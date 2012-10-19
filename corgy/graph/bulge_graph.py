@@ -22,12 +22,12 @@ def any_difference_of_one(stem, bulge):
     See if there's any difference of one between the two
     ends of the stem [(a,b),(c,d)] and a bulge (e,f)
 
-    @param stem: A couple of couples (2 x 2-tuple) indicating the start and end
+    :param stem: A couple of couples (2 x 2-tuple) indicating the start and end
                  nucleotides of the stem in the form ((s1, e1), (s2, e2))
-    @param bulge: A couple (2-tuple) indicating the first and last position
+    :param bulge: A couple (2-tuple) indicating the first and last position
                   of the bulge.
 
-    @return: True if there is an overlap between the stem nucleotides and the 
+    :return: True if there is an overlap between the stem nucleotides and the 
                   bulge nucleotides
              False otherwise
     '''
@@ -43,7 +43,7 @@ def print_bulge_graph(graph):
     '''
     Print out the connections in the graph.
 
-    @param graph: A dictionary indexed by stem number containing a set
+    :param graph: A dictionary indexed by stem number containing a set
                   of the bulge numbers that it is connected to.
     '''
     for key in graph.keys():
@@ -56,7 +56,7 @@ def print_stems(stems):
     '''
     Print the names and definitions of the stems.
 
-    @param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
+    :param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
                   where s1 and e1 are the nucleotides at one end of the stem
                   and s2 and e2 are the nucleotides at the other.
     '''
@@ -73,7 +73,7 @@ def print_bulges(bulges):
     '''
     Print the names and definitions of the bulges.
 
-    @param bulges: A list of tuples of the form [(s, e)] where s and e are the 
+    :param bulges: A list of tuples of the form [(s, e)] where s and e are the 
                    numbers of the nucleotides at the start and end of the bulge.
     '''
     for i in range(len(bulges)):
@@ -91,9 +91,9 @@ def condense_stem_pairs(stem_pairs):
     I.e. the pairs (0,10),(1,9),(2,8),(3,7) can be condensed into
     just the ends of the stem: [(0,10),(3,7)]
 
-    @param stem_pairs: A list of tuples containing paired base numbers.
+    :param stem_pairs: A list of tuples containing paired base numbers.
 
-    @return: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
+    :returns: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
                   where s1 and e1 are the nucleotides at one end of the stem
                   and s2 and e2 are the nucleotides at the other.
     '''
@@ -123,7 +123,7 @@ def print_brackets(brackets):
     '''
     Print the brackets and a numbering, for debugging purposes
 
-    @param brackets: A string with the dotplot passed as input to this script.
+    :param brackets: A string with the dotplot passed as input to this script.
     '''
     numbers = [chr(ord('0') + i % 10) for i in range(len(brackets))]
     tens = [chr(ord('0') + i / 10) for i in range(len(brackets))]
@@ -142,7 +142,7 @@ def find_bulges_and_stems(brackets):
     The returned bulges are of the form [(s,e), (s,e),...] where s is the start of a bulge
     and e is the end of a bulge
 
-    @param brackets: A string with the dotplot passed as input to this script.
+    :param brackets: A string with the dotplot passed as input to this script.
     '''
     prev = '.'
     context = 0
@@ -237,6 +237,7 @@ class BulgeGraph:
     def __init__(self):
         self.defines = dict()
         self.edges = c.defaultdict(set)
+        self.longrange = c.defaultdict(set)
         self.weights = dict()
         self.seq_length = 0
 
@@ -317,11 +318,11 @@ class BulgeGraph:
 
         Stems and bulges which share a nucleotide are considered connected.
 
-        @param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
+        :param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
                       where s1 and e1 are the nucleotides at one end of the stem
                       and s2 and e2 are the nucleotides at the other.
 
-        @param bulges: A list of tuples of the form [(s, e)] where s and e are the 
+        :param bulges: A list of tuples of the form [(s, e)] where s and e are the 
                        numbers of the nucleotides at the start and end of the bulge.
         '''
         for i in range(len(stems)):
@@ -343,12 +344,12 @@ class BulgeGraph:
         The defines for these bulges will be printed as well as the connection strings
         for the stems they are connected to.
 
-        @param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
+        :param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
                       where s1 and e1 are the nucleotides at one end of the stem
                       and s2 and e2 are the nucleotides at the other.
-        @param bulge_counter: The number of bulges that have been encountered so far.
+        :param bulge_counter: The number of bulges that have been encountered so far.
 
-        @return: A dictionary indexed by the number of a stem, containing a set of the 
+        :returns: A dictionary indexed by the number of a stem, containing a set of the 
                  other stems that the index is connected to.
         '''
         #print "stems:", stems
@@ -473,7 +474,7 @@ class BulgeGraph:
         at least one vertex has a weight of 2, implying that it accounts
         for all of the edges going out of one side of the stem
 
-        @param vertices: A list of vertex names to combine into one.
+        :param vertices: A list of vertex names to combine into one.
         '''
         merge_str = ""
         new_vertex = self.get_vertex()
@@ -518,8 +519,8 @@ class BulgeGraph:
         Find a set of nodes that form a loop containing the
         given vertex and being no greater than 4 nodes long.
 
-        @param vertex: The vertex to start the search from.
-        @return: A list of the nodes in the loop.
+        :param vertex: The vertex to start the search from.
+        :returns: A list of the nodes in the loop.
         '''
         visited = set()
         to_visit = [(key, 0) for key in self.edges[vertex]]
@@ -566,6 +567,50 @@ class BulgeGraph:
 
                     if len(bulge_loop) == 0:
                         break
+
+    def get_bulge_vertices(self):
+        """
+        Get all of the vertices which define a bulge. 
+
+        A bulge vertex can only have two connections: to the two stems which it links. 
+        Futhermore, each of these stems can
+        """
+
+        vertices = []
+
+        for vertex in self.edges:
+            if self.weights[vertex] == 2:
+                vertices += [vertex]
+        
+        return vertices
+
+    def get_bulge_vertex_names(self):
+        bulges = self.get_bulge_vertices()
+
+        return [v for v in bulges]
+
+    def get_bulged_stems(self):
+        '''
+        Get a list of the stem pairs which are separated by a bulge
+        region.
+        '''
+        bulges = self.get_bulge_vertices()
+        stem_pairs = []
+
+        for bulge in bulges:
+            connections = self.edges[bulge]
+            stem_pairs += [tuple(connections)]
+
+        return stem_pairs
+
+    def get_bulged_stem_names(self):
+        stem_pairs = self.get_bulged_stems()
+        stem_pair_names = []
+
+        for stem_pair in stem_pairs:
+            stem_pair_names += [(stem_pair[0], stem_pair[1])]
+
+        return stem_pair_names
 
     def from_dotbracket(self, dotbracket_str):
         (bulges, stems) = find_bulges_and_stems(dotbracket_str)
