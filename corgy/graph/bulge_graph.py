@@ -240,6 +240,21 @@ class BulgeGraph:
         self.weights = dict()
         self.seq_length = 0
 
+        self.name_counter = 0
+
+    # get an internal index for a named vertex
+    # this applies to both stems and edges
+    def get_vertex(self, name = None):
+        '''
+        Return a new unique vertex name.
+        '''
+
+        if name == None:
+            name = "x%d" % (self.name_counter)
+            self.name_counter += 1
+
+        return name
+
     def stem_length(self, key):
         d = self.defines[key]
         return (d[1] - d[0]) + 1
@@ -315,6 +330,7 @@ class BulgeGraph:
                 bulge = bulges[j]
                 if any_difference_of_one(stem, bulge):
                     self.edges['s%d' % (i)].add('b%d' % (j))
+                    self.edges['b%d' % (j)].add('s%d' % (i))
 
     def create_stem_graph(self, stems, bulge_counter):
         '''
@@ -353,16 +369,149 @@ class BulgeGraph:
                                     stem_stems_set = stem_stems.get(i, set())
                                     if j not in stem_stems_set:
                                         bn = 'b%d' % (bulge_counter)
-                                        self.defines[bn] = (min(s1, s2)+1, max(s1, s2)+1)
+                                        self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
                                         self.weights[bn] = 1
 
                                         self.edges['s%d' % i].add(bn)
+                                        self.edges[bn].add('s%d' % i)
+
                                         self.edges['s%d' % j].add(bn)
+                                        self.edges[bn].add('s%d' % j)
 
                                         bulge_counter += 1
                                         stem_stems_set.add(j)
                                     stem_stems[i] = stem_stems_set
         return stem_stems
+
+    def remove_vertex(self, v):
+        '''
+        Delete a vertex after merging it with another
+        '''
+        # delete all edges to this node
+        for key in self.edges[v]:
+            self.edges[key].remove(v)
+
+        for edge in self.edges:
+            if v in self.edges[edge]:
+                self.edges[edge].remove(v)
+
+        # delete all edges from this node
+        del self.edges[v]
+        del self.defines[v]
+
+    def reduce_defines(self):
+        """
+        Make defines like this:
+
+        define x0 2 124 124 3 4 125 127 5 5
+        
+        Into this:
+
+        define x0 2 3 5 124 127
+
+        That is, consolidate contiguous bulge region defines.
+        """
+
+        new_defines = []
+
+        for key in self.defines.keys():
+            if key[0] != 's':
+                assert(len(self.defines[key]) % 2 == 0)
+
+                j = 0
+                new_j = 0
+                #print >>sys.stderr,"self.defines[key]:", self.defines[key]
+
+                while new_j < len(self.defines[key]):
+
+                    j = new_j
+                    new_j += j + 2
+
+                    #print >>sys.stderr, "reduce_defines", i, j
+                    (f1, t1) = (int(self.defines[key][j]), int(self.defines[key][j+1]))
+
+                    # remove bulges of length 0
+                    if f1 == -1 and t1 == -2:
+                        del self.defines[key][j]
+                        del self.defines[key][j]
+                        
+                        new_j = 0
+                        continue
+
+                    # merge contiguous bulge regions
+                    for k in range(j+2, len(self.defines[key]), 2):
+                        (f2, t2) = (int(self.defines[key][k]), int(self.defines[key][k+1]))
+
+                        #print >>sys.stderr, "j: %d f1: %d, t1: %d, f2: %d, t2: %d" % (j, f1, t1, f2, t2)
+
+                        if t2 + 1 != f1 and t1 + 1 != f2:
+                            continue
+
+                        #print >>sys.stderr, "pre self.defines[key]:", self.defines[key]
+
+                        if t2 + 1 == f1:
+                            self.defines[key][j] = str(f2)
+                            self.defines[key][j+1] = str(t1)
+                        elif t1 + 1 == f2:
+                            self.defines[key][j] = str(f1)
+                            self.defines[key][j+1] = str(t2)
+
+                        del self.defines[key][k]
+                        del self.defines[key][k]
+
+                        #print >>sys.stderr, "post self.defines[key]:", self.defines[key]
+                        
+                        new_j = 0
+
+                        break
+
+    def merge_vertices(self, vertices):
+        '''
+        This is done when two of the outgoing strands of a stem
+        go to different bulges
+        It is assumed that the two ends are on the same sides because
+        at least one vertex has a weight of 2, implying that it accounts
+        for all of the edges going out of one side of the stem
+
+        @param vertices: A list of vertex names to combine into one.
+        '''
+        merge_str = ""
+        new_vertex = self.get_vertex()
+        self.weights[new_vertex] = 0
+
+        #assert(len(vertices) == 2)
+
+        connections = set()
+        needs_merging = set()
+
+        for v in vertices:
+            merge_str += " %s" % (v)
+
+            # what are we gonna merge?
+            for item in self.edges[v]:
+                connections.add(item)
+
+            # Add the definition of this vertex to the new vertex
+            #self.merge_defs[new_vertex] = self.merge_defs.get(new_vertex, []) + [v]
+
+            if v[0] == 's':
+                self.defines[new_vertex] = self.defines.get(new_vertex, []) + [self.defines[v][0], self.defines[v][2]] + [self.defines[v][1], self.defines[v][3]]
+            else:
+                self.defines[new_vertex] = self.defines.get(new_vertex,[]) + self.defines[v]
+
+
+            self.weights[new_vertex] += 1
+
+            # remove the old vertex, since it's been replaced by new_vertex
+            self.remove_vertex(v)
+            self.reduce_defines()
+
+        #self.weights[new_vertex] = 2
+        for connection in connections:
+            self.edges[new_vertex].add(connection)
+            self.edges[connection].add(new_vertex)
+
+        return new_vertex
 
     def find_bulge_loop(self, vertex):
         '''
@@ -428,12 +577,12 @@ class BulgeGraph:
             se1 = stems[i][1][0]+1
             se2 = stems[i][1][1]+1
 
-            self.defines['s%d' % (i)] = (min(ss1,se1), max(ss1,se1), 
-                                         min(ss2,se2), max(ss2,se2))
+            self.defines['s%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
+                                         min(ss2,se2), max(ss2,se2)]
             self.weights['s%d' % (i)] = 1
         for i in range(len(bulges)):
             bulge = bulges[i]
-            self.defines['b%d' % (i)] = (bulge[0]+1, bulge[1]+1)
+            self.defines['b%d' % (i)] = [bulge[0]+1, bulge[1]+1]
             self.weights['b%d' % (i)] = 1
 
         self.dotbracket_str = dotbracket_str
@@ -442,5 +591,3 @@ class BulgeGraph:
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
 
-if __name__ == "__main__":
-    main()

@@ -1,8 +1,11 @@
-import corgy.graph.bulge_graph as bg
+import sys
+from optparse import OptionParser
+
+import corgy.graph.bulge_graph as cgb
 
 def main():
-    if len(sys.argv) < 2:
-        print """
+
+    usage = """
         Usage: ./create_bulge_graph.py file.dotbracket [name]"
         
         Creates a graph of the paired and unpaired regions within a
@@ -45,18 +48,26 @@ def main():
 
         The results are printed to standard out.
         """
-        sys.exit(1)
-    if sys.argv[1] == '-':
-        f = sys.stdin
 
-    f = open(sys.argv[1])
+    parser = OptionParser(usage = usage)
+    (options, args) = parser.parse_args()
+
+    if len(args) < 1:
+        parser.print_help()
+        sys.exit(1)
+    if args[0] == '-':
+        f = sys.stdin
+    else:
+        f = open(args[0])
+
     brackets = "".join(f.readlines()).replace('\n', '')
-        #print "stems:", stems
-    
     bg = cgb.BulgeGraph()
     bg.from_dotbracket(brackets)
-    print bg.to_bg_text()
 
-    if len(sys.argv) == 3:
-        print "name", sys.argv[2]
-        print "length", len(brackets)
+    if len(args) == 2:
+        bg.name = args[1]
+
+    print bg.to_bg_string()
+
+if __name__ == "__main__":
+    main()
