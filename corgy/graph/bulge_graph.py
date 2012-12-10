@@ -10,7 +10,7 @@ def error_exit(message):
     sys.exit(1)
 
 # A wrapper for a simple dictionary addition
-# Added so that debugging can be amde easier
+# Added so that debugging can be made easier
 def add_bulge(bulges, bulge, context, message):
     #print >>sys.stderr,"Adding bulge", context, bulge, message
     #bulge = (context, bulge)
@@ -635,4 +635,22 @@ class BulgeGraph:
         self.create_bulge_graph(stems, bulges)
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
+
+    def stem_iterator(self):
+        '''
+        Iterate over all of the stem elements.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 's':
+                yield d
+
+    def stem_length(self, s):
+        '''
+        Return the number of base pairs that comprise
+        one strand of the stem.
+
+        @param s: The name of the stem.
+        '''
+        return self.defines[s][1] - self.defines[s][0] + 1
+
 
