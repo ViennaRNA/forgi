@@ -545,6 +545,77 @@ class BulgeGraph:
                     to_visit.append((key, depth+1))
         return []
 
+    def add_node(self, name, edges, define, weight=1):
+        self.defines[name] = define
+        self.edges[name] = edges
+        self.weights[name] = weight
+
+        for edge in self.edges[name]:
+            self.edges[edge].add(name)
+
+    def dissolve_stem(self, key):
+        #print >>sys.stderr, "hi"
+        d = self.defines[key]
+
+        bulge_sides = dict()
+        bulge_sides[0] = set()
+        bulge_sides[1] = set()
+
+        #print >>sys.stderr,"dissolving:", key
+        #print >>sys.stderr, "edges:", self.edges[key]
+        for edge in self.edges[key]:
+            be = self.defines[edge]
+
+            for i in range(0, 4):
+                for j in range(0, len(be)):
+                    if d[i] == be[j]:
+                        #print >>sys.stderr, key, edge
+                        bulge_sides[i / 2].add(edge)
+        
+        #print >>sys.stderr, "bulge_sides:", bulge_sides
+        
+        new_nodes = [0,0]
+        for i in range(2):
+            new_node = self.get_vertex()
+            edges = set()
+
+            mins = 10000
+            maxs = -10000
+
+            for bulge in bulge_sides[i]:
+                if bulge in self.defines:
+                    bd = self.defines[bulge]
+                else:
+                    continue
+                
+                for edge in self.edges[bulge]:
+                    edges.add(edge)
+
+                mins = min(mins, min(bd))
+                maxs = max(maxs, max(bd))
+                self.remove_vertex(bulge)
+
+            edges.remove(key)
+            #print >> sys.stderr, "new_node", new_node, "edges:", edges, "mins:", mins, "maxs:", maxs
+           
+            self.add_node(new_node, edges, [mins, maxs], self.weights[bulge])
+            new_nodes[i] = new_node
+
+        if len(self.edges[new_nodes[0]]) == 1 and len(self.edges[new_nodes[1]]) == 1:
+            dnn0 = self.defines[new_nodes[0]]
+            dnn1 = self.defines[new_nodes[1]]
+            newer_node = self.get_vertex()
+
+            define = [min(dnn0[0], dnn1[0]), max(dnn0[1], dnn1[1])]
+            edges = self.edges[new_nodes[0]].union(self.edges[new_nodes[1]])
+
+            self.add_node(newer_node, edges, define, self.weights[new_nodes[0]])
+
+            self.remove_vertex(new_nodes[0])
+            self.remove_vertex(new_nodes[1])
+
+        self.remove_vertex(key)
+
     def collapse(self):
         '''
         If any vertices form a loop, then they are either a bulge region of a fork region. The bulge (interior loop) regions will be condensed into one node.
