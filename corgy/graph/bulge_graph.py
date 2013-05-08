@@ -270,7 +270,7 @@ class BulgeGraph:
         '''
         defines_str = ''
         for key in self.defines.keys():
-            defines_str += "define %s %d %s" % ( key, self.weights[key], " ".join([str(d) for d in self.defines[key]]))
+            defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
             defines_str += '\n'
         return defines_str
 
@@ -639,51 +639,109 @@ class BulgeGraph:
                     if len(bulge_loop) == 0:
                         break
 
-    def get_bulge_vertices(self):
+    def interior_loop_iterator(self):
         """
-        Get all of the vertices which define a bulge. 
+        Iterate over all of the interior loops.
 
-        A bulge vertex can only have two connections: to the two stems which it links. 
-        Futhermore, each of these stems can
+        An interior loop can only have two connections: to the two stems which it links. 
         """
 
-        vertices = []
+        for key in self.defines.keys():
+            if key[0] == 'i':
+                yield key
 
-        for vertex in self.edges:
-            if self.weights[vertex] == 2:
-                vertices += [vertex]
-        
-        return vertices
-
-    def get_bulge_vertex_names(self):
-        bulges = self.get_bulge_vertices()
-
-        return [v for v in bulges]
-
-    def get_bulged_stems(self):
+    def relabel_node(self, old_name, new_name):
         '''
-        Get a list of the stem pairs which are separated by a bulge
-        region.
+        Change the name of a node.
+
+        param old_name: The previous name of the node
+        param new_name: The new name of the node
         '''
-        bulges = self.get_bulge_vertices()
-        stem_pairs = []
+        #replace the define name
+        define = self.defines[old_name]
+        del self.defines[old_name]
+        self.defines[new_name] = define
 
-        for bulge in bulges:
-            connections = self.edges[bulge]
-            stem_pairs += [tuple(connections)]
+        #replace the index into the edges array
+        edge = self.edges[old_name]
+        del self.edges[old_name]
+        self.edges[new_name] = edge
 
-        return stem_pairs
+        #replace the name of any edge that pointed to old_name
+        for k in self.edges.keys():
+            new_edges = set()
+            for e in self.edges[k]:
+                if e == old_name:
+                    new_edges.add(new_name)
+                else:
+                    new_edges.add(e)
+            self.edges[k] = new_edges
 
-    def get_bulged_stem_names(self):
-        stem_pairs = self.get_bulged_stems()
-        stem_pair_names = []
 
-        for stem_pair in stem_pairs:
-            stem_pair_names += [(stem_pair[0], stem_pair[1])]
+    def relabel_nodes(self):
+        '''
+        Change the labels of the nodes to be more indicative of their nature.
 
-        return stem_pair_names
+        s: stem
+        h: hairpin
+        i: interior loop
+        m: multiloop
+        f: five-prime unpaired
+        t: three-prime unpaired
+        '''
+        hairpins = []
+        interior_loops = []
+        multiloops = []
+        fiveprimes = []
+        threeprimes = []
+
+        for d in self.defines.keys():
+            if d[0] == 's':
+                continue
+
+            if len(self.edges[d]) == 1 and self.defines[d][0] == 0:
+                fiveprimes += [d]
+
+            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length:
+                threeprimes += [d]
+
+            if (len(self.edges[d]) == 1 and 
+                self.defines[d][0] != 0 and 
+                self.defines[d][1] != self.seq_length):
+                hairpins += [d]
+
+            if (len(self.edges[d]) == 2 and 
+                self.weights[d] == 1 and 
+                self.defines[d][0] != 0 and
+                self.defines[d][1] != self.seq_length):
+                multiloops += [d]
+
+            if self.weights[d] == 2:
+                interior_loops += [d]
+
+        for d in fiveprimes:
+            self.relabel_node(d, 'f1')
+        for d in threeprimes:
+            self.relabel_node(d, 't1')
+        for i,d in enumerate(interior_loops):
+            self.relabel_node(d, 'i%d' % (i))
+        for i,d in enumerate(multiloops):
+            self.relabel_node(d, 'm%d' % (i))
+        for i,d in enumerate(hairpins):
+            self.relabel_node(d, 'h%d' % (i))
+
+        pass
 
     def from_dotbracket(self, dotbracket_str):
+        '''
+        Populate the BulgeGraph structure from a dotbracket representation.
+
+        ie: ..((..))..
+
+        @param dotbracket_str: A string containing the dotbracket representation
+                               of the structure
+        '''
+
         (bulges, stems) = find_bulges_and_stems(dotbracket_str)
 
         for i in range(len(stems)):
@@ -706,6 +764,7 @@ class BulgeGraph:
         self.create_bulge_graph(stems, bulges)
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
+        self.relabel_nodes()
 
     def stem_iterator(self):
         '''
@@ -715,6 +774,39 @@ class BulgeGraph:
             if d[0] == 's':
                 yield d
 
+    def is_single_stranded(self, node):
+        '''
+        Does this node represent a single-stranded region?
+
+        Single stranded regions are five-prime and three-prime unpaired
+        regions, multiloops, and hairpins
+
+        @param node: The name of the node
+        @return: True if yes, False if no
+        '''
+        if node[0] == 'f' or node[0] == 't' or node[0] == 'm' or node[0] == 'h':
+            return True
+        else:
+            return False
+
+    def get_node_dimensions(self, node):
+        '''
+        Return the dimensions of a node.
+
+        If the node is a stem, then the dimensions will be (l, l) where l is
+        the length of the stem.
+
+        If it is single stranded it will be (0, x). Otherwise it will be (x, y).
+
+        @param node: The name of the node
+        @return: A pair containing its dimensions
+        '''
+        if self.is_single_stranded(node):
+            return (0, self.defines[node][1] - self.defines[node][0])
+        else:
+            return (self.defines[node][1] - self.defines[node][0],
+                    self.defines[node][3] - self.defines[node][2])
+
     def stem_length(self, s):
         '''
         Return the number of base pairs that comprise
@@ -723,5 +815,3 @@ class BulgeGraph:
         @param s: The name of the stem.
         '''
         return self.defines[s][1] - self.defines[s][0] + 1
-
-
