@@ -6,80 +6,47 @@ import corgy.graph.bulge_graph as cgb
 from optparse import OptionParser
 
 def print_neato(bg):
-    stems = bg.get_bulged_stem_names()
-
     # The different nodes for different types of bulges
-
-    node_defs = dict()
     node_lines = dict()
-
-    # loops
-    node_defs[1] = '\t{node [style=filled,shape=circle,fillcolor=red,fontsize=12'
-    node_defs[2] = '\t{node [style=filled,shape=circle,fillcolor=yellow,fontsize=12'
-    node_defs[3] = '\t{node [style=filled,shape=hexagon,fillcolor=red,fontsize=12'
-    node_defs[4] = '\t{node [style=filled,shape=octagon,fillcolor=red,fontsize=12'
-    node_defs[5] = '\t{node [style=filled,shape=octagon,fillcolor=red,fontsize=12'
-    node_defs[6] = '\t{node [style=filled,shape=octagon,fillcolor=red,fontsize=12'
-    node_defs[7] = '\t{node [style=filled,shape=octagon,fillcolor=red,fontsize=12'
-    node_defs[8] = '\t{node [style=filled,shape=octagon,fillcolor=red,fontsize=12'
-    node_defs[9] = '\t{node [style=filled,shape=octagon,fillcolor=red,fontsize=12'
 
     node_lines = ''
     connection_lines = ''
-    fancy = True
 
     print "graph G {"
     print "\tgraph [overlap=scale];"
     print "\tnode [shape=box];"
 
-    if fancy:
-        for key2 in bg.defines.keys():
-            if key2[0] == 's':
-                node_lines += '\t{node [style=filled,fillcolor=green,label=\"%s\\n(%d)\"] %s};\n' % (key2, bg.stem_length(key2), key2)
-                continue
+    for key2 in bg.defines.keys():
+        # Create the nodes with a different color for each type of element
+        if key2[0] == 's':
+            node_lines += '\t{node [style=filled,fillcolor=green,label=\"%s\\n(%d)\"] %s};\n' % (key2, bg.stem_length(key2), key2)
+            continue
+        elif key2[0] == 'i':
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor=yellow,fontsize=12'
+        elif key2[0] == 'm':
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor=red,fontsize=12'
+        elif key2[0] == 'f':
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor=orange,fontsize=12'
+        elif key2[0] == 't':
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor=purple,fontsize=12'
+        else:
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor=blue,fontsize=12'
 
-            if len(bg.edges[key2]) == 2:
-                if bg.weights[key2] == 2:
-                    node_lines += '\t{node [style=filled,shape=circle,fillcolor=yellow,fontsize=12'
+        node_lines += ',label=\"%s \\n' % (key2)
 
-                if bg.weights[key2] == 1:
-                    node_lines += '\t{node [style=filled,shape=circle,fillcolor=red,fontsize=12'
-            else:
-                node_lines += '\t{node [style=filled,shape=circle,fillcolor=blue,fontsize=12'
+        # figure out the size of the node and use that as a lbel
+        node_dims = bg.get_node_dimensions(key2)
+        total_bulge = sum(node_dims)
+        node_lines += str(node_dims)
 
+        # make bigger interior loops visually bigger
+        width = math.sqrt(1.5 * total_bulge / 10.0) 
+        height = width
 
-            #node_lines += node_defs[bg.weights[key2]] 
-            node_lines += ',label=\"%s \\n(' % (key2)
-            total_bulge = 0
-
-            for j in range(0, len(bg.defines[key2]), 2):
-                if j != 0:
-                    node_lines += ','
-
-                total_bulge += abs((int(bg.defines[key2][j+1]) - int(bg.defines[key2][j]) + 1))
-                node_lines += "%d" % (int(bg.defines[key2][j+1]) - int(bg.defines[key2][j]) + 1)
-            j = j / 2
-
-            while j < bg.weights[key2]-1:
-                node_lines += ",0"
-                j += 1
-
-            width = math.sqrt(1.5 * total_bulge / 10.0) 
-            height = width
-
-            if bg.weights[key2] == 2:
-                node_lines += ")\",width=%f,heigh=%f] %s};\n" % (width, height, key2)
-            else:
-                node_lines += ")\"] %s};\n" % (key2)
-    else:
-        for key2 in bg.defines.keys():
-            if key2[0] == 's':
-                node_lines += '\t{node [style=filled,fillcolor=green,label=\"%s\"] %s};\n' % (key2, key2)
-            else:
-                node_lines += node_defs[bg.weights[key2]]
-                node_lines += ',label=\"%s\"] %s};\n' % (key2, key2)
-
-
+        if key2[0] == 'i':
+            node_lines += "\",width=%f,heigh=%f] %s};\n" % (width, height, key2)
+        else:
+            node_lines += "\"] %s};\n" % (key2)
     
     for key1 in bg.edges:
         if key1[0] == 's':
