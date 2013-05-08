@@ -386,7 +386,9 @@ class BulgeGraph:
 
     def remove_vertex(self, v):
         '''
-        Delete a vertex after merging it with another
+        Delete a node after merging it with another
+
+        :param v: The name of the node
         '''
         # delete all edges to this node
         for key in self.edges[v]:
@@ -738,7 +740,7 @@ class BulgeGraph:
 
         ie: ..((..))..
 
-        @param dotbracket_str: A string containing the dotbracket representation
+        :param dotbracket_str: A string containing the dotbracket representation
                                of the structure
         '''
 
@@ -781,8 +783,8 @@ class BulgeGraph:
         Single stranded regions are five-prime and three-prime unpaired
         regions, multiloops, and hairpins
 
-        @param node: The name of the node
-        @return: True if yes, False if no
+        :param node: The name of the node
+        :return: True if yes, False if no
         '''
         if node[0] == 'f' or node[0] == 't' or node[0] == 'm' or node[0] == 'h':
             return True
@@ -798,8 +800,8 @@ class BulgeGraph:
 
         If it is single stranded it will be (0, x). Otherwise it will be (x, y).
 
-        @param node: The name of the node
-        @return: A pair containing its dimensions
+        :param node: The name of the node
+        :return: A pair containing its dimensions
         '''
         if self.is_single_stranded(node):
             return (0, self.defines[node][1] - self.defines[node][0])
@@ -812,6 +814,6 @@ class BulgeGraph:
         Return the number of base pairs that comprise
         one strand of the stem.
 
-        @param s: The name of the stem.
+        :param s: The name of the stem.
         '''
         return self.defines[s][1] - self.defines[s][0] + 1
