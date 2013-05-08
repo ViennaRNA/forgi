@@ -4,6 +4,7 @@ import sys
 import collections as c
 import math
 import random
+import itertools as it
 
 def error_exit(message):
     print >> sys.stderr, message
@@ -209,14 +210,12 @@ def find_bulges_and_stems(brackets):
         prev = brackets[i]
     if prev == '.':
         dots_end = i
-        bulges = add_bulge(bulges, (dots_start-1, dots_end), context, "7")
+        bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "7")
     elif prev == '(':
         print >>sys.stderr, "Unmatched bracket at the end"
         sys.exit(1)
-    """
     elif prev == ')':
-        bulges = add_bulge(bulges, (i+1, i), context, "8")
-    """
+        bulges = add_bulge(bulges, (i, i+1), context, "8")
     
     if context in bulges.keys():
         finished_bulges += bulges[context]
@@ -311,6 +310,54 @@ class BulgeGraph:
         out_str += self.get_connect_str()
 
         return out_str
+
+    def to_element_string(self):
+        '''
+        Create a string similar to dotbracket notation that identifies what
+        type of element is present at each location.
+
+        For example the following dotbracket:
+
+        ..((..))..
+
+        Should yield the following element string:
+
+        ffsshhsstt
+
+        Indicating that it begins with a fiveprime region, continues with a
+        stem, has a hairpin after the stem, the stem continues and it is terminated
+        by a threeprime region.
+        '''
+        output_str = [' ' for i in range(self.seq_length+1)]
+
+        for d in self.defines.keys():
+            for resi in self.define_residue_num_iterator(d):
+                output_str[resi] = d[0]
+
+        return "".join(output_str).strip()
+
+    def define_residue_num_iterator(self, node):
+        '''
+        Iterate over the residue numbers that belong to this node.
+
+        Note that everything except stems starts and ends one node
+        before and after its actual start. So a multiloop section
+        from residue 10 to 13 will only actually contain residues
+        11 and 12, since residues 10 and 13 will belong to the adjacent
+        stems.
+
+        :param node: The name of the node
+        '''
+        if node[0] == 's':  
+            a = iter(self.defines[node])
+            for (ds1, ds2) in it.izip(a,a):
+                for i in range(ds1, ds2+1):
+                    yield i
+        else:
+            a = iter(self.defines[node])
+            for (ds1, ds2) in it.izip(a,a):
+                for i in range(ds1+1, ds2):
+                    yield i
 
     def create_bulge_graph(self, stems, bulges):
         '''
@@ -704,18 +751,18 @@ class BulgeGraph:
             if len(self.edges[d]) == 1 and self.defines[d][0] == 0:
                 fiveprimes += [d]
 
-            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length:
+            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length+1:
                 threeprimes += [d]
 
             if (len(self.edges[d]) == 1 and 
                 self.defines[d][0] != 0 and 
-                self.defines[d][1] != self.seq_length):
+                self.defines[d][1] != self.seq_length+1):
                 hairpins += [d]
 
             if (len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
                 self.defines[d][0] != 0 and
-                self.defines[d][1] != self.seq_length):
+                self.defines[d][1] != self.seq_length+1):
                 multiloops += [d]
 
             if self.weights[d] == 2:
@@ -732,8 +779,6 @@ class BulgeGraph:
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
 
-        pass
-
     def from_dotbracket(self, dotbracket_str):
         '''
         Populate the BulgeGraph structure from a dotbracket representation.
@@ -743,7 +788,7 @@ class BulgeGraph:
         :param dotbracket_str: A string containing the dotbracket representation
                                of the structure
         '''
-
+        self.__init__()
         (bulges, stems) = find_bulges_and_stems(dotbracket_str)
 
         for i in range(len(stems)):
