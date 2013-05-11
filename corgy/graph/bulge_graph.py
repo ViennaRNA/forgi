@@ -1,4 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+"""bulge_graph.py: A graph representation of RNA secondary structure based
+   on its decomposition into primitive structure types: stems, hairpins,
+   interior loops, multiloops, etc..."""
+
+__author__      = "Peter Kerpedjiev"
+__copyright__   = "Copyright 2012, 2013"
+__license__     = "GPL"
+__version__     = "0.1"
+__maintainer__  = "Peter Kerpedjiev"
+__email__       = "pkerp@tbi.univie.ac.at"
 
 import sys
 import collections as c
