@@ -682,9 +682,10 @@ class BulgeGraph:
         '''
         # for all stems of length 1, merge with adjacent bulges
         for key in self.edges.keys():
-            if key[0] == 's':
-                if self.stem_length(key) == 1:
-                    self.dissolve_stem(key)
+            if self.dissolve_length_one_stems:
+                if key[0] == 's':
+                    if self.stem_length(key) == 1:
+                        self.dissolve_stem(key)
 
         for key in self.edges.keys():
             if key[0] == 's':
@@ -790,7 +791,7 @@ class BulgeGraph:
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
 
-    def from_dotbracket(self, dotbracket_str):
+    def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
         Populate the BulgeGraph structure from a dotbracket representation.
 
@@ -800,6 +801,7 @@ class BulgeGraph:
                                of the structure
         '''
         self.__init__()
+        self.dissolve_length_one_stems = dissolve_length_one_stems
         (bulges, stems) = find_bulges_and_stems(dotbracket_str)
 
         for i in range(len(stems)):
