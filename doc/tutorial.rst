@@ -109,6 +109,27 @@ Into a graph that looks like this:
 
 Note that the graph and the secondary structure representation are oriented differently. The multiloop at the top of the graph is at the bottom of the secondary structure. Furthermore, some of the small bulges clearly visible in the graph (as yellow nodes) are hard to see in the secondary structure although they are indeed present.
 
+Finding the Length of the Longest Stem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For whatever reason, one may be interested in finding out how long the longest stem in a secondary structure is. Initially, one may assume that this can easily be done by searching for the longest string of '(' or ')' in the dot-bracket file. Unfortunately, structures with an interior loop which has an unpaired base on only one strand will lead to an erronous result in this example. The decomposition provided by corgy will, however, take this into account in enumerating the structural elements. It then becomes a matter of iterating over the stems and checking their lengths::
+
+    bg = cgb.BulgeGraph()
+    bg.from_dotbracket(brackets)
+    biggest_stem = (-1, 'x')
+    for s in bg.stem_iterator():
+        if bg.stem_length(s) > biggest_stem[0]: 
+            biggest_stem = (bg.stem_length(s), s)
+
+This is best illustrated with two examples::
+
+    echo '..((((..))))..' | python examples/longest_stem.py -
+    4
+    echo '..((((..).)))..' | python examples/longest_stem.py -
+    3
+
+In the first case, the longest stem is the only stem. In the second case, what appears to be one large stem of length 4, is actually two stems of length 1 and 3.
+
 Rosetta rna_denovo Constraint File Creation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -118,29 +139,29 @@ Given an dot-bracket sequence as input, corgy can be easily be used to generate 
 
 ``python examples/dotbracket_to_rosetta_constraints.py examples/1y26_ss.dotbracket``
 
-And get an appropriately formatted parameter file:
+And get an appropriately formatted parameter file::
 
-| STEM PAIR 42 60
-| STEM PAIR 43 59
-| STEM PAIR 44 58
-| STEM PAIR 45 57
-| STEM PAIR 46 56
-| STEM PAIR 47 55
-| STEM PAIR 13 33
-| STEM PAIR 14 32
-| STEM PAIR 15 31
-| STEM PAIR 16 30
-| STEM PAIR 17 29
-| STEM PAIR 18 28
-| STEM PAIR 19 27
-| STEM PAIR 1 71
-| STEM PAIR 2 70
-| STEM PAIR 3 69
-| STEM PAIR 4 68
-| STEM PAIR 5 67
-| STEM PAIR 6 66
-| STEM PAIR 7 65
-| STEM PAIR 8 64
-| STEM PAIR 9 63
+    STEM PAIR 42 60
+    STEM PAIR 43 59
+    STEM PAIR 44 58
+    STEM PAIR 45 57
+    STEM PAIR 46 56
+    STEM PAIR 47 55
+    STEM PAIR 13 33
+    STEM PAIR 14 32
+    STEM PAIR 15 31
+    STEM PAIR 16 30
+    STEM PAIR 17 29
+    STEM PAIR 18 28
+    STEM PAIR 19 27
+    STEM PAIR 1 71
+    STEM PAIR 2 70
+    STEM PAIR 3 69
+    STEM PAIR 4 68
+    STEM PAIR 5 67
+    STEM PAIR 6 66
+    STEM PAIR 7 65
+    STEM PAIR 8 64
+    STEM PAIR 9 63
 
 

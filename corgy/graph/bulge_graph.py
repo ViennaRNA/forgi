@@ -38,10 +38,8 @@ def any_difference_of_one(stem, bulge):
                  nucleotides of the stem in the form ((s1, e1), (s2, e2))
     :param bulge: A couple (2-tuple) indicating the first and last position
                   of the bulge.
-
     :return: True if there is an overlap between the stem nucleotides and the 
-                  bulge nucleotides
-             False otherwise
+                  bulge nucleotides. False otherwise
     '''
     for stem_part in stem:
         for part in stem_part:
