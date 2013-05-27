@@ -824,6 +824,29 @@ class BulgeGraph:
         self.collapse()
         self.relabel_nodes()
 
+    def from_bg_string(self, bg_str):
+        '''
+        Populate this BulgeGraph from the string created by the method
+        to_bg_string.
+
+        @param bg_str: The string representation of this BugleGraph.
+        '''
+        lines = bg_str.split('\n')
+        for line in lines:
+            line = line.strip()
+            parts = line.split()
+            if len(parts) == 0:
+                #blank line
+                continue
+            if parts[0] == 'length':
+                self.length = int(parts[1])
+            elif parts[0] == 'define':
+                self.defines[parts[1]] = map(int, parts[2:])
+            elif parts[0] == 'connect':
+                for p in parts[2:]:
+                    self.edges[parts[1]].add(p)
+                    self.edges[p].add(parts[1])
+
     def stem_iterator(self):
         '''
         Iterate over all of the stem elements.
@@ -873,3 +896,19 @@ class BulgeGraph:
         :param s: The name of the stem.
         '''
         return self.defines[s][1] - self.defines[s][0] + 1
+
+    def adjacent_stem_pairs_iterator(self):
+        '''
+        Iterate over all pairs of stems which are separated by some element.
+
+        This will always yield triples of the form (s1, e1, s2) where s1 and
+        s2 are the stem identifiers and e1 denotes the element that separates
+        them.
+        '''
+        for d in self.defines.keys():
+            if len(self.edges[d]) == 2:
+                edges = list(self.edges[d])
+
+                if edges[0][0] == 's' and edges[1][0] == 's':
+                    yield (edges[0], d, edges[1])
+

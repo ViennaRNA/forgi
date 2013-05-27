@@ -11,6 +11,7 @@ def print_neato(bg):
 
     node_lines = ''
     connection_lines = ''
+    fontsize=20
 
     print "graph G {"
     print "\tgraph [overlap=scale];"
@@ -19,18 +20,18 @@ def print_neato(bg):
     for key2 in bg.defines.keys():
         # Create the nodes with a different color for each type of element
         if key2[0] == 's':
-            node_lines += '\t{node [style=filled,fillcolor=green,label=\"%s\\n(%d)\"] %s};\n' % (key2, bg.stem_length(key2), key2)
+            node_lines += '\t{node [style=filled,fillcolor="#B3E2CD",fontsize=%d,label=\"%s\\n(%d)\"] %s};\n' % (fontsize,key2, bg.stem_length(key2), key2)
             continue
         elif key2[0] == 'i':
-            node_lines += '\t{node [style=filled,shape=circle,fillcolor=yellow,fontsize=12'
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor="#FFF2AE",fontsize=%d' % (fontsize)
         elif key2[0] == 'm':
-            node_lines += '\t{node [style=filled,shape=circle,fillcolor=red,fontsize=12'
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor="#F4CAE4",fontsize=%d' % (fontsize)
         elif key2[0] == 'f':
-            node_lines += '\t{node [style=filled,shape=circle,fillcolor=orange,fontsize=12'
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor="#FDCDAC",fontsize=%d' % (fontsize)
         elif key2[0] == 't':
-            node_lines += '\t{node [style=filled,shape=circle,fillcolor=purple,fontsize=12'
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor="#E6F5C9",fontsize=%d' % (fontsize)
         else:
-            node_lines += '\t{node [style=filled,shape=circle,fillcolor=blue,fontsize=12'
+            node_lines += '\t{node [style=filled,shape=circle,fillcolor="#CBD5E8",fontsize=%d' % (fontsize)
 
         node_lines += ',label=\"%s \\n' % (key2)
 
