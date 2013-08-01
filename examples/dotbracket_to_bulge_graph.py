@@ -50,6 +50,9 @@ def main():
         """
 
     parser = OptionParser(usage = usage)
+
+    parser.add_option('-d', '--dissolve-length-one-stems', dest="dissolve", default=False, help='Remove any stems that have a length of just one nucleotide', type='str')
+
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
@@ -62,7 +65,7 @@ def main():
 
     brackets = "".join(f.readlines()).replace('\n', '')
     bg = cgb.BulgeGraph()
-    bg.from_dotbracket(brackets)
+    bg.from_dotbracket(brackets, options.dissolve)
 
     if len(args) == 2:
         bg.name = args[1]

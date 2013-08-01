@@ -16,6 +16,7 @@ import collections as c
 import math
 import random
 import itertools as it
+import corgy.utilities.debug as cud
 
 def error_exit(message):
     print >> sys.stderr, message
@@ -243,6 +244,8 @@ def print_name(filename):
 
 class BulgeGraph:
     def __init__(self):
+        self.name = "untitled"
+        self.seq = ""
         self.defines = dict()
         self.edges = c.defaultdict(set)
         self.longrange = c.defaultdict(set)
@@ -308,13 +311,36 @@ class BulgeGraph:
                 whole_str += '\n'
         return whole_str
 
+    def get_sequence_str(self):
+        '''
+        Return the sequence along with its keyword. I.e.
+
+            seq ACGGGCC
+        '''
+        if len(self.seq) > 0:
+            return "seq %s\n" % (self.seq)
+        else:
+            return ""
+
+    def get_name_str(self):
+        '''
+        Return the name of this structure along with its keyword:
+
+            name 1y26
+        '''
+        return "name %s\n" % (self.name)
+
+
+
     def to_bg_string(self):
         '''
         Output a string representation that can be stored and reloaded.
 
         '''
         out_str = ''
+        out_str += self.get_name_str()
         out_str += self.get_length_str()
+        out_str += self.get_sequence_str()
         out_str += self.get_define_str()
         out_str += self.get_connect_str()
 
@@ -846,6 +872,10 @@ class BulgeGraph:
                 for p in parts[2:]:
                     self.edges[parts[1]].add(p)
                     self.edges[p].add(parts[1])
+            elif parts[0] == 'seq':
+                self.seq = parts[1]
+            elif parts[0] == 'name':
+                self.name = parts[1].strip()
 
     def stem_iterator(self):
         '''
@@ -911,4 +941,14 @@ class BulgeGraph:
 
                 if edges[0][0] == 's' and edges[1][0] == 's':
                     yield (edges[0], d, edges[1])
+
+    def stem_bp_iterator(self, stem):
+        '''
+        Iterate over all the base pairs in the stem.
+        '''
+        d = self.defines[stem]
+        stem_length = self.stem_length(stem)
+
+        for i in range(stem_length):
+            yield (d[0] + i, d[3] - i)
 

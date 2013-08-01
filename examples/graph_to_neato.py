@@ -14,7 +14,7 @@ def print_neato(bg):
     fontsize=20
 
     print "graph G {"
-    print "\tgraph [overlap=scale];"
+    print "\tgraph [overlap=false,splines=true];"
     print "\tnode [shape=box];"
 
     for key2 in bg.defines.keys():
@@ -72,6 +72,7 @@ def main():
         Convert a BulgeGraph structure to a representation readable by the 'neato' program.
         """
     parser = OptionParser(usage = usage)
+    parser.add_option('-d', '--dotbracket', default=False, action='store_true', help='Indicte that the input is in dotbracket format')
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
@@ -82,9 +83,15 @@ def main():
     else:
         f = open(args[0])
 
-    brackets = "".join(f.readlines()).replace('\n', '')
+    text = "".join(f.readlines())
+    brackets = text.replace('\n', '')
     bg = cgb.BulgeGraph()
-    bg.from_dotbracket(brackets)
+
+    if options.dotbracket:
+        bg.from_dotbracket(brackets)
+    else:
+        bg.from_bg_string(text)
+
     print_neato(bg)
 
 if __name__=="__main__":
