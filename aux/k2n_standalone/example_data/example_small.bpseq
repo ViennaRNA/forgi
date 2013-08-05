@@ -1,0 +1,24 @@
+Filename: example_small.bpseq
+Organism: Some organism
+Accession Number: XYZ123
+Citation and related information available at http://www.rna.ccbb.utexas.edu
+1 A 0
+2 G 9
+3 U 8
+4 A 17
+5 G 16
+6 C 15
+7 G 14
+8 A 3
+9 C 2
+10 U 0
+11 G 19
+12 G 18
+13 G 0
+14 C 7
+15 G 6
+16 U 5
+17 U 4
+18 C 12
+19 C 11
+20 U 0
