@@ -815,6 +815,20 @@ class BulgeGraph:
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
 
+    def from_fasta(self, fasta_str):
+        '''
+        Create a bulge graph from a fasta-type file containing the following
+        format:
+
+            > id
+            ACCGGGG
+            ((...))
+        '''
+        lines = fasta_str.split('\n')
+        self.from_dotbracket(lines[2].strip())
+        self.name = lines[0].strip('>')
+        self.seq = lines[1].strip()
+
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
         Populate the BulgeGraph structure from a dotbracket representation.
