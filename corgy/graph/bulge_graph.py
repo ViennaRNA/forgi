@@ -815,7 +815,7 @@ class BulgeGraph:
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
 
-    def from_fasta(self, fasta_str):
+    def from_fasta(self, fasta_str, dissolve_length_one_stems):
         '''
         Create a bulge graph from a fasta-type file containing the following
         format:
@@ -825,7 +825,7 @@ class BulgeGraph:
             ((...))
         '''
         lines = fasta_str.split('\n')
-        self.from_dotbracket(lines[2].strip())
+        self.from_dotbracket(lines[2].strip(), dissolve_length_one_stems)
         self.name = lines[0].strip('>')
         self.seq = lines[1].strip()
 
@@ -966,3 +966,90 @@ class BulgeGraph:
         for i in range(stem_length):
             yield (d[0] + i, d[3] - i)
 
+
+    def get_sides(self, s1, b):
+        '''
+        Get the side of s1 that is next to b.
+
+        s1e -> s1b -> b
+
+        @param s1: The stem.
+        @param b: The bulge.
+        @return: A tuple indicating which side is the one next to the bulge
+                 and which is away from the bulge.
+        '''
+        s1d = self.defines[s1]
+        bd = self.defines[b]
+
+        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
+
+        for i in xrange(4):
+            for k in xrange(len(bd)):
+                if s1d[i] == bd[k]:
+                    if i == 0 or i == 3:
+                        s1b = 0
+                    else:
+                        s1b = 1
+
+        if s1b == 0:
+            s1e = 1
+        else:
+            s1e = 0
+
+        return (s1b, s1e)
+
+    def stem_iterator(self):
+        '''
+        Iterator over all of the stems in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 's':
+                yield d
+    
+    def hloop_iterator(self):
+        '''
+        Iterator over all of the hairpin in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 'h':
+                yield d
+
+    def mloop_iterator(self):
+        '''
+        Iterator over all of the multiloops in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 'm':
+                yield d
+
+    def iloop_iterator(self):
+        '''
+        Iterator over all of the interior loops in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 'i':
+                yield d
+
+    def get_length(self, vertex):
+        '''
+        Get the minimum length of a vertex.
+
+        If it's a stem, then the result is its length (in base pairs).
+
+        If it's a bulge, then the length is the smaller of it's dimensions.
+
+        @param vertex: The name of the vertex.
+        '''
+        if vertex[0] == 's':
+            return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
+        else:
+            if len(self.edges[vertex]) == 1:
+                return self.defines[vertex][1] - self.defines[vertex][0]
+            else:
+                dims = list(self.get_bulge_dimensions(vertex))
+                dims.sort()
+
+                if dims[0] == 0:
+                    return dims[1]
+                else:
+                    return dims[0]
