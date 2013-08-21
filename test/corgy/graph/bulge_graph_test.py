@@ -15,11 +15,31 @@ class TestBulgeGraph(unittest.TestCase):
 
     def setUp(self):
         self.dotbracket = '....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))........'
+        self.bg_string = '''
+name temp
+length 71
+seq CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+define f1 0 1
+define h1 47 55
+define s3 42 47 55 60
+define s2 13 19 27 33
+define h0 19 27
+define s0 1 9 63 71
+define t1 71 72
+define m1 9 13
+define m2 33 42
+define m0 60 63
+connect s3 h1 m0 m2
+connect s2 h0 m1 m2
+connect s0 f1 m1 m0 t1
+'''
 
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
-        print bg.to_bg_string()
+        #print bg.to_bg_string()
+
+        self.assertEquals(bg.seq_length, len(self.dotbracket))
 
     def test_from_dotplot2(self):
         bg = cgb.BulgeGraph()
@@ -41,5 +61,8 @@ class TestBulgeGraph(unittest.TestCase):
 
         self.assertEquals(elem_str, "ffsshhssmmsshhsstt")
 
-
-
+    def test_from_bg_string(self):
+        bg = cgb.BulgeGraph()
+        bg.from_bg_string(self.bg_string)
+        
+        self.assertEquals(bg.seq_length, 71)

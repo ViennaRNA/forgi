@@ -82,7 +82,6 @@ def load_cg_from_pdb(pdb_filename):
 def from_pdb(pdb_filename):
     cg = load_cg_from_pdb(pdb_filename)
 
-    print cg.to_cg_string()
     return cg
 
 class CoarseGrainRNA():
@@ -175,3 +174,21 @@ class CoarseGrainRNA():
         curr_str += self.get_long_range_str()
 
         return curr_str
+
+    def from_cg_string(self, cg_string):
+        '''
+        Populate this structure from the string
+        representation of a graph.
+        '''
+        lines = cg_string.split('\n')
+        for line in lines:
+            line = line.strip()
+            parts = line.split()
+            if len(parts) == 0:
+                continue
+            if parts[0] == 'coord':
+                name = parts[1]
+                self.coords[name] = [map(float, parts[2:5]), map(float, parts[5:8])]
+            if parts[0] == 'twist':
+                name = parts[1]
+                self.twists[name] = [map(float, parts[2:5]), map(float, parts[5:8])]

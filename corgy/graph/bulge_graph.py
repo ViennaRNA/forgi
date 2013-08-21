@@ -879,7 +879,7 @@ class BulgeGraph:
                 #blank line
                 continue
             if parts[0] == 'length':
-                self.length = int(parts[1])
+                self.seq_length = int(parts[1])
             elif parts[0] == 'define':
                 self.defines[parts[1]] = map(int, parts[2:])
             elif parts[0] == 'connect':
