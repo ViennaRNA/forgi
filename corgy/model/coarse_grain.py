@@ -1,6 +1,8 @@
 import corgy.graph.bulge_graph as cgb
 import corgy.graph.graph_pdb as cgg
 
+import corgy.aux.make_rna_rosetta_ready as cam
+import corgy.aux.k2n_standalone.knotted2nested as cak
 import corgy.utilities.debug as cud
 import corgy.utilities.mcannotate as cum
 import corgy.utilities.pdb as cup
@@ -13,6 +15,7 @@ import sys
 import tempfile as tf
 import time
 import warnings
+import numpy as np
 
 def load_cg_from_pdb(pdb_filename):
     '''
@@ -27,12 +30,19 @@ def load_cg_from_pdb(pdb_filename):
         # f1 will store the rosetta-fied pdb file
         with tf.NamedTemporaryFile() as f1:
             # Use rosetta's rna preparation script to rename some of the atoms
-            p = sp.Popen(['aux/make_rna_rosetta_ready.py', f.name], 
-                         stdout=sp.PIPE, stderr=sp.PIPE)
-            out, err = p.communicate()
+            f.seek(0)
+            lines = f.readlines()
+            chainids = []
+            ignorechain = True
+            nochain = False
+            (out_fasta, out_text) = cam.convert_pdb_to_rosetta_pdb(lines,
+                                                                   chainids,
+                                                                   ignorechain,
+                                                                   nochain)
 
+            #print "out_text:", out_text
             # Change rosetta's residue naming a little bit
-            line = out
+            line = out_text
             line = line.replace('rA', 'A')
             line = line.replace('rC', 'C')
             line = line.replace('rG', 'G')
@@ -55,10 +65,19 @@ def load_cg_from_pdb(pdb_filename):
                 f2.flush()
 
                 # remove pseudoknots
+                '''
                 p = sp.Popen(['aux/k2n_standalone/knotted2nested.py', '-f', 'bpseq', 
                               '-F', 'vienna', f2.name], stdout = sp.PIPE)
 
                 out, err = p.communicate()
+                '''
+                out = cak.k2n_main(f2.name, input_format='bpseq',
+                                   output_format = 'vienna',
+                                   method = cak.DEFAULT_METHOD,
+                                   opt_method = cak.DEFAULT_OPT_METHOD,
+                                   verbose = cak.DEFAULT_VERBOSE,
+                                   removed= cak.DEFAULT_REMOVED)
+
                 out = out.replace(' Nested structure', pdb_base)
 
                 bg = cgb.BulgeGraph()
@@ -188,7 +207,7 @@ class CoarseGrainRNA():
                 continue
             if parts[0] == 'coord':
                 name = parts[1]
-                self.coords[name] = [map(float, parts[2:5]), map(float, parts[5:8])]
+                self.coords[name] = np.array([map(float, parts[2:5]), map(float, parts[5:8])])
             if parts[0] == 'twist':
                 name = parts[1]
-                self.twists[name] = [map(float, parts[2:5]), map(float, parts[5:8])]
+                self.twists[name] = np.array([map(float, parts[2:5]), map(float, parts[5:8])])

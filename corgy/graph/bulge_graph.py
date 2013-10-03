@@ -243,7 +243,7 @@ def print_name(filename):
 
 
 class BulgeGraph:
-    def __init__(self):
+    def __init__(self, dotbracket_str=''):
         self.name = "untitled"
         self.seq = ""
         self.defines = dict()
@@ -253,6 +253,9 @@ class BulgeGraph:
         self.seq_length = 0
 
         self.name_counter = 0
+
+        if dotbracket_str != '':
+            self.from_dotbracket(dotbracket_str)
 
     # get an internal index for a named vertex
     # this applies to both stems and edges
@@ -863,6 +866,22 @@ class BulgeGraph:
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
+
+    def to_dotbracket(self):
+        '''
+        Convert the BulgeGraph representation to a dot-bracket string
+        and return it.
+
+        @return: A dot-bracket representation of this BulgeGraph
+        '''
+        out = ['.' for i in xrange(self.seq_length)]
+        for s in self.stem_iterator():
+            for i in xrange(self.defines[s][0], self.defines[s][1]+1):
+                out[i-1] = '('
+            for i in xrange(self.defines[s][2], self.defines[s][3]+1):
+                out[i-1] = ')'
+
+        return "".join(out)
 
     def from_bg_string(self, bg_str):
         '''

@@ -66,3 +66,14 @@ connect s0 f1 m1 m0 t1
         bg.from_bg_string(self.bg_string)
         
         self.assertEquals(bg.seq_length, 71)
+
+    def check_from_and_to_dotbracket(self, dotbracket):
+        bg = cgb.BulgeGraph(dotbracket)
+        self.assertEquals(bg.to_dotbracket(), dotbracket)
+
+    def test_to_dotbracket(self):
+        self.check_from_and_to_dotbracket('..((..))..')
+        self.check_from_and_to_dotbracket('..((..))..((..))')
+        self.check_from_and_to_dotbracket('..((..((..))..))')
+
+        pass
