@@ -34,6 +34,10 @@ def main():
     bg = cgb.BulgeGraph()
 
 
+    if len(brackets.strip()) == 0:
+        print >>sys.stderr, "Invalid input"
+        sys.exit(1)
+
     bg.from_dotbracket(brackets)
 
     if options.sec_struct:
