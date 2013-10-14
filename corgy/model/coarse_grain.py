@@ -17,10 +17,14 @@ import time
 import warnings
 import numpy as np
 
-def load_cg_from_pdb(pdb_filename):
+def load_cg_from_pdb(pdb_filename, secondary_structure=''):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
+
+    @param pdb_filename: The filename of the 3D model
+    @param secondary_structure: A dot-bracket string encoding the secondary
+                                structure of this molecule
     '''
     # create a temporary file to hold the biggest chain
     with tf.NamedTemporaryFile() as f:
@@ -28,6 +32,7 @@ def load_cg_from_pdb(pdb_filename):
         f.flush()
 
         # f1 will store the rosetta-fied pdb file
+
         with tf.NamedTemporaryFile() as f1:
             # Use rosetta's rna preparation script to rename some of the atoms
             f.seek(0)
@@ -80,6 +85,22 @@ def load_cg_from_pdb(pdb_filename):
 
                 out = out.replace(' Nested structure', pdb_base)
 
+                if secondary_structure != '':
+                    lines = out.split('\n')
+
+                    if len(secondary_structure) != len(lines[1].strip()):
+                        print >>sys.stderr, "The provided secondary structure \
+                                does not match the length of the 3D structure"
+                        print >>sys.stderr, "Sequence:", lines[1]
+                        print >>sys.stderr, "ss_struc:", secondary_structure
+                        sys.exit(1)
+
+                    lines[-1] = secondary_structure
+                    out = "\n".join(lines)
+
+                print >>sys.stderr, "out:", out
+                print >>sys.stderr, "secondary_structure:", secondary_structure
+
                 bg = cgb.BulgeGraph()
                 bg.from_fasta(out, dissolve_length_one_stems=1)
 
@@ -98,8 +119,8 @@ def load_cg_from_pdb(pdb_filename):
     return cg
 
     
-def from_pdb(pdb_filename):
-    cg = load_cg_from_pdb(pdb_filename)
+def from_pdb(pdb_filename, secondary_structure=''):
+    cg = load_cg_from_pdb(pdb_filename, secondary_structure)
 
     return cg
 

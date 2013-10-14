@@ -33,7 +33,7 @@ Evident in this image are six structural elements.
 
 The multiloop itself can be divided into three unpaired sections of nucleotides. Each of these elements is connected to certain other elements. For example, the stem at the top is connected to two unpaired regions of the multi-loop. Both of the hairpin loops are connected one stem each. If we abstract away the sequence information, we can imagine the structure as being represented by a graph.
 
-The corgy package can be used to do just this by using thedotbracket_to_bulge_graph.py script::
+The corgy package can be used to do just this by using the dotbracket_to_bulge_graph.py script::
 
     [pkerp@plastilin corgy]$ python examples/dotbracket_to_bulge_graph.py examples/input/1y26_ss.dotbracket
     length 71
@@ -51,7 +51,7 @@ The corgy package can be used to do just this by using thedotbracket_to_bulge_gr
     connect s1 h0 m1 m2
     connect s0 f1 m1 m0 t1
 
-The result is an adjacency list of all the elements. The stems are defined with names starting with 's', hairpins with an 'h', multiloops with an 'm', interior loops with an 'i', five-prime unpaired regions with an 'f' and three-prime unpaired regions with a 't'. The numbers indicate indicate the nucleotides that are present in each element. So the stem s0 is composed of nucleotides 1 to 9 on one strand and 63 to 71 on the other. For non-stem elements, the nucleotides listed in the define statements above actually extend one beyond the edges of the elements. This means that, for example, the hairpin *h0* includs the nucleotides 19 to 27, instead of 18 to 28. This difference is an artifact of the implementation and used for some internal computations. It also makes it easier to represent interior loops which only have a bulge on one strand.
+The result is an adjacency list of all the elements. The stems are defined with names starting with 's', hairpins with an 'h', multiloops with an 'm', interior loops with an 'i', five-prime unpaired regions with an 'f' and three-prime unpaired regions with a 't'. The numbers indicate the nucleotides that are present in each element. So the stem s0 is composed of nucleotides 1 to 9 on one strand and 63 to 71 on the other. For non-stem elements, the nucleotides listed in the define statements above actually extend one beyond the edges of the elements. This means that, for example, the hairpin *h0* includs the nucleotides 19 to 27, instead of 18 to 28. This difference is an artifact of the implementation and used for some internal computations. It also makes it easier to represent interior loops which only have a bulge on one strand.
 
 In this case it is difficult to picture which section is which from the text representation. To make it easier, another example script will generate a file readable by graphviz. The *neato* program can take that as input and create a nice visualization of the graph::
 
@@ -64,11 +64,11 @@ The result is the following graph representation of the structure.
     :height: 300
     :align: center
     
-Notice the similarity to the original base paired image? The top stem can be identified as *s0*. The two hairpin loops are *b3* and *b1*. The regions in the multiloop are given their own names. The oddity is the presence of the *f1* and *t1* loops.
+Notice the similarity to the original base paired image? The top stem can be identified as *s0*. The two hairpin loops are *b0* and *b1*. The regions in the multiloop are given their own names. *f1* and *t1* should correspond to the 5' and 3' unpaired regions. In this case, the structure lacks these regions so the nodes in the graph are just place-holders. 
 
 Getting a Condensed Representation of the Element Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When one is interested in a mapping of each nucleotide to the element type within which it residues, a string representation can be generated using one of the example scripts::
+Mapping nucleotide positions to secondary structure element types (stems, hairpins, multiloops) is easily done using an example script:
 
     [pkerp@plastilin corgy]$ python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
     (((((((((...((((((.........))))))........((((((.......))))))..)))))))))

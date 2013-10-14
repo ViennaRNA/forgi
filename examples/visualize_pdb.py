@@ -19,7 +19,10 @@ def main():
     num_args= 0
     parser = OptionParser(usage=usage)
 
-    #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
+    parser.add_option('-s', '--secondary-structure', 
+                      dest='secondary_structure', default='', 
+                      help="Enter a dot-bracket string for the \
+                      secondary structure of this model", type=str)
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
     (options, args) = parser.parse_args()
@@ -28,7 +31,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    cg = cmg.from_pdb(args[0])
+    cg = cmg.from_pdb(args[0], options.secondary_structure.strip("\"'"))
 
     pp = cvp.PymolPrinter()
     pp.coordinates_to_pymol(cg)
