@@ -203,12 +203,14 @@ class PymolPrinter:
             pa_s += "b=1.0, label=\"%s\")\n" % (text)
             counter += 1
 
+        '''
         for (text, pos) in self.labels:
             uid = str(uuid.uuid4()).replace('-', 'x')
             uids += [uid]
 
             pa_s += "pa_%s = cmd.pseudoatom(pos=%s," % (uid, str(list(pos)))
             pa_s += "b=1.0, label=\"%s\")\n" % (text)
+        '''
 
         s += "cmd.set(\"cgo_line_radius\",0.03)" + '\n'
         for i in range(counter):
@@ -482,22 +484,23 @@ class PymolPrinter:
                 self.add_stem_like(cg, key)
                 self.draw_bounding_boxes(cg, key)
             else:
-                if self.add_loops:
-                    if key in loops:
-                        self.add_segment(p, n, "blue", 1.0,
-                                         key + " " + str(bg.get_length(key)))
-                if key[0] == 'm':
+                if key[0] == 'h':
+                    if self.add_loops:
+                        if key in loops:
+                            self.add_segment(p, n, "blue", 1.0,
+                                             key + " " + str(bg.get_length(key)))
+                elif key[0] == 'm':
                     self.add_segment(p, n, "red", 1.0,
                                      key + " " +
                                      str(bg.defines[key][1] -
                                      bg.defines[key][0]) + "")
-                if key[0] == 'f':
+                elif key[0] == 'f':
                     self.add_segment(p, n, "cyan", 1.0,
                                      key + " " +
                                      str(bg.defines[key][1] -
                                      bg.defines[key][0]) + "")
 
-                if key[0] == 't':
+                elif key[0] == 't':
                     self.add_segment(p, n, "magenta", 1.0,
                                      key + " " +
                                      str(bg.defines[key][1] -
@@ -505,6 +508,7 @@ class PymolPrinter:
                 else:
                     #self.add_stem_like(bg, key, "yellow", 1.0)
                     self.add_segment(p, n, "yellow", 1.0, key)
+        return
 
         if self.max_stem_distances > 0:
             cud.pv('self.max_stem_distances')

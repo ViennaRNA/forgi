@@ -6,6 +6,7 @@ import operator
 
 import os.path as op
 import corgy.config as cc
+import corgy
 import warnings
 
 import math as m
@@ -587,8 +588,8 @@ def get_mids_core_a(chain, start1, start2, end1, end2, use_template=True):
     tend2 = template_stem_length + 1
 
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (tend1, tend2, tstart2)
-    filename = op.join(cc.Configuration.stem_fragment_dir,
-                       template_filename)
+    filename = corgy.data_file(op.join('data',
+                       template_filename))
     ideal_chain = cup.get_first_chain(filename)
 
     est_mids = estimate_mids_core(ideal_chain, tstart1, tstart2, tend1, tend2)
@@ -652,8 +653,7 @@ def get_mids_core(chain, start1, start2, end1, end2, use_template=True):
     #cud.pv('stem_length')
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
-    filename = op.join(cc.Configuration.stem_fragment_dir,
-                       template_filename)
+    filename = corgy.data_file(op.join('data', template_filename))
     ideal_chain = cup.get_first_chain(filename)
     #cud.pv('template_filename')
     #cud.pv('start1, end1, end2, start2')

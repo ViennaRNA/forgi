@@ -11,7 +11,8 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    tutorial.rst
+    corgy_tutorial.rst
+    tess_tutorial.rst
     documentation.rst
     download.rst
 

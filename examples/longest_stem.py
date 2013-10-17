@@ -1,9 +1,22 @@
 #!/usr/bin/python
 
 import sys
-import corgy.graph.bulge_graph as cgb
 
 from optparse import OptionParser
+
+import corgy.graph.bulge_graph as cgb
+
+def longest_stem(brackets):
+    bg = cgb.BulgeGraph()
+    bg.from_dotbracket(brackets)
+
+    biggest_stem = (-1, 'x')
+
+    for s in bg.stem_iterator():
+        if bg.stem_length(s) > biggest_stem[0]:
+            biggest_stem = (bg.stem_length(s), s)
+
+    return biggest_stem[0]
 
 def main():
     usage = """

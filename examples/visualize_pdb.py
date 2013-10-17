@@ -35,6 +35,8 @@ def main():
 
     pp = cvp.PymolPrinter()
     pp.coordinates_to_pymol(cg)
+    pp.print_text = False
+    #pp.print_text = False
     #pp.output_pymol_file()
 
     with tf.NamedTemporaryFile() as f:
