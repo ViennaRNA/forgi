@@ -98,9 +98,6 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
                     lines[-1] = secondary_structure
                     out = "\n".join(lines)
 
-                print >>sys.stderr, "out:", out
-                print >>sys.stderr, "secondary_structure:", secondary_structure
-
                 bg = cgb.BulgeGraph()
                 bg.from_fasta(out, dissolve_length_one_stems=1)
 
@@ -118,6 +115,23 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
 
     return cg
 
+def from_file(cg_filename):
+    '''
+    Read a coarse-grain structure file.
+
+    @param cg_filename: The filename.
+    @return: A CoarseGrainRNA from a file.
+    '''
+    with open(cg_filename, 'r') as f:
+        lines = "".join(f.readlines())
+
+        bg = cgb.BulgeGraph()
+        bg.from_bg_string(lines)
+
+        cg = CoarseGrainRNA(bg)
+        cg.from_cg_string(lines)
+
+        return cg
     
 def from_pdb(pdb_filename, secondary_structure=''):
     cg = load_cg_from_pdb(pdb_filename, secondary_structure)
@@ -214,6 +228,7 @@ class CoarseGrainRNA():
         curr_str += self.get_long_range_str()
 
         return curr_str
+
 
     def from_cg_string(self, cg_string):
         '''

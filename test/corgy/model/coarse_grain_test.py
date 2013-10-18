@@ -1,7 +1,10 @@
 import unittest, os
+import sys
 
 import corgy.graph.bulge_graph as cgb
 import corgy.model.coarse_grain as cmc
+import corgy.utilities.debug as cud
+import tempfile as tf
 
 import copy, time
 
@@ -44,6 +47,21 @@ twist s3 -0.5773115352 0.273755751171 -0.769265350855 0.683685010863 0.079737210
 twist s2 0.354411598448 0.27377713776 0.894113246589 -0.269145115187 -0.0308076403374 -0.96260677136
 twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.807336040837 0.206880238892
 '''
+        self.bg = cgb.BulgeGraph()
+        self.bg.from_bg_string(self.text)
+        self.tempfile = tf.NamedTemporaryFile()
+
+        self.tempfile.write(self.bg.to_bg_string())
+        self.tempfile.flush()
+
+    def compare_bg_to_cg(self, bg, cg):
+        for d in bg.defines.keys():
+            self.assertTrue(d in cg.bg.defines.keys())
+            self.assertTrue(bg.defines[d] == cg.bg.defines[d])
+
+        for e in bg.edges.keys():
+            self.assertTrue(e in cg.bg.edges.keys())
+            self.assertTrue(bg.edges[e] == cg.bg.edges[e])
 
     def test_from_cg_str(self):
         bg = cgb.BulgeGraph()
@@ -51,3 +69,9 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         cg = cmc.CoarseGrainRNA(bg)
         cg.from_cg_string(self.text)
 
+        self.compare_bg_to_cg(bg, cg)
+
+    def test_from_file(self):
+        cg = cmc.from_file(self.tempfile.name)
+
+        self.compare_bg_to_cg(self.bg, cg)

@@ -394,8 +394,12 @@ class BulgeGraph:
         else:
             a = iter(self.defines[node])
             for (ds1, ds2) in it.izip(a,a):
-                for i in range(ds1+1, ds2):
-                    yield i
+                if adjacent:
+                    for i in range(ds1, ds2+1):
+                        yield i
+                else:
+                    for i in range(ds1+1, ds2):
+                        yield i
 
     def create_bulge_graph(self, stems, bulges):
         '''
