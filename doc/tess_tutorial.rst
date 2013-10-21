@@ -26,7 +26,7 @@ To extract the base-pair information from a 3D structure stored in a PDB file, u
     CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
     (((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))
 
-The reported 2D structure is extracted from the annotations of MC-Annotate. Pseudoknots are removed using the knotted2nested.py script which is included with the generous permition of Dr. Sandra Smit. Users making use of the 3D-to-2D facilities of the ``tess`` package should cite the articles listed in the citations section at the bottom of this page.
+The reported 2D structure is extracted from the annotations of MC-Annotate [1]. Pseudoknots are removed using the knotted2nested.py script which is included with the generous permition of Dr. Sandra Smit [2]. Users making use of the 3D-to-2D facilities of the ``tess`` package should cite the articles listed in the citations section at the bottom of this page.
 
 One can also create and dump the graph structure itself::
 
@@ -54,8 +54,9 @@ The lines beginning with `coord` indicate the positions of the helices. They are
 Citations
 ~~~~~~~~~
 
-_Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight_.
-*From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.*
+[1] *Gendron P, Lemieux S, Major F(2001)*. **Quantitative analysis of nucleic acid three-dimensional structures.** J Mol Biol 308:919–936.
+
+[2] *Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight*.
+**From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.**
 RNA (2008) 14(3):410-416.
 
-_Gendron P, Lemieux S, Major F(2001)_. *Quantitative analysis of nucleic acid three-dimensional structures.* J Mol Biol 308:919–936.
