@@ -58,3 +58,4 @@ _Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight_.
 *From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.*
 RNA (2008) 14(3):410-416.
 
+_Gendron P, Lemieux S, Major F(2001)_. *Quantitative analysis of nucleic acid three-dimensional structures.* J Mol Biol 308:919–936.
