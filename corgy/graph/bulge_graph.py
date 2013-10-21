@@ -369,12 +369,12 @@ class BulgeGraph:
         output_str = [' ' for i in range(self.seq_length+1)]
 
         for d in self.defines.keys():
-            for resi in self.define_residue_num_iterator(d):
+            for resi in self.define_residue_num_iterator(d, adjacent=False):
                 output_str[resi] = d[0]
 
         return "".join(output_str).strip()
 
-    def define_residue_num_iterator(self, node):
+    def define_residue_num_iterator(self, node, adjacent=True):
         '''
         Iterate over the residue numbers that belong to this node.
 
@@ -387,15 +387,25 @@ class BulgeGraph:
         :param node: The name of the node
         '''
         if node[0] == 's':  
+            # iterate in sets of two
             a = iter(self.defines[node])
             for (ds1, ds2) in it.izip(a,a):
                 for i in range(ds1, ds2+1):
                     yield i
         else:
+            # iterate in sets of two elements
             a = iter(self.defines[node])
             for (ds1, ds2) in it.izip(a,a):
+                if ds1 == 0 and ds2 == 1:
+                    continue
+
+                if ds1 == self.seq_length:
+                    continue
+
                 if adjacent:
                     for i in range(ds1, ds2+1):
+                        if i <= 0 or i > self.seq_length:
+                            continue
                         yield i
                 else:
                     for i in range(ds1+1, ds2):

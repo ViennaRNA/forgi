@@ -1,6 +1,7 @@
 import unittest, os
 
 import corgy.graph.bulge_graph as cgb
+import corgy.utilities.debug as cud
 
 import copy, time
 
@@ -77,3 +78,42 @@ connect s0 f1 m1 m0 t1
         self.check_from_and_to_dotbracket('..((..((..))..))')
 
         pass
+
+    def test_define_residue_num_iterator(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('((..))')
+
+        cud.pv('bg.to_bg_string()')
+        
+        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=False))
+        self.assertEquals(len(unfixed), 0)
+        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=False))
+        self.assertEquals(len(unfixed), 0)
+
+        bg.from_dotbracket('.((..))')
+
+        cud.pv('bg.to_bg_string()')
+        
+        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=False))
+        self.assertEquals(len(unfixed), 1)
+        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=True))
+        self.assertEquals(len(unfixed), 2)
+        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=False))
+        self.assertEquals(len(unfixed), 0)
+        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=True))
+        self.assertEquals(len(unfixed), 0)
+
+        bg.from_dotbracket('((..)).')
+
+        cud.pv('bg.to_bg_string()')
+        
+        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=False))
+        self.assertEquals(len(unfixed), 0)
+        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=True))
+        self.assertEquals(len(unfixed), 0)
+
+        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=False))
+        self.assertEquals(len(unfixed), 1)
+        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=True))
+        cud.pv('unfixed')
+        self.assertEquals(len(unfixed), 2)

@@ -19,7 +19,7 @@ Extracting 2D structure from a 3D structure
     :width: 800
     :align: center
 
-To extract the base-pair information from a 3D structure stored in a PDB file, use the `pdb_to_ss_fasta.py` script::
+To extract the base-pair information from a 3D structure stored in a PDB file, use the `pdb_to_ss_fasta.py` script. This script operates on the largest RNA chain in the provided pdb file.::
 
     [pete@kat corgy]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb 
     >1y26
@@ -53,4 +53,8 @@ The lines beginning with `coord` indicate the positions of the helices. They are
 
 Citations
 ~~~~~~~~~
+
+_Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight_.
+*From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.*
+RNA (2008) 14(3):410-416.
 
