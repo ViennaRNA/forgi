@@ -241,6 +241,32 @@ def pdb_file_rmsd(fn1, fn2):
 
     return rmsd
 
+def renumber_first_chain(in_filename, out_filename):
+    '''
+    Renumber all the residues in the first chain of the
+    pdb_file in_file, so that they start at 1 and go
+    on to n, where n is the number of residues in the chain.
+    
+    @param in_filename: Input filename
+    @param out_filename: Output filename
+    '''
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        s = bpdb.PDBParser().get_structure('temp', in_filename)
+
+    chain = list(s.get_chains())[0]
+
+    counter = 1
+
+    for r in chain:
+        r.id = (r.id[0], counter, r.id[2])
+        counter += 1
+
+    io=bpdb.PDBIO()
+    io.set_structure(s)
+    io.save(out_filename)
+
 def get_biggest_chain(in_filename, out_filename):
     '''
     Load the PDB file located at filename, select the longest

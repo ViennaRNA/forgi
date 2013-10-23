@@ -23,7 +23,7 @@ import corgy.utilities.vector as cuv
 
 import scipy.optimize as so
 
-catom_name = 'C3*'
+catom_name = "C3'"
 
 def stem_stem_orientation(cg, s1, s2):
     '''

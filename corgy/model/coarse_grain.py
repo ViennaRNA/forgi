@@ -1,7 +1,6 @@
 import corgy.graph.bulge_graph as cgb
 import corgy.graph.graph_pdb as cgg
 
-import corgy.aux.make_rna_rosetta_ready as cam
 import corgy.aux.k2n_standalone.knotted2nested as cak
 import corgy.utilities.debug as cud
 import corgy.utilities.mcannotate as cum
@@ -16,6 +15,23 @@ import tempfile as tf
 import time
 import warnings
 import numpy as np
+import time
+
+def remove_hetatm(lines):
+    '''
+    Go through the lines of a pdb file and remove any which refer to a
+    HETATM.
+
+    @param lines: A an array of lines of text from a pdb file.
+    '''
+    new_lines = []
+
+    for line in lines:
+        if line.find('HETATM') == 0:
+            continue
+        new_lines += [line]
+
+    return new_lines
 
 def load_cg_from_pdb(pdb_filename, secondary_structure=''):
     '''
@@ -30,6 +46,8 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
     with tf.NamedTemporaryFile() as f:
         cup.get_biggest_chain(pdb_filename, f) 
         f.flush()
+        cup.renumber_first_chain(f.name, f.name)
+        f.flush()
 
         # f1 will store the rosetta-fied pdb file
 
@@ -37,13 +55,24 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
             # Use rosetta's rna preparation script to rename some of the atoms
             f.seek(0)
             lines = f.readlines()
+            lines = remove_hetatm(lines)
+
+            '''
             chainids = []
             ignorechain = True
             nochain = False
+
             (out_fasta, out_text) = cam.convert_pdb_to_rosetta_pdb(lines,
                                                                    chainids,
                                                                    ignorechain,
                                                                    nochain)
+
+            with open('temp1.pdb', 'w') as f1:
+                with open('temp2.pdb', 'w') as f2:
+                    f1.write("".join(lines))
+                    f2.write(out_text)
+            '''
+            out_text = "".join(lines)
 
             #print "out_text:", out_text
             # Change rosetta's residue naming a little bit

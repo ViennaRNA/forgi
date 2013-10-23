@@ -6,6 +6,7 @@ import tempfile as tf
 
 import corgy.model.coarse_grain as cmg
 import corgy.utilities.debug as cud
+import corgy.utilities.pdb as cup
 import corgy.visual.pymol as cvp
 
 from optparse import OptionParser
@@ -41,20 +42,27 @@ def main():
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:
-            cud.pv('pp.pymol_string()')
+            with tf.NamedTemporaryFile(suffix='.pdb') as f2:
+                # extract just the biggest chain and renumber it so
+                # the nucleotides start at 1
+                cup.get_biggest_chain(args[0], f2)
+                f2.flush()
+                cup.renumber_first_chain(f2.name, f2.name)
+                f2.flush()
 
-            f.write(pp.pymol_string())
-            f.flush()
 
-            pymol_cmd = 'hide all\n'
-            pymol_cmd += 'run %s\n' % (f.name)
-            pymol_cmd += 'show cartoon, all\n'
+                f.write(pp.pymol_string())
+                f.flush()
 
-            f1.write(pymol_cmd)
-            f1.flush()
+                pymol_cmd = 'hide all\n'
+                pymol_cmd += 'run %s\n' % (f.name)
+                pymol_cmd += 'show cartoon, all\n'
 
-            p = sp.Popen(['pymol', args[0], f1.name])
-            out, err = p.communicate()
+                f1.write(pymol_cmd)
+                f1.flush()
+
+                p = sp.Popen(['pymol', f2.name, f1.name])
+                out, err = p.communicate()
 
 if __name__ == '__main__':
     main()
