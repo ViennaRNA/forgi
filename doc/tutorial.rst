@@ -109,6 +109,20 @@ Into a graph that looks like this:
 
 Note that the graph and the secondary structure representation are oriented differently. The multiloop at the top of the graph is at the bottom of the secondary structure. Furthermore, some of the small bulges clearly visible in the graph (as yellow nodes) are hard to see in the secondary structure although they are indeed present.
 
+Finding the Partner of a Base Pair
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Consider the situation where we have a secondary structure and we want to know the base-pairing partner of nucleotide *n*. This is easily done with corgy::
+
+    >>> import corgy.graph.bulge_graph as cgb
+    >>> bg = cgb.BulgeGraph()
+    >>> bg.from_dotbracket('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
+    >>> bg.pairing_partner(1)
+    71
+    >>> bg.pairing_partner(13)
+    33
+
+
 Finding the Length of the Longest Stem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

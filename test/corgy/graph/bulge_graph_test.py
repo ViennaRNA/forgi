@@ -117,3 +117,11 @@ connect s0 f1 m1 m0 t1
         unfixed = list(bg.define_residue_num_iterator('t1', adjacent=True))
         cud.pv('unfixed')
         self.assertEquals(len(unfixed), 2)
+
+    def test_pairing_partner(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('((..))')
+
+        self.assertEquals(bg.pairing_partner(1), 6)
+        self.assertEquals(bg.pairing_partner(2), 5)
+        self.assertEquals(bg.pairing_partner(5), 2)

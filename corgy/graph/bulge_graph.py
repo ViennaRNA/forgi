@@ -719,7 +719,9 @@ class BulgeGraph:
 
     def collapse(self):
         '''
-        If any vertices form a loop, then they are either a bulge region of a fork region. The bulge (interior loop) regions will be condensed into one node.
+        If any vertices form a loop, then they are either a bulge region of 
+        a fork region. The bulge (interior loop) regions will be condensed 
+        into one node.
         '''
         # for all stems of length 1, merge with adjacent bulges
         for key in self.edges.keys():
@@ -1062,6 +1064,24 @@ class BulgeGraph:
         for d in self.defines.keys():
             if d[0] == 'i':
                 yield d
+
+    def pairing_partner(self, nucleotide_number):
+        '''
+        Return the base pairing partner of the nucleotide at position
+        nucleotide_number. If this nucleotide is unpaired, return None.
+
+        @param nucleotide_number: The position of the query nucleotide in the
+                                  sequence.
+        @return: The number of the nucleotide base paired with the one at
+                 position nucleotide_number.
+        '''
+        for d in self.stem_iterator():
+            for (r1, r2) in self.stem_bp_iterator(d):
+                if r1 == nucleotide_number:
+                    return r2
+                elif r2 == nucleotide_number:
+                    return r1
+        return None
 
     def get_length(self, vertex):
         '''
