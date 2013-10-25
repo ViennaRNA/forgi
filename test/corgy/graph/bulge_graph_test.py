@@ -125,3 +125,12 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.pairing_partner(1), 6)
         self.assertEquals(bg.pairing_partner(2), 5)
         self.assertEquals(bg.pairing_partner(5), 2)
+
+    def test_find_multiloop_loops(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('((..((..))..((..))..))')
+        
+        bg.find_multiloop_loops()
+
+        bg.from_dotbracket('((..((..((..))..((..))..))..((..))..))')
+        cud.pv('bg.find_multiloop_loops()')

@@ -615,7 +615,7 @@ class BulgeGraph:
 
         return new_vertex
 
-    def find_bulge_loop(self, vertex):
+    def find_bulge_loop(self, vertex, max_length=4):
         '''
         Find a set of nodes that form a loop containing the
         given vertex and being no greater than 4 nodes long.
@@ -637,7 +637,7 @@ class BulgeGraph:
 
             for key in self.edges[current]:
                 if key == vertex and depth > 1:
-                    if len(in_path[:depth+1]) > 4:
+                    if len(in_path[:depth+1]) > max_length:
                         continue
                     else:
                         return in_path[:depth+1]
@@ -738,6 +738,8 @@ class BulgeGraph:
 
                     if len(bulge_loop) > 0:
                         #assert(len(bulge_loop) != 1)
+                        print "bulge_loop:", bulge_loop
+                        print [self.defines[d] for d in bulge_loop]
                         self.merge_vertices(bulge_loop)
 
                     if len(bulge_loop) == 0:
@@ -780,7 +782,6 @@ class BulgeGraph:
                 else:
                     new_edges.add(e)
             self.edges[k] = new_edges
-
 
     def relabel_nodes(self):
         '''
@@ -833,6 +834,28 @@ class BulgeGraph:
             self.relabel_node(d, 'm%d' % (i))
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
+
+    def find_multiloop_loops(self):
+        '''
+        Find out which defines are connected in a multiloop.
+
+        @return: A list of sets, where each set contains the names of
+                 the elements in a particular multiloop.
+        '''
+        multis = []
+        visited = set()
+        for d in self.mloop_iterator():
+            if d in visited:
+                continue
+            # use a really high loop length
+            v = self.find_bulge_loop(d , max_length=400)
+            v += [d]
+            multis += [set(v)]
+
+            for d in v:
+                visited.add(d)
+
+        return multis
 
     def from_fasta(self, fasta_str, dissolve_length_one_stems):
         '''
