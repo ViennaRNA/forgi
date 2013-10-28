@@ -28,7 +28,20 @@ def remove_hetatm(lines):
 
     for line in lines:
         if line.find('HETATM') == 0:
-            continue
+            if line.find('5MU') > 0:
+                line = line.replace('5MU', '  U')
+            elif line.find('PSU') > 0:
+                line = line.replace('PSU', '  U')
+            elif line.find('5MC') > 0:
+                line = line.replace('5MC', '  C')
+            elif line.find('1MG') > 0:
+                line = line.replace('1MG', '  G')
+            elif line.find('H2U') > 0:
+                line = line.replace('H2U', '  G')
+            else:
+                continue
+        
+        line = line.replace('HETATM', 'ATOM  ')
         new_lines += [line]
 
     return new_lines
@@ -44,18 +57,18 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
     '''
     # create a temporary file to hold the biggest chain
     with tf.NamedTemporaryFile() as f:
-        cup.get_biggest_chain(pdb_filename, f) 
+        chain = cup.get_biggest_chain(pdb_filename) 
+        chain = cup.rename_modified_ress(chain)
+        chain = cup.remove_hetatm(chain)
+        chain = cup.renumber_chain(chain)
+        cup.output_chain(chain, f.name)
         f.flush()
-        cup.renumber_first_chain(f.name, f.name)
-        f.flush()
-
         # f1 will store the rosetta-fied pdb file
 
         with tf.NamedTemporaryFile() as f1:
             # Use rosetta's rna preparation script to rename some of the atoms
             f.seek(0)
             lines = f.readlines()
-            lines = remove_hetatm(lines)
 
             '''
             chainids = []
@@ -74,8 +87,6 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
             '''
             out_text = "".join(lines)
 
-            #print "out_text:", out_text
-            # Change rosetta's residue naming a little bit
             line = out_text
             line = line.replace('rA', 'A')
             line = line.replace('rC', 'C')

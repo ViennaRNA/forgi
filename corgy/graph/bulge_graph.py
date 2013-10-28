@@ -737,9 +737,7 @@ class BulgeGraph:
                     bulge_loop = [v for v in loop if v[0] == 'b' or v[0] == 'x']
 
                     if len(bulge_loop) > 0:
-                        #assert(len(bulge_loop) != 1)
-                        print "bulge_loop:", bulge_loop
-                        print [self.defines[d] for d in bulge_loop]
+                        assert(len(bulge_loop) != 1)
                         self.merge_vertices(bulge_loop)
 
                     if len(bulge_loop) == 0:
@@ -1024,6 +1022,25 @@ class BulgeGraph:
         for i in range(stem_length):
             yield (d[0] + i, d[3] - i)
 
+    def get_side_nucleotides(self, stem, side):
+        '''
+        Get the nucleotide numbers on the given side of
+        them stem. Side 0 corresponds to the 5' end of the
+        stem whereas as side 1 corresponds to the 3' side
+        of the stem.
+
+        @param stem: The name of the stem
+        @param side: Either 0 or 1, indicating the 5' or 3' end of the stem
+        @return: A tuple of the nucleotide numbers on the given side of
+                 the stem.
+        '''
+        if side == 0:
+            return (self.defines[stem][0], self.defines[stem][3])
+        elif side == 1:
+            return (self.defines[stem][1], self.defines[stem][2])
+
+        
+        raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
 
     def get_sides(self, s1, b):
         '''

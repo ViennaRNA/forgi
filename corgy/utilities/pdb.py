@@ -241,21 +241,14 @@ def pdb_file_rmsd(fn1, fn2):
 
     return rmsd
 
-def renumber_first_chain(in_filename, out_filename):
+def renumber_chain(chain):
     '''
-    Renumber all the residues in the first chain of the
-    pdb_file in_file, so that they start at 1 and go
-    on to n, where n is the number of residues in the chain.
+    Renumber all the residues in this chain so that they start at 1 and end at
+    len(chain)
     
-    @param in_filename: Input filename
-    @param out_filename: Output filename
+    @param chain: A Bio.PDB.Chain object
+    @return: The same chain, but with renamed nucleotides
     '''
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        s = bpdb.PDBParser().get_structure('temp', in_filename)
-
-    chain = list(s.get_chains())[0]
 
     counter = 1
 
@@ -263,18 +256,40 @@ def renumber_first_chain(in_filename, out_filename):
         r.id = (r.id[0], counter, r.id[2])
         counter += 1
 
-    io=bpdb.PDBIO()
-    io.set_structure(s)
-    io.save(out_filename)
+    return chain
 
-def get_biggest_chain(in_filename, out_filename):
+def output_chain(chain, filename, fr=None, to=None):
+    '''                                                                                                            
+    Dump a chain to an output file. Remove the hydrogen atoms.                                                     
+    
+    @param chain: The Bio.PDB.Chain to dump.
+    @param filename: The place to dump it.
+    '''                                                                                                            
+    class HSelect(bpdb.Select):
+        def accept_atom(self, atom):
+            if atom.name.find('H') >= 0:                                                                           
+                return False                                                                                       
+            else:
+                return True                                                                                        
+            
+    m = bpdb.Model.Model(' ')                                                                                           
+    s = bpdb.Structure.Structure(' ')
+                                                                                                                   
+    m.add(chain)
+    s.add(m)    
+                                                                                                                   
+    io = bpdb.PDBIO()
+    io.set_structure(s)
+    io.save(filename, HSelect()) 
+
+def get_biggest_chain(in_filename):
     '''
     Load the PDB file located at filename, select the longest
-    chain, and save the file to out_filename.
+    chain and return it.
 
     @param in_filename: The location of the original file.
-    @param out_filename: The location of the file containing just
-                         the largest chain.
+    @return: A Bio.PDB chain structure corresponding to the longest
+             chain in the structure stored in in_filename
     '''
 
     with warnings.catch_warnings():
@@ -307,16 +322,48 @@ def get_biggest_chain(in_filename, out_filename):
             biggest_len = num_residues
 
     orig_chain = chains[biggest]
+    return orig_chain
 
-    # only output the chain we deemed biggest
-    class FirstChainSelect(bpdb.Select):
-        def accept_chain(self, chain):
-            if chain.get_id() == orig_chain.get_id():
-                return 1
-            else:
-                return 0
+def rename_modified_ress(chain):
+    '''
+    Rename the modified residues so that they have the same
+    names as unmodified residues
 
-    io=bpdb.PDBIO()
-    io.set_structure(s)
+    @param chain: A Bio.PDB.Chain structure
+    @return: The same chain, but with modified residue names.
+    '''
+    for r in chain:
+        if r.id[0] == 'H_PSU':
+            r.resname = '  U'
+            r.id = (' ', r.id[1], r.id[2])
+        elif r.id[0] == 'H_5MU':
+            r.resname = '  U'
+            r.id = (' ', r.id[1], r.id[2])
+        elif r.id[0] == 'H_5MC':
+            r.resname = '  C'
+            r.id = (' ', r.id[1], r.id[2])
+        elif r.id[0] == 'H_1MG':
+            r.resname = '  G'
+            r.id = (' ', r.id[1], r.id[2])
+        elif r.id[0] == 'H_H2U':
+            r.resname = '  U'
+            r.id = (' ', r.id[1], r.id[2])
 
-    io.save(out_filename, FirstChainSelect())
+    return chain
+
+def remove_hetatm(chain):
+    '''
+    Remove all the hetatms in the chain.
+
+    @param chain: A Bio.PDB.Chain
+    @return: The same chain, but missing all hetatms
+    '''
+    to_detach = []
+    for r in chain:
+        if len(r.id[0].strip()) > 0:
+            to_detach += [r.id]
+
+    for r in to_detach:
+        chain.detach_child(r)
+
+    return chain

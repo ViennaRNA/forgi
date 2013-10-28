@@ -45,11 +45,10 @@ def main():
             with tf.NamedTemporaryFile(suffix='.pdb') as f2:
                 # extract just the biggest chain and renumber it so
                 # the nucleotides start at 1
-                cup.get_biggest_chain(args[0], f2)
+                chain = cup.get_biggest_chain(args[0])
+                chain = cup.renumber_chain(chain)
+                cup.output_chain(chain, f2.name)
                 f2.flush()
-                cup.renumber_first_chain(f2.name, f2.name)
-                f2.flush()
-
 
                 f.write(pp.pymol_string())
                 f.flush()
