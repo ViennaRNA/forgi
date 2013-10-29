@@ -41,7 +41,9 @@ def main():
             bg.from_dotbracket(line.strip())
 
             multiloops = [d for d in bg.find_multiloop_loops() if d[0] == 'm']
-            print multiloops
+            sizes = [bg.defines[d][1] - bg.defines[d][0] for d in multiloops]
+            
+            print sizes
 
 if __name__ == '__main__':
     main()
