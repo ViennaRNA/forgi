@@ -144,6 +144,21 @@ This is best illustrated with two examples::
 
 In the first case, the longest stem is the only stem. In the second case, what appears to be one large stem of length 4, is actually two stems of length 1 and 3.
 
+Iterating Over the Nucleotides of an Interior Loop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Imagine that we have a model of an RNA structure, and we want to list all of the nucleotides which are in interior loop regions. This is can be done by combining an iterator which yields all of the interior loops and another iterator which iterates over the nucleotides within a particular element::
+
+    >>> import sys
+    >>> import corgy.graph.bulge_graph as cgb
+    >>> bg = cgb.BulgeGraph()
+    >>> bg.from_dotbracket("((..((..))..))..((..((..))..))")
+    >>> for iloop in bg.iloop_iterator():
+    ...     for rn in bg.define_residue_num_iterator(iloop):
+    ...             sys.stdout.write(str(rn) + " ")
+    ... 
+    10 11 12 13 2 3 4 5 26 27 28 29 18 19 20 21
+
 Rosetta rna_denovo Constraint File Creation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

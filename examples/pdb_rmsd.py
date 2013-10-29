@@ -28,7 +28,7 @@ def main():
     chain1 = cup.load_structure(args[0])
     chain2 = cup.load_structure(args[1])
 
-    print cup.pdb_rmsd(chain1, chain2)
+    print cup.pdb_rmsd(chain1, chain2)[:2]
 
 if __name__ == '__main__':
     main()

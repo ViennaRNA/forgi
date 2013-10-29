@@ -33,17 +33,24 @@ def main():
 
     with open(args[0], 'r') as f:
         lines = f.readlines()
+        # extract the sequence and id, they're not really necessary
+        # but what the heck
         id = lines[0].strip('>')
         seq = lines[1].strip()
 
+        # iterate over each secondary structure
         for line in lines[2:]:
             bg = cgb.BulgeGraph()
             bg.from_dotbracket(line.strip())
 
-            multiloops = [d for d in bg.find_multiloop_loops() if d[0] == 'm']
-            sizes = [bg.defines[d][1] - bg.defines[d][0] for d in multiloops]
-            
-            print sizes
+            for m in bg.find_multiloop_loops():
+                loop = [d for d in m if d[0] == 'm']
+                for l in loop:
+                    print l, bg.defines[l]
+                loop.sort(key=lambda x: bg.defines[x][0])
+                sizes = [bg.defines[d][1] - bg.defines[d][0] for d in loop]
+
+                print "".join(loop), " ".join(map(str,sizes))
 
 if __name__ == '__main__':
     main()
