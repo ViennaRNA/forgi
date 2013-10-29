@@ -55,97 +55,64 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
     @param secondary_structure: A dot-bracket string encoding the secondary
                                 structure of this molecule
     '''
+    chain = cup.load_structure(pdb_filename)
+
     # create a temporary file to hold the biggest chain
     with tf.NamedTemporaryFile() as f:
-        chain = cup.get_biggest_chain(pdb_filename) 
-        chain = cup.rename_modified_ress(chain)
-        chain = cup.remove_hetatm(chain)
-        chain = cup.renumber_chain(chain)
+        # the chain needs to be stored so that MC-Annotate can annotate it
         cup.output_chain(chain, f.name)
         f.flush()
-        # f1 will store the rosetta-fied pdb file
 
-        with tf.NamedTemporaryFile() as f1:
-            # Use rosetta's rna preparation script to rename some of the atoms
-            f.seek(0)
-            lines = f.readlines()
+        pdb_base = op.splitext(op.basename(pdb_filename))[0]
+        # first we annotate the 3D structure
+        p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
+        out, err = p.communicate()
+        lines = out.strip().split('\n')
+        # convert the mcannotate output into bpseq format
+        dotplot = cum.get_dotplot(lines)
 
+        # f2 will store the dotbracket notation
+        with tf.NamedTemporaryFile() as f2:
+            f2.write(dotplot)
+            f2.flush()
+
+            # remove pseudoknots
             '''
-            chainids = []
-            ignorechain = True
-            nochain = False
+            p = sp.Popen(['aux/k2n_standalone/knotted2nested.py', '-f', 'bpseq', 
+                          '-F', 'vienna', f2.name], stdout = sp.PIPE)
 
-            (out_fasta, out_text) = cam.convert_pdb_to_rosetta_pdb(lines,
-                                                                   chainids,
-                                                                   ignorechain,
-                                                                   nochain)
-
-            with open('temp1.pdb', 'w') as f1:
-                with open('temp2.pdb', 'w') as f2:
-                    f1.write("".join(lines))
-                    f2.write(out_text)
-            '''
-            out_text = "".join(lines)
-
-            line = out_text
-            line = line.replace('rA', 'A')
-            line = line.replace('rC', 'C')
-            line = line.replace('rG', 'G')
-            line = line.replace('rU', 'U')
-            f1.write(line)
-
-            f1.flush()
-
-            pdb_base = op.splitext(op.basename(pdb_filename))[0]
-            # first we annotate the 3D structure
-            p = sp.Popen(['MC-Annotate', f1.name], stdout=sp.PIPE)
             out, err = p.communicate()
-            lines = out.strip().split('\n')
-            # convert the mcannotate output into bpseq format
-            dotplot = cum.get_dotplot(lines)
+            '''
+            out = cak.k2n_main(f2.name, input_format='bpseq',
+                               output_format = 'vienna',
+                               method = cak.DEFAULT_METHOD,
+                               opt_method = cak.DEFAULT_OPT_METHOD,
+                               verbose = cak.DEFAULT_VERBOSE,
+                               removed= cak.DEFAULT_REMOVED)
 
-            # f2 will store the dotbracket notation
-            with tf.NamedTemporaryFile() as f2:
-                f2.write(dotplot)
-                f2.flush()
+            out = out.replace(' Nested structure', pdb_base)
 
-                # remove pseudoknots
-                '''
-                p = sp.Popen(['aux/k2n_standalone/knotted2nested.py', '-f', 'bpseq', 
-                              '-F', 'vienna', f2.name], stdout = sp.PIPE)
+            if secondary_structure != '':
+                lines = out.split('\n')
 
-                out, err = p.communicate()
-                '''
-                out = cak.k2n_main(f2.name, input_format='bpseq',
-                                   output_format = 'vienna',
-                                   method = cak.DEFAULT_METHOD,
-                                   opt_method = cak.DEFAULT_OPT_METHOD,
-                                   verbose = cak.DEFAULT_VERBOSE,
-                                   removed= cak.DEFAULT_REMOVED)
+                if len(secondary_structure) != len(lines[1].strip()):
+                    print >>sys.stderr, "The provided secondary structure \
+                            does not match the length of the 3D structure"
+                    print >>sys.stderr, "Sequence:", lines[1]
+                    print >>sys.stderr, "ss_struc:", secondary_structure
+                    sys.exit(1)
 
-                out = out.replace(' Nested structure', pdb_base)
+                lines[-1] = secondary_structure
+                out = "\n".join(lines)
 
-                if secondary_structure != '':
-                    lines = out.split('\n')
-
-                    if len(secondary_structure) != len(lines[1].strip()):
-                        print >>sys.stderr, "The provided secondary structure \
-                                does not match the length of the 3D structure"
-                        print >>sys.stderr, "Sequence:", lines[1]
-                        print >>sys.stderr, "ss_struc:", secondary_structure
-                        sys.exit(1)
-
-                    lines[-1] = secondary_structure
-                    out = "\n".join(lines)
-
-                bg = cgb.BulgeGraph()
-                bg.from_fasta(out, dissolve_length_one_stems=1)
+            bg = cgb.BulgeGraph()
+            bg.from_fasta(out, dissolve_length_one_stems=1)
 
             # Add the 3D information about the starts and ends of the stems
             # and loops
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                s = bpdb.PDBParser().get_structure('temp', f1.name)
+                s = bpdb.PDBParser().get_structure('temp', f.name)
                 chain = list(s.get_chains())[0]
 
             cg = CoarseGrainRNA(bg)

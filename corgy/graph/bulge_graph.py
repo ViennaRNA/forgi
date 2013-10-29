@@ -1039,7 +1039,6 @@ class BulgeGraph:
         elif side == 1:
             return (self.defines[stem][1], self.defines[stem][2])
 
-        
         raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
 
     def get_sides(self, s1, b):

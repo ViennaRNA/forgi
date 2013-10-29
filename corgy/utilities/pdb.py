@@ -367,3 +367,16 @@ def remove_hetatm(chain):
         chain.detach_child(r)
 
     return chain
+
+def load_structure(pdb_filename):
+    '''
+    Load a Bio.PDB.Structure object and return the largest chain.
+    This chain will be modified so that all hetatms are removed, modified
+    residues will be renamed to regular residues, etc...
+    '''
+    chain = get_biggest_chain(pdb_filename) 
+    chain = rename_modified_ress(chain)
+    chain = remove_hetatm(chain)
+    chain = renumber_chain(chain)
+     
+    return chain
