@@ -50,7 +50,6 @@ def main():
         """
 
     parser = OptionParser(usage = usage)
-
     parser.add_option('-d', '--dissolve-length-one-stems', dest="dissolve", default=False, action='store_true', help='Remove any stems that have a length of just one nucleotide')
 
     (options, args) = parser.parse_args()

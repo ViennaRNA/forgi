@@ -1,4 +1,5 @@
 import unittest, os
+import itertools as it
 
 import corgy.graph.bulge_graph as cgb
 import corgy.utilities.debug as cud
@@ -42,8 +43,29 @@ connect s0 f1 m1 m0 t1
 
         self.assertEquals(bg.seq_length, len(self.dotbracket))
 
+    def check_for_overlapping_defines(self, bg):
+        '''
+        Check to make sure none of the defines overlap.
+        '''
+        for d1,d2 in it.combinations(bg.defines.keys(), 2):
+            for dx in bg.defines[d1]:
+                for dy in bg.defines[d2]:
+                    self.assertNotEqual(dx, dy)
+
+
+    def test_dissolve_stem(self):
+        '''
+        Test to make sure length one stems can be dissolved.
+        '''
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
+        self.assertEquals(bg.to_dotbracket(), '((....((..))....))')
+
     def test_from_dotplot2(self):
         bg = cgb.BulgeGraph()
+
+        bg.from_dotbracket('(.(..))')
+        self.check_for_overlapping_defines(bg)
 
         # secondary structure taken from 1y26
         bg.from_dotbracket('((..))')
@@ -62,6 +84,11 @@ connect s0 f1 m1 m0 t1
 
         self.assertEquals(elem_str, "ffsshhssmmsshhsstt")
 
+        dotbracket = '((((((((((..(((((((.......)))))))......).((((((.......))))))..)))))))))'
+        bg.from_dotbracket(dotbracket)
+        self.check_for_overlapping_defines(bg)
+
+
     def test_from_bg_string(self):
         bg = cgb.BulgeGraph()
         bg.from_bg_string(self.bg_string)
@@ -79,45 +106,6 @@ connect s0 f1 m1 m0 t1
 
         pass
 
-    def test_define_residue_num_iterator(self):
-        bg = cgb.BulgeGraph()
-        bg.from_dotbracket('((..))')
-
-        cud.pv('bg.to_bg_string()')
-        
-        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=False))
-        self.assertEquals(len(unfixed), 0)
-        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=False))
-        self.assertEquals(len(unfixed), 0)
-
-        bg.from_dotbracket('.((..))')
-
-        cud.pv('bg.to_bg_string()')
-        
-        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=False))
-        self.assertEquals(len(unfixed), 1)
-        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=True))
-        self.assertEquals(len(unfixed), 2)
-        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=False))
-        self.assertEquals(len(unfixed), 0)
-        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=True))
-        self.assertEquals(len(unfixed), 0)
-
-        bg.from_dotbracket('((..)).')
-
-        cud.pv('bg.to_bg_string()')
-        
-        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=False))
-        self.assertEquals(len(unfixed), 0)
-        unfixed = list(bg.define_residue_num_iterator('f1', adjacent=True))
-        self.assertEquals(len(unfixed), 0)
-
-        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=False))
-        self.assertEquals(len(unfixed), 1)
-        unfixed = list(bg.define_residue_num_iterator('t1', adjacent=True))
-        cud.pv('unfixed')
-        self.assertEquals(len(unfixed), 2)
-
     def test_pairing_partner(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket('((..))')
@@ -133,4 +121,8 @@ connect s0 f1 m1 m0 t1
         bg.find_multiloop_loops()
 
         bg.from_dotbracket('((..((..((..))..((..))..))..((..))..))')
-        cud.pv('bg.find_multiloop_loops()')
+
+    def test_big_structure(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('')
+

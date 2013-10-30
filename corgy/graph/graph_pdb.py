@@ -1557,23 +1557,19 @@ def add_bulge_information_from_pdb_chain(cg, chain):
 def add_loop_information_from_pdb_chain(cg, chain):
     bg = cg.bg
 
-    for d in bg.defines.keys():
-        if d[0] != 's':
-            if len(bg.edges[d]) == 1:
-                if bg.defines[d][1] == 1 or bg.defines[d][0] == bg.seq_length:
-                    continue
-                s1 = list(bg.edges[d])[0]
-                s1d = bg.defines[s1]
-                bd = bg.defines[d]
+    for d in bg.hloop_iter():
+        s1 = list(bg.edges[d])[0]
+        s1d = bg.defines[s1]
+        bd = bg.defines[d]
 
-                (s1b, s2b) = bg.get_sides(s1, d)
+        (s1b, s2b) = bg.get_sides(s1, d)
 
-                mids = get_mids(chain, s1d)
-                #centroid = get_bulge_centroid(chain, bd)
+        mids = get_mids(chain, s1d)
+        #centroid = get_bulge_centroid(chain, bd)
 
-                centroid = get_furthest_c_alpha(chain, mids[s1b].get_array(),
-                                                bd)
-                cg.coords[d] = (mids[s1b].get_array(), centroid)
+        centroid = get_furthest_c_alpha(chain, mids[s1b].get_array(),
+                                        bd)
+        cg.coords[d] = (mids[s1b].get_array(), centroid)
 
 
 def bg_rmsd(bg1, bg2):

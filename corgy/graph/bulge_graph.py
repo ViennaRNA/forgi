@@ -45,7 +45,7 @@ def any_difference_of_one(stem, bulge):
     for stem_part in stem:
         for part in stem_part:
             for bulge_part in bulge:
-                if abs(bulge_part - part) == 0:
+                if abs(bulge_part - part) == 1:
                     return True
     return False
 
@@ -91,7 +91,6 @@ def print_bulges(bulges):
             #print "bulge:", bulge
         bulge_str = "define b%d 1" % (i)
         bulge = bulges[i]
-        #print >>sys.stderr, "bulge:", bulge
         bulge_str += " %d %d" % (bulge[0]+1, bulge[1]+1)
         print bulge_str
 
@@ -155,7 +154,7 @@ def find_bulges_and_stems(brackets):
 
     :param brackets: A string with the dotplot passed as input to this script.
     '''
-    prev = '.'
+    prev = 'x'
     context = 0
 
     bulges = dict()
@@ -174,7 +173,6 @@ def find_bulges_and_stems(brackets):
 
     i = 0
     for i in range(len(brackets)):
-        #print >> sys.stderr, "bracket:", brackets[i]
         if brackets[i] == '(':
             opens.append(i)
 
@@ -187,7 +185,7 @@ def find_bulges_and_stems(brackets):
 
             if prev == '.':
                 dots_end = i-1
-                bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "4")
+                bulges = add_bulge(bulges, (dots_start, dots_end), context, "4")
             """
             if prev == ')':
                 bulges = add_bulge(bulges, (-1,-1), context, "3")
@@ -209,7 +207,7 @@ def find_bulges_and_stems(brackets):
 
             if prev == '.':
                 dots_end = i-1
-                bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "2")
+                bulges = add_bulge(bulges, (dots_start, dots_end), context, "2")
   
         if brackets[i] == '.':
             if prev == '.':
@@ -220,12 +218,14 @@ def find_bulges_and_stems(brackets):
         prev = brackets[i]
     if prev == '.':
         dots_end = i
-        bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "7")
+        bulges = add_bulge(bulges, (dots_start, dots_end), context, "7")
     elif prev == '(':
         print >>sys.stderr, "Unmatched bracket at the end"
         sys.exit(1)
+    '''
     elif prev == ')':
-        bulges = add_bulge(bulges, (i, i+1), context, "8")
+        bulges = add_bulge(bulges, (i+1, i+1), context, "8")
+    '''
     
     if context in bulges.keys():
         finished_bulges += bulges[context]
@@ -386,30 +386,19 @@ class BulgeGraph:
 
         :param node: The name of the node
         '''
-        if node[0] == 's':  
-            # iterate in sets of two
-            a = iter(self.defines[node])
-            for (ds1, ds2) in it.izip(a,a):
-                for i in range(ds1, ds2+1):
-                    yield i
-        else:
-            # iterate in sets of two elements
-            a = iter(self.defines[node])
-            for (ds1, ds2) in it.izip(a,a):
-                if ds1 == 0 and ds2 == 1:
-                    continue
+        a = iter(self.defines[node])
+        for (ds1, ds2) in it.izip(a,a):
+            start = ds1
+            end = ds2+1
 
-                if ds1 == self.seq_length:
-                    continue
+            if adjacent:
+                if ds1 > 1:
+                    start = ds1 - 1
+                if ds2 < self.seq_length:
+                    end = ds2 + 2
 
-                if adjacent:
-                    for i in range(ds1, ds2+1):
-                        if i <= 0 or i > self.seq_length:
-                            continue
-                        yield i
-                else:
-                    for i in range(ds1+1, ds2):
-                        yield i
+            for i in range(start, end):
+                yield i
 
     def create_bulge_graph(self, stems, bulges):
         '''
@@ -469,7 +458,8 @@ class BulgeGraph:
                                     stem_stems_set = stem_stems.get(i, set())
                                     if j not in stem_stems_set:
                                         bn = 'b%d' % (bulge_counter)
-                                        self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
+                                        #self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
+                                        self.defines[bn] = []
                                         self.weights[bn] = 1
 
                                         self.edges['s%d' % i].add(bn)
@@ -662,14 +652,12 @@ class BulgeGraph:
         bulge_sides[0] = set()
         bulge_sides[1] = set()
 
-        #print >>sys.stderr,"dissolving:", key
-        #print >>sys.stderr, "edges:", self.edges[key]
         for edge in self.edges[key]:
             be = self.defines[edge]
 
             for i in range(0, 4):
                 for j in range(0, len(be)):
-                    if d[i] == be[j]:
+                    if abs(d[i] - be[j]) == 1:
                         #print >>sys.stderr, key, edge
                         bulge_sides[i / 2].add(edge)
         
@@ -802,21 +790,25 @@ class BulgeGraph:
             if d[0] == 's':
                 continue
 
-            if len(self.edges[d]) == 1 and self.defines[d][0] == 0:
+            if len(self.defines[d]) == 0:
+                multiloops += [d]
+                continue
+
+            if len(self.edges[d]) == 1 and self.defines[d][0] == 1:
                 fiveprimes += [d]
 
-            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length+1:
+            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length:
                 threeprimes += [d]
 
             if (len(self.edges[d]) == 1 and 
-                self.defines[d][0] != 0 and 
-                self.defines[d][1] != self.seq_length+1):
+                self.defines[d][0] != 1 and 
+                self.defines[d][1] != self.seq_length):
                 hairpins += [d]
 
             if (len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
-                self.defines[d][0] != 0 and
-                self.defines[d][1] != self.seq_length+1):
+                self.defines[d][0] != 1 and
+                self.defines[d][1] != self.seq_length):
                 multiloops += [d]
 
             if self.weights[d] == 2:
@@ -894,7 +886,7 @@ class BulgeGraph:
             self.weights['s%d' % (i)] = 1
         for i in range(len(bulges)):
             bulge = bulges[i]
-            self.defines['b%d' % (i)] = [bulge[0]+1, bulge[1]+1]
+            self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
             self.weights['b%d' % (i)] = 1
 
         self.dotbracket_str = dotbracket_str
@@ -1059,7 +1051,7 @@ class BulgeGraph:
 
         for i in xrange(4):
             for k in xrange(len(bd)):
-                if s1d[i] == bd[k]:
+                if abs(s1d[i] - bd[k]) == 1:
                     if i == 0 or i == 3:
                         s1b = 0
                     else:
