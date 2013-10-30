@@ -1,10 +1,10 @@
 import corgy.graph.bulge_graph as cgb
-import corgy.graph.graph_pdb as cgg
+import tess.utilities.graph_pdb as cgg
 
 import corgy.aux.k2n_standalone.knotted2nested as cak
 import corgy.utilities.debug as cud
-import corgy.utilities.mcannotate as cum
-import corgy.utilities.pdb as cup
+import tess.utilities.mcannotate as cum
+import tess.utilities.pdb as cup
 
 import Bio.PDB as bpdb
 import collections as c

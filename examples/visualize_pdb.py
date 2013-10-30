@@ -4,10 +4,10 @@ import sys
 import subprocess as sp
 import tempfile as tf
 
-import corgy.model.coarse_grain as cmg
+import tess.model.coarse_grain as cmg
 import corgy.utilities.debug as cud
-import corgy.utilities.pdb as cup
-import corgy.visual.pymol as cvp
+import tess.utilities.pdb as cup
+import tess.visual.pymol as cvp
 
 from optparse import OptionParser
 
