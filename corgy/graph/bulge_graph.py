@@ -6,17 +6,18 @@
 
 __author__      = "Peter Kerpedjiev"
 __copyright__   = "Copyright 2012, 2013"
-__license__     = "GPL"
 __version__     = "0.1"
 __maintainer__  = "Peter Kerpedjiev"
 __email__       = "pkerp@tbi.univie.ac.at"
 
 import sys
+import itertools as it
 import collections as c
 import math
 import random
 import itertools as it
 import corgy.utilities.debug as cud
+import corgy.utilities.stuff as cus
 
 def error_exit(message):
     print >> sys.stderr, message
@@ -45,7 +46,7 @@ def any_difference_of_one(stem, bulge):
     for stem_part in stem:
         for part in stem_part:
             for bulge_part in bulge:
-                if abs(bulge_part - part) == 0:
+                if abs(bulge_part - part) == 1:
                     return True
     return False
 
@@ -91,7 +92,6 @@ def print_bulges(bulges):
             #print "bulge:", bulge
         bulge_str = "define b%d 1" % (i)
         bulge = bulges[i]
-        #print >>sys.stderr, "bulge:", bulge
         bulge_str += " %d %d" % (bulge[0]+1, bulge[1]+1)
         print bulge_str
 
@@ -155,7 +155,7 @@ def find_bulges_and_stems(brackets):
 
     :param brackets: A string with the dotplot passed as input to this script.
     '''
-    prev = '.'
+    prev = 'x'
     context = 0
 
     bulges = dict()
@@ -174,7 +174,6 @@ def find_bulges_and_stems(brackets):
 
     i = 0
     for i in range(len(brackets)):
-        #print >> sys.stderr, "bracket:", brackets[i]
         if brackets[i] == '(':
             opens.append(i)
 
@@ -187,7 +186,7 @@ def find_bulges_and_stems(brackets):
 
             if prev == '.':
                 dots_end = i-1
-                bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "4")
+                bulges = add_bulge(bulges, (dots_start, dots_end), context, "4")
             """
             if prev == ')':
                 bulges = add_bulge(bulges, (-1,-1), context, "3")
@@ -202,14 +201,14 @@ def find_bulges_and_stems(brackets):
             context_depths[context] -= 1
 
             if context_depths[context] == 0:
-                finished_bulges += bulges[context]
+                if context in bulges:
+                    finished_bulges += bulges[context]
                 bulges[context] = []
                 context -= 1
- 
 
             if prev == '.':
                 dots_end = i-1
-                bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "2")
+                bulges = add_bulge(bulges, (dots_start, dots_end), context, "2")
   
         if brackets[i] == '.':
             if prev == '.':
@@ -218,14 +217,17 @@ def find_bulges_and_stems(brackets):
             dots_start = i
 
         prev = brackets[i]
+
     if prev == '.':
         dots_end = i
-        bulges = add_bulge(bulges, (dots_start-1, dots_end+1), context, "7")
+        bulges = add_bulge(bulges, (dots_start, dots_end), context, "7")
     elif prev == '(':
         print >>sys.stderr, "Unmatched bracket at the end"
         sys.exit(1)
+    '''
     elif prev == ')':
-        bulges = add_bulge(bulges, (i, i+1), context, "8")
+        bulges = add_bulge(bulges, (i+1, i+1), context, "8")
+    '''
     
     if context in bulges.keys():
         finished_bulges += bulges[context]
@@ -243,7 +245,7 @@ def print_name(filename):
 
 
 class BulgeGraph:
-    def __init__(self):
+    def __init__(self, dotbracket_str=''):
         self.name = "untitled"
         self.seq = ""
         self.defines = dict()
@@ -253,6 +255,9 @@ class BulgeGraph:
         self.seq_length = 0
 
         self.name_counter = 0
+
+        if dotbracket_str != '':
+            self.from_dotbracket(dotbracket_str)
 
     # get an internal index for a named vertex
     # this applies to both stems and edges
@@ -366,12 +371,12 @@ class BulgeGraph:
         output_str = [' ' for i in range(self.seq_length+1)]
 
         for d in self.defines.keys():
-            for resi in self.define_residue_num_iterator(d):
+            for resi in self.define_residue_num_iterator(d, adjacent=False):
                 output_str[resi] = d[0]
 
         return "".join(output_str).strip()
 
-    def define_residue_num_iterator(self, node):
+    def define_residue_num_iterator(self, node, adjacent=False):
         '''
         Iterate over the residue numbers that belong to this node.
 
@@ -383,16 +388,19 @@ class BulgeGraph:
 
         :param node: The name of the node
         '''
-        if node[0] == 's':  
-            a = iter(self.defines[node])
-            for (ds1, ds2) in it.izip(a,a):
-                for i in range(ds1, ds2+1):
-                    yield i
-        else:
-            a = iter(self.defines[node])
-            for (ds1, ds2) in it.izip(a,a):
-                for i in range(ds1+1, ds2):
-                    yield i
+        a = iter(self.defines[node])
+        for (ds1, ds2) in it.izip(a,a):
+            start = ds1
+            end = ds2+1
+
+            if adjacent:
+                if ds1 > 1:
+                    start = ds1 - 1
+                if ds2 < self.seq_length:
+                    end = ds2 + 2
+
+            for i in range(start, end):
+                yield i
 
     def create_bulge_graph(self, stems, bulges):
         '''
@@ -452,7 +460,8 @@ class BulgeGraph:
                                     stem_stems_set = stem_stems.get(i, set())
                                     if j not in stem_stems_set:
                                         bn = 'b%d' % (bulge_counter)
-                                        self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
+                                        #self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
+                                        self.defines[bn] = []
                                         self.weights[bn] = 1
 
                                         self.edges['s%d' % i].add(bn)
@@ -598,7 +607,7 @@ class BulgeGraph:
 
         return new_vertex
 
-    def find_bulge_loop(self, vertex):
+    def find_bulge_loop(self, vertex, max_length=4):
         '''
         Find a set of nodes that form a loop containing the
         given vertex and being no greater than 4 nodes long.
@@ -620,7 +629,7 @@ class BulgeGraph:
 
             for key in self.edges[current]:
                 if key == vertex and depth > 1:
-                    if len(in_path[:depth+1]) > 4:
+                    if len(in_path[:depth+1]) > max_length:
                         continue
                     else:
                         return in_path[:depth+1]
@@ -638,71 +647,55 @@ class BulgeGraph:
             self.edges[edge].add(name)
 
     def dissolve_stem(self, key):
-        #print >>sys.stderr, "hi"
-        d = self.defines[key]
+        '''
+        Remove a stem which has a length of 1. This means that we need
+        to reconfigure all of the adjacent elements in such a manner
+        that they now include the nucleotides that were formerly 
+        in this stem.
+        '''
+        connections = self.edges[key]
+        all_defines = []
 
-        bulge_sides = dict()
-        bulge_sides[0] = set()
-        bulge_sides[1] = set()
+        # get all the unpaired regions
+        for c in list(connections) + [key]:
+            for x in cus.grouped(self.defines[c], 2):
+                all_defines += [x]
 
-        #print >>sys.stderr,"dissolving:", key
-        #print >>sys.stderr, "edges:", self.edges[key]
-        for edge in self.edges[key]:
-            be = self.defines[edge]
+        # condense them into contiguous regions of unpaired bases
+        intervals = cus.merge_intervals(all_defines, diff=1)
 
-            for i in range(0, 4):
-                for j in range(0, len(be)):
-                    if d[i] == be[j]:
-                        #print >>sys.stderr, key, edge
-                        bulge_sides[i / 2].add(edge)
-        
-        #print >>sys.stderr, "bulge_sides:", bulge_sides
-        
-        new_nodes = [0,0]
-        for i in range(2):
-            new_node = self.get_vertex()
-            edges = set()
-
-            mins = 10000
-            maxs = -10000
-
-            for bulge in bulge_sides[i]:
-                if bulge in self.defines:
-                    bd = self.defines[bulge]
-                else:
-                    continue
-                
-                for edge in self.edges[bulge]:
-                    edges.add(edge)
-
-                mins = min(mins, min(bd))
-                maxs = max(maxs, max(bd))
-                self.remove_vertex(bulge)
-
-            edges.remove(key)
-            #print >> sys.stderr, "new_node", new_node, "edges:", edges, "mins:", mins, "maxs:", maxs
-           
-            self.add_node(new_node, edges, [mins, maxs], self.weights[bulge])
-            new_nodes[i] = new_node
-
-        if len(self.edges[new_nodes[0]]) == 1 and len(self.edges[new_nodes[1]]) == 1:
-            dnn0 = self.defines[new_nodes[0]]
-            dnn1 = self.defines[new_nodes[1]]
-            newer_node = self.get_vertex()
-
-            define = [min(dnn0[0], dnn1[0]), max(dnn0[1], dnn1[1])]
-            edges = self.edges[new_nodes[0]].union(self.edges[new_nodes[1]])
-
-            self.add_node(newer_node, edges, define, self.weights[new_nodes[0]])
-
-            self.remove_vertex(new_nodes[0])
-            self.remove_vertex(new_nodes[1])
-
+        # remove the stem
         self.remove_vertex(key)
+
+        to_remove = set()
+        # find out which elements connect to each of the new
+        # contiguous regions
+        for i in intervals:
+            new_connections = set()
+            for c in connections:
+                # get the connections of the nodes to be removed
+                for nc in self.edges[c]:
+                    if nc == i:
+                        continue
+                    for cd in self.defines[nc]:
+                        for id in i:
+                            if abs(cd - id) == 1:
+                                new_connections.add(nc)
+                to_remove.add(c)
+            
+            # add a new node corresponding to this unpaired region
+            self.add_node(self.get_vertex(), new_connections, i, 1)
+
+        # remove the vertices that have been consolidated
+        for r in to_remove:
+            self.remove_vertex(r)
+
 
     def collapse(self):
         '''
-        If any vertices form a loop, then they are either a bulge region of a fork region. The bulge (interior loop) regions will be condensed into one node.
+        If any vertices form a loop, then they are either a bulge region of 
+        a fork region. The bulge (interior loop) regions will be condensed 
+        into one node.
         '''
         # for all stems of length 1, merge with adjacent bulges
         for key in self.edges.keys():
@@ -718,7 +711,7 @@ class BulgeGraph:
                     bulge_loop = [v for v in loop if v[0] == 'b' or v[0] == 'x']
 
                     if len(bulge_loop) > 0:
-                        #assert(len(bulge_loop) != 1)
+                        assert(len(bulge_loop) != 1)
                         self.merge_vertices(bulge_loop)
 
                     if len(bulge_loop) == 0:
@@ -762,7 +755,6 @@ class BulgeGraph:
                     new_edges.add(e)
             self.edges[k] = new_edges
 
-
     def relabel_nodes(self):
         '''
         Change the labels of the nodes to be more indicative of their nature.
@@ -784,21 +776,25 @@ class BulgeGraph:
             if d[0] == 's':
                 continue
 
-            if len(self.edges[d]) == 1 and self.defines[d][0] == 0:
+            if len(self.defines[d]) == 0:
+                multiloops += [d]
+                continue
+
+            if len(self.edges[d]) == 1 and self.defines[d][0] == 1:
                 fiveprimes += [d]
 
-            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length+1:
+            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length:
                 threeprimes += [d]
 
             if (len(self.edges[d]) == 1 and 
-                self.defines[d][0] != 0 and 
-                self.defines[d][1] != self.seq_length+1):
+                self.defines[d][0] != 1 and 
+                self.defines[d][1] != self.seq_length):
                 hairpins += [d]
 
             if (len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
-                self.defines[d][0] != 0 and
-                self.defines[d][1] != self.seq_length+1):
+                self.defines[d][0] != 1 and
+                self.defines[d][1] != self.seq_length):
                 multiloops += [d]
 
             if self.weights[d] == 2:
@@ -814,6 +810,42 @@ class BulgeGraph:
             self.relabel_node(d, 'm%d' % (i))
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
+
+    def find_multiloop_loops(self):
+        '''
+        Find out which defines are connected in a multiloop.
+
+        @return: A list of sets, where each set contains the names of
+                 the elements in a particular multiloop.
+        '''
+        multis = []
+        visited = set()
+        for d in self.mloop_iterator():
+            if d in visited:
+                continue
+            # use a really high loop length
+            v = self.find_bulge_loop(d , max_length=400)
+            v += [d]
+            multis += [set(v)]
+
+            for d in v:
+                visited.add(d)
+
+        return multis
+
+    def from_fasta(self, fasta_str, dissolve_length_one_stems):
+        '''
+        Create a bulge graph from a fasta-type file containing the following
+        format:
+
+            > id
+            ACCGGGG
+            ((...))
+        '''
+        lines = fasta_str.split('\n')
+        self.from_dotbracket(lines[2].strip(), dissolve_length_one_stems)
+        self.name = lines[0].strip('>')
+        self.seq = lines[1].strip()
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
@@ -840,7 +872,7 @@ class BulgeGraph:
             self.weights['s%d' % (i)] = 1
         for i in range(len(bulges)):
             bulge = bulges[i]
-            self.defines['b%d' % (i)] = [bulge[0]+1, bulge[1]+1]
+            self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
             self.weights['b%d' % (i)] = 1
 
         self.dotbracket_str = dotbracket_str
@@ -849,6 +881,22 @@ class BulgeGraph:
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
+
+    def to_dotbracket(self):
+        '''
+        Convert the BulgeGraph representation to a dot-bracket string
+        and return it.
+
+        @return: A dot-bracket representation of this BulgeGraph
+        '''
+        out = ['.' for i in xrange(self.seq_length)]
+        for s in self.stem_iterator():
+            for i in xrange(self.defines[s][0], self.defines[s][1]+1):
+                out[i-1] = '('
+            for i in xrange(self.defines[s][2], self.defines[s][3]+1):
+                out[i-1] = ')'
+
+        return "".join(out)
 
     def from_bg_string(self, bg_str):
         '''
@@ -865,7 +913,7 @@ class BulgeGraph:
                 #blank line
                 continue
             if parts[0] == 'length':
-                self.length = int(parts[1])
+                self.seq_length = int(parts[1])
             elif parts[0] == 'define':
                 self.defines[parts[1]] = map(int, parts[2:])
             elif parts[0] == 'connect':
@@ -952,3 +1000,126 @@ class BulgeGraph:
         for i in range(stem_length):
             yield (d[0] + i, d[3] - i)
 
+    def get_side_nucleotides(self, stem, side):
+        '''
+        Get the nucleotide numbers on the given side of
+        them stem. Side 0 corresponds to the 5' end of the
+        stem whereas as side 1 corresponds to the 3' side
+        of the stem.
+
+        @param stem: The name of the stem
+        @param side: Either 0 or 1, indicating the 5' or 3' end of the stem
+        @return: A tuple of the nucleotide numbers on the given side of
+                 the stem.
+        '''
+        if side == 0:
+            return (self.defines[stem][0], self.defines[stem][3])
+        elif side == 1:
+            return (self.defines[stem][1], self.defines[stem][2])
+
+        raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
+
+    def get_sides(self, s1, b):
+        '''
+        Get the side of s1 that is next to b.
+
+        s1e -> s1b -> b
+
+        @param s1: The stem.
+        @param b: The bulge.
+        @return: A tuple indicating which side is the one next to the bulge
+                 and which is away from the bulge.
+        '''
+        s1d = self.defines[s1]
+        bd = self.defines[b]
+
+        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
+
+        for i in xrange(4):
+            for k in xrange(len(bd)):
+                if abs(s1d[i] - bd[k]) == 1:
+                    if i == 0 or i == 3:
+                        s1b = 0
+                    else:
+                        s1b = 1
+
+        if s1b == 0:
+            s1e = 1
+        else:
+            s1e = 0
+
+        return (s1b, s1e)
+
+    def stem_iterator(self):
+        '''
+        Iterator over all of the stems in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 's':
+                yield d
+    
+    def hloop_iterator(self):
+        '''
+        Iterator over all of the hairpin in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 'h':
+                yield d
+
+    def mloop_iterator(self):
+        '''
+        Iterator over all of the multiloops in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 'm':
+                yield d
+
+    def iloop_iterator(self):
+        '''
+        Iterator over all of the interior loops in the structure.
+        '''
+        for d in self.defines.keys():
+            if d[0] == 'i':
+                yield d
+
+    def pairing_partner(self, nucleotide_number):
+        '''
+        Return the base pairing partner of the nucleotide at position
+        nucleotide_number. If this nucleotide is unpaired, return None.
+
+        @param nucleotide_number: The position of the query nucleotide in the
+                                  sequence.
+        @return: The number of the nucleotide base paired with the one at
+                 position nucleotide_number.
+        '''
+        for d in self.stem_iterator():
+            for (r1, r2) in self.stem_bp_iterator(d):
+                if r1 == nucleotide_number:
+                    return r2
+                elif r2 == nucleotide_number:
+                    return r1
+        return None
+
+    def get_length(self, vertex):
+        '''
+        Get the minimum length of a vertex.
+
+        If it's a stem, then the result is its length (in base pairs).
+
+        If it's a bulge, then the length is the smaller of it's dimensions.
+
+        @param vertex: The name of the vertex.
+        '''
+        if vertex[0] == 's':
+            return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
+        else:
+            if len(self.edges[vertex]) == 1:
+                return self.defines[vertex][1] - self.defines[vertex][0]
+            else:
+                dims = list(self.get_bulge_dimensions(vertex))
+                dims.sort()
+
+                if dims[0] == 0:
+                    return dims[1]
+                else:
+                    return dims[0]

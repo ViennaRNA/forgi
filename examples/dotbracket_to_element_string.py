@@ -18,6 +18,7 @@ def main():
 
     parser = OptionParser(usage = usage)
     parser.add_option('-s', '--secondary-structure', dest='sec_struct', default=False, help="Display the dotbracket represenation of the secondary structure along with the element string.", action='store_true')
+    parser.add_option('-n', '--numbers', dest='numbers', default=False, help='Display numbers for the nucleotides', action='store_true')
 
     (options, args) = parser.parse_args()
 
@@ -34,12 +35,31 @@ def main():
     bg = cgb.BulgeGraph()
 
 
+    if len(brackets.strip()) == 0:
+        print >>sys.stderr, "Invalid input"
+        sys.exit(1)
+
     bg.from_dotbracket(brackets)
 
     if options.sec_struct:
         print bg.dotbracket_str
 
     print bg.to_element_string()
+
+    out_strs = []
+    if options.numbers:
+        l = bg.seq_length
+        mult = 1
+
+        while l / mult > 0:
+            out_str = ''
+            for i in range(bg.seq_length):
+                out_str += str((i / mult) % 10)
+            out_strs += [out_str]
+            mult *= 10
+
+        print "\n".join(out_strs)
+            
 
 if __name__ == "__main__":
     main()
