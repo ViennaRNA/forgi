@@ -1,6 +1,18 @@
 import corgy.utilities.debug as cud
 
-def merge_intervals(intervals):
+from itertools import izip
+
+def grouped(iterable, n):
+    '''
+    Return a list of every n elements in iterable.
+
+    http://stackoverflow.com/questions/5389507/iterating-over-every-two-elements-in-a-list
+
+    s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ...
+    '''
+    return izip(*[iter(iterable)]*n)
+
+def merge_intervals(intervals, diff = 0):
     '''
     Take a set of intervals, and combine them whenever the endpoints
     match.
@@ -25,7 +37,7 @@ def merge_intervals(intervals):
     merged_intervals = []
 
     for i in iter_intervals:
-        if i[0] == curr_interval[1]:
+        if abs(i[0] - curr_interval[1]) <= diff:
             # the start of this interval is equal to the end of the
             # current merged interval, so we merge it
             curr_interval[1] = i[1]

@@ -9,6 +9,8 @@ Requirements
 
 MC_Annotate_ is required for annotating the nucleotide interactions.
 
+.. _MC_Annotate: http://www.major.iric.ca/MajorLabEn/MC-Tools.html
+
 Examples
 --------
 
@@ -50,6 +52,13 @@ One can also create and dump the graph structure itself::
     twist s0 -0.532923452202 0.816983142634 0.220297840992 0.430691441325 -0.408188889295 -0.804914102887
 
 The lines beginning with `coord` indicate the positions of the helices. They are calculated by fitting a cylinder to each Watson-crick paired region of the 3D structure.
+
+Visualizing the Coarse Grain Helical Representation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The coarse grain representation shown in the prior example can be visualized using Pymol_.
+
+.. _Pymol: http://www.pymol.org/
 
 Citations
 ~~~~~~~~~

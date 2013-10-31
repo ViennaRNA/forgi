@@ -52,6 +52,20 @@ connect s0 f1 m1 m0 t1
                 for dy in bg.defines[d2]:
                     self.assertNotEqual(dx, dy)
 
+    def check_for_all_nucleotides(self, bg):
+        '''
+        Check to make sure that the bulge_graph covers each nucleotide
+        in the structure.
+        '''
+        nucs = [False for i in range(bg.seq_length)]
+
+        for d in bg.defines.keys():
+            for r in bg.define_residue_num_iterator(d):
+                nucs[r-1] = True
+
+        for i,n in enumerate(nucs):
+            self.assertTrue(n)
+
 
     def test_dissolve_stem(self):
         '''
@@ -60,12 +74,15 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph()
         bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
         self.assertEquals(bg.to_dotbracket(), '((....((..))....))')
+        cud.pv('bg.to_bg_string()')
+        self.check_for_overlapping_defines(bg)
 
     def test_from_dotplot2(self):
         bg = cgb.BulgeGraph()
 
         bg.from_dotbracket('(.(..))')
         self.check_for_overlapping_defines(bg)
+        self.check_for_all_nucleotides(bg)
 
         # secondary structure taken from 1y26
         bg.from_dotbracket('((..))')
@@ -87,7 +104,12 @@ connect s0 f1 m1 m0 t1
         dotbracket = '((((((((((..(((((((.......)))))))......).((((((.......))))))..)))))))))'
         bg.from_dotbracket(dotbracket)
         self.check_for_overlapping_defines(bg)
+        self.check_for_all_nucleotides(bg)
 
+        dotbracket = '((((((((((..(((((((.......)))))))......).((((((.......))))))..)))))))))'
+        bg.from_dotbracket(dotbracket, dissolve_length_one_stems=True)
+        self.check_for_overlapping_defines(bg)
+        self.check_for_all_nucleotides(bg)
 
     def test_from_bg_string(self):
         bg = cgb.BulgeGraph()
