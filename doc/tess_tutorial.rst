@@ -56,7 +56,13 @@ The lines beginning with `coord` indicate the positions of the helices. They are
 Visualizing the Coarse Grain Helical Representation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The coarse grain representation shown in the prior example can be visualized using Pymol_.
+The coarse grain representation shown in the prior example can be visualized using Pymol_ and the ``visualize_pdb.py`` script. The green cylinder below represent canonical helical regions, red represents multiloops and blue - hairpin loops::
+
+    python examples/visualize_pdb.py ~/projects/ernwin/fess/structures/1y26.pdb
+
+.. image:: 1y26_visualized.png
+    :width: 400
+    :align: center
 
 .. _Pymol: http://www.pymol.org/
 

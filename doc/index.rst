@@ -13,7 +13,8 @@ Contents:
 
     corgy_tutorial.rst
     tess_tutorial.rst
-    documentation.rst
+    corgy_documentation.rst
+    tess_documentation.rst
     download.rst
 
 Indices and tables
