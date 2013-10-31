@@ -74,8 +74,13 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph()
         bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
         self.assertEquals(bg.to_dotbracket(), '((....((..))....))')
-        cud.pv('bg.to_bg_string()')
         self.check_for_overlapping_defines(bg)
+
+    def test_from_dotplot3(self):
+        dotbracket = '(.(.((((((...((((((....((((.((((.(((..(((((((((....)))))))))..((.......))....)))......))))))))...))))))..)).))))).)..((((..((((((((((...))))))))).))))).......'
+        bg = cgb.BulgeGraph()
+
+        bg.from_dotbracket(dotbracket)
 
     def test_from_dotplot2(self):
         bg = cgb.BulgeGraph()
@@ -88,6 +93,10 @@ connect s0 f1 m1 m0 t1
         bg.from_dotbracket('((..))')
         elem_str = bg.to_element_string()
         self.assertEquals(elem_str, "sshhss")
+
+        bg.from_dotbracket('((..))..')
+        elem_str = bg.to_element_string()
+        self.assertEquals(elem_str, "sshhsstt")
 
         dotbracket = '..((..))..'
         bg.from_dotbracket(dotbracket)

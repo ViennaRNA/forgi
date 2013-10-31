@@ -201,10 +201,10 @@ def find_bulges_and_stems(brackets):
             context_depths[context] -= 1
 
             if context_depths[context] == 0:
-                finished_bulges += bulges[context]
+                if context in bulges:
+                    finished_bulges += bulges[context]
                 bulges[context] = []
                 context -= 1
- 
 
             if prev == '.':
                 dots_end = i-1
@@ -217,6 +217,7 @@ def find_bulges_and_stems(brackets):
             dots_start = i
 
         prev = brackets[i]
+
     if prev == '.':
         dots_end = i
         bulges = add_bulge(bulges, (dots_start, dots_end), context, "7")
