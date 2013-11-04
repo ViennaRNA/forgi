@@ -36,22 +36,22 @@ The multiloop itself can be divided into three unpaired sections of nucleotides.
 The corgy package can be used to do just this by using the dotbracket_to_bulge_graph.py script::
 
     [pkerp@plastilin corgy]$ python examples/dotbracket_to_bulge_graph.py examples/input/1y26_ss.dotbracket
+    name untitled
     length 71
-    define f1 0 1
-    define h1 47 55
+    define m2 34 41
+    define h1 48 54
     define s2 42 47 55 60
     define s1 13 18 28 33
     define s0 1 9 63 71
-    define t1 71 72
-    define m1 9 13
-    define h0 18 28
-    define m2 33 42
-    define m0 60 63
+    define m1 10 12
+    define h0 19 27
+    define m0 61 62
     connect s2 h1 m0 m2
     connect s1 h0 m1 m2
-    connect s0 f1 m1 m0 t1
+    connect s0 m1 m0
 
-The result is an adjacency list of all the elements. The stems are defined with names starting with 's', hairpins with an 'h', multiloops with an 'm', interior loops with an 'i', five-prime unpaired regions with an 'f' and three-prime unpaired regions with a 't'. The numbers indicate the nucleotides that are present in each element. So the stem s0 is composed of nucleotides 1 to 9 on one strand and 63 to 71 on the other. For non-stem elements, the nucleotides listed in the define statements above actually extend one beyond the edges of the elements. This means that, for example, the hairpin *h0* includs the nucleotides 19 to 27, instead of 18 to 28. This difference is an artifact of the implementation and used for some internal computations. It also makes it easier to represent interior loops which only have a bulge on one strand.
+
+The result is an adjacency list of all the elements. The stems are defined with names starting with 's', hairpins with an 'h', multiloops with an 'm', interior loops with an 'i', five-prime unpaired regions with an 'f' and three-prime unpaired regions with a 't'. The numbers indicate the nucleotides that are present in each element. So the stem s0 is composed of nucleotides 1 to 9 on one strand and 63 to 71 on the other. The other elements are described in a similar manner. The hairpin *h0* includs the nucleotides 19 to 27.
 
 In this case it is difficult to picture which section is which from the text representation. To make it easier, another example script will generate a file readable by graphviz. The *neato* program can take that as input and create a nice visualization of the graph::
 
