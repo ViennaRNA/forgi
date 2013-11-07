@@ -66,6 +66,14 @@ The coarse grain representation shown in the prior example can be visualized usi
 
 .. _Pymol: http://www.pymol.org/
 
+If you just have the coarse-grain file, then use the ``visualize_cg.py`` script::
+
+    python examples/visualize_cg.py examples/1y26.cg
+
+.. image:: 1y26_coarse.png
+    :width: 400
+    :align: center
+
 Citations
 ~~~~~~~~~
 
