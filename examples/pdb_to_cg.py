@@ -2,7 +2,7 @@
 
 import sys
 import os.path as op
-import corgy.model.coarse_grain as cmg
+import tess.model.coarse_grain as cmg
 
 from optparse import OptionParser
 
