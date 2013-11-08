@@ -4,10 +4,10 @@ import sys
 import subprocess as sp
 import tempfile as tf
 
-import tess.model.coarse_grain as cmg
+import forgi.threed.model.coarse_grain as cmg
 import forgi.utilities.debug as cud
-import tess.utilities.pdb as cup
-import tess.visual.pymol as cvp
+import forgi.threed.utilities.pdb as cup
+import forgi.threed.visual.pymol as cvp
 
 from optparse import OptionParser
 

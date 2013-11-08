@@ -2,7 +2,7 @@
 
 import sys
 import os.path as op
-import tess.model.coarse_grain as cmg
+import forgi.threed.model.coarse_grain as cmg
 
 from optparse import OptionParser
 
