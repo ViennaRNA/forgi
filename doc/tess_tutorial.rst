@@ -2,7 +2,7 @@ Tess Tutorial
 ==============
 Introduction
 ------------
-Tess is an extension of corgy capable of handling 3D data about RNA structures. It provides methods for extracting secondary structure as well as a coarse grain representation of 3D RNA structures.
+Tess is an extension of forgi capable of handling 3D data about RNA structures. It provides methods for extracting secondary structure as well as a coarse grain representation of 3D RNA structures.
 
 Requirements
 ------------
@@ -23,7 +23,7 @@ Extracting 2D structure from a 3D structure
 
 To extract the base-pair information from a 3D structure stored in a PDB file, use the `pdb_to_ss_fasta.py` script. This script operates on the largest RNA chain in the provided pdb file.::
 
-    [pete@kat corgy]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb 
+    [pete@kat forgi]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb 
     >1y26
     CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
     (((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))
@@ -32,7 +32,7 @@ The reported 2D structure is extracted from the annotations of MC-Annotate [1]. 
 
 One can also create and dump the graph structure itself::
 
-    [pkerp@plastilin corgy]$ python examples/pdb_to_cg.py ~/projects/ernwin/fess/structures/2l94.pdb 
+    [pkerp@plastilin forgi]$ python examples/pdb_to_cg.py ~/projects/ernwin/fess/structures/2l94.pdb 
     name 2l94
     length 45
     seq GGGAAGAUCUGGCCUUCCCACAAGGGAAGGCCAGGGAAUCUUCCC

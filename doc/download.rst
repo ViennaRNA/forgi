@@ -1,9 +1,9 @@
 Download
 ========
 
-The source code for the corgy module can be found at github:
+The source code for the forgi module can be found at github:
 
-https://github.com/pkerpedjiev/corgy
+https://github.com/pkerpedjiev/forgi
 
 To install, just run the usual::
 

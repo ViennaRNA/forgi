@@ -1,11 +1,11 @@
 Corgy API Documentation
 =================
 
-.. automodule:: corgy.graph.bulge_graph
+.. automodule:: forgi.graph.bulge_graph
     :members:
 
-.. autoclass:: corgy.graph.bulge_graph.BulgeGraph
+.. autoclass:: forgi.graph.bulge_graph.BulgeGraph
     :members:
 
-.. automodule:: corgy.utilities.debug
+.. automodule:: forgi.utilities.debug
     :members:

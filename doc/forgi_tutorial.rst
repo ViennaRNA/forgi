@@ -33,9 +33,9 @@ Evident in this image are six structural elements.
 
 The multiloop itself can be divided into three unpaired sections of nucleotides. Each of these elements is connected to certain other elements. For example, the stem at the top is connected to two unpaired regions of the multi-loop. Both of the hairpin loops are connected one stem each. If we abstract away the sequence information, we can imagine the structure as being represented by a graph.
 
-The corgy package can be used to do just this by using the dotbracket_to_bulge_graph.py script::
+The forgi package can be used to do just this by using the dotbracket_to_bulge_graph.py script::
 
-    [pkerp@plastilin corgy]$ python examples/dotbracket_to_bulge_graph.py examples/input/1y26_ss.dotbracket
+    [pkerp@plastilin forgi]$ python examples/dotbracket_to_bulge_graph.py examples/input/1y26_ss.dotbracket
     name untitled
     length 71
     define m2 34 41
@@ -55,7 +55,7 @@ The result is an adjacency list of all the elements. The stems are defined with 
 
 In this case it is difficult to picture which section is which from the text representation. To make it easier, another example script will generate a file readable by graphviz. The *neato* program can take that as input and create a nice visualization of the graph::
 
-    [pkerp@plastilin corgy]$ python examples/graph_to_neato.py examples/input/1y26_ss.dotbracket | neato -Tpng -o 1y26_neato.png
+    [pkerp@plastilin forgi]$ python examples/graph_to_neato.py examples/input/1y26_ss.dotbracket | neato -Tpng -o 1y26_neato.png
     
 The result is the following graph representation of the structure.
 
@@ -70,7 +70,7 @@ Getting a Condensed Representation of the Element Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Mapping nucleotide positions to secondary structure element types (stems, hairpins, multiloops) is easily done using an example script:
 
-    [pkerp@plastilin corgy]$ python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
+    [pkerp@plastilin forgi]$ python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
     (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
     sssssssssmmmsssssshhhhhhhhhssssssmmmmmmmmsssssshhhhhhhssssssmmsssssssss
 
@@ -112,9 +112,9 @@ Note that the graph and the secondary structure representation are oriented diff
 Finding the Partner of a Base Pair
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Consider the situation where we have a secondary structure and we want to know the base-pairing partner of nucleotide *n*. This is easily done with corgy::
+Consider the situation where we have a secondary structure and we want to know the base-pairing partner of nucleotide *n*. This is easily done with forgi::
 
-    >>> import corgy.graph.bulge_graph as cgb
+    >>> import forgi.graph.bulge_graph as cgb
     >>> bg = cgb.BulgeGraph()
     >>> bg.from_dotbracket('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
     >>> bg.pairing_partner(1)
@@ -126,7 +126,7 @@ Consider the situation where we have a secondary structure and we want to know t
 Finding the Length of the Longest Stem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For whatever reason, one may be interested in finding out how long the longest stem in a secondary structure is. Initially, one may assume that this can easily be done by searching for the longest string of '(' or ')' in the dot-bracket file. Unfortunately, structures with an interior loop which has an unpaired base on only one strand will lead to an erronous result in this example. The decomposition provided by corgy will, however, take this into account in enumerating the structural elements. It then becomes a matter of iterating over the stems and checking their lengths::
+For whatever reason, one may be interested in finding out how long the longest stem in a secondary structure is. Initially, one may assume that this can easily be done by searching for the longest string of '(' or ')' in the dot-bracket file. Unfortunately, structures with an interior loop which has an unpaired base on only one strand will lead to an erronous result in this example. The decomposition provided by forgi will, however, take this into account in enumerating the structural elements. It then becomes a matter of iterating over the stems and checking their lengths::
 
     bg = cgb.BulgeGraph()
     bg.from_dotbracket(brackets)
@@ -150,7 +150,7 @@ Iterating Over the Nucleotides of an Interior Loop
 Imagine that we have a model of an RNA structure, and we want to list all of the nucleotides which are in interior loop regions. This is can be done by combining an iterator which yields all of the interior loops and another iterator which iterates over the nucleotides within a particular element::
 
     >>> import sys
-    >>> import corgy.graph.bulge_graph as cgb
+    >>> import forgi.graph.bulge_graph as cgb
     >>> bg = cgb.BulgeGraph()
     >>> bg.from_dotbracket("((..((..))..))..((..((..))..))")
     >>> for iloop in bg.iloop_iterator():
@@ -164,7 +164,7 @@ Rosetta rna_denovo Constraint File Creation
 
 The `Rosetta <http://www.rosettacommons.org/>`_ protein structure prediction package provides a program for RNA 3D structure prediction called `rna_denovo <http://www.rosettacommons.org/manuals/rosetta3.3_user_guide/d2/d82/rna_denovo.html>`_. To specify the secondary structure of an RNA molecule, one needs to pass in a parameter file indicating which nucleotides are paired. 
 
-Given an dot-bracket sequence as input, corgy can be easily be used to generate the parameter file for rna_denovo.Using the secondary structure of 1y26 (shown in the first example) one can run the appropriate example:
+Given an dot-bracket sequence as input, forgi can be easily be used to generate the parameter file for rna_denovo.Using the secondary structure of 1y26 (shown in the first example) one can run the appropriate example:
 
 ``python examples/dotbracket_to_rosetta_constraints.py examples/1y26_ss.dotbracket``
 
