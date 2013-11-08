@@ -10,7 +10,7 @@ import collections as col
 
 import tess.utilities.graph_pdb as cgg
 import tess.utilities.average_stem_vres_atom_positions as cua
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 import tess.utilities.vector as cuv
 
 import Bio.PDB.Model as bpm

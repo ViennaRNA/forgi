@@ -16,8 +16,8 @@ import collections as c
 import math
 import random
 import itertools as it
-import corgy.utilities.debug as cud
-import corgy.utilities.stuff as cus
+import forgi.utilities.debug as cud
+import forgi.utilities.stuff as cus
 
 def error_exit(message):
     print >> sys.stderr, message

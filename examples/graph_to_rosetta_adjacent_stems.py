@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 import sys, math, os
-import corgy.graph.bulge_graph as cgb
-import corgy.utilities.debug as cud
-import corgy.utilities.stuff as cus
+import forgi.graph.bulge_graph as cgb
+import forgi.utilities.debug as cud
+import forgi.utilities.stuff as cus
 
 from optparse import OptionParser
 

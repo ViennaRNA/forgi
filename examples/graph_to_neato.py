@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys, math
-import corgy.graph.bulge_graph as cgb
+import forgi.graph.bulge_graph as cgb
 
 from optparse import OptionParser
 

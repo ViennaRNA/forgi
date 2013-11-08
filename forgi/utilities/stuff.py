@@ -1,4 +1,4 @@
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 
 from itertools import izip
 

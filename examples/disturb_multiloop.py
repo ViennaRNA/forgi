@@ -3,8 +3,8 @@
 import sys
 import random
 import os.path as op
-import corgy.graph.bulge_graph as cgb
-import corgy.model.coarse_grain as cmc
+import forgi.graph.bulge_graph as cgb
+import forgi.model.coarse_grain as cmc
 from optparse import OptionParser
 
 def main():

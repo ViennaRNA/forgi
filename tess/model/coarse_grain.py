@@ -1,8 +1,8 @@
-import corgy.graph.bulge_graph as cgb
+import forgi.graph.bulge_graph as cgb
 import tess.utilities.graph_pdb as cgg
 
-import corgy.aux.k2n_standalone.knotted2nested as cak
-import corgy.utilities.debug as cud
+import forgi.aux.k2n_standalone.knotted2nested as cak
+import forgi.utilities.debug as cud
 import tess.utilities.mcannotate as cum
 import tess.utilities.pdb as cup
 

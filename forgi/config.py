@@ -7,7 +7,7 @@ class Configuration:
     #data_base_dir = os.path.expanduser('~/data/ernwin/processed')
     #pdb_base_dir = os.path.expanduser('~/data/ernwin/pdb')
     #stats_file = os.path.join(base_dir, 'fess/stats/temp.stats')
-    stem_fragment_dir = os.path.join(base_dir, 'corgy/data')
+    stem_fragment_dir = os.path.join(base_dir, 'forgi/data')
     #lric_stats_fn = os.path.join(base_dir, 'fess/stats/temp.energy')
     #template_residue_fn = os.path.join(base_dir, 'fess/stats/residue_template.pdb')
     #longrange_contact_stats_fn = os.path.join(base_dir, 'fess/stats/temp.longrange.contact')

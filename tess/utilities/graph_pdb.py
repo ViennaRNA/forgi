@@ -6,7 +6,7 @@ import operator
 import itertools as it
 
 import os.path as op
-import corgy.config as cc
+import forgi.config as cc
 import tess
 import warnings
 
@@ -16,7 +16,7 @@ import numpy as np
 import numpy.linalg as nl
 
 import tess.utilities.average_stem_vres_atom_positions as cua
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 import tess.utilities.my_math as cum
 import tess.utilities.pdb as cup
 import tess.utilities.rmsd as cur

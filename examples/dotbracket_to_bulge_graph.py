@@ -1,7 +1,7 @@
 import sys
 from optparse import OptionParser
 
-import corgy.graph.bulge_graph as cgb
+import forgi.graph.bulge_graph as cgb
 
 def main():
 

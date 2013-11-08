@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# corgy documentation build configuration file, created by
+# forgi documentation build configuration file, created by
 # sphinx-quickstart on Fri Oct 19 10:44:58 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'corgy'
+project = u'forgi'
 copyright = u'2012,2013 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -165,7 +165,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'corgydoc'
+htmlhelp_basename = 'forgidoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -184,7 +184,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'corgy.tex', u'corgy Documentation',
+  ('index', 'forgi.tex', u'forgi Documentation',
    u'Peter Kerpedjiev', 'manual'),
 ]
 
@@ -214,7 +214,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'corgy', u'corgy Documentation',
+    ('index', 'forgi', u'forgi Documentation',
      [u'Peter Kerpedjiev'], 1)
 ]
 
@@ -228,8 +228,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'corgy', u'corgy Documentation',
-   u'Peter Kerpedjiev', 'corgy', 'One line description of project.',
+  ('index', 'forgi', u'forgi Documentation',
+   u'Peter Kerpedjiev', 'forgi', 'One line description of project.',
    'Miscellaneous'),
 ]
 

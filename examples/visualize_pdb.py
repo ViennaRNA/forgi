@@ -5,7 +5,7 @@ import subprocess as sp
 import tempfile as tf
 
 import tess.model.coarse_grain as cmg
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 import tess.utilities.pdb as cup
 import tess.visual.pymol as cvp
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-import corgy.model.coarse_grain as cmc
+import forgi.model.coarse_grain as cmc
 import os.path as op
 from optparse import OptionParser
 

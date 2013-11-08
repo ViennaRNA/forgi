@@ -2,7 +2,7 @@ import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
 import tess.utilities.rmsd as brmsd
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 import tess.utilities.vector as cuv
 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']

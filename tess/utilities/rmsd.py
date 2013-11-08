@@ -2,7 +2,7 @@
 
 import numpy, sys
 import numpy as np
-#from corgy.graph.bulge_graph import BulgeGraph
+#from forgi.graph.bulge_graph import BulgeGraph
 from tess.utilities.vector import center_on_centroid
 
 # Shamelessly stolen from:

@@ -2,7 +2,7 @@
 
 #import timeit, sys
 
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 import numpy as np
 import math as m
 import numpy.linalg as nl
@@ -177,8 +177,8 @@ def time_cob2():
     basis = create_orthonormal_basis(vec1, vec2)
 
 def time_cob():
-    t1 = timeit.Timer("time_cob1()", "from corgy.utilities.vector import time_cob1")
-    t2 = timeit.Timer("time_cob2()", "from corgy.utilities.vector import time_cob2")
+    t1 = timeit.Timer("time_cob1()", "from forgi.utilities.vector import time_cob1")
+    t2 = timeit.Timer("time_cob2()", "from forgi.utilities.vector import time_cob2")
 
     print t1.repeat(number=10000)
     print t2.repeat(number=10000)
@@ -315,11 +315,11 @@ def change_basis2_benchmark():
     nc = change_basis2(coords, basis1, basis2)
 
 def time_basis1():
-    t1 = timeit.Timer("change_basis1_benchmark()","from corgy.utilities.vector import change_basis1_benchmark")
+    t1 = timeit.Timer("change_basis1_benchmark()","from forgi.utilities.vector import change_basis1_benchmark")
     print t1.repeat(number=10000)
 
 def time_basis2():
-    t2 = timeit.Timer("change_basis2_benchmark()","from corgy.utilities.vector import change_basis2_benchmark")
+    t2 = timeit.Timer("change_basis2_benchmark()","from forgi.utilities.vector import change_basis2_benchmark")
     print t2.repeat(number=10000)
 
 def vector_rejection(a, b):
@@ -472,8 +472,8 @@ def time_mag2():
     return m.sqrt(np.dot(vec1, vec1))
 
 def time_mag():
-    t1 = timeit.Timer("time_mag1()", "from corgy.utilities.vector import time_mag1")
-    t2 = timeit.Timer("time_mag2()", "from corgy.utilities.vector import time_mag2")
+    t1 = timeit.Timer("time_mag1()", "from forgi.utilities.vector import time_mag1")
+    t2 = timeit.Timer("time_mag2()", "from forgi.utilities.vector import time_mag2")
 
     print t1.repeat(number=10000)
     print t2.repeat(number=10000)

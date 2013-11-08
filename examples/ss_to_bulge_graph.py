@@ -1,8 +1,8 @@
 import sys
 from optparse import OptionParser
 
-import corgy.graph.bulge_graph as cgb
-import corgy.utilities.debug as cud
+import forgi.graph.bulge_graph as cgb
+import forgi.utilities.debug as cud
 
 def main():
 

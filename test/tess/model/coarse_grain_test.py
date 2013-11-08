@@ -1,9 +1,9 @@
 import unittest, os
 import sys
 
-import corgy.graph.bulge_graph as cgb
+import forgi.graph.bulge_graph as cgb
 import tess.model.coarse_grain as cmc
-import corgy.utilities.debug as cud
+import forgi.utilities.debug as cud
 import tempfile as tf
 
 import copy, time

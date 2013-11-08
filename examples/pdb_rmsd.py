@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-import corgy.utilities.pdb as cup
+import forgi.utilities.pdb as cup
 from optparse import OptionParser
 
 def main():
