@@ -4,7 +4,7 @@ import itertools as it
 
 
 import forgi.graph.bulge_graph as cgb
-import forgi.model.coarse_grain as cmc
+import forgi.threedee.model.coarse_grain as cmc
 
 # load the pdb structure
 s = bpdb.PDBParser().get_structure('blah', sys.argv[1])

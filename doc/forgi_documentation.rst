@@ -9,3 +9,6 @@ Corgy API Documentation
 
 .. automodule:: forgi.utilities.debug
     :members:
+
+.. automodule:: forgi.threedee
+    :members:

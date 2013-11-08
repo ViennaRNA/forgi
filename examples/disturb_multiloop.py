@@ -4,7 +4,7 @@ import sys
 import random
 import os.path as op
 import forgi.graph.bulge_graph as cgb
-import forgi.model.coarse_grain as cmc
+import forgi.threedee.model.coarse_grain as cmc
 from optparse import OptionParser
 
 def main():

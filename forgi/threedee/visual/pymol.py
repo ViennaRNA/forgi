@@ -8,10 +8,10 @@ import numpy as np
 import uuid
 import collections as col
 
-import forgi.threed.utilities.graph_pdb as cgg
-import forgi.threed.utilities.average_stem_vres_atom_positions as cua
+import forgi.threedee.utilities.graph_pdb as cgg
+import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as cud
-import forgi.threed.utilities.vector as cuv
+import forgi.threedee.utilities.vector as cuv
 
 import Bio.PDB.Model as bpm
 import Bio.PDB.Structure as bps

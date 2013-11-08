@@ -2,7 +2,7 @@ import unittest, os
 import sys
 
 import forgi.graph.bulge_graph as cgb
-import forgi.threed.model.coarse_grain as cmc
+import forgi.threedee.model.coarse_grain as cmc
 import forgi.utilities.debug as cud
 import tempfile as tf
 
@@ -77,7 +77,7 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         self.compare_bg_to_cg(self.bg, cg)
 
     def test_from_pdb(self):                                                                                                      
-        cg = cmc.from_pdb('test/forgi/threed/data/1y26.pdb')
+        cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
             
         cud.pv('cg.to_cg_string()')
 

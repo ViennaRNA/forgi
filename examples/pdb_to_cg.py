@@ -2,7 +2,7 @@
 
 import sys
 import os.path as op
-import forgi.threed.model.coarse_grain as cmg
+import forgi.threedee.model.coarse_grain as cmg
 
 from optparse import OptionParser
 

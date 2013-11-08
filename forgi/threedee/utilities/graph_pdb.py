@@ -7,7 +7,6 @@ import itertools as it
 
 import os.path as op
 import forgi.config as cc
-import forgi.threed
 import warnings
 
 import math as m
@@ -15,12 +14,13 @@ import math as m
 import numpy as np
 import numpy.linalg as nl
 
-import forgi.threed.utilities.average_stem_vres_atom_positions as cua
+import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as cud
-import forgi.threed.utilities.my_math as cum
-import forgi.threed.utilities.pdb as cup
-import forgi.threed.utilities.rmsd as cur
-import forgi.threed.utilities.vector as cuv
+import forgi.threedee.utilities.my_math as cum
+import forgi.threedee.utilities.pdb as cup
+import forgi.threedee.utilities.rmsd as cur
+import forgi.threedee.utilities.vector as cuv
+import forgi
 
 import scipy.optimize as so
 
@@ -589,7 +589,7 @@ def get_mids_core_a(chain, start1, start2, end1, end2, use_template=True):
     tend2 = template_stem_length + 1
 
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (tend1, tend2, tstart2)
-    filename = forgi.threed.data_file(op.join('data',
+    filename = forgi.threedee.data_file(op.join('data',
                        template_filename))
     ideal_chain = cup.get_first_chain(filename)
 
@@ -654,7 +654,7 @@ def get_mids_core(chain, start1, start2, end1, end2, use_template=True):
     #cud.pv('stem_length')
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
-    filename = forgi.threed.data_file(op.join('data', template_filename))
+    filename = forgi.threedee.data_file(op.join('data', template_filename))
     ideal_chain = cup.get_first_chain(filename)
     #cud.pv('template_filename')
     #cud.pv('start1, end1, end2, start2')

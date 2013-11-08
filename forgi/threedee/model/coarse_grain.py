@@ -1,10 +1,10 @@
 import forgi.graph.bulge_graph as cgb
-import forgi.threed.utilities.graph_pdb as cgg
+import forgi.threedee.utilities.graph_pdb as cgg
 
 import forgi.aux.k2n_standalone.knotted2nested as cak
 import forgi.utilities.debug as cud
-import forgi.threed.utilities.mcannotate as cum
-import forgi.threed.utilities.pdb as cup
+import forgi.threedee.utilities.mcannotate as cum
+import forgi.threedee.utilities.pdb as cup
 
 import Bio.PDB as bpdb
 import collections as c

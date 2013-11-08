@@ -3,7 +3,7 @@
 import numpy, sys
 import numpy as np
 #from forgi.graph.bulge_graph import BulgeGraph
-from forgi.threed.utilities.vector import center_on_centroid
+from forgi.threedee.utilities.vector import center_on_centroid
 
 # Shamelessly stolen from:
 # http://boscoh.com/protein/rmsd-root-mean-square-deviation

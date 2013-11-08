@@ -1,9 +1,9 @@
 import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
-import forgi.threed.utilities.rmsd as brmsd
+import forgi.threedee.utilities.rmsd as brmsd
 import forgi.utilities.debug as cud
-import forgi.threed.utilities.vector as cuv
+import forgi.threedee.utilities.vector as cuv
 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
 ring_atoms = ['C4*', 'C3*', 'C2*', 'C1*', 'O4*']
