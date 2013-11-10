@@ -1082,6 +1082,22 @@ class BulgeGraph:
             if d[0] == 'i':
                 yield d
 
+    def floop_iterator(self):
+        '''
+        Yield the name of the 5' prime unpaired region if it is
+        present in the structure.
+        '''
+        if 'f1' in self.defines.keys():
+            yield 'f1'
+
+    def tloop_iterator(self):
+        '''
+        Yield the name of the 3' prime unpaired region if it is
+        present in the structure.
+        '''
+        if 't1' in self.defines.keys():
+            yield 't1'
+
     def pairing_partner(self, nucleotide_number):
         '''
         Return the base pairing partner of the nucleotide at position
