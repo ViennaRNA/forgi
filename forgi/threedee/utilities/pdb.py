@@ -304,24 +304,26 @@ def get_biggest_chain(in_filename):
 
     for i in range(len(chains)):
         c = chains[i]
-        res_list = list(c.get_list())
+        #res_list = list(c.get_list())
         
         #print >> sys.stderr, res_list[0].resname
         rna = False
 
         # Only count RNA residues
         num_residues = 0
-        for res in res_list:
+        for res in c:
             if (res.resname.strip() == 'A' or
                 res.resname.strip() == 'C' or
                 res.resname.strip() == 'G' or
                 res.resname.strip() == 'U'):
                 num_residues += 1
-                break
 
         if num_residues > biggest_len:
             biggest = i
             biggest_len = num_residues
+
+        #print c, num_residues
+    #sys.exit(1)
 
     orig_chain = chains[biggest]
     return orig_chain
