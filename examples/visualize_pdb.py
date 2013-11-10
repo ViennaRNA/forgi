@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os.path as op
 import subprocess as sp
 import tempfile as tf
 
@@ -30,6 +31,10 @@ def main():
 
     if len(args) < 1:
         parser.print_help()
+        sys.exit(1)
+
+    if not op.exists(args[0]):
+        print >>sys.stderr, "File doesn't exist: %s" % (args[0])
         sys.exit(1)
 
     cg = cmg.from_pdb(args[0], options.secondary_structure.strip("\"'"))
