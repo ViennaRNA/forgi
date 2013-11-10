@@ -27,6 +27,8 @@ def main():
                       secondary structure of this model", type=str)
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
+    parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
+
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
@@ -39,6 +41,7 @@ def main():
 
     cg = cmg.from_pdb(args[0], options.secondary_structure.strip("\"'"))
     pp = cvp.PymolPrinter()
+    pp.add_loops = options.loops
     #cud.pv('cg.to_cg_string()')
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
