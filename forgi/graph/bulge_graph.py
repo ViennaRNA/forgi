@@ -902,6 +902,14 @@ class BulgeGraph(object):
         return "".join(out)
 
     def from_bg_file(self, bg_file):
+        '''
+        Load from a file containing a text-based representation
+        of this BulgeGraph.
+
+        @param bg_file: The filename.
+        @return: No return value since the current structure is the one
+                 being loaded.
+        '''
         with open(bg_file, 'r') as f:
             bg_string = "".join(f.readlines())
             self.from_bg_string(bg_string)
@@ -1041,6 +1049,19 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
+        #cud.pv('s1d')
+        #cud.pv('bd')
+
+        # if the bulge is a length 0, multiloop then use the adjacent
+        # stem to determine its side
+        if len(bd) == 0:
+            edges = self.edges[b]
+
+            for e in edges:
+                if e != s1:
+                    bd = self.defines[e]
+                    break
+
         #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
 
         for i in xrange(4):
@@ -1123,6 +1144,52 @@ class BulgeGraph(object):
                 elif r2 == nucleotide_number:
                     return r1
         return None
+
+    def connections(self, bulge):
+        '''
+        Return the edges that connect to a bulge in a list form,
+        sorted by lowest res number of the connection.
+        '''
+        connections = list(self.edges[bulge])
+        connections.sort(key=lambda x: self.defines[x][0])
+
+        return connections
+
+    def get_bulge_dimensions(self, bulge):
+        '''
+        Return the dimensions of the bulge.
+
+        If it is single stranded it will be (0, x). Otherwise it will be (x, y).
+
+        @param bulge: The name of the bulge.
+        @return: A pair containing its dimensions
+        '''
+
+        bd = self.defines[bulge]
+        prev_stem = self.connections(bulge)[0]
+        c = self.connections(bulge)
+
+        if bulge[0] == 'i':
+            # if this interior loop only has one unpaired region
+            # then we have to find out if it's on the 5' strand or
+            # the 3' strand
+            # Example:
+            # s1 1 3 
+            #    23 25
+            # s2 5 10 
+            #    15 20
+            s1 = self.defines[c[0]]
+            s2 = self.defines[c[1]]
+            dims = (s2[0] - s1[1] - 1, s1[2] - s2[3] - 1)
+
+        if bulge[0] == 'm':
+            # Multiloops are also pretty easy
+            if len(bd) == 2:
+                dims = (bd[1] - bd[0] + 1, 1000)
+            else:
+                dims = (0, 1000)
+
+        return dims
 
     def get_length(self, vertex):
         '''

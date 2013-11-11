@@ -127,7 +127,7 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.seq_length, 71)
 
     def check_from_and_to_dotbracket(self, dotbracket):
-        bg = cgb.BulgeGraph(dotbracket)
+        bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
         self.assertEquals(bg.to_dotbracket(), dotbracket)
 
     def test_to_dotbracket(self):
@@ -156,4 +156,22 @@ connect s0 f1 m1 m0 t1
     def test_big_structure(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket('')
+
+    def test_get_bulge_dimensions(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.))')
+        bd = bg.get_bulge_dimensions('i0')
+        self.assertEquals(bd, (1,0))
+
+        bg = cgb.BulgeGraph(dotbracket_str='((.).)')
+        bd = bg.get_bulge_dimensions('i0')
+        self.assertEquals(bd, (0,1))
+
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.).(.).(.))')
+        cud.pv('bg.to_bg_string()')
+        bd = bg.get_bulge_dimensions('m0')
+        self.assertEquals(bd, (0,1000))
+        bd = bg.get_bulge_dimensions('m1')
+        self.assertEquals(bd, (1,1000))
+        bd = bg.get_bulge_dimensions('m2')
+        self.assertEquals(bd, (1,1000))
 
