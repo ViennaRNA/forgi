@@ -24,6 +24,10 @@ def main():
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-d', '--dump-all', dest='dump_all', 
+                      default='', help='Enter a directory where to dump all of \
+                                        temporary and intermediate files.',
+                      type = 'str')
 
     (options, args) = parser.parse_args()
 
@@ -32,7 +36,7 @@ def main():
         sys.exit(1)
 
     pdb_id = op.basename(op.splitext(args[0])[0])
-    cg = cmg.from_pdb(args[0])
+    cg = cmg.from_pdb(args[0], intermediate_file_dir=options.dump_all)
     print cg.to_cg_string()
 
 

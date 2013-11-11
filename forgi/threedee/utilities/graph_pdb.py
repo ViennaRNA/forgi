@@ -43,8 +43,6 @@ def stem_stem_orientation(cg, s1, s2):
     @return: (x,y,z) where x,y and z are the parameters described in
         the description above.
     '''
-    bg = cg.bg
-
     # shorten the names a little bit
     s1_p0 = cg.coords[s1][0]
     s1_p1 = cg.coords[s1][1]
@@ -1516,19 +1514,17 @@ def add_stem_information_from_pdb_chain(cg, chain):
     @param bg: The BulgeGraph.
     @param chain: The Bio.PDB chain representation of the 3D structure.
     '''
-    bg = cg.bg
-
-    for d in bg.defines.keys():
+    for d in cg.defines.keys():
         if d[0] == 's':
-            mids = get_mids(chain, bg.defines[d])
-            twists = get_twists(chain, bg.defines[d])
+            mids = get_mids(chain, cg.defines[d])
+            twists = get_twists(chain, cg.defines[d])
 
             cg.coords[d] = (mids[0].get_array(), mids[1].get_array())
             cg.twists[d] = (twists[0], twists[1])
-            cg.sampled[d] = [bg.name] + bg.defines[d]
+            cg.sampled[d] = [cg.name] + cg.defines[d]
 
 
-def add_bulge_information_from_pdb_chain(cg, chain):
+def add_bulge_information_from_pdb_chain(bg, chain):
     '''
     Add the information about the starts and ends of the bulges. The stems
     have to be created beforehand.
@@ -1538,8 +1534,6 @@ def add_bulge_information_from_pdb_chain(cg, chain):
     @param bg: The BulgeGraph.
     @param chain: The Bio.PDB chain representation of the 3D structure.
     '''
-    bg = cg.bg
-
     for d in bg.defines.keys():
         if d[0] != 's':
             if len(bg.edges[d]) == 2:
@@ -1551,14 +1545,12 @@ def add_bulge_information_from_pdb_chain(cg, chain):
                 (s1b, s1e) = bg.get_sides(edges[0], d)
                 (s2b, s2e) = bg.get_sides(edges[1], d)
 
-                mids1 = cg.coords[edges[0]] #get_mids(chain, s1d)
-                mids2 = cg.coords[edges[1]] #get_mids(chain, s2d)
+                mids1 = bg.coords[edges[0]] #get_mids(chain, s1d)
+                mids2 = bg.coords[edges[1]] #get_mids(chain, s2d)
 
-                cg.coords[d] = (mids1[s1b], mids2[s2b])
+                bg.coords[d] = (mids1[s1b], mids2[s2b])
 
-def add_loop_information_from_pdb_chain(cg, chain):
-    bg = cg.bg
-
+def add_loop_information_from_pdb_chain(bg, chain):
     for d in it.chain(bg.hloop_iterator(), ['t1', 'f1']):
         if d not in bg.defines:
             continue
@@ -1569,12 +1561,12 @@ def add_loop_information_from_pdb_chain(cg, chain):
 
         (s1b, s2b) = bg.get_sides(s1, d)
 
-        mids = cg.coords[s1]
+        mids = bg.coords[s1]
         #centroid = get_bulge_centroid(chain, bd)
 
         centroid = get_furthest_c_alpha(chain, mids[s1b],
                                         bd)
-        cg.coords[d] = (mids[s1b], centroid)
+        bg.coords[d] = (mids[s1b], centroid)
 
 
 def bg_rmsd(bg1, bg2):

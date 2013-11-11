@@ -8,14 +8,16 @@ import forgi.threedee.utilities.pdb as cup
 
 import Bio.PDB as bpdb
 import collections as c
+import contextlib
+import numpy as np
+import os
 import os.path as op
+import shutil
 import subprocess as sp
 import sys
 import tempfile as tf
 import time
 import warnings
-import numpy as np
-import time
 
 def remove_hetatm(lines):
     '''
@@ -46,20 +48,36 @@ def remove_hetatm(lines):
 
     return new_lines
 
-def load_cg_from_pdb(pdb_filename, secondary_structure=''):
+@contextlib.contextmanager
+def make_temp_directory():
     '''
-    Load a coarse grain model from a PDB file, by extracing
-    the bulge graph.
+    Yanked from:
 
-    @param pdb_filename: The filename of the 3D model
-    @param secondary_structure: A dot-bracket string encoding the secondary
-                                structure of this molecule
+    http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class
+    '''
+    temp_dir = tf.mkdtemp()
+    yield temp_dir
+    shutil.rmtree(temp_dir)
+
+def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
+    '''
+    Create the coarse grain model from a pdb file and store all
+    of the intermediate files in the given directory.
+
+    @param pdb_filename: The name of the pdb file to be coarseified
+    @param output_dir: The name of the output directory
+    @param secondary_structure: Specify a particular secondary structure
+                                for this coarsification.
     '''
     chain = cup.load_structure(pdb_filename)
+    pdb_base = op.splitext(op.basename(pdb_filename))[0]
+    output_dir = op.join(output_dir, pdb_base)
 
-    # create a temporary file to hold the biggest chain
-    with tf.NamedTemporaryFile() as f:
-        # the chain needs to be stored so that MC-Annotate can annotate it
+    if not op.exists(output_dir):
+        os.makedirs(output_dir)
+
+    with open(op.join(output_dir, 'temp.pdb'), 'w') as f:
+        # output the biggest RNA chain
         cup.output_chain(chain, f.name)
         f.flush()
 
@@ -72,7 +90,7 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
         dotplot = cum.get_dotplot(lines)
 
         # f2 will store the dotbracket notation
-        with tf.NamedTemporaryFile() as f2:
+        with open(op.join(output_dir, 'temp.dotplot'), 'w') as f2:
             f2.write(dotplot)
             f2.flush()
 
@@ -105,9 +123,6 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
                 lines[-1] = secondary_structure
                 out = "\n".join(lines)
 
-            bg = cgb.BulgeGraph()
-            bg.from_fasta(out, dissolve_length_one_stems=1)
-
             # Add the 3D information about the starts and ends of the stems
             # and loops
             with warnings.catch_warnings():
@@ -115,10 +130,40 @@ def load_cg_from_pdb(pdb_filename, secondary_structure=''):
                 s = bpdb.PDBParser().get_structure('temp', f.name)
                 chain = list(s.get_chains())[0]
 
-            cg = CoarseGrainRNA(bg)
+            cg = CoarseGrainRNA()
+            cg.from_fasta(out, dissolve_length_one_stems=1)
             cgg.add_stem_information_from_pdb_chain(cg, chain)
             cgg.add_bulge_information_from_pdb_chain(cg, chain)
             cgg.add_loop_information_from_pdb_chain(cg, chain)
+
+            with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
+                f3.write(cg.to_cg_string())
+                f3.flush()
+
+            return cg
+    print >>sys.stderr, "Uh oh... couldn't generate the coarse-grain structure."
+    print >>sys.stderr, "Prepare for an incoming exception."
+
+def load_cg_from_pdb(pdb_filename, secondary_structure='', 
+                     intermediate_file_dir=''):
+    '''
+    Load a coarse grain model from a PDB file, by extracing
+    the bulge graph.
+
+    @param pdb_filename: The filename of the 3D model
+    @param secondary_structure: A dot-bracket string encoding the secondary
+                                structure of this molecule
+    '''
+
+    if intermediate_file_dir != '':
+        output_dir = intermediate_file_dir
+
+        cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
+    else:
+        with make_temp_directory() as output_dir:
+            print "output_dir"
+            print op.exists(output_dir)
+            cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
 
     return cg
 
@@ -132,20 +177,17 @@ def from_file(cg_filename):
     with open(cg_filename, 'r') as f:
         lines = "".join(f.readlines())
 
-        bg = cgb.BulgeGraph()
-        bg.from_bg_string(lines)
-
-        cg = CoarseGrainRNA(bg)
+        cg = CoarseGrainRNA()
         cg.from_cg_string(lines)
 
         return cg
     
-def from_pdb(pdb_filename, secondary_structure=''):
-    cg = load_cg_from_pdb(pdb_filename, secondary_structure)
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=''):
+    cg = load_cg_from_pdb(pdb_filename, secondary_structure, intermediate_file_dir)
 
     return cg
 
-class CoarseGrainRNA():
+class CoarseGrainRNA(cgb.BulgeGraph):
     '''
     A coarse grain model of RNA structure based on the
     bulge graph representation.
@@ -154,13 +196,12 @@ class CoarseGrainRNA():
     and two twist vetors pointing towards the centers of the base
     pairs at each end of the helix.
     '''
-    def __init__(self, bg):
+    def __init__(self):
         '''
-        Initialize the new structure using an existing BulgeGraph.
-        Without a BulgeGraph to describe the topology of the RNA
-        structure, this class is useless.
+        Initialize the new structure.
         '''
-        self.bg = bg
+        super(CoarseGrainRNA, self).__init__()
+
         self.coords = dict()
         self.twists = dict()
         self.sampled = dict()
@@ -229,7 +270,7 @@ class CoarseGrainRNA():
         '''
         Output this structure in string form.
         '''
-        curr_str = self.bg.to_bg_string()
+        curr_str = self.to_bg_string()
         curr_str += self.get_coord_str()
         curr_str += self.get_twist_str()
         curr_str += self.get_long_range_str()
@@ -242,6 +283,8 @@ class CoarseGrainRNA():
         Populate this structure from the string
         representation of a graph.
         '''
+        self.from_bg_string(cg_string)
+
         lines = cg_string.split('\n')
         for line in lines:
             line = line.strip()

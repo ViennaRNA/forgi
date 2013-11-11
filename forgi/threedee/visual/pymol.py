@@ -396,7 +396,7 @@ class PymolPrinter:
 
     def add_stem_like(self, cg, key, color='green', width=2.4):
         return self.add_stem_like_core(cg.coords[key], cg.twists[key],
-                                       cg.bg.stem_length(key), key, color, width)
+                                       cg.stem_length(key), key, color, width)
 
     def draw_bounding_boxes(self, bg, s):
         '''
@@ -474,8 +474,7 @@ class PymolPrinter:
                     self.boxes += [(corners, 'purple')]
 
     def coordinates_to_pymol(self, cg):
-        bg = cg.bg
-        loops = list(bg.hloop_iterator())
+        loops = list(cg.hloop_iterator())
 
         for key in cg.coords.keys():
             (p, n) = cg.coords[key]
@@ -488,31 +487,31 @@ class PymolPrinter:
                     if self.add_loops:
                         if key in loops:
                             self.add_segment(p, n, "blue", 1.0,
-                                             key + " " + str(bg.get_length(key)))
+                                             key + " " + str(cg.get_length(key)))
                 elif key[0] == 'm':
                     self.add_segment(p, n, "red", 1.0,
                                      key + " " +
-                                     str(bg.defines[key][1] -
-                                     bg.defines[key][0]) + "")
+                                     str(cg.defines[key][1] -
+                                     cg.defines[key][0]) + "")
                 elif key[0] == 'f':
                     self.add_segment(p, n, "cyan", 1.0,
                                      key + " " +
-                                     str(bg.defines[key][1] -
-                                     bg.defines[key][0]) + "")
+                                     str(cg.defines[key][1] -
+                                     cg.defines[key][0]) + "")
 
                 elif key[0] == 't':
                     self.add_segment(p, n, "magenta", 1.0,
                                      key + " " +
-                                     str(bg.defines[key][1] -
-                                     bg.defines[key][0]) + "")
+                                     str(cg.defines[key][1] -
+                                     cg.defines[key][0]) + "")
                 else:
-                    #self.add_stem_like(bg, key, "yellow", 1.0)
+                    #self.add_stem_like(cg, key, "yellow", 1.0)
                     self.add_segment(p, n, "yellow", 1.0, key)
         return
 
         if self.max_stem_distances > 0:
             cud.pv('self.max_stem_distances')
-            for (s1, s2) in it.permutations(bg.stem_iterator(), r=2):
+            for (s1, s2) in it.permutations(cg.stem_iterator(), r=2):
                 (i1, i2) = cuv.line_segment_distance(cg.coords[s1][0],
                                                      cg.coords[s1][1],
                                                      cg.coords[s2][0],
@@ -523,8 +522,8 @@ class PymolPrinter:
                     self.add_segment(i1, i2, 'cyan', 0.3)
 
         if self.add_longrange:
-            for key1 in bg.longrange.keys():
-                for key2 in bg.longrange[key1]:
+            for key1 in cg.longrange.keys():
+                for key2 in cg.longrange[key1]:
                     try:
 
                         p = cuv.line_segment_distance(cg.coords[key1][0],
@@ -533,8 +532,8 @@ class PymolPrinter:
                                                       cg.coords[key2][1])
                         (point1, point2) = p
 
-                        #point1 = bg.get_point(key1)
-                        #point2 = bg.get_point(key2)
+                        #point1 = cg.get_point(key1)
+                        #point2 = cg.get_point(key2)
 
                         self.add_segment(point1, point2, "purple",
                                          0.3, key1 + " " + key2)
@@ -550,14 +549,14 @@ class PymolPrinter:
             sum_energy = 0.
 
             e_func = self.energy_function
-            e_func_iter = e_func.interaction_energy_iter(bg, background=False)
+            e_func_iter = e_func.interaction_energy_iter(cg, background=False)
             int_energies = list(e_func_iter)
             max_energy = max(int_energies, key=lambda x: x[1])
             print >>sys.stderr, "max_energy:", max_energy
 
             for (interaction, energy) in int_energies:
-                (p, n) = (bg.get_point(interaction[0]),
-                          bg.get_point(interaction[1]))
+                (p, n) = (cg.get_point(interaction[0]),
+                          cg.get_point(interaction[1]))
                 scaled_energy = - max_energy[1] + energy
 
                 self.add_segment(p, n, 'purple', 3 * np.exp(scaled_energy))
@@ -567,9 +566,9 @@ class PymolPrinter:
             cud.pv("sum_energy")
 
         if self.stem_stem_orientations is not None:
-            for (s1, s2) in it.permutations(bg.stem_iterator(), 2):
+            for (s1, s2) in it.permutations(cg.stem_iterator(), 2):
                 '''
-                if bg.are_adjacent_stems(s1, s2):
+                if cg.are_adjacent_stems(s1, s2):
                     continue
                 '''
 
@@ -649,15 +648,14 @@ class PymolPrinter:
 
     def flex_to_pymol(self, cg, flex_file):
         flex_stats = self.load_flex_stats(flex_file)
-        bg = cg.bg
 
-        for key in bg.defines.keys():
+        for key in cg.defines.keys():
             if key[0] != 's':
                 if key in cg.coords.keys():
                     coords = cg.coords[key]
                     p = (coords[1] + coords[0]) / 2.
 
-                    bd = bg.defines[key]
+                    bd = cg.defines[key]
 
                     if len(bd) == 2:
                         #out_str += "0 %d" % (abs(bd[1] - bd[0]) + 1)
@@ -674,9 +672,8 @@ class PymolPrinter:
                         self.add_sphere(p, "yellow", flex, key)
 
     def centers_to_pymol(self, cg):
-        bg = cg.bg
 
-        for key in bg.defines.keys():
+        for key in cg.defines.keys():
             if key in cg.coords.keys():
                 coords = cg.coords[key]
                 p = (coords[1] + coords[0]) / 2.
@@ -684,9 +681,9 @@ class PymolPrinter:
                 if key[0] == 's':
                     self.add_sphere(p, 'green', 3, key)
                 else:
-                    if len(bg.edges[key]) == 1:
+                    if len(cg.edges[key]) == 1:
                         self.add_sphere(p, 'blue', 1.5, key)
-                if len(bg.edges[key]) == 2:
+                if len(cg.edges[key]) == 2:
                     if key[0] == 'm':
                         self.add_sphere(p, "red", 1.5, key)
                     else:

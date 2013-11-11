@@ -244,8 +244,8 @@ def print_name(filename):
     print "name", os.path.splitext(filename)[0]
 
 
-class BulgeGraph:
-    def __init__(self, dotbracket_str=''):
+class BulgeGraph(object):
+    def __init__(self, bg_file=None, dotbracket_str=''):
         self.name = "untitled"
         self.seq = ""
         self.defines = dict()
@@ -258,6 +258,9 @@ class BulgeGraph:
 
         if dotbracket_str != '':
             self.from_dotbracket(dotbracket_str)
+
+        if bg_file is not None:
+            self.from_bg_file(bg_file)
 
     # get an internal index for a named vertex
     # this applies to both stems and edges
@@ -897,6 +900,11 @@ class BulgeGraph:
                 out[i-1] = ')'
 
         return "".join(out)
+
+    def from_bg_file(self, bg_file):
+        with open(bg_file, 'r') as f:
+            bg_string = "".join(f.readlines())
+            self.from_bg_string(bg_string)
 
     def from_bg_string(self, bg_str):
         '''
