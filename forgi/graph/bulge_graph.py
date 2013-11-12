@@ -1155,6 +1155,16 @@ class BulgeGraph(object):
 
         return connections
 
+    def get_stem_direction(self, s1, s2):
+        '''
+        Return 0 if the lowest numbered residue in s1
+        is lower than the lowest numbered residue in s2.
+        '''
+        if self.defines[s1][0] < self.defines[s2][0]:
+            return 0
+        return 1
+
+
     def get_bulge_dimensions(self, bulge):
         '''
         Return the dimensions of the bulge.
