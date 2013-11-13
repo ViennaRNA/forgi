@@ -64,6 +64,10 @@ class PymolPrinter:
             return [0.0, 1.0, 1.0]
         elif color == 'magenta':
             return [249 / 255., 132 / 255., 229 / 255.]
+        elif color == 'light gray':
+            return [.8, .8, .8]
+        elif color == 'dark gray':
+            return [.1, .1, .1]
         else:
             return [0.0, 0.0, 0.0]
 
@@ -346,6 +350,8 @@ class PymolPrinter:
         (twist1o, twist2o) = twists
 
         self.add_segment(p, n, color, width, key)
+        self.add_sphere(p, 'light gray', width=2.0 ) 
+        self.add_sphere(n, 'dark gray', width=2.0 ) 
 
         if self.add_twists:
             mult = 8.
