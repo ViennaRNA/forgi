@@ -77,8 +77,8 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         self.compare_bg_to_cg(self.bg, cg)
 
     def test_from_pdb(self): 
-        cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
-        cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb')
+        #cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
 
         self.assertTrue(len(cg.defines) > 1)
 
