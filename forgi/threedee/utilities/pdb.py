@@ -337,6 +337,17 @@ def rename_modified_ress(chain):
     @return: The same chain, but with modified residue names.
     '''
     for r in chain:
+        # rename rosetta-generated structures
+        if r.resname == ' rA':
+            r.resname = '  A'
+        elif r.resname == ' rC':
+            r.resname = '  C'
+        elif r.resname == ' rG':
+            r.resname = '  G'
+        elif r.resname == ' rU':
+            r.resname = '  U'
+
+        # rename modified residues
         if r.id[0] == 'H_PSU':
             r.resname = '  U'
             r.id = (' ', r.id[1], r.id[2])
@@ -380,6 +391,7 @@ def load_structure(pdb_filename):
     '''
     chain = get_biggest_chain(pdb_filename) 
     chain = rename_modified_ress(chain)
+    #chain = rename_rosetta_atoms(chain)
     chain = remove_hetatm(chain)
     chain = renumber_chain(chain)
      

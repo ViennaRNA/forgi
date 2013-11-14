@@ -76,12 +76,18 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         self.compare_bg_to_cg(self.bg, cg)
 
-    def test_from_pdb(self):                                                                                                      
+    def test_from_pdb(self): 
         cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
-            
+        cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb')
+
+        self.assertTrue(len(cg.defines) > 1)
+
+        cud.pv('cg.to_cg_string()')
+
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         
         self.assertEqual(len(cg.coords), 8)
         for key in cg.defines.keys():
             self.assertTrue(key in cg.coords)
+
