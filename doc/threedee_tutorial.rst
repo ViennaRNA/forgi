@@ -1,4 +1,4 @@
-Forgi.threedee Tutorial
+forgi.threedee Tutorial
 ==============
 Introduction
 ------------

@@ -1,4 +1,4 @@
-Forgi Tutorial
+forgi Tutorial
 ==============
 A Simple Example
 ~~~~~~~~~~~~~~~~
