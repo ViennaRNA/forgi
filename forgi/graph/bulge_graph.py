@@ -18,6 +18,7 @@ import random
 import itertools as it
 import forgi.utilities.debug as cud
 import forgi.utilities.stuff as cus
+import forgi.threedee.utilities.vector as cuv
 
 def error_exit(message):
     print >> sys.stderr, message
@@ -254,6 +255,10 @@ class BulgeGraph(object):
         self.weights = dict()
         self.seq_length = 0
 
+        # sort the coordinate basis for each stem
+        self.bases = dict()
+        self.stem_invs = dict()
+
         self.name_counter = 0
 
         if dotbracket_str != '':
@@ -353,6 +358,12 @@ class BulgeGraph(object):
         out_str += self.get_connect_str()
 
         return out_str
+
+    def to_file(self, filename):
+        with open(filename, 'w') as f:
+            out_str = self.to_bg_string()
+
+            f.write(out_str)
 
     def to_element_string(self):
         '''
@@ -884,6 +895,20 @@ class BulgeGraph(object):
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
+        self.sort_defines()
+
+    def sort_defines(self):
+        '''
+        Sort the defines of interior loops and stems so that the 5' region
+        is always first.
+        '''
+        for k in self.defines.keys():
+            d = self.defines[k] 
+
+            if len(d) == 4:
+                if d[0] > d[2]:
+                    new_d = [d[2], d[3], d[0], d[1]]
+                    self.defines[k] = new_d
 
     def to_dotbracket(self):
         '''
@@ -948,6 +973,17 @@ class BulgeGraph(object):
         for d in self.defines.keys():
             if d[0] == 's':
                 yield d
+
+    def sorted_stem_iterator(self):
+        '''
+        Iterate over a list of the stems sorted by the lowest numbered
+        nucleotide in each stem.
+        '''
+        stems = [d for d in self.defines if d[0] == 's']
+        stems.sort(key=lambda s: self.defines[s][0])
+
+        for s in stems:
+            yield s
 
     def is_single_stranded(self, node):
         '''
@@ -1079,6 +1115,49 @@ class BulgeGraph(object):
 
         return (s1b, s1e)
 
+    def get_sides_plus(self, s1, b):
+        '''
+        Get the side of s1 that is next to b.
+
+        s1e -> s1b -> b
+
+        @param s1: The stem.
+        @param b: The bulge.
+        @return: A tuple indicating which side is the one next to the bulge
+                 and which is away from the bulge.
+        '''
+        s1d = self.defines[s1]
+        bd = self.defines[b]
+
+        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
+
+        if len(bd) == 0:
+            edges = self.edges[b]
+
+            for e in edges:
+                if e != s1:
+                    bd = self.defines[e]
+                    break
+
+        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
+
+        for i in xrange(4):
+            for k in xrange(len(bd)):
+                if abs(s1d[i] - bd[k]) == 1:
+                    return (i, k)
+
+    def stem_side_vres_to_resn(self, stem, side, vres):
+        '''
+        Return the residue number given the stem name, the strand (side) it's on
+        and the virtual residue number.
+        '''
+        d = self.defines[stem]
+
+        if side == 0:
+            return d[0] + vres
+        else:
+            return d[3] - vres
+
     def stem_iterator(self):
         '''
         Iterator over all of the stems in the structure.
@@ -1155,6 +1234,34 @@ class BulgeGraph(object):
 
         return connections
 
+    def get_define_seq_str(self, d, adjacent=False):
+        '''
+        Get an array containing the sequences for the given define.
+        Non-stem sequences will contain the sequence without the overlapping
+        stem residues that are part of the define.
+
+        @param d: The define for which to get the sequences
+        @return: An array containing the sequences corresponding to the defines
+        '''
+        define = self.defines[d]
+        ranges = zip(*[iter(define)] * 2)
+    
+        seqs = [] 
+        for r in ranges:
+            if d[0] == 's':
+                seqs += [self.seq[r[0]-1:r[1]]]
+            else:
+                if adjacent:
+                    if r[0] > 1:
+                        seqs += [self.seq[r[0]-2:r[1]+1]]
+                    else:
+                        seqs += [self.seq[r[0]-1:r[1]+1]]
+                else:
+                    seqs += [self.seq[r[0]-1:r[1]]]
+                #seqs += [self.seq[r[0]-1:r[1]]]
+            
+        return seqs
+
     def get_stem_direction(self, s1, s2):
         '''
         Return 0 if the lowest numbered residue in s1
@@ -1200,6 +1307,50 @@ class BulgeGraph(object):
                 dims = (0, 1000)
 
         return dims
+
+    def get_twists(self, node):
+        '''                                                                                                           
+        Get the array of twists for this node. If the node is a stem,
+        then the twists will simply those stored in the array.                                                        
+        
+        If the node is an interior loop or a junction segment,                                                        
+        then the twists will be the ones that are adjacent to it.                                                     
+            
+        If the node is a hairpin loop or a free end, then only                                                        
+        one twist will be returned.
+                                                                                                                      
+        @param node: The name of the node
+        '''                                                                                                           
+        if node[0] == 's':
+            return self.twists[node]                                                                                  
+
+        connections = list(self.edges[node])                                                                          
+        (s1b, s1e) = self.get_sides(connections[0], node)
+
+        if len(connections) == 1:
+            return (cuv.normalize(cuv.vector_rejection(                                                               
+                                  self.twists[connections[0]][s1b],
+                                  self.coords[connections[0]][1] -                                                    
+                                  self.coords[connections[0]][0])),)                                                  
+
+        if len(connections) == 2:                                                                                     
+            # interior loop or junction segment                                                                       
+            (s2b, s2e) = self.get_sides(connections[1], node)
+        
+            bulge_vec = (self.coords[connections[0]][s1b] -                                                           
+                         self.coords[connections[1]][s2b])                                                            
+
+            return (cuv.normalize(cuv.vector_rejection(                                                               
+                    self.twists[connections[0]][s1b],                                                                 
+                    bulge_vec)),
+                    cuv.normalize(cuv.vector_rejection(                                                               
+                    self.twists[connections[1]][s2b],                                                                 
+                    bulge_vec)))                                                                                      
+                                                                                                                      
+        # uh oh, this shouldn't happen since every node                                                               
+        # should have either one or two edges 
+        return None                                                                                                   
+        
 
     def get_length(self, vertex):
         '''

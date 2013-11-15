@@ -64,6 +64,10 @@ class PymolPrinter:
             return [0.0, 1.0, 1.0]
         elif color == 'magenta':
             return [249 / 255., 132 / 255., 229 / 255.]
+        elif color == 'light gray':
+            return [.8, .8, .8]
+        elif color == 'dark gray':
+            return [.1, .1, .1]
         else:
             return [0.0, 0.0, 0.0]
 
@@ -346,6 +350,8 @@ class PymolPrinter:
         (twist1o, twist2o) = twists
 
         self.add_segment(p, n, color, width, key)
+        self.add_sphere(p, 'light gray', width=2.0 ) 
+        self.add_sphere(n, 'dark gray', width=2.0 ) 
 
         if self.add_twists:
             mult = 8.
@@ -489,15 +495,21 @@ class PymolPrinter:
                             self.add_segment(p, n, "blue", 1.0,
                                              key + " " + str(cg.get_length(key)))
                 elif key[0] == 'm':
-                    self.add_segment(p, n, "red", 1.0,
-                                     key + " " +
-                                     str(cg.defines[key][1] -
-                                     cg.defines[key][0]) + "")
+                    # check if the multiloop is longer than one. If it's not, then
+                    # it has an empty define and we its length will be 1
+                    if len(cg.defines[key]) == 0:
+                        self.add_segment(p, n, "red", 1.0,
+                                         key + " 1")
+                    else:
+                        self.add_segment(p, n, "red", 1.0,
+                                         key + " " +
+                                         str(cg.defines[key][1] -
+                                         cg.defines[key][0] + 1))
                 elif key[0] == 'f':
                     self.add_segment(p, n, "cyan", 1.0,
                                      key + " " +
                                      str(cg.defines[key][1] -
-                                     cg.defines[key][0]) + "")
+                                     cg.defines[key][0] + 1) + "")
 
                 elif key[0] == 't':
                     self.add_segment(p, n, "magenta", 1.0,

@@ -34,8 +34,8 @@ def main():
     pdb_id = op.basename(op.splitext(args[0])[0])
     cg = cmg.from_pdb(args[0])
     print ">%s" % (pdb_id)
-    print cg.bg.seq
-    print cg.bg.to_dotbracket()
+    print cg.seq
+    print cg.to_dotbracket()
 
 
 if __name__ == '__main__':

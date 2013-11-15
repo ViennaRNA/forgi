@@ -1,10 +1,12 @@
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.utilities.graph_pdb as cgg
+import forgi.threedee.model.stats as cbs
 
 import forgi.aux.k2n_standalone.knotted2nested as cak
 import forgi.utilities.debug as cud
 import forgi.threedee.utilities.mcannotate as cum
 import forgi.threedee.utilities.pdb as cup
+import forgi.threedee.utilities.vector as cuv
 
 import Bio.PDB as bpdb
 import collections as c
@@ -70,6 +72,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
                                 for this coarsification.
     '''
     chain = cup.load_structure(pdb_filename)
+    # output the biggest RNA chain
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
     output_dir = op.join(output_dir, pdb_base)
 
@@ -77,7 +80,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
         os.makedirs(output_dir)
 
     with open(op.join(output_dir, 'temp.pdb'), 'w') as f:
-        # output the biggest RNA chain
         cup.output_chain(chain, f.name)
         f.flush()
 
@@ -196,7 +198,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
     and two twist vetors pointing towards the centers of the base
     pairs at each end of the helix.
     '''
-    def __init__(self, cg_file, dotbracket_str=''):
+    def __init__(self, cg_file=None, dotbracket_str=''):
         '''
         Initialize the new structure.
         '''
@@ -213,6 +215,9 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         self.vinvs = c.defaultdict( dict )
 
         self.longrange = c.defaultdict( set )
+
+        if cg_file is not None:
+            self.from_file(cg_file)
 
         pass
 
@@ -277,6 +282,87 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         return curr_str
 
+    def to_file(self, filename):
+        with open(filename, 'w') as f:
+            cg_str = self.to_cg_string()
+            f.write(cg_str)
+
+    def get_bulge_angle_stats_core(self, define, connections):
+        '''
+        Return the angle stats for a particular bulge. These stats describe the
+        relative orientation of the two stems that it connects.
+
+        @param define: The name of the bulge.
+        @param connections: The two stems that are connected by it.
+        @return: cbs.AngleStat object
+        '''
+        (stem1, twist1, stem2, twist2, bulge) = cgg.get_stem_twist_and_bulge_vecs(self, define, connections)
+
+        (s1b, s1e) = self.get_sides(connections[0], define)
+        (s2b, s1e) = self.get_sides(connections[1], define)
+
+        # Get the orientations for orienting these two stems
+        (r, u, v, t) = cgg.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
+        (r1, u1, v1) = cgg.get_stem_separation_parameters(stem1, twist1, bulge)
+
+        dims =self.get_bulge_dimensions(define)
+        ang_type = cbs.end_ang_types[(s1b, s2b, self.get_stem_direction(connections[0], connections[1]))]
+        seqs = self.get_define_seq_str(define)
+
+        angle_stat = cbs.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
+
+        return angle_stat
+
+    def get_bulge_angle_stats(self, bulge):                                                                           
+        '''
+        Return the angle stats for a particular bulge. These stats describe the                                       
+        relative orientation of the two stems that it connects.                                                       
+
+        @param bulge: The name of the bulge.
+        @param connections: The two stems that are connected by it.
+        @return: The angle statistics in one direction and angle statistics in the other direction                    
+        '''                                                                                                           
+        
+        if bulge == 'start':
+            return (cbs.AngleStat(), cbs.AngleStat())                                                                 
+        
+        #print "bulge:", bulge
+        connections = self.connections(bulge)                                                                         
+        
+        angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
+        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))                             
+        
+        return (angle_stat1, angle_stat2)                                                                             
+    
+    def get_stem_stats(self, stem):                                                                                   
+        '''
+        Calculate the statistics for a stem and return them. These statistics will describe the                       
+        length of the stem as well as how much it twists.                                                             
+
+        @param stem: The name of the stem.                                                                            
+
+        @return: A StemStat structure containing the above information.                                               
+        '''                                                                                                           
+        
+        ss = cbs.StemStat()                                                                                           
+        
+        ss.pdb_name = self.name
+        #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            
+        ss.bp_length = self.stem_length(stem)
+        ss.phys_length = cuv.magnitude(self.coords[stem][0] - self.coords[stem][1])                                   
+        ss.twist_angle = cgg.get_twist_angle(self.coords[stem], self.twists[stem])                                    
+        ss.define = self.defines[stem]                                                                                
+        
+        return ss  
+
+    def from_file(self, cg_filename):
+        '''
+        Load this data structure from a file.
+        '''
+        with open(cg_filename, 'r') as f:
+            lines = "".join(f.readlines())
+
+            self.from_cg_string(lines)
 
     def from_cg_string(self, cg_string):
         '''

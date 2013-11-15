@@ -56,17 +56,17 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def compare_bg_to_cg(self, bg, cg):
         for d in bg.defines.keys():
-            self.assertTrue(d in cg.bg.defines.keys())
-            self.assertTrue(bg.defines[d] == cg.bg.defines[d])
+            self.assertTrue(d in cg.defines.keys())
+            self.assertTrue(bg.defines[d] == cg.defines[d])
 
         for e in bg.edges.keys():
-            self.assertTrue(e in cg.bg.edges.keys())
-            self.assertTrue(bg.edges[e] == cg.bg.edges[e])
+            self.assertTrue(e in cg.edges.keys())
+            self.assertTrue(bg.edges[e] == cg.edges[e])
 
     def test_from_cg_str(self):
         bg = cgb.BulgeGraph()
+        cg = cmc.CoarseGrainRNA()
         bg.from_bg_string(self.text)
-        cg = cmc.CoarseGrainRNA(bg)
         cg.from_cg_string(self.text)
 
         self.compare_bg_to_cg(bg, cg)
@@ -76,8 +76,18 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         self.compare_bg_to_cg(self.bg, cg)
 
-    def test_from_pdb(self):                                                                                                      
-        cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
-            
+    def test_from_pdb(self): 
+        #cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
+
+        self.assertTrue(len(cg.defines) > 1)
+
         cud.pv('cg.to_cg_string()')
+
+    def test_from_cg(self):
+        cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        
+        self.assertEqual(len(cg.coords), 8)
+        for key in cg.defines.keys():
+            self.assertTrue(key in cg.coords)
 

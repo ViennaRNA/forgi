@@ -8,7 +8,7 @@ from optparse import OptionParser
 
 def main():
     usage = """
-    ./pdb_to_ss_fasta.py pdb_file
+    ./pdb_to_cg_fasta.py pdb_file
 
     Take a pdb file, extract the secondary structure and print it out
     as a fasta file like this:

@@ -22,6 +22,7 @@ def main():
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
+    parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
 
     (options, args) = parser.parse_args()
 
@@ -36,7 +37,7 @@ def main():
     #cud.pv('cg.to_cg_string()')
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
-    pp.print_text = False
+    pp.print_text = options.text
     #pp.print_text = False
     #pp.output_pymol_file()
 
