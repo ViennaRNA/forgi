@@ -22,7 +22,7 @@ def main():
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
-    parser.add_option('-x', '--text', dest='text', default=True, action='store_true', help="Add labels to the figure.")
+    parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
 
     (options, args) = parser.parse_args()
 

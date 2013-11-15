@@ -434,7 +434,7 @@ def get_furthest_c_alpha(chain, stem_end, ld):
     max_dist = 0
     furthest_pos = stem_end
 
-    for i in range(ld[0] + 1, ld[1]):
+    for i in range(ld[0], ld[1]+1):
         c_apos = chain[i][catom_name].get_vector().get_array()
         dist = cuv.magnitude(stem_end - c_apos)
 

@@ -895,6 +895,20 @@ class BulgeGraph(object):
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
+        self.sort_defines()
+
+    def sort_defines(self):
+        '''
+        Sort the defines of interior loops and stems so that the 5' region
+        is always first.
+        '''
+        for k in self.defines.keys():
+            d = self.defines[k] 
+
+            if len(d) == 4:
+                if d[0] > d[2]:
+                    new_d = [d[2], d[3], d[0], d[1]]
+                    self.defines[k] = new_d
 
     def to_dotbracket(self):
         '''

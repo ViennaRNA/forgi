@@ -167,7 +167,6 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bd, (0,1))
 
         bg = cgb.BulgeGraph(dotbracket_str='(.(.).(.).(.))')
-        cud.pv('bg.to_bg_string()')
         bd = bg.get_bulge_dimensions('m0')
         self.assertEquals(bd, (0,1000))
         bd = bg.get_bulge_dimensions('m1')
@@ -175,3 +174,32 @@ connect s0 f1 m1 m0 t1
         bd = bg.get_bulge_dimensions('m2')
         self.assertEquals(bd, (1,1000))
 
+        bg = cgb.BulgeGraph(dotbracket_str='((..((..))....))..((..((..))...))')
+        cud.pv('bg.to_bg_string()')
+
+        bd = bg.get_bulge_dimensions('i1')
+        self.assertEquals(bd, (2, 4))
+        bd = bg.get_bulge_dimensions('i0')
+        self.assertEquals(bd, (2, 3))
+
+    def check_define_integrity(self, bg):
+        '''
+        Check to make sure that the define regions are always 5' to 3'
+        '''
+        for v in bg.defines.values():
+            prev = 0
+            i = iter(v)
+
+            # iterate over every other element to make sure that the 
+            # ones in front involve lower-numbered nucleotides than
+            # the ones further on
+            for e in i:
+                cud.pv('e, prev')
+                self.assertTrue(e > prev)
+                prev = e
+                i.next()
+
+    def test_bulge_graph_define_sorting(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..((..))..))..((..((..))...))')
+
+        self.check_define_integrity(bg)
