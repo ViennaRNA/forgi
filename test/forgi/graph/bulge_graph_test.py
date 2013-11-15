@@ -175,12 +175,16 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bd, (1,1000))
 
         bg = cgb.BulgeGraph(dotbracket_str='((..((..))....))..((..((..))...))')
-        cud.pv('bg.to_bg_string()')
 
         bd = bg.get_bulge_dimensions('i1')
         self.assertEquals(bd, (2, 4))
         bd = bg.get_bulge_dimensions('i0')
         self.assertEquals(bd, (2, 3))
+
+    def test_get_define_seq_str(self):
+        bg = cgb.BulgeGraph(dotbracket_str="(.())") 
+        bg.seq = 'acguu'
+        self.assertEquals(bg.get_define_seq_str("i0"), ['c'])
 
     def check_define_integrity(self, bg):
         '''
@@ -194,7 +198,6 @@ connect s0 f1 m1 m0 t1
             # ones in front involve lower-numbered nucleotides than
             # the ones further on
             for e in i:
-                cud.pv('e, prev')
                 self.assertTrue(e > prev)
                 prev = e
                 i.next()

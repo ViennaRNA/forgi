@@ -1234,7 +1234,7 @@ class BulgeGraph(object):
 
         return connections
 
-    def get_define_seq_str(self, d):
+    def get_define_seq_str(self, d, adjacent=False):
         '''
         Get an array containing the sequences for the given define.
         Non-stem sequences will contain the sequence without the overlapping
@@ -1251,7 +1251,13 @@ class BulgeGraph(object):
             if d[0] == 's':
                 seqs += [self.seq[r[0]-1:r[1]]]
             else:
-                seqs += [self.seq[r[0]:r[1]-1]]
+                if adjacent:
+                    if r[0] > 1:
+                        seqs += [self.seq[r[0]-2:r[1]+1]]
+                    else:
+                        seqs += [self.seq[r[0]-1:r[1]+1]]
+                else:
+                    seqs += [self.seq[r[0]-1:r[1]]]
                 #seqs += [self.seq[r[0]-1:r[1]]]
             
         return seqs
