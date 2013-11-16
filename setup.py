@@ -9,5 +9,5 @@ setup(name='forgi',
       packages=['forgi', 'forgi.graph', 'forgi.threedee', 'forgi.threedee.model', 
                 'forgi.utilities', 'forgi.threedee.utilities', 'forgi.aux', 
                 'forgi.aux.k2n_standalone', 'forgi.threedee.visual'],
-      package_data={'forgi': ['data/*.pdb']}
+      package_data={'forgi.threedee': ['data/*.pdb']}
      )

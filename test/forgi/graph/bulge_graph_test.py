@@ -130,6 +130,35 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
         self.assertEquals(bg.to_dotbracket(), dotbracket)
 
+    def test_get_multiloop_side(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(.().().)')
+
+        s = bg.get_multiloop_side('m0')
+        self.assertEqual(s, (1, 0))
+
+        s = bg.get_multiloop_side('m1')
+        self.assertEquals(s, (3, 0))
+
+        s = bg.get_multiloop_side('m2')
+        self.assertEquals(s, (2, 3))
+
+        cud.pv('bg.to_bg_string()')
+        cud.pv("bg.get_bulge_dimensions('m0')")
+        cud.pv("bg.get_bulge_dimensions('m1')")
+        cud.pv("bg.get_bulge_dimensions('m2')")
+
+    def test_get_sides_plus(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(.().().)')
+
+        p1 = bg.get_sides_plus('s0', 'm0')
+        self.assertEquals(p1[0], 1)
+
+        p1 = bg.get_sides_plus('s0', 'm2')
+        self.assertEquals(p1[0], 2)
+
+        p1 = bg.get_sides_plus('s1', 'm0')
+        self.assertEquals(p1[0], 0)
+
     def test_to_dotbracket(self):
         self.check_from_and_to_dotbracket('..((..))..')
         self.check_from_and_to_dotbracket('..((..))..((..))')
@@ -165,6 +194,10 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph(dotbracket_str='((.).)')
         bd = bg.get_bulge_dimensions('i0')
         self.assertEquals(bd, (0,1))
+
+        bg = cgb.BulgeGraph(dotbracket_str='().()')
+        cud.pv('bg.to_bg_string()')
+        bd = bg.get_bulge_dimensions('m0')
 
         bg = cgb.BulgeGraph(dotbracket_str='(.(.).(.).(.))')
         bd = bg.get_bulge_dimensions('m0')
@@ -206,3 +239,16 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph(dotbracket_str='((..((..))..))..((..((..))...))')
 
         self.check_define_integrity(bg)
+
+    def test_get_flanking_region(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..))')
+
+        (m1, m2) = bg.get_flanking_region('h0')
+        self.assertEqual(m1, 1)
+        self.assertEqual(m2, 6)
+
+        bg = cgb.BulgeGraph(dotbracket_str='()()')
+
+        (m1, m2) = bg.get_flanking_region('m0')
+        self.assertEqual(m1, 2)
+        self.assertEqual(m2, 3)

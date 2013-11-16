@@ -284,17 +284,24 @@ class BulgeGraph(object):
         d = self.defines[key]
         return (d[1] - d[0]) + 1
 
+    def get_single_define_str(self, key):
+        '''
+        Get a define string for a single key.
+        '''
+        return "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
+
     def get_define_str(self):
         '''
         Convert the defines into a string. 
 
         Format:
 
-        define [name] [weight] [start_res1] [end_res1] [start_res2] [end_res2]
+        define [name] [start_res1] [end_res1] [start_res2] [end_res2]
         '''
         defines_str = ''
         for key in self.defines.keys():
-            defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
+            defines_str += self.get_single_define_str(key)
+            #defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
             defines_str += '\n'
         return defines_str
 
@@ -1141,10 +1148,27 @@ class BulgeGraph(object):
 
         #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
 
-        for i in xrange(4):
-            for k in xrange(len(bd)):
-                if abs(s1d[i] - bd[k]) == 1:
-                    return (i, k)
+        cud.pv('s1d')
+        cud.pv('bd')
+
+        for k in xrange(len(bd)):
+            cud.pv('bd[k]')
+            # before the stem on the 5' strand
+            if s1d[0] - bd[k] == 1:
+                return (0, k)
+            # after the stem on the 5' strand
+            elif bd[k] - s1d[1] == 1:
+                return (1, k)
+            # before the stem on the 3' strand
+            elif s1d[2] - bd[k] == 1:
+                return (2, k)
+            # after the stem on the 3' strand
+            elif bd[k] - s1d[3] == 1:
+                return (3, k)
+            else:
+                raise Exception("Faulty multiloop %s connecting %s"
+                                % (" ".join(map(str, bd)),
+                                   " ".join(map(str, s1d))))
 
     def stem_side_vres_to_resn(self, stem, side, vres):
         '''
@@ -1271,6 +1295,29 @@ class BulgeGraph(object):
             return 0
         return 1
 
+    def get_multiloop_side(self, m):
+        '''
+        Find out which strand a multiloop is on. An example of a situation in
+        which the loop can be on both sides can be seen in the three-stemmed
+        structure below:
+
+            (.().().)
+
+        In this case, the first multiloop section comes off of the 5' strand of
+        the first stem (the prior stem is always the one with a lower numbered
+        first residue). The second multiloop section comess of the 3' strand of 
+        the second stem and the third loop comes off the 3' strand of the third
+        stem.
+        '''
+        c = self.connections(m)
+        md = self.defines[m]
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
+
+        p1 = self.get_sides_plus(c[0], m)
+        p2 = self.get_sides_plus(c[1], m)
+
+        return (p1[0], p2[0])
 
     def get_bulge_dimensions(self, bulge):
         '''
@@ -1375,3 +1422,78 @@ class BulgeGraph(object):
                     return dims[1]
                 else:
                     return dims[0]
+
+    def get_flanking_region(self, bulge_name, side=0):
+        '''
+        If a bulge is flanked by stems, return the lowest residue number
+        of the previous stem and the highest residue number of the next
+        stem.
+
+        @param bulge_name: The name of the bulge
+        @param side: The side of the bulge (indicating the strand)
+        '''
+        c = self.connections(bulge_name)
+
+        if bulge_name[0] == 'h':
+            s1 = self.defines[c[0]]
+            return (s1[0], s1[3])
+
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
+
+        if bulge_name[0] == 'i':
+            # interior loop
+            if side == 0:
+                return (s1[0], s2[1])
+            else:
+                return (s2[2], s1[3])
+        elif bulge_name[0] == 'm':
+            return (s1[0], s2[1])
+            # multiloop
+
+        return (m1, m2)
+
+
+    def get_flanking_sequence(self, bulge_name, side=0):
+        if len(self.seq) == 0:
+            print >>sys.stderr, "No sequence present in the bulge_graph: %s" % (self.name)
+
+        (m1, m2) = self.get_flanking_region(bulge_name, side)
+
+        return self.seq[m1-1:m2]
+
+    def get_flanking_handles(self, bulge_name, side=0):
+        '''
+        Get the indices of the residues for fitting bulge regions.
+
+        So if there is a loop like so (between residues 7 and 16):
+
+        (((...))))
+        7890123456
+          ^   ^
+
+        Then residues 9 and 13 will be used as the handles against which
+        to align the fitted region.
+
+        In the fitted region, the residues (2,6) will be the ones that will
+        be aligned to the handles.
+
+        @return: (orig_chain_res1, orig_chain_res1, flanking_res1, flanking_res2)
+        '''
+        def1 = self.defines[bulge_name]
+        f1 = self.get_flanking_region(bulge_name, side)
+
+        a = def1[side*2]
+        b = def1[side*2+1]
+
+        i1 = def1[side*2] - f1[0]
+        i2 = def1[side*2 + 1] - f1[0]
+
+        '''
+        if b == self.length:
+            b -= 1
+            i2 -= 1
+
+        #return (def1[side*2], def1[side*2+1], def1[side*2] - f1[0], def1[side*2 + 1] - f1[0])
+        '''
+        return (a, b, i1, i2)
