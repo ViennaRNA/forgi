@@ -131,6 +131,7 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.to_dotbracket(), dotbracket)
 
     def test_get_multiloop_side(self):
+        # see page 85 in the notebook
         bg = cgb.BulgeGraph(dotbracket_str='(.().().)')
 
         s = bg.get_multiloop_side('m0')
@@ -141,11 +142,6 @@ connect s0 f1 m1 m0 t1
 
         s = bg.get_multiloop_side('m2')
         self.assertEquals(s, (2, 3))
-
-        cud.pv('bg.to_bg_string()')
-        cud.pv("bg.get_bulge_dimensions('m0')")
-        cud.pv("bg.get_bulge_dimensions('m1')")
-        cud.pv("bg.get_bulge_dimensions('m2')")
 
     def test_get_sides_plus(self):
         bg = cgb.BulgeGraph(dotbracket_str='(.().().)')
@@ -196,7 +192,6 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bd, (0,1))
 
         bg = cgb.BulgeGraph(dotbracket_str='().()')
-        cud.pv('bg.to_bg_string()')
         bd = bg.get_bulge_dimensions('m0')
 
         bg = cgb.BulgeGraph(dotbracket_str='(.(.).(.).(.))')
@@ -247,8 +242,16 @@ connect s0 f1 m1 m0 t1
         self.assertEqual(m1, 1)
         self.assertEqual(m2, 6)
 
-        bg = cgb.BulgeGraph(dotbracket_str='()()')
+        bg = cgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
+
+        (m1, m2) = bg.get_flanking_region('m1')
+        self.assertEqual(m1, 1)
+        self.assertEqual(m2, 5)
+
+        (m1, m2) = bg.get_flanking_region('m2')
+        self.assertEqual(m1, 7)
+        self.assertEqual(m2, 10)
 
         (m1, m2) = bg.get_flanking_region('m0')
-        self.assertEqual(m1, 2)
-        self.assertEqual(m2, 3)
+        self.assertEqual(m1, 12)
+        self.assertEqual(m2, 15)

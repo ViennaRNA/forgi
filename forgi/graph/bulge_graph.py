@@ -1092,9 +1092,6 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
-        #cud.pv('s1d')
-        #cud.pv('bd')
-
         # if the bulge is a length 0, multiloop then use the adjacent
         # stem to determine its side
         if len(bd) == 0:
@@ -1148,11 +1145,7 @@ class BulgeGraph(object):
 
         #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
 
-        cud.pv('s1d')
-        cud.pv('bd')
-
         for k in xrange(len(bd)):
-            cud.pv('bd[k]')
             # before the stem on the 5' strand
             if s1d[0] - bd[k] == 1:
                 return (0, k)
@@ -1448,7 +1441,31 @@ class BulgeGraph(object):
             else:
                 return (s2[2], s1[3])
         elif bulge_name[0] == 'm':
-            return (s1[0], s2[1])
+            ss = self.get_multiloop_side(bulge_name)
+            st = [s1, s2]
+
+            ends = []
+
+            # go through the two sides and stems and pick
+            # the other end of the same strand
+            for i, s in enumerate(ss):
+                cud.pv('st[i]')
+                if s == 0:
+                    ends += [st[i][1]]
+                elif s == 1:
+                    ends += [st[i][0]]
+                elif s == 2:
+                    ends += [st[i][3]]
+                elif s == 3:
+                    ends += [st[i][2]]
+                else:
+                    raise Exception("Weird multiloop sides: %s" %
+                                    bulge_name)
+
+            ends.sort()
+
+            cud.pv('s')
+            return tuple(ends)
             # multiloop
 
         return (m1, m2)

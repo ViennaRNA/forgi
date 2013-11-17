@@ -193,4 +193,17 @@ And get an appropriately formatted parameter file::
     STEM PAIR 8 64
     STEM PAIR 9 63
 
+Getting the flanking regions of a multiloop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Assume we have the following structure '(.(.).(.).)'. This is a simple (and probably impossible) fold which has three stems connected by multiloops:
+
+```
+echo '((.((.)).(.).))' | python examples/dotbracket_to_bulge_graph.py - | \
+python examples/graph_to_neato.py - | neato -Tpng -o doc/three_stem.png
+```
+
+What if we want to take a subset of the sequence that contains the loop 'm1', the section immediately preceding up to the start of the previous stem and the section immediately following it up to the end of the next stem. In this case, it would be the region containing the nucleotides [1,5]. What about the same for the multiloop 'm2'? That would correspond to the nucleotides [7,10]. One could write a regular expression to do this, but it would be awkward and brain-twisting. Or one could use some of the functions built into forgi. First we create the graph:
+
+import forgi.graph.bulge_graph as fgb
+bg = fgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
