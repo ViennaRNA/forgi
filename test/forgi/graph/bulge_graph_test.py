@@ -1,8 +1,10 @@
 import unittest, os
 import itertools as it
+import random
 
 import forgi.graph.bulge_graph as cgb
 import forgi.utilities.debug as cud
+import forgi.utilities.stuff as fus
 
 import copy, time
 
@@ -267,6 +269,12 @@ connect s0 f1 m1 m0 t1
         self.assertEqual(bg.get_flanking_region('i0', side=1),
                          (13,14))
 
+        dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
+        seq = fus.gen_random_sequence(len(dotbracket))
+        bg = cgb.BulgeGraph(dotbracket_str=dotbracket, seq=seq)
+        (m1, m2) = bg.get_flanking_region('m0')
+
+
     def test_get_flanking_sequence(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..))')
         bg.seq = 'AACCGG'
@@ -282,6 +290,13 @@ connect s0 f1 m1 m0 t1
                          '7890')
         self.assertEqual(bg.get_flanking_sequence('m0'),
                          '2345')
+
+        dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
+        seq = fus.gen_random_sequence(len(dotbracket))
+        cud.pv('seq')
+        bg = cgb.BulgeGraph(dotbracket_str=dotbracket, seq=seq)
+        s = bg.get_flanking_sequence('m0')
+        cud.pv('s')
 
     def test_get_flanking_handles(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..))')

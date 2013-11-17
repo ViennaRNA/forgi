@@ -198,11 +198,11 @@ class CoarseGrainRNA(cgb.BulgeGraph):
     and two twist vetors pointing towards the centers of the base
     pairs at each end of the helix.
     '''
-    def __init__(self, cg_file=None, dotbracket_str=''):
+    def __init__(self, cg_file=None, dotbracket_str='', seq=''):
         '''
         Initialize the new structure.
         '''
-        super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str)
+        super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
 
         self.coords = dict()
         self.twists = dict()

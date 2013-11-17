@@ -246,14 +246,12 @@ def print_name(filename):
 
 
 class BulgeGraph(object):
-    def __init__(self, bg_file=None, dotbracket_str=''):
+    def __init__(self, bg_file=None, dotbracket_str='', seq=''):
         self.name = "untitled"
-        self.seq = ""
         self.defines = dict()
         self.edges = c.defaultdict(set)
         self.longrange = c.defaultdict(set)
         self.weights = dict()
-        self.seq_length = 0
 
         # sort the coordinate basis for each stem
         self.bases = dict()
@@ -263,6 +261,8 @@ class BulgeGraph(object):
 
         if dotbracket_str != '':
             self.from_dotbracket(dotbracket_str)
+
+        self.seq = seq
 
         if bg_file is not None:
             self.from_bg_file(bg_file)
@@ -1158,10 +1158,10 @@ class BulgeGraph(object):
             # after the stem on the 3' strand
             elif bd[k] - s1d[3] == 1:
                 return (3, k)
-            else:
-                raise Exception("Faulty multiloop %s connecting %s"
-                                % (" ".join(map(str, bd)),
-                                   " ".join(map(str, s1d))))
+
+        raise Exception("Faulty multiloop %s connecting %s"
+                        % (" ".join(map(str, bd)),
+                           " ".join(map(str, s1d))))
 
     def stem_side_vres_to_resn(self, stem, side, vres):
         '''
@@ -1431,6 +1431,7 @@ class BulgeGraph(object):
             s1 = self.defines[c[0]]
             return (s1[0], s1[3])
 
+        cud.pv('bulge_name')
         s1 = self.defines[c[0]]
         s2 = self.defines[c[1]]
 
@@ -1471,7 +1472,7 @@ class BulgeGraph(object):
 
     def get_flanking_sequence(self, bulge_name, side=0):
         if len(self.seq) == 0:
-            print >>sys.stderr, "No sequence present in the bulge_graph: %s" % (self.name)
+            raise Exception("No sequence present in the bulge_graph: %s" % (self.name))
 
         (m1, m2) = self.get_flanking_region(bulge_name, side)
 

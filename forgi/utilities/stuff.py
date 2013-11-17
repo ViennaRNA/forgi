@@ -1,6 +1,7 @@
-import forgi.utilities.debug as cud
+import random
+import itertools as it
 
-from itertools import izip
+import forgi.utilities.debug as cud
 
 def grouped(iterable, n):
     '''
@@ -10,7 +11,7 @@ def grouped(iterable, n):
 
     s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ...
     '''
-    return izip(*[iter(iterable)]*n)
+    return it.izip(*[iter(iterable)]*n)
 
 def merge_intervals(intervals, diff = 0):
     '''
@@ -49,3 +50,9 @@ def merge_intervals(intervals, diff = 0):
 
     merged_intervals += [curr_interval]
     return merged_intervals
+
+def gen_random_sequence(l):
+    '''
+    Generate a random RNA sequence of length l.
+    '''
+    return "".join([random.choice(['A','C','G','U']) for i in range(l)])
