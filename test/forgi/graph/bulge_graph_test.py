@@ -256,6 +256,17 @@ connect s0 f1 m1 m0 t1
         self.assertEqual(m1, 12)
         self.assertEqual(m2, 15)
 
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
+        (m1, m2) = bg.get_flanking_region('i1', side=0)
+        self.assertEqual(bg.get_flanking_region('i1', side=0),
+                         (1,3))
+        self.assertEqual(bg.get_flanking_region('i1', side=1),
+                         (5,7))
+        self.assertEqual(bg.get_flanking_region('i0', side=0),
+                         (9,11))
+        self.assertEqual(bg.get_flanking_region('i0', side=1),
+                         (13,14))
+
     def test_get_flanking_sequence(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..))')
         bg.seq = 'AACCGG'
@@ -271,3 +282,39 @@ connect s0 f1 m1 m0 t1
                          '7890')
         self.assertEqual(bg.get_flanking_sequence('m0'),
                          '2345')
+
+    def test_get_flanking_handles(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..))')
+        h = bg.get_flanking_handles('h0')
+
+        self.assertEqual(h, (2, 5, 1, 4))
+
+        bg = cgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
+
+        self.assertEqual(bg.get_flanking_handles('m1'),
+                         (2,4,1,3))
+        self.assertEqual(bg.get_flanking_handles('m2'),
+                         (8,10,1,3))
+        self.assertEqual(bg.get_flanking_handles('m0'),
+                         (12,14,0,2))
+
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
+        self.assertEqual(bg.get_flanking_handles('i1', side=0),
+                         (1,3,0,2))
+        self.assertEqual(bg.get_flanking_handles('i1', side=1),
+                         (5,7,0,2))
+        self.assertEqual(bg.get_flanking_handles('i0', side=0),
+                         (9,11,0,2))
+        self.assertEqual(bg.get_flanking_handles('i0', side=1),
+                         (13,14,0,1))
+
+        bg = cgb.BulgeGraph(dotbracket_str='((.((.)).)).((.((.))))')
+        #                                   1234567890123456789012
+        self.assertEqual(bg.get_flanking_handles('i1', side=0),
+                         (2,4,1,3))
+        self.assertEqual(bg.get_flanking_handles('i1', side=1),
+                         (8,10,1,3))
+        self.assertEqual(bg.get_flanking_handles('i0', side=0),
+                         (14,16,1,3))
+        self.assertEqual(bg.get_flanking_handles('i0', side=1),
+                         (20,21,1,2))

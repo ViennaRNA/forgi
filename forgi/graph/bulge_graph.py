@@ -1497,18 +1497,31 @@ class BulgeGraph(object):
         '''
         def1 = self.defines[bulge_name]
         f1 = self.get_flanking_region(bulge_name, side)
+        c = self.connections(bulge_name)
 
-        a = def1[side*2]
-        b = def1[side*2+1]
+        if bulge_name[0] == 'h':
+            s1 = self.defines[c[0]]
+            ab = [s1[1], s1[2]]
+            return (ab[0], ab[1], ab[0] - f1[0], ab[1] - f1[0])
 
-        i1 = def1[side*2] - f1[0]
-        i2 = def1[side*2 + 1] - f1[0]
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
 
-        '''
-        if b == self.length:
-            b -= 1
-            i2 -= 1
+        if bulge_name[0] == 'm':
+            sides = self.get_multiloop_side(bulge_name)
+            ab = [s1[sides[0]], s2[sides[1]]]
+            ab.sort()
 
-        #return (def1[side*2], def1[side*2+1], def1[side*2] - f1[0], def1[side*2 + 1] - f1[0])
-        '''
-        return (a, b, i1, i2)
+            return (ab[0], ab[1], ab[0] - f1[0], ab[1] - f1[0])
+
+        if bulge_name[0] == 'i':
+            if side == 0:
+                ab = [s1[1], s2[0]]
+            else:
+                ab = [s2[3], s1[2]]
+
+            return (ab[0], ab[1], ab[0] - f1[0], ab[1] - f1[0])
+
+        # probably still have to include the 5' and 3' regions, but that
+        # will come a little later
+        return None
