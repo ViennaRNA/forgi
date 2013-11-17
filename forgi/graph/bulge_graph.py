@@ -1449,7 +1449,6 @@ class BulgeGraph(object):
             # go through the two sides and stems and pick
             # the other end of the same strand
             for i, s in enumerate(ss):
-                cud.pv('st[i]')
                 if s == 0:
                     ends += [st[i][1]]
                 elif s == 1:
@@ -1464,7 +1463,6 @@ class BulgeGraph(object):
 
             ends.sort()
 
-            cud.pv('s')
             return tuple(ends)
             # multiloop
 

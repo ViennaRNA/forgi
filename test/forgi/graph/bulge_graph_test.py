@@ -255,3 +255,19 @@ connect s0 f1 m1 m0 t1
         (m1, m2) = bg.get_flanking_region('m0')
         self.assertEqual(m1, 12)
         self.assertEqual(m2, 15)
+
+    def test_get_flanking_sequence(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..))')
+        bg.seq = 'AACCGG'
+
+        self.assertEqual(bg.get_flanking_sequence('h0'),
+                         'AACCGG')
+
+        bg = cgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
+        bg.seq = '123456789012345'
+        self.assertEqual(bg.get_flanking_sequence('m1'),
+                         '12345')
+        self.assertEqual(bg.get_flanking_sequence('m2'),
+                         '7890')
+        self.assertEqual(bg.get_flanking_sequence('m0'),
+                         '2345')
