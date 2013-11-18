@@ -383,3 +383,15 @@ class CoarseGrainRNA(cgb.BulgeGraph):
             if parts[0] == 'twist':
                 name = parts[1]
                 self.twists[name] = np.array([map(float, parts[2:5]), map(float, parts[5:8])])
+
+    def to_cg_file(self, filename):
+        '''
+        Save this structure as a string in a file.
+
+        @param filename: The filename to save it to.
+        '''
+        with open(filename, 'w') as f:
+            s = self.to_cg_string()
+
+            f.write(s)
+
