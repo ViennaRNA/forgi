@@ -293,10 +293,8 @@ connect s0 f1 m1 m0 t1
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
         seq = fus.gen_random_sequence(len(dotbracket))
-        cud.pv('seq')
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket, seq=seq)
         s = bg.get_flanking_sequence('m0')
-        cud.pv('s')
 
     def test_get_flanking_handles(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..))')
@@ -337,12 +335,19 @@ connect s0 f1 m1 m0 t1
     def test_are_adjacent_stems(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..((..))..))..((..))')
 
-        cud.pv('bg.to_bg_string()')
         self.assertTrue(bg.are_adjacent_stems('s0', 's1'))
         self.assertTrue(bg.are_adjacent_stems('s0', 's2'))
         self.assertFalse(bg.are_adjacent_stems('s1', 's2'))
 
         self.assertFalse(bg.are_adjacent_stems('s0', 's2', 
                                                multiloops_count=False))
+
+    def test_stem_length(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..(((..))).))((..))')
+
+        self.assertEqual(bg.stem_length('s0'), 2)
+        self.assertEqual(bg.stem_length('s1'), 3)
+        self.assertEqual(bg.stem_length('m0'), 0)
+        self.assertEqual(bg.stem_length('i0'), 1)
 
 

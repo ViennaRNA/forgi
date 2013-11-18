@@ -281,8 +281,17 @@ class BulgeGraph(object):
         return name
 
     def stem_length(self, key):
+        '''
+        Get the length of a particular element. If it's a stem, it's equal to
+        the number of paired bases. If it's an interior loop, it's equal to the
+        number of unpaired bases on the strand with less unpaired bases. If
+        it's a multiloop, then it's the number of unpaired bases.
+        '''
         d = self.defines[key]
-        return (d[1] - d[0]) + 1
+        if key[0] == 's':
+            return (d[1] - d[0]) + 1
+        else:
+            return min(self.get_bulge_dimensions(key))
 
     def get_single_define_str(self, key):
         '''
@@ -1025,14 +1034,6 @@ class BulgeGraph(object):
             return (self.defines[node][1] - self.defines[node][0],
                     self.defines[node][3] - self.defines[node][2])
 
-    def stem_length(self, s):
-        '''
-        Return the number of base pairs that comprise
-        one strand of the stem.
-
-        :param s: The name of the stem.
-        '''
-        return self.defines[s][1] - self.defines[s][0] + 1
 
     def adjacent_stem_pairs_iterator(self):
         '''
