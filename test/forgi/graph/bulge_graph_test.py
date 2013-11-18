@@ -343,11 +343,12 @@ connect s0 f1 m1 m0 t1
                                                multiloops_count=False))
 
     def test_stem_length(self):
-        bg = cgb.BulgeGraph(dotbracket_str='((..(((..))).))((..))')
+        bg = cgb.BulgeGraph(dotbracket_str='.((..(((..))).))((..))')
 
         self.assertEqual(bg.stem_length('s0'), 2)
         self.assertEqual(bg.stem_length('s1'), 3)
         self.assertEqual(bg.stem_length('m0'), 0)
         self.assertEqual(bg.stem_length('i0'), 1)
+        self.assertEqual(bg.stem_length('f1'), 1)
 
 

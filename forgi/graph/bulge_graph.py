@@ -288,6 +288,8 @@ class BulgeGraph(object):
         it's a multiloop, then it's the number of unpaired bases.
         '''
         d = self.defines[key]
+        #cud.pv('key')
+        #cud.pv('d')
         if key[0] == 's':
             return (d[1] - d[0]) + 1
         else:
@@ -1346,6 +1348,12 @@ class BulgeGraph(object):
                 dims = (bd[1] - bd[0] + 1, 1000)
             else:
                 dims = (0, 1000)
+        if bulge[0] == 'f' or bulge[0] == 't':
+            dims = (bd[1] - bd[0] + 1,)
+
+        if bulge[0] == 'h':
+            dims = (bd[1] - bd[0] + 1,)
+
 
         return dims
 
