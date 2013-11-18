@@ -333,3 +333,13 @@ connect s0 f1 m1 m0 t1
                          (14,16,1,3))
         self.assertEqual(bg.get_flanking_handles('i0', side=1),
                          (20,21,1,2))
+
+    def test_are_adjacent_stems(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..((..))..))..((..))')
+
+        cud.pv('bg.to_bg_string()')
+        self.assertTrue(bg.are_adjacent_stems('s0', 's1'))
+        self.assertTrue(bg.are_adjacent_stems('s0', 's2'))
+        self.assertFalse(bg.are_adjacent_stems('s1', 's2'))
+
+

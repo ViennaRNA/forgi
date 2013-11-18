@@ -1431,7 +1431,6 @@ class BulgeGraph(object):
             s1 = self.defines[c[0]]
             return (s1[0], s1[3])
 
-        cud.pv('bulge_name')
         s1 = self.defines[c[0]]
         s2 = self.defines[c[1]]
 
@@ -1526,3 +1525,16 @@ class BulgeGraph(object):
         # probably still have to include the 5' and 3' regions, but that
         # will come a little later
         return None
+    
+    def are_adjacent_stems(self, s1, s2):
+        '''
+        Are two stems separated by only one element.
+
+        @param s1: The name of the first stem
+        @param s2: The name of the second stem
+        '''
+        for e in self.edges[s1]:
+            if s2 in self.edges[e]:
+                return True
+
+        return False
