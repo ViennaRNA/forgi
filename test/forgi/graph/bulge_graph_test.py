@@ -342,4 +342,7 @@ connect s0 f1 m1 m0 t1
         self.assertTrue(bg.are_adjacent_stems('s0', 's2'))
         self.assertFalse(bg.are_adjacent_stems('s1', 's2'))
 
+        self.assertFalse(bg.are_adjacent_stems('s0', 's2', 
+                                               multiloops_count=False))
+
 

@@ -1526,14 +1526,19 @@ class BulgeGraph(object):
         # will come a little later
         return None
     
-    def are_adjacent_stems(self, s1, s2):
+    def are_adjacent_stems(self, s1, s2, multiloops_count=True):
         '''
-        Are two stems separated by only one element.
+        Are two stems separated by only one element. If multiloops should not
+        count as edges, then the appropriate parameter should be set.
 
         @param s1: The name of the first stem
         @param s2: The name of the second stem
+        @param multiloops_count: Whether to count multiloops as an edge linking
+                                 two stems
         '''
         for e in self.edges[s1]:
+            if not multiloops_count and e[0] == 'm':
+                continue
             if s2 in self.edges[e]:
                 return True
 
