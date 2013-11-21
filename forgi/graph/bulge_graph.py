@@ -928,7 +928,7 @@ class BulgeGraph(object):
                     new_d = [d[2], d[3], d[0], d[1]]
                     self.defines[k] = new_d
 
-    def to_dotbracket(self):
+    def to_dotbracket_string(self):
         '''
         Convert the BulgeGraph representation to a dot-bracket string
         and return it.
@@ -1130,8 +1130,9 @@ class BulgeGraph(object):
 
         @param s1: The stem.
         @param b: The bulge.
-        @return: A tuple indicating which side is the one next to the bulge
-                 and which is away from the bulge.
+        @return: A tuple indicating the corner of the stem that connects
+                 to the bulge as well as the corner of the bulge that connects
+                 to the stem.
         '''
         s1d = self.defines[s1]
         bd = self.defines[b]

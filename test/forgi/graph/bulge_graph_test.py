@@ -75,7 +75,7 @@ connect s0 f1 m1 m0 t1
         '''
         bg = cgb.BulgeGraph()
         bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
-        self.assertEquals(bg.to_dotbracket(), '((....((..))....))')
+        self.assertEquals(bg.to_dotbracket_string(), '((....((..))....))')
         self.check_for_overlapping_defines(bg)
 
     def test_from_dotplot3(self):
@@ -122,6 +122,7 @@ connect s0 f1 m1 m0 t1
         self.check_for_overlapping_defines(bg)
         self.check_for_all_nucleotides(bg)
 
+
     def test_from_bg_string(self):
         bg = cgb.BulgeGraph()
         bg.from_bg_string(self.bg_string)
@@ -130,7 +131,7 @@ connect s0 f1 m1 m0 t1
 
     def check_from_and_to_dotbracket(self, dotbracket):
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
-        self.assertEquals(bg.to_dotbracket(), dotbracket)
+        self.assertEquals(bg.to_dotbracket_string(), dotbracket)
 
     def test_get_multiloop_side(self):
         # see page 85 in the notebook
@@ -156,6 +157,19 @@ connect s0 f1 m1 m0 t1
 
         p1 = bg.get_sides_plus('s1', 'm0')
         self.assertEquals(p1[0], 0)
+
+        bg = cgb.BulgeGraph(dotbracket_str='(((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))')
+        cud.pv('bg.to_bg_string()')
+
+        for d in bg.mloop_iterator():
+            connections = bg.connections(d)
+
+            (s1c, d1c) = bg.get_sides_plus(connections[0], d)
+            (s2c, d2c) = bg.get_sides_plus(connections[1], d)
+
+            self.assertTrue((s1c, s2c) in [(1,0),(3,0),(2,3)])
+            
+            cud.pv('connections, d, s1c, s2c')
 
     def test_to_dotbracket(self):
         self.check_from_and_to_dotbracket('..((..))..')

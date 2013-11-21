@@ -35,7 +35,7 @@ def main():
     cg = cmg.from_pdb(args[0])
     print ">%s" % (pdb_id)
     print cg.seq
-    print cg.to_dotbracket()
+    print cg.to_dotbracket_string()
 
 
 if __name__ == '__main__':

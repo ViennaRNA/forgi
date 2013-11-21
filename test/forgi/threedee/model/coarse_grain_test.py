@@ -82,8 +82,6 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         self.assertTrue(len(cg.defines) > 1)
 
-        cud.pv('cg.to_cg_string()')
-
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         
@@ -91,3 +89,10 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         for key in cg.defines.keys():
             self.assertTrue(key in cg.coords)
 
+    def test_get_bulge_angle_stats_core(self):
+        cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        cud.pv('cg.to_bg_string()')
+        cud.pv('cg.to_dotbracket_string()')
+        for d in cg.mloop_iterator():
+            cg.get_bulge_angle_stats(d)
