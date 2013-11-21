@@ -301,18 +301,12 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         (s1b, s1e) = self.get_sides(connections[0], define)
         (s2b, s1e) = self.get_sides(connections[1], define)
 
-        (s1c, d1c) = self.get_sides_plus(connections[0], define)
-        (s2c, d2c) = self.get_sides_plus(connections[1], define)
-
-        cud.pv('connections')
-        cud.pv('define, s1c, s2c')
-
         # Get the orientations for orienting these two stems
         (r, u, v, t) = cgg.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
         (r1, u1, v1) = cgg.get_stem_separation_parameters(stem1, twist1, bulge)
 
         dims =self.get_bulge_dimensions(define)
-        ang_type = cbs.end_ang_types[(s1b, s2b, self.get_stem_direction(connections[0], connections[1]))]
+        ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define)
 
         angle_stat = cbs.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)

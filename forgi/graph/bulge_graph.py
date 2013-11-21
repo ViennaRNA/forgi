@@ -51,37 +51,6 @@ def any_difference_of_one(stem, bulge):
                     return True
     return False
 
-
-def print_bulge_graph(graph):
-    '''
-    Print out the connections in the graph.
-
-    :param graph: A dictionary indexed by stem number containing a set
-                  of the bulge numbers that it is connected to.
-    '''
-    for key in graph.keys():
-        stem_str = "connect s%d" % (key)
-        for item in graph[key]:
-            stem_str += " b%d" % (item)
-        print stem_str
-
-def print_stems(stems):
-    '''
-    Print the names and definitions of the stems.
-
-    :param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
-                  where s1 and e1 are the nucleotides at one end of the stem
-                  and s2 and e2 are the nucleotides at the other.
-    '''
-    for i in range(len(stems)):
-        # one is added to each coordinate to make up for the fact that residues are 1-based
-        ss1 = stems[i][0][0]+1
-        ss2 = stems[i][0][1]+1
-        se1 = stems[i][1][0]+1
-        se2 = stems[i][1][1]+1
-
-        print "define s%d 0 %d %d %d %d" % (i, min(ss1,se1), max(ss1,se1), min(ss2,se2), max(ss2,se2))
-
 def print_bulges(bulges):
     '''
     Print the names and definitions of the bulges.
@@ -288,9 +257,7 @@ class BulgeGraph(object):
         it's a multiloop, then it's the number of unpaired bases.
         '''
         d = self.defines[key]
-        #cud.pv('key')
-        #cud.pv('d')
-        if key[0] == 's':
+        if key[0] == 's' or key[0] == 'y':
             return (d[1] - d[0]) + 1
         else:
             return min(self.get_bulge_dimensions(key))
@@ -452,8 +419,8 @@ class BulgeGraph(object):
             for j in range(len(bulges)):
                 bulge = bulges[j]
                 if any_difference_of_one(stem, bulge):
-                    self.edges['s%d' % (i)].add('b%d' % (j))
-                    self.edges['b%d' % (j)].add('s%d' % (i))
+                    self.edges['y%d' % (i)].add('b%d' % (j))
+                    self.edges['b%d' % (j)].add('y%d' % (i))
 
     def create_stem_graph(self, stems, bulge_counter):
         '''
@@ -496,11 +463,11 @@ class BulgeGraph(object):
                                         self.defines[bn] = []
                                         self.weights[bn] = 1
 
-                                        self.edges['s%d' % i].add(bn)
-                                        self.edges[bn].add('s%d' % i)
+                                        self.edges['y%d' % i].add(bn)
+                                        self.edges[bn].add('y%d' % i)
 
-                                        self.edges['s%d' % j].add(bn)
-                                        self.edges[bn].add('s%d' % j)
+                                        self.edges['y%d' % j].add(bn)
+                                        self.edges[bn].add('y%d' % j)
 
                                         bulge_counter += 1
                                         stem_stems_set.add(j)
@@ -732,12 +699,12 @@ class BulgeGraph(object):
         # for all stems of length 1, merge with adjacent bulges
         for key in self.edges.keys():
             if self.dissolve_length_one_stems:
-                if key[0] == 's':
+                if key[0] == 'y':
                     if self.stem_length(key) == 1:
                         self.dissolve_stem(key)
 
         for key in self.edges.keys():
-            if key[0] == 's':
+            if key[0] == 'y':
                 while True:
                     loop = self.find_bulge_loop(key)
                     bulge_loop = [v for v in loop if v[0] == 'b' or v[0] == 'x']
@@ -787,6 +754,22 @@ class BulgeGraph(object):
                     new_edges.add(e)
             self.edges[k] = new_edges
 
+    def compare_stems(self, b):
+        '''
+        A function that can be passed in as the key to a sort.
+        '''
+        return (self.defines[b][0], 0)
+
+
+    def compare_bulges(self, b):
+        connections = self.connections(b)
+
+        return (self.defines[connections[0]][0], 
+                self.defines[connections[1]][0])
+
+    def compare_hairpins(self, b):
+        return (self.defines[b][0], sys.maxint)
+
     def relabel_nodes(self):
         '''
         Change the labels of the nodes to be more indicative of their nature.
@@ -798,6 +781,7 @@ class BulgeGraph(object):
         f: five-prime unpaired
         t: three-prime unpaired
         '''
+        stems = []
         hairpins = []
         interior_loops = []
         multiloops = []
@@ -805,7 +789,10 @@ class BulgeGraph(object):
         threeprimes = []
 
         for d in self.defines.keys():
-            if d[0] == 's':
+            if d[0] == 'y':
+                stems += [d]
+
+                stems.sort(key=self.compare_stems)
                 continue
 
             if len(self.defines[d]) == 0:
@@ -823,25 +810,71 @@ class BulgeGraph(object):
                 self.defines[d][1] != self.seq_length):
                 hairpins += [d]
 
+                hairpins.sort(key=self.compare_hairpins)
+
             if (len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
                 self.defines[d][0] != 1 and
                 self.defines[d][1] != self.seq_length):
                 multiloops += [d]
 
+                multiloops.sort(key=self.compare_bulges)
+
             if self.weights[d] == 2:
                 interior_loops += [d]
+                interior_loops.sort(key=self.compare_stems)
 
         for d in fiveprimes:
             self.relabel_node(d, 'f1')
         for d in threeprimes:
             self.relabel_node(d, 't1')
+
+        for i,d in enumerate(stems):
+            self.relabel_node(d, 's%d' % (i))
         for i,d in enumerate(interior_loops):
             self.relabel_node(d, 'i%d' % (i))
         for i,d in enumerate(multiloops):
             self.relabel_node(d, 'm%d' % (i))
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
+
+    def connection_type(self, define, connections):
+        '''
+        Classify the way that two stems are connected according to the type
+        of bulge that separates them.
+
+        @param define: The name of the bulge separating the two stems
+        @param connections: The two stems and their separation
+        '''
+
+        if define[0] == 'i':
+            # interior loop, we just have to check if 
+            # connections[0] < connections[1]
+            if self.defines[connections[0]][0] < self.defines[connections[1]][0]:
+                return 1
+            else:
+                return -1
+        elif define[0] == 'm':
+            (s1c, b1c) = self.get_sides_plus(connections[0], define)
+            (s2c, b2c) = self.get_sides_plus(connections[1], define)
+
+            if (s1c, s2c) == (1, 0):
+                return 2
+            elif (s1c, s2c) == (0, 1):
+                return -2
+            elif (s1c, s2c) == (3, 0):
+                return 3
+            elif (s1c, s2c) == (0, 3):
+                return -3
+            elif (s1c, s2c) == (2, 3):
+                return 4
+            elif (s1c, s2c) == (3, 2):
+                return -4
+            else:
+                raise Exception("Weird angle type: (s1c, s2c) = (%d, %d)" % 
+                                (s1c, s2c))
+        else:
+            raise Exception("connection_type called on non-interior loop/multiloop")
 
     def find_multiloop_loops(self):
         '''
@@ -899,9 +932,9 @@ class BulgeGraph(object):
             se1 = stems[i][1][0]+1
             se2 = stems[i][1][1]+1
 
-            self.defines['s%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
+            self.defines['y%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
                                          min(ss2,se2), max(ss2,se2)]
-            self.weights['s%d' % (i)] = 1
+            self.weights['y%d' % (i)] = 1
         for i in range(len(bulges)):
             bulge = bulges[i]
             self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])

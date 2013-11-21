@@ -140,10 +140,10 @@ connect s0 f1 m1 m0 t1
         s = bg.get_multiloop_side('m0')
         self.assertEqual(s, (1, 0))
 
-        s = bg.get_multiloop_side('m1')
+        s = bg.get_multiloop_side('m2')
         self.assertEquals(s, (3, 0))
 
-        s = bg.get_multiloop_side('m2')
+        s = bg.get_multiloop_side('m1')
         self.assertEquals(s, (2, 3))
 
     def test_get_sides_plus(self):
@@ -152,14 +152,13 @@ connect s0 f1 m1 m0 t1
         p1 = bg.get_sides_plus('s0', 'm0')
         self.assertEquals(p1[0], 1)
 
-        p1 = bg.get_sides_plus('s0', 'm2')
+        p1 = bg.get_sides_plus('s0', 'm1')
         self.assertEquals(p1[0], 2)
 
         p1 = bg.get_sides_plus('s1', 'm0')
         self.assertEquals(p1[0], 0)
 
         bg = cgb.BulgeGraph(dotbracket_str='(((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))')
-        cud.pv('bg.to_bg_string()')
 
         for d in bg.mloop_iterator():
             connections = bg.connections(d)
@@ -169,8 +168,6 @@ connect s0 f1 m1 m0 t1
 
             self.assertTrue((s1c, s2c) in [(1,0),(3,0),(2,3)])
             
-            cud.pv('connections, d, s1c, s2c')
-
     def test_to_dotbracket(self):
         self.check_from_and_to_dotbracket('..((..))..')
         self.check_from_and_to_dotbracket('..((..))..((..))')
@@ -210,19 +207,22 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph(dotbracket_str='().()')
         bd = bg.get_bulge_dimensions('m0')
 
-        bg = cgb.BulgeGraph(dotbracket_str='(.(.).(.).(.))')
+        dotbracket = '(.(.).(.).(.))'
+        bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
         bd = bg.get_bulge_dimensions('m0')
-        self.assertEquals(bd, (0,1000))
-        bd = bg.get_bulge_dimensions('m1')
         self.assertEquals(bd, (1,1000))
+        bd = bg.get_bulge_dimensions('m1')
+        self.assertEquals(bd, (0,1000))
         bd = bg.get_bulge_dimensions('m2')
+        self.assertEquals(bd, (1,1000))
+        bd = bg.get_bulge_dimensions('m3')
         self.assertEquals(bd, (1,1000))
 
         bg = cgb.BulgeGraph(dotbracket_str='((..((..))....))..((..((..))...))')
 
-        bd = bg.get_bulge_dimensions('i1')
-        self.assertEquals(bd, (2, 4))
         bd = bg.get_bulge_dimensions('i0')
+        self.assertEquals(bd, (2, 4))
+        bd = bg.get_bulge_dimensions('i1')
         self.assertEquals(bd, (2, 3))
 
     def test_get_define_seq_str(self):
@@ -260,7 +260,7 @@ connect s0 f1 m1 m0 t1
 
         bg = cgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
 
-        (m1, m2) = bg.get_flanking_region('m1')
+        (m1, m2) = bg.get_flanking_region('m0')
         self.assertEqual(m1, 1)
         self.assertEqual(m2, 5)
 
@@ -268,19 +268,19 @@ connect s0 f1 m1 m0 t1
         self.assertEqual(m1, 7)
         self.assertEqual(m2, 10)
 
-        (m1, m2) = bg.get_flanking_region('m0')
+        (m1, m2) = bg.get_flanking_region('m1')
         self.assertEqual(m1, 12)
         self.assertEqual(m2, 15)
 
         bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
         (m1, m2) = bg.get_flanking_region('i1', side=0)
-        self.assertEqual(bg.get_flanking_region('i1', side=0),
-                         (1,3))
-        self.assertEqual(bg.get_flanking_region('i1', side=1),
-                         (5,7))
         self.assertEqual(bg.get_flanking_region('i0', side=0),
-                         (9,11))
+                         (1,3))
         self.assertEqual(bg.get_flanking_region('i0', side=1),
+                         (5,7))
+        self.assertEqual(bg.get_flanking_region('i1', side=0),
+                         (9,11))
+        self.assertEqual(bg.get_flanking_region('i1', side=1),
                          (13,14))
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
@@ -298,11 +298,11 @@ connect s0 f1 m1 m0 t1
 
         bg = cgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
         bg.seq = '123456789012345'
-        self.assertEqual(bg.get_flanking_sequence('m1'),
+        self.assertEqual(bg.get_flanking_sequence('m0'),
                          '12345')
         self.assertEqual(bg.get_flanking_sequence('m2'),
                          '7890')
-        self.assertEqual(bg.get_flanking_sequence('m0'),
+        self.assertEqual(bg.get_flanking_sequence('m1'),
                          '2345')
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
@@ -318,32 +318,32 @@ connect s0 f1 m1 m0 t1
 
         bg = cgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
 
-        self.assertEqual(bg.get_flanking_handles('m1'),
+        self.assertEqual(bg.get_flanking_handles('m0'),
                          (2,4,1,3))
         self.assertEqual(bg.get_flanking_handles('m2'),
                          (8,10,1,3))
-        self.assertEqual(bg.get_flanking_handles('m0'),
+        self.assertEqual(bg.get_flanking_handles('m1'),
                          (12,14,0,2))
 
         bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
-        self.assertEqual(bg.get_flanking_handles('i1', side=0),
-                         (1,3,0,2))
-        self.assertEqual(bg.get_flanking_handles('i1', side=1),
-                         (5,7,0,2))
         self.assertEqual(bg.get_flanking_handles('i0', side=0),
-                         (9,11,0,2))
+                         (1,3,0,2))
         self.assertEqual(bg.get_flanking_handles('i0', side=1),
+                         (5,7,0,2))
+        self.assertEqual(bg.get_flanking_handles('i1', side=0),
+                         (9,11,0,2))
+        self.assertEqual(bg.get_flanking_handles('i1', side=1),
                          (13,14,0,1))
 
         bg = cgb.BulgeGraph(dotbracket_str='((.((.)).)).((.((.))))')
         #                                   1234567890123456789012
-        self.assertEqual(bg.get_flanking_handles('i1', side=0),
-                         (2,4,1,3))
-        self.assertEqual(bg.get_flanking_handles('i1', side=1),
-                         (8,10,1,3))
         self.assertEqual(bg.get_flanking_handles('i0', side=0),
-                         (14,16,1,3))
+                         (2,4,1,3))
         self.assertEqual(bg.get_flanking_handles('i0', side=1),
+                         (8,10,1,3))
+        self.assertEqual(bg.get_flanking_handles('i1', side=0),
+                         (14,16,1,3))
+        self.assertEqual(bg.get_flanking_handles('i1', side=1),
                          (20,21,1,2))
 
     def test_are_adjacent_stems(self):
@@ -365,4 +365,13 @@ connect s0 f1 m1 m0 t1
         self.assertEqual(bg.stem_length('i0'), 1)
         self.assertEqual(bg.stem_length('f1'), 1)
 
+    def test_connection_type(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
 
+        cud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.connection_type('m0', ['s0', 's2']), 3)
+        self.assertEqual(bg.connection_type('m0', ['s2', 's0']), -3)
+
+        self.assertEqual(bg.connection_type('i0', ['s0', 's1']), 1)
+        self.assertEqual(bg.connection_type('i0', ['s1', 's0']), -1)
