@@ -368,8 +368,6 @@ connect s0 f1 m1 m0 t1
     def test_connection_type(self):
         bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
 
-        cud.pv('bg.to_bg_string()')
-
         self.assertEqual(bg.connection_type('m0', ['s0', 's2']), 3)
         self.assertEqual(bg.connection_type('m0', ['s2', 's0']), -3)
 
