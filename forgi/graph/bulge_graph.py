@@ -838,6 +838,14 @@ class BulgeGraph(object):
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
 
+    def has_connection(self, v1, v2):
+        """ Is there an edge between these two nodes """
+
+        if v2 in self.edges[v1]:
+            return True
+        else:
+            return False
+
     def connection_type(self, define, connections):
         '''
         Classify the way that two stems are connected according to the type
@@ -1389,7 +1397,24 @@ class BulgeGraph(object):
             dims = (bd[1] - bd[0] + 1,)
 
 
+        cud.pv('bulge')
         return dims
+
+    def get_node_from_residue_num(self, base_num):
+        """
+        Iterate over the defines and see which one encompasses this base.
+        """
+        for key in self.defines.keys():
+            define = self.defines[key]
+
+            for i in range(0, len(define), 2):
+                a = [int(define[i]), int(define[i+1])]
+                a.sort()
+
+                if base_num >= a[0] and base_num <= a[1]:
+                    return key
+
+        raise Exception("Base number %d not found in the defines." % (base_num))
 
     def get_twists(self, node):
         '''                                                                                                           

@@ -61,6 +61,23 @@ def make_temp_directory():
     yield temp_dir
     shutil.rmtree(temp_dir)
 
+def add_longrange_interactions(cg, lines):
+    '''
+    Iterate over the lines in an MC-Annotate file and add information
+    about interactions between non-adjacent elements.
+
+    @param cg: A CoarseGrainRNA structure
+    @param lines: All the lines in an MC-Annotate file
+    '''
+    for line in cum.iterate_over_interactions(lines):
+        (from_chain, from_base, to_chain, to_base) =  cum.get_interacting_base_pairs(line)
+        node1 = cg.get_node_from_residue_num(from_base)
+        node2 = cg.get_node_from_residue_num(to_base)
+
+        if abs(from_base - to_base) > 1 and node1 != node2 and not cg.has_connection(node1, node2):
+            cg.longrange[node1].add(node2)
+            cg.longrange[node2].add(node1)
+
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
     '''
     Create the coarse grain model from a pdb file and store all
@@ -137,6 +154,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
             cgg.add_stem_information_from_pdb_chain(cg, chain)
             cgg.add_bulge_information_from_pdb_chain(cg, chain)
             cgg.add_loop_information_from_pdb_chain(cg, chain)
+
+            add_longrange_interactions(cg, lines)
 
             with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
                 f3.write(cg.to_cg_string())
@@ -265,8 +284,17 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
     def get_long_range_str(self):
         out_str = ''
+        printed = set()
+
         for key1 in self.longrange.keys():
             for key2 in self.longrange[key1]:
+                k = [key1, key2]
+                k.sort()
+                k = tuple(k)
+                if k in printed:
+                    continue
+                printed.add(k)
+
                 out_str += "longrange %s %s\n" % (key1, key2)
 
         return out_str
