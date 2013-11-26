@@ -58,7 +58,6 @@ def stem_stem_orientation(cg, s1, s2):
     # as line segments
     (i1, i2) = cuv.line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1)
     i_vec = i2 - i1
-    #cud.pv('s1,s2,cuv.magnitude(i2-i1)')
 
     i_rej = cuv.vector_rejection(i_vec, s1_vec)
     plane_vec = np.cross(i_rej, s1_vec)
@@ -81,7 +80,6 @@ def stem_stem_orientation(cg, s1, s2):
     dist = cuv.magnitude(i_vec) + 0.0001
 
     ortho_offset = cuv.magnitude(i_rej)
-    #cud.pv('dist, ortho_offset')
     lateral_offset = m.sqrt(dist * dist - ortho_offset * ortho_offset)
 
     return (cuv.magnitude(i_vec), ang1,
@@ -544,14 +542,9 @@ def basenormals_mids(chain, start1, start2, end1, end2):
     scatter /= float(len(residue_numbers))
     base_normals /= float(len(residue_numbers))
 
-    cud.pv('base_normals')
-
     # compute the eigenvalues and eigenvectors
     w, v = np.linalg.eig(scatter)
     index, value = max(enumerate(w), key=operator.itemgetter(1))
-
-    cud.pv('w,v, index, value')
-    cud.pv('axis')
 
     # estimate the start and end position, which will be converted scaled
     # to the position of the helix axis
@@ -607,8 +600,6 @@ def get_mids_core_a(chain, start1, start2, end1, end2, use_template=True):
     residue_numbers = [i for i in range(tstart1, tend1 + 1)]
     residue_numbers += [i for i in range(tend2, tstart2 + 1)]
 
-    #cud.pv('residue_numbers')
-
     for rn in residue_numbers:
         #atom_poss += [chain[rn]['C1*'].get_vector().get_array()]
         pot_atoms = ['P', 'O3*', 'C3*', 'C4*', 'C5*', 'O5*', 'C1*']
@@ -617,7 +608,6 @@ def get_mids_core_a(chain, start1, start2, end1, end2, use_template=True):
                 atom_poss += [ideal_chain[rn][atom].get_vector().get_array()]
             except KeyError:
                 pass
-            #cud.pv('ke')
 
     mids = fit_circle(est_mids, np.array(atom_poss), start_pos, end_pos)
     return mids
@@ -638,7 +628,6 @@ def get_mids_core(chain, start1, start2, end1, end2, use_template=True):
 
         n1 += [notch1_n[0]]
         n2 += [notch2_n[0]]
-    #cud.pv('n')
     dists1 = [j-i for i,j in zip(n1[:-1], n1[1:])]
     dists2 = [j-i for i,j in zip(n2[:-1], n2[1:])]
 
@@ -649,13 +638,10 @@ def get_mids_core(chain, start1, start2, end1, end2, use_template=True):
 
     #filename =
     stem_length = end1 - start1 + 1
-    #cud.pv('stem_length')
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
     filename = forgi.threedee.data_file(op.join('data', template_filename))
     ideal_chain = cup.get_first_chain(filename)
-    #cud.pv('template_filename')
-    #cud.pv('start1, end1, end2, start2')
     chain = extract_define_residues([start1, end1, end2, start2], chain)
 
     rotran = cup.pdb_rmsd(chain, ideal_chain, sidechains=False,
@@ -666,8 +652,6 @@ def get_mids_core(chain, start1, start2, end1, end2, use_template=True):
                                  use_template=use_template)
 
     chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
-    #cud.pv('chain_mids')
-    #cud.pv('chain_new_mids')
 
     return (bpdb.Vector(chain_new_mids[0]), bpdb.Vector(chain_new_mids[1]))
 
@@ -808,7 +792,6 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
         ang = expected_ang - backward
 
     ang_per_nt = ang / float(stem_len - 1)
-    #cud.pv('expected_ang, ang')
     ang = ang_per_nt * i
 
     # the basis vectors for the helix along which the
@@ -1223,7 +1206,6 @@ def f_3(vec, points, est):
     #center_2, ier=so.leastsq(f_2, center_estimate,args=p)
     center_2 = circle_fit(p)
 
-    #cud.pv('circle_error(center_2, p)')
     return f_2(center_2, p)
 
 
@@ -1283,12 +1265,6 @@ def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
     ideal_chain = cup.get_first_chain(filename)
 
     '''
-    cud.pv('cup.pdb_rmsd(ideal_chain, chain,
-                          sidechains=False, superimpose=False)')
-    cud.pv('cup.pdb_rmsd(ideal_chain, chain,
-                          sidechains=False, superimpose=True)')
-    '''
-    '''
     rotran = cup.pdb_rmsd(ideal_chain, chain, sidechains=False,
             superimpose=True, apply_sup=False)[2]
     '''
@@ -1302,11 +1278,6 @@ def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
                            ideal_mids[1].get_array()])
 
     chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
-
-    #cud.pv('ideal_new_mids')
-    #cud.pv('ideal_mids')
-    #cud.pv('chain_mids')
-    #cud.pv('chain_new_mids')
 
     return chain_new_mids
 
@@ -1326,10 +1297,6 @@ def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
 
     center_5 = circle_fit(points1[:, 1:])
     r5 = np.mean(calc_R(*center_5, p=points1[:, 1:]))
-    #cud.pv('v1')
-    #cud.pv('vec')
-    #cud.pv('cuv.vec_angle(v1, vec)')
-    #cud.pv('sum_square(f_3(v1,  points))')
     center_estimate = mids[0][1:]
     center_2, ier = so.leastsq(f_2, center_estimate, args=(p))
     center_4 = circle_fit(p)
@@ -1360,7 +1327,6 @@ def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
 
     mids_stem_basis = [[start_pos1[0], center_5[0], center_5[1]],
                        [end_pos1[0], center_5[0], center_5[1]]]
-    #cud.pv('basis1')
     mids_standard_basis = cuv.change_basis(np.array(mids_stem_basis).T,
                                            cuv.standard_basis,
                                            basis1).T
@@ -1373,10 +1339,7 @@ def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
                                            basis).T
     '''
 
-    #cud.pv('v1')
-    #cud.pv('cuv.normalize(mids_standard_basis[1] - mids_standard_basis[0])')
     plt.show()
-    #cud.pv('cuv.magnitude(mids_standard_basis[1] - mids_standard_basis[0])')
     return mids_standard_basis
 
 
@@ -1408,7 +1371,6 @@ def get_mids_fit_method(chain, start1, start2, end1, end2):
             atom_poss += [ideal_chain[rn]['C1*'].get_vector().get_array()]
         except KeyError:
             pass
-            #cud.pv('ke')
 
     points = np.array(atom_poss)
     mids = estimate_mids_core(chain, start1, start2, end1, end2)

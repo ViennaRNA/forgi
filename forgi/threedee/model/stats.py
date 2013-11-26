@@ -312,7 +312,6 @@ class ContinuousAngleStats():
                         data += [[d.u, d.v, d.t, d.r1, d.u1, d.v1]]
 
                     if len(data) < 3:
-                        #cud.pv('dims')
                         continue
 
                     try:
@@ -330,8 +329,6 @@ class ContinuousAngleStats():
         s = AngleStat()
         (s.u, s.v, s.v, s.r1, s.u1, s.v1) = new_stats.T[0]
         return s
-        #cud.pv('new_stats')
-        #cud.pv('s')
 
     def stats_by_dimensions(dims, n):
         '''

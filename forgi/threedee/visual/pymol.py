@@ -522,14 +522,12 @@ class PymolPrinter:
         return
 
         if self.max_stem_distances > 0:
-            cud.pv('self.max_stem_distances')
             for (s1, s2) in it.permutations(cg.stem_iterator(), r=2):
                 (i1, i2) = cuv.line_segment_distance(cg.coords[s1][0],
                                                      cg.coords[s1][1],
                                                      cg.coords[s2][0],
                                                      cg.coords[s2][1])
                 if cuv.magnitude(i2 - i1) < self.max_stem_distances:
-                    cud.pv('cuv.magnitude(i2-i1)')
                     #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
                     self.add_segment(i1, i2, 'cyan', 0.3)
 
@@ -575,8 +573,6 @@ class PymolPrinter:
 
                 sum_energy += energy
 
-            cud.pv("sum_energy")
-
         if self.stem_stem_orientations is not None:
             for (s1, s2) in it.permutations(cg.stem_iterator(), 2):
                 '''
@@ -619,7 +615,6 @@ class PymolPrinter:
                     continue
 
                 '''
-                #cud.pv('cuv.vec_angle(s2_proj_in, s1_vec)')
                 #self.add_segment(start_point,
                                   start_point + 10 * cuv.normalize(s2_vec),
                                   'white', 0.5)

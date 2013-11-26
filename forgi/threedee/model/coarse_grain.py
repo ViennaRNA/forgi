@@ -182,7 +182,6 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
     else:
         with make_temp_directory() as output_dir:
-            print "output_dir"
             print op.exists(output_dir)
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
 
@@ -354,7 +353,6 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         if bulge == 'start':
             return (cbs.AngleStat(), cbs.AngleStat())                                                                 
         
-        #print "bulge:", bulge
         connections = self.connections(bulge)                                                                         
         
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)

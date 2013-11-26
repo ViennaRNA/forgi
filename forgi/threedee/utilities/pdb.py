@@ -158,8 +158,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     all_atoms2 = []
 
     if len(c1.get_list()) != len(c2.get_list()):
-        cud.pv('len(c1.get_list())')
-        cud.pv('len(c2.get_list())')
         print >>sys.stderr, "Chains of different length"
         raise Exception("Chains of different length.")
 
@@ -204,7 +202,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         crvs1 = np.array([a.get_vector().get_array() for a in all_atoms1])
         crvs2 = np.array([a.get_vector().get_array() for a in all_atoms2])
 
-        #cud.pv('cuv.vector_set_rmsd(crvs1, crvs2)')
         #return (len(all_atoms1), brmsd.rmsd(crvs1, crvs2), None)
         return (len(all_atoms1), cuv.vector_set_rmsd(crvs1, crvs2), None)
 

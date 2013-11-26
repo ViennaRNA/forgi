@@ -179,7 +179,7 @@ def find_bulges_and_stems(brackets):
             if prev == '.':
                 dots_end = i-1
                 bulges = add_bulge(bulges, (dots_start, dots_end), context, "2")
-  
+
         if brackets[i] == '.':
             if prev == '.':
                 continue
@@ -472,6 +472,23 @@ class BulgeGraph(object):
                                         bulge_counter += 1
                                         stem_stems_set.add(j)
                                     stem_stems[i] = stem_stems_set
+
+        for d in self.defines.keys():
+            if d[0] != 'y':
+                continue
+
+            (s1, e1, s2, e2) = self.defines[d] 
+            if abs(s2 - e1) == 1:
+                bn = 'b%d' % (bulge_counter)
+
+                self.defines[bn] = []
+                self.weights[bn] = 1
+
+                self.edges[bn].add(d)
+                self.edges[d].add(bn)
+
+                bulge_counter += 1
+            
         return stem_stems
 
     def remove_vertex(self, v):
@@ -716,6 +733,7 @@ class BulgeGraph(object):
                     if len(bulge_loop) == 0:
                         break
 
+
     def interior_loop_iterator(self):
         """
         Iterate over all of the interior loops.
@@ -795,7 +813,11 @@ class BulgeGraph(object):
                 stems.sort(key=self.compare_stems)
                 continue
 
-            if len(self.defines[d]) == 0:
+            if len(self.defines[d]) == 0 and len(self.edges[d]) == 1:
+                hairpins += [d]
+                continue
+
+            if len(self.defines[d]) == 0 and len(self.edges[d]) == 2:
                 multiloops += [d]
                 continue
 
@@ -1396,8 +1418,6 @@ class BulgeGraph(object):
         if bulge[0] == 'h':
             dims = (bd[1] - bd[0] + 1,)
 
-
-        cud.pv('bulge')
         return dims
 
     def get_node_from_residue_num(self, base_num):
@@ -1458,7 +1478,6 @@ class BulgeGraph(object):
         # uh oh, this shouldn't happen since every node                                                               
         # should have either one or two edges 
         return None                                                                                                   
-        
 
     def get_length(self, vertex):
         '''
@@ -1474,15 +1493,12 @@ class BulgeGraph(object):
             return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
         else:
             if len(self.edges[vertex]) == 1:
-                return self.defines[vertex][1] - self.defines[vertex][0]
+                return self.defines[vertex][1] - self.defines[vertex][0] + 1
             else:
                 dims = list(self.get_bulge_dimensions(vertex))
                 dims.sort()
-
-                if dims[0] == 0:
-                    return dims[1]
-                else:
-                    return dims[0]
+                
+                return dims[0]
 
     def get_flanking_region(self, bulge_name, side=0):
         '''

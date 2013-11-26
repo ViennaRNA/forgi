@@ -34,7 +34,6 @@ def main():
     pp = cvp.PymolPrinter()
 
     pp.add_loops = options.loops
-    #cud.pv('cg.to_cg_string()')
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
     pp.print_text = options.text

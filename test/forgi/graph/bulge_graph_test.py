@@ -78,6 +78,13 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.to_dotbracket_string(), '((....((..))....))')
         self.check_for_overlapping_defines(bg)
 
+    def test_from_dotplot4(self):
+        dotbracket = '()'
+        bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
+
+        # this structure should have a hairpin
+        self.assertTrue('h0' in bg.defines)
+
     def test_from_dotplot3(self):
         dotbracket = '(.(.((((((...((((((....((((.((((.(((..(((((((((....)))))))))..((.......))....)))......))))))))...))))))..)).))))).)..((((..((((((((((...))))))))).))))).......'
         bg = cgb.BulgeGraph()
@@ -205,6 +212,9 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bd, (0,1))
 
         bg = cgb.BulgeGraph(dotbracket_str='().()')
+        cud.pv('bg.defines')
+        cud.pv('bg.edges')
+        cud.pv('bg.to_bg_string()')
         bd = bg.get_bulge_dimensions('m0')
 
         dotbracket = '(.(.).(.).(.))'
@@ -224,6 +234,20 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bd, (2, 4))
         bd = bg.get_bulge_dimensions('i1')
         self.assertEquals(bd, (2, 3))
+    
+    def test_get_length(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(())')
+        cud.pv('bg.to_bg_string()')
+
+        bg = cgb.BulgeGraph(dotbracket_str='((..))..(((.)))')
+
+        self.assertEquals(bg.get_length('s0'), 2)
+        self.assertEquals(bg.get_length('h0'), 2)
+        self.assertEquals(bg.get_length('m0'), 2)
+        self.assertEquals(bg.get_length('s1'), 3)
+
+        bg = cgb.BulgeGraph(dotbracket_str='(())(())')
+        self.assertEquals(bg.get_length('m0'), 0)
 
     def test_get_define_seq_str(self):
         bg = cgb.BulgeGraph(dotbracket_str="(.())") 
@@ -373,3 +397,4 @@ connect s0 f1 m1 m0 t1
 
         self.assertEqual(bg.connection_type('i0', ['s0', 's1']), 1)
         self.assertEqual(bg.connection_type('i0', ['s1', 's0']), -1)
+
