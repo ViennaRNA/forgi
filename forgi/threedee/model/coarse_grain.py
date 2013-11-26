@@ -371,7 +371,6 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         @return: A StemStat structure containing the above information.                                               
         '''                                                                                                           
-        
         ss = cbs.StemStat()                                                                                           
         
         ss.pdb_name = self.name
@@ -411,6 +410,9 @@ class CoarseGrainRNA(cgb.BulgeGraph):
             if parts[0] == 'twist':
                 name = parts[1]
                 self.twists[name] = np.array([map(float, parts[2:5]), map(float, parts[5:8])])
+            if parts[0] == 'longrange':
+                self.longrange[parts[1]].add(parts[2])
+                self.longrange[parts[2]].add(parts[1])
 
     def to_cg_file(self, filename):
         '''

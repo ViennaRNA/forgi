@@ -66,6 +66,9 @@ def main():
                 pymol_cmd = 'hide all\n'
                 pymol_cmd += 'run %s\n' % (f.name)
                 pymol_cmd += 'show cartoon, all\n'
+                pymol_cmd += 'set cartoon_ring_mode\n'
+                pymol_cmd += 'set cartoon_tube_radius, .3'
+
 
                 f1.write(pymol_cmd)
                 f1.flush()

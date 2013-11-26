@@ -96,3 +96,8 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         cud.pv('cg.to_dotbracket_string()')
         for d in cg.mloop_iterator():
             cg.get_bulge_angle_stats(d)
+
+    def test_read_longrange_interactions(self):
+        cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        self.assertGreater(len(cg.longrange), 0)
