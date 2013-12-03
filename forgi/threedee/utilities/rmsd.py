@@ -2,8 +2,10 @@
 
 import numpy, sys
 import numpy as np
+import math
+import forgi.utilities.debug as cud
 #from forgi.graph.bulge_graph import BulgeGraph
-from forgi.threedee.utilities.vector import center_on_centroid
+import forgi.threedee.utilities.vector as ftuv
 
 # Shamelessly stolen from:
 # http://boscoh.com/protein/rmsd-root-mean-square-deviation
@@ -30,8 +32,8 @@ def centered_rmsd(crds1, crds2):
     Center the coordinate vectors on their centroid
     and then calculate the rmsd.
     '''
-    crds1 = center_on_centroid(crds1)
-    crds2 = center_on_centroid(crds2)
+    crds1 = ftuv.center_on_centroid(crds1)
+    crds2 = ftuv.center_on_centroid(crds2)
 
     os = optimal_superposition(crds1, crds2)
     crds_aligned = np.dot(crds1, os)
@@ -95,3 +97,19 @@ def main():
 if __name__ == '__main__':
     main()
 '''
+
+def radius_of_gyration(coords):
+    '''
+    Calculate the radius of gyration, given a set of coordinates.
+    '''
+    centroid = sum(coords) / float(len(coords))
+    diff_vecs = coords - centroid
+    #cud.pv('diff_vecs')
+    sums = np.sum(diff_vecs * diff_vecs, axis=1)
+    #cud.pv('sums')
+    total = sum(sums)
+    total /= len(coords)
+    rmsd = math.sqrt(total)
+
+    return rmsd
+

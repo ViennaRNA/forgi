@@ -1627,3 +1627,28 @@ class BulgeGraph(object):
                 return True
 
         return False
+
+    def random_subgraph(self):
+        '''
+        Return a random subgraph of this graph.
+
+        @return: A list containing a the nodes comprising a random subgraph
+        '''
+        subgraph_length = random.randint(1, len(self.defines.keys()))
+        start_node = random.choice(self.defines.keys())
+
+        curr_length = 1
+        next_nodes = list(self.edges[start_node])
+        visited = set()
+
+        new_graph = [start_node]
+
+        while curr_length < subgraph_length:
+            curr_node = random.choice(next_nodes)
+            visited.add(curr_node)
+            next_nodes += list(self.edges[curr_node])
+            next_nodes = [n for n in next_nodes if n not in visited]
+            new_graph += [curr_node]
+            curr_length += 1
+
+        return new_graph

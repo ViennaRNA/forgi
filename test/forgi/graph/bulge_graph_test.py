@@ -398,3 +398,10 @@ connect s0 f1 m1 m0 t1
         self.assertEqual(bg.connection_type('i0', ['s0', 's1']), 1)
         self.assertEqual(bg.connection_type('i0', ['s1', 's0']), -1)
 
+    def test_random_subgraph(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
+
+        sg = bg.random_subgraph()
+
+        # check to make sure there are no duplicate elements
+        self.assertEquals(len(sg), len(set(sg)))
