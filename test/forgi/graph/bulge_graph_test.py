@@ -212,9 +212,6 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bd, (0,1))
 
         bg = cgb.BulgeGraph(dotbracket_str='().()')
-        cud.pv('bg.defines')
-        cud.pv('bg.edges')
-        cud.pv('bg.to_bg_string()')
         bd = bg.get_bulge_dimensions('m0')
 
         dotbracket = '(.(.).(.).(.))'
@@ -237,7 +234,6 @@ connect s0 f1 m1 m0 t1
     
     def test_get_length(self):
         bg = cgb.BulgeGraph(dotbracket_str='(())')
-        cud.pv('bg.to_bg_string()')
 
         bg = cgb.BulgeGraph(dotbracket_str='((..))..(((.)))')
 
@@ -250,9 +246,13 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.get_length('m0'), 0)
 
     def test_get_define_seq_str(self):
-        bg = cgb.BulgeGraph(dotbracket_str="(.())") 
-        bg.seq = 'acguu'
-        self.assertEquals(bg.get_define_seq_str("i0"), ['c'])
+        bg = cgb.BulgeGraph(dotbracket_str="(.(.))") 
+        bg.seq = 'acgauu'
+        self.assertEquals(bg.get_define_seq_str("i0"), ['c', ''])
+
+        bg = cgb.BulgeGraph(dotbracket_str="(.(.))") 
+        bg.seq = 'acgauu'
+        self.assertEquals(bg.get_define_seq_str("i0", True), ['acg','uu'])
 
     def check_define_integrity(self, bg):
         '''

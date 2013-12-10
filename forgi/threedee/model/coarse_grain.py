@@ -334,7 +334,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
-        seqs = self.get_define_seq_str(define)
+        seqs = self.get_define_seq_str(define, adjacent=True)
 
         angle_stat = cbs.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
 

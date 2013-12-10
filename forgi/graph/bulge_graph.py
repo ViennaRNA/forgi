@@ -1329,22 +1329,45 @@ class BulgeGraph(object):
         '''
         define = self.defines[d]
         ranges = zip(*[iter(define)] * 2)
-    
-        seqs = [] 
-        for r in ranges:
-            if d[0] == 's':
-                seqs += [self.seq[r[0]-1:r[1]]]
+        c = self.connections(d)
+
+        if d[0] == 'i':
+            s1 = self.defines[c[0]]
+            s2 = self.defines[c[1]]
+            if adjacent:
+                return [self.seq[s1[1]-1:s2[0]],
+                        self.seq[s2[3]-1:s1[2]]]
             else:
-                if adjacent:
-                    if r[0] > 1:
-                        seqs += [self.seq[r[0]-2:r[1]+1]]
-                    else:
-                        seqs += [self.seq[r[0]-1:r[1]+1]]
-                else:
+                return [self.seq[s1[1]:s2[0]-1],
+                        self.seq[s2[3]:s1[2]-1]]
+        if d[0] == 'm':
+            s1 = self.defines[c[0]]
+            s2 = self.defines[c[1]]
+
+            i1 = self.get_sides_plus(c[0], d)
+            i2 = self.get_sides_plus(c[1], d)
+
+            (i1, i2) = (min(i1, i2), max(i1, i2))
+
+            if adjacent:
+                return [self.seq[i1-1:i2]]
+            else:
+                return [self.seq[i1:i2-1]]
+        else:
+            seqs = [] 
+            for r in ranges:
+                if d[0] == 's':
                     seqs += [self.seq[r[0]-1:r[1]]]
-                #seqs += [self.seq[r[0]-1:r[1]]]
-            
-        return seqs
+                else:
+                    if adjacent:
+                        if r[0] > 1:
+                            seqs += [self.seq[r[0]-2:r[1]+1]]
+                        else:
+                            seqs += [self.seq[r[0]-1:r[1]+1]]
+                    else:
+                        seqs += [self.seq[r[0]-1:r[1]]]
+                
+            return seqs
 
     def get_stem_direction(self, s1, s2):
         '''
@@ -1640,6 +1663,7 @@ class BulgeGraph(object):
         curr_length = 1
         next_nodes = list(self.edges[start_node])
         visited = set()
+        visited.add(start_node)
 
         new_graph = [start_node]
 
