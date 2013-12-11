@@ -99,3 +99,9 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
 
         self.assertGreater(len(cg.longrange), 0)
+
+    def test_radius_of_gyration(self):
+        cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        rg = cg.radius_of_gyration()
+        #cud.pv('rg')

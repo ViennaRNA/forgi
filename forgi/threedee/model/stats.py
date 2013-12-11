@@ -418,7 +418,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     pickle.dump(ConstructionStats.angle_stats, open('fess/stats/angle_stats.pickle','w'))
     '''
 
-    print >>sys.stderr, "done loading stats"
+    #print >>sys.stderr, "done loading stats"
     return ConstructionStats.angle_stats
 
 def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):

@@ -254,6 +254,17 @@ connect s0 f1 m1 m0 t1
         bg.seq = 'acgauu'
         self.assertEquals(bg.get_define_seq_str("i0", True), ['acg','uu'])
 
+        bg = cgb.BulgeGraph(dotbracket_str='(.(.).(.).)')
+        bg.seq = 'acguaaccggu'
+        self.assertEquals(bg.get_define_seq_str('m0'), ['c'])
+        self.assertEquals(bg.get_define_seq_str('m0', True), ['acg'])
+
+        self.assertEquals(bg.get_define_seq_str('m1'), ['g'])
+        self.assertEquals(bg.get_define_seq_str('m1', True), ['ggu'])
+
+        self.assertEquals(bg.get_define_seq_str('m2'), ['a'])
+        self.assertEquals(bg.get_define_seq_str('m2', True), ['aac'])
+
     def check_define_integrity(self, bg):
         '''
         Check to make sure that the define regions are always 5' to 3'

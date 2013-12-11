@@ -1344,8 +1344,8 @@ class BulgeGraph(object):
             s1 = self.defines[c[0]]
             s2 = self.defines[c[1]]
 
-            i1 = self.get_sides_plus(c[0], d)
-            i2 = self.get_sides_plus(c[1], d)
+            i1 = s1[self.get_sides_plus(c[0], d)[0]]
+            i2 = s2[self.get_sides_plus(c[1], d)[0]]
 
             (i1, i2) = (min(i1, i2), max(i1, i2))
 

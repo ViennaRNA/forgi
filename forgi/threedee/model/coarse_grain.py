@@ -6,6 +6,7 @@ import forgi.aux.k2n_standalone.knotted2nested as cak
 import forgi.utilities.debug as cud
 import forgi.threedee.utilities.mcannotate as cum
 import forgi.threedee.utilities.pdb as cup
+import forgi.threedee.utilities.rmsd as ftur
 import forgi.threedee.utilities.vector as cuv
 
 import Bio.PDB as bpdb
@@ -423,3 +424,17 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
             f.write(s)
 
+    def radius_of_gyration(self):
+        '''
+        Calculate the radius of gyration of this structure.
+
+        @return: A number with the radius of gyration of this structure.
+        '''
+        coords = []
+
+        for s in self.sorted_stem_iterator():
+            coords += list(self.coords[s])
+
+        rmsd = ftur.radius_of_gyration(coords)
+
+        return rmsd
