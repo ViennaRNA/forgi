@@ -153,6 +153,19 @@ connect s0 f1 m1 m0 t1
         s = bg.get_multiloop_side('m1')
         self.assertEquals(s, (2, 3))
 
+    def test_get_any_sides(self):
+        bg = cgb.BulgeGraph(dotbracket_str='((..((..))..)).((..))')
+        #cud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.get_any_sides('s0', 'i0'), (1,0))
+        self.assertEqual(bg.get_any_sides('i0', 's0'), (0,1))
+
+        bg = cgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
+        cud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.get_any_sides('s1', 'm1'), (0, 1))
+        self.assertEqual(bg.get_any_sides('m1', 's1'), (1, 0))
+
     def test_get_sides_plus(self):
         bg = cgb.BulgeGraph(dotbracket_str='(.().().)')
 

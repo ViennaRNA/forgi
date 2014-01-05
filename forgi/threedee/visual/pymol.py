@@ -24,6 +24,8 @@ class PymolPrinter:
         self.stem_stem_orientations = None
         self.new_segments = []
         self.segments = []
+        self.new_cones = []
+        self.cones = []
         self.labels = []
         self.spheres = []
         self.new_spheres = []
@@ -105,6 +107,19 @@ class PymolPrinter:
         #assert(not allclose(p, n))
         self.new_segments += [(np.array(p), np.array(n), color, width, text)]
 
+    def add_cone(self, p, n, color='white', width=2.4, text=''):
+        if self.override_color is not None:
+            color = self.override_color
+
+        cone_extension = 2.
+        cyl_vec = cuv.normalize(n-p)
+        cyl_len = cuv.magnitude(n-p)
+
+        new_width = width * (cyl_len + cone_extension) / cyl_len
+
+        self.new_cones += [(np.array(p) - cone_extension * cyl_vec, np.array(n), color, width, text)]
+        self.new_cones += [(np.array(n) + cone_extension * cyl_vec, np.array(p), color, width, text)]
+
     def transform_segments(self, translation, rotation):
         for (p, n, color, width, text) in self.new_segments:
             p -= translation
@@ -167,6 +182,22 @@ class PymolPrinter:
                                                           n[0], n[1], n[2])
             s += "%f, %s, %s," % (width, ", ".join(color_vec),
                                   ", ".join(color_vec)) + '\n'
+
+        return s
+
+    def pymol_cones_string(self):
+        color = 'white'
+        width = 0.2
+        s = ''
+        self.cones += self.new_cones
+
+        for cone in self.cones:
+            (p, n, color, width, text) = cone
+            color_vec = [str(c) for c in self.get_color_vec(color)]
+            s += " CONE, %f, %f, %f, %f, %f, %f, " % (p[0], p[1], p[2],
+                                                          n[0], n[1], n[2])
+            s += "%f, %s, %s," % (width, ", ".join(color_vec),
+                                  ", ".join(color_vec)) + "\n"
 
         return s
 
@@ -235,10 +266,16 @@ class PymolPrinter:
         if self.draw_segments:
             s += self.pymol_segments_string()
 
+
         s += self.pymol_spheres_string()
 
         if self.draw_axes:
             s += self.pymol_axis_string()
+
+        '''
+        if self.draw_cones:
+            s += self.pymol_cones_string()
+        '''
 
         s += self.pymol_outro_string()
 
@@ -349,6 +386,7 @@ class PymolPrinter:
         (p, n) = coords
         (twist1o, twist2o) = twists
 
+        self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key)
         self.add_sphere(p, 'light gray', width=2.0 ) 
         self.add_sphere(n, 'dark gray', width=2.0 ) 
