@@ -26,6 +26,7 @@ def main():
                       help="Enter a dot-bracket string for the \
                       secondary structure of this model", type=str)
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
+    parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
@@ -43,6 +44,7 @@ def main():
     cg = cmg.from_pdb(args[0], options.secondary_structure.strip("\"'"))
     pp = cvp.PymolPrinter()
     pp.add_loops = options.loops
+    pp.add_longrange = options.longrange
     #cud.pv('cg.to_cg_string()')
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)

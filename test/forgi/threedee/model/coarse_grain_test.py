@@ -1,12 +1,40 @@
 import unittest, os
 import sys
 
+import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as cmc
+import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as cud
 import tempfile as tf
 
 import copy, time
+
+def cg_from_sg(cg, sg):
+    '''
+    Create a coarse-grain structure from a subgraph.
+    
+    @param cg: The original structure
+    @param sg: The list of elements that are in the subgraph
+    '''
+    new_cg = ftmc.CoarseGrainRNA()
+    
+    for d in sg:
+        new_cg.defines[d] = cg.defines[d]
+
+        if d in cg.coords.keys():
+            new_cg.coords[d] = cg.coords[d]
+        if d in cg.twists.keys():
+            new_cg.twists[d] = cg.twists[d]
+        if d in cg.longrange.keys():
+            new_cg.longrange[d] = cg.longrange[d]
+        
+        for x in cg.edges[d]:
+            if x in new_cg.defines.keys():
+                new_cg.edges[d].add(x)
+                new_cg.edges[x].add(d)
+    
+    return new_cg
 
 class TestCoarseGrainRNA(unittest.TestCase):
     '''
@@ -105,3 +133,21 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         rg = cg.radius_of_gyration()
         #cud.pv('rg')
+
+    def test_cg_from_sg(self):
+        bg = ftmc.CoarseGrainRNA(dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
+
+        #bg = cgb.BulgeGraph(dotbracket_str='.(((((........)))))..((((((((.(((.((...........((((((..(((((.((((((((..(((..)))...((((....)))).....))))))))..)))))................((((((...........))))))..((...(((((((...((((((..)))))).....((......))....)))))))...(((((((((.........))))))))).(((....))).))..........(((((.(((((.......))))))))))..........))))..))............(((.((((((((...((.......))...))))))..))))).........((((((((((((..(((((((((......))))))..))).((((.......)))).....)))))..))..))).))....((...............))....))..)))))))))))...')
+
+        for j in range(40):
+            sg = bg.random_subgraph()
+            new_cg = cg_from_sg(bg, sg)
+
+            for i in it.chain(new_cg.iloop_iterator(), new_cg.mloop_iterator()):
+                c = new_cg.connections(i)
+
+                if len(c) != 2:
+                    cud.pv('i')
+                    cud.pv('sg')
+                    cud.pv('bg.edges[i]')
+                self.assertEqual(len(c), 2)

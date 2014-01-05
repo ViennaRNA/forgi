@@ -105,6 +105,10 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
         # first we annotate the 3D structure
         p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
         out, err = p.communicate()
+
+        with open(op.join(output_dir, 'temp.mcannotate'), 'w') as f3:
+            f3.write(out)
+
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
         dotplot = cum.get_dotplot(lines)

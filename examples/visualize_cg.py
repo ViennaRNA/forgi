@@ -21,6 +21,7 @@ def main():
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
 
@@ -33,8 +34,10 @@ def main():
     cg = cmg.from_file(args[0])
     pp = cvp.PymolPrinter()
 
+    print "hey!!"
     pp.add_loops = options.loops
     #sys.exit(1)
+    pp.add_longrange = options.longrange
     pp.coordinates_to_pymol(cg)
     pp.print_text = options.text
     #pp.print_text = False

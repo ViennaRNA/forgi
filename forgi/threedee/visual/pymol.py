@@ -519,17 +519,6 @@ class PymolPrinter:
                 else:
                     #self.add_stem_like(cg, key, "yellow", 1.0)
                     self.add_segment(p, n, "yellow", 1.0, key)
-        return
-
-        if self.max_stem_distances > 0:
-            for (s1, s2) in it.permutations(cg.stem_iterator(), r=2):
-                (i1, i2) = cuv.line_segment_distance(cg.coords[s1][0],
-                                                     cg.coords[s1][1],
-                                                     cg.coords[s2][0],
-                                                     cg.coords[s2][1])
-                if cuv.magnitude(i2 - i1) < self.max_stem_distances:
-                    #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
-                    self.add_segment(i1, i2, 'cyan', 0.3)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():
@@ -551,6 +540,18 @@ class PymolPrinter:
                                          0.3, key1 + " " + key2)
                     except:
                         continue
+        return
+
+        if self.max_stem_distances > 0:
+            for (s1, s2) in it.permutations(cg.stem_iterator(), r=2):
+                (i1, i2) = cuv.line_segment_distance(cg.coords[s1][0],
+                                                     cg.coords[s1][1],
+                                                     cg.coords[s2][0],
+                                                     cg.coords[s2][1])
+                if cuv.magnitude(i2 - i1) < self.max_stem_distances:
+                    #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
+                    self.add_segment(i1, i2, 'cyan', 0.3)
+
 
         print >>sys.stderr, "energy_function:", self.energy_function
         # print the contributions of the energy function, if one is specified

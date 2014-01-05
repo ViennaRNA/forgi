@@ -1660,15 +1660,25 @@ class BulgeGraph(object):
         subgraph_length = random.randint(1, len(self.defines.keys()))
         start_node = random.choice(self.defines.keys())
 
-        curr_length = 1
-        next_nodes = list(self.edges[start_node])
+        curr_length = 0
         visited = set()
-        visited.add(start_node)
-
-        new_graph = [start_node]
+        next_nodes = [start_node]
+        new_graph = []
 
         while curr_length < subgraph_length:
             curr_node = random.choice(next_nodes)
+            if curr_node[0] == 'i' or curr_node[0] == 'm':
+                # if it's an interior loop or a multiloop, then we have to
+                # add the adjacent stems
+                for e in self.edges[curr_node]:
+                    if e in new_graph:
+                        continue
+                    #cud.pv('e')
+                    visited.add(e)
+                    new_graph += [e]
+                    next_nodes += list(self.edges[e])
+                    curr_length += 1
+
             visited.add(curr_node)
             next_nodes += list(self.edges[curr_node])
             next_nodes = [n for n in next_nodes if n not in visited]
