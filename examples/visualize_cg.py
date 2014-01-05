@@ -23,6 +23,7 @@ def main():
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
+    parser.add_option('-c', '--cones', dest='cones', default=False, action='store_true', help="Display cones that portrude from the stems")
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
 
     (options, args) = parser.parse_args()
@@ -36,6 +37,7 @@ def main():
 
     print "hey!!"
     pp.add_loops = options.loops
+    pp.draw_cones = options.cones
     #sys.exit(1)
     pp.add_longrange = options.longrange
     pp.coordinates_to_pymol(cg)

@@ -1144,6 +1144,27 @@ class BulgeGraph(object):
 
         raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
 
+    def get_any_sides(self, e1, e2):
+        '''
+        Get the side of e1 that e2 is on. The only difference from the get_sides
+        method is the fact that e1 does not have to be a stem.
+
+        0 indicates that e2 is on the side with lower numbered
+        nucleotides and 1 indicates that e2 is on the side with
+        greater nucleotide numbers.
+
+        @param e1: The name of the first element.
+        @param e2: The name of the second element.
+        @return: A tuple indicating the side of e1 adjacent to e2 and the side of e2
+                 adjacent to e1
+        '''
+        if e1[0] == 's':
+            return self.get_sides(e1, e2)
+        elif e2[0] == 's':
+            return self.get_sides(e2, e1)[::-1]
+
+        return None
+
     def get_sides(self, s1, b):
         '''
         Get the side of s1 that is next to b.
