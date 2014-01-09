@@ -249,6 +249,20 @@ class BulgeGraph(object):
 
         return name
 
+    def element_length(self, key):
+        '''
+        Get the number of residues that are contained within this element.
+
+        @param key: The name of the element.
+        '''
+        d = self.defines[key]
+        length = 0
+
+        for i in range(0, len(d), 2):
+            length += d[i+1] - d[i] + 1
+
+        return length 
+            
     def stem_length(self, key):
         '''
         Get the length of a particular element. If it's a stem, it's equal to
@@ -1672,7 +1686,7 @@ class BulgeGraph(object):
 
         return False
 
-    def random_subgraph(self, subraph_length=None):
+    def random_subgraph(self, subgraph_length=None):
         '''
         Return a random subgraph of this graph.
 
@@ -1682,7 +1696,6 @@ class BulgeGraph(object):
             subgraph_length = random.randint(1, len(self.defines.keys()))
 
         start_node = random.choice(self.defines.keys())
-
         curr_length = 0
         visited = set()
         next_nodes = [start_node]
@@ -1706,6 +1719,6 @@ class BulgeGraph(object):
             next_nodes += list(self.edges[curr_node])
             next_nodes = [n for n in next_nodes if n not in visited]
             new_graph += [curr_node]
-            curr_length += 1
+            curr_length += self.element_length(curr_node)
 
         return new_graph

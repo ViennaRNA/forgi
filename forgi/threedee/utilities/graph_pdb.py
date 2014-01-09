@@ -1136,7 +1136,6 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
 
     return new_atoms
 
-
 def calc_R(xc, yc, p):
     """ calculate the distance of each 2D points from the center (xc, yc) """
     return np.sqrt((p[:, 0] - xc) ** 2 + (p[:, 1] - yc) ** 2)
@@ -1147,7 +1146,6 @@ def f_2(c, p):
         circle centered at c=(xc, yc) """
     Ri = calc_R(*c, p=p)
     return Ri - Ri.mean()
-
 
 def circle_fit(p):
     x = p[:, 0]
@@ -1185,7 +1183,6 @@ def circle_fit(p):
 
     return (xc_1, yc_1, R_1)
     '''
-
 
 def circle_error(c, p):
     errors = f_2(c, p)

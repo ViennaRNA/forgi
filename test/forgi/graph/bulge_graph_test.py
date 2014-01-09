@@ -405,6 +405,12 @@ connect s0 f1 m1 m0 t1
         self.assertFalse(bg.are_adjacent_stems('s0', 's2', 
                                                multiloops_count=False))
 
+    def test_element_length(self):
+        bg = cgb.BulgeGraph(dotbracket_str='.((..(((..))).))((..))')
+
+        self.assertEqual(bg.element_length('s0'), 4)
+        self.assertEqual(bg.element_length('i0'), 3)
+
     def test_stem_length(self):
         bg = cgb.BulgeGraph(dotbracket_str='.((..(((..))).))((..))')
 
