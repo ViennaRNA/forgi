@@ -739,3 +739,44 @@ def cylinder_line_intersection(cyl, line, r):
 
     return change_basis(intersects_t.T, standard_basis, cyl_basis).T
 
+def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
+    '''
+    If we create a cone that starts at one end of cylinder1, does it
+    enclose cylinder2?
+
+    This function approximates an answer by projecting a circle on 
+    the plane normal to the axis of cylinder1.
+
+    @param cyl1: The coordinates of cylinder1
+    @param cyl2: The coordinates of cylinder2
+    @param cyl_width: The widths of the two cylinders
+    @return: True or False
+    '''
+    basis = create_orthonormal_basis(cyl1[1] - cyl1[0])
+    cyl2 = np.array([cyl2[0] - cyl1[1], cyl2[1] - cyl1[1]])
+    
+    cyl2_t = change_basis(cyl2.T, basis, standard_basis).T
+    cone_width = cyl_width
+    cyl1_len = magnitude(cyl1[1] - cyl1[0])
+    
+    # the cone expands
+    cone_width_cyl2_start = cyl_width * (cyl1_len + cyl2_t[0][0]) / cyl1_len
+    cone_width_cyl2_end = cyl_width * (cyl1_len + cyl2_t[1][0]) / cyl1_len
+    
+    cyl2_start_offset = m.sqrt(cyl2_t[0][1] ** 2 + cyl2_t[0][2] ** 2)
+    cyl2_end_offset = m.sqrt(cyl2_t[1][1] ** 2 + cyl2_t[1][2] ** 2)
+    
+    '''
+    fud.pv('cyl1_len')
+    fud.pv('cone_width_cyl2_start, cone_width_cyl2_end')
+    fud.pv('cyl2_start_offset, cyl2_end_offset')
+    fud.pv('cyl2_t')
+    '''
+
+    if cyl2_start_offset > cone_width_cyl2_start:
+        return False
+    if cyl2_end_offset > cone_width_cyl2_end:
+        return False
+    
+    return True
+

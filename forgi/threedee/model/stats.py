@@ -302,22 +302,20 @@ class ContinuousAngleStats():
         @param discrete_angle_statistics: A dictionary of dictionaries,
             each one containing and AngleStats structure.
         '''
-        for key1 in discrete_angle_stats.keys():
-            for key2 in discrete_angle_stats[key1].keys():
-                for key3 in discrete_angle_stats[key1][key2].keys():
-                    dims = (key1, key2, key3)
-                    data = []
+        for key1,key2,key3 in discrete_angle_stats.keys():
+            dims = (key1, key2, key3)
+            data = []
 
-                    for d in discrete_angle_stats[key1][key2][key3]:
-                        data += [[d.u, d.v, d.t, d.r1, d.u1, d.v1]]
+            for d in discrete_angle_stats[(key1,key2,key3)]:
+                data += [[d.u, d.v, d.t, d.r1, d.u1, d.v1]]
 
-                    if len(data) < 3:
-                        continue
+            if len(data) < 3:
+                continue
 
-                    try:
-                        self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
-                    except np.linalg.LinAlgError as lae:
-                        print >>sys.stderr, "Singular matrix, dimensions:", dims
+            try:
+                self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
+            except np.linalg.LinAlgError as lae:
+                print >>sys.stderr, "Singular matrix, dimensions:", dims
 
     def sample_stats(self, dims):
         '''
@@ -396,10 +394,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     return ConstructionStats.angle_stats
 
     '''
-    ConstructionStats.angle_stats = c.defaultdict(
-                                    lambda: c.defaultdict(
-                                        lambda: c.defaultdict(list)))
-    ConstructionStats.angle_stats = c.defaultdict(defaultdict_defaultdict_list)
+    ConstructionStats.angle_stats = c.defaultdict()
     #DefaultDict(DefaultDict([]))
 
     f = open(filename, 'r')
@@ -409,7 +404,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
         if line.strip().find('angle') == 0:
             angle_stat = AngleStat()
             angle_stat.parse_line(line)
-            ConstructionStats.angle_stats[angle_stat.dim1][angle_stat.dim2][angle_stat.ang_type] += [angle_stat]
+            ConstructionStats.angle_stats[(angle_stat.dim1, angle_stat.dim2, angle_stat.ang_type)] += [angle_stat]
             count += 1
 
     f.close()
@@ -434,18 +429,10 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
     available_stats = []
     angle_stats = get_angle_stats()
 
-    for k1 in angle_stats.keys():
-        for k2 in angle_stats[k1].keys():
-            for k3 in angle_stats[k1][k2].keys():
-                if k3 == angle_type and len(angle_stats[k1][k2][k3]) >= min_entries:
-                    dist = m.sqrt((k1 - s1) ** 2 + (k2 - s2) ** 2)
-                    available_stats += [(dist, k1,k2,k3)]
-
-                    '''
-                    if dist < 1.0:
-                        print "hey!"
-                        print ConstructionStats.angle_stats[k1][k2][k3]
-                    '''
+    for (k1,k2,k3) in angle_stats.keys():
+        if k3 == angle_type and len(angle_stats[(k1,k2,k3)]) >= min_entries:
+            dist = m.sqrt((k1 - s1) ** 2 + (k2 - s2) ** 2)
+            available_stats += [(dist, k1,k2,k3)]
 
     available_stats.sort()
     return available_stats

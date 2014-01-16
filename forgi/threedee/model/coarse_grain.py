@@ -79,6 +79,7 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node1].add(node2)
             cg.longrange[node2].add(node1)
 
+
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
     '''
     Create the coarse grain model from a pdb file and store all
@@ -303,6 +304,12 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         return out_str
 
+    def get_sampled_stems_str(self):
+        out_str = ''
+        for key in self.sampled.keys():
+            out_str += 'sampled %s %s\n' % (key, " ".join(map(str, self.sampled[key])))
+        return out_str
+
     def to_cg_string(self):
         '''
         Output this structure in string form.
@@ -310,6 +317,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         curr_str = self.to_bg_string()
         curr_str += self.get_coord_str()
         curr_str += self.get_twist_str()
+        curr_str += self.get_sampled_stems_str()
         curr_str += self.get_long_range_str()
 
         return curr_str
@@ -417,6 +425,9 @@ class CoarseGrainRNA(cgb.BulgeGraph):
                 self.longrange[parts[1]].add(parts[2])
                 self.longrange[parts[2]].add(parts[1])
 
+            if parts[0] == 'sampled':
+                self.sampled[parts[1]] = [parts[2]] + map(int, parts[3:])
+
     def to_cg_file(self, filename):
         '''
         Save this structure as a string in a file.
@@ -442,3 +453,26 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         rmsd = ftur.radius_of_gyration(coords)
 
         return rmsd
+
+def cg_from_sg(cg, sg):
+    '''
+    Create a coarse-grain structure from a subgraph.
+    
+    @param cg: The original structure
+    @param sg: The list of elements that are in the subgraph
+    '''
+    new_cg = CoarseGrainRNA()
+    
+    for d in sg:
+        new_cg.defines[d] = cg.defines[d]
+        new_cg.coords[d] = cg.coords[d]
+        if d in cg.twists:
+            new_cg.twists[d] = cg.twists[d]
+        new_cg.longrange[d] = cg.longrange[d]
+        
+        for x in cg.edges[d]:
+            if x in new_cg.defines.keys():
+                new_cg.edges[d].add(x)
+                new_cg.edges[x].add(d)
+    
+    return new_cg
