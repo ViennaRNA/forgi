@@ -95,7 +95,7 @@ class LoopStat:
         self.define = map(int, parts[6:])
 
     def __str__(self):
-        return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length)
+        return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, " ".join(map(str, self.define)))
 
 class StemStat:
     '''
@@ -394,7 +394,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     return ConstructionStats.angle_stats
 
     '''
-    ConstructionStats.angle_stats = c.defaultdict()
+    ConstructionStats.angle_stats = c.defaultdict(list)
     #DefaultDict(DefaultDict([]))
 
     f = open(filename, 'r')
@@ -404,6 +404,10 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
         if line.strip().find('angle') == 0:
             angle_stat = AngleStat()
             angle_stat.parse_line(line)
+
+            if len(angle_stat.define) > 0 and angle_stat.define[0] == 1:
+                continue
+
             ConstructionStats.angle_stats[(angle_stat.dim1, angle_stat.dim2, angle_stat.ang_type)] += [angle_stat]
             count += 1
 
@@ -457,6 +461,9 @@ def get_stem_stats(filename=cbc.Configuration.stats_file):
     for line in f:
         if line.strip().find('stem') == 0:
             stem_stat = StemStat(line)
+            if stem_stat.define[0] == 1:
+                continue
+
             ConstructionStats.stem_stats[stem_stat.bp_length] += [stem_stat]
 
     f.close()

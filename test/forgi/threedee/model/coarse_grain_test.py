@@ -134,6 +134,12 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         rg = cg.radius_of_gyration()
         #cud.pv('rg')
 
+    def test_get_coordinates_list(self):
+        cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        cl = cg.get_coordinates_list()
+        self.assertEqual(len(cl), len(cg.defines) * 2)
+
     def test_cg_from_sg(self):
         bg = ftmc.CoarseGrainRNA(dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
 

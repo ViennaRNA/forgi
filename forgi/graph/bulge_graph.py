@@ -1709,7 +1709,6 @@ class BulgeGraph(object):
                 for e in self.edges[curr_node]:
                     if e in new_graph:
                         continue
-                    #cud.pv('e')
                     visited.add(e)
                     new_graph += [e]
                     next_nodes += list(self.edges[e])
@@ -1719,6 +1718,24 @@ class BulgeGraph(object):
             next_nodes += list(self.edges[curr_node])
             next_nodes = [n for n in next_nodes if n not in visited]
             new_graph += [curr_node]
-            curr_length += self.element_length(curr_node)
+            curr_length += 1 #self.element_length(curr_node)
 
         return new_graph
+
+    def same_stem_end(self, sd): 
+        '''
+        Return the index of the define that is on the same end of the
+        stem as the index sd.
+
+        @param sd: An index into a define.
+        @return: The index pointing to the nucleotide on the other strand 
+                 on the same side as the stem.
+        '''
+        if sd == 0: 
+            return 3 
+        elif sd == 1: 
+            return 2 
+        elif sd == 2: 
+            return 1 
+        else: 
+            return 0 

@@ -4,6 +4,7 @@ import Bio.PDB as bp
 import Bio.PDB as bpdb
 import operator
 import itertools as it
+import collections as col
 
 import os.path as op
 import forgi.config as cc
@@ -13,6 +14,7 @@ import math as m
 
 import numpy as np
 import numpy.linalg as nl
+import random
 
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as cud
@@ -20,6 +22,7 @@ import forgi.threedee.utilities.my_math as cum
 import forgi.threedee.utilities.pdb as cup
 import forgi.threedee.utilities.rmsd as cur
 import forgi.threedee.utilities.vector as cuv
+import forgi.threedee.utilities.vector as ftuv
 import forgi
 
 import scipy.optimize as so
@@ -1536,3 +1539,103 @@ def bg_rmsd(bg1, bg2):
     centers2 = bg_virtual_residues(bg2)
 
     return cur.centered_rmsd(centers1, centers2)
+
+def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
+    '''
+    Check if all of these points are inside the cylinder.
+
+    '''
+    points = [cg.coords[tv][0], cg.coords[tv][1]]
+    
+    for s in cylinders_to_stems[c]:
+        points += [cg.coords[s][0], cg.coords[s][1]]
+        
+    data = np.array(points)
+    datamean = data.mean(axis=0)
+    
+    uu, dd, vv = np.linalg.svd(data - datamean)
+    
+    n = vv[0]
+    p = data
+    a = datamean
+    
+    dist_vec = (a - p) - (np.dot((a-p), n)[:,np.newaxis]) * n
+    mags = [ftuv.magnitude(c) for c in dist_vec]
+    
+    linepts = vv[0] * np.mgrid[-7:7:2j][:, np.newaxis]
+    linepts += datamean
+    
+    '''
+    import matplotlib.pyplot as plt
+    import mpl_toolkits.mplot3d as m3d
+    
+    ax = m3d.Axes3D(plt.figure())
+    ax.scatter3D(*data.T)
+    ax.plot3D(*linepts.T)
+    '''
+
+    if max(mags) > r:
+        return False
+    return True
+                   
+def get_encompassing_cylinders(cg, radius=6.):
+    visited = set()
+    
+    # the stems_in_cylinders dictionary will be indexed by stem name and contain
+    # the number of the cylinder it contains
+    #stems_to_cylinders = {'s0': 0}
+    stems_to_cylinders = dict()
+    cylinders_to_stems = col.defaultdict(list)
+    
+    in_cylinder = set()
+    #cylinders_to_stems = {0: ['s0']}
+    
+    # the first cylinder is equal to the first stem
+    #cylinders = {0: cg.coords['s0']}
+    cylinders = dict()
+    to_visit = [random.choice(cg.defines.keys())]
+    
+    cylinder_counter = 0
+    
+    while to_visit:
+        tv = to_visit.pop(0)
+        
+        if tv in visited:
+            continue
+            
+        visited.add(tv)
+        for e in cg.edges[tv]:
+            to_visit.append(e)
+        
+        # not interested in non- stem, multiloop or interior loop elements
+        if tv[0] != 's' and tv[0] != 'm' and tv[0] != 'i':
+            continue
+            
+        #cylinders_to_check = set(cylinders_to_stems.keys())
+        cylinders_to_check = set()
+        
+        # find which cylinders we need to check
+        for e in cg.edges[tv]:
+            if e in stems_to_cylinders:
+                cylinders_to_check.add(stems_to_cylinders[e])  
+            
+        found = False
+        #cud.pv('cylinders_to_check')
+        for c in sorted(cylinders_to_check, key=lambda x: -sum([cg.stem_length(k) for k in cylinders_to_stems[x]])):
+            # the new node will definitely be at the end of the cylinder
+            #print "checking...:", c, tv
+            if cylinder_works(cg, cylinders_to_stems, tv, c, radius):
+                cylinders_to_stems[c] += [tv]
+                stems_to_cylinders[tv] = c
+                found = True
+                
+                break
+        
+        if not found:
+            # no appropriately sized cylinder has been found so we
+            # just create new one containing just this stem
+            cylinder_counter += 1
+            cylinders_to_stems[cylinder_counter] += [tv]
+            stems_to_cylinders[tv] = cylinder_counter
+                
+    return cylinders_to_stems

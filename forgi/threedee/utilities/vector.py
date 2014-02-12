@@ -780,3 +780,34 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     
     return True
 
+def point_in_cylinder(pt1, pt2, r, testpt):
+    '''
+    Determine if testpt is within a cylinder of radius r.
+
+    Translated from:
+
+        http://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
+
+    @param pt1: The start of the cylinder axis.
+    @param pt2: The end of the cylinder axis.
+    @param r: The radius of the cylinder.
+    @param testpt: The point we are testing.
+    @return: True if the point is within the cylinder, False otherwise.
+    '''
+    d = pt2 - pt1
+    lengthsq = np.dot(d, d)
+    radius_sq = r * r
+
+    pd = testpt - pt1
+    dot = np.dot(pd, d)
+
+    if dot < 0. or dot > lengthsq:
+        # beyond the edges of the cylinder
+        return False
+    else:
+        dsq = np.dot(pd, pd) - (dot * dot) / lengthsq
+
+        if (dsq > radius_sq):
+            return False
+        else:
+            return True

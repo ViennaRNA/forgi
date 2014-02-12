@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import sys
-import forgi.utilities.pdb as cup
+import forgi.threedee.utilities.pdb as cup
 from optparse import OptionParser
 
 def main():

@@ -188,7 +188,6 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
     else:
         with make_temp_directory() as output_dir:
-            print op.exists(output_dir)
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
 
     return cg
@@ -453,6 +452,23 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         rmsd = ftur.radius_of_gyration(coords)
 
         return rmsd
+
+    def get_coordinates_list(self):
+        '''
+        Get all of the coordinates as a list of vectors.
+
+        The vectors are sorted according to the name of the
+        element they correspond to.
+
+        @return: A list of vectors.
+        '''
+        all_coords = []
+
+        for d in sorted(self.defines):
+            all_coords += [self.coords[d][0]]
+            all_coords += [self.coords[d][1]]
+
+        return all_coords
 
 def cg_from_sg(cg, sg):
     '''

@@ -9,9 +9,11 @@ import uuid
 import collections as col
 
 import forgi.threedee.utilities.graph_pdb as cgg
+import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as cud
 import forgi.threedee.utilities.vector as cuv
+import forgi.threedee.utilities.vector as ftuv
 
 import Bio.PDB.Model as bpm
 import Bio.PDB.Structure as bps
@@ -20,6 +22,7 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
+        self.encompassing_stems = False
         self.state = 2
         self.stem_stem_orientations = None
         self.new_segments = []
@@ -70,6 +73,8 @@ class PymolPrinter:
             return [.8, .8, .8]
         elif color == 'dark gray':
             return [.1, .1, .1]
+        elif color == 'middle gray':
+            return [.6, .6, .6]
         else:
             return [0.0, 0.0, 0.0]
 
@@ -517,6 +522,35 @@ class PymolPrinter:
                                     [208 / 255., 32 / 255., 144 / 255.])
                     self.boxes += [(corners, 'purple')]
 
+    def add_encompassing_cylinders(self, cg, radius=7.):
+        cylinders_to_stems = ftug.get_encompassing_cylinders(cg, radius)
+
+        for stems in cylinders_to_stems.values():
+            print "stems:", stems
+
+            points = []
+            for s in stems:
+                points += [cg.coords[s][0], cg.coords[s][1]]
+            
+            cud.pv('points')
+
+            # create the linear regression
+            data = np.array(points)
+            datamean = data.mean(axis=0)
+
+    
+            uu, dd, vv = np.linalg.svd(data - datamean)
+
+            furthest = max([ftuv.magnitude(d) for d in (data - datamean) ])
+
+            start_point = -furthest * vv[0] + datamean
+            end_point = furthest * vv[0] + datamean
+
+            self.add_segment(start_point, end_point, 'white', width=4, text='')
+
+
+        print >>sys.stderr, "YOOOOOOOOOOOOOOOOOOOOOOO"
+
     def coordinates_to_pymol(self, cg):
         loops = list(cg.hloop_iterator())
 
@@ -578,7 +612,9 @@ class PymolPrinter:
                                          0.3, key1 + " " + key2)
                     except:
                         continue
-        return
+
+        if self.encompassing_stems:
+            self.add_encompassing_cylinders(cg, 7.)
 
         if self.max_stem_distances > 0:
             for (s1, s2) in it.permutations(cg.stem_iterator(), r=2):
@@ -589,6 +625,7 @@ class PymolPrinter:
                 if cuv.magnitude(i2 - i1) < self.max_stem_distances:
                     #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
                     self.add_segment(i1, i2, 'cyan', 0.3)
+
 
 
         print >>sys.stderr, "energy_function:", self.energy_function
