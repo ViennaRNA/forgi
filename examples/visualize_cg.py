@@ -18,6 +18,9 @@ from optparse import OptionParser
 def align_cgs(cgs):
     '''
     Align each coarse grain RNA to the first one.
+
+    The points representing each coarse grain RNA molecule
+    will be the virtual residues.
     
     @param cgs: A list of CoarseGrainRNA structures.
     @return: Nothing, the cgs are modified in place
@@ -49,6 +52,7 @@ def main():
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-o', '--output', dest='output', default=None, help="Create a picture of the scene and exit", type='str')
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
     parser.add_option('-c', '--cones', dest='cones', default=False, action='store_true', help="Display cones that portrude from the stems")
@@ -92,6 +96,13 @@ def main():
             pymol_cmd += 'run %s\n' % (f.name)
             pymol_cmd += 'show cartoon, all\n'
             pymol_cmd += 'bg white\n'
+            pymol_cmd += 'clip slab, 10000\n'
+
+            if options.output is not None:
+                pymol_cmd += 'ray\n'
+                pymol_cmd += 'png %s\n' % (options.output)
+                pymol_cmd += 'quit\n'
+
 
             f1.write(pymol_cmd)
             f1.flush()

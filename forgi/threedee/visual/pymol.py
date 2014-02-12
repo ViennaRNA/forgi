@@ -22,6 +22,7 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
+        self.visualize_three_and_five_prime = False
         self.encompassing_stems = False
         self.state = 2
         self.stem_stem_orientations = None
@@ -578,16 +579,18 @@ class PymolPrinter:
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0] + 1))
                 elif key[0] == 'f':
-                    self.add_segment(p, n, "cyan", 1.0,
-                                     key + " " +
-                                     str(cg.defines[key][1] -
-                                     cg.defines[key][0] + 1) + "")
+                    if self.visualize_three_and_five_prime:
+                        self.add_segment(p, n, "cyan", 1.0,
+                                         key + " " +
+                                         str(cg.defines[key][1] -
+                                         cg.defines[key][0] + 1) + "")
 
                 elif key[0] == 't':
-                    self.add_segment(p, n, "magenta", 1.0,
-                                     key + " " +
-                                     str(cg.defines[key][1] -
-                                     cg.defines[key][0]) + "")
+                    if self.visualize_three_and_five_prime:
+                        self.add_segment(p, n, "magenta", 1.0,
+                                         key + " " +
+                                         str(cg.defines[key][1] -
+                                         cg.defines[key][0]) + "")
                 else:
                     #self.add_stem_like(cg, key, "yellow", 1.0)
                     self.add_segment(p, n, "yellow", 1.0, key)

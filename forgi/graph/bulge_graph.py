@@ -5,7 +5,7 @@
    interior loops, multiloops, etc..."""
 
 __author__      = "Peter Kerpedjiev"
-__copyright__   = "Copyright 2012, 2013"
+__copyright__   = "Copyright 2012, 2013, 2014"
 __version__     = "0.1"
 __maintainer__  = "Peter Kerpedjiev"
 __email__       = "pkerp@tbi.univie.ac.at"
@@ -157,10 +157,6 @@ def find_bulges_and_stems(brackets):
             if prev == '.':
                 dots_end = i-1
                 bulges = add_bulge(bulges, (dots_start, dots_end), context, "4")
-            """
-            if prev == ')':
-                bulges = add_bulge(bulges, (-1,-1), context, "3")
-            """
 
         if brackets[i] == ')':
             if len(opens) == 0:

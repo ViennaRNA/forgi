@@ -134,7 +134,13 @@ def get_dotplot(lines):
     for line in iterate_over_interactions(lines):
         parts = line.split(' ')
         bond_type = parts[3]
-        if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
+        #if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
+        if ((bond_type.find('Ww/Ww') and (bond_type.find('A-U') or
+                                        bond_type.find('U-A') or
+                                        bond_type.find('C-G') or
+                                        bond_type.find('G-C'))) or
+           (bond_type.find('Ws/Ww') and bond_type.find('U-G')) or
+            (bond_type.find('Ww/Ws') and bond_type.find('G-U'))):
         #if bond_type.find('Ww/Ww') >= 0:
             parts1 = parts[0].split('-')
             #print line
