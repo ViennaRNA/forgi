@@ -3,13 +3,13 @@
 import sys
 
 import random as rand
-#import scipy.stats as ss
 import numpy as np
+import numpy.random as nr
 import collections as c
 import math as m
 
 import fess.builder.config as cbc
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 
 avg_stem_bp_length = 2.24
 avg_twist_rotation_per_bp = 360 / 11.
@@ -281,6 +281,77 @@ class AngleStat:
                                                              " ".join(self.seqs))
         return out_str
 
+class RandomAngleStats():
+    '''
+    Store all of the angle stats.
+    '''
+    def __init__(self, discrete_angle_stats):
+        self.cont_stats = dict()
+        self.make_random(discrete_angle_stats)
+
+    def create_random_function(self, data):
+        '''
+        Create a function that returns a random value for
+        each column in the statistics.
+
+        @param stats: A table containing n rows and m columns
+        @return: A function returning m random values with a 
+                 maximum and minimum no greater than the largest
+                 and least values in that column, respectively.
+        '''
+        mins = map(min,data.T)
+        maxs = map(max,data.T)
+        
+        def bounded_uniform():
+            return [nr.uniform(i,x) for i,x in zip(mins, maxs)]
+
+        return bounded_uniform
+
+    def make_random(self, discrete_angle_stats):
+        '''
+        Create a set of statistsics that is random in each direction.
+
+        The maximum and minimum u and v values will be taken
+        from the discrete statistics.
+        '''
+        import scipy.stats as ss
+        for key1,key2,key3 in discrete_angle_stats.keys():
+            dims = (key1, key2, key3)
+            data = []
+
+            for d in discrete_angle_stats[(key1,key2,key3)]:
+                data += [[d.u, d.v, d.t, d.r1, d.u1, d.v1]]
+
+            if len(data) < 3:
+                continue
+
+            try:
+                self.cont_stats[dims] = self.create_random_function(np.array(data))
+            except np.linalg.LinAlgError as lae:
+                print >>sys.stderr, "Singular matrix, dimensions:", dims
+
+    def sample_stats(self, dims):
+        '''
+        Sample a set of statistics.
+
+        @param dims: The dimensions of the bulge for which to sample.
+        '''
+        new_stats = self.cont_stats[dims]()
+        s = AngleStat()
+        (s.u, s.v, s.v, s.r1, s.u1, s.v1) = new_stats
+        return s
+
+    def stats_by_dimensions(dims, n):
+        '''
+        Return a set of n AngleStats for a bulge with a dimension
+        of of dims.
+
+        @param dims: The dimensions of the bulge (i.e. (1,2))
+        @params n: The number of angle stats to return. If n is greater
+            than the number of stats stored, then return the number of
+            stats available.
+        '''
+        return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
 class ContinuousAngleStats():
     '''
     Store all of the angle stats.
@@ -302,6 +373,7 @@ class ContinuousAngleStats():
         @param discrete_angle_statistics: A dictionary of dictionaries,
             each one containing and AngleStats structure.
         '''
+        import scipy.stats as ss
         for key1,key2,key3 in discrete_angle_stats.keys():
             dims = (key1, key2, key3)
             data = []

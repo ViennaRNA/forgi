@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import itertools as it
 import numpy, sys
 import numpy as np
 import math
@@ -110,6 +111,25 @@ def radius_of_gyration(coords):
     total = sum(sums)
     total /= len(coords)
     rmsd = math.sqrt(total)
+
+    return rmsd
+
+def drmsd(coords1, coords2):
+    '''
+    Calculate the dRMSD measure.
+
+    This should be the RMSD between all of the inter-atom distances
+    in two structures.
+
+    @param coords1: The vectors of the 'atoms' in the first structure.
+    @param coords2: The vectors of the 'atoms' in the second structure.
+    @return: The dRMSD measure.
+    '''
+    ds1 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords1, r=2)])
+    ds2 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords2, r=2)])
+
+    rmsd = math.sqrt(np.mean((ds1 - ds2) * (ds1 - ds2)))
+    #rmsd = math.sqrt(np.mean(ftuv.vec_distance(ds1, ds2)))
 
     return rmsd
 

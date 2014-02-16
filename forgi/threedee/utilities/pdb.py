@@ -2,7 +2,7 @@ import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
 import forgi.threedee.utilities.rmsd as brmsd
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as cuv
 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
@@ -369,9 +369,13 @@ def rename_rosetta_atoms(chain):
     @return: The same chain with renamed atoms
     '''
     for a in bpdb.Selection.unfold_entities(chain, 'A'):
+        oldid = a.id
         a.name = a.name.replace('*', "'")
         a.fullname = a.name.replace('*', "'")
         a.id = a.id.replace('*', "'")
+
+        del a.parent.child_dict[oldid]
+        a.parent.child_dict[a.id] = a
 
     return chain
 

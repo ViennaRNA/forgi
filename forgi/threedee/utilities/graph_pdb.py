@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as cum
 import forgi.threedee.utilities.pdb as cup
 import forgi.threedee.utilities.rmsd as cur
@@ -1476,6 +1476,8 @@ def add_stem_information_from_pdb_chain(cg, chain):
     @param bg: The BulgeGraph.
     @param chain: The Bio.PDB chain representation of the 3D structure.
     '''
+    chain = cup.rename_rosetta_atoms(chain)
+
     for d in cg.defines.keys():
         if d[0] == 's':
             mids = get_mids(chain, cg.defines[d])
@@ -1531,14 +1533,17 @@ def add_loop_information_from_pdb_chain(bg, chain):
         bg.coords[d] = (mids[s1b], centroid)
 
 
-def bg_rmsd(bg1, bg2):
+def bg_rmsd(bg1, bg2, rmsd_function=None):
     '''
     Calculate the rmsd between the virtual residues of bg1 and bg2.
     '''
+    if rmsd_function == None:
+        rmsd_function = cur.centered_rmsd
+
     centers1 = bg_virtual_residues(bg1)
     centers2 = bg_virtual_residues(bg2)
 
-    return cur.centered_rmsd(centers1, centers2)
+    return rmsd_function(centers1, centers2)
 
 def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
     '''
@@ -1620,7 +1625,6 @@ def get_encompassing_cylinders(cg, radius=6.):
                 cylinders_to_check.add(stems_to_cylinders[e])  
             
         found = False
-        #cud.pv('cylinders_to_check')
         for c in sorted(cylinders_to_check, key=lambda x: -sum([cg.stem_length(k) for k in cylinders_to_stems[x]])):
             # the new node will definitely be at the end of the cylinder
             #print "checking...:", c, tv
