@@ -161,6 +161,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
             cgg.add_stem_information_from_pdb_chain(cg, chain)
             cgg.add_bulge_information_from_pdb_chain(cg, chain)
             cgg.add_loop_information_from_pdb_chain(cg, chain)
+            cg.chain = chain
 
             add_longrange_interactions(cg, lines)
 
@@ -239,6 +240,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         self.vinvs = c.defaultdict( dict )
 
         self.longrange = c.defaultdict( set )
+        self.chain = None #the PDB chain if loaded from a PDB file
 
         if cg_file is not None:
             self.from_file(cg_file)
@@ -471,6 +473,42 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         return all_coords
 
+    def get_twists(self, node):
+        ''' 
+        Get the array of twists for this node. If the node is a stem,
+        then the twists will simply those stored in the array. 
+        If the node is an interior loop or a junction segment, 
+        then the twists will be the ones that are adjacent to it. 
+        If the node is a hairpin loop or a free end, then the same twist
+        will be duplicated and returned twice.
+
+        @param node: The name of the node
+        '''                                                                                                           
+        if node[0] == 's':
+            return self.twists[node]                                                                                  
+
+        connections = list(self.edges[node])
+        (s1b, s1e) = self.get_sides(connections[0], node)
+
+        if len(connections) == 1:
+            vec = cuv.normalize(cuv.vector_rejection( 
+                                  self.twists[connections[0]][s1b],
+                                  self.coords[connections[0]][1] -  
+                                  self.coords[connections[0]][0]))
+            return (vec,vec)                                                  
+
+        if len(connections) == 2: 
+            # interior loop or junction segment                                                                  
+            (s2b, s2e) = self.get_sides(connections[1], node) 
+            bulge_vec = (self.coords[connections[0]][s1b] - 
+                         self.coords[connections[1]][s2b])                                                            
+            return (cuv.normalize(cuv.vector_rejection( 
+                    self.twists[connections[0]][s1b], bulge_vec)),
+                    cuv.normalize(cuv.vector_rejection(self.twists[connections[1]][s2b], bulge_vec)))  
+
+        # uh oh, this shouldn't happen since every node                 
+        # should have either one or two edges 
+        return None                                                                                                   
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.

@@ -1643,3 +1643,23 @@ def get_encompassing_cylinders(cg, radius=6.):
             stems_to_cylinders[tv] = cylinder_counter
                 
     return cylinders_to_stems
+
+def element_coord_system(cg, d):
+    '''
+    Get a coordinate system for a particular coarse grain element.
+
+    If an element has an axis vector, a, twist vectors t1 and t2,
+    then the coordinate system will be a normalized version 
+    of the axis a, the second, v2,  will be equal to norm((t1 + t2) / 2.)
+
+    And the third will be equal to a x v2.
+    '''
+    vec_axis = ftuv.normalize(cg.coords[d][1] - cg.coords[d][0])
+    twists = cg.get_twists(d)
+
+    #fud.pv('vec_axis')
+    #fud.pv('twists')
+
+    mid_twist = ftuv.normalize(twists[0] + twists[1])
+    return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
+            ftuv.create_orthonormal_basis(vec_axis, mid_twist))

@@ -1098,17 +1098,16 @@ class BulgeGraph(object):
         If the node is a stem, then the dimensions will be (l, l) where l is
         the length of the stem.
 
-        If it is single stranded it will be (0, x). Otherwise it will be (x, y).
+        Otherwise, see get_bulge_dimensions(node)
 
         :param node: The name of the node
         :return: A pair containing its dimensions
         '''
-        if self.is_single_stranded(node):
-            return (0, self.defines[node][1] - self.defines[node][0])
+        if node[0] == 's':
+            return (self.defines[node][1] - self.defines[node][0] + 1,
+                    self.defines[node][1] - self.defines[node][0] + 1)
         else:
-            return (self.defines[node][1] - self.defines[node][0],
-                    self.defines[node][3] - self.defines[node][2])
-
+            return self.get_bulge_dimensions(node)
 
     def adjacent_stem_pairs_iterator(self):
         '''
@@ -1467,10 +1466,10 @@ class BulgeGraph(object):
             else:
                 dims = (0, 1000)
         if bulge[0] == 'f' or bulge[0] == 't':
-            dims = (bd[1] - bd[0] + 1,)
+            dims = (bd[1] - bd[0] + 1,-1)
 
         if bulge[0] == 'h':
-            dims = (bd[1] - bd[0] + 1,)
+            dims = (bd[1] - bd[0] + 1,-1)
 
         return dims
 
@@ -1490,48 +1489,6 @@ class BulgeGraph(object):
 
         raise Exception("Base number %d not found in the defines." % (base_num))
 
-    def get_twists(self, node):
-        '''                                                                                                           
-        Get the array of twists for this node. If the node is a stem,
-        then the twists will simply those stored in the array.                                                        
-        
-        If the node is an interior loop or a junction segment,                                                        
-        then the twists will be the ones that are adjacent to it.                                                     
-            
-        If the node is a hairpin loop or a free end, then only                                                        
-        one twist will be returned.
-                                                                                                                      
-        @param node: The name of the node
-        '''                                                                                                           
-        if node[0] == 's':
-            return self.twists[node]                                                                                  
-
-        connections = list(self.edges[node])                                                                          
-        (s1b, s1e) = self.get_sides(connections[0], node)
-
-        if len(connections) == 1:
-            return (cuv.normalize(cuv.vector_rejection(                                                               
-                                  self.twists[connections[0]][s1b],
-                                  self.coords[connections[0]][1] -                                                    
-                                  self.coords[connections[0]][0])),)                                                  
-
-        if len(connections) == 2:                                                                                     
-            # interior loop or junction segment                                                                       
-            (s2b, s2e) = self.get_sides(connections[1], node)
-        
-            bulge_vec = (self.coords[connections[0]][s1b] -                                                           
-                         self.coords[connections[1]][s2b])                                                            
-
-            return (cuv.normalize(cuv.vector_rejection(                                                               
-                    self.twists[connections[0]][s1b],                                                                 
-                    bulge_vec)),
-                    cuv.normalize(cuv.vector_rejection(                                                               
-                    self.twists[connections[1]][s2b],                                                                 
-                    bulge_vec)))                                                                                      
-                                                                                                                      
-        # uh oh, this shouldn't happen since every node                                                               
-        # should have either one or two edges 
-        return None                                                                                                   
 
     def get_length(self, vertex):
         '''
