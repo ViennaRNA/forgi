@@ -8,7 +8,6 @@ import numpy as np
 import uuid
 import collections as col
 
-import forgi.threedee.utilities.graph_pdb as cgg
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as cud
@@ -34,6 +33,7 @@ class PymolPrinter:
         self.spheres = []
         self.new_spheres = []
         self.boxes = []
+        self.virtual_atoms = False
         self.override_color = None
         self.print_text = True
         self.energy_function = None
@@ -427,8 +427,8 @@ class PymolPrinter:
         #stem_len = bg.stem_length(key)
 
         for i in range(stem_len):
-            #(pos, vec) = cgg.virtual_res_3d_pos(bg, key, i)
-            res = cgg.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
+            #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
+            res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
             (pos, vec_c, vec_l, vec_r) = res
             self.add_segment(pos, pos + mult * vec_c, "orange", width, '')
 
@@ -463,7 +463,7 @@ class PymolPrinter:
         chain = list(struct.get_chains())[0]
 
         for i in range(bg.stem_length(s)):
-            (origin, bases, bb) = cgg.bounding_boxes(bg, chain, s, i)
+            (origin, bases, bb) = ftug.bounding_boxes(bg, chain, s, i)
             for k in range(2):
                 (n, x) = bb[k]
 
@@ -629,7 +629,26 @@ class PymolPrinter:
                     #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
                     self.add_segment(i1, i2, 'cyan', 0.3)
 
+        if self.virtual_atoms:
+            va = ftug.virtual_atoms(cg)
 
+            for r in va.keys():
+                for a in va[r].keys():
+                    d = cg.get_node_from_residue_num(r)
+                    if d[0] == 's':
+                        self.add_sphere(va[r][a], 'green', 1.)
+                    elif d[0] == 'i':
+                        self.add_sphere(va[r][a], 'yellow', 1.)
+                    elif d[0] == 'm':
+                        self.add_sphere(va[r][a], 'red', 1.)
+                    elif d[0] == 'h':
+                        self.add_sphere(va[r][a], 'blue', 1.)
+
+        if self.basis:
+            for d in cg.defines.keys():
+                origin, basis = ftug.element_coord_system(cg, d)
+
+                self.add_segment(origin, origin + 7. * basis[1], 'purple', 2.)
 
         print >>sys.stderr, "energy_function:", self.energy_function
         # print the contributions of the energy function, if one is specified
@@ -791,8 +810,8 @@ class PymolPrinter:
         colors = ['yellow', 'purple']
 
         for i in range(stem_len):
-            vbasis = cgg.virtual_res_basis_core(coords, twists, i, stem_len)
-            vpos = cgg.virtual_res_3d_pos_core(coords, twists, i, stem_len)
+            vbasis = ftug.virtual_res_basis_core(coords, twists, i, stem_len)
+            vpos = ftug.virtual_res_3d_pos_core(coords, twists, i, stem_len)
 
             # iterate once for each strand
             for j in range(2):

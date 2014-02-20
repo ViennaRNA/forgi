@@ -15,11 +15,13 @@ import math as m
 import numpy as np
 import numpy.linalg as nl
 import random
+import sys
 
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as fud
+import forgi.threedee.utilities.average_atom_positions as ftua
 import forgi.threedee.utilities.my_math as cum
-import forgi.threedee.utilities.pdb as cup
+import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.rmsd as cur
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
@@ -585,7 +587,7 @@ def get_mids_core_a(chain, start1, start2, end1, end2, use_template=True):
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (tend1, tend2, tstart2)
     filename = forgi.threedee.data_file(op.join('data',
                        template_filename))
-    ideal_chain = cup.get_first_chain(filename)
+    ideal_chain = ftup.get_first_chain(filename)
 
     est_mids = estimate_mids_core(ideal_chain, tstart1, tstart2, tend1, tend2)
     est_mids = [est_mids[0].get_array(), est_mids[1].get_array()]
@@ -644,10 +646,10 @@ def get_mids_core(chain, start1, start2, end1, end2, use_template=True):
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
     filename = forgi.threedee.data_file(op.join('data', template_filename))
-    ideal_chain = cup.get_first_chain(filename)
+    ideal_chain = ftup.get_first_chain(filename)
     chain = extract_define_residues([start1, end1, end2, start2], chain)
 
-    rotran = cup.pdb_rmsd(chain, ideal_chain, sidechains=False,
+    rotran = ftup.pdb_rmsd(chain, ideal_chain, sidechains=False,
                           superimpose=True, apply_sup=False)[2]
 
     ideal_mids = get_mids_core_a(ideal_chain, 1, stem_length * 2,
@@ -1061,7 +1063,7 @@ def stem_vres_reference_atoms(bg, chain, s, i):
         else:
             r = bg.defines[s][3] - i
 
-        for atom in cup.all_rna_atoms:
+        for atom in ftup.all_rna_atoms:
             try:
                 c = chain[r][atom].coord
                 new_c = cuv.change_basis(c - vpos, basis, cuv.standard_basis)
@@ -1262,13 +1264,13 @@ def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
                                                   stem_length * 2)
     filename = op.join(cc.Configuration.stem_fragment_dir,
                        template_filename)
-    ideal_chain = cup.get_first_chain(filename)
+    ideal_chain = ftup.get_first_chain(filename)
 
     '''
-    rotran = cup.pdb_rmsd(ideal_chain, chain, sidechains=False,
+    rotran = ftup.pdb_rmsd(ideal_chain, chain, sidechains=False,
             superimpose=True, apply_sup=False)[2]
     '''
-    rotran = cup.pdb_rmsd(chain, ideal_chain, sidechains=False,
+    rotran = ftup.pdb_rmsd(chain, ideal_chain, sidechains=False,
                           superimpose=True, apply_sup=False)[2]
 
     ideal_mids = get_mids_core(ideal_chain, 1, stem_length * 2,
@@ -1476,7 +1478,7 @@ def add_stem_information_from_pdb_chain(cg, chain):
     @param bg: The BulgeGraph.
     @param chain: The Bio.PDB chain representation of the 3D structure.
     '''
-    chain = cup.rename_rosetta_atoms(chain)
+    chain = ftup.rename_rosetta_atoms(chain)
 
     for d in cg.defines.keys():
         if d[0] == 's':
@@ -1657,9 +1659,30 @@ def element_coord_system(cg, d):
     vec_axis = ftuv.normalize(cg.coords[d][1] - cg.coords[d][0])
     twists = cg.get_twists(d)
 
-    #fud.pv('vec_axis')
-    #fud.pv('twists')
-
     mid_twist = ftuv.normalize(twists[0] + twists[1])
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
+
+def virtual_atoms(cg, atom_names=ftup.nonsidechain_atoms):
+    '''
+    Get a list of virtual atoms for this structure.
+
+    @param cg: The coarse grain structure.
+    '''
+    coords = col.defaultdict(dict)
+
+    for d in cg.defines.keys():
+        origin, basis = element_coord_system(cg, d)
+
+        for i,r in it.izip(it.count(),
+                           cg.define_residue_num_iterator(d)):
+            for aname in atom_names:
+                identifier = "%s %s %d %s" % (d[0],
+                                              " ".join(map(str, cg.get_node_dimensions(d))),
+                                              i, aname)
+                try:
+                    coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
+                except KeyError as ke:
+                    #print >>sys.stderr, "KeyError:", ke
+                    pass
+    return coords

@@ -5,8 +5,12 @@ import forgi.threedee.utilities.rmsd as brmsd
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as cuv
 
+backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"] 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
 ring_atoms = ['C4*', 'C3*', 'C2*', 'C1*', 'O4*']
+ring_atoms_real = ["C4'", "C3'", "C2'", "C1'", "O4'"]
+
+nonsidechain_atoms = backbone_atoms_real + ring_atoms_real
 
 side_chain_atoms = dict()
 side_chain_atoms['U'] = ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6']

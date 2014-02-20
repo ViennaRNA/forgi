@@ -59,6 +59,8 @@ def main():
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
     parser.add_option('-a', '--align', dest='align', default=False, action='store_true', help='Align all of the structures with the first')
     parser.add_option('-e', '--encompassing-stems', dest='encompassing_stems', default=False, action='store_true', help='Show the big stems that encompass the colinear ones.')
+    parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true', help='Display the virtual atoms')
+    parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true', help='Display the coordinate basis of each element')
 
     (options, args) = parser.parse_args()
 
@@ -73,6 +75,8 @@ def main():
     pp.add_longrange = options.longrange
     pp.print_text = options.text
     pp.encompassing_stems = options.encompassing_stems
+    pp.virtual_atoms = options.virtual_atoms
+    pp.basis = options.basis
 
     cgs = []
     for a in args:
