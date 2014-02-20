@@ -21,7 +21,8 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
-        self.visualize_three_and_five_prime = False
+        self.basis = None
+        self.visualize_three_and_five_prime = True
         self.encompassing_stems = False
         self.state = 2
         self.stem_stem_orientations = None

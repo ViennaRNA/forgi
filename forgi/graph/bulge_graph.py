@@ -16,7 +16,7 @@ import collections as c
 import math
 import random
 import itertools as it
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.utilities.stuff as cus
 import forgi.threedee.utilities.vector as cuv
 

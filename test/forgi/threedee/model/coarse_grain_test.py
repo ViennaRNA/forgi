@@ -5,7 +5,7 @@ import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as cmc
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import tempfile as tf
 
 import copy, time
@@ -132,13 +132,19 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
 
         rg = cg.radius_of_gyration()
-        #cud.pv('rg')
+        #fud.pv('rg')
 
     def test_get_coordinates_list(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
 
         cl = cg.get_coordinates_list()
         self.assertEqual(len(cl), len(cg.defines) * 2)
+
+    def test_get_sides(self):
+        cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1gid.cg')
+
+        (s1b, s1e) = cg.get_sides('s0', 'f1')
+        (s1b, s1e) = cg.get_sides('s8', 't1')
 
     def test_cg_from_sg(self):
         bg = ftmc.CoarseGrainRNA(dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
@@ -153,7 +159,7 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
                 c = new_cg.connections(i)
 
                 if len(c) != 2:
-                    cud.pv('i')
-                    cud.pv('sg')
-                    cud.pv('bg.edges[i]')
+                    fud.pv('i')
+                    fud.pv('sg')
+                    fud.pv('bg.edges[i]')
                 self.assertEqual(len(c), 2)
