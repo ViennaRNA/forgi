@@ -19,7 +19,6 @@ import sys
 
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as fud
-import forgi.threedee.utilities.average_atom_positions as ftua
 import forgi.threedee.utilities.my_math as cum
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.rmsd as cur
@@ -1669,6 +1668,7 @@ def virtual_atoms(cg, atom_names=ftup.nonsidechain_atoms):
 
     @param cg: The coarse grain structure.
     '''
+    import forgi.threedee.utilities.average_atom_positions as ftua
     coords = col.defaultdict(dict)
 
     for d in cg.defines.keys():
