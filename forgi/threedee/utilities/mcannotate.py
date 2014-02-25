@@ -3,6 +3,8 @@
 import sys
 import copy
 
+import forgi.utilities.debug as fud
+
 def parse_chain_base(chain_base):
     """
     Parse the string identifying a chain and a base in an MC-Annotate generated
@@ -134,15 +136,13 @@ def get_dotplot(lines):
     for line in iterate_over_interactions(lines):
         parts = line.split(' ')
         bond_type = parts[3]
-        if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
-            '''
-            if ((bond_type.find('Ww/Ww') and (bond_type.find('A-U') or
-                                            bond_type.find('U-A') or
-                                            bond_type.find('C-G') or
-                                            bond_type.find('G-C'))) or
-               (bond_type.find('Ws/Ww') and bond_type.find('U-G')) or
-                (bond_type.find('Ww/Ws') and bond_type.find('G-U'))):
-            '''
+        #if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
+        if ((line.find('Ww/Ww') >= 0 and (line.find('A-U') >= 0 or
+                                        line.find('U-A') >= 0 or
+                                        line.find('C-G') >= 0 or
+                                        line.find('G-C') >= 0)) or
+           (line.find('Ws/Ww') >= 0 and line.find('U-G') >= 0) or
+            (line.find('Ww/Ws') >= 0 and line.find('G-U') >= 0)):
             #if bond_type.find('Ww/Ww') >= 0:
             parts1 = parts[0].split('-')
             #print line

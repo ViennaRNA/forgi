@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'forgi'
-copyright = u'2012,2013 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>'
+copyright = u'2012,2013,2014 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

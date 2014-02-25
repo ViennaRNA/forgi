@@ -3,7 +3,7 @@ import itertools as it
 import random
 
 import forgi.graph.bulge_graph as cgb
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 
 import copy, time
@@ -42,7 +42,6 @@ connect s0 f1 m1 m0 t1
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
-        #print bg.to_bg_string()
 
         self.assertEquals(bg.seq_length, len(self.dotbracket))
 
@@ -156,13 +155,11 @@ connect s0 f1 m1 m0 t1
 
     def test_get_any_sides(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..((..))..)).((..))')
-        #cud.pv('bg.to_bg_string()')
 
         self.assertEqual(bg.get_any_sides('s0', 'i0'), (1,0))
         self.assertEqual(bg.get_any_sides('i0', 's0'), (0,1))
 
         bg = cgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
-        cud.pv('bg.to_bg_string()')
 
         self.assertEqual(bg.get_any_sides('s1', 'm1'), (0, 1))
         self.assertEqual(bg.get_any_sides('m1', 's1'), (1, 0))
@@ -258,6 +255,11 @@ connect s0 f1 m1 m0 t1
 
         bg = cgb.BulgeGraph(dotbracket_str='(())(())')
         self.assertEquals(bg.get_length('m0'), 0)
+
+        bg = cgb.BulgeGraph(dotbracket_str='(((((((((..(((..((((.(((((((((.....(((((.(((((....((((....))))....))))).....(((((((((.......)))))))))....))))).((........))...)))))))))))))...)))..))....))))))).')
+        fud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.get_length('i4'), 2)
 
     def test_get_define_seq_str(self):
         bg = cgb.BulgeGraph(dotbracket_str="(.(.))") 
@@ -436,4 +438,12 @@ connect s0 f1 m1 m0 t1
 
         # check to make sure there are no duplicate elements
         self.assertEquals(len(sg), len(set(sg)))
+
+    def test_has_connection(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(())..(())..(())..')
+
+        fud.pv('bg.to_bg_string()')
+        self.assertTrue(bg.has_connection('m0', 'm1'))
+        self.assertTrue(bg.has_connection('m1', 't1'))
+        self.assertFalse(bg.has_connection('m0', 't1'))
 

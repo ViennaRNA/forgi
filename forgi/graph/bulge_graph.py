@@ -269,6 +269,10 @@ class BulgeGraph(object):
         d = self.defines[key]
         if key[0] == 's' or key[0] == 'y':
             return (d[1] - d[0]) + 1
+        elif key[0] == 'f':
+            return self.get_bulge_dimensions(key)[0]
+        elif key[0] == 't':
+            return self.get_bulge_dimensions(key)[1]
         else:
             return min(self.get_bulge_dimensions(key))
 
@@ -876,6 +880,18 @@ class BulgeGraph(object):
         if v2 in self.edges[v1]:
             return True
         else:
+            # two multiloops can be connected at the end of a stem
+            for e in self.edges[v1]:
+                if e[0] != 's':
+                    continue
+
+                if v2 in self.edges[e]:
+                    (s1b, s1e) = self.get_sides(e, v1)
+                    (s2b, s2e) = self.get_sides(e, v2)
+
+                    if s1b == s2b:
+                        return True
+
             return False
 
     def connection_type(self, define, connections):
@@ -1457,6 +1473,7 @@ class BulgeGraph(object):
             #    15 20
             s1 = self.defines[c[0]]
             s2 = self.defines[c[1]]
+
             dims = (s2[0] - s1[1] - 1, s1[2] - s2[3] - 1)
 
         if bulge[0] == 'm':
@@ -1508,8 +1525,12 @@ class BulgeGraph(object):
             else:
                 dims = list(self.get_bulge_dimensions(vertex))
                 dims.sort()
-                
-                return dims[0]
+
+                if vertex[0] == 'i':
+                    return sum(dims) / float(len(dims))
+
+                else:
+                    return min(dims)
 
     def get_flanking_region(self, bulge_name, side=0):
         '''
