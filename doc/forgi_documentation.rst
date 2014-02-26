@@ -1,4 +1,4 @@
-Corgy API Documentation
+forgi API Documentation
 =================
 
 .. automodule:: forgi.graph.bulge_graph

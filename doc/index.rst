@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Forgi 0.1
+forgi 0.1
 =================================
 
 Contents:
@@ -14,6 +14,7 @@ Contents:
     graph_tutorial.rst
     threedee_tutorial.rst
     forgi_documentation.rst
+    utilities_tutorial.rst
     download.rst
 
 Indices and tables

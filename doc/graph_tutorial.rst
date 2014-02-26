@@ -1,8 +1,8 @@
-Forgi Tutorial
+RNA Secondary Structure as a Graph Using the forgi Library
 ==============
 A Simple Example
 ~~~~~~~~~~~~~~~~
-Forgi is a library for manipulating RNA as a graph-like structure. It provides classes for reading, storing, manipulating and outputting RNA structures. It's use is perhaps best illustrated with an example.
+forgi is a library for manipulating RNA as a graph-like structure. It provides classes for reading, storing, manipulating and outputting RNA structures. It's use is perhaps best illustrated with an example.
 
 
 Let's take an RNA sequence:

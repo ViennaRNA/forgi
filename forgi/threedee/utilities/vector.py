@@ -40,7 +40,6 @@ def get_orthogonal_unit_vector(vec):
     '''
     Return a vector orthogonal to vec.
     '''
-
     vec2 = get_non_colinear_unit_vector(vec)
     vec3 = np.cross(vec, vec2)
     return normalize(vec3)
@@ -653,7 +652,7 @@ def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
 
 def cylinder_line_intersection(cyl, line, r):
     '''
-    Get the points of intersection between a line and a sphere.
+    Get the points of intersection between a line and a cylinder.
 
     If they do not intersect, return an empty list. If the line
     touches the cylinder, then return a 2 point list with two identical points. 

@@ -1,8 +1,8 @@
-Forgi.threedee Tutorial
+RNA 3D Structure Using forgi.threedee
 ==============
 Introduction
 ------------
-Forgi.threedee is an extension of forgi capable of handling 3D data about RNA structures. It provides methods for extracting secondary structure as well as a coarse grain representation of 3D RNA structures.
+`forgi.threedee` is an extension of forgi capable of handling 3D data about RNA structures. It provides methods for extracting secondary structure as well as a coarse grain representation of 3D RNA structures.
 
 Requirements
 ------------
