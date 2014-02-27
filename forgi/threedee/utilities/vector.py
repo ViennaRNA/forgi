@@ -2,6 +2,7 @@
 
 #import timeit, sys
 
+import forgi.threedee.utilities.cytvec as ftuc
 import forgi.utilities.debug as cud
 import numpy as np
 import math as m
@@ -457,8 +458,8 @@ def magnitude(vec):
     @param vec: The vector in question.
     @return: The magnitude of the vector.
     '''
-
-    return m.sqrt(np.dot(vec, vec))
+    return ftuc.magnitude(vec)
+    #return m.sqrt(np.dot(vec, vec))
 
 def time_mag1():
     vec1 = get_random_vector()
@@ -530,8 +531,8 @@ def cross(a, b):
 '''
 
 def vec_distance(vec1, vec2):
-    return m.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
-
+    return ftuc.vec_distance(vec1, vec2)
+    #return m.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
 def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     '''
