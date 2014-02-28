@@ -3,7 +3,7 @@
 #import timeit, sys
 
 import forgi.threedee.utilities.cytvec as ftuc
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import numpy as np
 import math as m
 import numpy.linalg as nl
@@ -624,13 +624,15 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     '''
     seg_v = seg_b - seg_a
     pt_v = circ_pos - seg_a
-    if magnitude(seg_v) <= 0:
+    mag = m.sqrt(sum(seg_v * seg_v))
+
+    if m <= 0:
         raise ValueError, "Invalid segment length"
-    seg_v_unit = seg_v / magnitude(seg_v)
+    seg_v_unit = seg_v / mag
     proj = pt_v.dot(seg_v_unit)
     if proj <= 0:
         return seg_a.copy()
-    if proj >= magnitude(seg_v):
+    if proj >= mag:
         return seg_b.copy()
     proj_v = seg_v_unit * proj
     closest = proj_v + seg_a
@@ -644,11 +646,12 @@ def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
     closest = closest_point_on_seg(seg_a, seg_b, circ_pos)
     dist_v = circ_pos - closest
-    if magnitude(dist_v) > circ_rad:
+    mag = m.sqrt(sum(dist_v * dist_v))
+    if m > circ_rad:
         return vec(0, 0)
-    if magnitude(dist_v) <= 0:
+    if mag(dist_v) <= 0:
         raise ValueError, "Circle's center is exactly on segment"
-    offset = dist_v / magnitude(dist_v) * (circ_rad - magnitude(dist_v))
+    offset = dist_v / mag(dist_v) * (circ_rad - mag(dist_v))
     return offset
 
 def cylinder_line_intersection(cyl, line, r):
@@ -688,7 +691,8 @@ def cylinder_line_intersection(cyl, line, r):
     x  = (line_t[0][0] + 
             (line_vec_t[0] *
             (p[0] - line_t[0][1]) / line_vec_t[1]))
-    o = magnitude(p - cyl_t[0][1:])
+    v = p - cyl_t[0][1:]
+    o = m.sqrt(sum(v * v))
     p = [x, p[0], p[1]]
 
     if o > r:

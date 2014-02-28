@@ -251,6 +251,7 @@ def renumber_chain(chain):
     '''
 
     counter = 1
+    chain.id = ' '
 
     for r in chain:
         r.id = (r.id[0], counter, r.id[2])

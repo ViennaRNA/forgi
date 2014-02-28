@@ -460,7 +460,9 @@ class PymolPrinter:
         if self.pdb_file is None:
             return
 
-        struct = bp.PDBParser().get_structure('temp', self.pdb_file)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            struct = bp.PDBParser().get_structure('temp', self.pdb_file)
         chain = list(struct.get_chains())[0]
 
         for i in range(bg.stem_length(s)):

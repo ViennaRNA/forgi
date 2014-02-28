@@ -112,7 +112,9 @@ def base_normals(pdb_filename):
     @return: A list of pairs containing the origin the normal as well as the
         normal itself.
     '''
-    struct = bp.PDBParser().get_structure('t', pdb_filename)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        struct = bp.PDBParser().get_structure('t', pdb_filename)
     chain = list(struct.get_chains())[0]
     origin_norms = []
 
@@ -1662,7 +1664,7 @@ def element_coord_system(cg, d):
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
 
-def virtual_atoms(cg, atom_names=ftup.nonsidechain_atoms):
+def virtual_atoms(cg, given_atom_names=None):
     '''
     Get a list of virtual atoms for this structure.
 
@@ -1676,6 +1678,12 @@ def virtual_atoms(cg, atom_names=ftup.nonsidechain_atoms):
 
         for i,r in it.izip(it.count(),
                            cg.define_residue_num_iterator(d)):
+
+            if given_atom_names is None:
+                atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq[r-1]]
+            else:
+                atom_names = given_atom_names
+
             for aname in atom_names:
                 identifier = "%s %s %d %s" % (d[0],
                                               " ".join(map(str, cg.get_node_dimensions(d))),
