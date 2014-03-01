@@ -797,7 +797,7 @@ class PymolPrinter:
                     else:
                         self.add_sphere(p, "yellow", 1.5, key)
 
-    def stem_atoms(self, coords, twists, stem_len):
+    def stem_atoms(self, coords, twists, stem_len, side=0):
         '''
         Add the locations of the virtual atoms as spheres.
 
@@ -817,24 +817,24 @@ class PymolPrinter:
             vpos = ftug.virtual_res_3d_pos_core(coords, twists, i, stem_len)
 
             # iterate once for each strand
-            for j in range(2):
-                # just use A for now
-                for a in cua.avg_stem_vres_atom_coords[j]['A'].items():
-                    c = a[1]
-                    new_coords = np.dot(vbasis.transpose(), c) + vpos[0]
-                    #self.add_sphere(new_coords, colors[j], 0.3)
+            j = side
+            # just use A for now
+            for a in cua.avg_stem_vres_atom_coords[j]['A'].items():
+                c = a[1]
+                new_coords = np.dot(vbasis.transpose(), c) + vpos[0]
+                #self.add_sphere(new_coords, colors[j], 0.3)
 
-                    if a[0] == 'P' and i == 0:
-                        first_p[j] = new_coords
-                    if a[0] == 'P':
-                        if prev_p[j] is not None:
-                            self.add_segment(prev_p[j], new_coords,
-                                             colors[j], 0.7)
-                        prev_p[j] = new_coords
-                    if a[0] == 'O3*' and i == 0:
-                        first_o3[j] = new_coords
-                    if a[0] == 'O3*':
-                        last_o3[j] = new_coords
+                if a[0] == 'P' and i == 0:
+                    first_p[j] = new_coords
+                if a[0] == 'P':
+                    if prev_p[j] is not None:
+                        self.add_segment(prev_p[j], new_coords,
+                                         colors[j], 0.7)
+                    prev_p[j] = new_coords
+                if a[0] == 'O3*' and i == 0:
+                    first_o3[j] = new_coords
+                if a[0] == 'O3*':
+                    last_o3[j] = new_coords
 
         self.add_segment(prev_p[0], last_o3[0], colors[0], 0.7)
         self.add_segment(first_p[1], first_o3[1], colors[1], 0.7)

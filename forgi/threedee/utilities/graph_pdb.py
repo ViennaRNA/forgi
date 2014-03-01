@@ -813,10 +813,13 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
             u * m.cos(ang - ang_offset) + v * m.sin(ang - ang_offset))
 
 
-def virtual_res_3d_pos(bg, stem, i, stem_inv=None):
-    return virtual_res_3d_pos_core(bg.coords[stem], bg.twists[stem], i,
-                                   bg.stem_length(stem), stem_inv)
-
+def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
+    if stem_length is None
+        return virtual_res_3d_pos_core(bg.coords[stem], bg.twists[stem], i,
+                                       bg.stem_length(stem), stem_inv)
+    else:
+        return virtual_res_3d_pos_core(bg.coords[stem], bg.twists[stem], i,
+                                       stem_length, stem_inv)
 
 def bg_virtual_residues(bg):
     vress = []

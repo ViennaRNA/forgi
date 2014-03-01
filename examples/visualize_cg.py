@@ -61,6 +61,7 @@ def main():
     parser.add_option('-e', '--encompassing-stems', dest='encompassing_stems', default=False, action='store_true', help='Show the big stems that encompass the colinear ones.')
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true', help='Display the virtual atoms')
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true', help='Display the coordinate basis of each element')
+    parser.add_option('-a', '--stem-atoms', dest='stem_atoms', default=False, action='store_true', help='Display the stem atoms')
 
     (options, args) = parser.parse_args()
 
@@ -90,6 +91,11 @@ def main():
             pp.override_color = 'middle gray'
 
         pp.coordinates_to_pymol(cg)
+
+    for d in cg.defines:
+        if options.stem_atoms:
+            pp.stem_atoms(d.coords, d.twists, 
+                          cg.get_bulge_dimensions(d)[0], side=0)
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:
