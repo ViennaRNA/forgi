@@ -10,7 +10,7 @@ import collections as col
 
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
 
@@ -536,7 +536,7 @@ class PymolPrinter:
             for s in stems:
                 points += [cg.coords[s][0], cg.coords[s][1]]
             
-            cud.pv('points')
+            fud.pv('points')
 
             # create the linear regression
             data = np.array(points)
@@ -828,6 +828,7 @@ class PymolPrinter:
                     first_p[j] = new_coords
                 if a[0] == 'P':
                     if prev_p[j] is not None:
+                        fud.pv('new_coords, prev_p[j]')
                         self.add_segment(prev_p[j], new_coords,
                                          colors[j], 0.7)
                     prev_p[j] = new_coords
@@ -836,5 +837,5 @@ class PymolPrinter:
                 if a[0] == 'O3*':
                     last_o3[j] = new_coords
 
-        self.add_segment(prev_p[0], last_o3[0], colors[0], 0.7)
-        self.add_segment(first_p[1], first_o3[1], colors[1], 0.7)
+        fud.pv('prev_p[0], last_o3[0]')
+        #self.add_segment(prev_p[0], last_o3[0], colors[0], 0.7)

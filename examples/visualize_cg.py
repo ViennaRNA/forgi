@@ -6,7 +6,7 @@ import subprocess as sp
 import tempfile as tf
 
 import forgi.threedee.model.coarse_grain as cmg
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.pdb as cup
 import forgi.threedee.utilities.rmsd as ftur
@@ -61,7 +61,7 @@ def main():
     parser.add_option('-e', '--encompassing-stems', dest='encompassing_stems', default=False, action='store_true', help='Show the big stems that encompass the colinear ones.')
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true', help='Display the virtual atoms')
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true', help='Display the coordinate basis of each element')
-    parser.add_option('-a', '--stem-atoms', dest='stem_atoms', default=False, action='store_true', help='Display the stem atoms')
+    parser.add_option('', '--stem-atoms', dest='stem_atoms', default=False, action='store_true', help='Display the stem atoms')
 
     (options, args) = parser.parse_args()
 
@@ -93,9 +93,20 @@ def main():
         pp.coordinates_to_pymol(cg)
 
     for d in cg.defines:
-        if options.stem_atoms:
-            pp.stem_atoms(d.coords, d.twists, 
-                          cg.get_bulge_dimensions(d)[0], side=0)
+        if d[0] == 'i' or d[0] == 's' or d[0] == 'm':
+            if options.stem_atoms:
+                side = 0
+                if d[0] == 'm':
+                    side = cg.get_strand(d)
+                    fud.pv('d, side')
+
+                    pp.stem_atoms(cg.coords[d], cg.get_twists(d), 
+                                  cg.get_node_dimensions(d)[0], side=side)
+                elif d[0] == 's':
+                    for side in range(2):
+                        pp.stem_atoms(cg.coords[d], cg.get_twists(d), 
+                                    cg.get_node_dimensions(d)[0], side=side)
+
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:

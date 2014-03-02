@@ -1448,6 +1448,28 @@ class BulgeGraph(object):
 
         return (p1[0], p2[0])
 
+    def get_strand(self, multiloop):
+        '''
+        Get the strand on which this multiloop is located.
+
+        @param multiloop: The name of the multiloop
+        @return: 0 for being on the lower numbered strand and 1 for
+                 being on the higher numbered strand.
+        '''
+        conn = self.connections(multiloop)
+
+        t = self.connection_type(multiloop, conn)
+        fud.pv('multiloop, t')
+
+        if abs(t) == 2:
+            return 1
+        elif abs(t) == 3:
+            return 0
+        else:
+            return 0
+
+        pass
+
     def get_bulge_dimensions(self, bulge):
         '''
         Return the dimensions of the bulge.
