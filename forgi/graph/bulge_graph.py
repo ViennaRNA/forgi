@@ -968,6 +968,18 @@ class BulgeGraph(object):
         self.name = lines[0].strip('>')
         self.seq = lines[1].strip()
 
+    def remove_degenerate_nodes(self):
+        '''
+        For now just remove all hairpins that have no length.
+        '''
+        to_remove = []
+        for d in self.defines:
+            if d[0] == 'h' and len(self.defines[d]) == 0:
+                to_remove += [d]
+
+        for r in to_remove:
+            self.remove_vertex(r)
+
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
         Populate the BulgeGraph structure from a dotbracket representation.
@@ -1002,6 +1014,7 @@ class BulgeGraph(object):
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
+        self.remove_degenerate_nodes()
         self.sort_defines()
 
     def sort_defines(self):

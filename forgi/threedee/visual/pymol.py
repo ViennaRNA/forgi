@@ -395,8 +395,8 @@ class PymolPrinter:
 
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key)
-        self.add_sphere(p, 'light gray', width=2.0 ) 
-        self.add_sphere(n, 'dark gray', width=2.0 ) 
+        #self.add_sphere(p, 'light gray', width=2.0 ) 
+        #self.add_sphere(n, 'dark gray', width=2.0 ) 
 
         if self.add_twists:
             mult = 8.

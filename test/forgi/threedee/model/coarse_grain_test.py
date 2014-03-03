@@ -110,6 +110,8 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         self.assertTrue(len(cg.defines) > 1)
 
+        cg = cmc.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb', intermediate_file_dir='tmp')
+
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         

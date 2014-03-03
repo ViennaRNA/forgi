@@ -83,7 +83,9 @@ connect s0 f1 m1 m0 t1
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
 
         # this structure should have a hairpin
-        self.assertTrue('h0' in bg.defines)
+        self.assertTrue('h0' not in bg.defines)
+
+        # or should it?
 
     def test_from_dotplot3(self):
         dotbracket = '(.(.((((((...((((((....((((.((((.(((..(((((((((....)))))))))..((.......))....)))......))))))))...))))))..)).))))).)..((((..((((((((((...))))))))).))))).......'
