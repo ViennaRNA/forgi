@@ -1697,3 +1697,56 @@ def virtual_atoms(cg, given_atom_names=None):
                     #print >>sys.stderr, "KeyError:", ke
                     pass
     return coords
+
+def chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
+def add_atoms(coords, twists, define, side, seq, new_coords):
+    stem_len = define[1] - define[0] + 1
+
+    for i in range(stem_len):
+        if side == 0:
+            resnum = define[0] + i
+        else:
+            resnum = define[1] - i
+        resname = seq[resnum-1]
+        
+        vbasis = virtual_res_basis_core(coords, twists, i, stem_len)
+        vpos = virtual_res_3d_pos_core(coords, twists, i, stem_len)
+
+        for a in cua.avg_stem_vres_atom_coords[side][resname].items():
+            c = a[1]
+            new_coords[resnum][a[0]] = np.dot(vbasis.transpose(), c) + vpos[0]
+    
+    return new_coords
+
+def cg_atoms(cg):
+    '''
+    Place atoms as if every segment was a helix.
+    '''
+    new_coords = col.defaultdict(dict)
+
+    for d in cg.defines:
+        coords = cg.coords[d]
+        twists = cg.get_twists(d)
+
+        if d[0] == 's' or d[0] == 'i':
+            for c in chunks(cg.defines[d], 2):
+                for side in range(2):
+                    new_coords = add_atoms(coords, twists, c, side, cg.seq, new_coords)
+        elif d[0] == 'm':
+            side = cg.get_strand(d)
+
+            if len(cg.defines[d]) > 0:
+                new_coords = add_atoms(coords, twists, cg.defines[d], side, cg.seq, new_coords)
+
+        elif d[0] == 'f':
+            new_coords = add_atoms(coords, twists, cg.defines[d], 0, cg.seq, new_coords)
+        
+        elif d[0] == 't':
+            new_coords = add_atoms(coords, twists, cg.defines[d], 1, cg.seq, new_coords)
+
+    return new_coords
