@@ -322,8 +322,10 @@ class RandomAngleStats():
             for d in discrete_angle_stats[(key1,key2,key3)]:
                 data += [[d.u, d.v, d.t, d.r1, d.u1, d.v1]]
 
+            '''
             if len(data) < 3:
                 continue
+            '''
 
             try:
                 self.cont_stats[dims] = self.create_random_function(np.array(data))
@@ -381,8 +383,10 @@ class ContinuousAngleStats():
             for d in discrete_angle_stats[(key1,key2,key3)]:
                 data += [[d.u, d.v, d.t, d.r1, d.u1, d.v1]]
 
-            if len(data) < 3:
+            '''
+            if len(data) < 2:
                 continue
+            '''
 
             try:
                 self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
