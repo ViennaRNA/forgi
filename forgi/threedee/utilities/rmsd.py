@@ -46,6 +46,24 @@ def centered_rmsd(crds1, crds2):
 
     return rmsd(crds1, crds2)
 
+def centered_drmsd(crds1, crds2):
+    '''
+    Center the coordinate vectors on their centroid
+    and then calculate the drmsd.
+    '''
+    crds1 = ftuv.center_on_centroid(crds1)
+    crds2 = ftuv.center_on_centroid(crds2)
+
+    os = optimal_superposition(crds1, crds2)
+    crds_aligned = np.dot(crds1, os)
+
+    s2 = sum(sum((crds2 - crds_aligned) * (crds2 - crds_aligned)))
+    diff_vecs = (crds2 - crds_aligned)
+    sums = np.sum(diff_vecs * diff_vecs, axis=1)
+    sqrts = np.sqrt(sums)
+
+    return drmsd(crds1, crds2)
+
 def optimal_superposition(crds1, crds2):
     """Returns best-fit rotation matrix as [3x3] numpy matrix"""
     assert(crds1.shape[1] == 3)
