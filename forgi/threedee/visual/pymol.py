@@ -48,6 +48,7 @@ class PymolPrinter:
         self.draw_segments = True
         self.pdb_file = None
         self.movie = False
+        self.color_modifier=1.0
         self.prev_obj_name = ''     # The name of the previously created
                                     # object which needs to be hidden
                                     # when creating a movie
@@ -110,6 +111,8 @@ class PymolPrinter:
         '''
         if self.override_color is not None:
             color = self.override_color
+
+        color = [str(c * self.color_modifier) for c in self.get_color_vec(color)]        
 
         #assert(not allclose(p, n))
         self.new_segments += [(np.array(p), np.array(n), color, width, text)]
@@ -184,7 +187,11 @@ class PymolPrinter:
 
         for seg in self.segments:
             (p, n, color, width, text) = seg
-            color_vec = [str(c) for c in self.get_color_vec(color)]
+            if type(color) is not list:
+                color_vec = [str(c * self.color_modifier) for c in self.get_color_vec(color)]
+            else:
+                color_vec = color
+
             s += " CYLINDER, %f, %f, %f, %f, %f, %f, " % (p[0], p[1], p[2],
                                                           n[0], n[1], n[2])
             s += "%f, %s, %s," % (width, ", ".join(color_vec),

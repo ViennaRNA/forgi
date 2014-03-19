@@ -65,7 +65,7 @@ def centered_drmsd(crds1, crds2):
     return drmsd(crds1, crds2)
 
 def optimal_superposition(crds1, crds2):
-    """Returns best-fit rotation matrix as [3x3] numpy matrix"""
+    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""
     assert(crds1.shape[1] == 3)
     assert(crds1.shape == crds2.shape)
     correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)

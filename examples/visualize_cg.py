@@ -88,7 +88,9 @@ def main():
 
     for i,cg in enumerate(cgs):
         if i > 0:
-            pp.override_color = 'middle gray'
+            pp.color_modifier = .3
+            #pp.override_color = 'middle gray'
+
 
         pp.coordinates_to_pymol(cg)
 
