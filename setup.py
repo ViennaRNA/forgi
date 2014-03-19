@@ -6,6 +6,6 @@ setup(name='forgi',
       author='Peter Kerpedjiev',
       author_email='pkerp@tbi.univie.ac.at',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      packages=['forgi', 'forgi.graph, forgi.utilities'],
+      packages=['forgi', 'forgi.graph', 'forgi.utilities'],
       package_data={'forgi': ['data/*.pdb']}
      )
