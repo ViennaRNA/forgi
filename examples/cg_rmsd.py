@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 import sys
-import forgi.threedee.utilities.pdb as cup
 from optparse import OptionParser
+
+import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.utilities.rmsd as ftur
 
 def main():
     usage = """
-    ./pdb_rmsd.py pdb_file1 pdb_file2
+    python cg_rmsd.py file1.cg file2.cg
 
-    Extract the largest RNA chain from each file and calculate the rmsd between
-    all the matching atoms. Matching atoms are those that share a position and name.
-
-    I.e. residue 1, atom C1'
+    Calculate the RMSD between two coarse grain models.
     """
     num_args= 2
     parser = OptionParser(usage=usage)
@@ -25,10 +25,13 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    chain1 = cup.load_structure(args[0])
-    chain2 = cup.load_structure(args[1])
+    cg1 = ftmc.CoarseGrainRNA(args[0])
+    cg2 = ftmc.CoarseGrainRNA(args[1])
 
-    print cup.pdb_rmsd(chain1, chain2)[:2]
+    vrs1 = ftug.bg_virtual_residues(cg1)
+    vrs2 = ftug.bg_virtual_residues(cg2)
+
+    print ftur.centered_rmsd(vrs1, vrs2)
 
 if __name__ == '__main__':
     main()

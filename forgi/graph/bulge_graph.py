@@ -5,7 +5,7 @@
    interior loops, multiloops, etc..."""
 
 __author__      = "Peter Kerpedjiev"
-__copyright__   = "Copyright 2012, 2013"
+__copyright__   = "Copyright 2012, 2013, 2014"
 __version__     = "0.1"
 __maintainer__  = "Peter Kerpedjiev"
 __email__       = "pkerp@tbi.univie.ac.at"
@@ -16,7 +16,7 @@ import collections as c
 import math
 import random
 import itertools as it
-import forgi.utilities.debug as cud
+import forgi.utilities.debug as fud
 import forgi.utilities.stuff as cus
 import forgi.threedee.utilities.vector as cuv
 
@@ -50,37 +50,6 @@ def any_difference_of_one(stem, bulge):
                 if abs(bulge_part - part) == 1:
                     return True
     return False
-
-
-def print_bulge_graph(graph):
-    '''
-    Print out the connections in the graph.
-
-    :param graph: A dictionary indexed by stem number containing a set
-                  of the bulge numbers that it is connected to.
-    '''
-    for key in graph.keys():
-        stem_str = "connect s%d" % (key)
-        for item in graph[key]:
-            stem_str += " b%d" % (item)
-        print stem_str
-
-def print_stems(stems):
-    '''
-    Print the names and definitions of the stems.
-
-    :param stems: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
-                  where s1 and e1 are the nucleotides at one end of the stem
-                  and s2 and e2 are the nucleotides at the other.
-    '''
-    for i in range(len(stems)):
-        # one is added to each coordinate to make up for the fact that residues are 1-based
-        ss1 = stems[i][0][0]+1
-        ss2 = stems[i][0][1]+1
-        se1 = stems[i][1][0]+1
-        se2 = stems[i][1][1]+1
-
-        print "define s%d 0 %d %d %d %d" % (i, min(ss1,se1), max(ss1,se1), min(ss2,se2), max(ss2,se2))
 
 def print_bulges(bulges):
     '''
@@ -188,10 +157,6 @@ def find_bulges_and_stems(brackets):
             if prev == '.':
                 dots_end = i-1
                 bulges = add_bulge(bulges, (dots_start, dots_end), context, "4")
-            """
-            if prev == ')':
-                bulges = add_bulge(bulges, (-1,-1), context, "3")
-            """
 
         if brackets[i] == ')':
             if len(opens) == 0:
@@ -210,7 +175,7 @@ def find_bulges_and_stems(brackets):
             if prev == '.':
                 dots_end = i-1
                 bulges = add_bulge(bulges, (dots_start, dots_end), context, "2")
-  
+
         if brackets[i] == '.':
             if prev == '.':
                 continue
@@ -246,14 +211,12 @@ def print_name(filename):
 
 
 class BulgeGraph(object):
-    def __init__(self, bg_file=None, dotbracket_str=''):
+    def __init__(self, bg_file=None, dotbracket_str='', seq=''):
         self.name = "untitled"
-        self.seq = ""
         self.defines = dict()
         self.edges = c.defaultdict(set)
         self.longrange = c.defaultdict(set)
         self.weights = dict()
-        self.seq_length = 0
 
         # sort the coordinate basis for each stem
         self.bases = dict()
@@ -263,6 +226,8 @@ class BulgeGraph(object):
 
         if dotbracket_str != '':
             self.from_dotbracket(dotbracket_str)
+
+        self.seq = seq
 
         if bg_file is not None:
             self.from_bg_file(bg_file)
@@ -280,9 +245,42 @@ class BulgeGraph(object):
 
         return name
 
-    def stem_length(self, key):
+    def element_length(self, key):
+        '''
+        Get the number of residues that are contained within this element.
+
+        @param key: The name of the element.
+        '''
         d = self.defines[key]
-        return (d[1] - d[0]) + 1
+        length = 0
+
+        for i in range(0, len(d), 2):
+            length += d[i+1] - d[i] + 1
+
+        return length 
+            
+    def stem_length(self, key):
+        '''
+        Get the length of a particular element. If it's a stem, it's equal to
+        the number of paired bases. If it's an interior loop, it's equal to the
+        number of unpaired bases on the strand with less unpaired bases. If
+        it's a multiloop, then it's the number of unpaired bases.
+        '''
+        d = self.defines[key]
+        if key[0] == 's' or key[0] == 'y':
+            return (d[1] - d[0]) + 1
+        elif key[0] == 'f':
+            return self.get_bulge_dimensions(key)[0]
+        elif key[0] == 't':
+            return self.get_bulge_dimensions(key)[1]
+        else:
+            return min(self.get_bulge_dimensions(key))
+
+    def get_single_define_str(self, key):
+        '''
+        Get a define string for a single key.
+        '''
+        return "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
 
     def get_define_str(self):
         '''
@@ -290,11 +288,12 @@ class BulgeGraph(object):
 
         Format:
 
-        define [name] [weight] [start_res1] [end_res1] [start_res2] [end_res2]
+        define [name] [start_res1] [end_res1] [start_res2] [end_res2]
         '''
         defines_str = ''
         for key in self.defines.keys():
-            defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
+            defines_str += self.get_single_define_str(key)
+            #defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
             defines_str += '\n'
         return defines_str
 
@@ -434,8 +433,8 @@ class BulgeGraph(object):
             for j in range(len(bulges)):
                 bulge = bulges[j]
                 if any_difference_of_one(stem, bulge):
-                    self.edges['s%d' % (i)].add('b%d' % (j))
-                    self.edges['b%d' % (j)].add('s%d' % (i))
+                    self.edges['y%d' % (i)].add('b%d' % (j))
+                    self.edges['b%d' % (j)].add('y%d' % (i))
 
     def create_stem_graph(self, stems, bulge_counter):
         '''
@@ -478,15 +477,32 @@ class BulgeGraph(object):
                                         self.defines[bn] = []
                                         self.weights[bn] = 1
 
-                                        self.edges['s%d' % i].add(bn)
-                                        self.edges[bn].add('s%d' % i)
+                                        self.edges['y%d' % i].add(bn)
+                                        self.edges[bn].add('y%d' % i)
 
-                                        self.edges['s%d' % j].add(bn)
-                                        self.edges[bn].add('s%d' % j)
+                                        self.edges['y%d' % j].add(bn)
+                                        self.edges[bn].add('y%d' % j)
 
                                         bulge_counter += 1
                                         stem_stems_set.add(j)
                                     stem_stems[i] = stem_stems_set
+
+        for d in self.defines.keys():
+            if d[0] != 'y':
+                continue
+
+            (s1, e1, s2, e2) = self.defines[d] 
+            if abs(s2 - e1) == 1:
+                bn = 'b%d' % (bulge_counter)
+
+                self.defines[bn] = []
+                self.weights[bn] = 1
+
+                self.edges[bn].add(d)
+                self.edges[d].add(bn)
+
+                bulge_counter += 1
+            
         return stem_stems
 
     def remove_vertex(self, v):
@@ -714,12 +730,12 @@ class BulgeGraph(object):
         # for all stems of length 1, merge with adjacent bulges
         for key in self.edges.keys():
             if self.dissolve_length_one_stems:
-                if key[0] == 's':
+                if key[0] == 'y':
                     if self.stem_length(key) == 1:
                         self.dissolve_stem(key)
 
         for key in self.edges.keys():
-            if key[0] == 's':
+            if key[0] == 'y':
                 while True:
                     loop = self.find_bulge_loop(key)
                     bulge_loop = [v for v in loop if v[0] == 'b' or v[0] == 'x']
@@ -730,6 +746,7 @@ class BulgeGraph(object):
 
                     if len(bulge_loop) == 0:
                         break
+
 
     def interior_loop_iterator(self):
         """
@@ -769,6 +786,22 @@ class BulgeGraph(object):
                     new_edges.add(e)
             self.edges[k] = new_edges
 
+    def compare_stems(self, b):
+        '''
+        A function that can be passed in as the key to a sort.
+        '''
+        return (self.defines[b][0], 0)
+
+
+    def compare_bulges(self, b):
+        connections = self.connections(b)
+
+        return (self.defines[connections[0]][0], 
+                self.defines[connections[1]][0])
+
+    def compare_hairpins(self, b):
+        return (self.defines[b][0], sys.maxint)
+
     def relabel_nodes(self):
         '''
         Change the labels of the nodes to be more indicative of their nature.
@@ -780,6 +813,7 @@ class BulgeGraph(object):
         f: five-prime unpaired
         t: three-prime unpaired
         '''
+        stems = []
         hairpins = []
         interior_loops = []
         multiloops = []
@@ -787,10 +821,17 @@ class BulgeGraph(object):
         threeprimes = []
 
         for d in self.defines.keys():
-            if d[0] == 's':
+            if d[0] == 'y':
+                stems += [d]
+
+                stems.sort(key=self.compare_stems)
                 continue
 
-            if len(self.defines[d]) == 0:
+            if len(self.defines[d]) == 0 and len(self.edges[d]) == 1:
+                hairpins += [d]
+                continue
+
+            if len(self.defines[d]) == 0 and len(self.edges[d]) == 2:
                 multiloops += [d]
                 continue
 
@@ -805,25 +846,91 @@ class BulgeGraph(object):
                 self.defines[d][1] != self.seq_length):
                 hairpins += [d]
 
+                hairpins.sort(key=self.compare_hairpins)
+
             if (len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
                 self.defines[d][0] != 1 and
                 self.defines[d][1] != self.seq_length):
                 multiloops += [d]
 
+                multiloops.sort(key=self.compare_bulges)
+
             if self.weights[d] == 2:
                 interior_loops += [d]
+                interior_loops.sort(key=self.compare_stems)
 
         for d in fiveprimes:
             self.relabel_node(d, 'f1')
         for d in threeprimes:
             self.relabel_node(d, 't1')
+
+        for i,d in enumerate(stems):
+            self.relabel_node(d, 's%d' % (i))
         for i,d in enumerate(interior_loops):
             self.relabel_node(d, 'i%d' % (i))
         for i,d in enumerate(multiloops):
             self.relabel_node(d, 'm%d' % (i))
         for i,d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
+
+    def has_connection(self, v1, v2):
+        """ Is there an edge between these two nodes """
+
+        if v2 in self.edges[v1]:
+            return True
+        else:
+            # two multiloops can be connected at the end of a stem
+            for e in self.edges[v1]:
+                if e[0] != 's':
+                    continue
+
+                if v2 in self.edges[e]:
+                    (s1b, s1e) = self.get_sides(e, v1)
+                    (s2b, s2e) = self.get_sides(e, v2)
+
+                    if s1b == s2b:
+                        return True
+
+            return False
+
+    def connection_type(self, define, connections):
+        '''
+        Classify the way that two stems are connected according to the type
+        of bulge that separates them.
+
+        @param define: The name of the bulge separating the two stems
+        @param connections: The two stems and their separation
+        '''
+
+        if define[0] == 'i':
+            # interior loop, we just have to check if 
+            # connections[0] < connections[1]
+            if self.defines[connections[0]][0] < self.defines[connections[1]][0]:
+                return 1
+            else:
+                return -1
+        elif define[0] == 'm':
+            (s1c, b1c) = self.get_sides_plus(connections[0], define)
+            (s2c, b2c) = self.get_sides_plus(connections[1], define)
+
+            if (s1c, s2c) == (1, 0):
+                return 2
+            elif (s1c, s2c) == (0, 1):
+                return -2
+            elif (s1c, s2c) == (3, 0):
+                return 3
+            elif (s1c, s2c) == (0, 3):
+                return -3
+            elif (s1c, s2c) == (2, 3):
+                return 4
+            elif (s1c, s2c) == (3, 2):
+                return -4
+            else:
+                raise Exception("Weird angle type: (s1c, s2c) = (%d, %d)" % 
+                                (s1c, s2c))
+        else:
+            raise Exception("connection_type called on non-interior loop/multiloop")
 
     def find_multiloop_loops(self):
         '''
@@ -861,6 +968,18 @@ class BulgeGraph(object):
         self.name = lines[0].strip('>')
         self.seq = lines[1].strip()
 
+    def remove_degenerate_nodes(self):
+        '''
+        For now just remove all hairpins that have no length.
+        '''
+        to_remove = []
+        for d in self.defines:
+            if d[0] == 'h' and len(self.defines[d]) == 0:
+                to_remove += [d]
+
+        for r in to_remove:
+            self.remove_vertex(r)
+
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
         Populate the BulgeGraph structure from a dotbracket representation.
@@ -881,9 +1000,9 @@ class BulgeGraph(object):
             se1 = stems[i][1][0]+1
             se2 = stems[i][1][1]+1
 
-            self.defines['s%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
+            self.defines['y%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
                                          min(ss2,se2), max(ss2,se2)]
-            self.weights['s%d' % (i)] = 1
+            self.weights['y%d' % (i)] = 1
         for i in range(len(bulges)):
             bulge = bulges[i]
             self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
@@ -895,6 +1014,7 @@ class BulgeGraph(object):
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
+        self.remove_degenerate_nodes()
         self.sort_defines()
 
     def sort_defines(self):
@@ -910,7 +1030,7 @@ class BulgeGraph(object):
                     new_d = [d[2], d[3], d[0], d[1]]
                     self.defines[k] = new_d
 
-    def to_dotbracket(self):
+    def to_dotbracket_string(self):
         '''
         Convert the BulgeGraph representation to a dot-bracket string
         and return it.
@@ -1007,25 +1127,16 @@ class BulgeGraph(object):
         If the node is a stem, then the dimensions will be (l, l) where l is
         the length of the stem.
 
-        If it is single stranded it will be (0, x). Otherwise it will be (x, y).
+        Otherwise, see get_bulge_dimensions(node)
 
         :param node: The name of the node
         :return: A pair containing its dimensions
         '''
-        if self.is_single_stranded(node):
-            return (0, self.defines[node][1] - self.defines[node][0])
+        if node[0] == 's':
+            return (self.defines[node][1] - self.defines[node][0] + 1,
+                    self.defines[node][1] - self.defines[node][0] + 1)
         else:
-            return (self.defines[node][1] - self.defines[node][0],
-                    self.defines[node][3] - self.defines[node][2])
-
-    def stem_length(self, s):
-        '''
-        Return the number of base pairs that comprise
-        one strand of the stem.
-
-        :param s: The name of the stem.
-        '''
-        return self.defines[s][1] - self.defines[s][0] + 1
+            return self.get_bulge_dimensions(node)
 
     def adjacent_stem_pairs_iterator(self):
         '''
@@ -1071,6 +1182,27 @@ class BulgeGraph(object):
 
         raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
 
+    def get_any_sides(self, e1, e2):
+        '''
+        Get the side of e1 that e2 is on. The only difference from the get_sides
+        method is the fact that e1 does not have to be a stem.
+
+        0 indicates that e2 is on the side with lower numbered
+        nucleotides and 1 indicates that e2 is on the side with
+        greater nucleotide numbers.
+
+        @param e1: The name of the first element.
+        @param e2: The name of the second element.
+        @return: A tuple indicating the side of e1 adjacent to e2 and the side of e2
+                 adjacent to e1
+        '''
+        if e1[0] == 's':
+            return self.get_sides(e1, e2)
+        elif e2[0] == 's':
+            return self.get_sides(e2, e1)[::-1]
+
+        return None
+
     def get_sides(self, s1, b):
         '''
         Get the side of s1 that is next to b.
@@ -1084,9 +1216,6 @@ class BulgeGraph(object):
         '''
         s1d = self.defines[s1]
         bd = self.defines[b]
-
-        #cud.pv('s1d')
-        #cud.pv('bd')
 
         # if the bulge is a length 0, multiloop then use the adjacent
         # stem to determine its side
@@ -1123,8 +1252,9 @@ class BulgeGraph(object):
 
         @param s1: The stem.
         @param b: The bulge.
-        @return: A tuple indicating which side is the one next to the bulge
-                 and which is away from the bulge.
+        @return: A tuple indicating the corner of the stem that connects
+                 to the bulge as well as the corner of the bulge that connects
+                 to the stem.
         '''
         s1d = self.defines[s1]
         bd = self.defines[b]
@@ -1141,10 +1271,23 @@ class BulgeGraph(object):
 
         #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
 
-        for i in xrange(4):
-            for k in xrange(len(bd)):
-                if abs(s1d[i] - bd[k]) == 1:
-                    return (i, k)
+        for k in xrange(len(bd)):
+            # before the stem on the 5' strand
+            if s1d[0] - bd[k] == 1:
+                return (0, k)
+            # after the stem on the 5' strand
+            elif bd[k] - s1d[1] == 1:
+                return (1, k)
+            # before the stem on the 3' strand
+            elif s1d[2] - bd[k] == 1:
+                return (2, k)
+            # after the stem on the 3' strand
+            elif bd[k] - s1d[3] == 1:
+                return (3, k)
+
+        raise Exception("Faulty multiloop %s connecting %s"
+                        % (" ".join(map(str, bd)),
+                           " ".join(map(str, s1d))))
 
     def stem_side_vres_to_resn(self, stem, side, vres):
         '''
@@ -1245,22 +1388,45 @@ class BulgeGraph(object):
         '''
         define = self.defines[d]
         ranges = zip(*[iter(define)] * 2)
-    
-        seqs = [] 
-        for r in ranges:
-            if d[0] == 's':
-                seqs += [self.seq[r[0]-1:r[1]]]
+        c = self.connections(d)
+
+        if d[0] == 'i':
+            s1 = self.defines[c[0]]
+            s2 = self.defines[c[1]]
+            if adjacent:
+                return [self.seq[s1[1]-1:s2[0]],
+                        self.seq[s2[3]-1:s1[2]]]
             else:
-                if adjacent:
-                    if r[0] > 1:
-                        seqs += [self.seq[r[0]-2:r[1]+1]]
-                    else:
-                        seqs += [self.seq[r[0]-1:r[1]+1]]
-                else:
+                return [self.seq[s1[1]:s2[0]-1],
+                        self.seq[s2[3]:s1[2]-1]]
+        if d[0] == 'm':
+            s1 = self.defines[c[0]]
+            s2 = self.defines[c[1]]
+
+            i1 = s1[self.get_sides_plus(c[0], d)[0]]
+            i2 = s2[self.get_sides_plus(c[1], d)[0]]
+
+            (i1, i2) = (min(i1, i2), max(i1, i2))
+
+            if adjacent:
+                return [self.seq[i1-1:i2]]
+            else:
+                return [self.seq[i1:i2-1]]
+        else:
+            seqs = [] 
+            for r in ranges:
+                if d[0] == 's':
                     seqs += [self.seq[r[0]-1:r[1]]]
-                #seqs += [self.seq[r[0]-1:r[1]]]
-            
-        return seqs
+                else:
+                    if adjacent:
+                        if r[0] > 1:
+                            seqs += [self.seq[r[0]-2:r[1]+1]]
+                        else:
+                            seqs += [self.seq[r[0]-1:r[1]+1]]
+                    else:
+                        seqs += [self.seq[r[0]-1:r[1]]]
+                
+            return seqs
 
     def get_stem_direction(self, s1, s2):
         '''
@@ -1271,6 +1437,51 @@ class BulgeGraph(object):
             return 0
         return 1
 
+    def get_multiloop_side(self, m):
+        '''
+        Find out which strand a multiloop is on. An example of a situation in
+        which the loop can be on both sides can be seen in the three-stemmed
+        structure below:
+
+            (.().().)
+
+        In this case, the first multiloop section comes off of the 5' strand of
+        the first stem (the prior stem is always the one with a lower numbered
+        first residue). The second multiloop section comess of the 3' strand of 
+        the second stem and the third loop comes off the 3' strand of the third
+        stem.
+        '''
+        c = self.connections(m)
+        md = self.defines[m]
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
+
+        p1 = self.get_sides_plus(c[0], m)
+        p2 = self.get_sides_plus(c[1], m)
+
+        return (p1[0], p2[0])
+
+    def get_strand(self, multiloop):
+        '''
+        Get the strand on which this multiloop is located.
+
+        @param multiloop: The name of the multiloop
+        @return: 0 for being on the lower numbered strand and 1 for
+                 being on the higher numbered strand.
+        '''
+        conn = self.connections(multiloop)
+
+        t = self.connection_type(multiloop, conn)
+        fud.pv('multiloop, t')
+
+        if abs(t) == 2:
+            return 1
+        elif abs(t) == 3:
+            return 0
+        else:
+            return 0
+
+        pass
 
     def get_bulge_dimensions(self, bulge):
         '''
@@ -1297,6 +1508,7 @@ class BulgeGraph(object):
             #    15 20
             s1 = self.defines[c[0]]
             s2 = self.defines[c[1]]
+
             dims = (s2[0] - s1[1] - 1, s1[2] - s2[3] - 1)
 
         if bulge[0] == 'm':
@@ -1305,52 +1517,30 @@ class BulgeGraph(object):
                 dims = (bd[1] - bd[0] + 1, 1000)
             else:
                 dims = (0, 1000)
+        if bulge[0] == 'f' or bulge[0] == 't':
+            dims = (bd[1] - bd[0] + 1,-1)
+
+        if bulge[0] == 'h':
+            dims = (bd[1] - bd[0] + 1,-1)
 
         return dims
 
-    def get_twists(self, node):
-        '''                                                                                                           
-        Get the array of twists for this node. If the node is a stem,
-        then the twists will simply those stored in the array.                                                        
-        
-        If the node is an interior loop or a junction segment,                                                        
-        then the twists will be the ones that are adjacent to it.                                                     
-            
-        If the node is a hairpin loop or a free end, then only                                                        
-        one twist will be returned.
-                                                                                                                      
-        @param node: The name of the node
-        '''                                                                                                           
-        if node[0] == 's':
-            return self.twists[node]                                                                                  
+    def get_node_from_residue_num(self, base_num):
+        """
+        Iterate over the defines and see which one encompasses this base.
+        """
+        for key in self.defines.keys():
+            define = self.defines[key]
 
-        connections = list(self.edges[node])                                                                          
-        (s1b, s1e) = self.get_sides(connections[0], node)
+            for i in range(0, len(define), 2):
+                a = [int(define[i]), int(define[i+1])]
+                a.sort()
 
-        if len(connections) == 1:
-            return (cuv.normalize(cuv.vector_rejection(                                                               
-                                  self.twists[connections[0]][s1b],
-                                  self.coords[connections[0]][1] -                                                    
-                                  self.coords[connections[0]][0])),)                                                  
+                if base_num >= a[0] and base_num <= a[1]:
+                    return key
 
-        if len(connections) == 2:                                                                                     
-            # interior loop or junction segment                                                                       
-            (s2b, s2e) = self.get_sides(connections[1], node)
-        
-            bulge_vec = (self.coords[connections[0]][s1b] -                                                           
-                         self.coords[connections[1]][s2b])                                                            
+        raise Exception("Base number %d not found in the defines." % (base_num))
 
-            return (cuv.normalize(cuv.vector_rejection(                                                               
-                    self.twists[connections[0]][s1b],                                                                 
-                    bulge_vec)),
-                    cuv.normalize(cuv.vector_rejection(                                                               
-                    self.twists[connections[1]][s2b],                                                                 
-                    bulge_vec)))                                                                                      
-                                                                                                                      
-        # uh oh, this shouldn't happen since every node                                                               
-        # should have either one or two edges 
-        return None                                                                                                   
-        
 
     def get_length(self, vertex):
         '''
@@ -1366,12 +1556,195 @@ class BulgeGraph(object):
             return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
         else:
             if len(self.edges[vertex]) == 1:
-                return self.defines[vertex][1] - self.defines[vertex][0]
+                return self.defines[vertex][1] - self.defines[vertex][0] + 1
             else:
                 dims = list(self.get_bulge_dimensions(vertex))
                 dims.sort()
 
-                if dims[0] == 0:
-                    return dims[1]
+                if vertex[0] == 'i':
+                    return sum(dims) / float(len(dims))
+
                 else:
-                    return dims[0]
+                    return min(dims)
+
+    def get_flanking_region(self, bulge_name, side=0):
+        '''
+        If a bulge is flanked by stems, return the lowest residue number
+        of the previous stem and the highest residue number of the next
+        stem.
+
+        @param bulge_name: The name of the bulge
+        @param side: The side of the bulge (indicating the strand)
+        '''
+        c = self.connections(bulge_name)
+
+        if bulge_name[0] == 'h':
+            s1 = self.defines[c[0]]
+            return (s1[0], s1[3])
+
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
+
+        if bulge_name[0] == 'i':
+            # interior loop
+            if side == 0:
+                return (s1[0], s2[1])
+            else:
+                return (s2[2], s1[3])
+        elif bulge_name[0] == 'm':
+            ss = self.get_multiloop_side(bulge_name)
+            st = [s1, s2]
+
+            ends = []
+
+            # go through the two sides and stems and pick
+            # the other end of the same strand
+            for i, s in enumerate(ss):
+                if s == 0:
+                    ends += [st[i][1]]
+                elif s == 1:
+                    ends += [st[i][0]]
+                elif s == 2:
+                    ends += [st[i][3]]
+                elif s == 3:
+                    ends += [st[i][2]]
+                else:
+                    raise Exception("Weird multiloop sides: %s" %
+                                    bulge_name)
+
+            ends.sort()
+
+            return tuple(ends)
+            # multiloop
+
+        return (m1, m2)
+
+
+    def get_flanking_sequence(self, bulge_name, side=0):
+        if len(self.seq) == 0:
+            raise Exception("No sequence present in the bulge_graph: %s" % (self.name))
+
+        (m1, m2) = self.get_flanking_region(bulge_name, side)
+
+        return self.seq[m1-1:m2]
+
+    def get_flanking_handles(self, bulge_name, side=0):
+        '''
+        Get the indices of the residues for fitting bulge regions.
+
+        So if there is a loop like so (between residues 7 and 16):
+
+        (((...))))
+        7890123456
+          ^   ^
+
+        Then residues 9 and 13 will be used as the handles against which
+        to align the fitted region.
+
+        In the fitted region, the residues (2,6) will be the ones that will
+        be aligned to the handles.
+
+        @return: (orig_chain_res1, orig_chain_res1, flanking_res1, flanking_res2)
+        '''
+        def1 = self.defines[bulge_name]
+        f1 = self.get_flanking_region(bulge_name, side)
+        c = self.connections(bulge_name)
+
+        if bulge_name[0] == 'h':
+            s1 = self.defines[c[0]]
+            ab = [s1[1], s1[2]]
+            return (ab[0], ab[1], ab[0] - f1[0], ab[1] - f1[0])
+
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
+
+        if bulge_name[0] == 'm':
+            sides = self.get_multiloop_side(bulge_name)
+            ab = [s1[sides[0]], s2[sides[1]]]
+            ab.sort()
+
+            return (ab[0], ab[1], ab[0] - f1[0], ab[1] - f1[0])
+
+        if bulge_name[0] == 'i':
+            if side == 0:
+                ab = [s1[1], s2[0]]
+            else:
+                ab = [s2[3], s1[2]]
+
+            return (ab[0], ab[1], ab[0] - f1[0], ab[1] - f1[0])
+
+        # probably still have to include the 5' and 3' regions, but that
+        # will come a little later
+        return None
+    
+    def are_adjacent_stems(self, s1, s2, multiloops_count=True):
+        '''
+        Are two stems separated by only one element. If multiloops should not
+        count as edges, then the appropriate parameter should be set.
+
+        @param s1: The name of the first stem
+        @param s2: The name of the second stem
+        @param multiloops_count: Whether to count multiloops as an edge linking
+                                 two stems
+        '''
+        for e in self.edges[s1]:
+            if not multiloops_count and e[0] == 'm':
+                continue
+            if s2 in self.edges[e]:
+                return True
+
+        return False
+
+    def random_subgraph(self, subgraph_length=None):
+        '''
+        Return a random subgraph of this graph.
+
+        @return: A list containing a the nodes comprising a random subgraph
+        '''
+        if subgraph_length == None:
+            subgraph_length = random.randint(1, len(self.defines.keys()))
+
+        start_node = random.choice(self.defines.keys())
+        curr_length = 0
+        visited = set()
+        next_nodes = [start_node]
+        new_graph = []
+
+        while curr_length < subgraph_length:
+            curr_node = random.choice(next_nodes)
+            if curr_node[0] == 'i' or curr_node[0] == 'm':
+                # if it's an interior loop or a multiloop, then we have to
+                # add the adjacent stems
+                for e in self.edges[curr_node]:
+                    if e in new_graph:
+                        continue
+                    visited.add(e)
+                    new_graph += [e]
+                    next_nodes += list(self.edges[e])
+                    curr_length += 1
+
+            visited.add(curr_node)
+            next_nodes += list(self.edges[curr_node])
+            next_nodes = [n for n in next_nodes if n not in visited]
+            new_graph += [curr_node]
+            curr_length += 1 #self.element_length(curr_node)
+
+        return new_graph
+
+    def same_stem_end(self, sd): 
+        '''
+        Return the index of the define that is on the same end of the
+        stem as the index sd.
+
+        @param sd: An index into a define.
+        @return: The index pointing to the nucleotide on the other strand 
+                 on the same side as the stem.
+        '''
+        if sd == 0: 
+            return 3 
+        elif sd == 1: 
+            return 2 
+        elif sd == 2: 
+            return 1 
+        else: 
+            return 0 

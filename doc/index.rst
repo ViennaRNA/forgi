@@ -15,6 +15,7 @@ Contents:
 
     graph_tutorial.rst
     forgi_documentation.rst
+    utilities_tutorial.rst
     download.rst
 
 Indices and tables

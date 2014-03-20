@@ -53,7 +53,7 @@ def main():
     pdb_id = op.basename(op.splitext(filename)[0])
     print ">%s" % (pdb_id)
     print bg.seq
-    print bg.to_dotbracket()
+    print bg.to_dotbracket_string()
 
     multiloops = bg.find_multiloop_loops()
     for multi in multiloops:
@@ -67,7 +67,7 @@ def main():
 
                 # find the stems which are connected to this multiloop
                 # and pick a random one
-                db = list(bg.to_dotbracket())
+                db = list(bg.to_dotbracket_string())
 
                 # get the side of the stem which is connected to the 
                 # multiloop
