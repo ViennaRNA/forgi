@@ -14,6 +14,7 @@ Contents:
     :maxdepth: 2
 
     graph_tutorial.rst
+    threedee_tutorial.rst
     forgi_documentation.rst
     utilities_tutorial.rst
     download.rst
