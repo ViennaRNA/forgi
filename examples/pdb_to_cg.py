@@ -2,7 +2,8 @@
 
 import sys
 import os.path as op
-import forgi.threedee.model.coarse_grain as cmg
+
+import forgi.threedee.model.coarse_grain as ftmc
 
 from optparse import OptionParser
 
@@ -36,9 +37,8 @@ def main():
         sys.exit(1)
 
     pdb_id = op.basename(op.splitext(args[0])[0])
-    cg = cmg.from_pdb(args[0], intermediate_file_dir=options.dump_all)
+    cg = ftmc.from_pdb(args[0], intermediate_file_dir=options.dump_all)
     print cg.to_cg_string()
-
 
 if __name__ == '__main__':
     main()

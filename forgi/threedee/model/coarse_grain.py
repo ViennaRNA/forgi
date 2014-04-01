@@ -4,11 +4,11 @@ import forgi.threedee.utilities.graph_pdb as cgg
 import forgi.threedee.model.stats as cbs
 
 import forgi.aux.k2n_standalone.knotted2nested as cak
-import forgi.utilities.debug as cud
-import forgi.threedee.utilities.mcannotate as cum
-import forgi.threedee.utilities.pdb as cup
+import forgi.utilities.debug as fud
+import forgi.threedee.utilities.mcannotate as ftum
+import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.rmsd as ftur
-import forgi.threedee.utilities.vector as cuv
+import forgi.threedee.utilities.vector as ftuv
 
 import Bio.PDB as bpdb
 import collections as c
@@ -71,8 +71,8 @@ def add_longrange_interactions(cg, lines):
     @param cg: A CoarseGrainRNA structure
     @param lines: All the lines in an MC-Annotate file
     '''
-    for line in cum.iterate_over_interactions(lines):
-        (from_chain, from_base, to_chain, to_base) =  cum.get_interacting_base_pairs(line)
+    for line in ftum.iterate_over_interactions(lines):
+        (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
         node1 = cg.get_node_from_residue_num(from_base)
         node2 = cg.get_node_from_residue_num(to_base)
 
@@ -91,7 +91,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
     @param secondary_structure: Specify a particular secondary structure
                                 for this coarsification.
     '''
-    chain = cup.load_structure(pdb_filename)
+    #chain = ftup.load_structure(pdb_filename)
+    chain = ftup.get_biggest_chain(pdb_filename)
+    chain = ftup.rename_modified_ress(chain)
+    chain = ftup.rename_rosetta_atoms(chain)
+    chain = ftup.remove_hetatm(chain)
+
     # output the biggest RNA chain
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
     output_dir = op.join(output_dir, pdb_base)
@@ -100,7 +105,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
         os.makedirs(output_dir)
 
     with open(op.join(output_dir, 'temp.pdb'), 'w') as f:
-        cup.output_chain(chain, f.name)
+        ftup.output_chain(chain, f.name)
         f.flush()
 
         pdb_base = op.splitext(op.basename(pdb_filename))[0]
@@ -113,7 +118,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
 
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
-        dotplot = cum.get_dotplot(lines)
+        (dotplot, residue_map) = ftum.get_dotplot(lines)
+        #fud.pv('dotplot')
 
         # f2 will store the dotbracket notation
         with open(op.join(output_dir, 'temp.dotplot'), 'w') as f2:
@@ -158,9 +164,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
 
             cg = CoarseGrainRNA()
             cg.from_fasta(out, dissolve_length_one_stems=1)
+            cg.translate_define_resnums(residue_map)
             cgg.add_stem_information_from_pdb_chain(cg, chain)
             cgg.add_bulge_information_from_pdb_chain(cg, chain)
             cgg.add_loop_information_from_pdb_chain(cg, chain)
+
             cg.chain = chain
 
             add_longrange_interactions(cg, lines)
@@ -389,7 +397,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         ss.pdb_name = self.name
         #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            
         ss.bp_length = self.stem_length(stem)
-        ss.phys_length = cuv.magnitude(self.coords[stem][0] - self.coords[stem][1])                                   
+        ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])                                   
         ss.twist_angle = cgg.get_twist_angle(self.coords[stem], self.twists[stem])                                    
         ss.define = self.defines[stem]                                                                                
         
@@ -491,7 +499,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         (s1b, s1e) = self.get_sides(connections[0], node)
 
         if len(connections) == 1:
-            vec = cuv.normalize(cuv.vector_rejection( 
+            vec = ftuv.normalize(ftuv.vector_rejection( 
                                   self.twists[connections[0]][s1b],
                                   self.coords[connections[0]][1] -  
                                   self.coords[connections[0]][0]))
@@ -502,13 +510,14 @@ class CoarseGrainRNA(cgb.BulgeGraph):
             (s2b, s2e) = self.get_sides(connections[1], node) 
             bulge_vec = (self.coords[connections[0]][s1b] - 
                          self.coords[connections[1]][s2b])                                                            
-            return (cuv.normalize(cuv.vector_rejection( 
+            return (ftuv.normalize(ftuv.vector_rejection( 
                     self.twists[connections[0]][s1b], bulge_vec)),
-                    cuv.normalize(cuv.vector_rejection(self.twists[connections[1]][s2b], bulge_vec)))  
+                    ftuv.normalize(ftuv.vector_rejection(self.twists[connections[1]][s2b], bulge_vec)))  
 
         # uh oh, this shouldn't happen since every node                 
         # should have either one or two edges 
         return None                                                                                                   
+
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.

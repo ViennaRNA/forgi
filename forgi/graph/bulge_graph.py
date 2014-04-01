@@ -1748,3 +1748,37 @@ class BulgeGraph(object):
             return 1 
         else: 
             return 0 
+
+    def extract_chain_id(self, chainres):
+        '''
+        Extract the chain identifier from a chain/residue
+        identifier.
+
+        @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
+        @return: A chain identifier.
+        '''
+        return chainres[0]
+
+    def extract_resnum(self, chainres):
+        '''
+        Extract the residue number from a chainres identifier.
+
+        @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
+        @return: The residue number
+        '''
+        return int(chainres[1:])
+
+    def translate_define_resnums(self, residue_list):
+        '''
+        Translate the residue numbers in each define to contain
+        the residue numbers in residue_list.
+
+        @param residue_list: A list of residue numbers as they appear in the pdb file
+                             including the chain identifier.
+        @return: Nothing
+        '''
+        self.chain_id = self.extract_chain_id(residue_list[0])
+
+        for d in self.defines.values():
+            for i,_ in enumerate(d):
+                d[i] = self.extract_resnum(residue_list[d[i]-1])

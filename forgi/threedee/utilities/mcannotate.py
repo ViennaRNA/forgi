@@ -157,7 +157,8 @@ def get_dotplot(lines):
             bps[parts1[0]] = residues.index(parts1[1])
             bps[parts1[1]] = residues.index(parts1[0])
 
+
     for i in range(len(residue_types)):
         output_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
 
-    return output_str
+    return (output_str, residues)

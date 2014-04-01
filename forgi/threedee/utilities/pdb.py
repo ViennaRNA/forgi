@@ -1,9 +1,10 @@
 import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
-import forgi.threedee.utilities.rmsd as brmsd
+
+import forgi.threedee.utilities.rmsd as ftur
 import forgi.utilities.debug as fud
-import forgi.threedee.utilities.vector as cuv
+import forgi.threedee.utilities.vector as ftuv
 
 backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"] 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
@@ -131,7 +132,7 @@ def noncovalent_distances(chain, cutoff=0.3):
 
     contacts = ns.search_all(cutoff)
 
-    return [cuv.magnitude(c[1] - c[0]) for c in contacts if not is_covalent(c)]
+    return [ftuv.magnitude(c[1] - c[0]) for c in contacts if not is_covalent(c)]
 
 def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     '''
@@ -206,8 +207,8 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         crvs1 = np.array([a.get_vector().get_array() for a in all_atoms1])
         crvs2 = np.array([a.get_vector().get_array() for a in all_atoms2])
 
-        #return (len(all_atoms1), brmsd.rmsd(crvs1, crvs2), None)
-        return (len(all_atoms1), cuv.vector_set_rmsd(crvs1, crvs2), None)
+        #return (len(all_atoms1), ftur.rmsd(crvs1, crvs2), None)
+        return (len(all_atoms1), ftuv.vector_set_rmsd(crvs1, crvs2), None)
 
 def get_first_chain(filename):
     '''
