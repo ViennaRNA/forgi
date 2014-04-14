@@ -1667,7 +1667,7 @@ def element_coord_system(cg, d):
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
 
-def virtual_atoms(cg, given_atom_names=None):
+def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     Get a list of virtual atoms for this structure.
 
@@ -1679,15 +1679,20 @@ def virtual_atoms(cg, given_atom_names=None):
     for d in cg.defines.keys():
         origin, basis = element_coord_system(cg, d)
 
+        fud.pv('basis')
         for i,r in it.izip(it.count(),
                            cg.define_residue_num_iterator(d)):
 
             if given_atom_names is None:
-                atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq_dict[r]]
+                if sidechain:
+                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq_dict[r]]
+                else:
+                    atom_names = ftup.nonsidechain_atoms
             else:
                 atom_names = given_atom_names
 
             for aname in atom_names:
+                fud.pv('d, cg.get_node_dimensions(d)')
                 identifier = "%s %s %d %s" % (d[0],
                                               " ".join(map(str, cg.get_node_dimensions(d))),
                                               i, aname)

@@ -639,7 +639,8 @@ class PymolPrinter:
                     self.add_segment(i1, i2, 'cyan', 0.3)
 
         if self.virtual_atoms:
-            va = ftug.virtual_atoms(cg)
+            va = ftug.virtual_atoms(cg, sidechain=False)
+            fud.pv('va')
 
             atom_width = 0.5
             for i,r in enumerate(sorted(va.keys())):

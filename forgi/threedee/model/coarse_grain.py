@@ -81,7 +81,8 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node2].add(node1)
 
 
-def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
+def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
+                            chain_id=None):
     '''
     Create the coarse grain model from a pdb file and store all
     of the intermediate files in the given directory.
@@ -90,9 +91,14 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
     @param output_dir: The name of the output directory
     @param secondary_structure: Specify a particular secondary structure
                                 for this coarsification.
+    @param chain_id: The id of the chain to create the CG model from
     '''
     #chain = ftup.load_structure(pdb_filename)
-    chain = ftup.get_biggest_chain(pdb_filename)
+    if chain_id=None
+        chain = ftup.get_biggest_chain(pdb_filename)
+    else:
+        chain = ftup.get_specific_chain(pdb_filename)
+
     chain = ftup.rename_modified_ress(chain)
     chain = ftup.rename_rosetta_atoms(chain)
     chain = ftup.remove_hetatm(chain)
@@ -186,7 +192,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure=''):
     print >>sys.stderr, "Prepare for an incoming exception."
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
-                     intermediate_file_dir=''):
+                     intermediate_file_dir='', chain_id=None):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -199,10 +205,12 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
     if intermediate_file_dir != '':
         output_dir = intermediate_file_dir
 
-        cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
+        cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
+                                     secondary_structure, chain_id=chain_id)
     else:
         with make_temp_directory() as output_dir:
-            cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure)
+            cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
+                                         secondary_structure, chain_id = chain_id)
 
     return cg
 
@@ -221,8 +229,8 @@ def from_file(cg_filename):
 
         return cg
     
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=''):
-    cg = load_cg_from_pdb(pdb_filename, secondary_structure, intermediate_file_dir)
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', chain_id=None):
+    cg = load_cg_from_pdb(pdb_filename, secondary_structure, intermediate_file_dir, chain_id=chain_id)
 
     return cg
 

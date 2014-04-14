@@ -284,6 +284,24 @@ def output_chain(chain, filename, fr=None, to=None):
     io.set_structure(s)
     io.save(filename, HSelect()) 
 
+def get_particular_chain(in_filename, chain_id):
+    '''
+    Load a PDB file and return a particular chain.
+
+    @param in_filename: The name of the pdb file.
+    @param chain_id: The id of the chain.
+    @return: A Bio.PDB.Chain object containing that particular chain.
+    '''
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        s = bpdb.PDBParser().get_structure('temp', in_filename)
+
+    # always take the first model
+    m = s.get_list()[0]
+
+    return m[chain_id]
+
+
 def get_biggest_chain(in_filename):
     '''
     Load the PDB file located at filename, select the longest
