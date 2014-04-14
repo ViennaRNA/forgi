@@ -221,6 +221,7 @@ class BulgeGraph(object):
         # sort the coordinate basis for each stem
         self.bases = dict()
         self.stem_invs = dict()
+        self.seq_dict = dict()
 
         self.name_counter = 0
 
@@ -228,6 +229,8 @@ class BulgeGraph(object):
             self.from_dotbracket(dotbracket_str)
 
         self.seq = seq
+        for i, s in enumerate(seq):
+            self.seq_dict[i+1] = s
 
         if bg_file is not None:
             self.from_bg_file(bg_file)
@@ -334,6 +337,18 @@ class BulgeGraph(object):
         else:
             return ""
 
+    def get_seq_dict_str(self):
+        '''
+        Return the sequence dictionary string
+
+        seq_dict 11 C
+        '''
+        out_str = ""
+        for key, val in self.seq_dict.items():
+            out_str += "seq_dict %d %s\n" % (key, val)
+
+        return out_str
+
     def get_name_str(self):
         '''
         Return the name of this structure along with its keyword:
@@ -353,6 +368,7 @@ class BulgeGraph(object):
         out_str += self.get_name_str()
         out_str += self.get_length_str()
         out_str += self.get_sequence_str()
+        out_str += self.get_seq_dict_str()
         out_str += self.get_define_str()
         out_str += self.get_connect_str()
 
@@ -968,6 +984,17 @@ class BulgeGraph(object):
         self.name = lines[0].strip('>')
         self.seq = lines[1].strip()
 
+        self.seq_dict_from_seq()
+
+    def seq_dict_from_seq(self):
+        '''
+        Convert the current sequence into a seq_dict.
+        '''
+        self.seq_dict = dict()
+
+        for i, s in enumerate(self.seq):
+            self.seq_dict[i+1] = s
+
     def remove_degenerate_nodes(self):
         '''
         For now just remove all hairpins that have no length.
@@ -1037,12 +1064,23 @@ class BulgeGraph(object):
 
         @return: A dot-bracket representation of this BulgeGraph
         '''
-        out = ['.' for i in xrange(self.seq_length)]
+        resids = [k for k in self.seq_dict.keys()]
+
+        if len(resids) > 0:
+            min_resid = min(resids)
+            max_resid = max(resids)
+        else:
+            min_resid = 1
+            max_resid = self.seq_length
+
+        seq_len = max_resid - min_resid + 1
+
+        out = ['.' for i in xrange(min_resid, max_resid + 1)]
         for s in self.stem_iterator():
             for i in xrange(self.defines[s][0], self.defines[s][1]+1):
-                out[i-1] = '('
+                out[i-min_resid] = '('
             for i in xrange(self.defines[s][2], self.defines[s][3]+1):
-                out[i-1] = ')'
+                out[i-min_resid] = ')'
 
         return "".join(out)
 
@@ -1083,6 +1121,8 @@ class BulgeGraph(object):
                     self.edges[p].add(parts[1])
             elif parts[0] == 'seq':
                 self.seq = parts[1]
+            elif parts[0] == 'seq_dict':
+                self.seq_dict[int(parts[1])] = parts[2]
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
 

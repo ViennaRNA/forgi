@@ -39,6 +39,16 @@ connect s2 h0 m1 m2
 connect s0 f1 m1 m0 t1
 '''
 
+    def test_to_bg_string(self):
+        self.fasta = """>1y26
+CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+(((((((((...((((((.........))))))........((((((.......))))))..)))))))))
+"""
+        bg = cgb.BulgeGraph()
+        bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
+
+        fud.pv('bg.to_bg_string()')
+
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
@@ -137,6 +147,7 @@ connect s0 f1 m1 m0 t1
         bg.from_bg_string(self.bg_string)
         
         self.assertEquals(bg.seq_length, 71)
+        #self.assertEquals(bg.seq_dict[1], 'C')
 
     def check_from_and_to_dotbracket(self, dotbracket):
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
@@ -259,7 +270,6 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.get_length('m0'), 0)
 
         bg = cgb.BulgeGraph(dotbracket_str='(((((((((..(((..((((.(((((((((.....(((((.(((((....((((....))))....))))).....(((((((((.......)))))))))....))))).((........))...)))))))))))))...)))..))....))))))).')
-        fud.pv('bg.to_bg_string()')
 
         self.assertEqual(bg.get_length('i4'), 2)
 
@@ -444,7 +454,6 @@ connect s0 f1 m1 m0 t1
     def test_has_connection(self):
         bg = cgb.BulgeGraph(dotbracket_str='(())..(())..(())..')
 
-        fud.pv('bg.to_bg_string()')
         self.assertTrue(bg.has_connection('m0', 'm1'))
         self.assertTrue(bg.has_connection('m1', 't1'))
         self.assertFalse(bg.has_connection('m0', 't1'))

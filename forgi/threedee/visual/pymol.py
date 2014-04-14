@@ -21,6 +21,7 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
+        self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
         self.encompassing_stems = False
@@ -543,8 +544,6 @@ class PymolPrinter:
             for s in stems:
                 points += [cg.coords[s][0], cg.coords[s][1]]
             
-            fud.pv('points')
-
             # create the linear regression
             data = np.array(points)
             datamean = data.mean(axis=0)
@@ -642,17 +641,27 @@ class PymolPrinter:
         if self.virtual_atoms:
             va = ftug.virtual_atoms(cg)
 
-            for r in va.keys():
+            atom_width = 0.5
+            for i,r in enumerate(sorted(va.keys())):
                 for a in va[r].keys():
-                    d = cg.get_node_from_residue_num(r)
-                    if d[0] == 's':
-                        self.add_sphere(va[r][a], 'green', 1.)
-                    elif d[0] == 'i':
-                        self.add_sphere(va[r][a], 'yellow', 1.)
-                    elif d[0] == 'm':
-                        self.add_sphere(va[r][a], 'red', 1.)
-                    elif d[0] == 'h':
-                        self.add_sphere(va[r][a], 'blue', 1.)
+                    if self.rainbow:
+                        import matplotlib
+                        matplotlib.use('Agg')
+                        import matplotlib.pyplot as plt
+                        cmap = plt.get_cmap('gist_rainbow')
+                        self.add_sphere(va[r][a], 
+                                        color_rgb = cmap(i / float(len(va.keys()))), 
+                                        width=atom_width)
+                    else:
+                        d = cg.get_node_from_residue_num(r)
+                        if d[0] == 's':
+                            self.add_sphere(va[r][a], 'green', width=atom_width)
+                        elif d[0] == 'i':
+                            self.add_sphere(va[r][a], 'yellow', width=atom_width)
+                        elif d[0] == 'm':
+                            self.add_sphere(va[r][a], 'red', width=atom_width)
+                        elif d[0] == 'h':
+                            self.add_sphere(va[r][a], 'blue', width=atom_width)
 
         if self.basis:
             for d in cg.defines.keys():
@@ -835,7 +844,6 @@ class PymolPrinter:
                     first_p[j] = new_coords
                 if a[0] == 'P':
                     if prev_p[j] is not None:
-                        fud.pv('new_coords, prev_p[j]')
                         self.add_segment(prev_p[j], new_coords,
                                          colors[j], 0.7)
                     prev_p[j] = new_coords
@@ -844,5 +852,4 @@ class PymolPrinter:
                 if a[0] == 'O3*':
                     last_o3[j] = new_coords
 
-        fud.pv('prev_p[0], last_o3[0]')
         #self.add_segment(prev_p[0], last_o3[0], colors[0], 0.7)
