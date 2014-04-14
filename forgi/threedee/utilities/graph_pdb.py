@@ -1683,8 +1683,6 @@ def virtual_atoms(cg, given_atom_names=None):
                            cg.define_residue_num_iterator(d)):
 
             if given_atom_names is None:
-                fud.pv('d, r, len(cg.seq)')
-                fud.pv('cg.seq_dict')
                 atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq_dict[r]]
             else:
                 atom_names = given_atom_names
