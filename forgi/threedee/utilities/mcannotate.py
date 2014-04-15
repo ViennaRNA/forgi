@@ -161,4 +161,7 @@ def get_dotplot(lines):
     for i in range(len(residue_types)):
         output_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
 
+    #fud.pv('residues')
+    #fud.pv('[parse_chain_base(r)[1] for r in residues]')
+
     return (output_str, residues)

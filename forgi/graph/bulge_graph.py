@@ -18,6 +18,7 @@ import random
 import itertools as it
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as cus
+import forgi.threedee.utilities.mcannotate as ftum
 import forgi.threedee.utilities.vector as cuv
 
 def error_exit(message):
@@ -1797,7 +1798,7 @@ class BulgeGraph(object):
         @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
         @return: A chain identifier.
         '''
-        return chainres[0]
+        return ftum.parse_chain_base(chainres)[0]
 
     def extract_resnum(self, chainres):
         '''
@@ -1806,7 +1807,7 @@ class BulgeGraph(object):
         @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
         @return: The residue number
         '''
-        return int(chainres[1:])
+        return ftum.parse_chain_base(chainres)[1]
 
     def translate_define_resnums(self, residue_list):
         '''

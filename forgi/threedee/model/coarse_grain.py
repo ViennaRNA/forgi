@@ -80,6 +80,50 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node1].add(node2)
             cg.longrange[node2].add(node1)
 
+def add_missing_nucleotides(ss_fasta, residue_map):
+    '''
+    Add the letter 'X' in the sequence for nucleotides that are missing.
+    And add an unpaired character '.' in the secondary structure.
+
+    @param ss_fasta: A string containing the id, sequence and dotbracket
+                     for this secondary structure
+    @param residue_map: The mapping of the position in the sequence to the
+                        MC-Annotate id of the nucleotide it refers to.
+    @return: A sequence with the same format with placeholders for the
+             nucleotides which aren't present in the residue_map.
+    '''
+    (id, fa, ss) = ss_fasta.split('\n')
+
+    resnums = [ftum.parse_chain_base(r)[1] for r in residue_map]
+
+    # find out how long the new sequence is going to be
+    min_resnum = min(resnums)
+    max_resnum = max(resnums)
+
+    # create the new sequences
+    new_fa = ['X'] * (max_resnum - min_resnum + 1)
+    new_ss = ['.'] * (max_resnum - min_resnum + 1)
+
+    # go through and add the known nucleotides
+    for i,r  in enumerate(resnums):
+        new_fa[r - min_resnum] = fa[i]
+        new_ss[r - min_resnum] = ss[i]
+
+    new_residue_map = []
+    chain_id = ftum.parse_chain_base(residue_map[0])[0]
+    for i,s in enumerate(new_fa):
+        new_residue_map += [chain_id + str(min_resnum+i)]
+
+    new_fa = "".join(new_fa)
+    new_ss = "".join(new_ss)
+
+    print >>sys.stderr, fa
+    print >>sys.stderr, new_fa
+
+    fud.pv('residue_map')
+    fud.pv('new_residue_map')
+
+    return ("\n".join([id, new_fa, new_ss]), new_residue_map)
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
                             chain_id=None):
@@ -94,10 +138,10 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     @param chain_id: The id of the chain to create the CG model from
     '''
     #chain = ftup.load_structure(pdb_filename)
-    if chain_id=None
+    if chain_id == None:
         chain = ftup.get_biggest_chain(pdb_filename)
     else:
-        chain = ftup.get_specific_chain(pdb_filename)
+        chain = ftup.get_particular_chain(pdb_filename, chain_id)
 
     chain = ftup.rename_modified_ress(chain)
     chain = ftup.rename_rosetta_atoms(chain)
@@ -125,7 +169,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
         (dotplot, residue_map) = ftum.get_dotplot(lines)
-        #fud.pv('dotplot')
 
         # f2 will store the dotbracket notation
         with open(op.join(output_dir, 'temp.dotplot'), 'w') as f2:
@@ -147,6 +190,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                                removed= cak.DEFAULT_REMOVED)
 
             out = out.replace(' Nested structure', pdb_base)
+            (out, residue_map) = add_missing_nucleotides(out, residue_map)
+            fud.pv('out')
 
             if secondary_structure != '':
                 lines = out.split('\n')
@@ -169,6 +214,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                 chain = list(s.get_chains())[0]
 
             cg = CoarseGrainRNA()
+            fud.pv('out')
             cg.from_fasta(out, dissolve_length_one_stems=1)
             cg.translate_define_resnums(residue_map)
             cgg.add_stem_information_from_pdb_chain(cg, chain)

@@ -299,8 +299,10 @@ def get_particular_chain(in_filename, chain_id):
     # always take the first model
     m = s.get_list()[0]
 
+    fud.pv('m')
+    fud.pv('[c.id for c in m.get_list()]')
+    fud.pv('chain_id')
     return m[chain_id]
-
 
 def get_biggest_chain(in_filename):
     '''

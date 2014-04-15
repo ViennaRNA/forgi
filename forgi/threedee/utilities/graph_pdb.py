@@ -436,10 +436,14 @@ def get_furthest_c_alpha(chain, stem_end, ld):
     Get the position of the c-alpha atom furthest from the end of the stem.
     '''
     max_dist = 0
-    furthest_pos = stem_end
+    furthest_pos = None
 
     for i in range(ld[0], ld[1]+1):
-        c_apos = chain[i][catom_name].get_vector().get_array()
+        try:
+            c_apos = chain[i][catom_name].get_vector().get_array()
+        except KeyError as ke:
+            print >>sys.stderr, "Nucleotide %d missing in element %s" % (i, ld)
+
         dist = cuv.magnitude(stem_end - c_apos)
 
         if dist > max_dist:
@@ -1536,6 +1540,9 @@ def add_loop_information_from_pdb_chain(bg, chain):
 
         centroid = get_furthest_c_alpha(chain, mids[s1b],
                                         bd)
+        if centroid is None:
+            print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
+
         bg.coords[d] = (mids[s1b], centroid)
 
 
