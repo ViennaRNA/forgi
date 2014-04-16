@@ -120,9 +120,6 @@ def add_missing_nucleotides(ss_fasta, residue_map):
     print >>sys.stderr, fa
     print >>sys.stderr, new_fa
 
-    fud.pv('residue_map')
-    fud.pv('new_residue_map')
-
     return ("\n".join([id, new_fa, new_ss]), new_residue_map)
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
@@ -191,7 +188,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             out = out.replace(' Nested structure', pdb_base)
             (out, residue_map) = add_missing_nucleotides(out, residue_map)
-            fud.pv('out')
 
             if secondary_structure != '':
                 lines = out.split('\n')
@@ -214,7 +210,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                 chain = list(s.get_chains())[0]
 
             cg = CoarseGrainRNA()
-            fud.pv('out')
             cg.from_fasta(out, dissolve_length_one_stems=1)
             cg.translate_define_resnums(residue_map)
             cgg.add_stem_information_from_pdb_chain(cg, chain)

@@ -443,6 +443,7 @@ def get_furthest_c_alpha(chain, stem_end, ld):
             c_apos = chain[i][catom_name].get_vector().get_array()
         except KeyError as ke:
             print >>sys.stderr, "Nucleotide %d missing in element %s" % (i, ld)
+            continue
 
         dist = cuv.magnitude(stem_end - c_apos)
 
@@ -1542,6 +1543,7 @@ def add_loop_information_from_pdb_chain(bg, chain):
                                         bd)
         if centroid is None:
             print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
+            centroid = mids[s1b]
 
         bg.coords[d] = (mids[s1b], centroid)
 
