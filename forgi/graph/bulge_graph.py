@@ -817,7 +817,9 @@ class BulgeGraph(object):
                 self.defines[connections[1]][0])
 
     def compare_hairpins(self, b):
-        return (self.defines[b][0], sys.maxint)
+        connections = self.connections(b)
+
+        return (self.defines[connections[0]][1], sys.maxint)
 
     def relabel_nodes(self):
         '''

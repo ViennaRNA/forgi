@@ -53,14 +53,27 @@ def main():
                 resname = cg.chain[r].resname.strip()
                 atoms = ftup.nonsidechain_atoms + ftup.chi_torsion_atoms[resname][-2:]
 
-                atoms = cg.chain[r]
-                for a in atoms:
+                for aname in atoms:
+                    try:
+                        a = cg.chain[r][aname]
+                    except KeyError as ke:
+                        # missing an atom
+                        continue
+
+                    # The C1'->B1 and B1->B2 vectors define the plane of the base
+                    # The O4'->C1'->B1->B2 sequence defines the torsion 
+                    # angle chi
+                    if aname == ftup.chi_torsion_atoms[resname][-2]:
+                        aname = 'B1'
+                    elif aname == ftup.chi_torsion_atoms[resname][-1]:
+                        aname = 'B2'
+
                     avec = a.get_vector().get_array()
                     atom_pos = ftuv.change_basis(avec - origin, basis, ftuv.standard_basis)
                     identifier = "%s %s %d %d %s" % (d[0], 
                                                   " ".join(map(str, cg.get_node_dimensions(d))),
                                                   conn_type,                              
-                                                  i, a.name)
+                                                  i, aname)
                     poss[identifier] += [atom_pos]
 
     print "import collections as co"

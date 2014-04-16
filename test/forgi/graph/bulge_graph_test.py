@@ -47,8 +47,6 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg = cgb.BulgeGraph()
         bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
 
-        fud.pv('bg.to_bg_string()')
-
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
@@ -457,4 +455,10 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertTrue(bg.has_connection('m0', 'm1'))
         self.assertTrue(bg.has_connection('m1', 't1'))
         self.assertFalse(bg.has_connection('m0', 't1'))
+
+    def test_compare_hairpins(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(())(())')
+
+        fud.pv('bg.to_bg_string()')
+
 

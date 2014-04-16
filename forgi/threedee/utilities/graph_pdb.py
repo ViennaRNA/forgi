@@ -1673,7 +1673,8 @@ def element_coord_system(cg, d):
     twists = cg.get_twists(d)
 
     mid_twist = ftuv.normalize(twists[0] + twists[1])
-    return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
+    #return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
+    return (cg.coords[d][0], 
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
 
 def virtual_atoms(cg, given_atom_names=None, sidechain=True):
