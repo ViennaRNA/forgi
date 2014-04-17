@@ -996,8 +996,8 @@ def junction_virtual_atom_distance(bg, bulge):
     (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
 
-    r1 = bg.seq[bg.defines[connecting_stems[0]][i1] - 1]
-    r2 = bg.seq[bg.defines[connecting_stems[0]][i2] - 1]
+    r1 = bg.seq_dict[bg.defines[connecting_stems[0]][i1]]
+    r2 = bg.seq_dict[bg.defines[connecting_stems[0]][i2]]
 
     (strand1, a1, vrn1) = get_strand_atom_vrn(bg, connecting_stems[0], i1)
     (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)
@@ -1137,7 +1137,7 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
     vpos = bg.vposs[s][i]
     basis = bg.vbases[s][i].transpose()
 
-    rs = (bg.seq[bg.defines[s][0] + i - 1], bg.seq[bg.defines[s][3] - i - 1])
+    rs = (bg.seq_dict[bg.defines[s][0] + i], bg.seq_dict[bg.defines[s][3] - i])
 
     new_atoms = dict()
 
@@ -1674,7 +1674,7 @@ def element_coord_system(cg, d):
 
     mid_twist = ftuv.normalize(twists[0] + twists[1])
     #return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
-    return (cg.coords[d][0], 
+    return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
 
 def virtual_atoms(cg, given_atom_names=None, sidechain=True):
@@ -1689,7 +1689,6 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     for d in cg.defines.keys():
         origin, basis = element_coord_system(cg, d)
 
-        fud.pv('basis')
         for i,r in it.izip(it.count(),
                            cg.define_residue_num_iterator(d)):
 
