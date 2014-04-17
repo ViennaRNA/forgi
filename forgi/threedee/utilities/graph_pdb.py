@@ -1702,7 +1702,6 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
                 atom_names = given_atom_names
 
             for aname in atom_names:
-                fud.pv('d, cg.get_node_dimensions(d)')
                 identifier = "%s %s %d %s" % (d[0],
                                               " ".join(map(str, cg.get_node_dimensions(d))),
                                               i, aname)

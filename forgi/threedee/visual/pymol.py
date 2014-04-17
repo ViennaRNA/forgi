@@ -21,6 +21,7 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
+        self.constraints = None
         self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
@@ -561,11 +562,38 @@ class PymolPrinter:
 
         print >>sys.stderr, "YOOOOOOOOOOOOOOOOOOOOOOO"
 
+    def get_element_color(self, elem_name):
+        '''
+        Get the color for this element. The color is determined by the name
+        of the element.
+
+        @param elem_name: The name of the element.
+        @return: A string with a color name
+        '''
+        if elem_name[0] == 's':
+            return 'green'
+        elif elem_name[0] == 'i':
+            return 'yellow'
+        elif elem_name[0] == 'm':
+            return 'red'
+        elif elem_name[0] == 'h':
+            return 'blue'
+        elif elem_name[0] == 't':
+            return 'magenta'
+        elif elem_name[0] == 'f':
+            return 'cyan'
+
+
     def coordinates_to_pymol(self, cg):
         loops = list(cg.hloop_iterator())
 
         for key in cg.coords.keys():
+            if self.constraints is not None:
+                if key not in self.constraints:
+                    continue
+
             (p, n) = cg.coords[key]
+            color = self.get_element_color(key)
 
             if key[0] == 's':
                 self.add_stem_like(cg, key)
@@ -574,35 +602,44 @@ class PymolPrinter:
                 if key[0] == 'h':
                     if self.add_loops:
                         if key in loops:
-                            self.add_segment(p, n, "blue", 1.0,
+                            self.add_segment(p, n, color, 1.0,
                                              key + " " + str(cg.get_length(key)))
                 elif key[0] == 'm':
+                    twists = cg.get_twists(key)
+
                     # check if the multiloop is longer than one. If it's not, then
                     # it has an empty define and we its length will be 1
                     if len(cg.defines[key]) == 0:
-                        self.add_segment(p, n, "red", 1.0,
+                        self.add_segment(p, n, color, 1.0,
                                          key + " 1")
                     else:
-                        self.add_segment(p, n, "red", 1.0,
+                        self.add_segment(p, n, color, 1.0,
                                          key + " " +
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0] + 1))
+
+                    self.add_segment(p, p+ 7 * twists[0], 'light gray', 0.3)
+                    self.add_segment(n, n+ 7 * twists[1], 'light gray', 0.3)
+
+                    x = (p + n) / 2
+                    t = ftuv.normalize((twists[0] + twists[1]) / 2.)
+                    self.add_segment(x, x + 7 * t, 'middle gray', 0.3)
                 elif key[0] == 'f':
                     if self.visualize_three_and_five_prime:
-                        self.add_segment(p, n, "cyan", 1.0,
+                        self.add_segment(p, n, color, 1.0,
                                          key + " " +
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0] + 1) + "")
 
                 elif key[0] == 't':
                     if self.visualize_three_and_five_prime:
-                        self.add_segment(p, n, "magenta", 1.0,
+                        self.add_segment(p, n, color, 1.0,
                                          key + " " +
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0]) + "")
                 else:
                     #self.add_stem_like(cg, key, "yellow", 1.0)
-                    self.add_segment(p, n, "yellow", 1.0, key)
+                    self.add_segment(p, n, color, 1.0, key)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():

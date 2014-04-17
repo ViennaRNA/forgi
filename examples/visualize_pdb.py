@@ -5,10 +5,10 @@ import os.path as op
 import subprocess as sp
 import tempfile as tf
 
-import forgi.threedee.model.coarse_grain as cmg
-import forgi.utilities.debug as cud
-import forgi.threedee.utilities.pdb as cup
-import forgi.threedee.visual.pymol as cvp
+import forgi.threedee.model.coarse_grain as ftmc
+import forgi.utilities.debug as fud
+import forgi.threedee.utilities.pdb as ftup
+import forgi.threedee.visual.pymol as ftvp
 
 from optparse import OptionParser
 
@@ -43,11 +43,20 @@ def main():
         print >>sys.stderr, "File doesn't exist: %s" % (args[0])
         sys.exit(1)
 
-    cg = cmg.from_pdb(args[0], options.secondary_structure.strip("\"'"))
-    pp = cvp.PymolPrinter()
+    cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"))
+    pp = ftvp.PymolPrinter()
+
+    if options.constraints is not None:
+        orig_constraints = options.constraints.split(',')
+        constraints = set(orig_constraints[::])
+        for c in orig_constraints:
+            for e in cg.edges[c]:
+                constraints.add(e)
+        pp.constraints = constraints
+
     pp.add_loops = options.loops
     pp.add_longrange = options.longrange
-    #cud.pv('cg.to_cg_string()')
+    #fud.pv('cg.to_cg_string()')
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
     pp.print_text = options.text
@@ -59,20 +68,31 @@ def main():
             with tf.NamedTemporaryFile(suffix='.pdb') as f2:
                 # extract just the biggest chain and renumber it so
                 # the nucleotides start at 1
-                chain = cup.get_biggest_chain(args[0])
-                chain = cup.renumber_chain(chain)
-                cup.output_chain(chain, f2.name)
+                chain = ftup.get_biggest_chain(args[0])
+                #chain = ftup.renumber_chain(chain)
+                ftup.output_chain(chain, f2.name)
                 f2.flush()
 
                 f.write(pp.pymol_string())
                 f.flush()
 
                 pymol_cmd = 'hide all\n'
-                pymol_cmd += 'run %s\n' % (f.name)
                 pymol_cmd += 'show cartoon, all\n'
                 pymol_cmd += 'set cartoon_ring_mode\n'
-                pymol_cmd += 'set cartoon_tube_radius, .3'
+                pymol_cmd += 'set cartoon_tube_radius, .3\n'
 
+                if options.constraints is not None:
+                    pymol_cmd += "hide all\n"
+
+                    for constraint in constraints:
+                        color = pp.get_element_color(constraint)
+
+                        for r in cg.define_residue_num_iterator(constraint):
+                            fud.pv('r')
+                            pymol_cmd += "show sticks, resi %r\n" % (r)
+                            pymol_cmd += "color %s, resi %r\n" % (color, r)
+
+                pymol_cmd += 'run %s\n' % (f.name)
 
                 f1.write(pymol_cmd)
                 f1.flush()

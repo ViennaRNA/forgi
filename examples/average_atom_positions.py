@@ -31,6 +31,7 @@ def main():
         sys.exit(1)
 
     poss = c.defaultdict(list)
+    sources = c.defaultdict(list)
 
     for i,arg in enumerate(args):
         cg = ftmc.from_pdb(arg)
@@ -75,6 +76,7 @@ def main():
                                                   conn_type,                              
                                                   i, aname)
                     poss[identifier] += [atom_pos]
+                    sources[identifier] += [d]
 
     print "import collections as co"
 
@@ -88,6 +90,10 @@ def main():
         for key in poss.keys():
             pos = np.mean(poss[key], axis=0)
             print 'avg_atom_poss["%s"] = [%s] #%d' % (key, ",".join(map(str, pos)), len(poss[key]))
+
+    print "sources = dict()"
+    for key in sources.keys():
+        print 'sources["%s"] = [%s]' % (key, ",".join(sources[key]))
 
 if __name__ == '__main__':
     main()
