@@ -145,7 +145,6 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg.from_bg_string(self.bg_string)
         
         self.assertEquals(bg.seq_length, 71)
-        #self.assertEquals(bg.seq_dict[1], 'C')
 
     def check_from_and_to_dotbracket(self, dotbracket):
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket)
@@ -458,7 +457,4 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 
     def test_compare_hairpins(self):
         bg = cgb.BulgeGraph(dotbracket_str='(())(())')
-
-        fud.pv('bg.to_bg_string()')
-
 

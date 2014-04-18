@@ -248,7 +248,7 @@ def pdb_file_rmsd(fn1, fn2):
 
     return rmsd
 
-def renumber_chain(chain):
+def renumber_chain(chain, resids=None):
     '''
     Renumber all the residues in this chain so that they start at 1 and end at
     len(chain)
@@ -260,9 +260,19 @@ def renumber_chain(chain):
     counter = 1
     chain.id = ' '
 
-    for r in chain:
-        r.id = (r.id[0], counter, r.id[2])
-        counter += 1
+    if resids is None:
+        resids = [(' ', i+1, ' ') for i in range(len(chain))]
+
+    new_child_dict = dict()
+    new_child_list = []
+
+    for res, r_new in zip(chain, resids):
+        res.id = r_new
+        new_child_dict[res.id] = res
+        new_child_list.append(res)
+
+    chain.child_dict = new_child_dict
+    chain.child_list = new_child_list
 
     return chain
 

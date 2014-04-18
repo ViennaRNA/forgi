@@ -222,7 +222,7 @@ class BulgeGraph(object):
         # sort the coordinate basis for each stem
         self.bases = dict()
         self.stem_invs = dict()
-        self.seq_dict = dict()
+        self.seq_ids = []
 
         self.name_counter = 0
 
@@ -231,7 +231,7 @@ class BulgeGraph(object):
 
         self.seq = seq
         for i, s in enumerate(seq):
-            self.seq_dict[i+1] = s
+            self.seq_ids += [(' ', str(i+1), ' ')]
 
         if bg_file is not None:
             self.from_bg_file(bg_file)
@@ -338,15 +338,15 @@ class BulgeGraph(object):
         else:
             return ""
 
-    def get_seq_dict_str(self):
+    def get_seq_ids_str(self):
         '''
-        Return the sequence dictionary string
+        Return the sequence id string
 
-        seq_dict 11 C
+        seq_ids 1 2 2.A 17
         '''
-        out_str = ""
-        for key, val in self.seq_dict.items():
-            out_str += "seq_dict %d %s\n" % (key, val)
+        out_str = "seq_ids "
+        out_str += " ".join(map(ftum.format_resid, self.seq_ids))
+        out_str += "\n"
 
         return out_str
 
@@ -369,7 +369,7 @@ class BulgeGraph(object):
         out_str += self.get_name_str()
         out_str += self.get_length_str()
         out_str += self.get_sequence_str()
-        out_str += self.get_seq_dict_str()
+        out_str += self.get_seq_ids_str()
         out_str += self.get_define_str()
         out_str += self.get_connect_str()
 
@@ -987,16 +987,18 @@ class BulgeGraph(object):
         self.name = lines[0].strip('>')
         self.seq = lines[1].strip()
 
-        self.seq_dict_from_seq()
+        self.seq_ids_from_seq()
 
-    def seq_dict_from_seq(self):
+    def seq_ids_from_seq(self):
         '''
-        Convert the current sequence into a seq_dict.
+        Get the sequence ids of the string.
         '''
-        self.seq_dict = dict()
+        self.seq_ids = []
 
+        # when provided with just a sequence, we presume that the
+        # residue ids are numbered from 1-up
         for i, s in enumerate(self.seq):
-            self.seq_dict[i+1] = s
+            self.seq_ids += [(' ', i+1, ' ')]
 
     def remove_degenerate_nodes(self):
         '''
@@ -1067,23 +1069,12 @@ class BulgeGraph(object):
 
         @return: A dot-bracket representation of this BulgeGraph
         '''
-        resids = [k for k in self.seq_dict.keys()]
-
-        if len(resids) > 0:
-            min_resid = min(resids)
-            max_resid = max(resids)
-        else:
-            min_resid = 1
-            max_resid = self.seq_length
-
-        seq_len = max_resid - min_resid + 1
-
-        out = ['.' for i in xrange(min_resid, max_resid + 1)]
+        out = ['.' for i in xrange(self.seq_length)]
         for s in self.stem_iterator():
             for i in xrange(self.defines[s][0], self.defines[s][1]+1):
-                out[i-min_resid] = '('
+                out[i-1] = '('
             for i in xrange(self.defines[s][2], self.defines[s][3]+1):
-                out[i-min_resid] = ')'
+                out[i-1] = ')'
 
         return "".join(out)
 
@@ -1124,8 +1115,8 @@ class BulgeGraph(object):
                     self.edges[p].add(parts[1])
             elif parts[0] == 'seq':
                 self.seq = parts[1]
-            elif parts[0] == 'seq_dict':
-                self.seq_dict[int(parts[1])] = parts[2]
+            elif parts[0] == 'seq_ids':
+                self.seq_ids = map(ftum.parse_resid, parts[1:])
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
 
@@ -1513,9 +1504,7 @@ class BulgeGraph(object):
                  being on the higher numbered strand.
         '''
         conn = self.connections(multiloop)
-
         t = self.connection_type(multiloop, conn)
-        fud.pv('multiloop, t')
 
         if abs(t) == 2:
             return 1
@@ -1811,17 +1800,32 @@ class BulgeGraph(object):
         '''
         return ftum.parse_chain_base(chainres)[1]
 
-    def translate_define_resnums(self, residue_list):
+    def get_resseqs(self, define):
         '''
-        Translate the residue numbers in each define to contain
-        the residue numbers in residue_list.
+        Return the pdb ids of the nucleotides in this define.
 
-        @param residue_list: A list of residue numbers as they appear in the pdb file
-                             including the chain identifier.
-        @return: Nothing
+        @param define: The name of this element.
+        @param: Return a tuple of two arrays containing the residue ids
+                on each strand
         '''
-        self.chain_id = self.extract_chain_id(residue_list[0])
+        resnames = []
+        ranges = zip(*[iter(self.defines[define])] * 2)
+        for r in ranges:
+            strand_resnames = []
+            for x in range(r[0], r[1] + 1):
+                strand_resnames += [self.seq_ids[x-1]]
+            resnames += [strand_resnames]
 
-        for d in self.defines.values():
-            for i,_ in enumerate(d):
-                d[i] = self.extract_resnum(residue_list[d[i]-1])
+        return resnames
+
+    def seqids_from_residue_map(self, residue_map):
+        '''
+        Create the list of seq_ids from the list of MC-Annotate identifiers in the
+        residue map.
+        '''
+        self.seq_ids = []
+
+        for r in residue_map:
+            (from_chain, from_base) = ftum.parse_chain_base(r)
+
+            self.seq_ids += [ftum.parse_resid(from_base)]

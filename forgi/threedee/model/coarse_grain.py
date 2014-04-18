@@ -73,54 +73,16 @@ def add_longrange_interactions(cg, lines):
     '''
     for line in ftum.iterate_over_interactions(lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
-        node1 = cg.get_node_from_residue_num(from_base)
-        node2 = cg.get_node_from_residue_num(to_base)
 
-        if abs(from_base - to_base) > 1 and node1 != node2 and not cg.has_connection(node1, node2):
+        seq_id1 = cg.seq_ids.index(ftum.parse_resid(from_base)) + 1
+        seq_id2 = cg.seq_ids.index(ftum.parse_resid(to_base)) + 1
+
+        node1 = cg.get_node_from_residue_num(seq_id1)
+        node2 = cg.get_node_from_residue_num(seq_id2)
+
+        if abs(seq_id2 - seq_id1) > 1 and node1 != node2 and not cg.has_connection(node1, node2):
             cg.longrange[node1].add(node2)
             cg.longrange[node2].add(node1)
-
-def add_missing_nucleotides(ss_fasta, residue_map):
-    '''
-    Add the letter 'X' in the sequence for nucleotides that are missing.
-    And add an unpaired character '.' in the secondary structure.
-
-    @param ss_fasta: A string containing the id, sequence and dotbracket
-                     for this secondary structure
-    @param residue_map: The mapping of the position in the sequence to the
-                        MC-Annotate id of the nucleotide it refers to.
-    @return: A sequence with the same format with placeholders for the
-             nucleotides which aren't present in the residue_map.
-    '''
-    (id, fa, ss) = ss_fasta.split('\n')
-
-    resnums = [ftum.parse_chain_base(r)[1] for r in residue_map]
-
-    # find out how long the new sequence is going to be
-    min_resnum = min(resnums)
-    max_resnum = max(resnums)
-
-    # create the new sequences
-    new_fa = ['X'] * (max_resnum - min_resnum + 1)
-    new_ss = ['.'] * (max_resnum - min_resnum + 1)
-
-    # go through and add the known nucleotides
-    for i,r  in enumerate(resnums):
-        new_fa[r - min_resnum] = fa[i]
-        new_ss[r - min_resnum] = ss[i]
-
-    new_residue_map = []
-    chain_id = ftum.parse_chain_base(residue_map[0])[0]
-    for i,s in enumerate(new_fa):
-        new_residue_map += [chain_id + str(min_resnum+i)]
-
-    new_fa = "".join(new_fa)
-    new_ss = "".join(new_ss)
-
-    print >>sys.stderr, fa
-    print >>sys.stderr, new_fa
-
-    return ("\n".join([id, new_fa, new_ss]), new_residue_map)
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
                             chain_id=None):
@@ -187,7 +149,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                                removed= cak.DEFAULT_REMOVED)
 
             out = out.replace(' Nested structure', pdb_base)
-            (out, residue_map) = add_missing_nucleotides(out, residue_map)
+            #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
             if secondary_structure != '':
                 lines = out.split('\n')
@@ -211,7 +173,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             cg = CoarseGrainRNA()
             cg.from_fasta(out, dissolve_length_one_stems=1)
-            cg.translate_define_resnums(residue_map)
+            cg.seqids_from_residue_map(residue_map)
             cgg.add_stem_information_from_pdb_chain(cg, chain)
             cgg.add_bulge_information_from_pdb_chain(cg, chain)
             cgg.add_loop_information_from_pdb_chain(cg, chain)
