@@ -80,6 +80,36 @@ def trim_chain(chain, start_res, end_res):
     for res in to_detach:
         chain.detach_child(res.id)
 
+def trim_chain_between(chain, start_res, end_res):
+    '''
+    Remove all nucleotides between start_res and end_res, inclusive.
+
+    The chain is modified in place so there is no return value.
+    '''
+    to_detach = []
+    for res in chain:
+        if start_res <= res.id[1] and res.id[1] <= end_res:
+            to_detach += [res]
+
+    for res in to_detach:
+        chain.detach_child(res.id)
+
+def extract_subchain(chain, start_res, end_res):
+    '''
+    Extract a portion of a particular chain. The new chain
+    will contain residues copied from the original chain.
+
+    @param chain: The source chain.
+    @param start_res: The number of the first nucleotide to extract
+    @param last_res: The number of the last nucleotide to extract
+    '''
+    new_chain = bpdb.Chain.Chain(' ')
+    for r in new_chain:
+        if start_res <= r.id and r.id <= end_res:
+            new_chain.add(chain[i].copy())
+
+    return new_chain
+
 def is_covalent(contact):
     '''
     Determine if a particular contact is covalent.

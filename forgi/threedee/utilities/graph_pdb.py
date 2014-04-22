@@ -715,7 +715,6 @@ def get_twists_core(cg, chain, define,
 
     # the first nucleotide of the first strand
     # and the last nucleotide of the second strand
-    fud.pv('resnames')
     start_vec1 = chain[resnames[0][0]][catom_name].get_vector() - mids[0]
     end_vec1 = chain[resnames[0][-1]][catom_name].get_vector() - mids[1]
 

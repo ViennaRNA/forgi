@@ -406,6 +406,49 @@ class BulgeGraph(object):
 
         return "".join(output_str).strip()
 
+    def define_range_iterator(self, node, adjacent=False, seq_ids=False):
+        '''
+        Return the ranges of the nucleotides in the define.
+
+        In other words, if a define contains the following: [1,2,7,8]
+        The ranges will be [1,2] and [7,8].
+
+        @param adjacent: Use the nucleotides in the neighboring element which
+                         connect to this element as the range starts and ends.
+        @return: A list of two-element lists
+        '''
+        a = iter(self.defines[node])
+        ranges = it.izip(a,a)
+
+        if node[0] == 'i':
+            # interior loops have to be treated specially because
+            # they might have a bulge that has no unpaired nucleotides on one strand
+            fud.pv('self.defines[node]')
+
+            if adjacent:
+                conns = self.connections(node)
+                s1 = self.defines[conns[0]]
+                s2 = self.defines[conns[1]]
+
+                if adjacent:
+                    # offset by one, which will be reversed in the yield step
+                    # below
+                    ranges =  [[s1[1]+1, s2[0]-1], [s2[3]+1, s1[2]-1]]
+
+        for (ds1, ds2) in ranges:
+            if adjacent:
+                if ds1 > 1:
+                    ds1 -= 1
+                if ds2 < self.seq_length-1:
+                    ds2 += 1
+
+            if seq_ids:
+                # this will cause problems if the nucleotide has insertion codes
+                yield [self.seq_ids[ds1],self.seq_ids[ds2]]
+            else:
+                yield [ds1,ds2]
+
+
     def define_residue_num_iterator(self, node, adjacent=False):
         '''
         Iterate over the residue numbers that belong to this node.
@@ -418,18 +461,8 @@ class BulgeGraph(object):
 
         :param node: The name of the node
         '''
-        a = iter(self.defines[node])
-        for (ds1, ds2) in it.izip(a,a):
-            start = ds1
-            end = ds2+1
-
-            if adjacent:
-                if ds1 > 1:
-                    start = ds1 - 1
-                if ds2 < self.seq_length:
-                    end = ds2 + 2
-
-            for i in range(start, end):
+        for r in self.define_range_iterator(node, adjacent):
+            for i in range(r[0], r[1] + 1):
                 yield i
 
     def create_bulge_graph(self, stems, bulges):

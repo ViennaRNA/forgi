@@ -77,6 +77,35 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
             self.assertTrue(n)
 
 
+    def test_define_residue_num_iterator(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('..((..((...))..))..((..))..')
+
+        self.assertEqual(list(bg.define_residue_num_iterator('f1')),
+                         [1,2])
+        self.assertEqual(list(bg.define_residue_num_iterator('t1')),
+                         [26, 27])
+        self.assertEqual(list(bg.define_residue_num_iterator('s1')),
+                         [7, 8, 12, 13])
+        self.assertEqual(list(bg.define_residue_num_iterator('i0')),
+                         [5,6,14,15])
+
+        bg.from_dotbracket('((((.)).))')
+        self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True)),
+                         [2,3,7,8,9])
+
+    def test_define_range_iterator(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('..((..((...))..))..((..))..')
+
+        self.assertEqual(list(bg.define_range_iterator('i0')),
+                         [[5,6],[14,15]])
+        self.assertEqual(list(bg.define_range_iterator('f1')),
+                         [[1,2]])
+        self.assertEqual(list(bg.define_range_iterator('t1')),
+                         [[26,27]])
+
+
     def test_dissolve_stem(self):
         '''
         Test to make sure length one stems can be dissolved.
