@@ -319,13 +319,12 @@ def output_chain(chain, filename, fr=None, to=None):
                 return False                                                                                       
             else:
                 return True                                                                                        
-            
-    m = bpdb.Model.Model(' ')                                                                                           
+    m = bpdb.Model.Model(' ') 
     s = bpdb.Structure.Structure(' ')
-                                                                                                                   
+
     m.add(chain)
     s.add(m)    
-                                                                                                                   
+
     io = bpdb.PDBIO()
     io.set_structure(s)
     io.save(filename, HSelect()) 

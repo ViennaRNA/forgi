@@ -443,12 +443,12 @@ class BulgeGraph(object):
 
             if seq_ids:
                 # this will cause problems if the nucleotide has insertion codes
-                yield [self.seq_ids[ds1],self.seq_ids[ds2]]
+                yield [self.seq_ids[ds1-1],self.seq_ids[ds2-1]]
             else:
                 yield [ds1,ds2]
 
 
-    def define_residue_num_iterator(self, node, adjacent=False):
+    def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         '''
         Iterate over the residue numbers that belong to this node.
 
@@ -460,7 +460,7 @@ class BulgeGraph(object):
 
         :param node: The name of the node
         '''
-        for r in self.define_range_iterator(node, adjacent):
+        for r in self.define_range_iterator(node, adjacent, seq_ids):
             for i in range(r[0], r[1] + 1):
                 yield i
 

@@ -185,3 +185,10 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
                     fud.pv('sg')
                     fud.pv('bg.edges[i]')
                 self.assertEqual(len(c), 2)
+
+    def test_define_residue_num_iterator(self):
+        cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        #fud.pv('cg.to_bg_string()')
+
+        self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
+                         [[(' ',6,' '), (' ',10,' ')], [(' ',19,' '), (' ',21,' ')]])
