@@ -128,7 +128,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
         (dotplot, residue_map) = ftum.get_dotplot(lines)
-        fud.pv('dotplot')
 
         # f2 will store the dotbracket notation
         with open(op.join(output_dir, 'temp.dotplot'), 'w') as f2:
@@ -151,7 +150,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             out = out.replace(' Nested structure', pdb_base)
             #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-            fud.pv('out')
 
             if secondary_structure != '':
                 lines = out.split('\n')

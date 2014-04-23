@@ -104,9 +104,9 @@ def extract_subchain(chain, start_res, end_res):
     @param last_res: The number of the last nucleotide to extract
     '''
     new_chain = bpdb.Chain.Chain(' ')
-    for r in new_chain:
+    for r in chain:
         if start_res <= r.id and r.id <= end_res:
-            new_chain.add(chain[i].copy())
+            new_chain.add(r.copy())
 
     return new_chain
 
@@ -345,9 +345,6 @@ def get_particular_chain(in_filename, chain_id):
     # always take the first model
     m = s.get_list()[0]
 
-    fud.pv('m')
-    fud.pv('[c.id for c in m.get_list()]')
-    fud.pv('chain_id')
     return m[chain_id]
 
 def get_biggest_chain(in_filename):

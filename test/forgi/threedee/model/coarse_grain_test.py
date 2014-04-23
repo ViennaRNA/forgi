@@ -112,7 +112,6 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_from_pdb(self): 
         #cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
-        print >>sys.stderr, "here"
         #cg = cmc.from_pdb('test/forgi/threedee/data/3V2F.pdb', intermediate_file_dir='tmp')
         cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
 
