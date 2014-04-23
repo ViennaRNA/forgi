@@ -128,6 +128,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
         (dotplot, residue_map) = ftum.get_dotplot(lines)
+        fud.pv('dotplot')
 
         # f2 will store the dotbracket notation
         with open(op.join(output_dir, 'temp.dotplot'), 'w') as f2:
@@ -150,6 +151,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             out = out.replace(' Nested structure', pdb_base)
             #(out, residue_map) = add_missing_nucleotides(out, residue_map)
+            fud.pv('out')
 
             if secondary_structure != '':
                 lines = out.split('\n')
@@ -195,7 +197,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     print >>sys.stderr, "Prepare for an incoming exception."
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
-                     intermediate_file_dir='', chain_id=None):
+                     intermediate_file_dir=None, chain_id=None):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -205,7 +207,7 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
                                 structure of this molecule
     '''
 
-    if intermediate_file_dir != '':
+    if intermediate_file_dir is not None:
         output_dir = intermediate_file_dir
 
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 

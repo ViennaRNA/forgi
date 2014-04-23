@@ -423,7 +423,6 @@ class BulgeGraph(object):
         if node[0] == 'i':
             # interior loops have to be treated specially because
             # they might have a bulge that has no unpaired nucleotides on one strand
-            fud.pv('self.defines[node]')
 
             if adjacent:
                 conns = self.connections(node)
@@ -614,6 +613,11 @@ class BulgeGraph(object):
 
                     # merge contiguous bulge regions
                     for k in range(j+2, len(self.defines[key]), 2):
+                        if key[0] == 'y':
+                            # we can have stems with defines like: [1,2,3,4]
+                            # which would imply a non-existant loop at its end
+                            continue
+
                         (f2, t2) = (int(self.defines[key][k]), int(self.defines[key][k+1]))
 
                         #print >>sys.stderr, "j: %d f1: %d, t1: %d, f2: %d, t2: %d" % (j, f1, t1, f2, t2)
@@ -818,6 +822,7 @@ class BulgeGraph(object):
         '''
         #replace the define name
         define = self.defines[old_name]
+
         del self.defines[old_name]
         self.defines[new_name] = define
 
@@ -1068,6 +1073,7 @@ class BulgeGraph(object):
             self.defines['y%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
                                          min(ss2,se2), max(ss2,se2)]
             self.weights['y%d' % (i)] = 1
+
         for i in range(len(bulges)):
             bulge = bulges[i]
             self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
@@ -1590,7 +1596,7 @@ class BulgeGraph(object):
 
         return dims
 
-    def get_node_from_residue_num(self, base_num):
+    def get_node_from_residue_num(self, base_num, seq_id=False):
         """
         Iterate over the defines and see which one encompasses this base.
         """
@@ -1601,8 +1607,13 @@ class BulgeGraph(object):
                 a = [int(define[i]), int(define[i+1])]
                 a.sort()
 
-                if base_num >= a[0] and base_num <= a[1]:
-                    return key
+                if seq_id:
+                    for i in range(a[0], a[1]+1):
+                        if self.seq_ids[i-1][1] == base_num:
+                            return key
+                else:
+                    if base_num >= a[0] and base_num <= a[1]:
+                        return key
 
         raise Exception("Base number %d not found in the defines." % (base_num))
 

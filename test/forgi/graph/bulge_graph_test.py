@@ -47,6 +47,16 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg = cgb.BulgeGraph()
         bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
 
+    def test_from_fasta(self):
+        bg = cgb.BulgeGraph()
+
+        with open('test/forgi/threedee/data/3V2F.fa', 'r') as f:
+            text = f.read()
+            bg.from_fasta(text, dissolve_length_one_stems=False)
+
+        for s in bg.stem_iterator():
+            bg.stem_length(s)
+
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
