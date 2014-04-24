@@ -467,6 +467,16 @@ class BulgeGraph(object):
                 else:
                     yield i
 
+    def iterate_over_seqid_range(self, start_id, end_id):
+        '''
+        Iterate over the seq_ids between the start_id and end_id.
+        '''
+        i1 = self.seq_ids.index(start_id)
+        i2 = self.seq_ids.index(end_id)
+
+        for i in range(i1, i2+1):
+            yield self.seq_ids[i]
+
     def create_bulge_graph(self, stems, bulges):
         '''
         Find out which stems connect to which bulges

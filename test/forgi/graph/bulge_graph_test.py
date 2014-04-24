@@ -113,15 +113,25 @@ AAAAAAAAAA
 
     def test_define_range_iterator(self):
         bg = cgb.BulgeGraph()
-        bg.from_dotbracket('..((..((...))..))..((..))..')
-
+        fa = """>blah
+AAAAAAAAAAAAAAAAAAAAAAAAAAA
+..((..((...))..))..((..))..
+"""
+        bg.from_fasta(fa, dissolve_length_one_stems=False)
+        fud.pv('bg.to_bg_string()')
         self.assertEqual(list(bg.define_range_iterator('i0')),
                          [[5,6],[14,15]])
+
+        r1 = list(bg.define_range_iterator('i0', seq_ids=True))[0]
+        srange = list(bg.iterate_over_seqid_range(r1[0], r1[1]))
+        self.assertEqual(srange[0], (' ', 5, ' '))
+
         self.assertEqual(list(bg.define_range_iterator('f1')),
                          [[1,2]])
         self.assertEqual(list(bg.define_range_iterator('t1')),
                          [[26,27]])
 
+        
 
     def test_dissolve_stem(self):
         '''
