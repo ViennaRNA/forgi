@@ -460,9 +460,12 @@ class BulgeGraph(object):
 
         :param node: The name of the node
         '''
-        for r in self.define_range_iterator(node, adjacent, seq_ids):
+        for r in self.define_range_iterator(node, adjacent, seq_ids=False):
             for i in range(r[0], r[1] + 1):
-                yield i
+                if seq_ids:
+                    yield self.seq_ids[i-1]
+                else:
+                    yield i
 
     def create_bulge_graph(self, stems, bulges):
         '''

@@ -100,9 +100,16 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEqual(list(bg.define_residue_num_iterator('i0')),
                          [5,6,14,15])
 
-        bg.from_dotbracket('((((.)).))')
+        fa=""">blah
+AAAAAAAAAA
+((((.)).))
+"""
+        bg.from_fasta(fa, dissolve_length_one_stems=True)
         self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True)),
                          [2,3,7,8,9])
+
+        self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True, seq_ids=True)),
+                         [(' ', 2, ' '), (' ', 3, ' '), (' ', 7, ' '), (' ', 8, ' '), (' ', 9, ' ')])
 
     def test_define_range_iterator(self):
         bg = cgb.BulgeGraph()
