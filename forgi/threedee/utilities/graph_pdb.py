@@ -1034,8 +1034,8 @@ def junction_virtual_atom_distance(bg, bulge):
     (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
 
-    r1 = bg.seq_dict[bg.defines[connecting_stems[0]][i1]]
-    r2 = bg.seq_dict[bg.defines[connecting_stems[0]][i2]]
+    r1 = bg.seq[bg.defines[connecting_stems[0][i1]]-1]
+    r2 = bg.seq[bg.defines[connecting_stems[0][i2]]-1]
 
     (strand1, a1, vrn1) = get_strand_atom_vrn(bg, connecting_stems[0], i1)
     (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)
@@ -1175,7 +1175,7 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
     vpos = bg.vposs[s][i]
     basis = bg.vbases[s][i].transpose()
 
-    rs = (bg.seq_dict[bg.defines[s][0] + i], bg.seq_dict[bg.defines[s][3] - i])
+    rs = (bg.seq[bg.defines[s][0] + i - 1], bg.seq[bg.defines[s][3] - i - 1])
 
     new_atoms = dict()
 

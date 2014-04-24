@@ -180,10 +180,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             cg.chain = chain
 
-            cg.seq_dict = dict()
-            for r in chain:
-                cg.seq_dict[r.id[1]] = r.resname.strip()
-
             add_longrange_interactions(cg, lines)
 
             with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
