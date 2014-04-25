@@ -624,3 +624,48 @@ def get_loop_stats(filename=cbc.Configuration.stats_file):
     f.close()
 
     return ConstructionStats.loop_stats
+
+class ConformationStats:
+    def __init__(self):
+        self.angle_stats = get_angle_stats()
+        self.stem_stats = get_stem_stats()
+        self.fiveprime_stats = get_fiveprime_stats()
+        self.threeprime_stats = get_threeprime_stats()
+        self.loop_stats = get_loop_stats()
+
+        self.constrained_stats = c.defaultdict(list)
+
+    def constrain_stats(self, constraint_file):
+        '''
+        Constrain the statistics for certain regions of the molecule. This 
+        is created for use with the JAR3D annotations for loop regions.
+
+        @param constraint_file: A file containing the allowed statistics for
+                                a particular loop.
+        @return: Nothing
+        '''
+
+    def sample_stats(self, bg, elem):
+        '''
+        Return a set of statistics compatible with this element.
+
+        @param bg: The graph representation we're using.
+        @param elem: The name of the element
+        @return: A list of compatible statistics
+        '''
+        if elem in self.constrained_stats:
+            return self.constrained_stats[elem]
+
+        if elem[0] == 's':
+            stats = self.stem_stats
+        elif elem[0] == 'i' or elem[0] == 'm':
+            stats = self.angle_stats
+        elif elem[0] == 'h':
+            stats = self.loop_stats
+        elif elem[0] == 't':
+            stats = self.threeprime_stats
+        elif elem[0] == 'f':
+            stats = self.fiveprime_stats
+
+        dims = bg.get_bulge_dimensions(bulge)
+        return stats[dims]
