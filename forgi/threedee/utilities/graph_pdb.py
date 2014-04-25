@@ -1034,8 +1034,8 @@ def junction_virtual_atom_distance(bg, bulge):
     (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
 
-    r1 = bg.seq[bg.defines[connecting_stems[0][i1]]-1]
-    r2 = bg.seq[bg.defines[connecting_stems[0][i2]]-1]
+    r1 = bg.seq[bg.defines[connecting_stems[0]][i1]-1]
+    r2 = bg.seq[bg.defines[connecting_stems[0]][i2]-1]
 
     (strand1, a1, vrn1) = get_strand_atom_vrn(bg, connecting_stems[0], i1)
     (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)

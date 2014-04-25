@@ -110,6 +110,21 @@ def extract_subchain(chain, start_res, end_res):
 
     return new_chain
 
+def extract_subchain_from_res_list(chain, res_list):
+    '''
+    Extract a portion of a particular chain. The new chain
+    will contain residues copied from the original chain.
+
+    @param chain: The source chain.
+    @param res_list: The list of residue identifiers of the nucleotides
+                     to extract
+    '''
+    new_chain = bpdb.Chain.Chain(' ')
+    for r in res_list:
+        new_chain.add(chain[r].copy())
+
+    return new_chain
+
 def is_covalent(contact):
     '''
     Determine if a particular contact is covalent.

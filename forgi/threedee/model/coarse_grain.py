@@ -118,6 +118,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         f.flush()
 
         pdb_base = op.splitext(op.basename(pdb_filename))[0]
+        pdb_base += "_" + chain.id
+
         # first we annotate the 3D structure
         p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
         out, err = p.communicate()
