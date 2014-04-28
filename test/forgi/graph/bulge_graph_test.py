@@ -57,6 +57,46 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         for s in bg.stem_iterator():
             bg.stem_length(s)
 
+    def test_from_bpseq(self):
+        bg = cgb.BulgeGraph()
+
+        seq= 'AAAAAAAAAAAAAAAAAAAA'
+        db = '.((((..)).))..((..))'
+        n  = '12345678901234567890'
+
+        bpstr="""1 A 0
+2 A 12
+3 A 11
+4 A 9
+5 A 8
+6 A 0
+7 A 0
+8 A 5
+9 A 4
+10 A 0
+11 A 3
+12 A 2
+13 A 0
+14 A 0
+15 A 20
+16 A 19
+17 A 0
+18 A 0
+19 A 16
+20 A 15
+"""
+        (stems, bulges) = bg.from_bpseq_str(bpstr)
+        bg.from_stems_and_bulges(stems, bulges)
+
+        fud.pv('db')
+        fud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.defines['i0'], [10,10])
+        self.assertEqual(bg.defines['h0'], [6,7])
+        self.assertEqual(bg.defines['h1'], [17,18])
+        self.assertEqual(bg.defines['s0'], [2,3,11,12])
+        self.assertEqual(bg.defines['s1'], [4,5,8,9])
+
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
@@ -118,7 +158,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
 ..((..((...))..))..((..))..
 """
         bg.from_fasta(fa, dissolve_length_one_stems=False)
-        fud.pv('bg.to_bg_string()')
         self.assertEqual(list(bg.define_range_iterator('i0')),
                          [[5,6],[14,15]])
 

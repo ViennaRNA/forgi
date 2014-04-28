@@ -1063,19 +1063,16 @@ class BulgeGraph(object):
         for r in to_remove:
             self.remove_vertex(r)
 
-    def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
+    def from_stems_and_bulges(self, stems, bulges):
         '''
-        Populate the BulgeGraph structure from a dotbracket representation.
+        Create the graph from the list of stems and bulges.
 
-        ie: ..((..))..
-
-        :param dotbracket_str: A string containing the dotbracket representation
-                               of the structure
+        @param stems: A list of tuples of two two-tuples, each containing the start
+                      and end nucleotides of each strand of the stem.
+        @param bulges: A list of tuples containing the starts and ends of the 
+                       of the bulge regions.
+        @return: Nothing, just make the bulgegraph
         '''
-        self.__init__()
-        self.dissolve_length_one_stems = dissolve_length_one_stems
-        (bulges, stems) = find_bulges_and_stems(dotbracket_str)
-
         for i in range(len(stems)):
             # one is added to each coordinate to make up for the fact that residues are 1-based
             ss1 = stems[i][0][0]+1
@@ -1092,14 +1089,120 @@ class BulgeGraph(object):
             self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
             self.weights['b%d' % (i)] = 1
 
-        self.dotbracket_str = dotbracket_str
-        self.seq_length = len(dotbracket_str)
         self.create_bulge_graph(stems, bulges)
         self.create_stem_graph(stems, len(bulges))
         self.collapse()
         self.relabel_nodes()
         self.remove_degenerate_nodes()
         self.sort_defines()
+
+    def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
+        '''
+        Populate the BulgeGraph structure from a dotbracket representation.
+
+        ie: ..((..))..
+
+        :param dotbracket_str: A string containing the dotbracket representation
+                               of the structure
+        '''
+        self.__init__()
+        self.dissolve_length_one_stems = dissolve_length_one_stems
+        (bulges, stems) = find_bulges_and_stems(dotbracket_str)
+
+        #fud.pv('stems')
+        #fud.pv('bulges')
+
+        self.dotbracket_str = dotbracket_str
+        self.seq_length = len(dotbracket_str)
+
+        self.from_stems_and_bulges(stems, bulges)
+
+    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
+        '''
+        Create the graph from a string listing the base pairs.
+
+        The string should be formatted like so:
+
+            1 G 115
+            2 A 0
+            3 A 0
+            4 U 0
+            5 U 112
+            6 G 111
+
+        @param bpseq_str: The string, containing newline characters.
+        @return: Nothing, but fill out this structure.
+        '''
+        lines = bpseq_str.split('\n')
+        seq = ''
+
+        line_iter = iter(lines)
+        parts = line_iter.next().split(' ')
+
+        stems = []
+        bulges = []
+
+        prev_from = (int(parts[0]))
+        prev_to = (int(parts[2]))
+
+        start_from = prev_from
+        start_to = prev_to
+
+        seq = parts[1]
+
+        self.dissolve_length_one_stems = dissolve_length_one_stems
+
+        for line in line_iter:
+            parts = line.split(' ')
+
+            if len(parts) < 3:
+                continue
+            (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
+            seq += base
+
+            print >>sys.stderr, "-------------------"
+            fud.pv('prev_from, prev_to')
+            fud.pv('start_from, start_to')
+            fud.pv('from_bp, to_bp')
+            fud.pv('abs(from_bp - prev_from)')
+            fud.pv('abs(to_bp - prev_to)')
+            if abs(from_bp - prev_from) == 1 and abs(to_bp - prev_to) == 1:
+                # stem
+                (prev_from, prev_to) = (from_bp, to_bp)
+                continue
+
+            if to_bp == 0 and prev_to == 0:
+                # bulge
+                (prev_from, prev_to) = (from_bp, to_bp)
+                continue
+            else:
+                if prev_to != 0:
+                    new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])), 
+                                tuple(sorted([prev_from - 1, prev_to - 1]))]))
+                    if new_stem not in stems:
+                        fud.pv('new_stem')
+                        stems += [new_stem]
+
+                    start_from = from_bp
+                    start_to = to_bp
+                else:
+                    new_bulge = ((start_from - 1, prev_from - 1))
+                    fud.pv('new_bulge')
+                    bulges += [new_bulge]
+
+                    start_from = from_bp
+                    start_to = to_bp
+
+
+            prev_from = from_bp
+            prev_to = to_bp
+
+        self.seq = seq
+        self.seq_length = len(seq)
+
+        fud.pv('stems')
+        fud.pv('bulges')
+        return (stems, bulges)
 
     def sort_defines(self):
         '''
@@ -1210,7 +1313,7 @@ class BulgeGraph(object):
         '''
         Return the dimensions of a node.
 
-        If the node is a stem, then the dimensions will be (l, l) where l is
+        If the node is a stem, then the dimensions will be l where l is
         the length of the stem.
 
         Otherwise, see get_bulge_dimensions(node)
@@ -1219,8 +1322,11 @@ class BulgeGraph(object):
         :return: A pair containing its dimensions
         '''
         if node[0] == 's':
+            return self.stem_length(node)
+            '''
             return (self.defines[node][1] - self.defines[node][0] + 1,
                     self.defines[node][1] - self.defines[node][0] + 1)
+            '''
         else:
             return self.get_bulge_dimensions(node)
 

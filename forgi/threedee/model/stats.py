@@ -644,6 +644,8 @@ class ConformationStats:
                                 a particular loop.
         @return: Nothing
         '''
+        pass
+
 
     def sample_stats(self, bg, elem):
         '''
@@ -667,5 +669,7 @@ class ConformationStats:
         elif elem[0] == 'f':
             stats = self.fiveprime_stats
 
-        dims = bg.get_bulge_dimensions(bulge)
+        dims = bg.get_node_dimensions(elem)
+        fud.pv('dims')
+
         return stats[dims]
