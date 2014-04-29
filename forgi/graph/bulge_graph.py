@@ -213,6 +213,9 @@ def print_name(filename):
 
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
+        self.ang_types = None
+        self.mst = None
+        self.build_order = None
         self.name = "untitled"
         self.defines = dict()
         self.edges = c.defaultdict(set)
@@ -787,7 +790,6 @@ class BulgeGraph(object):
         for r in to_remove:
             self.remove_vertex(r)
 
-
     def collapse(self):
         '''
         If any vertices form a loop, then they are either a bulge region of 
@@ -1109,9 +1111,6 @@ class BulgeGraph(object):
         self.dissolve_length_one_stems = dissolve_length_one_stems
         (bulges, stems) = find_bulges_and_stems(dotbracket_str)
 
-        #fud.pv('stems')
-        #fud.pv('bulges')
-
         self.dotbracket_str = dotbracket_str
         self.seq_length = len(dotbracket_str)
 
@@ -1133,6 +1132,7 @@ class BulgeGraph(object):
         @param bpseq_str: The string, containing newline characters.
         @return: Nothing, but fill out this structure.
         '''
+        self.__init__()
         lines = bpseq_str.split('\n')
         seq = ''
 
@@ -1160,13 +1160,7 @@ class BulgeGraph(object):
             (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
             seq += base
 
-            print >>sys.stderr, "-------------------"
-            fud.pv('prev_from, prev_to')
-            fud.pv('start_from, start_to')
-            fud.pv('from_bp, to_bp')
-            fud.pv('abs(from_bp - prev_from)')
-            fud.pv('abs(to_bp - prev_to)')
-            if abs(from_bp - prev_from) == 1 and abs(to_bp - prev_to) == 1:
+            if abs(from_bp - prev_from) == 1 and abs(to_bp - prev_to) == 1 and abs(to_bp - from_bp) > 1:
                 # stem
                 (prev_from, prev_to) = (from_bp, to_bp)
                 continue
@@ -1180,14 +1174,12 @@ class BulgeGraph(object):
                     new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])), 
                                 tuple(sorted([prev_from - 1, prev_to - 1]))]))
                     if new_stem not in stems:
-                        fud.pv('new_stem')
                         stems += [new_stem]
 
                     start_from = from_bp
                     start_to = to_bp
                 else:
                     new_bulge = ((start_from - 1, prev_from - 1))
-                    fud.pv('new_bulge')
                     bulges += [new_bulge]
 
                     start_from = from_bp
@@ -1197,12 +1189,20 @@ class BulgeGraph(object):
             prev_from = from_bp
             prev_to = to_bp
 
+        # Take care of the last element
+        if prev_to != 0:
+            new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])), 
+                        tuple(sorted([prev_from - 1, prev_to - 1]))]))
+            if new_stem not in stems:
+                stems += [new_stem]
+        if prev_to == 0:
+            new_bulge = ((start_from - 1, prev_from - 1))
+            bulges += [new_bulge]
+
         self.seq = seq
         self.seq_length = len(seq)
 
-        fud.pv('stems')
-        fud.pv('bulges')
-        return (stems, bulges)
+        self.from_stems_and_bulges(stems, bulges)
 
     def sort_defines(self):
         '''
@@ -1322,7 +1322,7 @@ class BulgeGraph(object):
         :return: A pair containing its dimensions
         '''
         if node[0] == 's':
-            return self.stem_length(node)
+            return (self.stem_length(node))
             '''
             return (self.defines[node][1] - self.defines[node][0] + 1,
                     self.defines[node][1] - self.defines[node][0] + 1)
@@ -1992,3 +1992,104 @@ class BulgeGraph(object):
             (from_chain, from_base) = ftum.parse_chain_base(r)
 
             self.seq_ids += [ftum.parse_resid(from_base)]
+    
+    def connected_stem_iterator(self):
+        '''
+        Iterate over all pairs of connected stems.
+        '''
+        for l in it.chain(self.mloop_iterator(), self.iloop_iterator()):
+            edge_list = list(self.edges[l])
+            yield (edge_list[0], l, edge_list[1])
+    
+    def get_mst(self):
+        '''
+        Create a minimum spanning tree from this BulgeGraph. This is useful
+        for constructing a structure where each section of a multiloop is
+        sampled independently and we want to introduce a break at the largest
+        multiloop section.
+        '''
+        # keep track of all linked nodes
+        sets = c.defaultdict(set)
+        edges = sorted(it.chain(self.mloop_iterator(),
+                                self.iloop_iterator()),
+                       key=lambda x: min(self.get_node_dimensions(x)))
+
+        mst = set(it.chain(self.stem_iterator(),
+                           self.floop_iterator(),
+                           self.tloop_iterator()))
+
+
+        while len(edges) > 0:
+            outside = False
+            conn = edges.pop(0)
+            neighbors = list(self.edges[conn])
+
+            
+            if len(set.intersection(sets[neighbors[0]], 
+                                    sets[neighbors[1]])) == 0:
+                # this edge joins two disconnected forests, so it is added
+                # to the MST
+                sets[neighbors[0]].add(neighbors[1])
+                sets[neighbors[1]].add(neighbors[0])
+
+                mst.add(conn)
+                
+        return mst
+
+    def traverse_graph(self):
+        '''
+        Traverse the graph to get the angle types. The angle type depends on 
+        which corners of the stem are connected by the multiloop or internal
+        loop.
+        '''
+        if self.mst is None:
+            self.mst = self.get_mst()
+
+        build_order = []
+        to_visit = [('s0', 'start')]
+        visited = set(['s0'])
+        while len(to_visit) > 0:
+            (current, prev) = to_visit.pop(0)
+
+            for e in self.edges[current]:
+                if (e not in visited and e in self.mst):
+                    # make sure the node hasn't been visited
+                    # and is in the minimum spanning tree
+                    to_visit.append((e, current))
+                    visited.add(e)
+
+            if current[0] != 's' and len(self.edges[current]) == 2:
+                # multiloop or interior loop
+
+                #overkill method of getting the stem that isn't
+                #equal to prev
+                next_stem = set.difference(self.edges[current],
+                                           set([prev]))
+                build_order += [(prev, current, list(next_stem)[0])]
+
+        self.build_order = build_order
+        return build_order
+
+    def set_angle_types(self):
+        '''
+        Fill in the angle types based on the build order
+        '''
+        if self.build_order is None:
+            self.traverse_graph()
+
+        self.ang_types = dict()
+        for (s1, b, s2) in self.build_order:
+            fud.pv('(s1,b,s2)')
+            self.ang_types[b] = self.connection_type(b, [s1,s2])
+
+    def get_angle_type(self, bulge):
+        '''
+        Return what type of angle this bulge is, based on the way this
+        would be built using a breadth-first traversal along the minimum
+        spanning tree.
+        '''
+        if self.ang_types is None:
+            self.set_angle_types()
+        else:
+            return self.ang_types[bulge]
+        

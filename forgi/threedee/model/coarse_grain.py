@@ -144,7 +144,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             out, err = p.communicate()
             '''
             out = cak.k2n_main(f2.name, input_format='bpseq',
-                               output_format = 'vienna',
+                               #output_format = 'vienna',
+                               output_format = 'bpseq',
                                method = cak.DEFAULT_METHOD,
                                opt_method = cak.DEFAULT_OPT_METHOD,
                                verbose = cak.DEFAULT_VERBOSE,
@@ -153,6 +154,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             out = out.replace(' Nested structure', pdb_base)
             #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
+            '''
             if secondary_structure != '':
                 lines = out.split('\n')
 
@@ -165,6 +167,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
                 lines[-1] = secondary_structure
                 out = "\n".join(lines)
+            '''
 
             # Add the 3D information about the starts and ends of the stems
             # and loops
@@ -174,7 +177,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                 chain = list(s.get_chains())[0]
 
             cg = CoarseGrainRNA()
-            cg.from_fasta(out, dissolve_length_one_stems=1)
+            #cg.from_fasta(out, dissolve_length_one_stems=1)
+            cg.from_bpseq_str(out, dissolve_length_one_stems=True)
             cg.seqids_from_residue_map(residue_map)
             cgg.add_stem_information_from_pdb_chain(cg, chain)
             cgg.add_bulge_information_from_pdb_chain(cg, chain)

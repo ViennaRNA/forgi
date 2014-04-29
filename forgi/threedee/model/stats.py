@@ -354,6 +354,7 @@ class RandomAngleStats():
             stats available.
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
+
 class ContinuousAngleStats():
     '''
     Store all of the angle stats.
@@ -658,10 +659,16 @@ class ConformationStats:
         if elem in self.constrained_stats:
             return self.constrained_stats[elem]
 
+        dims = bg.get_node_dimensions(elem)
+
         if elem[0] == 's':
             stats = self.stem_stats
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
+            ang_type = bg.get_angle_type(elem)
+            fud.pv('ang_type')
+            fud.pv('dims[0], dims[1]')
+            return stats[(dims[0], dims[1], ang_type)]
         elif elem[0] == 'h':
             stats = self.loop_stats
         elif elem[0] == 't':
@@ -669,7 +676,5 @@ class ConformationStats:
         elif elem[0] == 'f':
             stats = self.fiveprime_stats
 
-        dims = bg.get_node_dimensions(elem)
-        fud.pv('dims')
 
         return stats[dims]

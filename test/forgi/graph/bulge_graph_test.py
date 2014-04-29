@@ -60,9 +60,9 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
     def test_from_bpseq(self):
         bg = cgb.BulgeGraph()
 
-        seq= 'AAAAAAAAAAAAAAAAAAAA'
-        db = '.((((..)).))..((..))'
-        n  = '12345678901234567890'
+        seq= 'AAAAAAAAAAAAAAAAAAAAA'
+        db = '.((((..)).))..((..)).'
+        n  = '12345678901234567890.'
 
         bpstr="""1 A 0
 2 A 12
@@ -84,18 +84,64 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 18 A 0
 19 A 16
 20 A 15
+21 A 0
 """
-        (stems, bulges) = bg.from_bpseq_str(bpstr)
-        bg.from_stems_and_bulges(stems, bulges)
 
-        fud.pv('db')
-        fud.pv('bg.to_bg_string()')
+        bg.from_bpseq_str(bpstr)
 
         self.assertEqual(bg.defines['i0'], [10,10])
         self.assertEqual(bg.defines['h0'], [6,7])
         self.assertEqual(bg.defines['h1'], [17,18])
         self.assertEqual(bg.defines['s0'], [2,3,11,12])
         self.assertEqual(bg.defines['s1'], [4,5,8,9])
+        self.assertEqual(bg.defines['s2'], [15,16,19,20])
+        self.assertEqual(bg.defines['t1'], [21, 21])
+
+        bg.get_node_from_residue_num(21)
+
+        bpstr = """1 G 26
+2 A 25
+3 G 24
+4 C 23
+5 U 22
+6 G 21
+7 C 0
+8 A 0
+9 G 0
+10 C 19
+11 A 18
+12 C 17
+13 G 0
+14 A 0
+15 A 0
+16 A 0
+17 G 12
+18 U 11
+19 G 10
+20 A 0
+21 C 6
+22 G 5
+23 G 4
+24 C 3
+25 U 2
+26 C 1
+"""
+
+        bg.from_bpseq_str(bpstr)
+        bg.get_node_from_residue_num(1)
+
+        bpstr = """1 G 8
+2 G 7
+3 C 6
+4 A 5
+5 U 4
+6 G 3
+7 C 2
+8 C 1
+"""
+        bg.from_bpseq_str(bpstr)
+        bg.get_node_from_residue_num(1)
+        bg.get_node_from_residue_num(2)
 
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
@@ -553,3 +599,37 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
     def test_compare_hairpins(self):
         bg = cgb.BulgeGraph(dotbracket_str='(())(())')
 
+    def test_create_mst(self):
+        '''
+        Test the creation of a minimum spanning tree from the graph.
+        '''
+        db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'
+        bg = cgb.BulgeGraph(dotbracket_str=db)
+        mst = bg.get_mst()
+        self.assertTrue("m0" in mst)
+
+        db = '..((.(())..(())...)).'
+        bg = cgb.BulgeGraph(dotbracket_str=db)
+        mst = bg.get_mst()
+
+        self.assertTrue('m0' in mst)
+        self.assertTrue('m2' in mst)
+
+        build_order = bg.traverse_graph()
+
+    def test_traverse_graph(self):
+        # the dotbracket for 1gid
+        db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'
+        bg = cgb.BulgeGraph(dotbracket_str=db)
+
+        build_order = bg.traverse_graph()
+        all_stems = set(bg.stem_iterator())
+
+        for (f, c, t) in build_order:
+            if f in all_stems:
+                all_stems.remove(f)
+            if t in all_stems:
+                all_stems.remove(t)
+
+        self.assertTrue(('s0', 'i4', 's1') in build_order)
+        self.assertEqual(len(all_stems), 0)
