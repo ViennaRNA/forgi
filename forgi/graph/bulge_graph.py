@@ -2079,7 +2079,6 @@ class BulgeGraph(object):
 
         self.ang_types = dict()
         for (s1, b, s2) in self.build_order:
-            fud.pv('(s1,b,s2)')
             self.ang_types[b] = self.connection_type(b, [s1,s2])
 
     def get_angle_type(self, bulge):
@@ -2090,6 +2089,6 @@ class BulgeGraph(object):
         '''
         if self.ang_types is None:
             self.set_angle_types()
-        else:
-            return self.ang_types[bulge]
+        
+        return self.ang_types[bulge]
         

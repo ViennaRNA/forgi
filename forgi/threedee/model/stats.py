@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import csv
 import sys
 
 import random as rand
@@ -474,6 +475,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     ConstructionStats.angle_stats = c.defaultdict(list)
     #DefaultDict(DefaultDict([]))
 
+    fud.pv('filename')
     f = open(filename, 'r')
 
     count = 0
@@ -518,7 +520,7 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
     available_stats.sort()
     return available_stats
 
-def get_stem_stats(filename=cbc.Configuration.stats_file):
+def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -528,7 +530,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file):
 
     @param filename: The name of the file.
     '''
-    if ConstructionStats.stem_stats != None:
+    if ConstructionStats.stem_stats != None and not refresh:
         return ConstructionStats.stem_stats
 
     ConstructionStats.stem_stats = c.defaultdict(list)
@@ -548,7 +550,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file):
     return ConstructionStats.stem_stats
 
 
-def get_fiveprime_stats(filename=cbc.Configuration.stats_file):
+def get_fiveprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -558,7 +560,7 @@ def get_fiveprime_stats(filename=cbc.Configuration.stats_file):
 
     @param filename: The name of the file.
     '''
-    if ConstructionStats.fiveprime_stats != None:
+    if ConstructionStats.fiveprime_stats != None and not refresh:
         return ConstructionStats.fiveprime_stats
 
     ConstructionStats.fiveprime_stats = c.defaultdict(list)
@@ -574,7 +576,7 @@ def get_fiveprime_stats(filename=cbc.Configuration.stats_file):
 
     return ConstructionStats.fiveprime_stats
 
-def get_threeprime_stats(filename=cbc.Configuration.stats_file):
+def get_threeprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -584,7 +586,7 @@ def get_threeprime_stats(filename=cbc.Configuration.stats_file):
 
     @param filename: The name of the file.
     '''
-    if ConstructionStats.threeprime_stats != None:
+    if ConstructionStats.threeprime_stats != None and not refresh:
         return ConstructionStats.threeprime_stats
 
     ConstructionStats.threeprime_stats = c.defaultdict(list)
@@ -600,7 +602,7 @@ def get_threeprime_stats(filename=cbc.Configuration.stats_file):
 
     return ConstructionStats.threeprime_stats
 
-def get_loop_stats(filename=cbc.Configuration.stats_file):
+def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -610,7 +612,7 @@ def get_loop_stats(filename=cbc.Configuration.stats_file):
 
     @param filename: The name of the file.
     '''
-    if ConstructionStats.loop_stats != None:
+    if ConstructionStats.loop_stats != None and not refresh:
         return ConstructionStats.loop_stats
 
     ConstructionStats.loop_stats = c.defaultdict(list)
@@ -626,13 +628,15 @@ def get_loop_stats(filename=cbc.Configuration.stats_file):
 
     return ConstructionStats.loop_stats
 
-class ConformationStats:
-    def __init__(self):
-        self.angle_stats = get_angle_stats()
-        self.stem_stats = get_stem_stats()
-        self.fiveprime_stats = get_fiveprime_stats()
-        self.threeprime_stats = get_threeprime_stats()
-        self.loop_stats = get_loop_stats()
+
+class ConformationStats(object):
+    def __init__(self, stats_file=cbc.Configuration.stats_file):
+        fud.pv('stats_file')
+        self.angle_stats = get_angle_stats(stats_file, refresh=True)
+        self.stem_stats = get_stem_stats(stats_file, refresh=True)
+        self.fiveprime_stats = get_fiveprime_stats(stats_file, refresh=True)
+        self.threeprime_stats = get_threeprime_stats(stats_file, refresh=True)
+        self.loop_stats = get_loop_stats(stats_file, refresh=True)
 
         self.constrained_stats = c.defaultdict(list)
 
@@ -646,7 +650,6 @@ class ConformationStats:
         @return: Nothing
         '''
         pass
-
 
     def sample_stats(self, bg, elem):
         '''
@@ -666,15 +669,64 @@ class ConformationStats:
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            fud.pv('ang_type')
-            fud.pv('dims[0], dims[1]')
             return stats[(dims[0], dims[1], ang_type)]
         elif elem[0] == 'h':
             stats = self.loop_stats
         elif elem[0] == 't':
+            dims = dims[0]
             stats = self.threeprime_stats
         elif elem[0] == 'f':
+            dims = dims[0]
             stats = self.fiveprime_stats
 
 
         return stats[dims]
+
+class FilteredConformationStats(ConformationStats):
+    def __init__(self, stats_file=cbc.Configuration.stats_file, filter_filename=None):
+        super(FilteredConformationStats, self).__init__(stats_file)
+
+        self.filtered = None
+
+        if filter_filename is not None:
+            self.from_file(filter_filename)
+
+    def from_file(self, filename):
+        '''
+        Read the statistics in from a file, with the following formatting:
+
+            i3 1X8W_A 4 27 31 101 104 ""
+            i2 3U5F_6 4 1348 1348 1365 1367 "cWW AG or UU"
+            i2 2QBG_B 4 1013 1014 1103 1103 "cWW AG or UU"
+
+        '''
+        self.filtered = dict()
+        self.filtered_stats = c.defaultdict(list)
+
+        with open(filename, 'r') as f:
+            reader = csv.reader(f, delimiter=' ', quotechar='"')
+            for row in reader:
+                elem_name = row[0]
+                define_len = int(row[2])
+                pdb_id = row[1]
+                dims = tuple(map(int, row[3:5]))
+                define = map(int, row[5:5 + define_len])
+
+                # get filtered stats for each type of angle
+                ang_types = [1,-1]
+                for at in ang_types:
+                    for stat in self.angle_stats[(dims[0], dims[1], at)]:
+
+                        if stat.pdb_name == pdb_id and stat.define == define:
+                            self.filtered_stats[(elem_name, at)] += [stat]
+
+    def sample_stats(self, bg, elem):
+        if self.filtered_stats is not None:
+            ang_type = bg.get_angle_type(elem)
+            fud.pv('(elem, ang_type)')
+            fud.pv('self.filtered_stats.keys()')
+            if (elem, ang_type) in self.filtered_stats:
+                fud.pv('ang_type')
+                return self.filtered_stats[(elem, ang_type)]
+
+        return super(FilteredConformationStats, self).sample_stats(bg, elem)
