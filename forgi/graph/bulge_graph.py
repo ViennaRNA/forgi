@@ -1026,7 +1026,7 @@ class BulgeGraph(object):
 
         return multis
 
-    def from_fasta(self, fasta_str, dissolve_length_one_stems):
+    def from_fasta(self, fasta_str, dissolve_length_one_stems=False):
         '''
         Create a bulge graph from a fasta-type file containing the following
         format:
@@ -1786,6 +1786,7 @@ class BulgeGraph(object):
                 return (s1[0], s2[1])
             else:
                 return (s2[2], s1[3])
+
         elif bulge_name[0] == 'm':
             ss = self.get_multiloop_side(bulge_name)
             st = [s1, s2]

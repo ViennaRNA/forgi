@@ -489,6 +489,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = cgb.BulgeGraph(dotbracket_str=dotbracket, seq=seq)
         (m1, m2) = bg.get_flanking_region('m0')
 
+        fa = """>blah
+AAAACCGGGCCUUUUACCCCAAAUUGGAA
+((((..(((..)))..))))...((..))
+"""
 
     def test_get_flanking_sequence(self):
         bg = cgb.BulgeGraph(dotbracket_str='((..))')
