@@ -104,13 +104,33 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         self.compare_bg_to_cg(self.bg, cg)
 
+    def test_get_node_from_residue_num(self):
+        cg = cmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
+                          intermediate_file_dir='tmp', chain_id='A')
+
+        elem_name = cg.get_node_from_residue_num(247, seq_id=True)
+
     def test_from_pdb(self): 
         #cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        #cg = cmc.from_pdb('test/forgi/threedee/data/3V2F.pdb', intermediate_file_dir='tmp')
         cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
 
         self.assertTrue(len(cg.defines) > 1)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb', intermediate_file_dir='tmp')
+        cg = cmc.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb', intermediate_file_dir=None)
+
+        cg = cmc.from_pdb('test/forgi/threedee/data/1y26_missing.pdb', intermediate_file_dir='tmp')
+
+        cg = cmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb', 
+                          intermediate_file_dir='tmp', chain_id='Y')
+
+        cg = cmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
+                          intermediate_file_dir='tmp', chain_id='A')
+
+        cg = cmc.from_pdb('test/forgi/threedee/data/1FJG_reduced.pdb', 
+                          intermediate_file_dir='tmp')
+
 
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -134,7 +154,6 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
 
         rg = cg.radius_of_gyration()
-        #fud.pv('rg')
 
     def test_get_coordinates_list(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -161,7 +180,10 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
                 c = new_cg.connections(i)
 
                 if len(c) != 2:
-                    fud.pv('i')
-                    fud.pv('sg')
-                    fud.pv('bg.edges[i]')
-                self.assertEqual(len(c), 2)
+                    self.assertEqual(len(c), 2)
+
+    def test_define_residue_num_iterator(self):
+        cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+
+        self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
+                         [[(' ',6,' '), (' ',10,' ')], [(' ',19,' '), (' ',21,' ')]])

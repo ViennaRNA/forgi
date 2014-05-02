@@ -1,9 +1,10 @@
 import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
-import forgi.threedee.utilities.rmsd as brmsd
+
+import forgi.threedee.utilities.rmsd as ftur
 import forgi.utilities.debug as fud
-import forgi.threedee.utilities.vector as cuv
+import forgi.threedee.utilities.vector as ftuv
 
 backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"] 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
@@ -11,6 +12,12 @@ ring_atoms = ['C4*', 'C3*', 'C2*', 'C1*', 'O4*']
 ring_atoms_real = ["C4'", "C3'", "C2'", "C1'", "O4'"]
 
 nonsidechain_atoms = backbone_atoms_real + ring_atoms_real
+
+chi_torsion_atoms = dict()
+chi_torsion_atoms['A'] = ["O4'", "C1'", "N9", "C4"]
+chi_torsion_atoms['G'] = chi_torsion_atoms['A']
+chi_torsion_atoms['C'] = ["O4'", "C1'", "N1", "C2"]
+chi_torsion_atoms['U'] = chi_torsion_atoms['C']
 
 side_chain_atoms = dict()
 side_chain_atoms['U'] = ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6']
@@ -73,6 +80,51 @@ def trim_chain(chain, start_res, end_res):
     for res in to_detach:
         chain.detach_child(res.id)
 
+def trim_chain_between(chain, start_res, end_res):
+    '''
+    Remove all nucleotides between start_res and end_res, inclusive.
+
+    The chain is modified in place so there is no return value.
+    '''
+    to_detach = []
+    for res in chain:
+        if start_res <= res.id[1] and res.id[1] <= end_res:
+            to_detach += [res]
+
+    for res in to_detach:
+        chain.detach_child(res.id)
+
+def extract_subchain(chain, start_res, end_res):
+    '''
+    Extract a portion of a particular chain. The new chain
+    will contain residues copied from the original chain.
+
+    @param chain: The source chain.
+    @param start_res: The number of the first nucleotide to extract
+    @param last_res: The number of the last nucleotide to extract
+    '''
+    new_chain = bpdb.Chain.Chain(' ')
+    for r in chain:
+        if start_res <= r.id and r.id <= end_res:
+            new_chain.add(r.copy())
+
+    return new_chain
+
+def extract_subchain_from_res_list(chain, res_list):
+    '''
+    Extract a portion of a particular chain. The new chain
+    will contain residues copied from the original chain.
+
+    @param chain: The source chain.
+    @param res_list: The list of residue identifiers of the nucleotides
+                     to extract
+    '''
+    new_chain = bpdb.Chain.Chain(' ')
+    for r in res_list:
+        new_chain.add(chain[r].copy())
+
+    return new_chain
+
 def is_covalent(contact):
     '''
     Determine if a particular contact is covalent.
@@ -131,7 +183,7 @@ def noncovalent_distances(chain, cutoff=0.3):
 
     contacts = ns.search_all(cutoff)
 
-    return [cuv.magnitude(c[1] - c[0]) for c in contacts if not is_covalent(c)]
+    return [ftuv.magnitude(c[1] - c[0]) for c in contacts if not is_covalent(c)]
 
 def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     '''
@@ -206,8 +258,8 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         crvs1 = np.array([a.get_vector().get_array() for a in all_atoms1])
         crvs2 = np.array([a.get_vector().get_array() for a in all_atoms2])
 
-        #return (len(all_atoms1), brmsd.rmsd(crvs1, crvs2), None)
-        return (len(all_atoms1), cuv.vector_set_rmsd(crvs1, crvs2), None)
+        #return (len(all_atoms1), ftur.rmsd(crvs1, crvs2), None)
+        return (len(all_atoms1), ftuv.vector_set_rmsd(crvs1, crvs2), None)
 
 def get_first_chain(filename):
     '''
@@ -241,7 +293,7 @@ def pdb_file_rmsd(fn1, fn2):
 
     return rmsd
 
-def renumber_chain(chain):
+def renumber_chain(chain, resids=None):
     '''
     Renumber all the residues in this chain so that they start at 1 and end at
     len(chain)
@@ -253,9 +305,19 @@ def renumber_chain(chain):
     counter = 1
     chain.id = ' '
 
-    for r in chain:
-        r.id = (r.id[0], counter, r.id[2])
-        counter += 1
+    if resids is None:
+        resids = [(' ', i+1, ' ') for i in range(len(chain))]
+
+    new_child_dict = dict()
+    new_child_list = []
+
+    for res, r_new in zip(chain, resids):
+        res.id = r_new
+        new_child_dict[res.id] = res
+        new_child_list.append(res)
+
+    chain.child_dict = new_child_dict
+    chain.child_list = new_child_list
 
     return chain
 
@@ -272,16 +334,32 @@ def output_chain(chain, filename, fr=None, to=None):
                 return False                                                                                       
             else:
                 return True                                                                                        
-            
-    m = bpdb.Model.Model(' ')                                                                                           
+    m = bpdb.Model.Model(' ') 
     s = bpdb.Structure.Structure(' ')
-                                                                                                                   
+
     m.add(chain)
     s.add(m)    
-                                                                                                                   
+
     io = bpdb.PDBIO()
     io.set_structure(s)
     io.save(filename, HSelect()) 
+
+def get_particular_chain(in_filename, chain_id):
+    '''
+    Load a PDB file and return a particular chain.
+
+    @param in_filename: The name of the pdb file.
+    @param chain_id: The id of the chain.
+    @return: A Bio.PDB.Chain object containing that particular chain.
+    '''
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        s = bpdb.PDBParser().get_structure('temp', in_filename)
+
+    # always take the first model
+    m = s.get_list()[0]
+
+    return m[chain_id]
 
 def get_biggest_chain(in_filename):
     '''

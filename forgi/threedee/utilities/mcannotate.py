@@ -1,9 +1,29 @@
 #!/usr/bin/python
-
 import sys
 import copy
 
 import forgi.utilities.debug as fud
+
+def parse_resid(mcann_resid):
+    '''
+    Read in an MC-Annotate formatted resid and return a tuple
+    that can be used as an index into a Bio.PDB.Chain.
+    '''
+    parts = mcann_resid.split('.')
+    if len(parts) == 1:
+        return (' ', int(parts[0]), ' ')
+    else:
+        return (' ', int(parts[0]), parts[1])
+
+def format_resid(pdb_resid):
+    '''
+    Convert a PDB.Chain.Residue id to an MC-Annotate formatted
+    residue identifier.
+    '''
+    if pdb_resid[2] == ' ':
+        return str(pdb_resid[1])
+    else:
+        return str(pdb_resid[1]) + "." + pdb_resid[2]
 
 def parse_chain_base(chain_base):
     """
@@ -18,17 +38,17 @@ def parse_chain_base(chain_base):
     if (ord(chain_base[0]) >= ord('A') and ord(chain_base[0]) <= ord('Z')) or (ord(chain_base[0]) >= ord('a') and ord(chain_base[0]) <= ord('z')):
         # normal string
         chain = chain_base[0]
-        base = int(chain_base[1:])
+        base = chain_base[1:]
     else:
         # quoted string (i.e. ''33'')
         if chain_base[0] == '\'':
             end_quote_idx = chain_base.find('\'', 1)
             chain = chain_base[1:end_quote_idx]
-            base = int(chain_base[end_quote_idx+1:])
+            base = chain_base[end_quote_idx+1:]
         else:
             # no chain identifier
             chain = ''
-            base = int(chain_base)
+            base = chain_base
 
     return (chain, base)
 
@@ -157,7 +177,11 @@ def get_dotplot(lines):
             bps[parts1[0]] = residues.index(parts1[1])
             bps[parts1[1]] = residues.index(parts1[0])
 
+
     for i in range(len(residue_types)):
         output_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
 
-    return output_str
+    #fud.pv('residues')
+    #fud.pv('[parse_chain_base(r)[1] for r in residues]')
+
+    return (output_str, residues)

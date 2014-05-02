@@ -687,7 +687,7 @@ def cylinder_line_intersection(cyl, line, r):
         return []
 
     # Figure out the x position by determining how far along
-    # the y-coordinate of the segment the closest point it
+    # the y-coordinate of the segment the closest point is
     x  = (line_t[0][0] + 
             (line_vec_t[0] *
             (p[0] - line_t[0][1]) / line_vec_t[1]))

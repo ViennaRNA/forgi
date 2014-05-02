@@ -39,6 +39,110 @@ connect s2 h0 m1 m2
 connect s0 f1 m1 m0 t1
 '''
 
+    def test_to_bg_string(self):
+        self.fasta = """>1y26
+CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+(((((((((...((((((.........))))))........((((((.......))))))..)))))))))
+"""
+        bg = cgb.BulgeGraph()
+        bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
+
+    def test_from_fasta(self):
+        bg = cgb.BulgeGraph()
+
+        with open('test/forgi/threedee/data/3V2F.fa', 'r') as f:
+            text = f.read()
+            bg.from_fasta(text, dissolve_length_one_stems=False)
+
+        for s in bg.stem_iterator():
+            bg.stem_length(s)
+
+    def test_from_bpseq(self):
+        bg = cgb.BulgeGraph()
+
+        seq= 'AAAAAAAAAAAAAAAAAAAAA'
+        db = '.((((..)).))..((..)).'
+        n  = '12345678901234567890.'
+
+        bpstr="""1 A 0
+2 A 12
+3 A 11
+4 A 9
+5 A 8
+6 A 0
+7 A 0
+8 A 5
+9 A 4
+10 A 0
+11 A 3
+12 A 2
+13 A 0
+14 A 0
+15 A 20
+16 A 19
+17 A 0
+18 A 0
+19 A 16
+20 A 15
+21 A 0
+"""
+
+        bg.from_bpseq_str(bpstr)
+
+        self.assertEqual(bg.defines['i0'], [10,10])
+        self.assertEqual(bg.defines['h0'], [6,7])
+        self.assertEqual(bg.defines['h1'], [17,18])
+        self.assertEqual(bg.defines['s0'], [2,3,11,12])
+        self.assertEqual(bg.defines['s1'], [4,5,8,9])
+        self.assertEqual(bg.defines['s2'], [15,16,19,20])
+        self.assertEqual(bg.defines['t1'], [21, 21])
+
+        bg.get_node_from_residue_num(21)
+
+        bpstr = """1 G 26
+2 A 25
+3 G 24
+4 C 23
+5 U 22
+6 G 21
+7 C 0
+8 A 0
+9 G 0
+10 C 19
+11 A 18
+12 C 17
+13 G 0
+14 A 0
+15 A 0
+16 A 0
+17 G 12
+18 U 11
+19 G 10
+20 A 0
+21 C 6
+22 G 5
+23 G 4
+24 C 3
+25 U 2
+26 C 1
+"""
+
+        bg.from_bpseq_str(bpstr)
+        bg.get_node_from_residue_num(1)
+
+        bpstr = """1 G 8
+2 G 7
+3 C 6
+4 A 5
+5 U 4
+6 G 3
+7 C 2
+8 C 1
+"""
+        bg.from_bpseq_str(bpstr)
+        bg.get_node_from_residue_num(1)
+        bg.get_node_from_residue_num(2)
+
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
         bg.from_dotbracket(self.dotbracket)
@@ -68,6 +172,51 @@ connect s0 f1 m1 m0 t1
         for i,n in enumerate(nucs):
             self.assertTrue(n)
 
+
+    def test_define_residue_num_iterator(self):
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket('..((..((...))..))..((..))..')
+
+        self.assertEqual(list(bg.define_residue_num_iterator('f1')),
+                         [1,2])
+        self.assertEqual(list(bg.define_residue_num_iterator('t1')),
+                         [26, 27])
+        self.assertEqual(list(bg.define_residue_num_iterator('s1')),
+                         [7, 8, 12, 13])
+        self.assertEqual(list(bg.define_residue_num_iterator('i0')),
+                         [5,6,14,15])
+
+        fa=""">blah
+AAAAAAAAAA
+((((.)).))
+"""
+        bg.from_fasta(fa, dissolve_length_one_stems=True)
+        self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True)),
+                         [2,3,7,8,9])
+
+        self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True, seq_ids=True)),
+                         [(' ', 2, ' '), (' ', 3, ' '), (' ', 7, ' '), (' ', 8, ' '), (' ', 9, ' ')])
+
+    def test_define_range_iterator(self):
+        bg = cgb.BulgeGraph()
+        fa = """>blah
+AAAAAAAAAAAAAAAAAAAAAAAAAAA
+..((..((...))..))..((..))..
+"""
+        bg.from_fasta(fa, dissolve_length_one_stems=False)
+        self.assertEqual(list(bg.define_range_iterator('i0')),
+                         [[5,6],[14,15]])
+
+        r1 = list(bg.define_range_iterator('i0', seq_ids=True))[0]
+        srange = list(bg.iterate_over_seqid_range(r1[0], r1[1]))
+        self.assertEqual(srange[0], (' ', 5, ' '))
+
+        self.assertEqual(list(bg.define_range_iterator('f1')),
+                         [[1,2]])
+        self.assertEqual(list(bg.define_range_iterator('t1')),
+                         [[26,27]])
+
+        
 
     def test_dissolve_stem(self):
         '''
@@ -259,7 +408,6 @@ connect s0 f1 m1 m0 t1
         self.assertEquals(bg.get_length('m0'), 0)
 
         bg = cgb.BulgeGraph(dotbracket_str='(((((((((..(((..((((.(((((((((.....(((((.(((((....((((....))))....))))).....(((((((((.......)))))))))....))))).((........))...)))))))))))))...)))..))....))))))).')
-        fud.pv('bg.to_bg_string()')
 
         self.assertEqual(bg.get_length('i4'), 2)
 
@@ -444,8 +592,44 @@ connect s0 f1 m1 m0 t1
     def test_has_connection(self):
         bg = cgb.BulgeGraph(dotbracket_str='(())..(())..(())..')
 
-        fud.pv('bg.to_bg_string()')
         self.assertTrue(bg.has_connection('m0', 'm1'))
         self.assertTrue(bg.has_connection('m1', 't1'))
         self.assertFalse(bg.has_connection('m0', 't1'))
 
+    def test_compare_hairpins(self):
+        bg = cgb.BulgeGraph(dotbracket_str='(())(())')
+
+    def test_create_mst(self):
+        '''
+        Test the creation of a minimum spanning tree from the graph.
+        '''
+        db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'
+        bg = cgb.BulgeGraph(dotbracket_str=db)
+        mst = bg.get_mst()
+        self.assertTrue("m0" in mst)
+
+        db = '..((.(())..(())...)).'
+        bg = cgb.BulgeGraph(dotbracket_str=db)
+        mst = bg.get_mst()
+
+        self.assertTrue('m0' in mst)
+        self.assertTrue('m2' in mst)
+
+        build_order = bg.traverse_graph()
+
+    def test_traverse_graph(self):
+        # the dotbracket for 1gid
+        db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'
+        bg = cgb.BulgeGraph(dotbracket_str=db)
+
+        build_order = bg.traverse_graph()
+        all_stems = set(bg.stem_iterator())
+
+        for (f, c, t) in build_order:
+            if f in all_stems:
+                all_stems.remove(f)
+            if t in all_stems:
+                all_stems.remove(t)
+
+        self.assertTrue(('s0', 'i4', 's1') in build_order)
+        self.assertEqual(len(all_stems), 0)

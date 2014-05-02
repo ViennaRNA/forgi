@@ -18,6 +18,7 @@ import random
 import itertools as it
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as cus
+import forgi.threedee.utilities.mcannotate as ftum
 import forgi.threedee.utilities.vector as cuv
 
 def error_exit(message):
@@ -212,6 +213,9 @@ def print_name(filename):
 
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
+        self.ang_types = None
+        self.mst = None
+        self.build_order = None
         self.name = "untitled"
         self.defines = dict()
         self.edges = c.defaultdict(set)
@@ -221,6 +225,7 @@ class BulgeGraph(object):
         # sort the coordinate basis for each stem
         self.bases = dict()
         self.stem_invs = dict()
+        self.seq_ids = []
 
         self.name_counter = 0
 
@@ -228,6 +233,8 @@ class BulgeGraph(object):
             self.from_dotbracket(dotbracket_str)
 
         self.seq = seq
+        for i, s in enumerate(seq):
+            self.seq_ids += [(' ', str(i+1), ' ')]
 
         if bg_file is not None:
             self.from_bg_file(bg_file)
@@ -334,6 +341,18 @@ class BulgeGraph(object):
         else:
             return ""
 
+    def get_seq_ids_str(self):
+        '''
+        Return the sequence id string
+
+        seq_ids 1 2 2.A 17
+        '''
+        out_str = "seq_ids "
+        out_str += " ".join(map(ftum.format_resid, self.seq_ids))
+        out_str += "\n"
+
+        return out_str
+
     def get_name_str(self):
         '''
         Return the name of this structure along with its keyword:
@@ -353,6 +372,7 @@ class BulgeGraph(object):
         out_str += self.get_name_str()
         out_str += self.get_length_str()
         out_str += self.get_sequence_str()
+        out_str += self.get_seq_ids_str()
         out_str += self.get_define_str()
         out_str += self.get_connect_str()
 
@@ -389,7 +409,49 @@ class BulgeGraph(object):
 
         return "".join(output_str).strip()
 
-    def define_residue_num_iterator(self, node, adjacent=False):
+    def define_range_iterator(self, node, adjacent=False, seq_ids=False):
+        '''
+        Return the ranges of the nucleotides in the define.
+
+        In other words, if a define contains the following: [1,2,7,8]
+        The ranges will be [1,2] and [7,8].
+
+        @param adjacent: Use the nucleotides in the neighboring element which
+                         connect to this element as the range starts and ends.
+        @return: A list of two-element lists
+        '''
+        a = iter(self.defines[node])
+        ranges = it.izip(a,a)
+
+        if node[0] == 'i':
+            # interior loops have to be treated specially because
+            # they might have a bulge that has no unpaired nucleotides on one strand
+
+            if adjacent:
+                conns = self.connections(node)
+                s1 = self.defines[conns[0]]
+                s2 = self.defines[conns[1]]
+
+                if adjacent:
+                    # offset by one, which will be reversed in the yield step
+                    # below
+                    ranges =  [[s1[1]+1, s2[0]-1], [s2[3]+1, s1[2]-1]]
+
+        for (ds1, ds2) in ranges:
+            if adjacent:
+                if ds1 > 1:
+                    ds1 -= 1
+                if ds2 < self.seq_length-1:
+                    ds2 += 1
+
+            if seq_ids:
+                # this will cause problems if the nucleotide has insertion codes
+                yield [self.seq_ids[ds1-1],self.seq_ids[ds2-1]]
+            else:
+                yield [ds1,ds2]
+
+
+    def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         '''
         Iterate over the residue numbers that belong to this node.
 
@@ -401,19 +463,22 @@ class BulgeGraph(object):
 
         :param node: The name of the node
         '''
-        a = iter(self.defines[node])
-        for (ds1, ds2) in it.izip(a,a):
-            start = ds1
-            end = ds2+1
+        for r in self.define_range_iterator(node, adjacent, seq_ids=False):
+            for i in range(r[0], r[1] + 1):
+                if seq_ids:
+                    yield self.seq_ids[i-1]
+                else:
+                    yield i
 
-            if adjacent:
-                if ds1 > 1:
-                    start = ds1 - 1
-                if ds2 < self.seq_length:
-                    end = ds2 + 2
+    def iterate_over_seqid_range(self, start_id, end_id):
+        '''
+        Iterate over the seq_ids between the start_id and end_id.
+        '''
+        i1 = self.seq_ids.index(start_id)
+        i2 = self.seq_ids.index(end_id)
 
-            for i in range(start, end):
-                yield i
+        for i in range(i1, i2+1):
+            yield self.seq_ids[i]
 
     def create_bulge_graph(self, stems, bulges):
         '''
@@ -564,6 +629,11 @@ class BulgeGraph(object):
 
                     # merge contiguous bulge regions
                     for k in range(j+2, len(self.defines[key]), 2):
+                        if key[0] == 'y':
+                            # we can have stems with defines like: [1,2,3,4]
+                            # which would imply a non-existant loop at its end
+                            continue
+
                         (f2, t2) = (int(self.defines[key][k]), int(self.defines[key][k+1]))
 
                         #print >>sys.stderr, "j: %d f1: %d, t1: %d, f2: %d, t2: %d" % (j, f1, t1, f2, t2)
@@ -720,7 +790,6 @@ class BulgeGraph(object):
         for r in to_remove:
             self.remove_vertex(r)
 
-
     def collapse(self):
         '''
         If any vertices form a loop, then they are either a bulge region of 
@@ -768,6 +837,7 @@ class BulgeGraph(object):
         '''
         #replace the define name
         define = self.defines[old_name]
+
         del self.defines[old_name]
         self.defines[new_name] = define
 
@@ -800,7 +870,9 @@ class BulgeGraph(object):
                 self.defines[connections[1]][0])
 
     def compare_hairpins(self, b):
-        return (self.defines[b][0], sys.maxint)
+        connections = self.connections(b)
+
+        return (self.defines[connections[0]][1], sys.maxint)
 
     def relabel_nodes(self):
         '''
@@ -968,6 +1040,19 @@ class BulgeGraph(object):
         self.name = lines[0].strip('>')
         self.seq = lines[1].strip()
 
+        self.seq_ids_from_seq()
+
+    def seq_ids_from_seq(self):
+        '''
+        Get the sequence ids of the string.
+        '''
+        self.seq_ids = []
+
+        # when provided with just a sequence, we presume that the
+        # residue ids are numbered from 1-up
+        for i, s in enumerate(self.seq):
+            self.seq_ids += [(' ', i+1, ' ')]
+
     def remove_degenerate_nodes(self):
         '''
         For now just remove all hairpins that have no length.
@@ -979,6 +1064,39 @@ class BulgeGraph(object):
 
         for r in to_remove:
             self.remove_vertex(r)
+
+    def from_stems_and_bulges(self, stems, bulges):
+        '''
+        Create the graph from the list of stems and bulges.
+
+        @param stems: A list of tuples of two two-tuples, each containing the start
+                      and end nucleotides of each strand of the stem.
+        @param bulges: A list of tuples containing the starts and ends of the 
+                       of the bulge regions.
+        @return: Nothing, just make the bulgegraph
+        '''
+        for i in range(len(stems)):
+            # one is added to each coordinate to make up for the fact that residues are 1-based
+            ss1 = stems[i][0][0]+1
+            ss2 = stems[i][0][1]+1
+            se1 = stems[i][1][0]+1
+            se2 = stems[i][1][1]+1
+
+            self.defines['y%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
+                                         min(ss2,se2), max(ss2,se2)]
+            self.weights['y%d' % (i)] = 1
+
+        for i in range(len(bulges)):
+            bulge = bulges[i]
+            self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
+            self.weights['b%d' % (i)] = 1
+
+        self.create_bulge_graph(stems, bulges)
+        self.create_stem_graph(stems, len(bulges))
+        self.collapse()
+        self.relabel_nodes()
+        self.remove_degenerate_nodes()
+        self.sort_defines()
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
@@ -993,29 +1111,98 @@ class BulgeGraph(object):
         self.dissolve_length_one_stems = dissolve_length_one_stems
         (bulges, stems) = find_bulges_and_stems(dotbracket_str)
 
-        for i in range(len(stems)):
-            # one is added to each coordinate to make up for the fact that residues are 1-based
-            ss1 = stems[i][0][0]+1
-            ss2 = stems[i][0][1]+1
-            se1 = stems[i][1][0]+1
-            se2 = stems[i][1][1]+1
-
-            self.defines['y%d' % (i)] = [min(ss1,se1), max(ss1,se1), 
-                                         min(ss2,se2), max(ss2,se2)]
-            self.weights['y%d' % (i)] = 1
-        for i in range(len(bulges)):
-            bulge = bulges[i]
-            self.defines['b%d' % (i)] = sorted([bulge[0]+1, bulge[1]+1])
-            self.weights['b%d' % (i)] = 1
-
         self.dotbracket_str = dotbracket_str
         self.seq_length = len(dotbracket_str)
-        self.create_bulge_graph(stems, bulges)
-        self.create_stem_graph(stems, len(bulges))
-        self.collapse()
-        self.relabel_nodes()
-        self.remove_degenerate_nodes()
-        self.sort_defines()
+
+        self.from_stems_and_bulges(stems, bulges)
+
+    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
+        '''
+        Create the graph from a string listing the base pairs.
+
+        The string should be formatted like so:
+
+            1 G 115
+            2 A 0
+            3 A 0
+            4 U 0
+            5 U 112
+            6 G 111
+
+        @param bpseq_str: The string, containing newline characters.
+        @return: Nothing, but fill out this structure.
+        '''
+        self.__init__()
+        lines = bpseq_str.split('\n')
+        seq = ''
+
+        line_iter = iter(lines)
+        parts = line_iter.next().split(' ')
+
+        stems = []
+        bulges = []
+
+        prev_from = (int(parts[0]))
+        prev_to = (int(parts[2]))
+
+        start_from = prev_from
+        start_to = prev_to
+
+        seq = parts[1]
+
+        self.dissolve_length_one_stems = dissolve_length_one_stems
+
+        for line in line_iter:
+            parts = line.split(' ')
+
+            if len(parts) < 3:
+                continue
+            (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
+            seq += base
+
+            if abs(from_bp - prev_from) == 1 and abs(to_bp - prev_to) == 1 and abs(to_bp - from_bp) > 1:
+                # stem
+                (prev_from, prev_to) = (from_bp, to_bp)
+                continue
+
+            if to_bp == 0 and prev_to == 0:
+                # bulge
+                (prev_from, prev_to) = (from_bp, to_bp)
+                continue
+            else:
+                if prev_to != 0:
+                    new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])), 
+                                tuple(sorted([prev_from - 1, prev_to - 1]))]))
+                    if new_stem not in stems:
+                        stems += [new_stem]
+
+                    start_from = from_bp
+                    start_to = to_bp
+                else:
+                    new_bulge = ((start_from - 1, prev_from - 1))
+                    bulges += [new_bulge]
+
+                    start_from = from_bp
+                    start_to = to_bp
+
+
+            prev_from = from_bp
+            prev_to = to_bp
+
+        # Take care of the last element
+        if prev_to != 0:
+            new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])), 
+                        tuple(sorted([prev_from - 1, prev_to - 1]))]))
+            if new_stem not in stems:
+                stems += [new_stem]
+        if prev_to == 0:
+            new_bulge = ((start_from - 1, prev_from - 1))
+            bulges += [new_bulge]
+
+        self.seq = seq
+        self.seq_length = len(seq)
+
+        self.from_stems_and_bulges(stems, bulges)
 
     def sort_defines(self):
         '''
@@ -1083,6 +1270,8 @@ class BulgeGraph(object):
                     self.edges[p].add(parts[1])
             elif parts[0] == 'seq':
                 self.seq = parts[1]
+            elif parts[0] == 'seq_ids':
+                self.seq_ids = map(ftum.parse_resid, parts[1:])
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
 
@@ -1124,7 +1313,7 @@ class BulgeGraph(object):
         '''
         Return the dimensions of a node.
 
-        If the node is a stem, then the dimensions will be (l, l) where l is
+        If the node is a stem, then the dimensions will be l where l is
         the length of the stem.
 
         Otherwise, see get_bulge_dimensions(node)
@@ -1133,8 +1322,11 @@ class BulgeGraph(object):
         :return: A pair containing its dimensions
         '''
         if node[0] == 's':
+            return (self.stem_length(node))
+            '''
             return (self.defines[node][1] - self.defines[node][0] + 1,
                     self.defines[node][1] - self.defines[node][0] + 1)
+            '''
         else:
             return self.get_bulge_dimensions(node)
 
@@ -1470,9 +1662,7 @@ class BulgeGraph(object):
                  being on the higher numbered strand.
         '''
         conn = self.connections(multiloop)
-
         t = self.connection_type(multiloop, conn)
-        fud.pv('multiloop, t')
 
         if abs(t) == 2:
             return 1
@@ -1525,7 +1715,7 @@ class BulgeGraph(object):
 
         return dims
 
-    def get_node_from_residue_num(self, base_num):
+    def get_node_from_residue_num(self, base_num, seq_id=False):
         """
         Iterate over the defines and see which one encompasses this base.
         """
@@ -1536,8 +1726,13 @@ class BulgeGraph(object):
                 a = [int(define[i]), int(define[i+1])]
                 a.sort()
 
-                if base_num >= a[0] and base_num <= a[1]:
-                    return key
+                if seq_id:
+                    for i in range(a[0], a[1]+1):
+                        if self.seq_ids[i-1][1] == base_num:
+                            return key
+                else:
+                    if base_num >= a[0] and base_num <= a[1]:
+                        return key
 
         raise Exception("Base number %d not found in the defines." % (base_num))
 
@@ -1748,3 +1943,152 @@ class BulgeGraph(object):
             return 1 
         else: 
             return 0 
+
+    def extract_chain_id(self, chainres):
+        '''
+        Extract the chain identifier from a chain/residue
+        identifier.
+
+        @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
+        @return: A chain identifier.
+        '''
+        return ftum.parse_chain_base(chainres)[0]
+
+    def extract_resnum(self, chainres):
+        '''
+        Extract the residue number from a chainres identifier.
+
+        @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
+        @return: The residue number
+        '''
+        return ftum.parse_chain_base(chainres)[1]
+
+    def get_resseqs(self, define):
+        '''
+        Return the pdb ids of the nucleotides in this define.
+
+        @param define: The name of this element.
+        @param: Return a tuple of two arrays containing the residue ids
+                on each strand
+        '''
+        resnames = []
+        ranges = zip(*[iter(self.defines[define])] * 2)
+        for r in ranges:
+            strand_resnames = []
+            for x in range(r[0], r[1] + 1):
+                strand_resnames += [self.seq_ids[x-1]]
+            resnames += [strand_resnames]
+
+        return resnames
+
+    def seqids_from_residue_map(self, residue_map):
+        '''
+        Create the list of seq_ids from the list of MC-Annotate identifiers in the
+        residue map.
+        '''
+        self.seq_ids = []
+
+        for r in residue_map:
+            (from_chain, from_base) = ftum.parse_chain_base(r)
+
+            self.seq_ids += [ftum.parse_resid(from_base)]
+    
+    def connected_stem_iterator(self):
+        '''
+        Iterate over all pairs of connected stems.
+        '''
+        for l in it.chain(self.mloop_iterator(), self.iloop_iterator()):
+            edge_list = list(self.edges[l])
+            yield (edge_list[0], l, edge_list[1])
+    
+    def get_mst(self):
+        '''
+        Create a minimum spanning tree from this BulgeGraph. This is useful
+        for constructing a structure where each section of a multiloop is
+        sampled independently and we want to introduce a break at the largest
+        multiloop section.
+        '''
+        # keep track of all linked nodes
+        sets = c.defaultdict(set)
+        edges = sorted(it.chain(self.mloop_iterator(),
+                                self.iloop_iterator()),
+                       key=lambda x: min(self.get_node_dimensions(x)))
+
+        mst = set(it.chain(self.stem_iterator(),
+                           self.floop_iterator(),
+                           self.tloop_iterator()))
+
+
+        while len(edges) > 0:
+            outside = False
+            conn = edges.pop(0)
+            neighbors = list(self.edges[conn])
+
+            
+            if len(set.intersection(sets[neighbors[0]], 
+                                    sets[neighbors[1]])) == 0:
+                # this edge joins two disconnected forests, so it is added
+                # to the MST
+                sets[neighbors[0]].add(neighbors[1])
+                sets[neighbors[1]].add(neighbors[0])
+
+                mst.add(conn)
+                
+        return mst
+
+    def traverse_graph(self):
+        '''
+        Traverse the graph to get the angle types. The angle type depends on 
+        which corners of the stem are connected by the multiloop or internal
+        loop.
+        '''
+        if self.mst is None:
+            self.mst = self.get_mst()
+
+        build_order = []
+        to_visit = [('s0', 'start')]
+        visited = set(['s0'])
+        while len(to_visit) > 0:
+            (current, prev) = to_visit.pop(0)
+
+            for e in self.edges[current]:
+                if (e not in visited and e in self.mst):
+                    # make sure the node hasn't been visited
+                    # and is in the minimum spanning tree
+                    to_visit.append((e, current))
+                    visited.add(e)
+
+            if current[0] != 's' and len(self.edges[current]) == 2:
+                # multiloop or interior loop
+
+                #overkill method of getting the stem that isn't
+                #equal to prev
+                next_stem = set.difference(self.edges[current],
+                                           set([prev]))
+                build_order += [(prev, current, list(next_stem)[0])]
+
+        self.build_order = build_order
+        return build_order
+
+    def set_angle_types(self):
+        '''
+        Fill in the angle types based on the build order
+        '''
+        if self.build_order is None:
+            self.traverse_graph()
+
+        self.ang_types = dict()
+        for (s1, b, s2) in self.build_order:
+            self.ang_types[b] = self.connection_type(b, [s1,s2])
+
+    def get_angle_type(self, bulge):
+        '''
+        Return what type of angle this bulge is, based on the way this
+        would be built using a breadth-first traversal along the minimum
+        spanning tree.
+        '''
+        if self.ang_types is None:
+            self.set_angle_types()
+        
+        return self.ang_types[bulge]
+        

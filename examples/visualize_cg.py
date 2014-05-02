@@ -62,6 +62,7 @@ def main():
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true', help='Display the virtual atoms')
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true', help='Display the coordinate basis of each element')
     parser.add_option('', '--stem-atoms', dest='stem_atoms', default=False, action='store_true', help='Display the stem atoms')
+    parser.add_option('', '--rainbow', dest='rainbow', default=False, action='store_true', help='Color each of the nucleotide positions (i.e. average atoms) according to the colors of the rainbow and their position')
 
     (options, args) = parser.parse_args()
 
@@ -78,6 +79,7 @@ def main():
     pp.encompassing_stems = options.encompassing_stems
     pp.virtual_atoms = options.virtual_atoms
     pp.basis = options.basis
+    pp.rainbow = options.rainbow
 
     cgs = []
     for a in args:
