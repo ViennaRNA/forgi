@@ -475,7 +475,6 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     ConstructionStats.angle_stats = c.defaultdict(list)
     #DefaultDict(DefaultDict([]))
 
-    fud.pv('filename')
     f = open(filename, 'r')
 
     count = 0
@@ -631,7 +630,6 @@ def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
 class ConformationStats(object):
     def __init__(self, stats_file=cbc.Configuration.stats_file):
-        fud.pv('stats_file')
         self.angle_stats = get_angle_stats(stats_file, refresh=True)
         self.stem_stats = get_stem_stats(stats_file, refresh=True)
         self.fiveprime_stats = get_fiveprime_stats(stats_file, refresh=True)
@@ -671,6 +669,7 @@ class ConformationStats(object):
             ang_type = bg.get_angle_type(elem)
             return stats[(dims[0], dims[1], ang_type)]
         elif elem[0] == 'h':
+            dims = dims[0]
             stats = self.loop_stats
         elif elem[0] == 't':
             dims = dims[0]
@@ -678,7 +677,6 @@ class ConformationStats(object):
         elif elem[0] == 'f':
             dims = dims[0]
             stats = self.fiveprime_stats
-
 
         return stats[dims]
 
@@ -695,9 +693,9 @@ class FilteredConformationStats(ConformationStats):
         '''
         Read the statistics in from a file, with the following formatting:
 
-            i3 1X8W_A 4 27 31 101 104 ""
-            i2 3U5F_6 4 1348 1348 1365 1367 "cWW AG or UU"
-            i2 2QBG_B 4 1013 1014 1103 1103 "cWW AG or UU"
+            sampled i3 1X8W_A 4 27 31 101 104 ""
+            sampled i2 3U5F_6 4 1348 1348 1365 1367 "cWW AG or UU"
+            sampled i2 2QBG_B 4 1013 1014 1103 1103 "cWW AG or UU"
 
         '''
         self.filtered = dict()
@@ -723,10 +721,7 @@ class FilteredConformationStats(ConformationStats):
     def sample_stats(self, bg, elem):
         if self.filtered_stats is not None:
             ang_type = bg.get_angle_type(elem)
-            fud.pv('(elem, ang_type)')
-            fud.pv('self.filtered_stats.keys()')
             if (elem, ang_type) in self.filtered_stats:
-                fud.pv('ang_type')
                 return self.filtered_stats[(elem, ang_type)]
 
         return super(FilteredConformationStats, self).sample_stats(bg, elem)

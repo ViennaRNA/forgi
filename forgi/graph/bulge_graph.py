@@ -280,6 +280,8 @@ class BulgeGraph(object):
             return self.get_bulge_dimensions(key)[0]
         elif key[0] == 't':
             return self.get_bulge_dimensions(key)[1]
+        elif key[0] == 'h':
+            return self.get_bulge_dimensions(key)[0]
         else:
             return min(self.get_bulge_dimensions(key))
 
