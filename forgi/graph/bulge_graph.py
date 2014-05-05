@@ -2092,5 +2092,8 @@ class BulgeGraph(object):
         if self.ang_types is None:
             self.set_angle_types()
         
-        return self.ang_types[bulge]
+        if bulge in self.ang_types:
+            return self.ang_types[bulge]
+        else:
+            return None
         

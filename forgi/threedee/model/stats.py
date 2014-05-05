@@ -667,7 +667,10 @@ class ConformationStats(object):
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            return stats[(dims[0], dims[1], ang_type)]
+            dims = (dims[0], dims[1], ang_type)
+
+            fud.pv('self.angle_stats.keys()')
+            fud.pv('dims')
         elif elem[0] == 'h':
             dims = dims[0]
             stats = self.loop_stats

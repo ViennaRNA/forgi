@@ -207,3 +207,27 @@ What if we want to take a subset of the sequence that contains the loop 'm1', th
 
 import forgi.graph.bulge_graph as fgb
 bg = fgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
+
+Finding the Minimum Spanning Tree of a Graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Can we take a subgraph such that all stems are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes in our representation, then the result is not exactly a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
+
+As an example, consider the following structure:
+
+.. image:: mst_init.png
+    :width: 200
+    :align: center
+
+Where the image was created using the following command::
+
+    python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
+
+To remove the cycle, we would like to remove the segment 'm0'. This is easily done using the `get_mst()` function of the `BulgeGraph` data structure::
+
+    >>> import forgi.graph.bulge_graph as fgb 
+    >>> bg = fgb.BulgeGraph(dotbracket_str="((..((.)).(.).))")
+    >>> bg.get_mst()
+    set(['s2', 's1', 's0', 'm1', 'm2'])
+
+The result contains all the nodes except the ones removed to eliminate the cycles. The implementation uses a slightly modified version of Kruskal's algorithm.

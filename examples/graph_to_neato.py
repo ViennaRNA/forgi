@@ -38,6 +38,12 @@ def print_neato(bg):
         # figure out the size of the node and use that as a lbel
         node_dims = bg.get_node_dimensions(key2)
         total_bulge = sum(node_dims)
+
+        if node_dims[0] == -1 or node_dims[0] == 1000:
+            node_dims = (node_dims[1])
+        elif node_dims[1] == -1 or node_dims[1] == 1000:
+            node_dims = (node_dims[0])
+
         node_lines += str(node_dims)
 
         # make bigger interior loops visually bigger
@@ -72,25 +78,33 @@ def main():
         Convert a BulgeGraph structure to a representation readable by the 'neato' program.
         """
     parser = OptionParser(usage = usage)
-    parser.add_option('-d', '--dotbracket', default=False, action='store_true', help='Indicte that the input is in dotbracket format')
+    parser.add_option('-d', '--dotbracket', default=False, action='store_true', help='Indicate that the input is in dotbracket format')
+    parser.add_option('-c', '--command-line-dotbracket', dest='command_line_dotbracket',
+                      default=None, help='Provide a dotbracket string on the command line', type='str')
+
     (options, args) = parser.parse_args()
 
-    if len(args) < 1:
-        parser.print_help()
-        sys.exit(1)
-    if args[0] == '-':
-        f = sys.stdin
-    else:
-        f = open(args[0])
-
-    text = "".join(f.readlines())
-    brackets = text.replace('\n', '')
     bg = cgb.BulgeGraph()
 
-    if options.dotbracket:
-        bg.from_dotbracket(brackets)
+    if len(args) < 1 and options.command_line_dotbracket is None:
+        parser.print_help()
+        sys.exit(1)
+
+    if options.command_line_dotbracket is not None:
+        bg.from_dotbracket(options.command_line_dotbracket)
     else:
-        bg.from_bg_string(text)
+        if args[0] == '-':
+            f = sys.stdin
+        else:
+            f = open(args[0])
+
+        text = "".join(f.readlines())
+        brackets = text.replace('\n', '')
+
+        if options.dotbracket:
+            bg.from_dotbracket(brackets)
+        else:
+            bg.from_bg_string(text)
 
     print_neato(bg)
 
