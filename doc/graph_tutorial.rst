@@ -193,20 +193,37 @@ And get an appropriately formatted parameter file::
     STEM PAIR 8 64
     STEM PAIR 9 63
 
-Getting the flanking regions of a multiloop
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Getting the sequence of an element and its neighbors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Assume we have the following structure '(.(.).(.).)'. This is a simple (and probably impossible) fold which has three stems connected by multiloops:
+Suppose we want to find out not only the sequence of an element, but also the elements that surround it? This is easily done using the `get_flanking_sequence` function. To illustrate, let's create a graph from a fasta representation::
 
-```
-echo '((.((.)).(.).))' | python examples/dotbracket_to_bulge_graph.py - | \
-python examples/graph_to_neato.py - | neato -Tpng -o doc/three_stem.png
-```
+    import forgi.graph.bulge_graph as fgb
 
-What if we want to take a subset of the sequence that contains the loop 'm1', the section immediately preceding up to the start of the previous stem and the section immediately following it up to the end of the next stem. In this case, it would be the region containing the nucleotides [1,5]. What about the same for the multiloop 'm2'? That would correspond to the nucleotides [7,10]. One could write a regular expression to do this, but it would be awkward and brain-twisting. Or one could use some of the functions built into forgi. First we create the graph:
+    bg = fgb.BulgeGraph()
 
-import forgi.graph.bulge_graph as fgb
-bg = fgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
+    fa = """>blah
+    AAAACCGGGCCUUUUACCCCAAAUUGGAA
+    ((((..(((..)))..))))...((..))
+    """
+    bg.from_fasta(fa)
+
+From the structure, we can see that there are two hairpins (`h0` and `h1`), one interior loop (`i0`) and one multiloop (`m0`). We can get the sequence for `h0` and it's neighboring node (`s0`) like so::
+
+    >>> bg.get_flanking_sequence('h0')
+    'GGGCCUUU'
+
+The same can be done for the multiloop (`m0`)::
+
+    >>> bg.get_flanking_sequence('m0')
+    'CCCCAAAUU'
+
+The interior loop is a little more tricky because it is double stranded. From the interior loop, we need to pass in a parameter indicating which side we want (0 or 1). The 0'th strand corresponds to the one with the lower numbered nucleotides, whereas the 1'st strand is the other. The default is the 0'th strand::
+
+    >>> bg.get_flanking_sequence('i0')
+    'AAAACCGGG'
+    >>> bg.get_flanking_sequence('i0', side=1)
+    'UUUUACCCC'
 
 Finding the Minimum Spanning Tree of a Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
