@@ -320,6 +320,9 @@ class BulgeGraph(object):
 
         whole_str = ''
         for key in self.edges:
+            if len(self.edges[key]) == 0:
+                continue
+
             # Our graph will be defined by the stems and the bulges they connect to
             name = key
             if name[0] == 's':
@@ -330,6 +333,7 @@ class BulgeGraph(object):
 
                 whole_str += out_str
                 whole_str += '\n'
+
         return whole_str
 
     def get_sequence_str(self):
