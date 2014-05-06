@@ -770,13 +770,6 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     cyl2_start_offset = m.sqrt(cyl2_t[0][1] ** 2 + cyl2_t[0][2] ** 2)
     cyl2_end_offset = m.sqrt(cyl2_t[1][1] ** 2 + cyl2_t[1][2] ** 2)
     
-    '''
-    fud.pv('cyl1_len')
-    fud.pv('cone_width_cyl2_start, cone_width_cyl2_end')
-    fud.pv('cyl2_start_offset, cyl2_end_offset')
-    fud.pv('cyl2_t')
-    '''
-
     if cyl2_start_offset > cone_width_cyl2_start:
         return False
     if cyl2_end_offset > cone_width_cyl2_end:

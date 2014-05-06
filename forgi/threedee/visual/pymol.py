@@ -677,7 +677,6 @@ class PymolPrinter:
 
         if self.virtual_atoms:
             va = ftug.virtual_atoms(cg, sidechain=False)
-            fud.pv('va')
 
             atom_width = 0.5
             for i,r in enumerate(sorted(va.keys())):
