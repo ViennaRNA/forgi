@@ -88,6 +88,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         db = '.((((..)).))..((..)).'
         n  = '12345678901234567890.'
 
+        bg = fgb.BulgeGraph()
         bpstr="""1 A 0
 2 A 12
 3 A 11

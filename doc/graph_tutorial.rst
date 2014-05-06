@@ -60,15 +60,15 @@ In this case it is difficult to picture which section is which from the text rep
 The result is the following graph representation of the structure.
 
 .. image:: 1y26_neato.png
-    :width: 300
-    :height: 300
+    :width: 200
+    :height: 200
     :align: center
     
 Notice the similarity to the original base paired image? The top stem can be identified as *s0*. The two hairpin loops are *b0* and *b1*. The regions in the multiloop are given their own names. *f1* and *t1* should correspond to the 5' and 3' unpaired regions. In this case, the structure lacks these regions so the nodes in the graph are just place-holders. 
 
 Getting a Condensed Representation of the Element Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Mapping nucleotide positions to secondary structure element types (stems, hairpins, multiloops) is easily done using an example script:
+Mapping nucleotide positions to secondary structure element types (stems, hairpins, multiloops) is easily done using an example script::
 
     [pkerp@plastilin forgi]$ python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
     (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
@@ -108,6 +108,57 @@ Into a graph that looks like this:
     :align: center
 
 Note that the graph and the secondary structure representation are oriented differently. The multiloop at the top of the graph is at the bottom of the secondary structure. Furthermore, some of the small bulges clearly visible in the graph (as yellow nodes) are hard to see in the secondary structure although they are indeed present.
+
+Loading a Structure from a BPSEQ Formatted File:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A bpseq-formatted file stores the sequence and base-pair content of a file on one line for each nucleotide in the sequence. Each line has three columns, the index of the nucleotide being described, it's identity (A, C, G, or U) and the index of its pairing partner (0 if none). We can load this file and create graph structure from it using the `from_bpseq_str` function::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph()
+    >>> bpstr="""1 A 0                                                                                                 
+    ... 2 A 12 
+    ... 3 A 11
+    ... 4 A 9
+    ... 5 A 8
+    ... 6 A 0
+    ... 7 A 0 
+    ... 8 A 5
+    ... 9 A 4
+    ... 10 A 0
+    ... 11 A 3
+    ... 12 A 2
+    ... 13 A 0
+    ... 14 A 0
+    ... 15 A 20
+    ... 16 A 19
+    ... 17 A 0
+    ... 18 A 0
+    ... 19 A 16
+    ... 20 A 15
+    ... 21 A 0
+    ... """
+    >>> 
+    >>> bg.from_bpseq_str(bpstr)                                                                                       
+    >>> print bg.to_bg_string()
+    name untitled
+    length 21
+    seq AAAAAAAAAAAAAAAAAAAAA
+    seq_ids 
+    define f1 1 1
+    define i0 10 10
+    define h1 17 18
+    define s2 15 16 19 20
+    define s1 4 5 8 9
+    define s0 2 3 11 12
+    define t1 21 21
+    define h0 6 7
+    define m0 13 14
+    connect s2 h1 m0 t1
+    connect s1 i0 h0
+    connect s0 f1 m0 i0
+
+
 
 Finding the Partner of a Base Pair
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
