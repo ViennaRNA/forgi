@@ -424,6 +424,7 @@ class ConstructionStats:
     loop_stats = None
     fiveprime_stats = None
     threeprime_stats = None
+    conf_stats = None
 
 def defaultdict_list():
     return c.defaultdict(list)
@@ -669,7 +670,7 @@ class ConformationStats(object):
             ang_type = bg.get_angle_type(elem)
             dims = (dims[0], dims[1], ang_type)
 
-            fud.pv('self.angle_stats.keys()')
+            #fud.pv('self.angle_stats.keys()')
             fud.pv('dims')
         elif elem[0] == 'h':
             dims = dims[0]
@@ -728,3 +729,12 @@ class FilteredConformationStats(ConformationStats):
                 return self.filtered_stats[(elem, ang_type)]
 
         return super(FilteredConformationStats, self).sample_stats(bg, elem)
+
+def get_conformation_stats():
+    if ConstructionStats.conf_stats is not None:
+        return ConstructionStats.conf_stats
+    else:
+        return ConformationStats()
+
+def set_conformation_stats(conf_stats):
+    ConstructionStats.conf_stats = conf_stats

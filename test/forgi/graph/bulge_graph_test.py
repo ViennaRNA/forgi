@@ -1,6 +1,7 @@
 import unittest, os
 import itertools as it
 import random
+import sys
 
 import forgi.graph.bulge_graph as cgb
 import forgi.utilities.debug as fud
@@ -57,8 +58,31 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         for s in bg.stem_iterator():
             bg.stem_length(s)
 
+    def test_from_bpseq_file(self):
+        with open('test/forgi/data/1gid.bpseq', 'r') as f:
+            lines = f.readlines()
+
+        bpseq_str = "".join(lines)
+        bg = cgb.BulgeGraph()
+        bg.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
+
+        for d in bg.defines:
+            self.assertFalse(d[0] == 'x')
+
     def test_from_bpseq(self):
         bg = cgb.BulgeGraph()
+
+        bpstr="""1 G 8
+2 G 7
+3 C 6
+4 A 5
+5 U 4
+6 G 3
+7 C 2
+8 C 1
+"""
+        bg.from_bpseq_str(bpstr, dissolve_length_one_stems=False)
+        bg.from_bpseq_str(bpstr, dissolve_length_one_stems=True)
 
         seq= 'AAAAAAAAAAAAAAAAAAAAA'
         db = '.((((..)).))..((..)).'
@@ -142,6 +166,119 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg.from_bpseq_str(bpstr)
         bg.get_node_from_residue_num(1)
         bg.get_node_from_residue_num(2)
+
+        db='(.(.(.).).)'
+        nm='12345678901'
+
+        bpstr="""1 A 11
+2 A 0
+3 A 9
+4 A 0
+5 A 7
+6 A 0
+7 A 5
+8 A 0
+9 A 3
+10 A 0
+11 A 1
+"""
+        bg.from_bpseq_str(bpstr)
+
+        db='[.(.].)'
+        nm='1234567'
+
+        bpstr="""1 A 5
+2 A 0
+3 A 7
+4 A 0
+5 A 1
+6 A 0
+7 A 3
+"""
+
+        bg.from_bpseq_str(bpstr)
+
+        db='[[.((..]]...))'
+        nm='12345678901234'
+
+        bpstr="""1 A 9
+2 A 8
+3 A 0
+4 A 14
+5 A 13
+6 A 0
+7 A 0
+8 A 2
+9 A 1
+10 A 0
+11 A 0
+12 A 0
+13 A 5
+14 A 4
+"""
+        bg.from_bpseq_str(bpstr)
+
+        db='[[.((..]]...)).((..((..)).))'
+        nm='1234567890123456789012345678'
+
+        bpstr="""1 A 9
+2 A 8
+3 A 0
+4 A 14
+5 A 13
+6 A 0
+7 A 0
+8 A 2
+9 A 1
+10 A 0
+11 A 0
+12 A 0
+13 A 5
+14 A 4
+15 A 0
+16 A 28
+17 A 27
+18 A 0
+19 A 0
+20 A 25
+21 A 24
+22 A 0
+23 A 0
+24 A 21
+25 A 20
+26 A 0
+27 A 17
+28 A 20
+"""
+        bg.from_bpseq_str(bpstr)
+
+        bg.from_bpseq_str(bpstr)
+
+        db='[[.((..]]..((..)).))'
+        nm='12345678901234567890'
+
+        bpstr="""1 A 9
+2 A 8
+3 A 0
+4 A 20
+5 A 19
+6 A 0
+7 A 0
+8 A 2
+9 A 1
+10 A 0
+11 A 0
+12 A 17
+13 A 16
+14 A 0
+15 A 0
+16 A 13
+17 A 12
+18 A 0
+19 A 5
+20 A 4
+"""
+        bg.from_bpseq_str(bpstr)
 
     def test_from_dotplot(self):
         bg = cgb.BulgeGraph()
