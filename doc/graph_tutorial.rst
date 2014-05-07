@@ -299,3 +299,25 @@ To remove the cycle, we would like to remove the segment 'm0'. This is easily do
     set(['s2', 's1', 's0', 'm1', 'm2'])
 
 The result contains all the nodes except the ones removed to eliminate the cycles. The implementation uses a slightly modified version of Kruskal's algorithm.
+
+Finding the elements which form the multiloops of a structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+What if we want to find out the identities of all elements that are part of junctions? A junction in our case is comprised of a number of multiloop segments and stems. Example:
+
+.. image:: find_loops.png
+    :width: 290
+    :align: center
+
+Source::
+
+    python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
+
+Using the `find_multiloop_loops()` we obtain a list of sets where each set contains the elements which comprise a particular junction::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+    >>> print bg.find_multiloop_loops()
+    [set(['s3', 's2', 's4', 'm5', 'm3', 'm2']), set(['s2', 's1', 's5', 'm4', 'm1', 'm0'])]
+
+

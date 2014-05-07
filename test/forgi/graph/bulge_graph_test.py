@@ -483,6 +483,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         pass
 
     def test_pairing_partner(self):
+        # documented
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('((..))')
 
@@ -495,8 +496,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg.from_dotbracket('((..((..))..((..))..))')
         
         bg.find_multiloop_loops()
-
         bg.from_dotbracket('((..((..((..))..((..))..))..((..))..))')
+        bg.from_dotbracket('(.(.(.(.).(.).).(.).))')
+
+        fud.pv('bg.find_multiloop_loops()')
 
     def test_big_structure(self):
         bg = fgb.BulgeGraph()

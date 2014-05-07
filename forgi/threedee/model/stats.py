@@ -631,6 +631,7 @@ def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
 class ConformationStats(object):
     def __init__(self, stats_file=cbc.Configuration.stats_file):
+        fud.pv('stats_file')
         self.angle_stats = get_angle_stats(stats_file, refresh=True)
         self.stem_stats = get_stem_stats(stats_file, refresh=True)
         self.fiveprime_stats = get_fiveprime_stats(stats_file, refresh=True)
