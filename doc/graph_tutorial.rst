@@ -287,9 +287,7 @@ As an example, consider the following structure:
     :width: 200
     :align: center
 
-Where the image was created using the following command::
-
-    python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
+.. python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
 
 To remove the cycle, we would like to remove the segment 'm0'. This is easily done using the `get_mst()` function of the `BulgeGraph` data structure::
 
@@ -309,9 +307,7 @@ What if we want to find out the identities of all elements that are part of junc
     :width: 290
     :align: center
 
-Source::
-
-    python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
+.. python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
 
 Using the `find_multiloop_loops()` we obtain a list of sets where each set contains the elements which comprise a particular junction::
 
@@ -320,4 +316,36 @@ Using the `find_multiloop_loops()` we obtain a list of sets where each set conta
     >>> print bg.find_multiloop_loops()
     [set(['s3', 's2', 's4', 'm5', 'm3', 'm2']), set(['s2', 's1', 's5', 'm4', 'm1', 'm0'])]
 
+Get a random subgraph
+~~~~~~~~~~~~~~~~~~~~~
 
+What if we want to get a random subgraph of the structure? Use the `random_subgraph` function. This function picks a random quantity of elements which will become part of the subgraph. A random element is chosen as a starting point and the graph is traversed in a random manner until at least the chosen number of nodes have been added. When that number is exceeded, the traversal stops. In cases where an interior loop or a multiloop segment is added, the stem on the other end is automatically added as well. Example, using the graph in the previous section::
+
+
+>>> import forgi.graph.bulge_graph as fgb
+>>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+>>> sg = bg.random_subgraph(5)
+>>> print sg
+['s3', 's2', 'm2', 's4', 'm5']
+
+From this we can create a new graph, compete with defines and connections. Only the sequence and its related information (length, ids) will not be carried over::
+
+    >>> nbg = fgb.bg_from_subgraph(bg, sg)
+    >>> print nbg.to_bg_string()
+    name untitled
+    length 0
+    seq_ids
+    define s3 7 7 9 9
+    define s2 5 5 15 15
+    define s4 11 11 13 13
+    define m5 10 10
+    define m2 6 6
+    connect s3 m5 m2
+    connect s2 m2
+    connect s4 m5
+
+Which, when visualized, looks like this:
+
+.. image:: subgraph.png
+    :height: 200
+    :align: center

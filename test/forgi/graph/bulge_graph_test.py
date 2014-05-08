@@ -730,6 +730,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         # check to make sure there are no duplicate elements
         self.assertEquals(len(sg), len(set(sg)))
 
+        nbg = fgb.bg_from_subgraph(bg, sg)
+        self.assertTrue(set(nbg.defines.keys()) == set(sg))
+        fud.pv('nbg.to_bg_string()')
+
     def test_has_connection(self):
         bg = fgb.BulgeGraph(dotbracket_str='(())..(())..(())..')
 

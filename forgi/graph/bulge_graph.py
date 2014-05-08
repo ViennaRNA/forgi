@@ -211,6 +211,7 @@ def print_name(filename):
     print "name", os.path.splitext(filename)[0]
 
 
+
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
         self.ang_types = None
@@ -2111,3 +2112,26 @@ class BulgeGraph(object):
         else:
             return None
         
+def bg_from_subgraph(bg, sg):
+    '''
+    Create a BulgeGraph from a list containing the nodes
+    to take from the original.
+
+    WARNING: The sequence information is not copied
+    '''
+    nbg = BulgeGraph()
+    nbg.seq_length = 0
+
+    for d in sg:
+        # copy the define
+        nbg.defines[d] = bg.defines[d][::]
+
+    # copy edges only if they connect elements which 
+    # are also in the new structure
+    for e in bg.edges.keys():
+        for c in bg.edges[e]:
+            if c in sg:
+                nbg.edges[e].add(c)
+
+    return nbg
+
