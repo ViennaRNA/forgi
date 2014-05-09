@@ -108,7 +108,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     # output the biggest RNA chain
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
-    output_dir = op.join(output_dir, pdb_base)
+    output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
 
     if not op.exists(output_dir):
         os.makedirs(output_dir)

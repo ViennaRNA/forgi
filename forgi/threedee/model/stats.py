@@ -688,9 +688,11 @@ class FilteredConformationStats(ConformationStats):
         super(FilteredConformationStats, self).__init__(stats_file)
 
         self.filtered = None
+        self.filtered_stats = None
 
         if filter_filename is not None:
             self.from_file(filter_filename)
+
 
     def from_file(self, filename):
         '''

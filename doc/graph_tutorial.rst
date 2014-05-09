@@ -279,7 +279,7 @@ The interior loop is a little more tricky because it is double stranded. From th
 Finding the Minimum Spanning Tree of a Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Can we take a subgraph such that all stems are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes in our representation, then the result is not exactly a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
+Can we create a subgraph such that all nodes are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes in our representation, then the result is not exactly a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
 
 As an example, consider the following structure:
 
