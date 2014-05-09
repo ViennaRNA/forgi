@@ -85,7 +85,7 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node2].add(node1)
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
-                            chain_id=None):
+                            chain_id=None, remove_pseudoknots=True):
     '''
     Create the coarse grain model from a pdb file and store all
     of the intermediate files in the given directory.
@@ -143,15 +143,18 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             out, err = p.communicate()
             '''
-            out = cak.k2n_main(f2.name, input_format='bpseq',
-                               #output_format = 'vienna',
-                               output_format = 'bpseq',
-                               method = cak.DEFAULT_METHOD,
-                               opt_method = cak.DEFAULT_OPT_METHOD,
-                               verbose = cak.DEFAULT_VERBOSE,
-                               removed= cak.DEFAULT_REMOVED)
+            if remove_pseudoknots:
+                out = cak.k2n_main(f2.name, input_format='bpseq',
+                                   #output_format = 'vienna',
+                                   output_format = 'bpseq',
+                                   method = cak.DEFAULT_METHOD,
+                                   opt_method = cak.DEFAULT_OPT_METHOD,
+                                   verbose = cak.DEFAULT_VERBOSE,
+                                   removed= cak.DEFAULT_REMOVED)
 
-            out = out.replace(' Nested structure', pdb_base)
+                out = out.replace(' Nested structure', pdb_base)
+            else:
+                out = dotplot
             #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
             '''
@@ -198,7 +201,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     print >>sys.stderr, "Prepare for an incoming exception."
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
-                     intermediate_file_dir=None, chain_id=None):
+                     intermediate_file_dir=None, chain_id=None,
+                    remove_pseudoknots=True):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -212,11 +216,13 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
         output_dir = intermediate_file_dir
 
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
-                                     secondary_structure, chain_id=chain_id)
+                                     secondary_structure, chain_id=chain_id,
+                                    remove_pseudoknots=remove_pseudoknots)
     else:
         with make_temp_directory() as output_dir:
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
-                                         secondary_structure, chain_id = chain_id)
+                                         secondary_structure, chain_id = chain_id,
+                                        remove_pseudoknots=remove_pseudoknots)
 
     return cg
 
@@ -235,8 +241,11 @@ def from_file(cg_filename):
 
         return cg
     
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', chain_id=None):
-    cg = load_cg_from_pdb(pdb_filename, secondary_structure, intermediate_file_dir, chain_id=chain_id)
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', 
+             chain_id=None, remove_pseudoknots=True):
+    cg = load_cg_from_pdb(pdb_filename, secondary_structure, 
+                          intermediate_file_dir, chain_id=chain_id,
+                         remove_pseudoknots=remove_pseudoknots)
 
     return cg
 

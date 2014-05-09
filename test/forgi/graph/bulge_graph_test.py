@@ -69,6 +69,18 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         for d in bg.defines:
             self.assertFalse(d[0] == 'x')
 
+        with open('test/forgi/data/1ymo.bpseq', 'r') as f:
+            lines = f.readlines()
+        
+        bpseq_str = "".join(lines)
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
+
+        node = bg.get_node_from_residue_num(25)
+        self.assertFalse(node[0] == 'h')
+
+        fud.pv('bg.to_bg_string()')
+
     def test_from_bpseq(self):
         bg = fgb.BulgeGraph()
 
@@ -499,8 +511,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg.from_dotbracket('((..((..((..))..((..))..))..((..))..))')
         bg.from_dotbracket('(.(.(.(.).(.).).(.).))')
 
-        fud.pv('bg.find_multiloop_loops()')
-
     def test_big_structure(self):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('')
@@ -732,7 +742,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
 
         nbg = fgb.bg_from_subgraph(bg, sg)
         self.assertTrue(set(nbg.defines.keys()) == set(sg))
-        fud.pv('nbg.to_bg_string()')
 
     def test_has_connection(self):
         bg = fgb.BulgeGraph(dotbracket_str='(())..(())..(())..')

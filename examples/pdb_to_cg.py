@@ -25,6 +25,9 @@ def main():
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False,
+                      help='Keep pseudoknots in the structure', 
+                      action='store_true')
     parser.add_option('-d', '--dump-all', dest='dump_all', 
                       default='', help='Enter a directory where to dump all of \
                                         temporary and intermediate files.',
@@ -37,7 +40,8 @@ def main():
         sys.exit(1)
 
     pdb_id = op.basename(op.splitext(args[0])[0])
-    cg = ftmc.from_pdb(args[0], intermediate_file_dir=options.dump_all)
+    cg = ftmc.from_pdb(args[0], intermediate_file_dir=options.dump_all, 
+                       remove_pseudoknots=not options.pseudoknots)
     print cg.to_cg_string()
 
 if __name__ == '__main__':
