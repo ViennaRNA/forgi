@@ -681,6 +681,9 @@ class ConformationStats(object):
             dims = dims[0]
             stats = self.fiveprime_stats
 
+        if len(stats[dims]) == 0:
+            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
+
         return stats[dims]
 
 class FilteredConformationStats(ConformationStats):
@@ -719,7 +722,6 @@ class FilteredConformationStats(ConformationStats):
                 ang_types = [1,-1]
                 for at in ang_types:
                     for stat in self.angle_stats[(dims[0], dims[1], at)]:
-
                         if stat.pdb_name == pdb_id and stat.define == define:
                             self.filtered_stats[(elem_name, at)] += [stat]
 
@@ -727,6 +729,9 @@ class FilteredConformationStats(ConformationStats):
         if self.filtered_stats is not None:
             ang_type = bg.get_angle_type(elem)
             if (elem, ang_type) in self.filtered_stats:
+                if len(self.filtered_stats[(elem, ang_type)]) == 0:
+                    print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
+
                 return self.filtered_stats[(elem, ang_type)]
 
         return super(FilteredConformationStats, self).sample_stats(bg, elem)

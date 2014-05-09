@@ -279,7 +279,7 @@ The interior loop is a little more tricky because it is double stranded. From th
 Finding the Minimum Spanning Tree of a Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Can we create a subgraph such that all nodes are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes in our representation, then the result is not exactly a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
+Can we create a subgraph such that all stems are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes, then the result is not a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
 
 As an example, consider the following structure:
 
@@ -289,27 +289,27 @@ As an example, consider the following structure:
 
 .. python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
 
-To remove the cycle, we would like to remove the segment 'm0'. This is easily done using the `get_mst()` function of the `BulgeGraph` data structure::
+To break the cycle, we would like to remove the segment 'm0'. This is easily done using the `get_mst()` function of the `BulgeGraph` data structure::
 
     >>> import forgi.graph.bulge_graph as fgb 
     >>> bg = fgb.BulgeGraph(dotbracket_str="((..((.)).(.).))")
     >>> bg.get_mst()
     set(['s2', 's1', 's0', 'm1', 'm2'])
 
-The result contains all the nodes except the ones removed to eliminate the cycles. The implementation uses a slightly modified version of Kruskal's algorithm.
+The result contains all the nodes except the ones removed to break the cycles. The implementation uses a slightly modified version of Kruskal's algorithm.
 
 Finding the elements which form the multiloops of a structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-What if we want to find out the identities of all elements that are part of junctions? A junction in our case is comprised of a number of multiloop segments and stems. Example:
+The `find_multiloop_loops()` function returns a list of sets where each set contains the elements that are part of a particular junction. 
+
 
 .. image:: find_loops.png
     :width: 290
     :align: center
 
 .. python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
-
-Using the `find_multiloop_loops()` we obtain a list of sets where each set contains the elements which comprise a particular junction::
+Example::
 
     >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
@@ -319,7 +319,7 @@ Using the `find_multiloop_loops()` we obtain a list of sets where each set conta
 Get a random subgraph
 ~~~~~~~~~~~~~~~~~~~~~
 
-What if we want to get a random subgraph of the structure? Use the `random_subgraph` function. This function picks a random quantity of elements which will become part of the subgraph. A random element is chosen as a starting point and the graph is traversed in a random manner until at least the chosen number of nodes have been added. When that number is exceeded, the traversal stops. In cases where an interior loop or a multiloop segment is added, the stem on the other end is automatically added as well. Example, using the graph in the previous section::
+The `random_subgraph` function picks a random quantity of elements which will become part of the subgraph. A random element is chosen as a starting point and the graph is traversed in a random manner until at least the chosen number of nodes have been added. When that number is exceeded, the traversal stops. In cases where an interior loop or a multiloop segment is added, the stem on the other end is automatically added as well. Example, using the graph in the previous section::
 
 
 >>> import forgi.graph.bulge_graph as fgb
