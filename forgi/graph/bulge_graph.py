@@ -983,6 +983,14 @@ class BulgeGraph(object):
         Classify the way that two stems are connected according to the type
         of bulge that separates them.
 
+        Potential angle types for single stranded segments, and the ends of
+        the stems they connect:
+
+            1   2 (1, 1) #pseudoknot
+            1   0 (1, 0)
+            3   2 (0, 1)
+            3   0 (0, 0)
+
         @param define: The name of the bulge separating the two stems
         @param connections: The two stems and their separation
         '''
@@ -1010,6 +1018,12 @@ class BulgeGraph(object):
                 return 4
             elif (s1c, s2c) == (3, 2):
                 return -4
+
+            # the next two refer to pseudoknots
+            elif (s1c, s2c) == (2, 1):
+                return 5
+            elif (s1c, s2c) == (1, 2):
+                return -5
             else:
                 raise Exception("Weird angle type: (s1c, s2c) = (%d, %d)" % 
                                 (s1c, s2c))
