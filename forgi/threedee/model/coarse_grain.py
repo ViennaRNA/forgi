@@ -1,7 +1,7 @@
 
-import forgi.graph.bulge_graph as cgb
-import forgi.threedee.utilities.graph_pdb as cgg
-import forgi.threedee.model.stats as cbs
+import forgi.graph.bulge_graph as fgb
+import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.model.stats as ftms
 
 import forgi.aux.k2n_standalone.knotted2nested as cak
 import forgi.utilities.debug as fud
@@ -184,9 +184,9 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             cg.from_bpseq_str(out, dissolve_length_one_stems=True)
             cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
-            cgg.add_stem_information_from_pdb_chain(cg, chain)
-            cgg.add_bulge_information_from_pdb_chain(cg, chain)
-            cgg.add_loop_information_from_pdb_chain(cg, chain)
+            ftug.add_stem_information_from_pdb_chain(cg, chain)
+            ftug.add_bulge_information_from_pdb_chain(cg, chain)
+            ftug.add_loop_information_from_pdb_chain(cg, chain)
 
             cg.chain = chain
 
@@ -249,7 +249,7 @@ def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='',
 
     return cg
 
-class CoarseGrainRNA(cgb.BulgeGraph):
+class CoarseGrainRNA(fgb.BulgeGraph):
     '''
     A coarse grain model of RNA structure based on the
     bulge graph representation.
@@ -371,22 +371,19 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         @param define: The name of the bulge.
         @param connections: The two stems that are connected by it.
-        @return: cbs.AngleStat object
+        @return: ftms.AngleStat object
         '''
-        (stem1, twist1, stem2, twist2, bulge) = cgg.get_stem_twist_and_bulge_vecs(self, define, connections)
-
-        (s1b, s1e) = self.get_sides(connections[0], define)
-        (s2b, s1e) = self.get_sides(connections[1], define)
+        (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, define, connections)
 
         # Get the orientations for orienting these two stems
-        (r, u, v, t) = cgg.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
-        (r1, u1, v1) = cgg.get_stem_separation_parameters(stem1, twist1, bulge)
+        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
+        (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
 
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
 
-        angle_stat = cbs.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
+        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
 
         return angle_stat
 
@@ -401,7 +398,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         '''                                                                                                           
         
         if bulge == 'start':
-            return (cbs.AngleStat(), cbs.AngleStat())                                                                 
+            return (ftms.AngleStat(), cbs.AngleStat())                                                                 
         
         connections = self.connections(bulge)                                                                         
         
@@ -419,13 +416,13 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         @return: A StemStat structure containing the above information.                                               
         '''                                                                                                           
-        ss = cbs.StemStat()                                                                                           
+        ss = ftms.StemStat()                                                                                           
         
         ss.pdb_name = self.name
         #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            
         ss.bp_length = self.stem_length(stem)
         ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])                                   
-        ss.twist_angle = cgg.get_twist_angle(self.coords[stem], self.twists[stem])                                    
+        ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])                                    
         ss.define = self.defines[stem]                                                                                
         
         return ss  
