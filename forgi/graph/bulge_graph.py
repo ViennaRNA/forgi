@@ -1030,6 +1030,35 @@ class BulgeGraph(object):
         else:
             raise Exception("connection_type called on non-interior loop/multiloop")
 
+    def connection_ends(self, connection_type):
+        """
+        Find out which ends of the stems are connected by a particular angle
+        type.
+
+        @param connection_type: The angle type, as determined by which corners
+                                of a stem are connected
+        @return: (s1e, s2b)
+        """
+        ends = ()
+
+        if abs(connection_type) == 1:
+            ends = (1, 0)
+        elif abs(connection_type) == 2:
+            ends = (1, 0)
+        elif abs(connection_type) == 3:
+            ends = (0, 0)
+        elif abs(connection_type) == 4:
+            ends = (1, 0)
+        elif abs(connection_type) == 5:
+            ends = (1, 1)
+        else:
+            raise Exception('Unknown connection type: %d' % (connection_type))
+
+        if connection_type < 0:
+            return ends[::-1]
+        else:
+            return ends
+
     def find_multiloop_loops(self):
         '''
         Find out which defines are connected in a multiloop.

@@ -79,8 +79,6 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         node = bg.get_node_from_residue_num(25)
         self.assertFalse(node[0] == 'h')
 
-        fud.pv('bg.to_bg_string()')
-
     def test_from_bpseq(self):
         bg = fgb.BulgeGraph()
 
@@ -761,6 +759,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph(dotbracket_str=db)
         mst = bg.get_mst()
         self.assertTrue("m0" in mst)
+        build_order = bg.traverse_graph()
 
         db = '..((.(())..(())...)).'
         bg = fgb.BulgeGraph(dotbracket_str=db)
