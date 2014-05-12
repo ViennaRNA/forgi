@@ -1,3 +1,5 @@
+.. _forgi_graph_tutorial:
+
 RNA Secondary Structure as a Graph Using the forgi Library
 ==============
 A Simple Example
@@ -321,12 +323,11 @@ Get a random subgraph
 
 The `random_subgraph` function picks a random quantity of elements which will become part of the subgraph. A random element is chosen as a starting point and the graph is traversed in a random manner until at least the chosen number of nodes have been added. When that number is exceeded, the traversal stops. In cases where an interior loop or a multiloop segment is added, the stem on the other end is automatically added as well. Example, using the graph in the previous section::
 
-
->>> import forgi.graph.bulge_graph as fgb
->>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
->>> sg = bg.random_subgraph(5)
->>> print sg
-['s3', 's2', 'm2', 's4', 'm5']
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+    >>> sg = bg.random_subgraph(5)
+    >>> print sg
+    ['s3', 's2', 'm2', 's4', 'm5']
 
 From this we can create a new graph, compete with defines and connections. Only the sequence and its related information (length, ids) will not be carried over::
 

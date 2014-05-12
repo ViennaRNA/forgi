@@ -463,6 +463,16 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         self.assertEqual(bg.get_any_sides('s1', 'm1'), (0, 1))
         self.assertEqual(bg.get_any_sides('m1', 's1'), (1, 0))
 
+    def test_get_sides(self):
+        with open('test/forgi/data/1ymo.bpseq', 'r') as f:
+            lines = f.readlines()
+        
+        bpseq_str = "".join(lines)
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
+
+        fud.pv('bg.to_bg_string()')
+
     def test_get_sides_plus(self):
         bg = fgb.BulgeGraph(dotbracket_str='(.().().)')
 
@@ -786,3 +796,4 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
 
         self.assertTrue(('s0', 'i4', 's1') in build_order)
         self.assertEqual(len(all_stems), 0)
+

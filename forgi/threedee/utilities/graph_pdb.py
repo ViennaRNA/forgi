@@ -281,7 +281,6 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
 
     return (stem1_vec, twists1[s1b], stem2_vec, twists2[s2b], bulge_vec)
 
-
 def stem2_pos_from_stem1(stem1, twist1, params):
     '''
     Get the starting point of a second stem, given the parameters

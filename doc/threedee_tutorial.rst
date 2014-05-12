@@ -2,7 +2,7 @@ RNA 3D Structure Using forgi.threedee
 ==============
 Introduction
 ------------
-`forgi.threedee` is an extension of forgi capable of handling 3D data about RNA structures. It provides methods for extracting secondary structure as well as a coarse grain representation of 3D RNA structures.
+`forgi.threedee` is an extension of forgi capable of handling 3D data about RNA structures. It provides methods for extracting secondary structure as well as creating a coarse grain representation of 3D RNA structures.
 
 Requirements
 ------------
@@ -21,7 +21,7 @@ Extracting 2D structure from a 3D structure
     :width: 800
     :align: center
 
-To extract the base-pair information from a 3D structure stored in a PDB file, use the `pdb_to_ss_fasta.py` script. This script operates on the largest RNA chain in the provided pdb file.::
+To extract the base-pair information from a 3D structure stored in a PDB file, use the `pdb_to_ss_fasta.py` script. By default, this script operates on the largest RNA chain in the provided pdb file (although a specific chain can be specified using the `-c` option).::
 
     [pete@kat forgi]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb 
     >1y26
@@ -30,7 +30,10 @@ To extract the base-pair information from a 3D structure stored in a PDB file, u
 
 The reported 2D structure is extracted from the annotations of MC-Annotate [1]. Pseudoknots are removed using the knotted2nested.py script which is included with the generous permition of Dr. Sandra Smit [2]. Users making use of the 3D-to-2D facilities of the ``forgi.threedee`` package should cite the articles listed in the citations section at the bottom of this page.
 
-One can also create and dump the graph structure itself::
+Creating a Coarse Grain 3D Representation of an RNA Molecule
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+One can imagine an RNA molecule as a collection of helices and ... not helices (hairpins, interior loops, multiloops, etc..) as described in the :ref:`forgi_graph_tutorial`. By creating an abstraction for the canonical helixes and representing them as cylinders, we can create a coarse grain representaiton of the RNA molecule::
 
     [pkerp@plastilin forgi]$ python examples/pdb_to_cg.py ~/projects/ernwin/fess/structures/2l94.pdb 
     name 2l94
@@ -55,7 +58,6 @@ The lines beginning with `coord` indicate the positions of the helices. They are
 
 Visualizing the Coarse Grain Helical Representation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 The coarse grain representation shown in the prior example can be visualized using Pymol_ and the ``visualize_pdb.py`` script. The green cylinder below represent canonical helical regions, red represents multiloops and blue - hairpin loops::
 
     python examples/visualize_pdb.py ~/projects/ernwin/fess/structures/1y26.pdb

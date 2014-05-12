@@ -2,7 +2,7 @@
 
 import sys
 import os.path as op
-import forgi.threedee.model.coarse_grain as cmg
+import forgi.threedee.model.coarse_grain as ftmc
 
 from optparse import OptionParser
 
@@ -24,6 +24,7 @@ def main():
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-c', '--chain', dest='chain', default=None, help="Extract the secondary structure of a particular chain in the PDB file")
 
     (options, args) = parser.parse_args()
 
@@ -32,7 +33,8 @@ def main():
         sys.exit(1)
 
     pdb_id = op.basename(op.splitext(args[0])[0])
-    cg = cmg.from_pdb(args[0])
+    cg = ftmc.from_pdb(args[0], chain_id=options.chain)
+
     print ">%s" % (pdb_id)
     print cg.seq
     print cg.to_dotbracket_string()
