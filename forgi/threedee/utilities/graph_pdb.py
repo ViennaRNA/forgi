@@ -443,7 +443,7 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
         try:
             c_apos = chain[i][catom_name].get_vector().get_array()
         except KeyError as ke:
-            print >>sys.stderr, "Nucleotide %d missing in element %s" % (i, ld)
+            print >>sys.stderr, "Nucleotide %s missing in element %s" % (str(i),d )
             continue
 
         dist = cuv.magnitude(stem_end - c_apos)
