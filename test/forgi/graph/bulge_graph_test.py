@@ -471,8 +471,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph()
         bg.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
 
-        fud.pv('bg.to_bg_string()')
-
     def test_get_sides_plus(self):
         bg = fgb.BulgeGraph(dotbracket_str='(.().().)')
 
