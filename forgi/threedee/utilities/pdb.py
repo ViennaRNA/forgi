@@ -8,6 +8,7 @@ import forgi.threedee.utilities.vector as ftuv
 
 backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"] 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
+backbone_atoms += ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]
 ring_atoms = ['C4*', 'C3*', 'C2*', 'C1*', 'O4*']
 ring_atoms_real = ["C4'", "C3'", "C2'", "C1'", "O4'"]
 
@@ -195,7 +196,9 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     '''
 
     a_5_names = ['P', 'O5*', 'C5*', 'C4*', 'O4*', 'O2*']
-    a_3_names = ['C1*', 'C2*', 'C3*', 'O3*']
+    a_5_names += ['P', "O5'", "C5'", "C4'", "O4'", "O2'"]
+    a_3_names = ["C1*", "C2*", "C3*", "O3*"]
+    a_3_names += ["C1'", "C2'", "C3'", "O3'"]
 
     a_names = dict()
     a_names['U'] = a_5_names + ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6'] + a_3_names
@@ -222,7 +225,7 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
 
     c1_list.sort(key=lambda x: x.id[1])
     c2_list.sort(key=lambda x: x.id[1])
-
+    
     for r1,r2 in zip(c1_list, c2_list):
         if sidechains:
             anames = backbone_atoms + a_names[c1[i].resname.strip()]

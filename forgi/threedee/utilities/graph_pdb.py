@@ -670,6 +670,7 @@ def get_mids_core(cg, chain, define,
     filename = forgi.threedee.data_file(op.join('data', template_filename))
     ideal_chain = ftup.get_first_chain(filename)
 
+
     # extract the coordinates of the stem from the input chain
     # and place them into a new chain
     stem_chain = bpdb.Chain.Chain(' ')
@@ -678,21 +679,31 @@ def get_mids_core(cg, chain, define,
         for resname in strand:
             stem_chain.add(chain[resname])
 
-    #chain = extract_define_residues([start1, end1, end2, start2], chain)
-
     # get the rotation and translation to rotate the ideal chain onto
     # the stem chain
     rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,
                           superimpose=True, apply_sup=False)[2]
 
+
+
     # get the mids of the ideal chain using the fit method
+    '''
     ideal_mids = get_mids_core_a(ideal_chain, 1, stem_length * 2,
                                  stem_length, stem_length + 1,
                                  use_template=use_template)
+    '''
+
+    # average length of a base-pair: 2.547
+    mult=1.0
+    ideal_mids = np.array([[0., 0., mult], 
+                  np.array([0., 0., -mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
 
     # apply the rotation and translation to get the mids of the
     # target chain
+    #chain_new_mids[0] = 
+
     chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
+    #chain_new_mids = [chain_new_mids[0] + mult * stem_vec, chain_new_mids[1] - mult * stem_vec]
 
     # return it as a Bio.PDB.Vector for some strang reason
     return (bpdb.Vector(chain_new_mids[0]), bpdb.Vector(chain_new_mids[1]))
@@ -809,7 +820,10 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
 
     # the position of the virtual residue along the axis of
     # the stem
-    vres_stem_pos = coords[0] + (i / float(stem_len - 1)) * stem_vec
+    if stem_len == 1:
+        vres_stem_pos = coords[0]
+    else:
+        vres_stem_pos = coords[0] + (i / float(stem_len - 1)) * stem_vec
 
     # the angle of the second twist with respect to the first
     if stem_inv is None:
@@ -839,8 +853,11 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     else:
         ang = expected_ang - backward
 
-    ang_per_nt = ang / float(stem_len - 1)
-    ang = ang_per_nt * i
+    if stem_len == 1:
+        ang = 0.
+    else:
+        ang_per_nt = ang / float(stem_len - 1)
+        ang = ang_per_nt * i
 
     # the basis vectors for the helix along which the
     # virtual residues will residue

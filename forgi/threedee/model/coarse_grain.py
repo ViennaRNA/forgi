@@ -181,7 +181,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             cg = CoarseGrainRNA()
             #cg.from_fasta(out, dissolve_length_one_stems=1)
-            cg.from_bpseq_str(out, dissolve_length_one_stems=True)
+            cg.from_bpseq_str(out, dissolve_length_one_stems=False)
             cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
             ftug.add_stem_information_from_pdb_chain(cg, chain)
