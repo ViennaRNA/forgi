@@ -350,3 +350,31 @@ Which, when visualized, looks like this:
 .. image:: subgraph.png
     :height: 200
     :align: center
+
+Iterating Over The List of Elements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To iterate over each stem in the structure, use the `stem_iterator()` function::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((..((..))..))..((..((..))...)).')
+    >>> print list(bg.stem_iterator())
+    ['s3', 's2', 's1', 's0']
+
+To iterate over each interior loop in the structures, use the `iloop_iterator()`::
+
+    >>> print list(bg.iloop_iterator())
+    ['i1', 'i0']
+
+For multiloops, hairpin loops, fiveprime regions and threeprimes regions  use `mloop_iterator()`, `hloop_iterator()`, `floop_iterator` and `tloop_iterator`, respectively::
+
+    >>> print list(bg.mloop_iterator())
+    ['m0']
+    >>> print list(bg.hloop_iterator())
+    ['h1', 'h0']
+    >>> print list(bg.floop_iterator())
+    []
+    >>> print list(bg.tloop_iterator())
+    ['t1']
+
+Notice that `floop_iterator()` doesn't yield any values. This is because there is no 3' unpaired region in this structure.
