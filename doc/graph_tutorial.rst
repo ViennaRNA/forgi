@@ -1,4 +1,6 @@
-forgi Tutorial
+.. _forgi_graph_tutorial:
+
+RNA Secondary Structure as a Graph Using the forgi Library
 ==============
 A Simple Example
 ~~~~~~~~~~~~~~~~
@@ -60,8 +62,8 @@ In this case it is difficult to picture which section is which from the text rep
 The result is the following graph representation of the structure.
 
 .. image:: 1y26_neato.png
-    :width: 300
-    :height: 300
+    :width: 200
+    :height: 200
     :align: center
     
 Notice the similarity to the original base paired image? The top stem can be identified as *s0*. The two hairpin loops are *b0* and *b1*. The regions in the multiloop are given their own names. *f1* and *t1* should correspond to the 5' and 3' unpaired regions. In this case, the structure lacks these regions so the nodes in the graph are just place-holders. 
@@ -108,6 +110,57 @@ Into a graph that looks like this:
     :align: center
 
 Note that the graph and the secondary structure representation are oriented differently. The multiloop at the top of the graph is at the bottom of the secondary structure. Furthermore, some of the small bulges clearly visible in the graph (as yellow nodes) are hard to see in the secondary structure although they are indeed present.
+
+Loading a Structure from a BPSEQ Formatted File:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A bpseq-formatted file stores the sequence and base-pair content of a file on one line for each nucleotide in the sequence. Each line has three columns, the index of the nucleotide being described, it's identity (A, C, G, or U) and the index of its pairing partner (0 if none). We can load this file and create graph structure from it using the `from_bpseq_str` function::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph()
+    >>> bpstr="""1 A 0                                                                                                 
+    ... 2 A 12 
+    ... 3 A 11
+    ... 4 A 9
+    ... 5 A 8
+    ... 6 A 0
+    ... 7 A 0 
+    ... 8 A 5
+    ... 9 A 4
+    ... 10 A 0
+    ... 11 A 3
+    ... 12 A 2
+    ... 13 A 0
+    ... 14 A 0
+    ... 15 A 20
+    ... 16 A 19
+    ... 17 A 0
+    ... 18 A 0
+    ... 19 A 16
+    ... 20 A 15
+    ... 21 A 0
+    ... """
+    >>> 
+    >>> bg.from_bpseq_str(bpstr)                                                                                       
+    >>> print bg.to_bg_string()
+    name untitled
+    length 21
+    seq AAAAAAAAAAAAAAAAAAAAA
+    seq_ids 
+    define f1 1 1
+    define i0 10 10
+    define h1 17 18
+    define s2 15 16 19 20
+    define s1 4 5 8 9
+    define s0 2 3 11 12
+    define t1 21 21
+    define h0 6 7
+    define m0 13 14
+    connect s2 h1 m0 t1
+    connect s1 i0 h0
+    connect s0 f1 m0 i0
+
+
 
 Finding the Partner of a Base Pair
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -212,6 +265,7 @@ From the structure, we can see that there are two hairpins (`h0` and `h1`), one 
 
     >>> bg.get_flanking_sequence('h0')
     'GGGCCUUU'
+<<<<<<< HEAD
 
 The same can be done for the multiloop (`m0`)::
 
@@ -224,3 +278,117 @@ The interior loop is a little more tricky because it is double stranded. From th
     'AAAACCGGG'
     >>> bg.get_flanking_sequence('i0', side=1)
     'UUUUACCCC'
+=======
+
+The same can be done for the multiloop (`m0`)::
+
+    >>> bg.get_flanking_sequence('m0')
+    'CCCCAAAUU'
+
+The interior loop is a little more tricky because it is double stranded. From the interior loop, we need to pass in a parameter indicating which side we want (0 or 1). The 0'th strand corresponds to the one with the lower numbered nucleotides, whereas the 1'st strand is the other. The default is the 0'th strand::
+
+    >>> bg.get_flanking_sequence('i0')
+    'AAAACCGGG'
+    >>> bg.get_flanking_sequence('i0', side=1)
+    'UUUUACCCC'
+
+Finding the Minimum Spanning Tree of a Graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Can we create a subgraph such that all stems are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes, then the result is not a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
+
+As an example, consider the following structure:
+
+.. image:: mst_init.png
+    :width: 200
+    :align: center
+
+.. python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
+
+To break the cycle, we would like to remove the segment 'm0'. This is easily done using the `get_mst()` function of the `BulgeGraph` data structure::
+
+    >>> import forgi.graph.bulge_graph as fgb 
+    >>> bg = fgb.BulgeGraph(dotbracket_str="((..((.)).(.).))")
+    >>> bg.get_mst()
+    set(['s2', 's1', 's0', 'm1', 'm2'])
+
+The result contains all the nodes except the ones removed to break the cycles. The implementation uses a slightly modified version of Kruskal's algorithm.
+
+Finding the elements which form the multiloops of a structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `find_multiloop_loops()` function returns a list of sets where each set contains the elements that are part of a particular junction. 
+
+
+.. image:: find_loops.png
+    :width: 290
+    :align: center
+
+.. python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
+Example::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+    >>> print bg.find_multiloop_loops()
+    [set(['s3', 's2', 's4', 'm5', 'm3', 'm2']), set(['s2', 's1', 's5', 'm4', 'm1', 'm0'])]
+
+Get a random subgraph
+~~~~~~~~~~~~~~~~~~~~~
+
+The `random_subgraph` function picks a random quantity of elements which will become part of the subgraph. A random element is chosen as a starting point and the graph is traversed in a random manner until at least the chosen number of nodes have been added. When that number is exceeded, the traversal stops. In cases where an interior loop or a multiloop segment is added, the stem on the other end is automatically added as well. Example, using the graph in the previous section::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+    >>> sg = bg.random_subgraph(5)
+    >>> print sg
+    ['s3', 's2', 'm2', 's4', 'm5']
+
+From this we can create a new graph, compete with defines and connections. Only the sequence and its related information (length, ids) will not be carried over::
+
+    >>> nbg = fgb.bg_from_subgraph(bg, sg)
+    >>> print nbg.to_bg_string()
+    name untitled
+    length 0
+    seq_ids
+    define s3 7 7 9 9
+    define s2 5 5 15 15
+    define s4 11 11 13 13
+    define m5 10 10
+    define m2 6 6
+    connect s3 m5 m2
+    connect s2 m2
+    connect s4 m5
+
+Which, when visualized, looks like this:
+
+.. image:: subgraph.png
+    :height: 200
+    :align: center
+
+Iterating Over The List of Elements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To iterate over each stem in the structure, use the `stem_iterator()` function::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((..((..))..))..((..((..))...)).')
+    >>> print list(bg.stem_iterator())
+    ['s3', 's2', 's1', 's0']
+
+To iterate over each interior loop in the structures, use the `iloop_iterator()`::
+
+    >>> print list(bg.iloop_iterator())
+    ['i1', 'i0']
+
+For multiloops, hairpin loops, fiveprime regions and threeprimes regions  use `mloop_iterator()`, `hloop_iterator()`, `floop_iterator` and `tloop_iterator`, respectively::
+
+    >>> print list(bg.mloop_iterator())
+    ['m0']
+    >>> print list(bg.hloop_iterator())
+    ['h1', 'h0']
+    >>> print list(bg.floop_iterator())
+    []
+    >>> print list(bg.tloop_iterator())
+    ['t1']
+
+Notice that `floop_iterator()` doesn't yield any values. This is because there is no 3' unpaired region in this structure.

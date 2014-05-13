@@ -102,7 +102,6 @@ def main():
                 side = 0
                 if d[0] == 'm':
                     side = cg.get_strand(d)
-                    fud.pv('d, side')
 
                     pp.stem_atoms(cg.coords[d], cg.get_twists(d), 
                                   cg.get_node_dimensions(d)[0], side=side)

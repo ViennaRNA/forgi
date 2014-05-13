@@ -424,6 +424,7 @@ class ConstructionStats:
     loop_stats = None
     fiveprime_stats = None
     threeprime_stats = None
+    conf_stats = None
 
 def defaultdict_list():
     return c.defaultdict(list)
@@ -475,7 +476,6 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     ConstructionStats.angle_stats = c.defaultdict(list)
     #DefaultDict(DefaultDict([]))
 
-    fud.pv('filename')
     f = open(filename, 'r')
 
     count = 0
@@ -631,7 +631,6 @@ def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
 class ConformationStats(object):
     def __init__(self, stats_file=cbc.Configuration.stats_file):
-        fud.pv('stats_file')
         self.angle_stats = get_angle_stats(stats_file, refresh=True)
         self.stem_stats = get_stem_stats(stats_file, refresh=True)
         self.fiveprime_stats = get_fiveprime_stats(stats_file, refresh=True)
@@ -669,8 +668,10 @@ class ConformationStats(object):
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            return stats[(dims[0], dims[1], ang_type)]
+            dims = (dims[0], dims[1], ang_type)
+
         elif elem[0] == 'h':
+            dims = dims[0]
             stats = self.loop_stats
         elif elem[0] == 't':
             dims = dims[0]
@@ -679,6 +680,8 @@ class ConformationStats(object):
             dims = dims[0]
             stats = self.fiveprime_stats
 
+        if len(stats[dims]) == 0:
+            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
 
         return stats[dims]
 
@@ -687,17 +690,19 @@ class FilteredConformationStats(ConformationStats):
         super(FilteredConformationStats, self).__init__(stats_file)
 
         self.filtered = None
+        self.filtered_stats = None
 
         if filter_filename is not None:
             self.from_file(filter_filename)
+
 
     def from_file(self, filename):
         '''
         Read the statistics in from a file, with the following formatting:
 
-            i3 1X8W_A 4 27 31 101 104 ""
-            i2 3U5F_6 4 1348 1348 1365 1367 "cWW AG or UU"
-            i2 2QBG_B 4 1013 1014 1103 1103 "cWW AG or UU"
+            sampled i3 1X8W_A 4 27 31 101 104 ""
+            sampled i2 3U5F_6 4 1348 1348 1365 1367 "cWW AG or UU"
+            sampled i2 2QBG_B 4 1013 1014 1103 1103 "cWW AG or UU"
 
         '''
         self.filtered = dict()
@@ -716,17 +721,25 @@ class FilteredConformationStats(ConformationStats):
                 ang_types = [1,-1]
                 for at in ang_types:
                     for stat in self.angle_stats[(dims[0], dims[1], at)]:
-
                         if stat.pdb_name == pdb_id and stat.define == define:
                             self.filtered_stats[(elem_name, at)] += [stat]
 
     def sample_stats(self, bg, elem):
         if self.filtered_stats is not None:
             ang_type = bg.get_angle_type(elem)
-            fud.pv('(elem, ang_type)')
-            fud.pv('self.filtered_stats.keys()')
             if (elem, ang_type) in self.filtered_stats:
-                fud.pv('ang_type')
+                if len(self.filtered_stats[(elem, ang_type)]) == 0:
+                    print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
+
                 return self.filtered_stats[(elem, ang_type)]
 
         return super(FilteredConformationStats, self).sample_stats(bg, elem)
+
+def get_conformation_stats():
+    if ConstructionStats.conf_stats is not None:
+        return ConstructionStats.conf_stats
+    else:
+        return ConformationStats()
+
+def set_conformation_stats(conf_stats):
+    ConstructionStats.conf_stats = conf_stats

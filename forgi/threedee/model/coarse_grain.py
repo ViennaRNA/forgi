@@ -1,7 +1,7 @@
 
-import forgi.graph.bulge_graph as cgb
-import forgi.threedee.utilities.graph_pdb as cgg
-import forgi.threedee.model.stats as cbs
+import forgi.graph.bulge_graph as fgb
+import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.model.stats as ftms
 
 import forgi.aux.k2n_standalone.knotted2nested as cak
 import forgi.utilities.debug as fud
@@ -85,7 +85,7 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node2].add(node1)
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
-                            chain_id=None):
+                            chain_id=None, remove_pseudoknots=True):
     '''
     Create the coarse grain model from a pdb file and store all
     of the intermediate files in the given directory.
@@ -108,7 +108,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     # output the biggest RNA chain
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
-    output_dir = op.join(output_dir, pdb_base)
+    output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
 
     if not op.exists(output_dir):
         os.makedirs(output_dir)
@@ -143,15 +143,18 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             out, err = p.communicate()
             '''
-            out = cak.k2n_main(f2.name, input_format='bpseq',
-                               #output_format = 'vienna',
-                               output_format = 'bpseq',
-                               method = cak.DEFAULT_METHOD,
-                               opt_method = cak.DEFAULT_OPT_METHOD,
-                               verbose = cak.DEFAULT_VERBOSE,
-                               removed= cak.DEFAULT_REMOVED)
+            if remove_pseudoknots:
+                out = cak.k2n_main(f2.name, input_format='bpseq',
+                                   #output_format = 'vienna',
+                                   output_format = 'bpseq',
+                                   method = cak.DEFAULT_METHOD,
+                                   opt_method = cak.DEFAULT_OPT_METHOD,
+                                   verbose = cak.DEFAULT_VERBOSE,
+                                   removed= cak.DEFAULT_REMOVED)
 
-            out = out.replace(' Nested structure', pdb_base)
+                out = out.replace(' Nested structure', pdb_base)
+            else:
+                out = dotplot
             #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
             '''
@@ -179,10 +182,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             cg = CoarseGrainRNA()
             #cg.from_fasta(out, dissolve_length_one_stems=1)
             cg.from_bpseq_str(out, dissolve_length_one_stems=True)
+            cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
-            cgg.add_stem_information_from_pdb_chain(cg, chain)
-            cgg.add_bulge_information_from_pdb_chain(cg, chain)
-            cgg.add_loop_information_from_pdb_chain(cg, chain)
+            ftug.add_stem_information_from_pdb_chain(cg, chain)
+            ftug.add_bulge_information_from_pdb_chain(cg, chain)
+            ftug.add_loop_information_from_pdb_chain(cg, chain)
 
             cg.chain = chain
 
@@ -197,7 +201,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     print >>sys.stderr, "Prepare for an incoming exception."
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
-                     intermediate_file_dir=None, chain_id=None):
+                     intermediate_file_dir=None, chain_id=None,
+                    remove_pseudoknots=True):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -211,11 +216,13 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
         output_dir = intermediate_file_dir
 
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
-                                     secondary_structure, chain_id=chain_id)
+                                     secondary_structure, chain_id=chain_id,
+                                    remove_pseudoknots=remove_pseudoknots)
     else:
         with make_temp_directory() as output_dir:
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
-                                         secondary_structure, chain_id = chain_id)
+                                         secondary_structure, chain_id = chain_id,
+                                        remove_pseudoknots=remove_pseudoknots)
 
     return cg
 
@@ -234,12 +241,15 @@ def from_file(cg_filename):
 
         return cg
     
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', chain_id=None):
-    cg = load_cg_from_pdb(pdb_filename, secondary_structure, intermediate_file_dir, chain_id=chain_id)
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', 
+             chain_id=None, remove_pseudoknots=True):
+    cg = load_cg_from_pdb(pdb_filename, secondary_structure, 
+                          intermediate_file_dir, chain_id=chain_id,
+                         remove_pseudoknots=remove_pseudoknots)
 
     return cg
 
-class CoarseGrainRNA(cgb.BulgeGraph):
+class CoarseGrainRNA(fgb.BulgeGraph):
     '''
     A coarse grain model of RNA structure based on the
     bulge graph representation.
@@ -361,22 +371,19 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         @param define: The name of the bulge.
         @param connections: The two stems that are connected by it.
-        @return: cbs.AngleStat object
+        @return: ftms.AngleStat object
         '''
-        (stem1, twist1, stem2, twist2, bulge) = cgg.get_stem_twist_and_bulge_vecs(self, define, connections)
-
-        (s1b, s1e) = self.get_sides(connections[0], define)
-        (s2b, s1e) = self.get_sides(connections[1], define)
+        (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, define, connections)
 
         # Get the orientations for orienting these two stems
-        (r, u, v, t) = cgg.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
-        (r1, u1, v1) = cgg.get_stem_separation_parameters(stem1, twist1, bulge)
+        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
+        (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
 
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
 
-        angle_stat = cbs.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
+        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
 
         return angle_stat
 
@@ -391,7 +398,7 @@ class CoarseGrainRNA(cgb.BulgeGraph):
         '''                                                                                                           
         
         if bulge == 'start':
-            return (cbs.AngleStat(), cbs.AngleStat())                                                                 
+            return (ftms.AngleStat(), cbs.AngleStat())                                                                 
         
         connections = self.connections(bulge)                                                                         
         
@@ -409,13 +416,13 @@ class CoarseGrainRNA(cgb.BulgeGraph):
 
         @return: A StemStat structure containing the above information.                                               
         '''                                                                                                           
-        ss = cbs.StemStat()                                                                                           
+        ss = ftms.StemStat()                                                                                           
         
         ss.pdb_name = self.name
         #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            
         ss.bp_length = self.stem_length(stem)
         ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])                                   
-        ss.twist_angle = cgg.get_twist_angle(self.coords[stem], self.twists[stem])                                    
+        ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])                                    
         ss.define = self.defines[stem]                                                                                
         
         return ss  

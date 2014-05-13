@@ -211,6 +211,7 @@ def print_name(filename):
     print "name", os.path.splitext(filename)[0]
 
 
+
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
         self.ang_types = None
@@ -280,6 +281,8 @@ class BulgeGraph(object):
             return self.get_bulge_dimensions(key)[0]
         elif key[0] == 't':
             return self.get_bulge_dimensions(key)[1]
+        elif key[0] == 'h':
+            return self.get_bulge_dimensions(key)[0]
         else:
             return min(self.get_bulge_dimensions(key))
 
@@ -318,6 +321,9 @@ class BulgeGraph(object):
 
         whole_str = ''
         for key in self.edges:
+            if len(self.edges[key]) == 0:
+                continue
+
             # Our graph will be defined by the stems and the bulges they connect to
             name = key
             if name[0] == 's':
@@ -328,6 +334,7 @@ class BulgeGraph(object):
 
                 whole_str += out_str
                 whole_str += '\n'
+
         return whole_str
 
     def get_sequence_str(self):
@@ -609,14 +616,12 @@ class BulgeGraph(object):
 
                 j = 0
                 new_j = 0
-                #print >>sys.stderr,"self.defines[key]:", self.defines[key]
 
                 while new_j < len(self.defines[key]):
 
                     j = new_j
                     new_j += j + 2
 
-                    #print >>sys.stderr, "reduce_defines", i, j
                     (f1, t1) = (int(self.defines[key][j]), int(self.defines[key][j+1]))
 
                     # remove bulges of length 0
@@ -636,12 +641,9 @@ class BulgeGraph(object):
 
                         (f2, t2) = (int(self.defines[key][k]), int(self.defines[key][k+1]))
 
-                        #print >>sys.stderr, "j: %d f1: %d, t1: %d, f2: %d, t2: %d" % (j, f1, t1, f2, t2)
 
                         if t2 + 1 != f1 and t1 + 1 != f2:
                             continue
-
-                        #print >>sys.stderr, "pre self.defines[key]:", self.defines[key]
 
                         if t2 + 1 == f1:
                             self.defines[key][j] = str(f2)
@@ -653,8 +655,6 @@ class BulgeGraph(object):
                         del self.defines[key][k]
                         del self.defines[key][k]
 
-                        #print >>sys.stderr, "post self.defines[key]:", self.defines[key]
-                        
                         new_j = 0
 
                         break
@@ -803,17 +803,25 @@ class BulgeGraph(object):
                     if self.stem_length(key) == 1:
                         self.dissolve_stem(key)
 
-        for key in self.edges.keys():
-            if key[0] == 'y':
-                while True:
-                    loop = self.find_bulge_loop(key)
-                    bulge_loop = [v for v in loop if v[0] == 'b' or v[0] == 'x']
+        new_vertex = True
+        while new_vertex:
+            new_vertex = False
+            bulges = [k for k in self.defines if k[0] != 'y']
 
-                    if len(bulge_loop) > 0:
-                        assert(len(bulge_loop) != 1)
-                        self.merge_vertices(bulge_loop)
+            for (b1, b2) in it.combinations(bulges, r=2):
+                if self.edges[b1] == self.edges[b2] and len(self.edges[b1]) > 1:
+                    elist = list(self.edges[b1])
+                    connections = self.connections(b1)
 
-                    if len(bulge_loop) == 0:
+                    all_connections = [sorted((self.get_sides_plus(connections[0], b1)[0],
+                                              self.get_sides_plus(connections[0], b2)[0])),
+                                       sorted((self.get_sides_plus(connections[1], b1)[0],
+                                              self.get_sides_plus(connections[1], b2)[0]))]
+
+                    if all_connections == [[1,2],[0,3]]:
+                        # interior loop
+                        self.merge_vertices([b1,b2])
+                        new_vertex = True
                         break
 
 
@@ -909,9 +917,11 @@ class BulgeGraph(object):
 
             if len(self.edges[d]) == 1 and self.defines[d][0] == 1:
                 fiveprimes += [d]
+                continue
 
             if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length:
                 threeprimes += [d]
+                continue
 
             if (len(self.edges[d]) == 1 and 
                 self.defines[d][0] != 1 and 
@@ -919,6 +929,7 @@ class BulgeGraph(object):
                 hairpins += [d]
 
                 hairpins.sort(key=self.compare_hairpins)
+                continue
 
             if (len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
@@ -927,6 +938,7 @@ class BulgeGraph(object):
                 multiloops += [d]
 
                 multiloops.sort(key=self.compare_bulges)
+                continue
 
             if self.weights[d] == 2:
                 interior_loops += [d]
@@ -971,6 +983,14 @@ class BulgeGraph(object):
         Classify the way that two stems are connected according to the type
         of bulge that separates them.
 
+        Potential angle types for single stranded segments, and the ends of
+        the stems they connect:
+
+            1   2 (1, 1) #pseudoknot
+            1   0 (1, 0)
+            3   2 (0, 1)
+            3   0 (0, 0)
+
         @param define: The name of the bulge separating the two stems
         @param connections: The two stems and their separation
         '''
@@ -998,11 +1018,46 @@ class BulgeGraph(object):
                 return 4
             elif (s1c, s2c) == (3, 2):
                 return -4
+
+            # the next two refer to pseudoknots
+            elif (s1c, s2c) == (2, 1):
+                return 5
+            elif (s1c, s2c) == (1, 2):
+                return -5
             else:
                 raise Exception("Weird angle type: (s1c, s2c) = (%d, %d)" % 
                                 (s1c, s2c))
         else:
             raise Exception("connection_type called on non-interior loop/multiloop")
+
+    def connection_ends(self, connection_type):
+        """
+        Find out which ends of the stems are connected by a particular angle
+        type.
+
+        @param connection_type: The angle type, as determined by which corners
+                                of a stem are connected
+        @return: (s1e, s2b)
+        """
+        ends = ()
+
+        if abs(connection_type) == 1:
+            ends = (1, 0)
+        elif abs(connection_type) == 2:
+            ends = (1, 0)
+        elif abs(connection_type) == 3:
+            ends = (0, 0)
+        elif abs(connection_type) == 4:
+            ends = (1, 0)
+        elif abs(connection_type) == 5:
+            ends = (1, 1)
+        else:
+            raise Exception('Unknown connection type: %d' % (connection_type))
+
+        if connection_type < 0:
+            return ends[::-1]
+        else:
+            return ends
 
     def find_multiloop_loops(self):
         '''
@@ -1147,6 +1202,7 @@ class BulgeGraph(object):
 
         start_from = prev_from
         start_to = prev_to
+        last_paired = prev_from
 
         seq = parts[1]
 
@@ -1160,10 +1216,13 @@ class BulgeGraph(object):
             (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
             seq += base
 
-            if abs(from_bp - prev_from) == 1 and abs(to_bp - prev_to) == 1 and abs(to_bp - from_bp) > 1:
+            if abs(to_bp - prev_to) == 1 and prev_to != 0:
                 # stem
-                (prev_from, prev_to) = (from_bp, to_bp)
-                continue
+                if ((prev_to - prev_from > 0 and to_bp - from_bp > 0) or
+                    (prev_to - prev_from < 0 and to_bp - from_bp < 0)):
+                    (prev_from, prev_to) = (from_bp, to_bp)
+                    last_paired = from_bp
+                    continue
 
             if to_bp == 0 and prev_to == 0:
                 # bulge
@@ -1176,10 +1235,11 @@ class BulgeGraph(object):
                     if new_stem not in stems:
                         stems += [new_stem]
 
+                    last_paired = from_bp
                     start_from = from_bp
                     start_to = to_bp
                 else:
-                    new_bulge = ((start_from - 1, prev_from - 1))
+                    new_bulge = ((last_paired - 1, prev_from - 1))
                     bulges += [new_bulge]
 
                     start_from = from_bp
@@ -2091,5 +2151,31 @@ class BulgeGraph(object):
         if self.ang_types is None:
             self.set_angle_types()
         
-        return self.ang_types[bulge]
+        if bulge in self.ang_types:
+            return self.ang_types[bulge]
+        else:
+            return None
         
+def bg_from_subgraph(bg, sg):
+    '''
+    Create a BulgeGraph from a list containing the nodes
+    to take from the original.
+
+    WARNING: The sequence information is not copied
+    '''
+    nbg = BulgeGraph()
+    nbg.seq_length = 0
+
+    for d in sg:
+        # copy the define
+        nbg.defines[d] = bg.defines[d][::]
+
+    # copy edges only if they connect elements which 
+    # are also in the new structure
+    for e in bg.edges.keys():
+        for c in bg.edges[e]:
+            if c in sg:
+                nbg.edges[e].add(c)
+
+    return nbg
+

@@ -281,7 +281,6 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
 
     return (stem1_vec, twists1[s1b], stem2_vec, twists2[s2b], bulge_vec)
 
-
 def stem2_pos_from_stem1(stem1, twist1, params):
     '''
     Get the starting point of a second stem, given the parameters
@@ -444,7 +443,7 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
         try:
             c_apos = chain[i][catom_name].get_vector().get_array()
         except KeyError as ke:
-            print >>sys.stderr, "Nucleotide %d missing in element %s" % (i, ld)
+            print >>sys.stderr, "Nucleotide %s missing in element %s" % (str(i),d )
             continue
 
         dist = cuv.magnitude(stem_end - c_apos)
