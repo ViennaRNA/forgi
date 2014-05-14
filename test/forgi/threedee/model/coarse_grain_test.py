@@ -192,3 +192,8 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
         self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
                          [[(' ',6,' '), (' ',10,' ')], [(' ',19,' '), (' ',21,' ')]])
+
+    def test_get_stem_stats(self):
+        cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        
+        fud.pv('cg.get_stem_stats("s0")')

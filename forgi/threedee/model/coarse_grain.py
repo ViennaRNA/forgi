@@ -279,7 +279,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         if cg_file is not None:
             self.from_file(cg_file)
-
         pass
 
     def get_coord_str(self):
@@ -416,15 +415,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         @return: A StemStat structure containing the above information.                                               
         '''                                                                                                           
-        ss = ftms.StemStat()                                                                                           
-        
+        ss = ftms.StemStat()
         ss.pdb_name = self.name
         #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            
         ss.bp_length = self.stem_length(stem)
-        ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])                                   
-        ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])                                    
-        ss.define = self.defines[stem]                                                                                
-        
+        ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])
+        ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])
+        ss.define = self.defines[stem]
+
         return ss  
 
     def from_file(self, cg_filename):
