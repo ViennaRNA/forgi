@@ -76,6 +76,20 @@ If you just have the coarse-grain file, then use the ``visualize_cg.py`` script:
     :width: 400
     :align: center
 
+Get A Description of a Coarse-Grain Stem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `get_stem_stats` function returns a `forgi.threedee.model.StemStat` structure which contains some information about a particular stem, such as how many base pairs it has, how long it is (in Angstroms) and how much its helix twists from the start to the end. It also stores information about which nucleotides it is composed of (its `define`). 
+
+Using the structure 2MIS as an example::
+
+    >>> import forgi.threedee.model.coarse_grain as ftmc
+    >>> cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+    >>> print cg.get_stem_stats('s0')
+    pdb_name: 2mis_A bp_length: 6 phys_length: 14.735000 twist_angle: 2.822735 define: 1 6 21 26
+
+This indicates that the first stem in the structure ('s0'), composed of the nucleotides 1 - 6 and 21 - 26 has a length of 14.735 Angstroms and a twist of 2.82 radians. It is composed of 6 base pairs and comes from a structure named `2mis_A`.
+
 Citations
 ~~~~~~~~~
 
