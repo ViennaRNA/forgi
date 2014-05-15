@@ -195,5 +195,8 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_get_stem_stats(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+
+    def test_get_angle_stats(self):
+        cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
         
-        fud.pv('cg.get_stem_stats("s0")')
+        fud.pv('cg.get_bulge_angle_stats("i0")')

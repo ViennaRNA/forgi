@@ -90,6 +90,34 @@ Using the structure 2MIS as an example::
 
 This indicates that the first stem in the structure ('s0'), composed of the nucleotides 1 - 6 and 21 - 26 has a length of 14.735 Angstroms and a twist of 2.82 radians. It is composed of 6 base pairs and comes from a structure named `2mis_A`.
 
+Get A Description of an Angle Between Two Stems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The orientation of one helix (h1) with respect to another (h2) can be represented by six parameters: 
+
+1. r, u, and v, which describe the location of the of the start of h2 relative to the end of h1
+2. u1, and v1, which describe the direction of the axis vector of h2
+3. t, which describes how much h2 is twisted relative to h1
+
+Using these six parameters, one can reproduce the position of a second helix given the position of the first. The `get_bulge_angle_stats` function returns this set of parameters for any secondary structure element which connects two stems::
+
+    >>> import forgi.threedee.model.coarse_grain as ftmc
+    >>> cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+    >>> print cg.get_bulge_angle_stats('i0')
+    (<forgi.threedee.model.stats.AngleStat instance at 0x226e098>, <forgi.threedee.model.stats.AngleStat instance at 0x226e200>)
+    >>> print cg.get_bulge_angle_stats('i0')[0]
+    angle 2mis_A 3 1 1.422985 -0.124293 0.828886 6.720167 1.313748 -0.401573 7 9 20 20 GCAGC GAC
+    >>> print cg.get_bulge_angle_stats('i0')[1]
+    angle 2mis_A 3 1 1.762096 0.024409 0.822014 6.720167 1.294799 0.098387 7 9 20 20 GCAGC GAC
+
+The `get_bulge_angle_stats` actually returns two sets of parameters, one for each orientation. There is an order to the two stems which are connected by a secondary structure element. If s1 is connected to s2, then we can have the parameters for the position of s2 relative to s1 or the parameters for the position of s1 relative to s2. Both of these sets of parameters are returned as a list.
+
+The values stored by an `AngleStat` are the six parameters listed above as well as the name of the pdb file the coarse_grain model represents, the size of the element and the sequence of its two strands (including the watson-crick bas pairs which flank it).
+
+Angle Type
+~~~~~~~~~~
+
+
 Citations
 ~~~~~~~~~
 

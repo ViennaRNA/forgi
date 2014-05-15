@@ -395,7 +395,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         @param connections: The two stems that are connected by it.
         @return: The angle statistics in one direction and angle statistics in the other direction                    
         '''                                                                                                           
-        
         if bulge == 'start':
             return (ftms.AngleStat(), cbs.AngleStat())                                                                 
         
