@@ -375,14 +375,17 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, define, connections)
 
         # Get the orientations for orienting these two stems
-        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
+        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, 
+                                                            stem2, twist2)
         (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
 
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
 
-        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
+        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, 
+                                    u1, v1, ang_type, self.defines[define], 
+                                    seqs)
 
         return angle_stat
 
@@ -421,15 +424,16 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         @param bulge: The name of the bulge.
         @param connections: The two stems that are connected by it.
-        @return: The angle statistics in one direction and angle statistics in the other direction                    
-        '''                                                                                                           
+        @return: The angle statistics in one direction and angle statistics in
+                 the other direction                    
+        '''  
         if bulge == 'start':
             return (ftms.AngleStat(), cbs.AngleStat())                                                                 
         
         connections = self.connections(bulge)                                                                         
         
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
-        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))                             
+        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))  
         
         return (angle_stat1, angle_stat2)                                                                             
     
