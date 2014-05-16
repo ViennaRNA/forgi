@@ -386,6 +386,34 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return angle_stat
 
+    def get_loop_stat(self, d):
+        '''
+        Return the statistics for this loop.
+
+        These stats describe the relative orientation of the loop to the stem
+        to which it is attached.
+
+        @param d: The name of the loop
+        '''
+        loop_stat = ftms.LoopStat()
+        loop_stat.pdb_name = self.name
+
+        loop_stat.bp_length = self.get_length(d)
+        loop_stat.phys_length = ftuv.magnitude(self.coords[d][1] - self.coords[d][0])
+
+        stem1 = list(self.edges[d])[0]
+        (s1b, s1e) = self.get_sides(stem1, d)
+
+        stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
+        twist1_vec = self.twists[stem1][s1b]
+        bulge_vec = self.coords[d][1] - self.coords[d][0]
+
+        (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec, 
+                                                      bulge_vec)
+        (loop_stat.r, loop_stat.u, loop_stat.v) = (r,u,v)
+
+        return loop_stat
+
     def get_bulge_angle_stats(self, bulge):                                                                           
         '''
         Return the angle stats for a particular bulge. These stats describe the                                       
