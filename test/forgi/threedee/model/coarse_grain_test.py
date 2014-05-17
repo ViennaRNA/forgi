@@ -205,8 +205,10 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_get_loop_stat(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
-
         cg.get_loop_stat("h0")
+
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg')
+        cg.get_loop_stat('h3')
 
     def test_length_one_stems(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1byj.pdb', 

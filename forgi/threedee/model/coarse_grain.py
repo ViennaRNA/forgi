@@ -324,6 +324,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return out_str
 
     def get_long_range_str(self):
+
         out_str = ''
         printed = set()
 
@@ -409,7 +410,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
         twist1_vec = self.twists[stem1][s1b]
-        bulge_vec = self.coords[d][1] - self.coords[d][0]
+        bulge_vec = self.coords[d][1] - self.coords[d][0] + 0.1 * (stem1_vec / ftuv.magnitude(stem1_vec))
+
+        #fud.pv('stem1_vec, twist1_vec, bulge_vec')
 
         (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec, 
                                                       bulge_vec)
