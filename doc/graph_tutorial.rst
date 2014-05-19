@@ -392,3 +392,17 @@ For multiloops, hairpin loops, fiveprime regions and threeprimes regions  use `m
     ['t1']
 
 Notice that `floop_iterator()` doesn't yield any values. This is because there is no 3' unpaired region in this structure.
+
+Dissolving Stems
+~~~~~~~~~~~~~~~~
+
+To remove a stem from the skeleton graph, use the ``dissolve_stem()`` member function. This will remove the base pairs that were part of the stem and merge them with the adjacent unpaired regions::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
+    >>> bg.dissolve_stem('s0')
+    >>> print bg.to_dotbracket_str()
+    ........((..))
+    >>> bg.dissolve_stem('s1')
+    >>> print bg.to_dotbracket_string()
+    ..............

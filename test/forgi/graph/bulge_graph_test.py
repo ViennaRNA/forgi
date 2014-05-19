@@ -320,6 +320,19 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         for i,n in enumerate(nucs):
             self.assertTrue(n)
 
+    def check_node_labels(self, bg):
+        '''
+        There should be only six types of nodes in the graph. The internal
+        representation sometimes uses nodes that start with 'x' or 'y' as
+        intermediates, but these should always be removed.
+        '''
+        for k in bg.defines:
+            self.assertTrue(k[0] in ['s', 'h', 'i', 'm', 't', 'f'])
+    
+    def check_graph_integrity(self, bg):
+        self.check_node_labels(bg)
+        self.check_for_all_nucleotides(bg)
+        self.check_for_overlapping_defines(bg)
 
     def test_define_residue_num_iterator(self):
         bg = fgb.BulgeGraph()
@@ -373,7 +386,17 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
         self.assertEquals(bg.to_dotbracket_string(), '((....((..))....))')
-        self.check_for_overlapping_defines(bg)
+        self.check_graph_integrity(bg)
+
+        bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
+        self.assertEquals(bg.to_dotbracket_string(), '((..))..((..))')
+        bg.dissolve_stem('s0')
+        self.check_graph_integrity(bg)
+
+        self.assertEquals(bg.to_dotbracket_string(), '........((..))')
+
+        bg.dissolve_stem('s0')
+        self.check_graph_integrity(bg)
 
     def test_from_dotplot4(self):
         dotbracket = '()'
