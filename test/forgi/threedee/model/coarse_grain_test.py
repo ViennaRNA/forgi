@@ -218,4 +218,3 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_pseudoknot(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1YMO.pdb', intermediate_file_dir='tmp')
-

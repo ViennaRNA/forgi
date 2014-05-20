@@ -297,6 +297,9 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 
         self.assertEquals(bg.seq_length, len(self.dotbracket))
 
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket('....')
+
     def check_for_overlapping_defines(self, bg):
         '''
         Check to make sure none of the defines overlap.
@@ -821,4 +824,5 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         self.assertTrue(('s0', 'i4', 's1') in build_order)
         self.assertEqual(len(all_stems), 0)
+
 

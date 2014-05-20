@@ -1584,7 +1584,12 @@ def add_loop_information_from_pdb_chain(bg, chain):
         if d not in bg.defines:
             continue
 
-        s1 = list(bg.edges[d])[0]
+        edges = list(bg.edges[d])
+        
+        if len(edges) == 0:
+            continue
+
+        s1 = edges[0]
         s1d = bg.defines[s1]
         bd = bg.defines[d]
 

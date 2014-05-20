@@ -401,7 +401,7 @@ To remove a stem from the skeleton graph, use the ``dissolve_stem()`` member fun
     >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
     >>> bg.dissolve_stem('s0')
-    >>> print bg.to_dotbracket_str()
+    >>> print bg.to_dotbracket_string()
     ........((..))
     >>> bg.dissolve_stem('s1')
     >>> print bg.to_dotbracket_string()

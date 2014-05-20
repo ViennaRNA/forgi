@@ -150,6 +150,25 @@ as the name of the pdb file the coarse grain model represents, the size of the
 joint and the sequence of its two strands (including the nucleotides in the
 Watson-crick base pairs which flank it).
 
+Get the Largest RNA Chain from a PDB File
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``forgi`` includes some utility functions for PDB files, one of which returns
+the largest chain in the pdb file which is an RNA molecule. This can be useful
+for rapidly visualizing a PDB file which contains both RNA and proteins without
+having to see which chain is the RNA molecule. Of course for any meaningful
+analysis, one should know which chains are present along with their
+identifiers. The return value for this function is a Bio.PDB.Chain.Chain
+populated from the pdb file passed as an argument.
+
+Example::
+
+    import forgi.threedee.utilities.pdb as ftup
+    >>> c = ftup.get_biggest_chain('test/forgi/threedee/data/1X8W.pdb')
+    >>> print c
+    <Chain id=B>
+
+
 
 Citations
 ~~~~~~~~~

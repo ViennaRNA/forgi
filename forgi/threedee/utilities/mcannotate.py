@@ -60,7 +60,12 @@ def parse_base_pair_id(base_pair_id):
     @param base_pair_id: The identifier string for the interacting nucleotides (i.e. 'A33-B45')
     @return: 4-tuple containing of the form (chain1, res1, chain2, res2) i.e. ('A', 33, 'B', '45')
     """
+
     parts = base_pair_id.split('-')
+    
+    if len(parts) > 2:
+        raise Exception("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+
     (from_chain, from_base) = parse_chain_base(parts[0].strip())
     (to_chain, to_base) = parse_chain_base(parts[1].strip())
 

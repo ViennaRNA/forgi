@@ -177,7 +177,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 s = bpdb.PDBParser().get_structure('temp', f.name)
-                chain = list(s.get_chains())[0]
+                chains = list(s.get_chains())
+                if len(chains) < 1:
+                    raise Exception("No chains in the PDB file")
+
+                chain = chains[0]
 
             cg = CoarseGrainRNA()
             #cg.from_fasta(out, dissolve_length_one_stems=1)
