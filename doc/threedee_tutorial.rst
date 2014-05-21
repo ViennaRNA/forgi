@@ -168,6 +168,31 @@ Example::
     >>> print c
     <Chain id=B>
 
+Calculate the RMSD Between two PDB Chains
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The root mean square deviation (RMSD) is a measure of how much two molecules
+differ in their atomic coordinates. The value, of course, depends on how the
+two molecules are superimposed, but in most cases (including here) a rotation
+is applied such that the RMSD is minimized. The RMSD value is often used to
+compare the models created by structure prediction software to the real
+structure, and can easily be calculated using the `pdb_rmsd` method. It can
+take an optional `sidechains` parameter (which defaults to False), to indicate
+that the sidechains (bases) should be included in the RMSD calculation. If it
+is False, then only the backbone atoms are used in the calculation::
+
+    >>> import forgi.threedee.utilities.pdb as ftup
+    >>> import Bio.PDB as bpdb
+    >>> c = list(bpdb.PDBParser().get_structure('temp', 'test/forgi/threedee/data/2mis.pdb').get_chains())[0]
+    >>> ftup.pdb_rmsd(c, c)
+    (180, 1.0314194769216807e-14, (array([[  1.00000000e+00,  -1.94289029e-16,   1.11022302e-16],
+           [  8.32667268e-17,   1.00000000e+00,   6.93889390e-17],
+                  [ -5.55111512e-17,   6.93889390e-17,   1.00000000e+00]]), array([ -5.68434189e-14,   2.84217094e-14,  -1.73194792e-14])))
+
+The return value is a tuple containing the number of atoms that were
+superimposed, the RMSD value and another tuple containing the optimal rotation
+matrix and translation vector.
+
 
 
 Citations
