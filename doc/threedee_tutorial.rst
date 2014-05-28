@@ -193,7 +193,33 @@ The return value is a tuple containing the number of atoms that were
 superimposed, the RMSD value and another tuple containing the optimal rotation
 matrix and translation vector.
 
+If loading the chains is too much work, there is a wrapper function which will
+calculate the rmsd between the first chains of the first models of two pdb
+files::
 
+    >>> import forgi.threedee.utilities.pdb as ftup
+    >>> ftup.pdb_file_rmsd('test/forgi/threedee/data/2mis.pdb', 'test/forgi/threedee/data/2mis.pdb')
+    (180, 1.0314194769216807e-14, (array([[  1.00000000e+00,  -1.94289029e-16,   1.11022302e-16],
+           [  8.32667268e-17,   1.00000000e+00,   6.93889390e-17],
+                  [ -5.55111512e-17,   6.93889390e-17,   1.00000000e+00]]), array([ -5.68434189e-14,   2.84217094e-14,  -1.73194792e-14])))
+
+Determine if two Atoms are Covalently Bonded
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The difference between covalently bonded and unbonded atoms needs to be taken
+into account when calculating clash scores. Covalently bonded atoms can be
+closer to each other in a real structure than unbonded atoms. Based on the
+identity of the atoms and their parent nucleotides, the ``is_covalent``
+function tries to determine the whether two atoms are covalently bonded.
+
+Example::
+
+    >>> import forgi.threedee.utilities.pdb as ftup
+    >>> c = ftup.get_biggest_chain('test/forgi/threedee/data/2mis.pdb')
+    >>> ftup.is_covalent([c[10]["C3'"], c[10]["C4'"]])
+    True
+    >>> ftup.is_covalent([c[10]["C3'"], c[10]["C5'"]])
+    False
 
 Citations
 ~~~~~~~~~
