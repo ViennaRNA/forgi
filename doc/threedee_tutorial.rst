@@ -1,20 +1,19 @@
+.. _forgi_threedee_tutorial:
+
 RNA 3D Structure Using forgi.threedee
 ==============
 Introduction
-------------
+~~~~~~~~~~~~
 ``forgi.threedee`` is an extension of ``forgi`` capable of handling 3D data
 about RNA structures. It provides methods for extracting secondary structure as
 well as creating a coarse grain representation of 3D RNA structures.
 
 Requirements
-------------
+~~~~~~~~~~~~
 
 MC_Annotate_ is required for annotating the nucleotide interactions.
 
 .. _MC_Annotate: http://www.major.iric.ca/MajorLabEn/MC-Tools.html
-
-Examples
---------
 
 Extracting 2D structure from a 3D structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
