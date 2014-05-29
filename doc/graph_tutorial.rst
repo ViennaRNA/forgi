@@ -111,6 +111,32 @@ Into a graph that looks like this:
 
 Note that the graph and the secondary structure representation are oriented differently. The multiloop at the top of the graph is at the bottom of the secondary structure. Furthermore, some of the small bulges clearly visible in the graph (as yellow nodes) are hard to see in the secondary structure although they are indeed present.
 
+Loading a Structure from a Dot-Bracket String:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A pseudoknot free secondary structure can be represented a sequence of dots and
+brackets where the dots represent unpaired bases and the matching brackets
+represent base pairs. This representation is often delivered as the output of
+secondary structure prediction tools such as `RNAfold`_ and `Mfold`_. It can also be used as input to create a skeleton graph in `forgi`::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph()
+    >>> bg.from_dotbracket('((..))..((..))')
+    >>> print bg.to_bg_string()
+    name untitled
+    length 14
+    seq_ids
+    define h1 11 12
+    define s1 9 10 13 14
+    define s0 1 2 5 6
+    define m0 7 8
+    define h0 3 4
+    connect s1 h1 m0
+    connect s0 h0 m0
+
+.. _RNAfold: http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi
+.. _mFold: http://mfold.rna.albany.edu/?q=mfold
+
 Loading a Structure from a BPSEQ Formatted File:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
