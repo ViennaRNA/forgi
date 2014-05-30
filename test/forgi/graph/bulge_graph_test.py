@@ -338,6 +338,16 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.check_for_overlapping_defines(bg)
 
     def test_define_residue_num_iterator(self):
+        bg = fgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
+        drni = bg.define_residue_num_iterator('m2', adjacent=True)
+        # the second multiloop should have at least two adjacent nucleotides
+        self.assertEqual(len(list(drni)), 2)
+        drni = bg.define_residue_num_iterator('m1', adjacent=True)
+        # the second multiloop should have at least two adjacent nucleotides
+        self.assertEqual(len(list(drni)), 2)
+
+        drni = bg.define_residue_num_iterator('m1', adjacent=True)
+
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('..((..((...))..))..((..))..')
 

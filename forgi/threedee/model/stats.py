@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import csv
+import itertools as it
 import sys
 
 import random as rand
@@ -717,17 +718,31 @@ class FilteredConformationStats(ConformationStats):
                 dims = tuple(map(int, row[3:5]))
                 define = map(int, row[5:5 + define_len])
 
+                fud.pv('elem_name, dims')
                 # get filtered stats for each type of angle
                 ang_types = [1,-1]
                 for at in ang_types:
-                    for stat in self.angle_stats[(dims[0], dims[1], at)]:
+                    # for interior loops, the mirror loop should induce the same
+                    # bend as if the direction of the stem was reversed
+                    # TODO: make sure this is true
+                    for stat in it.chain(self.angle_stats[(dims[0], dims[1], at)],
+                                        self.angle_stats[(dims[1], dims[0], -at)]):
+                        fud.pv('stat.pdb_name, pdb_id')
+                        if stat.pdb_name == pdb_id:
+                            print stat.define, define
+
                         if stat.pdb_name == pdb_id and stat.define == define:
+                            print >>sys.stderr, "found:", stat.pdb_name, define
                             self.filtered_stats[(elem_name, at)] += [stat]
+
 
     def sample_stats(self, bg, elem):
         if self.filtered_stats is not None:
             ang_type = bg.get_angle_type(elem)
+            fud.pv('elem, ang_type')
             if (elem, ang_type) in self.filtered_stats:
+                print >>sys.stderr, "found:", elem, ang_type
+
                 if len(self.filtered_stats[(elem, ang_type)]) == 0:
                     print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
 

@@ -301,7 +301,13 @@ class BulgeGraph(object):
         define [name] [start_res1] [end_res1] [start_res2] [end_res2]
         '''
         defines_str = ''
-        for key in self.defines.keys():
+
+        # a method for sorting the defines
+        def define_sorter(k):
+            drni = self.define_residue_num_iterator(k, adjacent=True)
+            return drni.next()
+
+        for key in sorted(self.defines.keys(), key=define_sorter):
             defines_str += self.get_single_define_str(key)
             #defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
             defines_str += '\n'
@@ -444,6 +450,16 @@ class BulgeGraph(object):
                     # below
                     ranges =  [[s1[1]+1, s2[0]-1], [s2[3]+1, s1[2]-1]]
 
+        if node[0] == 'm':
+            if adjacent:
+                conns = self.connections(node)
+                s1 = self.get_sides_plus(conns[0], node)[0]
+                s2 = self.get_sides_plus(conns[1], node)[0]
+
+                rnge = sorted([self.defines[conns[0]][s1],
+                                self.defines[conns[1]][s2]])
+                ranges = [[rnge[0] + 1, rnge[1] - 1]]
+
         for (ds1, ds2) in ranges:
             if adjacent:
                 if ds1 > 1:
@@ -461,12 +477,6 @@ class BulgeGraph(object):
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         '''
         Iterate over the residue numbers that belong to this node.
-
-        Note that everything except stems starts and ends one node
-        before and after its actual start. So a multiloop section
-        from residue 10 to 13 will only actually contain residues
-        11 and 12, since residues 10 and 13 will belong to the adjacent
-        stems.
 
         :param node: The name of the node
         '''
