@@ -114,7 +114,7 @@ Note that the graph and the secondary structure representation are oriented diff
 Loading a Structure from a Dot-Bracket String:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A pseudoknot free secondary structure can be represented a sequence of dots and
+A pseudoknot-free secondary structure can be represented a sequence of dots and
 brackets where the dots represent unpaired bases and the matching brackets
 represent base pairs. This representation is often delivered as the output of
 secondary structure prediction tools such as `RNAfold`_ and `Mfold`_. It can also be used as input to create a skeleton graph in `forgi`::
@@ -140,7 +140,7 @@ secondary structure prediction tools such as `RNAfold`_ and `Mfold`_. It can als
 Loading a Structure from a BPSEQ Formatted File:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A bpseq-formatted file stores the sequence and base-pair content of a file on one line for each nucleotide in the sequence. Each line has three columns, the index of the nucleotide being described, it's identity (A, C, G, or U) and the index of its pairing partner (0 if none). We can load this file and create graph structure from it using the `from_bpseq_str` function::
+A bpseq-formatted file stores the sequence and base-pair content of an RNA secondary structure using one line for each nucleotide in the sequence. Each line has three columns, the index of the nucleotide being described, it's identity (A, C, G, or U) and the index of its pairing partner (0 if none). We can load this file and create graph structure from it using the `from_bpseq_str` function::
 
     >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph()
