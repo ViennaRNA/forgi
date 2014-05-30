@@ -135,7 +135,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
-        (dotplot, residue_map) = ftum.get_dotplot(lines)
+        try:
+            (dotplot, residue_map) = ftum.get_dotplot(lines)
+        except Exception as e:
+            print >>sys.stderr, e
+            return cg
 
         # f2 will store the dotbracket notation
         with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
