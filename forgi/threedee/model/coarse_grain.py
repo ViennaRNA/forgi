@@ -120,6 +120,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         pdb_base = op.splitext(op.basename(pdb_filename))[0]
         pdb_base += "_" + chain.id
 
+        cg = CoarseGrainRNA()
+        cg.name = pdb_base
+
+        if len(chain.get_list()) == 0:
+            return cg
+
         # first we annotate the 3D structure
         p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
         out, err = p.communicate()
@@ -183,10 +189,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
                 chain = chains[0]
 
-            cg = CoarseGrainRNA()
             #cg.from_fasta(out, dissolve_length_one_stems=1)
             cg.from_bpseq_str(out, dissolve_length_one_stems=False)
-            cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
             ftug.add_stem_information_from_pdb_chain(cg, chain)
             ftug.add_bulge_information_from_pdb_chain(cg, chain)
@@ -268,6 +272,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
 
+        self.seq_length = 0
         self.coords = dict()
         self.twists = dict()
         self.sampled = dict()
