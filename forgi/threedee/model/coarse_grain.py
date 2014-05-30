@@ -195,6 +195,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
             #cg.from_fasta(out, dissolve_length_one_stems=1)
             cg.from_bpseq_str(out, dissolve_length_one_stems=False)
+            cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
             ftug.add_stem_information_from_pdb_chain(cg, chain)
             ftug.add_bulge_information_from_pdb_chain(cg, chain)
@@ -424,8 +425,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
         twist1_vec = self.twists[stem1][s1b]
         bulge_vec = self.coords[d][1] - self.coords[d][0] + 0.1 * (stem1_vec / ftuv.magnitude(stem1_vec))
-
-        #fud.pv('stem1_vec, twist1_vec, bulge_vec')
 
         (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec, 
                                                       bulge_vec)
