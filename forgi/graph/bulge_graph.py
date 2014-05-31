@@ -214,6 +214,7 @@ def print_name(filename):
 
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
+        self.seq_length = 0
         self.ang_types = None
         self.mst = None
         self.build_order = None
@@ -1272,7 +1273,7 @@ class BulgeGraph(object):
             if new_stem not in stems:
                 stems += [new_stem]
         if prev_to == 0:
-            new_bulge = ((start_from - 1, prev_from - 1))
+            new_bulge = ((last_paired - 1, prev_from - 1))
             bulges += [new_bulge]
 
         self.seq = seq

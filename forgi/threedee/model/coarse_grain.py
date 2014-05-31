@@ -276,8 +276,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Initialize the new structure.
         '''
         super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
-
-        self.seq_length = 0
         self.coords = dict()
         self.twists = dict()
         self.sampled = dict()

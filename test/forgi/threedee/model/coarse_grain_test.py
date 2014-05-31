@@ -8,6 +8,8 @@ import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as fud
 import tempfile as tf
 
+import test.forgi.graph.bulge_graph_test as tfgb
+
 import copy, time
 
 def cg_from_sg(cg, sg):
@@ -36,7 +38,7 @@ def cg_from_sg(cg, sg):
     
     return new_cg
 
-class TestCoarseGrainRNA(unittest.TestCase):
+class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
     '''
     Simple tests for the BulgeGraph data structure.
 
@@ -46,41 +48,7 @@ class TestCoarseGrainRNA(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.text = '''
-name temp
-length 71
-seq CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
-define f1 0 1
-define h1 47 55
-define s3 42 47 55 60
-define s2 13 19 27 33
-define h0 19 27
-define s0 1 9 63 71
-define t1 71 72
-define m1 9 13
-define m2 33 42
-define m0 60 63
-connect s3 h1 m0 m2
-connect s2 h0 m1 m2
-connect s0 f1 m1 m0 t1
-coord h1 40.4278627091 -20.8674778121 -8.82330482052 56.2509994507 -31.7719993591 -10.3870000839
-coord s3 31.3600393191 -17.1294338011 -0.68791944097 40.4278627091 -20.8674778121 -8.82330482052
-coord s2 24.2992093432 -28.493700772 -0.129475995658 37.964536177 -34.3139290144 -3.76403225525
-coord h0 37.964536177 -34.3139290144 -3.76403225525 50.0929985046 -23.061000824 -16.1790008545
-coord s0 2.38464903301 0.227762971329 3.9355757629 19.2429921013 -11.2312887275 4.2510264888
-coord m1 24.2992093432 -28.493700772 -0.129475995658 19.2429921013 -11.2312887275 4.2510264888
-coord m0 31.3600393191 -17.1294338011 -0.68791944097 19.2429921013 -11.2312887275 4.2510264888
-coord m2 31.3600393191 -17.1294338011 -0.68791944097 24.2992093432 -28.493700772 -0.129475995658
-twist s3 -0.5773115352 0.273755751171 -0.769265350855 0.683685010863 0.0797372103421 0.725408011542
-twist s2 0.354411598448 0.27377713776 0.894113246589 -0.269145115187 -0.0308076403374 -0.96260677136
-twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.807336040837 0.206880238892
-'''
-        self.bg = cgb.BulgeGraph()
-        self.bg.from_bg_string(self.text)
-        self.tempfile = tf.NamedTemporaryFile()
-
-        self.tempfile.write(self.bg.to_bg_string())
-        self.tempfile.flush()
+        pass
 
     def compare_bg_to_cg(self, bg, cg):
         for d in bg.defines.keys():
@@ -92,17 +60,19 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
             self.assertTrue(bg.edges[e] == cg.edges[e])
 
     def test_from_cg_str(self):
+        pass
+
+        '''
         bg = cgb.BulgeGraph()
         cg = cmc.CoarseGrainRNA()
         bg.from_bg_string(self.text)
         cg.from_cg_string(self.text)
 
         self.compare_bg_to_cg(bg, cg)
+        '''
 
     def test_from_file(self):
-        cg = cmc.from_file(self.tempfile.name)
-
-        self.compare_bg_to_cg(self.bg, cg)
+        pass
 
     def test_get_node_from_residue_num(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
@@ -111,12 +81,11 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         elem_name = cg.get_node_from_residue_num(247, seq_id=True)
 
     def test_from_pdb(self): 
-        #cg = cmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
-        #fud.pv('cg.to_bg_string()')
+        cg = cmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
 
         cg = cmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', 
                           intermediate_file_dir='tmp',
-                         remove_pseudoknots=False)
+                          remove_pseudoknots=False)
 
         node = cg.get_node_from_residue_num(25)
         self.assertFalse(node[0] == 'h')
@@ -142,6 +111,7 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.check_graph_integrity(cg)
         
         self.assertEqual(len(cg.coords), 8)
         for key in cg.defines.keys():
@@ -149,34 +119,40 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_get_bulge_angle_stats_core(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.check_graph_integrity(cg)
 
         for d in cg.mloop_iterator():
             cg.get_bulge_angle_stats(d)
 
     def test_read_longrange_interactions(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.check_graph_integrity(cg)
 
         self.assertGreater(len(cg.longrange), 0)
 
     def test_radius_of_gyration(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.check_graph_integrity(cg)
 
         rg = cg.radius_of_gyration()
 
     def test_get_coordinates_list(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.check_graph_integrity(cg)
 
         cl = cg.get_coordinates_list()
         self.assertEqual(len(cl), len(cg.defines) * 2)
 
     def test_get_sides(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1gid.cg')
+        self.check_graph_integrity(cg)
 
         (s1b, s1e) = cg.get_sides('s0', 'f1')
         (s1b, s1e) = cg.get_sides('s8', 't1')
 
     def test_cg_from_sg(self):
         bg = ftmc.CoarseGrainRNA(dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
+        self.check_graph_integrity(bg)
 
         #bg = cgb.BulgeGraph(dotbracket_str='.(((((........)))))..((((((((.(((.((...........((((((..(((((.((((((((..(((..)))...((((....)))).....))))))))..)))))................((((((...........))))))..((...(((((((...((((((..)))))).....((......))....)))))))...(((((((((.........))))))))).(((....))).))..........(((((.(((((.......))))))))))..........))))..))............(((.((((((((...((.......))...))))))..))))).........((((((((((((..(((((((((......))))))..))).((((.......)))).....)))))..))..))).))....((...............))....))..)))))))))))...')
 
@@ -192,32 +168,40 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
 
     def test_define_residue_num_iterator(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        self.check_graph_integrity(cg)
 
         self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
                          [[(' ',6,' '), (' ',10,' ')], [(' ',19,' '), (' ',21,' ')]])
 
     def test_get_stem_stats(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        self.check_graph_integrity(cg)
 
         cg.get_stem_stats("s0")
 
     def test_get_angle_stats(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        self.check_graph_integrity(cg)
 
         cg.get_bulge_angle_stats("i0")
 
     def test_get_loop_stat(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        self.check_graph_integrity(cg)
         cg.get_loop_stat("h0")
 
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg')
+        self.check_graph_integrity(cg)
         cg.get_loop_stat('h3')
 
     def test_length_one_stems(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1byj.pdb', 
                           intermediate_file_dir='tmp', remove_pseudoknots=False)
+        self.check_graph_integrity(cg)
         cg = cmc.from_pdb('test/forgi/threedee/data/2QBZ.pdb', 
                           intermediate_file_dir='tmp', remove_pseudoknots=False)
+        self.check_graph_integrity(cg)
 
     def test_pseudoknot(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1YMO.pdb', intermediate_file_dir='tmp')
+        self.check_graph_integrity(cg)
