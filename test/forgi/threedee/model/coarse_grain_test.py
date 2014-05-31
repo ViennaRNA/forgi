@@ -111,6 +111,9 @@ twist s0 0.0711019690565 0.0772274674423 -0.994474951051 -0.552638293934 -0.8073
         elem_name = cg.get_node_from_residue_num(247, seq_id=True)
 
     def test_from_pdb(self): 
+        #cg = cmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
+        #fud.pv('cg.to_bg_string()')
+
         cg = cmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', 
                           intermediate_file_dir='tmp',
                          remove_pseudoknots=False)
