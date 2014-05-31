@@ -56,7 +56,6 @@ def main():
 
     pp.add_loops = options.loops
     pp.add_longrange = options.longrange
-    #fud.pv('cg.to_cg_string()')
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
     pp.print_text = options.text
@@ -88,7 +87,6 @@ def main():
                         color = pp.get_element_color(constraint)
 
                         for r in cg.define_residue_num_iterator(constraint):
-                            fud.pv('r')
                             pymol_cmd += "show sticks, resi %r\n" % (r)
                             pymol_cmd += "color %s, resi %r\n" % (color, r)
 

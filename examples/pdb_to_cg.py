@@ -29,7 +29,7 @@ def main():
                       help='Keep pseudoknots in the structure', 
                       action='store_true')
     parser.add_option('-d', '--dump-all', dest='dump_all', 
-                      default='', help='Enter a directory where to dump all of \
+                      default=None, help='Enter a directory where to dump all of \
                                         temporary and intermediate files.',
                       type = 'str')
 

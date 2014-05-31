@@ -9,8 +9,45 @@ import forgi.utilities.stuff as fus
 
 import copy, time
 
+class GraphVerification(object):
+    def check_for_overlapping_defines(self, bg):
+        '''
+        Check to make sure none of the defines overlap.
+        '''
+        for d1,d2 in it.combinations(bg.defines.keys(), 2):
+            for dx in bg.defines[d1]:
+                for dy in bg.defines[d2]:
+                    self.assertNotEqual(dx, dy)
 
-class TestBulgeGraph(unittest.TestCase):
+    def check_for_all_nucleotides(self, bg):
+        '''
+        Check to make sure that the bulge_graph covers each nucleotide
+        in the structure.
+        '''
+        nucs = [False for i in range(bg.seq_length)]
+
+        for d in bg.defines.keys():
+            for r in bg.define_residue_num_iterator(d):
+                nucs[r-1] = True
+
+        for i,n in enumerate(nucs):
+            self.assertTrue(n)
+
+    def check_node_labels(self, bg):
+        '''
+        There should be only six types of nodes in the graph. The internal
+        representation sometimes uses nodes that start with 'x' or 'y' as
+        intermediates, but these should always be removed.
+        '''
+        for k in bg.defines:
+            self.assertTrue(k[0] in ['s', 'h', 'i', 'm', 't', 'f'])
+    
+    def check_graph_integrity(self, bg):
+        self.check_node_labels(bg)
+        self.check_for_all_nucleotides(bg)
+        self.check_for_overlapping_defines(bg)
+
+class TestBulgeGraph(unittest.TestCase, GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
 
@@ -297,31 +334,21 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 
         self.assertEquals(bg.seq_length, len(self.dotbracket))
 
-    def check_for_overlapping_defines(self, bg):
-        '''
-        Check to make sure none of the defines overlap.
-        '''
-        for d1,d2 in it.combinations(bg.defines.keys(), 2):
-            for dx in bg.defines[d1]:
-                for dy in bg.defines[d2]:
-                    self.assertNotEqual(dx, dy)
-
-    def check_for_all_nucleotides(self, bg):
-        '''
-        Check to make sure that the bulge_graph covers each nucleotide
-        in the structure.
-        '''
-        nucs = [False for i in range(bg.seq_length)]
-
-        for d in bg.defines.keys():
-            for r in bg.define_residue_num_iterator(d):
-                nucs[r-1] = True
-
-        for i,n in enumerate(nucs):
-            self.assertTrue(n)
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket('....')
 
 
     def test_define_residue_num_iterator(self):
+        bg = fgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
+        drni = bg.define_residue_num_iterator('m2', adjacent=True)
+        # the second multiloop should have at least two adjacent nucleotides
+        self.assertEqual(len(list(drni)), 2)
+        drni = bg.define_residue_num_iterator('m1', adjacent=True)
+        # the second multiloop should have at least two adjacent nucleotides
+        self.assertEqual(len(list(drni)), 2)
+
+        drni = bg.define_residue_num_iterator('m1', adjacent=True)
+
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('..((..((...))..))..((..))..')
 
@@ -373,7 +400,17 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
         self.assertEquals(bg.to_dotbracket_string(), '((....((..))....))')
-        self.check_for_overlapping_defines(bg)
+        self.check_graph_integrity(bg)
+
+        bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
+        self.assertEquals(bg.to_dotbracket_string(), '((..))..((..))')
+        bg.dissolve_stem('s0')
+        self.check_graph_integrity(bg)
+
+        self.assertEquals(bg.to_dotbracket_string(), '........((..))')
+
+        bg.dissolve_stem('s0')
+        self.check_graph_integrity(bg)
 
     def test_from_dotplot4(self):
         dotbracket = '()'
@@ -387,8 +424,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
     def test_from_dotplot3(self):
         dotbracket = '(.(.((((((...((((((....((((.((((.(((..(((((((((....)))))))))..((.......))....)))......))))))))...))))))..)).))))).)..((((..((((((((((...))))))))).))))).......'
         bg = fgb.BulgeGraph()
+        self.check_graph_integrity(bg)
 
         bg.from_dotbracket(dotbracket)
+        self.check_graph_integrity(bg)
 
     def test_from_dotplot2(self):
         bg = fgb.BulgeGraph()
@@ -798,4 +837,5 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         self.assertTrue(('s0', 'i4', 's1') in build_order)
         self.assertEqual(len(all_stems), 0)
+
 

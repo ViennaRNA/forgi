@@ -1,5 +1,6 @@
 import inspect    
 import sys
+import traceback
 
 def pv(name):
     '''
@@ -11,3 +12,10 @@ def pv(name):
     frame=record[0]
     val=eval(name,frame.f_globals,frame.f_locals)
     print >>sys.stderr, '{0}: {1}'.format(name, val)
+
+def bt():
+    '''
+    Print the calls stack.
+    '''
+    for line in traceback.format_stack()[:-1]:
+        print line.strip()

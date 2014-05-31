@@ -214,6 +214,7 @@ def print_name(filename):
 
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
+        self.seq_length = 0
         self.ang_types = None
         self.mst = None
         self.build_order = None
@@ -301,7 +302,13 @@ class BulgeGraph(object):
         define [name] [start_res1] [end_res1] [start_res2] [end_res2]
         '''
         defines_str = ''
-        for key in self.defines.keys():
+
+        # a method for sorting the defines
+        def define_sorter(k):
+            drni = self.define_residue_num_iterator(k, adjacent=True)
+            return drni.next()
+
+        for key in sorted(self.defines.keys(), key=define_sorter):
             defines_str += self.get_single_define_str(key)
             #defines_str += "define %s %s" % ( key, " ".join([str(d) for d in self.defines[key]]))
             defines_str += '\n'
@@ -444,6 +451,16 @@ class BulgeGraph(object):
                     # below
                     ranges =  [[s1[1]+1, s2[0]-1], [s2[3]+1, s1[2]-1]]
 
+        if node[0] == 'm':
+            if adjacent:
+                conns = self.connections(node)
+                s1 = self.get_sides_plus(conns[0], node)[0]
+                s2 = self.get_sides_plus(conns[1], node)[0]
+
+                rnge = sorted([self.defines[conns[0]][s1],
+                                self.defines[conns[1]][s2]])
+                ranges = [[rnge[0] + 1, rnge[1] - 1]]
+
         for (ds1, ds2) in ranges:
             if adjacent:
                 if ds1 > 1:
@@ -461,12 +478,6 @@ class BulgeGraph(object):
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         '''
         Iterate over the residue numbers that belong to this node.
-
-        Note that everything except stems starts and ends one node
-        before and after its actual start. So a multiloop section
-        from residue 10 to 13 will only actually contain residues
-        11 and 12, since residues 10 and 13 will belong to the adjacent
-        stems.
 
         :param node: The name of the node
         '''
@@ -748,7 +759,7 @@ class BulgeGraph(object):
 
     def dissolve_stem(self, key):
         '''
-        Remove a stem which has a length of 1. This means that we need
+        Remove a stem. This means that we need
         to reconfigure all of the adjacent elements in such a manner
         that they now include the nucleotides that were formerly 
         in this stem.
@@ -790,18 +801,14 @@ class BulgeGraph(object):
         for r in to_remove:
             self.remove_vertex(r)
 
+        self.relabel_nodes()
+
     def collapse(self):
         '''
         If any vertices form a loop, then they are either a bulge region of 
         a fork region. The bulge (interior loop) regions will be condensed 
         into one node.
         '''
-        # for all stems of length 1, merge with adjacent bulges
-        for key in self.edges.keys():
-            if self.dissolve_length_one_stems:
-                if key[0] == 'y':
-                    if self.stem_length(key) == 1:
-                        self.dissolve_stem(key)
 
         new_vertex = True
         while new_vertex:
@@ -823,7 +830,6 @@ class BulgeGraph(object):
                         self.merge_vertices([b1,b2])
                         new_vertex = True
                         break
-
 
     def interior_loop_iterator(self):
         """
@@ -901,7 +907,7 @@ class BulgeGraph(object):
         threeprimes = []
 
         for d in self.defines.keys():
-            if d[0] == 'y':
+            if d[0] == 'y' or d[0] == 's':
                 stems += [d]
 
                 stems.sort(key=self.compare_stems)
@@ -915,7 +921,7 @@ class BulgeGraph(object):
                 multiloops += [d]
                 continue
 
-            if len(self.edges[d]) == 1 and self.defines[d][0] == 1:
+            if len(self.edges[d]) <= 1 and self.defines[d][0] == 1:
                 fiveprimes += [d]
                 continue
 
@@ -931,7 +937,7 @@ class BulgeGraph(object):
                 hairpins.sort(key=self.compare_hairpins)
                 continue
 
-            if (len(self.edges[d]) == 2 and 
+            if d[0] == 'm' or (d[0] != 'i' and len(self.edges[d]) == 2 and 
                 self.weights[d] == 1 and 
                 self.defines[d][0] != 1 and
                 self.defines[d][1] != self.seq_length):
@@ -940,7 +946,7 @@ class BulgeGraph(object):
                 multiloops.sort(key=self.compare_bulges)
                 continue
 
-            if self.weights[d] == 2:
+            if d[0] == 'i' or self.weights[d] == 2:
                 interior_loops += [d]
                 interior_loops.sort(key=self.compare_stems)
 
@@ -1152,6 +1158,17 @@ class BulgeGraph(object):
         self.relabel_nodes()
         self.remove_degenerate_nodes()
         self.sort_defines()
+        
+        # dissolve all stems which have a length of one
+        if self.dissolve_length_one_stems:
+            repeat=True
+            while repeat:
+                repeat = False
+                for k in self.defines:
+                    if k[0] == 's' and self.stem_length(k) == 1:
+                        self.dissolve_stem(k)
+                        repeat = True
+                        break
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
@@ -1256,7 +1273,7 @@ class BulgeGraph(object):
             if new_stem not in stems:
                 stems += [new_stem]
         if prev_to == 0:
-            new_bulge = ((start_from - 1, prev_from - 1))
+            new_bulge = ((last_paired - 1, prev_from - 1))
             bulges += [new_bulge]
 
         self.seq = seq

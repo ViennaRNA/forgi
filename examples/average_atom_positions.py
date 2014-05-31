@@ -35,7 +35,6 @@ def main():
 
     for i,arg in enumerate(args):
         cg = ftmc.from_pdb(arg)
-        fud.pv('i')
 
         for d in cg.defines.keys():
             origin, basis = ftug.element_coord_system(cg, d)

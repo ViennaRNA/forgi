@@ -111,10 +111,36 @@ Into a graph that looks like this:
 
 Note that the graph and the secondary structure representation are oriented differently. The multiloop at the top of the graph is at the bottom of the secondary structure. Furthermore, some of the small bulges clearly visible in the graph (as yellow nodes) are hard to see in the secondary structure although they are indeed present.
 
+Loading a Structure from a Dot-Bracket String:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A pseudoknot-free secondary structure can be represented a sequence of dots and
+brackets where the dots represent unpaired bases and the matching brackets
+represent base pairs. This representation is often delivered as the output of
+secondary structure prediction tools such as `RNAfold`_ and `Mfold`_. It can also be used as input to create a skeleton graph in `forgi`::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph()
+    >>> bg.from_dotbracket('((..))..((..))')
+    >>> print bg.to_bg_string()
+    name untitled
+    length 14
+    seq_ids
+    define h1 11 12
+    define s1 9 10 13 14
+    define s0 1 2 5 6
+    define m0 7 8
+    define h0 3 4
+    connect s1 h1 m0
+    connect s0 h0 m0
+
+.. _RNAfold: http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi
+.. _mFold: http://mfold.rna.albany.edu/?q=mfold
+
 Loading a Structure from a BPSEQ Formatted File:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A bpseq-formatted file stores the sequence and base-pair content of a file on one line for each nucleotide in the sequence. Each line has three columns, the index of the nucleotide being described, it's identity (A, C, G, or U) and the index of its pairing partner (0 if none). We can load this file and create graph structure from it using the `from_bpseq_str` function::
+A bpseq-formatted file stores the sequence and base-pair content of an RNA secondary structure using one line for each nucleotide in the sequence. Each line has three columns, the index of the nucleotide being described, it's identity (A, C, G, or U) and the index of its pairing partner (0 if none). We can load this file and create graph structure from it using the `from_bpseq_str` function::
 
     >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph()
@@ -332,7 +358,7 @@ Example::
     >>> print bg.find_multiloop_loops()
     [set(['s3', 's2', 's4', 'm5', 'm3', 'm2']), set(['s2', 's1', 's5', 'm4', 'm1', 'm0'])]
 
-Get a random subgraph
+Selecting a Random Subgraph
 ~~~~~~~~~~~~~~~~~~~~~
 
 The `random_subgraph` function picks a random quantity of elements which will become part of the subgraph. A random element is chosen as a starting point and the graph is traversed in a random manner until at least the chosen number of nodes have been added. When that number is exceeded, the traversal stops. In cases where an interior loop or a multiloop segment is added, the stem on the other end is automatically added as well. Example, using the graph in the previous section::
@@ -392,3 +418,17 @@ For multiloops, hairpin loops, fiveprime regions and threeprimes regions  use `m
     ['t1']
 
 Notice that `floop_iterator()` doesn't yield any values. This is because there is no 3' unpaired region in this structure.
+
+Dissolving Stems
+~~~~~~~~~~~~~~~~
+
+To remove a stem from the skeleton graph, use the ``dissolve_stem()`` member function. This will remove the base pairs that were part of the stem and merge them with the adjacent unpaired regions::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
+    >>> bg.dissolve_stem('s0')
+    >>> print bg.to_dotbracket_string()
+    ........((..))
+    >>> bg.dissolve_stem('s1')
+    >>> print bg.to_dotbracket_string()
+    ..............

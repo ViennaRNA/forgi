@@ -120,6 +120,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         pdb_base = op.splitext(op.basename(pdb_filename))[0]
         pdb_base += "_" + chain.id
 
+        cg = CoarseGrainRNA()
+        cg.name = pdb_base
+
+        if len(chain.get_list()) == 0:
+            return cg
+
         # first we annotate the 3D structure
         p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
         out, err = p.communicate()
@@ -129,7 +135,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
         lines = out.strip().split('\n')
         # convert the mcannotate output into bpseq format
-        (dotplot, residue_map) = ftum.get_dotplot(lines)
+        try:
+            (dotplot, residue_map) = ftum.get_dotplot(lines)
+        except Exception as e:
+            print >>sys.stderr, e
+            return cg
 
         # f2 will store the dotbracket notation
         with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
@@ -177,11 +187,14 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 s = bpdb.PDBParser().get_structure('temp', f.name)
-                chain = list(s.get_chains())[0]
+                chains = list(s.get_chains())
+                if len(chains) < 1:
+                    raise Exception("No chains in the PDB file")
 
-            cg = CoarseGrainRNA()
+                chain = chains[0]
+
             #cg.from_fasta(out, dissolve_length_one_stems=1)
-            cg.from_bpseq_str(out, dissolve_length_one_stems=True)
+            cg.from_bpseq_str(out, dissolve_length_one_stems=False)
             cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
             ftug.add_stem_information_from_pdb_chain(cg, chain)
@@ -263,7 +276,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Initialize the new structure.
         '''
         super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
-
         self.coords = dict()
         self.twists = dict()
         self.sampled = dict()
@@ -324,6 +336,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return out_str
 
     def get_long_range_str(self):
+
         out_str = ''
         printed = set()
 
@@ -375,16 +388,47 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, define, connections)
 
         # Get the orientations for orienting these two stems
-        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, stem2, twist2)
+        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, 
+                                                            stem2, twist2)
         (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
 
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
 
-        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, u1, v1, ang_type, self.defines[define], seqs)
+        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, 
+                                    u1, v1, ang_type, self.defines[define], 
+                                    seqs)
 
         return angle_stat
+
+    def get_loop_stat(self, d):
+        '''
+        Return the statistics for this loop.
+
+        These stats describe the relative orientation of the loop to the stem
+        to which it is attached.
+
+        @param d: The name of the loop
+        '''
+        loop_stat = ftms.LoopStat()
+        loop_stat.pdb_name = self.name
+
+        loop_stat.bp_length = self.get_length(d)
+        loop_stat.phys_length = ftuv.magnitude(self.coords[d][1] - self.coords[d][0])
+
+        stem1 = list(self.edges[d])[0]
+        (s1b, s1e) = self.get_sides(stem1, d)
+
+        stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
+        twist1_vec = self.twists[stem1][s1b]
+        bulge_vec = self.coords[d][1] - self.coords[d][0] + 0.1 * (stem1_vec / ftuv.magnitude(stem1_vec))
+
+        (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec, 
+                                                      bulge_vec)
+        (loop_stat.r, loop_stat.u, loop_stat.v) = (r,u,v)
+
+        return loop_stat
 
     def get_bulge_angle_stats(self, bulge):                                                                           
         '''
@@ -393,16 +437,16 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         @param bulge: The name of the bulge.
         @param connections: The two stems that are connected by it.
-        @return: The angle statistics in one direction and angle statistics in the other direction                    
-        '''                                                                                                           
-        
+        @return: The angle statistics in one direction and angle statistics in
+                 the other direction                    
+        '''  
         if bulge == 'start':
             return (ftms.AngleStat(), cbs.AngleStat())                                                                 
         
         connections = self.connections(bulge)                                                                         
         
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
-        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))                             
+        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))  
         
         return (angle_stat1, angle_stat2)                                                                             
     
