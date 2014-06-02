@@ -489,6 +489,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
                 continue
 
             ConstructionStats.angle_stats[(angle_stat.dim1, angle_stat.dim2, angle_stat.ang_type)] += [angle_stat]
+            ConstructionStats.angle_stats[(angle_stat.dim2, angle_stat.dim1, -angle_stat.ang_type)] += [angle_stat]
             count += 1
 
     f.close()
