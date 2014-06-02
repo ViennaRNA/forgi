@@ -3,6 +3,8 @@
 import sys
 from optparse import OptionParser
 
+import forgi.threedee.utilities.pdb as ftup
+
 def main():
     usage = """
     python get_biggest_rna_chain.py in.pdb out.pdb
