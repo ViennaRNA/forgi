@@ -254,7 +254,7 @@ def from_file(cg_filename):
 
         return cg
     
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', 
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None, 
              chain_id=None, remove_pseudoknots=True):
     cg = load_cg_from_pdb(pdb_filename, secondary_structure, 
                           intermediate_file_dir, chain_id=chain_id,
