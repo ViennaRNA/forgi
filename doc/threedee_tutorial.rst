@@ -202,6 +202,27 @@ files::
            [  8.32667268e-17,   1.00000000e+00,   6.93889390e-17],
                   [ -5.55111512e-17,   6.93889390e-17,   1.00000000e+00]]), array([ -5.68434189e-14,   2.84217094e-14,  -1.73194792e-14])))
 
+
+Calculate the RMSD Between two Coarse-Grain Models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Like PDB chains, we can also compute an RMSD value for two coarse grain models.
+For this we need to use the virtual residues of the helices as the atoms and
+compute the RMSD value amongst them::
+
+    >>> import forgi.threedee.model.coarse_grain as ftmc
+    >>> import forgi.threedee.utilities.graph_pdb as ftug
+    >>> import forgi.threedee.utilities.rmsd as ftur
+    >>> 
+    >>> cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+    >>> cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+    >>> 
+    >>> v1 = ftug.bg_virtual_residues(cg1)
+    >>> v2 = ftug.bg_virtual_residues(cg2)
+    >>> 
+    >>> print ftur.rmsd(v1,v2)
+    0.0
+
 Determine if two Atoms are Covalently Bonded
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
