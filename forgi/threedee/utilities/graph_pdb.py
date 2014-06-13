@@ -670,7 +670,6 @@ def get_mids_core(cg, chain, define,
     filename = forgi.threedee.data_file(op.join('data', template_filename))
     ideal_chain = ftup.get_first_chain(filename)
 
-
     # extract the coordinates of the stem from the input chain
     # and place them into a new chain
     stem_chain = bpdb.Chain.Chain(' ')
@@ -680,12 +679,11 @@ def get_mids_core(cg, chain, define,
         for resname in strand:
             stem_chain.add(chain[resname])
 
+
     # get the rotation and translation to rotate the ideal chain onto
     # the stem chain
     rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,
                           superimpose=True, apply_sup=False)[2]
-
-
 
     # get the mids of the ideal chain using the fit method
     '''

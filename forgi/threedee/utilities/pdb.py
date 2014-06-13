@@ -235,8 +235,8 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     c1_list = c1.get_list()
     c2_list = c2.get_list()
 
-    c1_list.sort(key=lambda x: x.id[1])
-    c2_list.sort(key=lambda x: x.id[1])
+    #c1_list.sort(key=lambda x: x.id[1])
+    #c2_list.sort(key=lambda x: x.id[1])
     
     for r1,r2 in zip(c1_list, c2_list):
         if sidechains:
