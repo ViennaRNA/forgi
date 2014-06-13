@@ -1500,12 +1500,20 @@ class BulgeGraph(object):
 
         for i in xrange(4):
             for k in xrange(len(bd)):
-                if abs(s1d[i] - bd[k]) == 1:
-                    if i == 0 or i == 3:
+                if s1d[i] - bd[k] == 1:
+                    if i == 0:
                         s1b = 0
-                    else:
+                        break
+                    if i == 2:
                         s1b = 1
-
+                        break
+                elif s1d[i] - bd[k] == -1:
+                    if i == 1:
+                        s1b = 1
+                        break
+                    if i == 3:
+                        s1b = 0
+                        break
         if s1b == 0:
             s1e = 1
         else:
@@ -2041,7 +2049,7 @@ class BulgeGraph(object):
         '''
         return ftum.parse_chain_base(chainres)[1]
 
-    def get_resseqs(self, define):
+    def get_resseqs(self, define, seq_ids=True):
         '''
         Return the pdb ids of the nucleotides in this define.
 
@@ -2054,7 +2062,11 @@ class BulgeGraph(object):
         for r in ranges:
             strand_resnames = []
             for x in range(r[0], r[1] + 1):
-                strand_resnames += [self.seq_ids[x-1]]
+                if seq_ids:
+                    strand_resnames += [self.seq_ids[x-1]]
+                else:
+                    strand_resnames += [x]
+
             resnames += [strand_resnames]
 
         return resnames

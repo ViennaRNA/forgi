@@ -1,3 +1,4 @@
+import numpy as np
 import unittest, os
 import sys
 
@@ -59,6 +60,30 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
             self.assertTrue(e in cg.edges.keys())
             self.assertTrue(bg.edges[e] == cg.edges[e])
 
+    def check_cg_integrity(self, cg):
+        for s in cg.stem_iterator():
+            edges = list(cg.edges[s])
+            if len(edges) < 2:
+                continue
+
+            multiloops = False
+            for e in edges:
+                if e[0] != 'i':
+                    multiloops = True
+
+            if multiloops:
+                continue
+
+
+            self.assertFalse(np.allclose(cg.coords[edges[0]][0],
+                                         cg.coords[edges[1]][0]))
+            self.assertFalse(np.allclose(cg.coords[edges[0]][0],
+                                         cg.coords[edges[1]][1]))
+            self.assertFalse(np.allclose(cg.coords[edges[0]][1],
+                                         cg.coords[edges[1]][0]))
+            self.assertFalse(np.allclose(cg.coords[edges[0]][1],
+                                         cg.coords[edges[1]][1]))
+
     def test_from_cg_str(self):
         pass
 
@@ -77,43 +102,54 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
     def test_get_node_from_residue_num(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
                           intermediate_file_dir='tmp', chain_id='A')
+        self.check_cg_integrity(cg)
 
         elem_name = cg.get_node_from_residue_num(247, seq_id=True)
 
     def test_from_pdb(self): 
         cg = cmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
+        self.check_cg_integrity(cg)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', 
                           intermediate_file_dir='tmp',
                           remove_pseudoknots=False)
+        self.check_cg_integrity(cg)
 
         node = cg.get_node_from_residue_num(25)
         self.assertFalse(node[0] == 'h')
 
         cg = cmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
+        self.check_cg_integrity(cg)
 
         self.assertTrue(len(cg.defines) > 1)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb', intermediate_file_dir='tmp')
+        self.check_cg_integrity(cg)
         cg = cmc.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb', intermediate_file_dir=None)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/1y26_missing.pdb', intermediate_file_dir='tmp')
+        self.check_cg_integrity(cg)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb', 
                           intermediate_file_dir='tmp', chain_id='Y')
+        self.check_cg_integrity(cg)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
                           intermediate_file_dir='tmp', chain_id='A')
+        self.check_cg_integrity(cg)
 
         cg = cmc.from_pdb('test/forgi/threedee/data/1FJG_reduced.pdb', 
                           intermediate_file_dir='tmp')
+        self.check_cg_integrity(cg)
 
 
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
         
-        self.assertEqual(len(cg.coords), 8)
+        #fud.pv('cg.coords')
+        #self.assertEqual(len(cg.coords), 8)
         for key in cg.defines.keys():
             self.assertTrue(key in cg.coords)
 
@@ -146,6 +182,7 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
     def test_get_sides(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1gid.cg')
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
 
         (s1b, s1e) = cg.get_sides('s0', 'f1')
         (s1b, s1e) = cg.get_sides('s8', 't1')
@@ -169,39 +206,42 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
     def test_define_residue_num_iterator(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
 
         self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
                          [[(' ',6,' '), (' ',10,' ')], [(' ',19,' '), (' ',21,' ')]])
 
     def test_get_stem_stats(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
-        self.check_graph_integrity(cg)
 
         cg.get_stem_stats("s0")
 
     def test_get_angle_stats(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
-        self.check_graph_integrity(cg)
 
         cg.get_bulge_angle_stats("i0")
 
     def test_get_loop_stat(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
-        self.check_graph_integrity(cg)
         cg.get_loop_stat("h0")
 
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg')
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
         cg.get_loop_stat('h3')
 
     def test_length_one_stems(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1byj.pdb', 
                           intermediate_file_dir='tmp', remove_pseudoknots=False)
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
+
         cg = cmc.from_pdb('test/forgi/threedee/data/2QBZ.pdb', 
                           intermediate_file_dir='tmp', remove_pseudoknots=False)
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
 
     def test_pseudoknot(self):
         cg = cmc.from_pdb('test/forgi/threedee/data/1YMO.pdb', intermediate_file_dir='tmp')
         self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
