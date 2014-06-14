@@ -693,9 +693,9 @@ def get_mids_core(cg, chain, define,
     '''
 
     # average length of a base-pair: 2.547
-    mult=1.0
-    ideal_mids = np.array([[0., 0., -mult], 
-                  np.array([0., 0., mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
+    mult=0.1
+    ideal_mids = np.array([[0., 0., mult], 
+                  np.array([0., 0., -mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
 
     # apply the rotation and translation to get the mids of the
     # target chain
@@ -1825,3 +1825,16 @@ def cg_atoms(cg):
             new_coords = add_atoms(coords, twists, cg.defines[d], 1, cg.seq, new_coords)
 
     return new_coords
+
+def element_distance(cg, l1, l2):
+    '''
+    Calculate the distance between the two closest points of these
+    two elements.
+    '''
+    (i1, i2) = ftuv.line_segment_distance(cg.coords[l1][0],
+                                       cg.coords[l1][1],
+                                       cg.coords[l2][0],
+                                       cg.coords[l2][1])                                                             
+    return ftuv.vec_distance(i1, i2)
+            
+
