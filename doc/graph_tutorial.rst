@@ -272,7 +272,7 @@ And get an appropriately formatted parameter file::
     STEM PAIR 8 64
     STEM PAIR 9 63
 
-Getting the sequence of an element and its neighbors
+Getting the Sequence of an Element and its Neighbors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Suppose we want to find out not only the sequence of an element, but also the elements that surround it? This is easily done using the `get_flanking_sequence` function. To illustrate, let's create a graph from a fasta representation::
@@ -432,3 +432,22 @@ To remove a stem from the skeleton graph, use the ``dissolve_stem()`` member fun
     >>> bg.dissolve_stem('s1')
     >>> print bg.to_dotbracket_string()
     ..............
+
+Finding Out Which Side of a Stem a Loop Is On
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If one imagines a stem as having a direction where its start is the position of
+the lowest numbered nucleotide within it, then a loop adjacent to the stem will
+be on one side of it. Which side it's on can be elucidated using the
+``get_sides`` function::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str="..((..((..))..))..")
+    >>> bg.get_sides('s0', 'i0')
+    (1, 0)
+    >>> bg.get_sides('s1', 'i0')
+    (0, 1)
+
+The result shows that the loop `i0` is on side 1 of stem `s0` and side 0 of
+stem `s1`. The second number of the tuple is simple the boolean opposite of the
+first number. This needs to be changed in a future version.
