@@ -584,6 +584,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # should have either one or two edges 
         return None                                                                                                   
 
+    def total_length(self):
+        '''
+        Calculate the combined length of all the elements.
+        '''
+        return sum([len(list(self.define_residue_num_iterator(d))) for d in self.defines])
+
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.

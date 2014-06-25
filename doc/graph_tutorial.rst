@@ -321,7 +321,14 @@ The interior loop is a little more tricky because it is double stranded. From th
 Finding the Minimum Spanning Tree of a Graph
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Can we create a subgraph such that all stems are connected and no cycles remain? Recall that cycles only occur in multiloop sections (junctions). Can we return a representation of the structure such that all stems are connected with the least number of nucleotides between them? If interior loops and multiloop segements were considered edges, then this would be the equivalent of a minimum spanning tree. Since they are nodes, then the result is not a minimum spanning tree but simply a representation of the secondary structure with broken multiloops.
+Can we create a subgraph such that all stems are connected and no cycles
+remain? Recall that cycles only occur in multiloop sections (junctions). Can we
+return a representation of the structure such that all stems are connected with
+the least number of nucleotides between them? If interior loops and multiloop
+segements were considered edges, then this would be the equivalent of a minimum
+spanning tree. Since they are nodes, then the result is not a minimum spanning
+tree but simply a representation of the secondary structure with broken
+multiloops.
 
 As an example, consider the following structure:
 
@@ -331,14 +338,31 @@ As an example, consider the following structure:
 
 .. python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
 
-To break the cycle, we would like to remove the segment 'm0'. This is easily done using the `get_mst()` function of the `BulgeGraph` data structure::
+To break the cycle, we would like to remove the segment 'm0'. This is easily
+done using the `get_mst()` function of the `BulgeGraph` data structure::
 
     >>> import forgi.graph.bulge_graph as fgb 
     >>> bg = fgb.BulgeGraph(dotbracket_str="((..((.)).(.).))")
     >>> bg.get_mst()
     set(['s2', 's1', 's0', 'm1', 'm2'])
 
-The result contains all the nodes except the ones removed to break the cycles. The implementation uses a slightly modified version of Kruskal's algorithm.
+The result contains all the nodes except the ones removed to break the cycles.
+The implementation uses a slightly modified version of Kruskal's algorithm.
+
+Traversing the Graph
+~~~~~~~~~~~~~~~~~~~~
+
+We can traverse all of the loops in a graph in breadth-first manner using the
+`traverse_graph` function::
+
+>>> import forgi.graph.bulge_graph as fgb
+>>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+>>> bg.traverse_graph()
+[('s0', 'i0', 's1'), ('s1', 'm1', 's5'), ('s5', 'm4', 's2'), ('s2', 'm3', 's4'), ('s4', 'm5', 's3')]
+
+Starting with the first stem, *s0*, we visit each loop that connects it to
+another stem and return all the visited loops as a list of tuples. Each tuple
+has the following three elements: (from_stem, loop, to_stem).
 
 Finding the elements which form the multiloops of a structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
