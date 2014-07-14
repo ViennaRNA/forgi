@@ -522,6 +522,16 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
     available_stats.sort()
     return available_stats
 
+def get_one_d_stat_dims(d, stats, min_entries=1):
+    available_stats = []
+
+    for k in stats.keys():
+        available_stats += [(abs(d - k), k)]
+
+    available_stats.sort()
+    return available_stats
+
+
 def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
     Load the statistics from the file.
@@ -670,7 +680,11 @@ class ConformationStats(object):
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            dims = (dims[0], dims[1], ang_type)
+            #dims = (dims[0], dims[1], ang_type)
+            #fud.pv('dims')
+            dims = get_angle_stat_dims(dims[0], dims[1], 
+                                       ang_type, min_entries=1)[0][-3:]
+            #fud.pv('dims')
 
         elif elem[0] == 'h':
             dims = dims[0]
@@ -678,9 +692,12 @@ class ConformationStats(object):
         elif elem[0] == 't':
             dims = dims[0]
             stats = self.threeprime_stats
+            dims = get_one_d_stat_dims(dims, stats)[0][-1]
+
         elif elem[0] == 'f':
             dims = dims[0]
             stats = self.fiveprime_stats
+            dims = get_one_d_stat_dims(dims, stats)[0][-1]
 
         if len(stats[dims]) == 0:
             print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
