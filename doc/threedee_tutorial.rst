@@ -202,6 +202,8 @@ files::
            [  8.32667268e-17,   1.00000000e+00,   6.93889390e-17],
                   [ -5.55111512e-17,   6.93889390e-17,   1.00000000e+00]]), array([ -5.68434189e-14,   2.84217094e-14,  -1.73194792e-14])))
 
+Note that this function, unless provided with a chain identifier always takes the largest RNA chain in the file and omits any non-RNA residues.
+
 
 Calculate the RMSD Between two Coarse-Grain Models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
