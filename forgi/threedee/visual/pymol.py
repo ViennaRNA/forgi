@@ -665,7 +665,7 @@ class PymolPrinter:
                         for i in range(int(num_dashes)):
                             self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
                                              point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
-                                             0.3, key1 + " " + key2)
+                                             0.3, "")
 
                             '''
                             self.add_segment(point1, point2, "purple",
