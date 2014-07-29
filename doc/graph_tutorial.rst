@@ -291,20 +291,6 @@ From the structure, we can see that there are two hairpins (`h0` and `h1`), one 
 
     >>> bg.get_flanking_sequence('h0')
     'GGGCCUUU'
-<<<<<<< HEAD
-
-The same can be done for the multiloop (`m0`)::
-
-    >>> bg.get_flanking_sequence('m0')
-    'CCCCAAAUU'
-
-The interior loop is a little more tricky because it is double stranded. From the interior loop, we need to pass in a parameter indicating which side we want (0 or 1). The 0'th strand corresponds to the one with the lower numbered nucleotides, whereas the 1'st strand is the other. The default is the 0'th strand::
-
-    >>> bg.get_flanking_sequence('i0')
-    'AAAACCGGG'
-    >>> bg.get_flanking_sequence('i0', side=1)
-    'UUUUACCCC'
-=======
 
 The same can be done for the multiloop (`m0`)::
 
