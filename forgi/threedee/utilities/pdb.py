@@ -409,7 +409,11 @@ def get_biggest_chain(in_filename):
                 res.resname.strip() == 'G' or
                 res.resname.strip() == 'U'):
                 num_residues += 1
+            else:
+                fud.pv('res.resname.strip()')
 
+        fud.pv('c.id, num_residues')
+        fud.pv('len(list(c.get_list()))')
         if num_residues > biggest_len:
             biggest = i
             biggest_len = num_residues

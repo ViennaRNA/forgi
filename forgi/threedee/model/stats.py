@@ -391,6 +391,9 @@ class ContinuousAngleStats():
                 continue
             '''
 
+            if len(data) < 3:
+                continue
+
             try:
                 self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
             except np.linalg.LinAlgError as lae:
@@ -745,10 +748,16 @@ class FilteredConformationStats(ConformationStats):
                     for stat in it.chain(self.angle_stats[(dims[0], dims[1], at)],
                                         self.angle_stats[(dims[1], dims[0], -at)]):
                         if stat.pdb_name == pdb_id:
+                            #print stat.define, define
+                            pass
+
+                        if stat.pdb_name.find('1X8W') >= 0:
+                            print "(%d, %d, %d) - (%d, %d, %d)" % (stat.dim1, stat.dim2, stat.ang_type, dims[0], dims[1], at)
+                            print stat.pdb_name, pdb_id
                             print stat.define, define
 
                         if stat.pdb_name == pdb_id and stat.define == define:
-                            #print >>sys.stderr, "found:", stat.pdb_name, define
+                            print >>sys.stderr, "found:", stat.pdb_name, define
                             self.filtered_stats[(elem_name, at)] += [stat]
 
 
