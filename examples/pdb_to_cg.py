@@ -33,7 +33,7 @@ def main():
                                         temporary and intermediate files.',
                       type = 'str')
     parser.add_option('-c', '--chain', dest='chain', 
-                      default=None, help='Specify the chain to coarse-grain')
+                      default=None, help='Specify the chain to coarse-grain',
                       type = 'str')
 
     (options, args) = parser.parse_args()

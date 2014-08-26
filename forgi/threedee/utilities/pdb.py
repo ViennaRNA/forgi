@@ -228,8 +228,9 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     all_atoms1 = []
     all_atoms2 = []
 
-    c1_list = [cr for cr in c1.get_list() if cr.resname.strip() in ['A','C','G','U','rA','rC','rG', 'rU']]
-    c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in ['A','C','G','U','rA','rC','rG', 'rU']]
+    acceptable_residues = ['A','C','G','U','rA','rC','rG','rU','DG']
+    c1_list = [cr for cr in c1.get_list() if cr.resname.strip() in acceptable_residues]
+    c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in acceptable_residues]
 
     if len(c1_list) != len(c2_list):
         #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
@@ -409,11 +410,9 @@ def get_biggest_chain(in_filename):
                 res.resname.strip() == 'G' or
                 res.resname.strip() == 'U'):
                 num_residues += 1
-            else:
-                fud.pv('res.resname.strip()')
 
-        fud.pv('c.id, num_residues')
-        fud.pv('len(list(c.get_list()))')
+        #fud.pv('c.id, num_residues')
+        #fud.pv('len(list(c.get_list()))')
         if num_residues > biggest_len:
             biggest = i
             biggest_len = num_residues
