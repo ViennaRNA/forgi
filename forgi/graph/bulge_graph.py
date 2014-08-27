@@ -2059,6 +2059,7 @@ class BulgeGraph(object):
         '''
         resnames = []
         ranges = zip(*[iter(self.defines[define])] * 2)
+
         for r in ranges:
             strand_resnames = []
             for x in range(r[0], r[1] + 1):

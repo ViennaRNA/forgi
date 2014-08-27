@@ -411,8 +411,6 @@ def get_biggest_chain(in_filename):
                 res.resname.strip() == 'U'):
                 num_residues += 1
 
-        #fud.pv('c.id, num_residues')
-        #fud.pv('len(list(c.get_list()))')
         if num_residues > biggest_len:
             biggest = i
             biggest_len = num_residues
@@ -458,6 +456,11 @@ def rename_modified_ress(chain):
         elif r.id[0] == 'H_H2U':
             r.resname = '  U'
             r.id = (' ', r.id[1], r.id[2])
+
+        # treat deoxyuridine as uridine
+        # TODO: is this acceptable?
+        if r.resname == ' DU':
+            r.resname = '  U'
 
     return chain
 
