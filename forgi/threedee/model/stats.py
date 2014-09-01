@@ -683,12 +683,8 @@ class ConformationStats(object):
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            #dims = (dims[0], dims[1], ang_type)
-            #fud.pv('dims')
             dims = get_angle_stat_dims(dims[0], dims[1], 
                                        ang_type, min_entries=1)[0][-3:]
-            #fud.pv('dims')
-
         elif elem[0] == 'h':
             dims = dims[0]
             stats = self.loop_stats
@@ -751,13 +747,8 @@ class FilteredConformationStats(ConformationStats):
                             #print stat.define, define
                             pass
 
-                        if stat.pdb_name.find('1X8W') >= 0:
-                            print "(%d, %d, %d) - (%d, %d, %d)" % (stat.dim1, stat.dim2, stat.ang_type, dims[0], dims[1], at)
-                            print stat.pdb_name, pdb_id
-                            print stat.define, define
-
                         if stat.pdb_name == pdb_id and stat.define == define:
-                            print >>sys.stderr, "found:", stat.pdb_name, define
+                            #print >>sys.stderr, "found filtered stats:", stat.pdb_name, define
                             self.filtered_stats[(elem_name, at)] += [stat]
 
 
@@ -768,7 +759,8 @@ class FilteredConformationStats(ConformationStats):
                 #print >>sys.stderr, "found:", elem, ang_type
 
                 if len(self.filtered_stats[(elem, ang_type)]) == 0:
-                    print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
+                    #print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
+                    pass
 
                 return self.filtered_stats[(elem, ang_type)]
 
