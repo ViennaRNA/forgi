@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='forgi',
-      version='0.2',
+      version='0.20',
       description='RNA Graph Library',
       author='Peter Kerpedjiev',
       author_email='pkerp@tbi.univie.ac.at',
