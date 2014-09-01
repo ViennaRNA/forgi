@@ -655,10 +655,23 @@ class PymolPrinter:
                         #point1 = cg.get_point(key1)
                         #point2 = cg.get_point(key2)
 
-                        self.add_segment(point1, point2, "purple",
-                                         0.3, key1 + " " + key2)
-                        self.add_segment(point1, point2, "purple",
-                                         0.3, key1 + " " + key2)
+                        dash_length = 0.6
+                        gap_length = dash_length * 2
+                        direction = ftuv.normalize(point2 - point1)
+
+                        num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
+                        fud.pv('num_dashes')
+
+                        for i in range(int(num_dashes)):
+                            self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
+                                             point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
+                                             0.3, "")
+
+                            '''
+                            self.add_segment(point1, point2, "purple",
+                                             0.3, key1 + " " + key2)
+                            
+                            '''
                     except:
                         continue
 

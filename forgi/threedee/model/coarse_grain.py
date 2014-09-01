@@ -254,7 +254,7 @@ def from_file(cg_filename):
 
         return cg
     
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir='', 
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None, 
              chain_id=None, remove_pseudoknots=True):
     cg = load_cg_from_pdb(pdb_filename, secondary_structure, 
                           intermediate_file_dir, chain_id=chain_id,
@@ -583,6 +583,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # uh oh, this shouldn't happen since every node                 
         # should have either one or two edges 
         return None                                                                                                   
+
+    def total_length(self):
+        '''
+        Calculate the combined length of all the elements.
+        '''
+        return sum([len(list(self.define_residue_num_iterator(d))) for d in self.defines])
 
 def cg_from_sg(cg, sg):
     '''

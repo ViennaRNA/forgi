@@ -391,6 +391,9 @@ class ContinuousAngleStats():
                 continue
             '''
 
+            if len(data) < 3:
+                continue
+
             try:
                 self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
             except np.linalg.LinAlgError as lae:
@@ -489,6 +492,7 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
                 continue
 
             ConstructionStats.angle_stats[(angle_stat.dim1, angle_stat.dim2, angle_stat.ang_type)] += [angle_stat]
+            ConstructionStats.angle_stats[(angle_stat.dim2, angle_stat.dim1, -angle_stat.ang_type)] += [angle_stat]
             count += 1
 
     f.close()
@@ -520,6 +524,16 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
 
     available_stats.sort()
     return available_stats
+
+def get_one_d_stat_dims(d, stats, min_entries=1):
+    available_stats = []
+
+    for k in stats.keys():
+        available_stats += [(abs(d - k), k)]
+
+    available_stats.sort()
+    return available_stats
+
 
 def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
@@ -669,17 +683,20 @@ class ConformationStats(object):
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            dims = (dims[0], dims[1], ang_type)
-
+            dims = get_angle_stat_dims(dims[0], dims[1], 
+                                       ang_type, min_entries=1)[0][-3:]
         elif elem[0] == 'h':
             dims = dims[0]
             stats = self.loop_stats
         elif elem[0] == 't':
             dims = dims[0]
             stats = self.threeprime_stats
+            dims = get_one_d_stat_dims(dims, stats)[0][-1]
+
         elif elem[0] == 'f':
             dims = dims[0]
             stats = self.fiveprime_stats
+            dims = get_one_d_stat_dims(dims, stats)[0][-1]
 
         if len(stats[dims]) == 0:
             print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
@@ -727,10 +744,11 @@ class FilteredConformationStats(ConformationStats):
                     for stat in it.chain(self.angle_stats[(dims[0], dims[1], at)],
                                         self.angle_stats[(dims[1], dims[0], -at)]):
                         if stat.pdb_name == pdb_id:
-                            print stat.define, define
+                            #print stat.define, define
+                            pass
 
                         if stat.pdb_name == pdb_id and stat.define == define:
-                            #print >>sys.stderr, "found:", stat.pdb_name, define
+                            #print >>sys.stderr, "found filtered stats:", stat.pdb_name, define
                             self.filtered_stats[(elem_name, at)] += [stat]
 
 
@@ -741,7 +759,8 @@ class FilteredConformationStats(ConformationStats):
                 #print >>sys.stderr, "found:", elem, ang_type
 
                 if len(self.filtered_stats[(elem, ang_type)]) == 0:
-                    print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
+                    #print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
+                    pass
 
                 return self.filtered_stats[(elem, ang_type)]
 

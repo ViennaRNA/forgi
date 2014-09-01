@@ -32,6 +32,9 @@ def main():
                       default=None, help='Enter a directory where to dump all of \
                                         temporary and intermediate files.',
                       type = 'str')
+    parser.add_option('-c', '--chain', dest='chain', 
+                      default=None, help='Specify the chain to coarse-grain',
+                      type = 'str')
 
     (options, args) = parser.parse_args()
 
@@ -41,7 +44,8 @@ def main():
 
     pdb_id = op.basename(op.splitext(args[0])[0])
     cg = ftmc.from_pdb(args[0], intermediate_file_dir=options.dump_all, 
-                       remove_pseudoknots=not options.pseudoknots)
+                       remove_pseudoknots=not options.pseudoknots,
+                      chain_id = options.chain)
     print cg.to_cg_string()
 
 if __name__ == '__main__':

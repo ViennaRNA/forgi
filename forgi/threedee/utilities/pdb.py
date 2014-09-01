@@ -228,15 +228,16 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     all_atoms1 = []
     all_atoms2 = []
 
-    if len(c1.get_list()) != len(c2.get_list()):
-        print >>sys.stderr, "Chains of different length"
+    acceptable_residues = ['A','C','G','U','rA','rC','rG','rU','DG']
+    c1_list = [cr for cr in c1.get_list() if cr.resname.strip() in acceptable_residues]
+    c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in acceptable_residues]
+
+    if len(c1_list) != len(c2_list):
+        #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
         raise Exception("Chains of different length.")
 
-    c1_list = c1.get_list()
-    c2_list = c2.get_list()
-
-    c1_list.sort(key=lambda x: x.id[1])
-    c2_list.sort(key=lambda x: x.id[1])
+    #c1_list.sort(key=lambda x: x.id[1])
+    #c2_list.sort(key=lambda x: x.id[1])
     
     for r1,r2 in zip(c1_list, c2_list):
         if sidechains:
@@ -301,8 +302,8 @@ def pdb_file_rmsd(fn1, fn2):
         s1= bpdb.PDBParser().get_structure('t', fn1)
         s2= bpdb.PDBParser().get_structure('t', fn2)
 
-    c1 = list(s1.get_chains())[0]
-    c2 = list(s2.get_chains())[0]
+    c1 = get_biggest_chain(fn1)
+    c2 = get_biggest_chain(fn2)
 
     rmsd = pdb_rmsd(c1, c2)
 
@@ -455,6 +456,11 @@ def rename_modified_ress(chain):
         elif r.id[0] == 'H_H2U':
             r.resname = '  U'
             r.id = (' ', r.id[1], r.id[2])
+
+        # treat deoxyuridine as uridine
+        # TODO: is this acceptable?
+        if r.resname == ' DU':
+            r.resname = '  U'
 
     return chain
 
