@@ -90,9 +90,11 @@ def main():
             pos = np.mean(poss[key], axis=0)
             print 'avg_atom_poss["%s"] = [%s] #%d' % (key, ",".join(map(str, pos)), len(poss[key]))
 
+    '''
     print "sources = dict()"
     for key in sources.keys():
         print 'sources["%s"] = [%s]' % (key, ",".join(sources[key]))
+    '''
 
 if __name__ == '__main__':
     main()

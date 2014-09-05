@@ -1751,21 +1751,27 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     for d in cg.defines.keys():
         origin, basis = element_coord_system(cg, d)
 
+        if d[0] == 'i' or d[0] == 'm':
+            conn = cg.connections(d)
+            conn_type = cg.connection_type(d, conn)
+        else:
+            conn_type = 0
+
         for i,r in it.izip(it.count(),
                            cg.define_residue_num_iterator(d)):
 
             if given_atom_names is None:
                 if sidechain:
-                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq_dict[r]]
+                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq[r-1]]
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
                 atom_names = given_atom_names
 
             for aname in atom_names:
-                identifier = "%s %s %d %s" % (d[0],
+                identifier = "%s %s %d %d %s" % (d[0],
                                               " ".join(map(str, cg.get_node_dimensions(d))),
-                                              i, aname)
+                                              conn_type, i, aname)
                 try:
                     coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:

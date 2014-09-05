@@ -558,7 +558,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
             if stem_stat.define[0] == 1:
                 continue
 
-            ConstructionStats.stem_stats[stem_stat.bp_length] += [stem_stat]
+            ConstructionStats.stem_stats[(stem_stat.bp_length, stem_stat.bp_length)] += [stem_stat]
 
     f.close()
 

@@ -6,6 +6,7 @@ import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as cmc
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.utilities.debug as fud
 import tempfile as tf
 
@@ -142,6 +143,14 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
                           intermediate_file_dir='tmp')
         self.check_cg_integrity(cg)
 
+        cg = cmc.from_pdb('test/forgi/threedee/data/1y26.pdb',
+                          intermediate_file_dir='tmp')
+
+        for d in cg.defines:
+            for r in cg.define_residue_num_iterator(d):
+                # make sure all the seq_ids are there
+                print cg.seq_ids[r-1]
+
 
     def test_from_cg(self):
         cg = cmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -245,3 +254,9 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         cg = cmc.from_pdb('test/forgi/threedee/data/1YMO.pdb', intermediate_file_dir='tmp')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
+
+    def test_from_fasta(self):
+        cg = ftmc.CoarseGrainRNA()
+        with open('test/forgi/threedee/data/1.fa', 'r') as f:
+            text = f.read()
+            cg.from_dotbracket(text)
