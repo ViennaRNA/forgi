@@ -28,6 +28,7 @@ def main():
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-c', '--constraints', dest='constraints', default=None, help="Only visualize the elements passed as parameters", type='str')
+    parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
@@ -43,7 +44,8 @@ def main():
         print >>sys.stderr, "File doesn't exist: %s" % (args[0])
         sys.exit(1)
 
-    cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"))
+    cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"),
+                      remove_pseudoknots=not options.pseudoknots)
     pp = ftvp.PymolPrinter()
 
     if options.constraints is not None:
