@@ -50,12 +50,12 @@ def main():
 
                 # add only the base atoms which are relevant to the calculation
                 # of the chi torsion angle
-                resname = cg.chain[r].resname.strip()
+                resname = cg.chain[cg.seq_ids[r-1]].resname.strip()
                 atoms = ftup.nonsidechain_atoms + ftup.chi_torsion_atoms[resname][-2:]
 
                 for aname in atoms:
                     try:
-                        a = cg.chain[r][aname]
+                        a = cg.chain[cg.seq_ids[r-1]][aname]
                     except KeyError as ke:
                         # missing an atom
                         continue

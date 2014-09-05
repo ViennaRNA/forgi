@@ -33,6 +33,21 @@ def add_bulge(bulges, bulge, context, message):
     bulges[context] = bulges.get(context, []) + [bulge]
     return bulges
 
+def from_fasta(filename):
+    '''
+    Load a bulge graph from a fasta file. The format of the fasta
+    file is roughly:
+
+        >1
+        AACCCAA
+        ((...))
+    '''
+    with open(filename, 'r') as f:
+        text = f.read()
+        bg = BulgeGraph()
+        bg.from_dotbracket(text)
+        return bg
+
 def any_difference_of_one(stem, bulge):
     '''
     See if there's any difference of one between the two
@@ -1399,7 +1414,7 @@ class BulgeGraph(object):
         :return: A pair containing its dimensions
         '''
         if node[0] == 's':
-            return (self.stem_length(node))
+            return (self.stem_length(node), self.stem_length(node))
             '''
             return (self.defines[node][1] - self.defines[node][0] + 1,
                     self.defines[node][1] - self.defines[node][0] + 1)
