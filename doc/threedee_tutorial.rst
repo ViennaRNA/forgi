@@ -32,6 +32,15 @@ specified using the `-c` option).::
     CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
     (((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))
 
+This can also be done programmatically in python::
+
+    >>> import forgi.threedee.model.coarse_grain as ftmc
+    >>> cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+    >>> print cg.to_fasta_string()
+    >1y26_X
+    CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+    ((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))
+
 The reported 2D structure is extracted from the annotations of MC-Annotate [1].
 Pseudoknots are removed using the knotted2nested.py script which is included
 with the generous permition of Dr. Sandra Smit [2]. Users making use of the
