@@ -1,5 +1,8 @@
-import random
 import itertools as it
+import contextlib
+import random
+import shutil
+import tempfile as tf
 
 import forgi.utilities.debug as cud
 
@@ -56,3 +59,14 @@ def gen_random_sequence(l):
     Generate a random RNA sequence of length l.
     '''
     return "".join([random.choice(['A','C','G','U']) for i in range(l)])
+
+@contextlib.contextmanager
+def make_temp_directory():
+    '''
+    Yanked from:
+
+    http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class
+    '''
+    temp_dir = tf.mkdtemp()
+    yield temp_dir
+    shutil.rmtree(temp_dir)

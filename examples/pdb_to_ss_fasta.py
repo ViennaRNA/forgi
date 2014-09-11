@@ -35,10 +35,7 @@ def main():
     pdb_id = op.basename(op.splitext(args[0])[0])
     cg = ftmc.from_pdb(args[0], chain_id=options.chain)
 
-    print ">%s" % (pdb_id)
-    print cg.seq
-    print cg.to_dotbracket_string()
-
+    print cg.to_fasta_string()
 
 if __name__ == '__main__':
     main()

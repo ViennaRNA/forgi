@@ -478,6 +478,15 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph(dotbracket_str=dotbracket)
         self.assertEquals(bg.to_dotbracket_string(), dotbracket)
 
+    def test_to_fasta_string(self):
+        filename = 'test/forgi/data/2hoj.fa'
+        with open(filename, 'r') as f:
+            instr = f.read()
+            bg = fgb.from_fasta(filename)
+            outstr = bg.to_fasta_string()
+
+            self.assertEqual(instr, outstr)
+
     def test_get_multiloop_side(self):
         # see page 85 in the notebook
         bg = fgb.BulgeGraph(dotbracket_str='(.().().)')

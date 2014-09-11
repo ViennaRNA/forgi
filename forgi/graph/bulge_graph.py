@@ -45,7 +45,7 @@ def from_fasta(filename):
     with open(filename, 'r') as f:
         text = f.read()
         bg = BulgeGraph()
-        bg.from_dotbracket(text)
+        bg.from_fasta(text)
         return bg
 
 def any_difference_of_one(stem, bulge):
@@ -1324,6 +1324,23 @@ class BulgeGraph(object):
                 out[i-1] = ')'
 
         return "".join(out)
+    
+    def to_fasta_string(self):
+        '''
+        Output the BulgeGraph representation as a fast string of the
+        format:
+
+            >id
+            AACCCAA
+            ((...))
+        '''
+        output_string = ''
+
+        output_string +=  ">%s\n" % (self.name)
+        output_string += "%s\n" % (self.seq)
+        output_string += "%s\n" % (self.to_dotbracket_string())
+
+        return output_string
 
     def from_bg_file(self, bg_file):
         '''
