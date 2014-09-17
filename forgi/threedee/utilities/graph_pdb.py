@@ -1060,8 +1060,13 @@ def junction_virtual_atom_distance(bg, bulge):
     (strand1, a1, vrn1) = get_strand_atom_vrn(bg, connecting_stems[0], i1)
     (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)
 
-    a1_pos = cua.avg_stem_vres_atom_coords[strand1][r1][a1]
-    a2_pos = cua.avg_stem_vres_atom_coords[strand2][r2][a2]
+    try:
+        a1_pos = cua.avg_stem_vres_atom_coords[strand1][r1][a1]
+        a2_pos = cua.avg_stem_vres_atom_coords[strand2][r2][a2]
+    except KeyError as e:
+        print >>sys.stderr, "KeyError in junction_virtual_atom_distance"
+        fud.pv('strand1, r1, a1')
+        fud.pv('strand2, r2, a2')
 
     vpos1 = bg.vposs[connecting_stems[0]][vrn1]
     vbasis1 = bg.vbases[connecting_stems[0]][vrn1].transpose()

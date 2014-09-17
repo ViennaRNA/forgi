@@ -1246,7 +1246,7 @@ class BulgeGraph(object):
             if len(parts) < 3:
                 continue
             (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
-            seq += base
+            seq += base.replace('T', 'U')
 
             if abs(to_bp - prev_to) == 1 and prev_to != 0:
                 # stem
