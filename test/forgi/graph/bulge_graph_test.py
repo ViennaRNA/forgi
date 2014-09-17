@@ -830,6 +830,17 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         build_order = bg.traverse_graph()
 
+    def test_create_mst_telomerase(self):
+        '''
+        Test the creation of a minimum spanning tree from the telomerase
+        secondary structure.
+        '''
+        bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
+
+        mst = bg.get_mst()
+        self.assertTrue('m0' not in mst)
+        self.assertTrue('m3' not in mst)
+
     def test_traverse_graph(self):
         # the dotbracket for 1gid
         db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'

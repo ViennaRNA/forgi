@@ -2132,7 +2132,6 @@ class BulgeGraph(object):
         multiloop section.
         '''
         # keep track of all linked nodes
-        sets = c.defaultdict(set)
         edges = sorted(it.chain(self.mloop_iterator(),
                                 self.iloop_iterator()),
                        key=lambda x: min(self.get_node_dimensions(x)))
@@ -2141,19 +2140,31 @@ class BulgeGraph(object):
                            self.floop_iterator(),
                            self.tloop_iterator()))
 
+        # store all of the disconnected trees
+        forest = [set([m]) for m in mst]
+
+        # get the tree containing a particular element
+        def get_tree(elem):
+            for t in forest:
+                if elem in t:
+                    return t
 
         while len(edges) > 0:
-            outside = False
             conn = edges.pop(0)
             neighbors = list(self.edges[conn])
 
-            
-            if len(set.intersection(sets[neighbors[0]], 
-                                    sets[neighbors[1]])) == 0:
-                # this edge joins two disconnected forests, so it is added
-                # to the MST
-                sets[neighbors[0]].add(neighbors[1])
-                sets[neighbors[1]].add(neighbors[0])
+            # get the trees containing the neighbors of this node
+            # the node should be an interior loop or multiloop so
+            # the neighbors should necessarily be stems, 5' or 3'
+            t1 = get_tree(neighbors[0])
+            t2 = get_tree(neighbors[1])
+
+            if len(set.intersection(t1, t2)) == 0:
+                # if this node connects two disparate trees, then add it to the mst
+                new_tree = t1.union(t2)
+                forest.remove(t1)
+                forest.remove(t2)
+                forest.append(new_tree)
 
                 mst.add(conn)
                 
@@ -2171,7 +2182,9 @@ class BulgeGraph(object):
         build_order = []
         to_visit = [('s0', 'start')]
         visited = set(['s0'])
+
         while len(to_visit) > 0:
+            to_visit.sort(key=lambda x: min(self.get_node_dimensions(x[0])))
             (current, prev) = to_visit.pop(0)
 
             for e in self.edges[current]:
