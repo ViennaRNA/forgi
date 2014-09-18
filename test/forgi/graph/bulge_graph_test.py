@@ -858,4 +858,8 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertTrue(('s0', 'i4', 's1') in build_order)
         self.assertEqual(len(all_stems), 0)
 
+    def test_get_node_from_residue_num(self):
+        bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
+
+        fud.pv('bg.get_node_from_residue_num(280)')
 
