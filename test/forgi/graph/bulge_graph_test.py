@@ -861,5 +861,28 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
     def test_get_node_from_residue_num(self):
         bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
 
-        fud.pv('bg.get_node_from_residue_num(280)')
+        #fud.pv('bg.get_node_from_residue_num(280)')
 
+    def test_get_connected_nucleotides(self):
+        db = '((..((..))..))'
+        bg = fgb.BulgeGraph(dotbracket_str=db)
+
+        cr = bg.get_connected_residues('s0', 's1')
+
+        self.assertEqual(len(cr), 2)
+        self.assertEqual(cr[0], [2,5])
+        self.assertEqual(cr[1], [10, 13])
+
+        cr = bg.get_connected_residues('s1', 's0')
+
+        self.assertEqual(len(cr), 2)
+        self.assertEqual(cr[0], [2,5])
+        self.assertEqual(cr[1], [10, 13])
+        db = '((..))..((..))'
+        bg = fgb.BulgeGraph(dotbracket_str=db)
+
+        fud.pv('bg.to_bg_string()')
+        cr = bg.get_connected_residues('s0', 's1')
+
+        self.assertEqual(len(cr), 1)
+        self.assertEqual(cr[0], [6,9])

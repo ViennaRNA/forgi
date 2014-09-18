@@ -1464,6 +1464,64 @@ class BulgeGraph(object):
         for i in range(stem_length):
             yield (d[0] + i, d[3] - i)
 
+    def get_connected_residues(self, s1, s2):
+        '''
+        Get the nucleotides which are connected by the element separating
+        s1 and s2. They should be adjacent stems.
+
+        The connected nucleotides are those which are spanned by a single
+        interior loop or multiloop. In the case of an interior loop, this
+        function will return a list of two tuples and in the case of multiloops
+        if it will be a list of one tuple.
+
+        If the two stems are not separated by a single element, then return
+        an empty list.
+        '''
+        # sort the stems according to the number of their first nucleotide
+        stems = [s1,s2]
+        stems.sort(key=lambda x: self.defines[x][0])
+
+        c1 = self.edges[s1]
+        c2 = self.edges[s2]
+
+        # find out which edges they share
+        common_edges = c1.intersection(c2)
+
+        if len(common_edges) == 0:
+            # not connected
+            return []
+
+        if len(common_edges) > 1:
+            raise Exception("Too many connections between the stems")
+        
+        # the element linking the two stems
+        conn = list(common_edges)[0]
+
+        # find out the sides of the stems that face the bulge
+        (s1b, s1e) = self.get_sides(s1, conn)
+        (s2b, s2e) = self.get_sides(s2, conn)
+
+        # get the nucleotides on the side facing the stem
+        s1_nucleotides = self.get_side_nucleotides(s1, s1b)
+        s2_nucleotides = self.get_side_nucleotides(s2, s2b)
+        
+        # find out the distances between all the nucleotides flanking
+        # the bulge
+        dists = []
+        for n1 in s1_nucleotides:
+            for n2 in s2_nucleotides:
+                dists += [(abs(n2 - n1), n1, n2)]
+        dists.sort()
+        #fud.pv('dists')
+
+        # return the ones which are closest to each other
+        if conn[0] == 'i':
+            return sorted([sorted(dists[0][1:]), sorted(dists[1][1:])])
+        else:
+            return sorted([sorted(dists[0][1:])])
+
+        #fud.pv('s1b, s2b')
+
     def get_side_nucleotides(self, stem, side):
         '''
         Get the nucleotide numbers on the given side of
