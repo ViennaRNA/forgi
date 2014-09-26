@@ -448,7 +448,7 @@ def get_furthest_c_alpha(cg, chain, stem_end, d, seq_ids=True):
 
         dist = cuv.magnitude(stem_end - c_apos)
 
-        if dist > max_dist:
+        if dist >= max_dist:
             max_dist = dist
             furthest_pos = c_apos
 
@@ -1596,23 +1596,34 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
         edges = list(bg.edges[d])
         
         if len(edges) == 0:
-            continue
+            # Odd case where there are no stems in the structure
+            # We should find the furthest distance from the first
+            # nucleotide
+            first_res = list(chain.get_residues())[0]
+            start_point = first_res[catom_name].get_vector().get_array() 
 
-        s1 = edges[0]
-        s1d = bg.defines[s1]
-        bd = bg.defines[d]
+            centroid = get_furthest_c_alpha(bg, chain, 
+                                            first_res[catom_name].get_vector().get_array(), 
+                                            d, seq_ids=seq_ids)
+            fud.pv('centroid')
+        else:
+            s1 = edges[0]
+            s1d = bg.defines[s1]
+            bd = bg.defines[d]
 
-        (s1b, s2b) = bg.get_sides(s1, d)
+            (s1b, s2b) = bg.get_sides(s1, d)
 
-        mids = bg.coords[s1]
-        #centroid = get_bulge_centroid(chain, bd)
+            mids = bg.coords[s1]
+            start_point = mids[s1b]
+            #centroid = get_bulge_centroid(chain, bd)
 
-        centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d, seq_ids=seq_ids)
-        if centroid is None:
-            print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
-            centroid = mids[s1b]
+            centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d, seq_ids=seq_ids)
 
-        bg.coords[d] = (mids[s1b], centroid)
+            if centroid is None:
+                print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
+                centroid = mids[s1b]
+
+        bg.coords[d] = (start_point, centroid)
 
 
 def bg_rmsd(bg1, bg2, rmsd_function=None):
@@ -1780,7 +1791,7 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
                 try:
                     coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
-                    #print >>sys.stderr, "KeyError:", ke
+                    print >>sys.stderr, "virtual_atoms KeyError:", ke
                     pass
     return coords
 
