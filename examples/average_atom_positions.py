@@ -34,9 +34,18 @@ def main():
     sources = c.defaultdict(list)
 
     for i,arg in enumerate(args):
+        fud.pv('arg')
         cg = ftmc.from_pdb(arg)
 
+        if len(list(cg.stem_iterator())) == 0:
+            print >>sys.stderr, "skipping {}: no stems".format(arg)
+            continue
+
         for d in cg.defines.keys():
+            if np.allclose(cg.coords[d][0], cg.coords[d][1]):
+                print >>sys.stderr, "Degenerate coordinates for element: {}".format(d)
+                continue
+
             origin, basis = ftug.element_coord_system(cg, d)
 
             if d[0] == 'i' or d[0] == 'm':
@@ -51,6 +60,11 @@ def main():
                 # add only the base atoms which are relevant to the calculation
                 # of the chi torsion angle
                 resname = cg.chain[cg.seq_ids[r-1]].resname.strip()
+
+                if resname not in ftup.chi_torsion_atoms.keys():
+                    print >>sys.stderr, "Unknown nucleotide name:", resname
+                    continue
+
                 atoms = ftup.nonsidechain_atoms + ftup.chi_torsion_atoms[resname][-2:]
 
                 for aname in atoms:

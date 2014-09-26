@@ -1599,13 +1599,16 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
             # Odd case where there are no stems in the structure
             # We should find the furthest distance from the first
             # nucleotide
-            first_res = list(chain.get_residues())[0]
-            start_point = first_res[catom_name].get_vector().get_array() 
+            first_res = None
+            for res in chain.get_residues():
+                if catom_name in res:
+                    first_res = res
+                    break
 
+            start_point = first_res[catom_name].get_vector().get_array() 
             centroid = get_furthest_c_alpha(bg, chain, 
                                             first_res[catom_name].get_vector().get_array(), 
                                             d, seq_ids=seq_ids)
-            fud.pv('centroid')
         else:
             s1 = edges[0]
             s1d = bg.defines[s1]
