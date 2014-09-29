@@ -881,8 +881,32 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         db = '((..))..((..))'
         bg = fgb.BulgeGraph(dotbracket_str=db)
 
-        fud.pv('bg.to_bg_string()')
         cr = bg.get_connected_residues('s0', 's1')
 
         self.assertEqual(len(cr), 1)
         self.assertEqual(cr[0], [6,9])
+
+    def test_is_pseudoknot(self):
+
+        bg = fgb.BulgeGraph()
+
+        db='[[.((..]]...))'
+        nm='12345678901234'
+
+        bpstr="""1 A 9
+2 A 8
+3 A 0
+4 A 14
+5 A 13
+6 A 0
+7 A 0
+8 A 2
+9 A 1
+10 A 0
+11 A 0
+12 A 0
+13 A 5
+14 A 4
+"""
+        bg.from_bpseq_str(bpstr)
+        self.assertTrue(bg.is_pseudoknot())

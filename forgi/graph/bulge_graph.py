@@ -2189,10 +2189,12 @@ class BulgeGraph(object):
         sampled independently and we want to introduce a break at the largest
         multiloop section.
         '''
+        priority = {'s':1, 'i':2, 'm':3, 'f':4, 't':5}
+
         # keep track of all linked nodes
         edges = sorted(it.chain(self.mloop_iterator(),
                                 self.iloop_iterator()),
-                       key=lambda x: min(self.get_node_dimensions(x)))
+                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x))))
 
         mst = set(it.chain(self.stem_iterator(),
                            self.floop_iterator(),
@@ -2241,6 +2243,8 @@ class BulgeGraph(object):
         to_visit = [('s0', 'start')]
         visited = set(['s0'])
 
+        priority = {'s':1, 'i':2, 'm':3, 'f':4, 't':5}
+
         while len(to_visit) > 0:
             to_visit.sort(key=lambda x: min(self.get_node_dimensions(x[0])))
             (current, prev) = to_visit.pop(0)
@@ -2288,6 +2292,18 @@ class BulgeGraph(object):
             return self.ang_types[bulge]
         else:
             return None
+
+    def is_pseudoknot(self):
+        '''
+        Is this bulge part of a pseudoknot?
+        '''
+        for d in self.mloop_iterator():
+            conn = self.connections(d)
+            ct = self.connection_type(d, conn)
+            if abs(ct) == 5:
+                return True
+
+        return False
         
 def bg_from_subgraph(bg, sg):
     '''

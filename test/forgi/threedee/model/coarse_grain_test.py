@@ -254,6 +254,13 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
 
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        self.check_graph_integrity(cg)
+        self.check_cg_integrity(cg)
+
+        cg.traverse_graph()
+        self.assertEqual(cg.get_angle_type("i3"), 1)
+
     def test_from_fasta(self):
         cg = ftmc.CoarseGrainRNA()
         with open('test/forgi/threedee/data/1.fa', 'r') as f:
