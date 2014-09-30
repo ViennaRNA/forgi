@@ -6,7 +6,7 @@
 
 __author__      = "Peter Kerpedjiev"
 __copyright__   = "Copyright 2012, 2013, 2014"
-__version__     = "0.1"
+__version__     = "0.2"
 __maintainer__  = "Peter Kerpedjiev"
 __email__       = "pkerp@tbi.univie.ac.at"
 
@@ -2250,7 +2250,7 @@ class BulgeGraph(object):
             (current, prev) = to_visit.pop(0)
 
             for e in self.edges[current]:
-                if (e not in visited and e in self.mst):
+                if e not in visited and e in self.mst:
                     # make sure the node hasn't been visited
                     # and is in the minimum spanning tree
                     to_visit.append((e, current))

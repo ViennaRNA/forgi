@@ -12,6 +12,7 @@ setup(name='forgi',
       package_data={'forgi.threedee': ['data/*.pdb']},
       scripts=['examples/visualize_cg.py', 'examples/visualize_pdb.py', 
                'examples/pdb_to_cg.py', 'examples/pdb_to_ss_fasta.py',
-               'examples/bpseq_to_bulge_graph.py'],
+               'examples/bpseq_to_bulge_graph.py', 
+               'examples/ss_to_bulge_graph.py'],
 
      )
