@@ -1338,7 +1338,7 @@ class BulgeGraph(object):
 
         output_string +=  ">%s\n" % (self.name)
         output_string += "%s\n" % (self.seq)
-        output_string += "%s\n" % (self.to_dotbracket_string())
+        output_string += "%s" % (self.to_dotbracket_string())
 
         return output_string
 
