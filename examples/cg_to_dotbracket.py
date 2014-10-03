@@ -8,10 +8,14 @@ def main():
     usage = """
     python cg_to_ss_fasta.py file.cg
 
-    Convert a coarse-grain RNA file to a dotbracket string.
+    Convert a coarse-grain RNA file to a fasta file like this:
+
+        >id
+        ACCGGGAAA
+        (((...)))
     BEWARE: Structures with pseudoknots will give bogus output.
     """
-    num_args= 0
+    num_args= 1
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
