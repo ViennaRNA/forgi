@@ -1203,6 +1203,20 @@ class BulgeGraph(object):
 
         self.from_stems_and_bulges(stems, bulges)
 
+    def to_bpseq_string(self):
+        '''
+        Create a bpseq_string from this structure.
+        '''
+        out_str = ''
+        fud.pv('self.seq_length')
+        for i in range(1, self.seq_length+1):
+            pp = self.pairing_partner(i)
+            if pp is None:
+                pp = 0
+            out_str += "{} {} {}\n".format(i, self.seq[i-1], pp)
+        
+        return out_str
+
     def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
         '''
         Create the graph from a string listing the base pairs.

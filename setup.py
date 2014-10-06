@@ -13,6 +13,7 @@ setup(name='forgi',
       scripts=['examples/visualize_cg.py', 'examples/visualize_pdb.py', 
                'examples/pdb_to_cg.py', 'examples/pdb_to_ss_fasta.py',
                'examples/bpseq_to_bulge_graph.py', 
-               'examples/ss_to_bulge_graph.py', 'examples/cg_to_ss_fasta.py'],
+               'examples/ss_to_bulge_graph.py', 'examples/cg_to_ss_fasta.py',
+               'examples/cg_to_bpseq_string.py'],
 
      )

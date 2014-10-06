@@ -485,7 +485,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
             bg = fgb.from_fasta(filename)
             outstr = bg.to_fasta_string()
 
-            self.assertEqual(instr, outstr)
+            self.assertEqual(instr.strip(), outstr.strip())
 
     def test_get_multiloop_side(self):
         # see page 85 in the notebook
@@ -910,3 +910,37 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 """
         bg.from_bpseq_str(bpstr)
         self.assertTrue(bg.is_pseudoknot())
+
+    def test_to_bpseq_str(self):
+        bpstr = """1 G 26
+2 A 25
+3 G 24
+4 C 23
+5 U 22
+6 G 21
+7 C 0
+8 A 0
+9 G 0
+10 C 19
+11 A 18
+12 C 17
+13 G 0
+14 A 0
+15 A 0
+16 A 0
+17 G 12
+18 U 11
+19 G 10
+20 A 0
+21 C 6
+22 G 5
+23 G 4
+24 C 3
+25 U 2
+26 C 1
+"""
+
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpstr)
+
+        fud.pv('bg.to_bpseq_str()')
