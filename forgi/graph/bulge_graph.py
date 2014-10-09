@@ -1350,9 +1350,11 @@ class BulgeGraph(object):
 
             (t1,s,t2) = (int(parts[0]), parts[1], int(parts[2]))
             tuples += [(t1,t2)]
+            seq += [s]
 
         seq = "".join(seq).upper().replace('T', 'U')
 
+        fud.pv('seq')
         return (tuples, seq)
 
     def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
@@ -1440,6 +1442,7 @@ class BulgeGraph(object):
         self.seq = seq
         self.seq_length = len(seq)
 
+        fud.pv('stems, bulges')
         self.from_stems_and_bulges(stems, bulges)
         fud.pv('self.to_bg_string()')
 
