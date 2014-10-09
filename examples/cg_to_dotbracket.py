@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import forgi.threedee.model.coarse_grain as ftmc
+#import forgi.threedee.model.coarse_grain as ftmc
+import forgi.graph.bulge_graph as fgb
 import sys
 from optparse import OptionParser
 
@@ -27,7 +28,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    cg = ftmc.CoarseGrainRNA(args[0])
+    cg = fgb.BulgeGraph(args[0])
     print cg.to_fasta_string()
 
 if __name__ == '__main__':
