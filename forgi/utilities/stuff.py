@@ -3,8 +3,12 @@ import contextlib
 import random
 import shutil
 import tempfile as tf
+import collections as col
 
 import forgi.utilities.debug as cud
+
+bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+bracket_right = ")]}>abcdefghijklmnopqrstuvwxyz"
 
 def grouped(iterable, n):
     '''
@@ -70,4 +74,67 @@ def make_temp_directory():
     temp_dir = tf.mkdtemp()
     yield temp_dir
     shutil.rmtree(temp_dir)
+
+def insert_into_stack(stack, i, j):
+	#print "add", i,j
+	k = 0
+	while len(stack[k])>0 and stack[k][len(stack[k])-1] < j:
+		k+=1
+	stack[k].append(j)
+	return k
+
+def delete_from_stack(stack, j):
+	#print "del", j 
+	k = 0
+	while len(stack[k])==0 or stack[k][len(stack[k])-1] != j:
+		k+=1
+	stack[k].pop()
+	return k	
+
+def pairtable_to_dotbracket(pt):
+	"""
+	Converts arbitrary pair table array (ViennaRNa format) to structure in dot bracket format.
+	"""
+	stack = col.defaultdict(list)
+	res = ""
+	for i in range(1, pt[0]+1):
+		if pt[i]==0: 
+			res += '.'
+		else:
+			if pt[i]>i:						# '(' check if we can stack it...
+				res += bracket_left[insert_into_stack(stack, i, pt[i])]
+			else:									# ')'
+				res += bracket_right[delete_from_stack(stack, i)]
+
+	return res
+
+def inverse_brackets(bracket):
+	res = col.defaultdict(int)
+	for i,a in enumerate(bracket):
+		res[a] = i
+	return res
+
+def dotbracket_to_pairtable(struct):
+	"""
+	Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).
+	"""	
+	pt = [0] * (len(struct)+1)
+	pt[0] = len(struct)
+
+	stack = col.defaultdict(list)
+	inverse_bracket_left = inverse_brackets(bracket_left)
+	inverse_bracket_right = inverse_brackets(bracket_right)
+
+	for i,a in enumerate(struct):
+		i += 1
+		#print i,a, pt
+		if a == ".": pt[i] = 0
+		else: 
+			if a in inverse_bracket_left: stack[inverse_bracket_left[a]].append(i)
+			else: 
+				j = stack[inverse_bracket_right[a]].pop()
+				pt[i] = j
+				pt[j] = i
+
+	return pt
 
