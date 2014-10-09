@@ -988,3 +988,18 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertTrue((26,1) in pair_tuples)
         self.assertTrue((7,0) in pair_tuples)
 
+    def test_to_pairtable(self):
+        bpstr = self.bpseq['1y26']
+
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpstr)
+
+        pt = bg.to_pair_table()
+        fud.pv('pt')
+        self.assertEqual(pt[0], 26)
+        self.assertEqual(pt[1], 26)
+        self.assertEqual(pt[26], 1)
+        self.assertEqual(pt[7], 0)
+
+
+

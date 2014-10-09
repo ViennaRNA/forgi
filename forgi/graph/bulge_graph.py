@@ -1277,6 +1277,26 @@ class BulgeGraph(object):
 
         self.from_stems_and_bulges(stems, bulges)
 
+    def to_pair_table(self):
+        '''
+        Create a pair table from the list of elements.
+
+        The first element in the returned list indicates the number of
+        nucleotides in the structure.
+
+        i.e. [5,5,4,0,2,1]
+        '''
+        pair_tuples = self.to_pair_tuples()
+        max_bp = max([max(x) for x in pair_tuples])
+
+        pt = [0] * (max_bp + 1)
+        pt[0] = max_bp
+
+        for tup in pair_tuples:
+            pt[tup[0]] = tup[1]
+
+        return pt
+
     def to_pair_tuples(self):
         '''
         Create a list of tuples corresponding to all of the base pairs in the
