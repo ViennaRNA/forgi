@@ -1279,7 +1279,11 @@ class BulgeGraph(object):
 
     def to_pair_tuples(self):
         '''
-        Create a pair table from this BulgeGraph.
+        Create a list of tuples corresponding to all of the base pairs in the
+        structure. Unpaired bases will be shown as being paired with a
+        nucleotide numbered 0.
+
+        i.e. [(1,5),(2,4),(3,0),(4,2),(5,1)]
         '''
         # iterate over each element
         table = []
