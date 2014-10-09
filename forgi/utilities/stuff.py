@@ -70,3 +70,4 @@ def make_temp_directory():
     temp_dir = tf.mkdtemp()
     yield temp_dir
     shutil.rmtree(temp_dir)
+
