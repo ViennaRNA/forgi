@@ -1,6 +1,8 @@
 import unittest, os
+import forgi.utilities.stuff as fus
 
-class TestBulgeGraph(unittest.TestCase, GraphVerification):
+
+class TestBulgeGraph(unittest.TestCase):
     def setUp(self):
         """
 ([)]
@@ -11,10 +13,14 @@ class TestBulgeGraph(unittest.TestCase, GraphVerification):
 
 ([)]()
 123456
+
+((([[[)))(.(]]])).
+123456789012345678
 """
-        self.pt_dbs = [([7,3,4,1,2], "([)]"),
-                       ([11,4,5,6,1,2,3], "([{)]}"),
-                       ([6,3,4,1,2,6,5], "([)]()")]
+        self.pt_dbs = [([4,3,4,1,2], "([)]"),
+                       ([6,4,5,6,1,2,3], "([{)]}"),
+                       ([6,3,4,1,2,6,5], "([)]()"),
+											 ([18, 9,8,7, 15,14,13, 3,2,1, 17,0,16,6,5,4,12,10,0], "((([[[)))(.(]]])).")]
         pass
 
     def test_pairtable_to_dotbracket(self):
@@ -23,7 +29,7 @@ class TestBulgeGraph(unittest.TestCase, GraphVerification):
 
         """
         for pt,db in self.pt_dbs:
-            self.assertEqual(fus.pairtable_to_dotbracket_string(pt), db)
+            self.assertEqual(fus.pairtable_to_dotbracket(pt), db)
 
     def test_dotbracket_to_pairtable(self):
         """
