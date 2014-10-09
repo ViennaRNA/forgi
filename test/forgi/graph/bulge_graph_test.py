@@ -1001,5 +1001,4 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(pt[26], 1)
         self.assertEqual(pt[7], 0)
 
-
-
+        fud.pv('bg.to_dotbracket_string()')

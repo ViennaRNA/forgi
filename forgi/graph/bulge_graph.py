@@ -18,7 +18,7 @@ import random
 import re
 import itertools as it
 import forgi.utilities.debug as fud
-import forgi.utilities.stuff as cus
+import forgi.utilities.stuff as fus
 import forgi.threedee.utilities.mcannotate as ftum
 import forgi.threedee.utilities.vector as cuv
 
@@ -858,11 +858,11 @@ class BulgeGraph(object):
 
         # get all the unpaired regions
         for c in list(connections) + [key]:
-            for x in cus.grouped(self.defines[c], 2):
+            for x in fus.grouped(self.defines[c], 2):
                 all_defines += [x]
 
         # condense them into contiguous regions of unpaired bases
-        intervals = cus.merge_intervals(all_defines, diff=1)
+        intervals = fus.merge_intervals(all_defines, diff=1)
 
         # remove the stem
         self.remove_vertex(key)
@@ -1443,6 +1443,11 @@ class BulgeGraph(object):
 
         @return: A dot-bracket representation of this BulgeGraph
         '''
+        pt = self.to_pair_table()
+        return fus.pairtable_to_dotbracket()
+
+        """
+        return fus.
         out = ['.' for i in xrange(self.seq_length)]
         for s in self.stem_iterator():
             for i in xrange(self.defines[s][0], self.defines[s][1]+1):
@@ -1451,6 +1456,7 @@ class BulgeGraph(object):
                 out[i-1] = ')'
 
         return "".join(out)
+        """
     
     def to_fasta_string(self):
         '''
