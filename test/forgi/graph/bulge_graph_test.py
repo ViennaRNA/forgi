@@ -977,14 +977,14 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg.from_bpseq_str(bpstr)
         s = bg.to_bpseq_string()
 
-    def test_to_pair_table(self):
+    def test_to_pair_tuples(self):
         bpstr = self.bpseq['1y26']
 
         bg = fgb.BulgeGraph()
         bg.from_bpseq_str(bpstr)
-        pair_table = bg.to_pair_table()
+        pair_tuples = bg.to_pair_tuples()
 
-        self.assertTrue((1,26) in pair_table)
-        self.assertTrue((26,1) in pair_table)
-        self.assertTrue((7,0) in pair_table)
+        self.assertTrue((1,26) in pair_tuples)
+        self.assertTrue((26,1) in pair_tuples)
+        self.assertTrue((7,0) in pair_tuples)
 

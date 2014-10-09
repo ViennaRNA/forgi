@@ -1277,7 +1277,7 @@ class BulgeGraph(object):
 
         self.from_stems_and_bulges(stems, bulges)
 
-    def to_pair_table(self):
+    def to_pair_tuples(self):
         '''
         Create a pair table from this BulgeGraph.
         '''
@@ -1299,9 +1299,9 @@ class BulgeGraph(object):
         Create a bpseq string from this structure.
         '''
         out_str = ''
-        pair_table = sorted(self.to_pair_table())
+        pair_tuples = sorted(self.to_pair_tuples())
 
-        for i,pp in pair_table:
+        for i,pp in pair_tuples:
             out_str += "{} {} {}\n".format(i, self.seq[i-1], pp)
         
         return out_str
