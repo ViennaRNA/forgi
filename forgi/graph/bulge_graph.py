@@ -15,6 +15,7 @@ import itertools as it
 import collections as c
 import math
 import random
+import re
 import itertools as it
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as cus
@@ -32,6 +33,79 @@ def add_bulge(bulges, bulge, context, message):
     #bulge = (context, bulge)
     bulges[context] = bulges.get(context, []) + [bulge]
     return bulges
+
+def from_id_seq_struct(id_str, seq, struct):
+    '''
+    Return a new BulgeGraph with the given id, 
+    sequence and structure.
+
+    :param id_str: The id (i.e. >1y26)
+    :param seq: the sequence (i.e. 'ACCGGG')
+    :param struct: The dotplot secondary structure (i.e. '((..))')
+    '''
+    bg = BulgeGraph()
+    bg.from_dotbracket(struct)
+    bg.name = id_str
+    bg.seq = seq
+
+    return bg
+
+def from_fasta_text(fasta_text):
+    '''
+    Create a bulge graph or multiple bulge
+    graphs from some fasta text.
+    '''
+    # compile searches for the fasta id, sequence and 
+    # secondary structure respectively
+    id_search = re.compile('>(.+)')
+    seq_search = re.compile('^([acguACGU]+)$')
+    struct_search = re.compile('^([\(\)\.]+)$')
+
+    prev_id = None
+    prev_seq = None
+    prev_struct = None
+
+    bgs = []
+
+    for line in fasta_text.split('\n'):
+        # newlines suck
+        line = line.strip()
+
+        # find out what this line contains
+        id_match = id_search.match(line)
+        seq_match = seq_search.match(line)
+        struct_match = struct_search.match(line)
+
+        if id_match is not None:
+            # we found an id, check if there's a previous
+            # sequence and structure, and create a BG
+            prev_id = id_match.group(0)
+
+            if prev_seq is None and prev_struct is None:
+                # must be the first sequence/structure
+                continue
+
+            # make sure we have
+            if prev_seq is None:
+                raise Exception("No sequence for id: {}", prev_id)
+            if prev_struct is None:
+                raise Exception("No sequence for id: {}", prev_id)
+            if prev_id is None:
+                raise Exception("No previous id")
+
+            bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
+
+        if seq_match is not None:
+            prev_seq = seq_match.group(0)
+        if struct_match is not None:
+            prev_struct = struct_match.group(0)
+
+    bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
+
+    if len(bgs) == 1:
+        return bgs[0]
+    else:
+        return bgs
 
 def from_fasta(filename):
     '''
@@ -1203,16 +1277,31 @@ class BulgeGraph(object):
 
         self.from_stems_and_bulges(stems, bulges)
 
+    def to_pair_table(self):
+        '''
+        Create a pair table from this BulgeGraph.
+        '''
+        # iterate over each element
+        table = []
+
+        for d in self.defines:
+            # iterate over each nucleotide in each element
+            for b in self.define_residue_num_iterator(d):
+                p = self.pairing_partner(b)
+                if p is None:
+                    p = 0
+                table += [(b,p)]
+
+        return table
+
     def to_bpseq_string(self):
         '''
-        Create a bpseq_string from this structure.
+        Create a bpseq string from this structure.
         '''
         out_str = ''
-        fud.pv('self.seq_length')
-        for i in range(1, self.seq_length+1):
-            pp = self.pairing_partner(i)
-            if pp is None:
-                pp = 0
+        pair_table = sorted(self.to_pair_table())
+
+        for i,pp in pair_table:
             out_str += "{} {} {}\n".format(i, self.seq[i-1], pp)
         
         return out_str
@@ -1526,7 +1615,6 @@ class BulgeGraph(object):
             for n2 in s2_nucleotides:
                 dists += [(abs(n2 - n1), n1, n2)]
         dists.sort()
-        #fud.pv('dists')
 
         # return the ones which are closest to each other
         if conn[0] == 'i':
@@ -1534,7 +1622,6 @@ class BulgeGraph(object):
         else:
             return sorted([sorted(dists[0][1:])])
 
-        #fud.pv('s1b, s2b')
 
     def get_side_nucleotides(self, stem, side):
         '''
