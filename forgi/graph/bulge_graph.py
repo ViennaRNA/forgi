@@ -1330,6 +1330,31 @@ class BulgeGraph(object):
         
         return out_str
 
+    def bpseq_to_tuples_and_seq(self, bpseq_str):
+        '''
+        Convert a bpseq string to a list of pair tuples and a sequence
+        dictionary. The return value is a tuple of the list of pair tuples
+        and a sequence string.
+        
+        :param bpseq_str: The bpseq string
+        :return: ([(1,5),(2,4),(3,0),(4,2),(5,1)], 'ACCAA')
+        '''
+        lines = bpseq_str.split('\n')
+        seq = []
+        tuples = []
+        for line in lines:
+            parts = line.split()
+
+            if len(parts) == 0:
+                continue
+
+            (t1,s,t2) = (int(parts[0]), parts[1], int(parts[2]))
+            tuples += [(t1,t2)]
+
+        seq = "".join(seq).upper().replace('T', 'U')
+
+        return (tuples, seq)
+
     def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
         '''
         Create the graph from a string listing the base pairs.
@@ -1347,33 +1372,25 @@ class BulgeGraph(object):
         @return: Nothing, but fill out this structure.
         '''
         self.__init__()
-        lines = bpseq_str.split('\n')
-        seq = ''
-
-        line_iter = iter(lines)
-        parts = line_iter.next().split(' ')
 
         stems = []
         bulges = []
 
-        prev_from = (int(parts[0]))
-        prev_to = (int(parts[2]))
+        tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
+        tuples = iter(tuples)
+        (t1, t2) = tuples.next()
+
+        prev_from = t1
+        prev_to = t2
 
         start_from = prev_from
         start_to = prev_to
         last_paired = prev_from
 
-        seq = parts[1]
-
         self.dissolve_length_one_stems = dissolve_length_one_stems
 
-        for line in line_iter:
-            parts = line.split(' ')
-
-            if len(parts) < 3:
-                continue
-            (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
-            seq += base.replace('T', 'U')
+        for t1, t2 in tuples:
+            (from_bp, to_bp) = (t1, t2)
 
             if abs(to_bp - prev_to) == 1 and prev_to != 0:
                 # stem
@@ -1416,12 +1433,15 @@ class BulgeGraph(object):
                 stems += [new_stem]
         if prev_to == 0:
             new_bulge = ((last_paired - 1, prev_from - 1))
+            fud.pv('new_bulge')
             bulges += [new_bulge]
+
 
         self.seq = seq
         self.seq_length = len(seq)
 
         self.from_stems_and_bulges(stems, bulges)
+        fud.pv('self.to_bg_string()')
 
     def sort_defines(self):
         '''
