@@ -1354,7 +1354,6 @@ class BulgeGraph(object):
 
         seq = "".join(seq).upper().replace('T', 'U')
 
-        fud.pv('seq')
         return (tuples, seq)
 
     def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
@@ -1435,16 +1434,13 @@ class BulgeGraph(object):
                 stems += [new_stem]
         if prev_to == 0:
             new_bulge = ((last_paired - 1, prev_from - 1))
-            fud.pv('new_bulge')
             bulges += [new_bulge]
 
 
         self.seq = seq
         self.seq_length = len(seq)
 
-        fud.pv('stems, bulges')
         self.from_stems_and_bulges(stems, bulges)
-        fud.pv('self.to_bg_string()')
 
     def sort_defines(self):
         '''
@@ -1469,18 +1465,6 @@ class BulgeGraph(object):
         pt = self.to_pair_table()
         return fus.pairtable_to_dotbracket(pt)
 
-        """
-        return fus.
-        out = ['.' for i in xrange(self.seq_length)]
-        for s in self.stem_iterator():
-            for i in xrange(self.defines[s][0], self.defines[s][1]+1):
-                out[i-1] = '('
-            for i in xrange(self.defines[s][2], self.defines[s][3]+1):
-                out[i-1] = ')'
-
-        return "".join(out)
-        """
-    
     def to_fasta_string(self):
         '''
         Output the BulgeGraph representation as a fast string of the
