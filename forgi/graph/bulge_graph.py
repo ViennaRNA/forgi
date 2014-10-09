@@ -59,7 +59,6 @@ def from_fasta_text(fasta_text):
     # secondary structure respectively
     id_search = re.compile('>(.+)')
     seq_search = re.compile('^([acguACGU]+)$')
-    struct_search = re.compile('^([\(\)\.]+)$')
 
     prev_id = None
     prev_seq = None
@@ -74,12 +73,11 @@ def from_fasta_text(fasta_text):
         # find out what this line contains
         id_match = id_search.match(line)
         seq_match = seq_search.match(line)
-        struct_match = struct_search.match(line)
 
         if id_match is not None:
             # we found an id, check if there's a previous
             # sequence and structure, and create a BG
-            prev_id = id_match.group(0)
+            prev_id = id_match.group(0).strip('>')
 
             if prev_seq is None and prev_struct is None:
                 # must be the first sequence/structure
@@ -97,8 +95,9 @@ def from_fasta_text(fasta_text):
 
         if seq_match is not None:
             prev_seq = seq_match.group(0)
-        if struct_match is not None:
-            prev_struct = struct_match.group(0)
+        if id_match is None and seq_match is None:
+            if len(line) > 0:
+                prev_struct = line
 
     bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
 
@@ -1270,12 +1269,15 @@ class BulgeGraph(object):
         '''
         self.__init__()
         self.dissolve_length_one_stems = dissolve_length_one_stems
-        (bulges, stems) = find_bulges_and_stems(dotbracket_str)
-
         self.dotbracket_str = dotbracket_str
         self.seq_length = len(dotbracket_str)
 
-        self.from_stems_and_bulges(stems, bulges)
+        if len(dotbracket_str) == 0:
+            return
+
+        pt = fus.dotbracket_to_pairtable(dotbracket_str)
+        tuples = fus.pairtable_to_tuples(pt)
+        self.from_tuples(tuples)
 
     def to_pair_table(self):
         '''
@@ -1374,10 +1376,22 @@ class BulgeGraph(object):
         '''
         self.__init__()
 
+        tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
+        self.dissolve_length_one_stems = dissolve_length_one_stems
+
+        self.seq = seq
+        self.seq_length = len(seq)
+        self.from_tuples(tuples)
+
+    def from_tuples(self, tuples):
+        '''
+        Create a bulge_graph from a list of pair tuples. Unpaired
+        nucleotides have a pairing partner of 0.
+        '''
+        fud.pv('tuples')
         stems = []
         bulges = []
 
-        tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
         tuples = iter(tuples)
         (t1, t2) = tuples.next()
 
@@ -1387,8 +1401,6 @@ class BulgeGraph(object):
         start_from = prev_from
         start_to = prev_to
         last_paired = prev_from
-
-        self.dissolve_length_one_stems = dissolve_length_one_stems
 
         for t1, t2 in tuples:
             (from_bp, to_bp) = (t1, t2)
@@ -1435,11 +1447,6 @@ class BulgeGraph(object):
         if prev_to == 0:
             new_bulge = ((last_paired - 1, prev_from - 1))
             bulges += [new_bulge]
-
-
-        self.seq = seq
-        self.seq_length = len(seq)
-
         self.from_stems_and_bulges(stems, bulges)
 
     def sort_defines(self):

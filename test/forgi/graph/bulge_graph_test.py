@@ -139,6 +139,30 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         for s in bg.stem_iterator():
             bg.stem_length(s)
 
+    def test_from_fasta2(self):
+        fasta_str = """
+>a
+AAAA
+([)]
+"""
+        bg = fgb.from_fasta_text(fasta_str)
+        fud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.defines['s0'], [1,1,3,3])
+        self.assertEqual(bg.defines['s1'], [2,2,4,4])
+
+        fasta_str = """
+>a
+AAAAAAA
+(.[.).]
+"""
+        bg = fgb.from_fasta_text(fasta_str)
+        fud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.defines['s0'], [1,1,5,5])
+        self.assertEqual(bg.defines['s1'], [3,3,7,7])
+
+
     def test_from_fasta1(self):
         a = """
 >a
@@ -167,7 +191,6 @@ GGGGGG
 """
         bg = fgb.from_fasta_text(a)
         self.assertEqual(bg.seq, 'GGGGGG')
-        fud.pv('bg.defines')
 
     def test_from_bpseq_file(self):
         with open('test/forgi/data/1gid.bpseq', 'r') as f:
