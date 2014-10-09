@@ -995,10 +995,8 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg.from_bpseq_str(bpstr)
 
         pt = bg.to_pair_table()
-        fud.pv('pt')
+
         self.assertEqual(pt[0], 26)
         self.assertEqual(pt[1], 26)
         self.assertEqual(pt[26], 1)
         self.assertEqual(pt[7], 0)
-
-        fud.pv('bg.to_dotbracket_string()')

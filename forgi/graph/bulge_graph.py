@@ -1444,7 +1444,7 @@ class BulgeGraph(object):
         @return: A dot-bracket representation of this BulgeGraph
         '''
         pt = self.to_pair_table()
-        return fus.pairtable_to_dotbracket()
+        return fus.pairtable_to_dotbracket(pt)
 
         """
         return fus.
