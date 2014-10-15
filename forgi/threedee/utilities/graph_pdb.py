@@ -448,7 +448,7 @@ def get_furthest_c_alpha(cg, chain, stem_end, d, seq_ids=True):
 
         dist = cuv.magnitude(stem_end - c_apos)
 
-        if dist > max_dist:
+        if dist >= max_dist:
             max_dist = dist
             furthest_pos = c_apos
 
@@ -1060,8 +1060,13 @@ def junction_virtual_atom_distance(bg, bulge):
     (strand1, a1, vrn1) = get_strand_atom_vrn(bg, connecting_stems[0], i1)
     (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)
 
-    a1_pos = cua.avg_stem_vres_atom_coords[strand1][r1][a1]
-    a2_pos = cua.avg_stem_vres_atom_coords[strand2][r2][a2]
+    try:
+        a1_pos = cua.avg_stem_vres_atom_coords[strand1][r1][a1]
+        a2_pos = cua.avg_stem_vres_atom_coords[strand2][r2][a2]
+    except KeyError as e:
+        print >>sys.stderr, "KeyError in junction_virtual_atom_distance"
+        fud.pv('strand1, r1, a1')
+        fud.pv('strand2, r2, a2')
 
     vpos1 = bg.vposs[connecting_stems[0]][vrn1]
     vbasis1 = bg.vbases[connecting_stems[0]][vrn1].transpose()
@@ -1591,23 +1596,37 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
         edges = list(bg.edges[d])
         
         if len(edges) == 0:
-            continue
+            # Odd case where there are no stems in the structure
+            # We should find the furthest distance from the first
+            # nucleotide
+            first_res = None
+            for res in chain.get_residues():
+                if catom_name in res:
+                    first_res = res
+                    break
 
-        s1 = edges[0]
-        s1d = bg.defines[s1]
-        bd = bg.defines[d]
+            start_point = first_res[catom_name].get_vector().get_array() 
+            centroid = get_furthest_c_alpha(bg, chain, 
+                                            first_res[catom_name].get_vector().get_array(), 
+                                            d, seq_ids=seq_ids)
+        else:
+            s1 = edges[0]
+            s1d = bg.defines[s1]
+            bd = bg.defines[d]
 
-        (s1b, s2b) = bg.get_sides(s1, d)
+            (s1b, s2b) = bg.get_sides(s1, d)
 
-        mids = bg.coords[s1]
-        #centroid = get_bulge_centroid(chain, bd)
+            mids = bg.coords[s1]
+            start_point = mids[s1b]
+            #centroid = get_bulge_centroid(chain, bd)
 
-        centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d, seq_ids=seq_ids)
-        if centroid is None:
-            print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
-            centroid = mids[s1b]
+            centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d, seq_ids=seq_ids)
 
-        bg.coords[d] = (mids[s1b], centroid)
+            if centroid is None:
+                print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
+                centroid = mids[s1b]
+
+        bg.coords[d] = (start_point, centroid)
 
 
 def bg_rmsd(bg1, bg2, rmsd_function=None):
@@ -1751,25 +1770,31 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     for d in cg.defines.keys():
         origin, basis = element_coord_system(cg, d)
 
+        if d[0] == 'i' or d[0] == 'm':
+            conn = cg.connections(d)
+            conn_type = cg.connection_type(d, conn)
+        else:
+            conn_type = 0
+
         for i,r in it.izip(it.count(),
                            cg.define_residue_num_iterator(d)):
 
             if given_atom_names is None:
                 if sidechain:
-                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq_dict[r]]
+                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq[r-1]]
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
                 atom_names = given_atom_names
 
             for aname in atom_names:
-                identifier = "%s %s %d %s" % (d[0],
+                identifier = "%s %s %d %d %s" % (d[0],
                                               " ".join(map(str, cg.get_node_dimensions(d))),
-                                              i, aname)
+                                              conn_type, i, aname)
                 try:
                     coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
-                    #print >>sys.stderr, "KeyError:", ke
+                    print >>sys.stderr, "virtual_atoms KeyError:", ke
                     pass
     return coords
 

@@ -400,7 +400,6 @@ class PymolPrinter:
     def add_stem_like_core(self, coords, twists, stem_len, key,
                            color='green', width=2.4):
         (p, n) = coords
-        (twist1o, twist2o) = twists
 
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key)
@@ -412,6 +411,8 @@ class PymolPrinter:
             width = .3
             #twist1o = bg.get_twists(key)[0]
             #twist2o = bg.get_twists(key)[1]
+            (twist1o, twist2o) = twists
+
             self.add_segment(p, p + mult * twist1o, "cyan", width, '')
             self.add_segment(n, n + mult * twist2o, "magenta", width, '')
             '''
@@ -436,18 +437,18 @@ class PymolPrinter:
 
         #stem_len = bg.stem_length(key)
 
-        for i in range(stem_len):
-            #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
-            res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
-            (pos, vec_c, vec_l, vec_r) = res
-            self.add_segment(pos, pos + mult * vec_c, "orange", width, '')
+            for i in range(stem_len):
+                #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
+                res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
+                (pos, vec_c, vec_l, vec_r) = res
+                self.add_segment(pos, pos + mult * vec_c, "orange", width, '')
 
-            if self.add_letters:
-                self.labels += [('L', list(pos + mult * vec_l))]
-                self.labels += [('R', list(pos + mult * vec_r))]
+                if self.add_letters:
+                    self.labels += [('L', list(pos + mult * vec_l))]
+                    self.labels += [('R', list(pos + mult * vec_r))]
 
-            #self.add_segment(pos, pos + mult * vec_l, "yellow", width, '')
-            #self.add_segment(pos, pos + mult * vec_r, "purple", width, '')
+                #self.add_segment(pos, pos + mult * vec_l, "yellow", width, '')
+                #self.add_segment(pos, pos + mult * vec_r, "purple", width, '')
 
         '''
         self.add_sphere(p + mult * twist1, "white", width, key)
@@ -455,8 +456,12 @@ class PymolPrinter:
         '''
 
     def add_stem_like(self, cg, key, color='green', width=2.4):
-        return self.add_stem_like_core(cg.coords[key], cg.twists[key],
-                                       cg.stem_length(key), key, color, width)
+        if key in cg.twists:
+            return self.add_stem_like_core(cg.coords[key], cg.twists[key],
+                                           cg.stem_length(key), key, color, width)
+        else:
+            return self.add_stem_like_core(cg.coords[key], None,
+                                           cg.stem_length(key), key, color, width)
 
     def draw_bounding_boxes(self, bg, s):
         '''
@@ -583,6 +588,22 @@ class PymolPrinter:
         elif elem_name[0] == 'f':
             return 'cyan'
 
+    def add_dashed(self, point1, point2, width=0.3):
+        '''
+        Add a dashed line from point1 to point2.
+        '''
+        dash_length = 0.6
+        gap_length = dash_length * 2
+        direction = ftuv.normalize(point2 - point1)
+
+        num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
+        fud.pv('num_dashes')
+
+        for i in range(int(num_dashes)):
+            self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
+                             point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
+                             width, "")
+
 
     def coordinates_to_pymol(self, cg):
         loops = list(cg.hloop_iterator())
@@ -650,28 +671,14 @@ class PymolPrinter:
                                                       cg.coords[key1][1],
                                                       cg.coords[key2][0],
                                                       cg.coords[key2][1])
-                        (point1, point2) = p
 
-                        #point1 = cg.get_point(key1)
-                        #point2 = cg.get_point(key2)
+                        self.add_dashed(p[0], p[1])
 
-                        dash_length = 0.6
-                        gap_length = dash_length * 2
-                        direction = ftuv.normalize(point2 - point1)
-
-                        num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
-                        fud.pv('num_dashes')
-
-                        for i in range(int(num_dashes)):
-                            self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
-                                             point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
-                                             0.3, "")
-
-                            '''
-                            self.add_segment(point1, point2, "purple",
-                                             0.3, key1 + " " + key2)
-                            
-                            '''
+                        '''
+                        self.add_segment(point1, point2, "purple",
+                                         0.3, key1 + " " + key2)
+                        
+                        '''
                     except:
                         continue
 

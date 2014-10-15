@@ -1,13 +1,9 @@
-import unittest, os
+import unittest
 import itertools as it
-import random
-import sys
 
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
-
-import copy, time
 
 class GraphVerification(object):
     def check_for_overlapping_defines(self, bg):
@@ -76,6 +72,50 @@ connect s3 h1 m0 m2
 connect s2 h0 m1 m2
 connect s0 f1 m1 m0 t1
 '''
+        self.bpseq = dict()
+        self.bpseq['1y26'] = """1 G 26
+2 A 25
+3 G 24
+4 C 23
+5 U 22
+6 G 21
+7 C 0
+8 A 0
+9 G 0
+10 C 19
+11 A 18
+12 C 17
+13 G 0
+14 A 0
+15 A 0
+16 A 0
+17 G 12
+18 U 11
+19 G 10
+20 A 0
+21 C 6
+22 G 5
+23 G 4
+24 C 3
+25 U 2
+26 C 1
+"""
+
+        self.bpseq['pseudoknot'] ="""1 A 9
+2 A 8
+3 A 0
+4 A 14
+5 A 13
+6 A 0
+7 A 0
+8 A 2
+9 A 1
+10 A 0
+11 A 0
+12 A 0
+13 A 5
+14 A 4
+"""
 
     def test_to_bg_string(self):
         self.fasta = """>1y26
@@ -94,6 +134,36 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 
         for s in bg.stem_iterator():
             bg.stem_length(s)
+
+    def test_from_fasta1(self):
+        a = """
+>a
+ACGCCA
+((..))
+"""
+        x = fgb.from_fasta_text(a)
+        self.assertEqual(x.seq, 'ACGCCA')
+
+        a = """
+>a
+ACGCCA
+((..))
+>b
+CCCCCC
+((()))
+"""
+        bgs = fgb.from_fasta_text(a)
+        self.assertEqual(len(bgs), 2)
+        self.assertEqual(bgs[0].seq, 'ACGCCA')
+        self.assertEqual(bgs[1].seq, 'CCCCCC')
+
+        a = """
+GGGGGG
+......
+"""
+        bg = fgb.from_fasta_text(a)
+        self.assertEqual(bg.seq, 'GGGGGG')
+        fud.pv('bg.defines')
 
     def test_from_bpseq_file(self):
         with open('test/forgi/data/1gid.bpseq', 'r') as f:
@@ -478,6 +548,15 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph(dotbracket_str=dotbracket)
         self.assertEquals(bg.to_dotbracket_string(), dotbracket)
 
+    def test_to_fasta_string(self):
+        filename = 'test/forgi/data/2hoj.fa'
+        with open(filename, 'r') as f:
+            instr = f.read()
+            bg = fgb.from_fasta(filename)
+            outstr = bg.to_fasta_string()
+
+            self.assertEqual(instr.strip(), outstr.strip())
+
     def test_get_multiloop_side(self):
         # see page 85 in the notebook
         bg = fgb.BulgeGraph(dotbracket_str='(.().().)')
@@ -821,6 +900,17 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         build_order = bg.traverse_graph()
 
+    def test_create_mst_telomerase(self):
+        '''
+        Test the creation of a minimum spanning tree from the telomerase
+        secondary structure.
+        '''
+        bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
+
+        mst = bg.get_mst()
+        self.assertTrue('m0' not in mst)
+        self.assertTrue('m3' not in mst)
+
     def test_traverse_graph(self):
         # the dotbracket for 1gid
         db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'
@@ -838,4 +928,70 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertTrue(('s0', 'i4', 's1') in build_order)
         self.assertEqual(len(all_stems), 0)
 
+    def test_get_node_from_residue_num(self):
+        bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
 
+    def test_get_connected_nucleotides(self):
+        db = '((..((..))..))'
+        bg = fgb.BulgeGraph(dotbracket_str=db)
+
+        cr = bg.get_connected_residues('s0', 's1')
+
+        self.assertEqual(len(cr), 2)
+        self.assertEqual(cr[0], [2,5])
+        self.assertEqual(cr[1], [10, 13])
+
+        cr = bg.get_connected_residues('s1', 's0')
+
+        self.assertEqual(len(cr), 2)
+        self.assertEqual(cr[0], [2,5])
+        self.assertEqual(cr[1], [10, 13])
+        db = '((..))..((..))'
+        bg = fgb.BulgeGraph(dotbracket_str=db)
+
+        cr = bg.get_connected_residues('s0', 's1')
+
+        self.assertEqual(len(cr), 1)
+        self.assertEqual(cr[0], [6,9])
+
+    def test_is_pseudoknot(self):
+
+        bg = fgb.BulgeGraph()
+
+        db='[[.((..]]...))'
+        nm='12345678901234'
+        bpstr = self.bpseq['pseudoknot']
+
+        bg.from_bpseq_str(bpstr)
+        self.assertTrue(bg.is_pseudoknot())
+
+    def test_to_bpseq_str(self):
+        bpstr = self.bpseq['1y26']
+
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpstr)
+        s = bg.to_bpseq_string()
+
+    def test_to_pair_tuples(self):
+        bpstr = self.bpseq['1y26']
+
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpstr)
+        pair_tuples = bg.to_pair_tuples()
+
+        self.assertTrue((1,26) in pair_tuples)
+        self.assertTrue((26,1) in pair_tuples)
+        self.assertTrue((7,0) in pair_tuples)
+
+    def test_to_pairtable(self):
+        bpstr = self.bpseq['1y26']
+
+        bg = fgb.BulgeGraph()
+        bg.from_bpseq_str(bpstr)
+
+        pt = bg.to_pair_table()
+
+        self.assertEqual(pt[0], 26)
+        self.assertEqual(pt[1], 26)
+        self.assertEqual(pt[26], 1)
+        self.assertEqual(pt[7], 0)

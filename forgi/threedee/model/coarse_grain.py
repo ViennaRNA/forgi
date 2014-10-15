@@ -4,11 +4,12 @@ import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.model.stats as ftms
 
 import forgi.aux.k2n_standalone.knotted2nested as cak
-import forgi.utilities.debug as fud
 import forgi.threedee.utilities.mcannotate as ftum
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.rmsd as ftur
 import forgi.threedee.utilities.vector as ftuv
+import forgi.utilities.debug as fud
+import forgi.utilities.stuff as fus
 
 import Bio.PDB as bpdb
 import collections as c
@@ -52,16 +53,6 @@ def remove_hetatm(lines):
 
     return new_lines
 
-@contextlib.contextmanager
-def make_temp_directory():
-    '''
-    Yanked from:
-
-    http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class
-    '''
-    temp_dir = tf.mkdtemp()
-    yield temp_dir
-    shutil.rmtree(temp_dir)
 
 def add_longrange_interactions(cg, lines):
     '''
@@ -232,7 +223,7 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
                                      secondary_structure, chain_id=chain_id,
                                     remove_pseudoknots=remove_pseudoknots)
     else:
-        with make_temp_directory() as output_dir:
+        with fus.make_temp_directory() as output_dir:
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
                                          secondary_structure, chain_id = chain_id,
                                         remove_pseudoknots=remove_pseudoknots)

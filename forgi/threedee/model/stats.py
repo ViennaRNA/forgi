@@ -558,7 +558,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
             if stem_stat.define[0] == 1:
                 continue
 
-            ConstructionStats.stem_stats[stem_stat.bp_length] += [stem_stat]
+            ConstructionStats.stem_stats[(stem_stat.bp_length, stem_stat.bp_length)] += [stem_stat]
 
     f.close()
 
@@ -683,8 +683,14 @@ class ConformationStats(object):
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
-            dims = get_angle_stat_dims(dims[0], dims[1], 
-                                       ang_type, min_entries=1)[0][-3:]
+            try:
+                dims = get_angle_stat_dims(dims[0], dims[1], 
+                                           ang_type, min_entries=1)[0][-3:]
+            except IndexError as ie:
+                #fud.pv('elem, dims, ang_type')
+                print >>sys.stderr, "Error in sample_stats:"
+                print >>sys.stderr, "elem:", elem, "dims:", dims, "ang_type:", ang_type
+                raise
         elif elem[0] == 'h':
             dims = dims[0]
             stats = self.loop_stats

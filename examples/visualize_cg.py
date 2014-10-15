@@ -52,6 +52,7 @@ def main():
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-g', '--highlight', dest='highlight', default=None, help="Highlight some elements", type='str')
     parser.add_option('-o', '--output', dest='output', default=None, help="Create a picture of the scene and exit", type='str')
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
@@ -60,7 +61,9 @@ def main():
     parser.add_option('-a', '--align', dest='align', default=False, action='store_true', help='Align all of the structures with the first')
     parser.add_option('-e', '--encompassing-stems', dest='encompassing_stems', default=False, action='store_true', help='Show the big stems that encompass the colinear ones.')
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true', help='Display the virtual atoms')
+    parser.add_option('-d', '--distance', dest='distance', default=None, help="Draw the lines between specified virtual residues")
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true', help='Display the coordinate basis of each element')
+    parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
     parser.add_option('', '--stem-atoms', dest='stem_atoms', default=False, action='store_true', help='Display the stem atoms')
     parser.add_option('', '--rainbow', dest='rainbow', default=False, action='store_true', help='Color each of the nucleotide positions (i.e. average atoms) according to the colors of the rainbow and their position')
 
@@ -110,6 +113,26 @@ def main():
                         pp.stem_atoms(cg.coords[d], cg.get_twists(d), 
                                     cg.get_node_dimensions(d)[0], side=side)
 
+    # highlight things in purple
+    if options.highlight is not None:
+        for s in options.highlight.split(','):
+            fud.pv('s')
+            pp.add_twists = False
+            pp.add_stem_like(cg, s, color='purple', width=3.)
+    
+    # display the distances between nucleotides
+    if options.distance is not None:
+        virtual_atoms = ftug.virtual_atoms(cg, sidechain=False)
+
+        for dist_pair in options.distance.split(':'):
+            fud.pv('dist_pair')
+            fr,to = dist_pair.split(',')
+
+            fr = int(fr)
+            to = int(to)
+
+            pp.add_dashed(virtual_atoms[fr]["C1'"], virtual_atoms[to]["C1'"], width=1.2)
+
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:
@@ -121,6 +144,7 @@ def main():
             pymol_cmd += 'show cartoon, all\n'
             pymol_cmd += 'bg white\n'
             pymol_cmd += 'clip slab, 10000\n'
+            pymol_cmd += 'orient\n'
 
             if options.output is not None:
                 pymol_cmd += 'ray\n'
@@ -128,10 +152,15 @@ def main():
                 pymol_cmd += 'quit\n'
 
 
+
             f1.write(pymol_cmd)
             f1.flush()
 
-            p = sp.Popen(['pymol', f1.name])
+            if options.batch:
+                p = sp.Popen(['pymol', '-cq', f1.name])
+            else:
+                p = sp.Popen(['pymol', f1.name])
+
             out, err = p.communicate()
 
 if __name__ == '__main__':

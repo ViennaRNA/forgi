@@ -28,10 +28,14 @@ def main():
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-c', '--constraints', dest='constraints', default=None, help="Only visualize the elements passed as parameters", type='str')
+    parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
+    parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
+    parser.add_option('-d', '--distance', dest='distance', default=None, help="Draw the lines between specified virtual residues")
+    parser.add_option('-o', '--output', dest='output', default=None, help="Create a picture of the scene and exit", type='str')
 
     (options, args) = parser.parse_args()
 
@@ -43,7 +47,8 @@ def main():
         print >>sys.stderr, "File doesn't exist: %s" % (args[0])
         sys.exit(1)
 
-    cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"))
+    cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"),
+                      remove_pseudoknots=not options.pseudoknots)
     pp = ftvp.PymolPrinter()
 
     if options.constraints is not None:
@@ -72,6 +77,27 @@ def main():
                 ftup.output_chain(chain, f2.name)
                 f2.flush()
 
+                # display the distances between nucleotides
+                if options.distance is not None:
+                    for dist_pair in options.distance.split(':'):
+                        fud.pv('dist_pair')
+                        fr,to = dist_pair.split(',')
+
+                        fr = int(fr)
+                        to = int(to)
+
+                        try:
+                            vec1 = chain[fr]["C1*"].get_vector().get_array() 
+                            vec2 = chain[to]["C1*"].get_vector().get_array()
+                        except KeyError as ke:
+                            # Rosetta produces atoms with non-standard names
+                            vec1 = chain[fr]["C1*"].get_vector().get_array() 
+                            vec2 = chain[to]["C1*"].get_vector().get_array()
+
+                        fud.pv('vec1, vec2')
+
+                        pp.add_dashed(vec1, vec2, width=1.2)
+
                 f.write(pp.pymol_string())
                 f.flush()
 
@@ -90,12 +116,26 @@ def main():
                             pymol_cmd += "show sticks, resi %r\n" % (r)
                             pymol_cmd += "color %s, resi %r\n" % (color, r)
 
+
+
                 pymol_cmd += 'run %s\n' % (f.name)
+                pymol_cmd += 'bg white\n'
+                pymol_cmd += 'clip slab, 10000\n'
+                pymol_cmd += 'orient\n'
+
+                if options.output is not None:
+                    pymol_cmd += 'ray\n'
+                    pymol_cmd += 'png %s\n' % (options.output)
+                    pymol_cmd += 'quit\n'
 
                 f1.write(pymol_cmd)
                 f1.flush()
 
-                p = sp.Popen(['pymol', f2.name, f1.name])
+                if options.batch:
+                    p = sp.Popen(['pymol', '-cq', f2.name, f1.name])
+                else:
+                    p = sp.Popen(['pymol', f2.name, f1.name])
+
                 out, err = p.communicate()
 
 if __name__ == '__main__':
