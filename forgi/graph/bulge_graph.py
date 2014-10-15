@@ -13,9 +13,10 @@ __email__       = "pkerp@tbi.univie.ac.at"
 import sys
 import collections as col
 import random
+import re
 import itertools as it
 import forgi.utilities.debug as fud
-import forgi.utilities.stuff as cus
+import forgi.utilities.stuff as fus
 import forgi.threedee.utilities.mcannotate as ftum
 import os
 
@@ -30,6 +31,79 @@ def add_bulge(bulges, bulge, context, message):
     #bulge = (context, bulge)
     bulges[context] = bulges.get(context, []) + [bulge]
     return bulges
+
+def from_id_seq_struct(id_str, seq, struct):
+    '''
+    Return a new BulgeGraph with the given id, 
+    sequence and structure.
+
+    :param id_str: The id (i.e. >1y26)
+    :param seq: the sequence (i.e. 'ACCGGG')
+    :param struct: The dotplot secondary structure (i.e. '((..))')
+    '''
+    bg = BulgeGraph()
+    bg.from_dotbracket(struct)
+    bg.name = id_str
+    bg.seq = seq
+
+    return bg
+
+def from_fasta_text(fasta_text):
+    '''
+    Create a bulge graph or multiple bulge
+    graphs from some fasta text.
+    '''
+    # compile searches for the fasta id, sequence and 
+    # secondary structure respectively
+    id_search = re.compile('>(.+)')
+    seq_search = re.compile('^([acguACGU]+)$')
+    struct_search = re.compile('^([\(\)\.]+)$')
+
+    prev_id = None
+    prev_seq = None
+    prev_struct = None
+
+    bgs = []
+
+    for line in fasta_text.split('\n'):
+        # newlines suck
+        line = line.strip()
+
+        # find out what this line contains
+        id_match = id_search.match(line)
+        seq_match = seq_search.match(line)
+        struct_match = struct_search.match(line)
+
+        if id_match is not None:
+            # we found an id, check if there's a previous
+            # sequence and structure, and create a BG
+            prev_id = id_match.group(0)
+
+            if prev_seq is None and prev_struct is None:
+                # must be the first sequence/structure
+                continue
+
+            # make sure we have
+            if prev_seq is None:
+                raise Exception("No sequence for id: {}", prev_id)
+            if prev_struct is None:
+                raise Exception("No sequence for id: {}", prev_id)
+            if prev_id is None:
+                raise Exception("No previous id")
+
+            bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
+
+        if seq_match is not None:
+            prev_seq = seq_match.group(0)
+        if struct_match is not None:
+            prev_struct = struct_match.group(0)
+
+    bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
+
+    if len(bgs) == 1:
+        return bgs[0]
+    else:
+        return bgs
 
 def from_fasta(filename):
     '''
@@ -774,12 +848,12 @@ class BulgeGraph(object):
         all_defines = []
 
         # get all the unpaired regions
-        for conn in list(connections) + [key]:
-            for x in cus.grouped(self.defines[conn], 2):
+        for c in list(connections) + [key]:
+            for x in fus.grouped(self.defines[c], 2):
                 all_defines += [x]
 
         # condense them into contiguous regions of unpaired bases
-        intervals = cus.merge_intervals(all_defines, diff=1)
+        intervals = fus.merge_intervals(all_defines, diff=1)
 
         # remove the stem
         self.remove_vertex(key)
@@ -1193,9 +1267,50 @@ class BulgeGraph(object):
 
         self.from_stems_and_bulges(stems, bulges)
 
+    def to_pair_table(self):
+        '''
+        Create a pair table from the list of elements.
+
+        The first element in the returned list indicates the number of
+        nucleotides in the structure.
+
+        i.e. [5,5,4,0,2,1]
+        '''
+        pair_tuples = self.to_pair_tuples()
+        max_bp = max([max(x) for x in pair_tuples])
+
+        pt = [0] * (max_bp + 1)
+        pt[0] = max_bp
+
+        for tup in pair_tuples:
+            pt[tup[0]] = tup[1]
+
+        return pt
+
+    def to_pair_tuples(self):
+        '''
+        Create a list of tuples corresponding to all of the base pairs in the
+        structure. Unpaired bases will be shown as being paired with a
+        nucleotide numbered 0.
+
+        i.e. [(1,5),(2,4),(3,0),(4,2),(5,1)]
+        '''
+        # iterate over each element
+        table = []
+
+        for d in self.defines:
+            # iterate over each nucleotide in each element
+            for b in self.define_residue_num_iterator(d):
+                p = self.pairing_partner(b)
+                if p is None:
+                    p = 0
+                table += [(b,p)]
+
+        return table
+
     def to_bpseq_string(self):
         '''
-        Create a bpseq_string from this structure.
+        Create a bpseq string from this structure.
         '''
         out_str = ''
         for i in range(1, self.seq_length+1):
@@ -1319,6 +1434,11 @@ class BulgeGraph(object):
 
         @return: A dot-bracket representation of this BulgeGraph
         '''
+        pt = self.to_pair_table()
+        return fus.pairtable_to_dotbracket(pt)
+
+        """
+        return fus.
         out = ['.' for i in xrange(self.seq_length)]
         for s in self.stem_iterator():
             for i in xrange(self.defines[s][0], self.defines[s][1]+1):
@@ -1327,6 +1447,7 @@ class BulgeGraph(object):
                 out[i-1] = ')'
 
         return "".join(out)
+        """
     
     def to_fasta_string(self):
         '''
