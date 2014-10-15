@@ -20,10 +20,6 @@ import forgi.utilities.stuff as fus
 import forgi.threedee.utilities.mcannotate as ftum
 import os
 
-def error_exit(message):
-    print >> sys.stderr, message
-    sys.exit(1)
-
 # A wrapper for a simple dictionary addition
 # Added so that debugging can be made easier
 def add_bulge(bulges, bulge, context, message):
@@ -248,7 +244,7 @@ def find_bulges_and_stems(brackets):
 
         if brackets[i] == ')':
             if len(opens) == 0:
-                error_exit("ERROR: Unmatched close bracket")
+                raise Exception("Unmatched close bracket")
 
             stem_pairs.append((opens.pop(), i))
 
@@ -287,7 +283,7 @@ def find_bulges_and_stems(brackets):
         finished_bulges += bulges[context]
 
     if len(opens) > 0:
-        error_exit("ERROR: Unmatched open bracket")
+        raise Exception("Unmatched open bracket")
 
     stem_pairs.sort()
     stems = condense_stem_pairs(stem_pairs)
