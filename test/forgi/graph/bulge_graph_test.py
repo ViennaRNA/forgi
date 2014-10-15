@@ -861,8 +861,6 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
     def test_get_node_from_residue_num(self):
         bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
 
-        #fud.pv('bg.get_node_from_residue_num(280)')
-
     def test_get_connected_nucleotides(self):
         db = '((..((..))..))'
         bg = fgb.BulgeGraph(dotbracket_str=db)
@@ -943,4 +941,3 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg = fgb.BulgeGraph()
         bg.from_bpseq_str(bpstr)
 
-        fud.pv('bg.to_bpseq_str()')
