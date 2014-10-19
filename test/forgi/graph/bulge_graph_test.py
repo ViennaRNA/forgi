@@ -1,13 +1,9 @@
-import unittest, os
+import unittest
 import itertools as it
-import random
-import sys
 
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
-
-import copy, time
 
 class GraphVerification(object):
     def check_for_overlapping_defines(self, bg):
@@ -957,7 +953,6 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
     def test_get_node_from_residue_num(self):
         bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
-
 
     def test_get_connected_nucleotides(self):
         db = '((..((..))..))'

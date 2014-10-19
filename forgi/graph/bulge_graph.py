@@ -11,20 +11,14 @@ __maintainer__  = "Peter Kerpedjiev"
 __email__       = "pkerp@tbi.univie.ac.at"
 
 import sys
-import itertools as it
-import collections as c
-import math
+import collections as col
 import random
 import re
 import itertools as it
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 import forgi.threedee.utilities.mcannotate as ftum
-import forgi.threedee.utilities.vector as cuv
-
-def error_exit(message):
-    print >> sys.stderr, message
-    sys.exit(1)
+import os
 
 # A wrapper for a simple dictionary addition
 # Added so that debugging can be made easier
@@ -249,7 +243,7 @@ def find_bulges_and_stems(brackets):
 
         if brackets[i] == ')':
             if len(opens) == 0:
-                error_exit("ERROR: Unmatched close bracket")
+                raise Exception("Unmatched close bracket")
 
             stem_pairs.append((opens.pop(), i))
 
@@ -288,7 +282,7 @@ def find_bulges_and_stems(brackets):
         finished_bulges += bulges[context]
 
     if len(opens) > 0:
-        error_exit("ERROR: Unmatched open bracket")
+        raise Exception("Unmatched open bracket")
 
     stem_pairs.sort()
     stems = condense_stem_pairs(stem_pairs)
@@ -308,8 +302,8 @@ class BulgeGraph(object):
         self.build_order = None
         self.name = "untitled"
         self.defines = dict()
-        self.edges = c.defaultdict(set)
-        self.longrange = c.defaultdict(set)
+        self.edges = col.defaultdict(set)
+        self.longrange = col.defaultdict(set)
         self.weights = dict()
 
         # sort the coordinate basis for each stem
@@ -628,10 +622,7 @@ class BulgeGraph(object):
         '''
         #print "stems:", stems
         stem_stems = dict()
-        define_text = ""
-        connect_text = ""
         for i in range(len(stems)):
-            stem = stems[i]
             for j in range(i+1, len(stems)):
                 for k1 in range(2):
                     # don't fear the for loop
@@ -706,9 +697,6 @@ class BulgeGraph(object):
 
         That is, consolidate contiguous bulge region defines.
         """
-
-        new_defines = []
-
         for key in self.defines.keys():
             if key[0] != 's':
                 assert(len(self.defines[key]) % 2 == 0)
@@ -775,7 +763,6 @@ class BulgeGraph(object):
         #assert(len(vertices) == 2)
 
         connections = set()
-        needs_merging = set()
 
         for v in vertices:
             merge_str += " %s" % (v)
@@ -871,16 +858,16 @@ class BulgeGraph(object):
         # contiguous regions
         for i in intervals:
             new_connections = set()
-            for c in connections:
+            for conn in connections:
                 # get the connections of the nodes to be removed
-                for nc in self.edges[c]:
+                for nc in self.edges[conn]:
                     if nc == i:
                         continue
                     for cd in self.defines[nc]:
                         for id in i:
                             if abs(cd - id) == 1:
                                 new_connections.add(nc)
-                to_remove.add(c)
+                to_remove.add(conn)
             
             # add a new node corresponding to this unpaired region
             self.add_node(self.get_vertex(), new_connections, i, 1)
@@ -905,7 +892,6 @@ class BulgeGraph(object):
 
             for (b1, b2) in it.combinations(bulges, r=2):
                 if self.edges[b1] == self.edges[b2] and len(self.edges[b1]) > 1:
-                    elist = list(self.edges[b1])
                     connections = self.connections(b1)
 
                     all_connections = [sorted((self.get_sides_plus(connections[0], b1)[0],
@@ -1325,9 +1311,10 @@ class BulgeGraph(object):
         Create a bpseq string from this structure.
         '''
         out_str = ''
-        pair_tuples = sorted(self.to_pair_tuples())
-
-        for i,pp in pair_tuples:
+        for i in range(1, self.seq_length+1):
+            pp = self.pairing_partner(i)
+            if pp is None:
+                pp = 0
             out_str += "{} {} {}\n".format(i, self.seq[i-1], pp)
         
         return out_str
@@ -1531,14 +1518,6 @@ class BulgeGraph(object):
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
 
-    def stem_iterator(self):
-        '''
-        Iterate over all of the stem elements.
-        '''
-        for d in self.defines.keys():
-            if d[0] == 's':
-                yield d
-
     def sorted_stem_iterator(self):
         '''
         Iterate over a list of the stems sorted by the lowest numbered
@@ -1665,7 +1644,6 @@ class BulgeGraph(object):
             return sorted([sorted(dists[0][1:]), sorted(dists[1][1:])])
         else:
             return sorted([sorted(dists[0][1:])])
-
 
     def get_side_nucleotides(self, stem, side):
         '''
@@ -1964,9 +1942,6 @@ class BulgeGraph(object):
         stem.
         '''
         c = self.connections(m)
-        md = self.defines[m]
-        s1 = self.defines[c[0]]
-        s2 = self.defines[c[1]]
 
         p1 = self.get_sides_plus(c[0], m)
         p2 = self.get_sides_plus(c[1], m)
@@ -2004,7 +1979,6 @@ class BulgeGraph(object):
         '''
 
         bd = self.defines[bulge]
-        prev_stem = self.connections(bulge)[0]
         c = self.connections(bulge)
 
         if bulge[0] == 'i':
@@ -2133,7 +2107,7 @@ class BulgeGraph(object):
             return tuple(ends)
             # multiloop
 
-        return (m1, m2)
+        return (None, None)
 
 
     def get_flanking_sequence(self, bulge_name, side=0):
@@ -2162,7 +2136,6 @@ class BulgeGraph(object):
 
         @return: (orig_chain_res1, orig_chain_res1, flanking_res1, flanking_res2)
         '''
-        def1 = self.defines[bulge_name]
         f1 = self.get_flanking_region(bulge_name, side)
         c = self.connections(bulge_name)
 
@@ -2388,8 +2361,6 @@ class BulgeGraph(object):
         to_visit = [('s0', 'start')]
         visited = set(['s0'])
 
-        priority = {'s':1, 'i':2, 'm':3, 'f':4, 't':5}
-
         while len(to_visit) > 0:
             to_visit.sort(key=lambda x: min(self.get_node_dimensions(x[0])))
             (current, prev) = to_visit.pop(0)
@@ -2467,9 +2438,9 @@ def bg_from_subgraph(bg, sg):
     # copy edges only if they connect elements which 
     # are also in the new structure
     for e in bg.edges.keys():
-        for c in bg.edges[e]:
-            if c in sg:
-                nbg.edges[e].add(c)
+        for conn in bg.edges[e]:
+            if conn in sg:
+                nbg.edges[e].add(conn)
 
     return nbg
 
