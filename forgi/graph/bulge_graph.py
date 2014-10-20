@@ -1375,7 +1375,6 @@ class BulgeGraph(object):
         Create a bulge_graph from a list of pair tuples. Unpaired
         nucleotides have a pairing partner of 0.
         '''
-        fud.pv('tuples')
         stems = []
         bulges = []
 
@@ -2409,14 +2408,22 @@ class BulgeGraph(object):
         else:
             return None
 
+    def is_node_pseudoknot(self, d):
+        '''
+        Is a particular multiloop part of a pseudoknot?
+        '''
+        conn = self.connections(d)
+        ct = self.connection_type(d, conn)
+        if abs(ct) == 5:
+            return True
+        return False
+
     def is_pseudoknot(self):
         '''
         Is this bulge part of a pseudoknot?
         '''
         for d in self.mloop_iterator():
-            conn = self.connections(d)
-            ct = self.connection_type(d, conn)
-            if abs(ct) == 5:
+            if self.is_node_pseudoknot(d):
                 return True
 
         return False

@@ -142,10 +142,11 @@ AAAA
 ([)]
 """
         bg = fgb.from_fasta_text(fasta_str)
-        fud.pv('bg.to_bg_string()')
 
+        '''
         self.assertEqual(bg.defines['s0'], [1,1,3,3])
         self.assertEqual(bg.defines['s1'], [2,2,4,4])
+        '''
 
         fasta_str = """
 >a
@@ -153,7 +154,6 @@ AAAAAAA
 (.[.).]
 """
         bg = fgb.from_fasta_text(fasta_str)
-        fud.pv('bg.to_bg_string()')
 
         self.assertEqual(bg.defines['s0'], [1,1,5,5])
         self.assertEqual(bg.defines['s1'], [3,3,7,7])
