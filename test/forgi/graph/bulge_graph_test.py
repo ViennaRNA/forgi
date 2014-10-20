@@ -188,6 +188,17 @@ GGGGGG
         bg = fgb.from_fasta_text(a)
         self.assertEqual(bg.seq, 'GGGGGG')
 
+    def test_from_fasta3(self):
+        a = """
+>3NKB_B
+GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
+(((((((((((.[[....))).......]]....((((((....)).)))).....))))))))
+"""
+        bg = fgb.from_fasta_text(a)
+
+        bg.dissolve_stem('s2')
+        bg.get_node_from_residue_num(41)
+
     def test_from_bpseq_file(self):
         with open('test/forgi/data/1gid.bpseq', 'r') as f:
             lines = f.readlines()
@@ -420,6 +431,8 @@ GGGGGG
 20 A 4
 """
         bg.from_bpseq_str(bpstr)
+
+
 
     def test_from_dotplot(self):
         bg = fgb.BulgeGraph()

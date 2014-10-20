@@ -23,7 +23,6 @@ import os
 # A wrapper for a simple dictionary addition
 # Added so that debugging can be made easier
 def add_bulge(bulges, bulge, context, message):
-    #print >>sys.stderr,"Adding bulge", context, bulge, message
     #bulge = (context, bulge)
     bulges[context] = bulges.get(context, []) + [bulge]
     return bulges
@@ -839,44 +838,20 @@ class BulgeGraph(object):
         that they now include the nucleotides that were formerly 
         in this stem.
         '''
-        connections = self.edges[key]
-        all_defines = []
+        st = list(self.stem_bp_iterator(key))
+        pt = self.to_pair_tuples()
 
-        # get all the unpaired regions
-        for c in list(connections) + [key]:
-            for x in fus.grouped(self.defines[c], 2):
-                all_defines += [x]
+        nt = []
+        for p in pt:
+            to_add = p
+            for s in st:
+                if sorted(p) == sorted(s):
+                    to_add = (p[0], 0)
+                    break
+            nt += [to_add]
 
-        # condense them into contiguous regions of unpaired bases
-        intervals = fus.merge_intervals(all_defines, diff=1)
-
-        # remove the stem
-        self.remove_vertex(key)
-
-        to_remove = set()
-        # find out which elements connect to each of the new
-        # contiguous regions
-        for i in intervals:
-            new_connections = set()
-            for conn in connections:
-                # get the connections of the nodes to be removed
-                for nc in self.edges[conn]:
-                    if nc == i:
-                        continue
-                    for cd in self.defines[nc]:
-                        for id in i:
-                            if abs(cd - id) == 1:
-                                new_connections.add(nc)
-                to_remove.add(conn)
-            
-            # add a new node corresponding to this unpaired region
-            self.add_node(self.get_vertex(), new_connections, i, 1)
-
-        # remove the vertices that have been consolidated
-        for r in to_remove:
-            self.remove_vertex(r)
-
-        self.relabel_nodes()
+        self.defines = dict()
+        self.from_tuples(nt)
 
     def collapse(self):
         '''
@@ -1233,16 +1208,16 @@ class BulgeGraph(object):
         self.remove_degenerate_nodes()
         self.sort_defines()
         
+    def dissolve_length_one_stems(self):
         # dissolve all stems which have a length of one
-        if self.dissolve_length_one_stems:
-            repeat=True
-            while repeat:
-                repeat = False
-                for k in self.defines:
-                    if k[0] == 's' and self.stem_length(k) == 1:
-                        self.dissolve_stem(k)
-                        repeat = True
-                        break
+        repeat=True
+        while repeat:
+            repeat = False
+            for k in self.defines:
+                if k[0] == 's' and self.stem_length(k) == 1:
+                    self.dissolve_stem(k)
+                    repeat = True
+                    break
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
@@ -1254,7 +1229,6 @@ class BulgeGraph(object):
                                of the structure
         '''
         self.__init__()
-        self.dissolve_length_one_stems = dissolve_length_one_stems
         self.dotbracket_str = dotbracket_str
         self.seq_length = len(dotbracket_str)
 
@@ -1264,6 +1238,9 @@ class BulgeGraph(object):
         pt = fus.dotbracket_to_pairtable(dotbracket_str)
         tuples = fus.pairtable_to_tuples(pt)
         self.from_tuples(tuples)
+
+        if dissolve_length_one_stems:
+            self.dissolve_length_one_stems()
 
     def to_pair_table(self):
         '''
@@ -1364,11 +1341,13 @@ class BulgeGraph(object):
         self.__init__()
 
         tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
-        self.dissolve_length_one_stems = dissolve_length_one_stems
 
         self.seq = seq
         self.seq_length = len(seq)
         self.from_tuples(tuples)
+
+        if dissolve_length_one_stems:
+            self.dissolve_length_one_stems()
 
     def from_tuples(self, tuples):
         '''
@@ -1378,6 +1357,7 @@ class BulgeGraph(object):
         stems = []
         bulges = []
 
+        tuples.sort()
         tuples = iter(tuples)
         (t1, t2) = tuples.next()
 
@@ -1708,8 +1688,6 @@ class BulgeGraph(object):
                     bd = self.defines[e]
                     break
 
-        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
-
         for i in xrange(4):
             for k in xrange(len(bd)):
                 if s1d[i] - bd[k] == 1:
@@ -1748,8 +1726,6 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
-        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
-
         if len(bd) == 0:
             edges = self.edges[b]
 
@@ -1757,8 +1733,6 @@ class BulgeGraph(object):
                 if e != s1:
                     bd = self.defines[e]
                     break
-
-        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
 
         for k in xrange(len(bd)):
             # before the stem on the 5' strand
@@ -2028,7 +2002,6 @@ class BulgeGraph(object):
                         return key
 
         raise Exception("Base number %d not found in the defines." % (base_num))
-
 
     def get_length(self, vertex):
         '''
