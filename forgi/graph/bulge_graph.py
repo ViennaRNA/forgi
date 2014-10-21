@@ -23,7 +23,6 @@ import os
 # A wrapper for a simple dictionary addition
 # Added so that debugging can be made easier
 def add_bulge(bulges, bulge, context, message):
-    #print >>sys.stderr,"Adding bulge", context, bulge, message
     #bulge = (context, bulge)
     bulges[context] = bulges.get(context, []) + [bulge]
     return bulges
@@ -53,7 +52,6 @@ def from_fasta_text(fasta_text):
     # secondary structure respectively
     id_search = re.compile('>(.+)')
     seq_search = re.compile('^([acguACGU]+)$')
-    struct_search = re.compile('^([\(\)\.]+)$')
 
     prev_id = None
     prev_seq = None
@@ -68,12 +66,11 @@ def from_fasta_text(fasta_text):
         # find out what this line contains
         id_match = id_search.match(line)
         seq_match = seq_search.match(line)
-        struct_match = struct_search.match(line)
 
         if id_match is not None:
             # we found an id, check if there's a previous
             # sequence and structure, and create a BG
-            prev_id = id_match.group(0)
+            prev_id = id_match.group(0).strip('>')
 
             if prev_seq is None and prev_struct is None:
                 # must be the first sequence/structure
@@ -91,8 +88,9 @@ def from_fasta_text(fasta_text):
 
         if seq_match is not None:
             prev_seq = seq_match.group(0)
-        if struct_match is not None:
-            prev_struct = struct_match.group(0)
+        if id_match is None and seq_match is None:
+            if len(line) > 0:
+                prev_struct = line
 
     bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
 
@@ -840,44 +838,20 @@ class BulgeGraph(object):
         that they now include the nucleotides that were formerly 
         in this stem.
         '''
-        connections = self.edges[key]
-        all_defines = []
+        st = list(self.stem_bp_iterator(key))
+        pt = self.to_pair_tuples()
 
-        # get all the unpaired regions
-        for c in list(connections) + [key]:
-            for x in fus.grouped(self.defines[c], 2):
-                all_defines += [x]
+        nt = []
+        for p in pt:
+            to_add = p
+            for s in st:
+                if sorted(p) == sorted(s):
+                    to_add = (p[0], 0)
+                    break
+            nt += [to_add]
 
-        # condense them into contiguous regions of unpaired bases
-        intervals = fus.merge_intervals(all_defines, diff=1)
-
-        # remove the stem
-        self.remove_vertex(key)
-
-        to_remove = set()
-        # find out which elements connect to each of the new
-        # contiguous regions
-        for i in intervals:
-            new_connections = set()
-            for conn in connections:
-                # get the connections of the nodes to be removed
-                for nc in self.edges[conn]:
-                    if nc == i:
-                        continue
-                    for cd in self.defines[nc]:
-                        for id in i:
-                            if abs(cd - id) == 1:
-                                new_connections.add(nc)
-                to_remove.add(conn)
-            
-            # add a new node corresponding to this unpaired region
-            self.add_node(self.get_vertex(), new_connections, i, 1)
-
-        # remove the vertices that have been consolidated
-        for r in to_remove:
-            self.remove_vertex(r)
-
-        self.relabel_nodes()
+        self.defines = dict()
+        self.from_tuples(nt)
 
     def collapse(self):
         '''
@@ -1234,16 +1208,16 @@ class BulgeGraph(object):
         self.remove_degenerate_nodes()
         self.sort_defines()
         
+    def dissolve_length_one_stems(self):
         # dissolve all stems which have a length of one
-        if self.dissolve_length_one_stems:
-            repeat=True
-            while repeat:
-                repeat = False
-                for k in self.defines:
-                    if k[0] == 's' and self.stem_length(k) == 1:
-                        self.dissolve_stem(k)
-                        repeat = True
-                        break
+        repeat=True
+        while repeat:
+            repeat = False
+            for k in self.defines:
+                if k[0] == 's' and self.stem_length(k) == 1:
+                    self.dissolve_stem(k)
+                    repeat = True
+                    break
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems = False):
         '''
@@ -1255,13 +1229,18 @@ class BulgeGraph(object):
                                of the structure
         '''
         self.__init__()
-        self.dissolve_length_one_stems = dissolve_length_one_stems
-        (bulges, stems) = find_bulges_and_stems(dotbracket_str)
-
         self.dotbracket_str = dotbracket_str
         self.seq_length = len(dotbracket_str)
 
-        self.from_stems_and_bulges(stems, bulges)
+        if len(dotbracket_str) == 0:
+            return
+
+        pt = fus.dotbracket_to_pairtable(dotbracket_str)
+        tuples = fus.pairtable_to_tuples(pt)
+        self.from_tuples(tuples)
+
+        if dissolve_length_one_stems:
+            self.dissolve_length_one_stems()
 
     def to_pair_table(self):
         '''
@@ -1317,6 +1296,32 @@ class BulgeGraph(object):
         
         return out_str
 
+    def bpseq_to_tuples_and_seq(self, bpseq_str):
+        '''
+        Convert a bpseq string to a list of pair tuples and a sequence
+        dictionary. The return value is a tuple of the list of pair tuples
+        and a sequence string.
+        
+        :param bpseq_str: The bpseq string
+        :return: ([(1,5),(2,4),(3,0),(4,2),(5,1)], 'ACCAA')
+        '''
+        lines = bpseq_str.split('\n')
+        seq = []
+        tuples = []
+        for line in lines:
+            parts = line.split()
+
+            if len(parts) == 0:
+                continue
+
+            (t1,s,t2) = (int(parts[0]), parts[1], int(parts[2]))
+            tuples += [(t1,t2)]
+            seq += [s]
+
+        seq = "".join(seq).upper().replace('T', 'U')
+
+        return (tuples, seq)
+
     def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems = False):
         '''
         Create the graph from a string listing the base pairs.
@@ -1334,33 +1339,37 @@ class BulgeGraph(object):
         @return: Nothing, but fill out this structure.
         '''
         self.__init__()
-        lines = bpseq_str.split('\n')
-        seq = ''
 
-        line_iter = iter(lines)
-        parts = line_iter.next().split(' ')
+        tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
 
+        self.seq = seq
+        self.seq_length = len(seq)
+        self.from_tuples(tuples)
+
+        if dissolve_length_one_stems:
+            self.dissolve_length_one_stems()
+
+    def from_tuples(self, tuples):
+        '''
+        Create a bulge_graph from a list of pair tuples. Unpaired
+        nucleotides have a pairing partner of 0.
+        '''
         stems = []
         bulges = []
 
-        prev_from = (int(parts[0]))
-        prev_to = (int(parts[2]))
+        tuples.sort()
+        tuples = iter(tuples)
+        (t1, t2) = tuples.next()
+
+        prev_from = t1
+        prev_to = t2
 
         start_from = prev_from
         start_to = prev_to
         last_paired = prev_from
 
-        seq = parts[1]
-
-        self.dissolve_length_one_stems = dissolve_length_one_stems
-
-        for line in line_iter:
-            parts = line.split(' ')
-
-            if len(parts) < 3:
-                continue
-            (from_bp, base, to_bp) = (int(parts[0]), parts[1], int(parts[2]))
-            seq += base.replace('T', 'U')
+        for t1, t2 in tuples:
+            (from_bp, to_bp) = (t1, t2)
 
             if abs(to_bp - prev_to) == 1 and prev_to != 0:
                 # stem
@@ -1404,10 +1413,6 @@ class BulgeGraph(object):
         if prev_to == 0:
             new_bulge = ((last_paired - 1, prev_from - 1))
             bulges += [new_bulge]
-
-        self.seq = seq
-        self.seq_length = len(seq)
-
         self.from_stems_and_bulges(stems, bulges)
 
     def sort_defines(self):
@@ -1433,18 +1438,6 @@ class BulgeGraph(object):
         pt = self.to_pair_table()
         return fus.pairtable_to_dotbracket(pt)
 
-        """
-        return fus.
-        out = ['.' for i in xrange(self.seq_length)]
-        for s in self.stem_iterator():
-            for i in xrange(self.defines[s][0], self.defines[s][1]+1):
-                out[i-1] = '('
-            for i in xrange(self.defines[s][2], self.defines[s][3]+1):
-                out[i-1] = ')'
-
-        return "".join(out)
-        """
-    
     def to_fasta_string(self):
         '''
         Output the BulgeGraph representation as a fast string of the
@@ -1695,8 +1688,6 @@ class BulgeGraph(object):
                     bd = self.defines[e]
                     break
 
-        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
-
         for i in xrange(4):
             for k in xrange(len(bd)):
                 if s1d[i] - bd[k] == 1:
@@ -1735,8 +1726,6 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
-        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
-
         if len(bd) == 0:
             edges = self.edges[b]
 
@@ -1744,8 +1733,6 @@ class BulgeGraph(object):
                 if e != s1:
                     bd = self.defines[e]
                     break
-
-        #print >>sys.stderr, "s1: %s b: %s" % (s1, b)
 
         for k in xrange(len(bd)):
             # before the stem on the 5' strand
@@ -2015,7 +2002,6 @@ class BulgeGraph(object):
                         return key
 
         raise Exception("Base number %d not found in the defines." % (base_num))
-
 
     def get_length(self, vertex):
         '''
@@ -2395,14 +2381,22 @@ class BulgeGraph(object):
         else:
             return None
 
+    def is_node_pseudoknot(self, d):
+        '''
+        Is a particular multiloop part of a pseudoknot?
+        '''
+        conn = self.connections(d)
+        ct = self.connection_type(d, conn)
+        if abs(ct) == 5:
+            return True
+        return False
+
     def is_pseudoknot(self):
         '''
         Is this bulge part of a pseudoknot?
         '''
         for d in self.mloop_iterator():
-            conn = self.connections(d)
-            ct = self.connection_type(d, conn)
-            if abs(ct) == 5:
+            if self.is_node_pseudoknot(d):
                 return True
 
         return False

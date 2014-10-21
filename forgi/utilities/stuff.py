@@ -138,3 +138,24 @@ def dotbracket_to_pairtable(struct):
 
 	return pt
 
+def pairtable_to_tuples(pt):
+    '''
+    Convert a pairtable to a list of base pair tuples.
+
+    i.e. [4,3,4,1,2] -> [(1,3),(2,4),(3,1),(4,2)]
+
+    :param pt: A pairtable 
+    :return: A list paired tuples
+    '''
+    pt = iter(pt)
+
+    # get rid of the first element which contains the length
+    # of the sequence. We'll figure it out after the traversal
+    pt.next()
+
+    tuples = []
+    for i, p in enumerate(pt):
+        tuples += [(i+1, p)]
+
+    return tuples
+        
