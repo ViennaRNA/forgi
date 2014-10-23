@@ -801,9 +801,10 @@ class BulgeGraph(object):
         :returns: A list of the nodes in the loop.
         '''
         visited = set()
-        to_visit = [(key, 0) for key in self.edges[vertex]]
+        to_visit = [(key, 1) for key in self.edges[vertex]]
         visited.add(vertex)
         in_path = [vertex]
+        fud.pv('vertex')
 
         while len(to_visit) > 0:
             (current, depth) = to_visit.pop()
@@ -813,10 +814,25 @@ class BulgeGraph(object):
             in_path.append(current)
 
             for key in self.edges[current]:
+                fud.pv('key, current, in_path')
+                if key[0] == 'm' and current[0] == 's' and len(in_path) > 1 and in_path[-2][0] == 'm':
+                    s1 = self.get_sides_plus(current, in_path[-2])[0]
+                    s2 = self.get_sides_plus(current, key)[0]
+                    fud.pv('key, current, in_path[-2], s1, s2')
+
+                    if abs(s1 - s2) == 2:
+                        print >>sys.stderr, "skipping", key
+                        # connection across the far side of a stem. This
+                        # shouldn't form a loop since there is something
+                        # that intersects it
+                        continue
+
                 if key == vertex and depth > 1:
+                    fud.pv('key, current, in_path')
                     if len(in_path[:depth+1]) > max_length:
                         continue
                     else:
+                        print >>sys.stderr, "returning"
                         return in_path[:depth+1]
                 
                 if key not in visited:

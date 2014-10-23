@@ -1053,7 +1053,23 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        bg.to_networkx()
+        # needs networkx, and for what?
+        #bg.to_networkx()
+
+    def test_find_multiloop_loops_x1(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#2345678
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        loops = bg.find_multiloop_loops()
+        self.assertEqual(len(loops), 2)
+        for loop in loops:
+            self.assertFalse(('m0','m2') in loop)
+            self.assertFalse(('m2', 'm0') in loop)
 
     def test_get_multiloop_nucleotides(self):
         fasta = """>1L2X_A
@@ -1064,6 +1080,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
+        return
         loops = bg.find_multiloop_loops()
         for loop in loops:
             bg.get_multiloop_nucleotides(loop)
