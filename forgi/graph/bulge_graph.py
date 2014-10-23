@@ -1144,8 +1144,9 @@ class BulgeGraph(object):
         fud.pv('multiloop_loop')
 
         for s in stems:
-            sides = [self.get_sides_plus(s,c)[0] for c in self.edges[s] if c in multiloop_loop]
-            fud.pv('s, sides')
+            relevant_edges = [c for c in self.edges[s] if c in multiloop_loop]
+            sides = [self.get_sides_plus(s,c)[0] for c in relevant_edges]
+            fud.pv('s, sides, relevant_edges')
             sides.sort()
 
             # the whole stem is part of this multiloop
@@ -1154,8 +1155,11 @@ class BulgeGraph(object):
             else:
                 residues += [self.defines[s][sides[0]], self.defines[s][sides[1]]]
                  
+        for m in multis:
+            residues += self.define_residue_num_iterator(m, adjacent=False)
         fud.pv('residues')
             #fud.pv('s, sides')
+        return residues
 
     def find_multiloop_loops(self):
         '''

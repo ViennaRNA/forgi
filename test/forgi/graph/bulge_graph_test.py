@@ -1080,7 +1080,17 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        return
         loops = bg.find_multiloop_loops()
+        loop = loops[0]
+
+        self.assertEqual(sorted(bg.get_multiloop_nucleotides(loop)),
+                sorted([11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]))
+
+        loop = loops[1]
+        self.assertEqual(sorted(bg.get_multiloop_nucleotides(loop)),
+                sorted([6,7,8,9,10,11,12,13]))
+
+
+        fud.pv('loops')
         for loop in loops:
             bg.get_multiloop_nucleotides(loop)
