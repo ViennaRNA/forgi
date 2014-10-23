@@ -671,6 +671,18 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg.from_dotbracket('((..((..((..))..((..))..))..((..))..))')
         bg.from_dotbracket('(.(.(.(.).(.).).(.).))')
 
+    def test_find_multiloop_loops2(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        fud.pv('bg.to_bg_string()')
+        fud.pv('bg.find_multiloop_loops()')
+
+
     def test_big_structure(self):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('')
@@ -994,8 +1006,8 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         bg = fgb.BulgeGraph()
 
-        db='[[.((..]]...))'
-        nm='12345678901234'
+        #db='[[.((..]]...))'
+        #nm='12345678901234'
         bpstr = self.bpseq['pseudoknot']
 
         bg.from_bpseq_str(bpstr)
@@ -1006,7 +1018,7 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         bg = fgb.BulgeGraph()
         bg.from_bpseq_str(bpstr)
-        s = bg.to_bpseq_string()
+        bg.to_bpseq_string()
 
     def test_to_pair_tuples(self):
         bpstr = self.bpseq['1y26']
@@ -1031,3 +1043,27 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(pt[1], 26)
         self.assertEqual(pt[26], 1)
         self.assertEqual(pt[7], 0)
+
+    def test_to_networkx(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#2345678
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        bg.to_networkx()
+
+    def test_get_multiloop_nucleotides(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#2345678
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        loops = bg.find_multiloop_loops()
+        for loop in loops:
+            bg.get_multiloop_nucleotides(loop)

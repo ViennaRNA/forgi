@@ -1114,6 +1114,33 @@ class BulgeGraph(object):
         else:
             return ends
 
+    def get_multiloop_nucleotides(self, multiloop_loop):
+        '''
+        Return a list of nucleotides which make up a particular
+        multiloop.
+
+        @param multiloop_loop: The elements which make up this multiloop
+        @return: A list of nucleotides
+        '''
+        stems = [d for d in multiloop_loop if d[0] == 's']
+        multis = [d for d in multiloop_loop if d[0] == 'm']
+        residues = []
+        fud.pv('multiloop_loop')
+
+        for s in stems:
+            sides = [self.get_sides_plus(s,c)[0] for c in self.edges[s] if c in multiloop_loop]
+            fud.pv('s, sides')
+            sides.sort()
+
+            # the whole stem is part of this multiloop
+            if sides == [2,3] or sides == [0,1]:
+                residues += range(self.defines[s][sides[0]], self.defines[s][sides[1]] + 1)
+            else:
+                residues += [self.defines[s][sides[0]], self.defines[s][sides[1]]]
+                 
+        fud.pv('residues')
+            #fud.pv('s, sides')
+
     def find_multiloop_loops(self):
         '''
         Find out which defines are connected in a multiloop.
@@ -1937,7 +1964,7 @@ class BulgeGraph(object):
         elif abs(t) == 3:
             return 0
         else:
-            return 0
+            return 2 
 
         pass
 
@@ -2400,6 +2427,38 @@ class BulgeGraph(object):
                 return True
 
         return False
+
+    def to_networkx(self):
+        '''
+        Convert this graph to a networkx representation. This representation
+        will contain all of the nucleotides as nodes and all of the base pairs
+        as edges as well as the adjacent nucleotides.
+        '''
+        import networkx as nx
+
+        G = nx.Graph()
+
+        residues = []
+        for d in self.defines:
+            prev = None
+
+            for r in self.define_residue_num_iterator(d):
+                G.add_node(r)
+                residues += [r]
+
+        residues.sort()
+        prev = None
+        for r in residues:
+            if prev is not None:
+                G.add_edge(prev, r)
+            prev =r 
+
+        for s in self.stem_iterator():
+            for (f,t) in self.stem_bp_iterator(s):
+                G.add_edge(f,t)
+
+        return G
+
         
 def bg_from_subgraph(bg, sg):
     '''
