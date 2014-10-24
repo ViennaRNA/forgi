@@ -1089,8 +1089,3 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         loop = loops[1]
         self.assertEqual(sorted(bg.get_multiloop_nucleotides(loop)),
                 sorted([6,7,8,9,10,11,12,13]))
-
-
-        fud.pv('loops')
-        for loop in loops:
-            bg.get_multiloop_nucleotides(loop)
