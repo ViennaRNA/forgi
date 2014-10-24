@@ -43,7 +43,7 @@ class GraphVerification(object):
         self.check_for_all_nucleotides(bg)
         self.check_for_overlapping_defines(bg)
 
-class TestBulgeGraph(unittest.TestCase, GraphVerification):
+class BulgeGraphTest(unittest.TestCase, GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
 
@@ -143,10 +143,8 @@ AAAA
 """
         bg = fgb.from_fasta_text(fasta_str)
 
-        '''
         self.assertEqual(bg.defines['s0'], [1,1,3,3])
         self.assertEqual(bg.defines['s1'], [2,2,4,4])
-        '''
 
         fasta_str = """
 >a
@@ -679,10 +677,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        fud.pv('bg.to_bg_string()')
-        fud.pv('bg.find_multiloop_loops()')
-
-
     def test_big_structure(self):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('')
@@ -1071,7 +1065,30 @@ GCGCGGCACCGUCCGCGGAACAAACGG
             self.assertFalse(('m0','m2') in loop)
             self.assertFalse(('m2', 'm0') in loop)
 
+    def check_multiloops(self, dotbracket):
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(dotbracket)
+
+        loops = bg.find_multiloop_loops()
+        for loop in loops:
+            self.assertGreater(len(loop), 2)
+
     def test_find_multiloop_loops_x2(self):
+        dotbracket = '(([)]())'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(dotbracket)
+
+        loops = bg.find_multiloop_loops()
+
+    def test_find_multiloop_loops_x3(self):
+        self.check_multiloops('()()')
+        self.check_multiloops('(()())')
+        self.check_multiloops('((()())())')
+        self.check_multiloops('(([)]())')
+        self.check_multiloops('(([{)]}())')
+
+
+    def test_find_multiloop_loops_x4(self):
         fasta = """>4FAW_A
         UGUGCCCGGCAUGGGUGCAGUCUAUAGGGUGAGAGUCCCGAACUGUGAAGGCAGAAGUAACAGUUAGCCUAACGCAAGGGUGUCCGUGGCGACAUGGAAUCUGAAGGAAGCGGACGGCAAACCUUCGGUCUGAGGAACACGAACUUCAUAUGAGGCUAGGUAUCAAUGGAUGAGUUUGCAUAACAAAACAAAGUCCUUUCUGCCAAAGUUGGUACAGAGUAAAUGAAGCAGAUUGAUGAAGGGAAAGACUGCAUUCUUACCCGGGGAGGUCUGGAAACAGAAGUCAGCAGAAGUCAUAGUACCCUGUUCGCAGGGGAAGGACGGAACAAGUAUGGCGUUCGCGCCUAAGCUUGAACCGCCGUAUACCGAACGGUACGUACGGUGGUGUGG
         .((.[[[[[[..{{{{{{{{{{{...(((.......)))..(((((...{{{{{{{...))))){.{{{...{{{..((((.((((((....))))))))))...)]..}}}...}}}.}.(((((((((((.(.....)...(((((.....([[[..[.[..[[[[[[[..[[[[.)......]]]]...]]]].}}}}}}}...]]]..].]..]]]...))))))))))...))))))...}}}}}}}}}}}...)]]]]](...((((....))))...).......(((.(....(((........)))...))))....(((((..(((.(..).)))...))))).(((((((((((((....)))..))))))))))....

@@ -804,7 +804,6 @@ class BulgeGraph(object):
         to_visit = [(key, 1) for key in self.edges[vertex]]
         visited.add(vertex)
         in_path = [vertex]
-        fud.pv('vertex')
 
         while len(to_visit) > 0:
             (current, depth) = to_visit.pop()
@@ -814,25 +813,21 @@ class BulgeGraph(object):
             in_path.append(current)
 
             for key in self.edges[current]:
-                fud.pv('key, current, in_path')
                 if key[0] == 'm' and current[0] == 's' and len(in_path) > 1 and in_path[-2][0] == 'm':
                     s1 = self.get_sides_plus(current, in_path[-2])[0]
                     s2 = self.get_sides_plus(current, key)[0]
-                    fud.pv('key, current, in_path[-2], s1, s2')
 
                     if abs(s1 - s2) == 2:
-                        print >>sys.stderr, "skipping", key
+                        #print >>sys.stderr, "skipping", key
                         # connection across the far side of a stem. This
                         # shouldn't form a loop since there is something
                         # that intersects it
                         continue
 
                 if key == vertex and depth > 1:
-                    fud.pv('key, current, in_path')
                     if len(in_path[:depth+1]) > max_length:
                         continue
                     else:
-                        print >>sys.stderr, "returning"
                         return in_path[:depth+1]
                 
                 if key not in visited:
@@ -1141,12 +1136,10 @@ class BulgeGraph(object):
         stems = [d for d in multiloop_loop if d[0] == 's']
         multis = [d for d in multiloop_loop if d[0] == 'm']
         residues = []
-        fud.pv('multiloop_loop')
 
         for s in stems:
             relevant_edges = [c for c in self.edges[s] if c in multiloop_loop]
             sides = [self.get_sides_plus(s,c)[0] for c in relevant_edges]
-            fud.pv('s, sides, relevant_edges')
             sides.sort()
 
             # the whole stem is part of this multiloop
@@ -1157,8 +1150,6 @@ class BulgeGraph(object):
                  
         for m in multis:
             residues += self.define_residue_num_iterator(m, adjacent=False)
-        fud.pv('residues')
-            #fud.pv('s, sides')
         return residues
 
     def find_multiloop_loops(self):
@@ -1175,6 +1166,10 @@ class BulgeGraph(object):
                 continue
             # use a really high loop length
             v = self.find_bulge_loop(d , max_length=400)
+            if len(v) == 0:
+                # external loop
+                continue
+
             v += [d]
             multis += [set(v)]
 
@@ -1420,8 +1415,9 @@ class BulgeGraph(object):
 
             if abs(to_bp - prev_to) == 1 and prev_to != 0:
                 # stem
-                if ((prev_to - prev_from > 0 and to_bp - from_bp > 0) or
-                    (prev_to - prev_from < 0 and to_bp - from_bp < 0)):
+                if (((prev_to - prev_from > 0 and to_bp - from_bp > 0) or
+                    (prev_to - prev_from < 0 and to_bp - from_bp < 0)) and
+                   (to_bp - prev_to) == -(from_bp - prev_from)):
                     (prev_from, prev_to) = (from_bp, to_bp)
                     last_paired = from_bp
                     continue
