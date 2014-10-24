@@ -156,7 +156,6 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
         
-        #fud.pv('cg.coords')
         #self.assertEqual(len(cg.coords), 8)
         for key in cg.defines.keys():
             self.assertTrue(key in cg.coords)
@@ -178,7 +177,7 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
 
-        rg = cg.radius_of_gyration()
+        cg.radius_of_gyration()
 
     def test_get_coordinates_list(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -265,7 +264,7 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         cg = ftmc.CoarseGrainRNA()
         with open('test/forgi/threedee/data/1.fa', 'r') as f:
             text = f.read()
-            cg.from_dotbracket(text)
+            cg.from_fasta(text)
 
     def test_small_molecule(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')

@@ -1071,6 +1071,18 @@ GCGCGGCACCGUCCGCGGAACAAACGG
             self.assertFalse(('m0','m2') in loop)
             self.assertFalse(('m2', 'm0') in loop)
 
+    def test_find_multiloop_loops_x2(self):
+        fasta = """>4FAW_A
+        UGUGCCCGGCAUGGGUGCAGUCUAUAGGGUGAGAGUCCCGAACUGUGAAGGCAGAAGUAACAGUUAGCCUAACGCAAGGGUGUCCGUGGCGACAUGGAAUCUGAAGGAAGCGGACGGCAAACCUUCGGUCUGAGGAACACGAACUUCAUAUGAGGCUAGGUAUCAAUGGAUGAGUUUGCAUAACAAAACAAAGUCCUUUCUGCCAAAGUUGGUACAGAGUAAAUGAAGCAGAUUGAUGAAGGGAAAGACUGCAUUCUUACCCGGGGAGGUCUGGAAACAGAAGUCAGCAGAAGUCAUAGUACCCUGUUCGCAGGGGAAGGACGGAACAAGUAUGGCGUUCGCGCCUAAGCUUGAACCGCCGUAUACCGAACGGUACGUACGGUGGUGUGG
+        .((.[[[[[[..{{{{{{{{{{{...(((.......)))..(((((...{{{{{{{...))))){.{{{...{{{..((((.((((((....))))))))))...)]..}}}...}}}.}.(((((((((((.(.....)...(((((.....([[[..[.[..[[[[[[[..[[[[.)......]]]]...]]]].}}}}}}}...]]]..].]..]]]...))))))))))...))))))...}}}}}}}}}}}...)]]]]](...((((....))))...).......(((.(....(((........)))...))))....(((((..(((.(..).)))...))))).(((((((((((((....)))..))))))))))....
+"""
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        loops = bg.find_multiloop_loops()
+        for loop in loops:
+            self.assertGreater(len(loop), 2)
+
     def test_get_multiloop_nucleotides(self):
         fasta = """>1L2X_A
 GCGCGGCACCGUCCGCGGAACAAACGG
