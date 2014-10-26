@@ -1118,3 +1118,54 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         loop = loops[1]
         self.assertEqual(sorted(bg.get_multiloop_nucleotides(loop)),
                 sorted([6,7,8,9,10,11,12,13]))
+
+    def test_get_multiloop_nucleotides2(self):
+        fasta = """>1L2X_A
+AAAAAAAAAAAAAAAAAAAAAAAAAA
+((...[[...{{...))..]]...}}
+"""
+#2345678901234
+
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        fud.pv('bg.to_bg_string()')
+
+        loops = bg.find_multiloop_loops()
+
+        bl = bg.find_bulge_loop('m0', max_length=400)
+        fud.pv('bl')
+        return
+
+        
+        sloops = [tuple(sorted(l)) for l in loops]
+
+        for loop in loops:
+            fud.pv('loop')
+            for l in loop:
+                if l[0] != 'm':
+                    continue
+
+                conn = bg.connections(l)
+                fud.pv('l, bg.connection_type(l, conn)')
+
+        #fud.pv('sloops')
+
+        #self.assertTrue(('m0','m1','s0','s1') in sloops)
+        '''
+        for loop in loops:
+            ln = bg.get_multiloop_nucleotides(loop)
+            fud.pv('sorted(ln)')
+        '''
+
+    def test_find_shortest_path(self):
+        fasta = """>1L2X_A
+AAAAAAAAAAAAAAAAAAAAAAAAAA
+((...[[...{{...))..]]...}}
+"""
+#2345678901234
+
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        bg.find_shortest_path('m0', 'm1')

@@ -817,12 +817,21 @@ class BulgeGraph(object):
                     s1 = self.get_sides_plus(current, in_path[-2])[0]
                     s2 = self.get_sides_plus(current, key)[0]
 
+                    '''
+                    if not ((s1 == 0 and s2 == 3) or (s1 == 3 and s2 == 0) or
+                        (s1 == 1 and s2 == 2) or (s1 == 2 and s1 == 1)):
+                        continue
+                    '''
+
+
+                    '''
                     if abs(s1 - s2) == 2:
                         #print >>sys.stderr, "skipping", key
                         # connection across the far side of a stem. This
                         # shouldn't form a loop since there is something
                         # that intersects it
                         continue
+                    '''
 
                 if key == vertex and depth > 1:
                     if len(in_path[:depth+1]) > max_length:
