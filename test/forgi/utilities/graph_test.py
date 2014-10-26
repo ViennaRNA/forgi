@@ -1,4 +1,6 @@
 import sys
+print >>sys.stderr, sys.version
+
 import networkx as nx
 import unittest
 import forgi.utilities.graph as fug
