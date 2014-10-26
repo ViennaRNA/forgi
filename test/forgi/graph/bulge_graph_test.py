@@ -1059,7 +1059,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        loops = bg.find_multiloop_loops()
+        loops,loop_nts = bg.find_multiloop_loops()
         self.assertEqual(len(loops), 2)
         for loop in loops:
             self.assertFalse(('m0','m2') in loop)
@@ -1069,7 +1069,8 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(dotbracket)
 
-        loops = bg.find_multiloop_loops()
+        loops, loop_nts = bg.find_multiloop_loops()
+
         for loop in loops:
             self.assertGreater(len(loop), 2)
 
@@ -1078,7 +1079,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(dotbracket)
 
-        loops = bg.find_multiloop_loops()
+        loops, loop_nts = bg.find_multiloop_loops()
 
     def test_find_multiloop_loops_x3(self):
         self.check_multiloops('()()')
@@ -1087,6 +1088,13 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.check_multiloops('(([)]())')
         self.check_multiloops('(([{)]}())')
 
+    def test_find_multiloop_loops_x5(self):
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket('(((())()()))')
+
+        loops, loop_nts = bg.find_multiloop_loops()
+        for loop in loops:
+            self.assertGreater(len(loop), 2)
 
     def test_find_multiloop_loops_x4(self):
         fasta = """>4FAW_A
@@ -1096,8 +1104,8 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        loops = bg.find_multiloop_loops()
-        for loop in loops:
+        loops, loop_nts = bg.find_multiloop_loops()
+        for loop, loop_nt in zip(loops, loop_nts):
             self.assertGreater(len(loop), 2)
 
     def test_get_multiloop_nucleotides(self):
@@ -1109,63 +1117,39 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        loops = bg.find_multiloop_loops()
-        loop = loops[0]
+        loops, loop_nts = bg.find_multiloop_loops()
 
-        self.assertEqual(sorted(bg.get_multiloop_nucleotides(loop)),
+        self.assertEqual(list(loop_nts[1]),
                 sorted([11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]))
 
-        loop = loops[1]
-        self.assertEqual(sorted(bg.get_multiloop_nucleotides(loop)),
+        self.assertEqual(list(loop_nts[0]),
                 sorted([6,7,8,9,10,11,12,13]))
 
-    def test_get_multiloop_nucleotides2(self):
+    def test_shortest_bg_loop(self):
         fasta = """>1L2X_A
 AAAAAAAAAAAAAAAAAAAAAAAAAA
 ((...[[...{{...))..]]...}}
 """
-#2345678901234
-
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
-
-        fud.pv('bg.to_bg_string()')
-
-        loops = bg.find_multiloop_loops()
-
-        bl = bg.find_bulge_loop('m0', max_length=400)
-        fud.pv('bl')
-        return
-
         
-        sloops = [tuple(sorted(l)) for l in loops]
-
-        for loop in loops:
-            fud.pv('loop')
-            for l in loop:
-                if l[0] != 'm':
-                    continue
-
-                conn = bg.connections(l)
-                fud.pv('l, bg.connection_type(l, conn)')
-
-        #fud.pv('sloops')
-
-        #self.assertTrue(('m0','m1','s0','s1') in sloops)
-        '''
-        for loop in loops:
-            ln = bg.get_multiloop_nucleotides(loop)
-            fud.pv('sorted(ln)')
-        '''
-
-    def test_find_shortest_path(self):
-        fasta = """>1L2X_A
-AAAAAAAAAAAAAAAAAAAAAAAAAA
-((...[[...{{...))..]]...}}
-"""
-#2345678901234
-
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        bg.find_shortest_path('m0', 'm1')
+        sbl = bg.shortest_bg_loop('m0')
+        self.assertTrue(3 in sbl)
+        self.assertTrue(18 in sbl)
+        self.assertFalse(14 in sbl)
+        self.assertFalse(23 in sbl)
+
+        sbl = bg.shortest_bg_loop('m2')
+        self.assertTrue(13 in sbl)
+        self.assertFalse(4 in sbl)
+        self.assertTrue(23 in sbl)
+
+        sbl = bg.shortest_bg_loop('m4')
+        self.assertTrue(8 in sbl)
+        self.assertTrue(23 in sbl)
+        self.assertTrue(25 in sbl)
+        self.assertFalse(14 in sbl)
+        self.assertFalse(4 in sbl)
+
+#2345678901234

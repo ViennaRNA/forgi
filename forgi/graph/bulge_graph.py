@@ -792,6 +792,45 @@ class BulgeGraph(object):
 
         return new_vertex
 
+    def shortest_bg_loop(self, vertex):
+        '''
+        Find the shortest loop containing this node. The vertex should
+        be a multiloop.
+
+        @param vertex: The name of the vertex to find the loop.
+        @return: A list containing the elements in the shortest cycle.
+        '''
+        G = self.to_networkx()
+
+        # use the nucleotide in the middle of this element as the starting point
+        residues = sorted(list(self.define_residue_num_iterator(vertex, adjacent=True)))
+        mid_res = residues[len(residues)/2]
+        
+        if len(residues) == 2:
+            # no-residue multiloop
+            # find the neighbor which isn't part of the multiloop
+            neighbors = [n for n in G.neighbors(mid_res) if n != residues[0]]
+
+            if len(neighbors) == 2:
+                # break the chain so that we don't get cycles within a stem
+                for n in neighbors:
+                    if abs(n - mid_res) == 1:
+                        G.remove_edge(n,  mid_res)
+                        break
+
+        import forgi.utilities.graph as fug
+
+        path = fug.shortest_cycle(G, mid_res)
+        return path
+
+    def nucleotides_to_elements(self, nucleotides):
+        '''
+        Convert a list of nucleotides to element names.
+
+        Remove redundant entries and return a set.
+        '''
+        return set([self.get_node_from_residue_num(n) for n in nucleotides])
+
     def find_bulge_loop(self, vertex, max_length=4):
         '''
         Find a set of nodes that form a loop containing the
@@ -813,26 +852,6 @@ class BulgeGraph(object):
             in_path.append(current)
 
             for key in self.edges[current]:
-                if key[0] == 'm' and current[0] == 's' and len(in_path) > 1 and in_path[-2][0] == 'm':
-                    s1 = self.get_sides_plus(current, in_path[-2])[0]
-                    s2 = self.get_sides_plus(current, key)[0]
-
-                    '''
-                    if not ((s1 == 0 and s2 == 3) or (s1 == 3 and s2 == 0) or
-                        (s1 == 1 and s2 == 2) or (s1 == 2 and s1 == 1)):
-                        continue
-                    '''
-
-
-                    '''
-                    if abs(s1 - s2) == 2:
-                        #print >>sys.stderr, "skipping", key
-                        # connection across the far side of a stem. This
-                        # shouldn't form a loop since there is something
-                        # that intersects it
-                        continue
-                    '''
-
                 if key == vertex and depth > 1:
                     if len(in_path[:depth+1]) > max_length:
                         continue
@@ -1165,27 +1184,33 @@ class BulgeGraph(object):
         '''
         Find out which defines are connected in a multiloop.
 
-        @return: A list of sets, where each set contains the names of
-                 the elements in a particular multiloop.
+        @return: Two lists, one containing the sets of nucleotides comprising the shortest loops
+                 and the other containing sets of nucleotides comprising the shortest loops.
         '''
-        multis = []
-        visited = set()
+        loops = set()
+
         for d in self.mloop_iterator():
-            if d in visited:
-                continue
-            # use a really high loop length
-            v = self.find_bulge_loop(d , max_length=400)
-            if len(v) == 0:
-                # external loop
-                continue
+            loop_nts = self.shortest_bg_loop(d)
 
-            v += [d]
-            multis += [set(v)]
+            if len(loop_nts) > 0:
+                loops.add(tuple(sorted(loop_nts)))
 
-            for d in v:
-                visited.add(d)
+        loops = list(loops)
+        loop_elems = []
 
-        return multis
+        for loop in loops:
+            all_loops = set([self.get_node_from_residue_num(n) for n in loop])
+
+            # some multiloops might not contain any nucleotides, so we
+            # have to explicitly add these
+            for a,b in it.combinations(all_loops, r=2):
+                common_edges = set.intersection(self.edges[a], self.edges[b]) 
+                for e in common_edges:
+                    all_loops.add(e)
+
+            loop_elems += [all_loops]
+
+        return loop_elems, loops
 
     def from_fasta(self, fasta_str, dissolve_length_one_stems=False):
         '''

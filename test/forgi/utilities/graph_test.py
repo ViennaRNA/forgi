@@ -8,7 +8,7 @@ class GraphTest(unittest.TestCase):
         pass
 
     def test_shortest_cycle(self):
-        edges = [(1,2),(2,3),(2,5),(1,4),(4,5)]
+        edges = [(1,2),(2,3),(2,5),(1,4),(4,5),(1,3)]
         G = nx.Graph()
         G.add_edges_from(edges)
 
