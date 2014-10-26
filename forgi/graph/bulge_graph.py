@@ -15,6 +15,7 @@ import collections as col
 import random
 import re
 import itertools as it
+import forgi.aux.k2n_standalone.knotted2nested as fak
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 import forgi.threedee.utilities.mcannotate as ftum
@@ -878,18 +879,30 @@ class BulgeGraph(object):
         in this stem.
         '''
         st = list(self.stem_bp_iterator(key))
+
+        self.remove_base_pairs(st)
+
+    def remove_base_pairs(self, to_remove):
+        """
+        Remove all of the base pairs which are in pair_list.
+
+        :param to_remove: A list of tuples containing the names of the base pairs.
+        :return: nothing
+        """
         pt = self.to_pair_tuples()
 
         nt = []
         for p in pt:
             to_add = p
-            for s in st:
+            for s in to_remove:
                 if sorted(p) == sorted(s):
                     to_add = (p[0], 0)
                     break
             nt += [to_add]
 
         self.defines = dict()
+        #self.edges = dict()
+
         self.from_tuples(nt)
 
     def collapse(self):
@@ -2536,6 +2549,25 @@ class BulgeGraph(object):
                 G.add_edge(f,t)
 
         return G
+
+    def remove_pseudoknots(self):
+        """
+        Remove all of the pseudoknots using the knotted2nested.py script.
+
+        :return: A list of base-pairs that were removed.
+        """
+        # remove unpaired bases and redundant pairs (i.e. (2,3) and (3,2))
+        pairs = sorted([tuple(sorted(p)) for p in self.to_pair_tuples() if p[1] != 0])
+        pairs = list(set(pairs))
+
+        #knotted_struct = fak.KnottedStructure(pairs, Seq=self.seq, Header=[])
+
+        import forgi.aux.k2n_standalone.knots as fakk
+        pk_function = fakk.eg
+        nested_pairs, removed_pairs = pk_function(pairs,return_removed=True)
+
+        self.remove_base_pairs(removed_pairs)
+        return removed_pairs
 
         
 def bg_from_subgraph(bg, sg):

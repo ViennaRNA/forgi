@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 import sys
 
-import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
+#import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as cum
 import forgi.threedee.utilities.pdb as ftup

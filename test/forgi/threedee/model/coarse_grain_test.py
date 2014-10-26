@@ -41,7 +41,7 @@ def cg_from_sg(cg, sg):
     return new_cg
 
 
-class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification):
+class TestCoarseGrainRNA(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
 

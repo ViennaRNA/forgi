@@ -1192,5 +1192,24 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
         for loop in loops:
             self.assertFalse(bg.is_loop_pseudoknot(loop))
 
+    def test_remove_pseudoknots(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#23456789012345678901234567
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        pairs = bg.remove_pseudoknots()
+        self.assertTrue((9,27) in pairs)
+        self.assertTrue((10,26) in pairs)
+        self.assertTrue((11,25) in pairs)
+
+        self.assertEqual(bg.pairing_partner(9), None)
+        self.assertEqual(bg.pairing_partner(12), None)
+
+        self.assertEqual(bg.pairing_partner(2), 17)
+        self.assertEqual(bg.pairing_partner(2), 17)
 
 #2345678901234
