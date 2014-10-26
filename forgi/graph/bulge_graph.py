@@ -2468,6 +2468,34 @@ class BulgeGraph(object):
             return True
         return False
 
+    def is_loop_pseudoknot(self, loop):
+        """
+        Is a particular loop a pseudoknot?
+
+        :param loop: A list of elements that are part of the loop.
+        :return: Either True or false
+        """
+        allowed_ang_types = [2,3,4]
+        found_ang_types = set()
+
+        for l in loop:
+            if l[0] != 'm':
+                continue
+
+            conn = self.connections(l)
+            ctype = self.connection_type(l, conn)
+
+            if ctype not in allowed_ang_types:
+                return True
+
+            found_ang_types.add(ctype)
+
+        if len(found_ang_types) == 3:
+            return False
+
+        return True
+
+
     def is_pseudoknot(self):
         '''
         Is this bulge part of a pseudoknot?
