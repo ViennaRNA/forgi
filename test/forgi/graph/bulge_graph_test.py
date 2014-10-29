@@ -1213,3 +1213,24 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(bg.pairing_partner(2), 17)
 
 #2345678901234
+
+    def test_find_external_loops(self):
+        db = '..((..))..'
+        bg = fgb.BulgeGraph()
+
+        bg.from_dotbracket(db)
+        eloops = bg.find_external_loops()
+
+        self.assertEqual(eloops, ['f1', 't1'])
+
+        bg.from_dotbracket('..((.)).((.))..')
+        eloops = bg.find_external_loops()
+        self.assertEqual(eloops, ['f1', 't1', 'm0'])
+
+        bg.from_dotbracket('..((.))((.))..')
+        eloops = bg.find_external_loops()
+        self.assertEqual(eloops, ['f1', 't1', 'm0'])
+
+        bg.from_dotbracket('..(((.))((.)))..(..)')
+        eloops = bg.find_external_loops()
+        self.assertEqual(eloops, ['f1', 'm2'])

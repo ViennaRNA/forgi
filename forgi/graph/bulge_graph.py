@@ -1201,6 +1201,25 @@ class BulgeGraph(object):
             residues += self.define_residue_num_iterator(m, adjacent=False)
         return residues
 
+    def find_external_loops(self):
+        '''
+        Return all of the elements which are part of
+        an external loop.
+
+        :return: A list containing the external loops in this molecule
+                 (i.e. ['f0, m3, m5, t0'])
+        '''
+        ext_loop = []
+
+        for d in it.chain(self.floop_iterator(),
+                          self.tloop_iterator(),
+                          self.mloop_iterator()):
+            loop_nts = self.shortest_bg_loop(d)
+            if len(loop_nts) == 0:
+                ext_loop += [d]
+
+        return ext_loop
+
     def find_multiloop_loops(self):
         """
         Find out which defines are connected in a multiloop.
