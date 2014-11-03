@@ -54,6 +54,7 @@ class PymolPrinter:
         self.prev_obj_name = ''     # The name of the previously created
                                     # object which needs to be hidden
                                     # when creating a movie
+        self.only_elements = None
 
     def get_color_vec(self, color):
         if color == 'green':
@@ -609,6 +610,10 @@ class PymolPrinter:
         loops = list(cg.hloop_iterator())
 
         for key in cg.coords.keys():
+            if self.only_elements is not None:
+                if key not in self.only_elements:
+                    continue
+
             if self.constraints is not None:
                 if key not in self.constraints:
                     continue
