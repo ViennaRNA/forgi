@@ -172,9 +172,9 @@ def main():
             f1.flush()
 
             if options.batch:
-                p = sp.Popen(['pymol', '-cq', f1.name])
+                p = sp.Popen(['pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
             else:
-                p = sp.Popen(['pymol', f1.name])
+                p = sp.Popen(['pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
             out, err = p.communicate()
 

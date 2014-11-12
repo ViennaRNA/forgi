@@ -21,7 +21,6 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
-        self.constraints = None
         self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
@@ -612,10 +611,6 @@ class PymolPrinter:
         for key in cg.coords.keys():
             if self.only_elements is not None:
                 if key not in self.only_elements:
-                    continue
-
-            if self.constraints is not None:
-                if key not in self.constraints:
                     continue
 
             (p, n) = cg.coords[key]
