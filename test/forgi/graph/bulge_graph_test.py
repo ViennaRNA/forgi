@@ -3,8 +3,6 @@ import itertools as it
 
 import sys
 import os
-print >>sys.stderr, os.getcwd()
-print >>sys.stderr, sys.path
 
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud

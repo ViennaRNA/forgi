@@ -2448,6 +2448,7 @@ class BulgeGraph(object):
         build_order = []
         to_visit = [('s0', 'start')]
         visited = set(['s0'])
+        build_paths = col.defaultdict(list)
 
         while len(to_visit) > 0:
             to_visit.sort(key=lambda x: min(self.get_node_dimensions(x[0])))
@@ -2458,6 +2459,10 @@ class BulgeGraph(object):
                     # make sure the node hasn't been visited
                     # and is in the minimum spanning tree
                     to_visit.append((e, current))
+
+                    build_paths[e] += [e]
+                    build_paths[e] += build_paths[current]
+
                     visited.add(e)
 
             if current[0] != 's' and len(self.edges[current]) == 2:
@@ -2469,7 +2474,10 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
 
+        #fud.pv('build_paths')
+        self.build_paths = build_paths
         self.build_order = build_order
+
         return build_order
 
     def set_angle_types(self):
