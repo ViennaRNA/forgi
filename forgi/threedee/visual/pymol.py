@@ -665,6 +665,9 @@ class PymolPrinter:
         if self.add_longrange:
             for key1 in cg.longrange.keys():
                 for key2 in cg.longrange[key1]:
+                    if self.only_elements is not None:
+                        if key1 not in self.only_elements or key2 not in self.only_elements:
+                            continue
                     try:
 
                         p = cuv.line_segment_distance(cg.coords[key1][0],

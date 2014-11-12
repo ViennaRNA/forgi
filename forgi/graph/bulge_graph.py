@@ -2474,7 +2474,6 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
 
-        #fud.pv('build_paths')
         self.build_paths = build_paths
         self.build_order = build_order
 

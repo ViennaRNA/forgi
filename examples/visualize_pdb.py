@@ -56,11 +56,9 @@ def main():
     if options.only_elements is not None:
         orig_only_elements = options.only_elements.split(',')
         only_elements = set(orig_only_elements[::])
-        '''
         for c in orig_only_elements:
             for e in cg.edges[c]:
                 only_elements.add(e)
-        '''
         pp.only_elements = only_elements
 
     pp.add_loops = options.loops
@@ -87,7 +85,6 @@ def main():
                 # display the distances between nucleotides
                 if options.distance is not None:
                     for dist_pair in options.distance.split(':'):
-                        fud.pv('dist_pair')
                         fr,to = dist_pair.split(',')
 
                         fr = int(fr)
@@ -100,8 +97,6 @@ def main():
                             # Rosetta produces atoms with non-standard names
                             vec1 = chain[fr]["C1*"].get_vector().get_array() 
                             vec2 = chain[to]["C1*"].get_vector().get_array()
-
-                        fud.pv('vec1, vec2')
 
                         pp.add_dashed(vec1, vec2, width=1.2)
 
@@ -116,13 +111,12 @@ def main():
                 if options.only_elements is not None:
                     pymol_cmd += "hide all\n"
 
-                    for constraint in options.only_elements.split(','):
+                    for constraint in only_elements:
                         color = pp.get_element_color(constraint)
 
                         for r in cg.define_residue_num_iterator(constraint, seq_ids=True):
                             pymol_cmd += "show sticks, resi %r\n" % (r[1])
                             pymol_cmd += "color %s, resi %r\n" % (color, r[1])
-
 
 
                 pymol_cmd += 'run %s\n' % (f.name)
