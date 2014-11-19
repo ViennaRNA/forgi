@@ -573,12 +573,18 @@ class BulgeGraph(object):
 
         :param node: The name of the node
         """
+        visited=set()
+
         for r in self.define_range_iterator(node, adjacent, seq_ids=False):
             for i in range(r[0], r[1] + 1):
                 if seq_ids:
-                    yield self.seq_ids[i - 1]
+                    if self.seq_ids[i-1] not in visited:
+                        visited.add(self.seq_ids[i-1])
+                        yield self.seq_ids[i - 1]
                 else:
-                    yield i
+                    if i not in visited:
+                        visited.add(i)
+                        yield i
 
     def iterate_over_seqid_range(self, start_id, end_id):
         """
@@ -1951,8 +1957,17 @@ class BulgeGraph(object):
         Return the edges that connect to a bulge in a list form,
         sorted by lowest res number of the connection.
         """
+        def sort_key(x):
+            if len(self.defines[x]) > 0:
+                if self.defines[x][0] == 1:
+                    # special case for stems at the beginning since there is no
+                    # adjacent nucleotide 0
+                    return 0
+            return list(self.define_residue_num_iterator(x, adjacent=True))[0]
+
+
         connections = list(self.edges[bulge])
-        connections.sort(key=lambda x: self.defines[x][0])
+        connections.sort(key=sort_key)
 
         return connections
 

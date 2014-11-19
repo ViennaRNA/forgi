@@ -450,6 +450,9 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
 
 
     def test_define_residue_num_iterator(self):
+        bg = fgb.BulgeGraph(dotbracket_str='((.).)')
+        self.assertEqual(list(bg.define_residue_num_iterator('s1', adjacent=True)), [1,2,3,4,5])
+
         bg = fgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
         drni = bg.define_residue_num_iterator('m2', adjacent=True)
         # the second multiloop should have at least two adjacent nucleotides
@@ -689,13 +692,13 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.from_dotbracket('')
 
     def test_get_bulge_dimensions(self):
-        bg = fgb.BulgeGraph(dotbracket_str='(.(.))')
-        bd = bg.get_bulge_dimensions('i0')
-        self.assertEquals(bd, (1,0))
-
         bg = fgb.BulgeGraph(dotbracket_str='((.).)')
         bd = bg.get_bulge_dimensions('i0')
         self.assertEquals(bd, (0,1))
+
+        bg = fgb.BulgeGraph(dotbracket_str='(.(.))')
+        bd = bg.get_bulge_dimensions('i0')
+        self.assertEquals(bd, (1,0))
 
         bg = fgb.BulgeGraph(dotbracket_str='().()')
         bd = bg.get_bulge_dimensions('m0')
@@ -736,6 +739,11 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(bg.get_length('i4'), 2)
 
     def test_get_define_seq_str(self):
+        bg = fgb.from_fasta_text(""">1Y26_X
+CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))""")
+        self.assertEqual(bg.get_define_seq_str("s0"), ['CGCUUCAUA', 'UAUGAAGUG'])
+
         bg = fgb.BulgeGraph(dotbracket_str="(.(.))") 
         bg.seq = 'acgauu'
         self.assertEquals(bg.get_define_seq_str("i0"), ['c', ''])
@@ -1234,3 +1242,15 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.from_dotbracket('..(((.))((.)))..(..)')
         eloops = bg.find_external_loops()
         self.assertEqual(eloops, ['f1', 'm2'])
+
+    def test_stem_bp_iterator(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#23456789012345678901234567
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        #fud.pv('list(bg.stem_bp_iterator("s1"))')
+        self.assertEqual(list(bg.stem_bp_iterator("s1")), [(9, 27), (10, 26), (11, 25)])
