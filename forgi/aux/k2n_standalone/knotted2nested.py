@@ -210,9 +210,6 @@ def k2n_main(input_filename, input_format=DEFAULT_INPUT_FORMAT,\
         if input_format == 'bpseq':
             header, seq, pairs = input_parser(open(input_filename,'U'))
             import sys
-            print >>sys.stderr, "pairs:", pairs
-            print >>sys.stderr, "seq:", seq
-            print >>sys.stderr, "header:", header
 
             ks = KnottedStructure(pairs, Seq=seq, Header=header)
             input_data = [ks]

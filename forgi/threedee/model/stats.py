@@ -11,8 +11,7 @@ import collections as c
 import math as m
 
 #import fess.builder.config as cbc
-import forgi.threedee.config as cbc
-
+import forgi.config as cbc
 import forgi.utilities.debug as fud
 
 avg_stem_bp_length = 2.24

@@ -27,7 +27,6 @@ def main():
                       secondary structure of this model", type=str)
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
-    parser.add_option('-c', '--constraints', dest='constraints', default=None, help="Only visualize the elements passed as parameters", type='str')
     parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
     parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
 
@@ -36,6 +35,9 @@ def main():
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
     parser.add_option('-d', '--distance', dest='distance', default=None, help="Draw the lines between specified virtual residues")
     parser.add_option('-o', '--output', dest='output', default=None, help="Create a picture of the scene and exit", type='str')
+    parser.add_option('', '--only-elements', dest='only_elements', default=None, help='Display only these elements '
+                                                                                      'element names should be '
+                                                                                      'separated by commas')
 
     (options, args) = parser.parse_args()
 
@@ -51,13 +53,13 @@ def main():
                       remove_pseudoknots=not options.pseudoknots)
     pp = ftvp.PymolPrinter()
 
-    if options.constraints is not None:
-        orig_constraints = options.constraints.split(',')
-        constraints = set(orig_constraints[::])
-        for c in orig_constraints:
+    if options.only_elements is not None:
+        orig_only_elements = options.only_elements.split(',')
+        only_elements = set(orig_only_elements[::])
+        for c in orig_only_elements:
             for e in cg.edges[c]:
-                constraints.add(e)
-        pp.constraints = constraints
+                only_elements.add(e)
+        pp.only_elements = only_elements
 
     pp.add_loops = options.loops
     pp.add_longrange = options.longrange
@@ -66,6 +68,9 @@ def main():
     pp.print_text = options.text
     #pp.print_text = False
     #pp.output_pymol_file()
+
+    if options.only_elements is not None:
+        pp.only_elements = options.only_elements.split(',')
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:
@@ -80,7 +85,6 @@ def main():
                 # display the distances between nucleotides
                 if options.distance is not None:
                     for dist_pair in options.distance.split(':'):
-                        fud.pv('dist_pair')
                         fr,to = dist_pair.split(',')
 
                         fr = int(fr)
@@ -89,12 +93,10 @@ def main():
                         try:
                             vec1 = chain[fr]["C1*"].get_vector().get_array() 
                             vec2 = chain[to]["C1*"].get_vector().get_array()
-                        except KeyError as ke:
+                        except KeyError:
                             # Rosetta produces atoms with non-standard names
                             vec1 = chain[fr]["C1*"].get_vector().get_array() 
                             vec2 = chain[to]["C1*"].get_vector().get_array()
-
-                        fud.pv('vec1, vec2')
 
                         pp.add_dashed(vec1, vec2, width=1.2)
 
@@ -106,16 +108,15 @@ def main():
                 pymol_cmd += 'set cartoon_ring_mode\n'
                 pymol_cmd += 'set cartoon_tube_radius, .3\n'
 
-                if options.constraints is not None:
+                if options.only_elements is not None:
                     pymol_cmd += "hide all\n"
 
-                    for constraint in constraints:
+                    for constraint in only_elements:
                         color = pp.get_element_color(constraint)
 
-                        for r in cg.define_residue_num_iterator(constraint):
-                            pymol_cmd += "show sticks, resi %r\n" % (r)
-                            pymol_cmd += "color %s, resi %r\n" % (color, r)
-
+                        for r in cg.define_residue_num_iterator(constraint, seq_ids=True):
+                            pymol_cmd += "show sticks, resi %r\n" % (r[1])
+                            pymol_cmd += "color %s, resi %r\n" % (color, r[1])
 
 
                 pymol_cmd += 'run %s\n' % (f.name)
@@ -132,9 +133,9 @@ def main():
                 f1.flush()
 
                 if options.batch:
-                    p = sp.Popen(['pymol', '-cq', f2.name, f1.name])
+                    p = sp.Popen(['pymol', '-cq', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
                 else:
-                    p = sp.Popen(['pymol', f2.name, f1.name])
+                    p = sp.Popen(['pymol', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
                 out, err = p.communicate()
 
