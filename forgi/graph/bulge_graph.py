@@ -353,7 +353,7 @@ class BulgeGraph(object):
         """
         Get the number of residues that are contained within this element.
 
-        @param key: The name of the element.
+        :param key: The name of the element.
         """
         d = self.defines[key]
         length = 0
@@ -523,9 +523,9 @@ class BulgeGraph(object):
         In other words, if a define contains the following: [1,2,7,8]
         The ranges will be [1,2] and [7,8].
 
-        @param adjacent: Use the nucleotides in the neighboring element which
+        :param adjacent: Use the nucleotides in the neighboring element which
                          connect to this element as the range starts and ends.
-        @return: A list of two-element lists
+        :return: A list of two-element lists
         """
         a = iter(self.defines[node])
         ranges = it.izip(a, a)
@@ -812,8 +812,8 @@ class BulgeGraph(object):
         Find the shortest loop containing this node. The vertex should
         be a multiloop.
 
-        @param vertex: The name of the vertex to find the loop.
-        @return: A list containing the elements in the shortest cycle.
+        :param vertex: The name of the vertex to find the loop.
+        :return: A list containing the elements in the shortest cycle.
         """
         G = self.to_networkx()
 
@@ -1112,8 +1112,8 @@ class BulgeGraph(object):
             3   2 (0, 1)
             3   0 (0, 0)
 
-        @param define: The name of the bulge separating the two stems
-        @param connections: The two stems and their separation
+        :param define: The name of the bulge separating the two stems
+        :param connections: The two stems and their separation
         """
 
         if define[0] == 'i':
@@ -1156,9 +1156,9 @@ class BulgeGraph(object):
         Find out which ends of the stems are connected by a particular angle
         type.
 
-        @param connection_type: The angle type, as determined by which corners
+        :param connection_type: The angle type, as determined by which corners
                                 of a stem are connected
-        @return: (s1e, s2b)
+        :return: (s1e, s2b)
         """
         ends = ()
 
@@ -1185,8 +1185,8 @@ class BulgeGraph(object):
         Return a list of nucleotides which make up a particular
         multiloop.
 
-        @param multiloop_loop: The elements which make up this multiloop
-        @return: A list of nucleotides
+        :param multiloop_loop: The elements which make up this multiloop
+        :return: A list of nucleotides
         """
         stems = [d for d in multiloop_loop if d[0] == 's']
         multis = [d for d in multiloop_loop if d[0] == 'm']
@@ -1230,7 +1230,7 @@ class BulgeGraph(object):
         """
         Find out which defines are connected in a multiloop.
 
-        @return: Two lists, one containing the sets of nucleotides comprising the shortest loops
+        :return: Two lists, one containing the sets of nucleotides comprising the shortest loops
                  and the other containing sets of nucleotides comprising the shortest loops.
         """
         loops = set()
@@ -1301,11 +1301,11 @@ class BulgeGraph(object):
         """
         Create the graph from the list of stems and bulges.
 
-        @param stems: A list of tuples of two two-tuples, each containing the start
+        :param stems: A list of tuples of two two-tuples, each containing the start
                       and end nucleotides of each strand of the stem.
-        @param bulges: A list of tuples containing the starts and ends of the 
+        :param bulges: A list of tuples containing the starts and ends of the 
                        of the bulge regions.
-        @return: Nothing, just make the bulgegraph
+        :return: Nothing, just make the bulgegraph
         """
         for i in range(len(stems)):
             # one is added to each coordinate to make up for the fact that residues are 1-based
@@ -1457,8 +1457,8 @@ class BulgeGraph(object):
             5 U 112
             6 G 111
 
-        @param bpseq_str: The string, containing newline characters.
-        @return: Nothing, but fill out this structure.
+        :param bpseq_str: The string, containing newline characters.
+        :return: Nothing, but fill out this structure.
         """
         self.__init__()
 
@@ -1555,7 +1555,7 @@ class BulgeGraph(object):
         Convert the BulgeGraph representation to a dot-bracket string
         and return it.
 
-        @return: A dot-bracket representation of this BulgeGraph
+        :return: A dot-bracket representation of this BulgeGraph
         """
         pt = self.to_pair_table()
         return fus.pairtable_to_dotbracket(pt)
@@ -1582,8 +1582,8 @@ class BulgeGraph(object):
         Load from a file containing a text-based representation
         of this BulgeGraph.
 
-        @param bg_file: The filename.
-        @return: No return value since the current structure is the one
+        :param bg_file: The filename.
+        :return: No return value since the current structure is the one
                  being loaded.
         """
         with open(bg_file, 'r') as f:
@@ -1595,7 +1595,7 @@ class BulgeGraph(object):
         Populate this BulgeGraph from the string created by the method
         to_bg_string.
 
-        @param bg_str: The string representation of this BugleGraph.
+        :param bg_str: The string representation of this BugleGraph.
         """
         lines = bg_str.split('\n')
         for line in lines:
@@ -1753,9 +1753,9 @@ class BulgeGraph(object):
         stem whereas as side 1 corresponds to the 3' side
         of the stem.
 
-        @param stem: The name of the stem
-        @param side: Either 0 or 1, indicating the 5' or 3' end of the stem
-        @return: A tuple of the nucleotide numbers on the given side of
+        :param stem: The name of the stem
+        :param side: Either 0 or 1, indicating the 5' or 3' end of the stem
+        :return: A tuple of the nucleotide numbers on the given side of
                  the stem.
         """
         if side == 0:
@@ -1774,9 +1774,9 @@ class BulgeGraph(object):
         nucleotides and 1 indicates that e2 is on the side with
         greater nucleotide numbers.
 
-        @param e1: The name of the first element.
-        @param e2: The name of the second element.
-        @return: A tuple indicating the side of e1 adjacent to e2 and the side of e2
+        :param e1: The name of the first element.
+        :param e2: The name of the second element.
+        :return: A tuple indicating the side of e1 adjacent to e2 and the side of e2
                  adjacent to e1
         """
         if e1[0] == 's':
@@ -1792,9 +1792,9 @@ class BulgeGraph(object):
 
         s1e -> s1b -> b
 
-        @param s1: The stem.
-        @param b: The bulge.
-        @return: A tuple indicating which side is the one next to the bulge
+        :param s1: The stem.
+        :param b: The bulge.
+        :return: A tuple indicating which side is the one next to the bulge
                  and which is away from the bulge.
         """
         s1d = self.defines[s1]
@@ -1839,9 +1839,9 @@ class BulgeGraph(object):
 
         s1e -> s1b -> b
 
-        @param s1: The stem.
-        @param b: The bulge.
-        @return: A tuple indicating the corner of the stem that connects
+        :param s1: The stem.
+        :param b: The bulge.
+        :return: A tuple indicating the corner of the stem that connects
                  to the bulge as well as the corner of the bulge that connects
                  to the stem.
         """
@@ -1939,9 +1939,9 @@ class BulgeGraph(object):
         Return the base pairing partner of the nucleotide at position
         nucleotide_number. If this nucleotide is unpaired, return None.
 
-        @param nucleotide_number: The position of the query nucleotide in the
+        :param nucleotide_number: The position of the query nucleotide in the
                                   sequence.
-        @return: The number of the nucleotide base paired with the one at
+        :return: The number of the nucleotide base paired with the one at
                  position nucleotide_number.
         """
         for d in self.stem_iterator():
@@ -1977,8 +1977,8 @@ class BulgeGraph(object):
         Non-stem sequences will contain the sequence without the overlapping
         stem residues that are part of the define.
 
-        @param d: The define for which to get the sequences
-        @return: An array containing the sequences corresponding to the defines
+        :param d: The define for which to get the sequences
+        :return: An array containing the sequences corresponding to the defines
         """
         define = self.defines[d]
         ranges = zip(*[iter(define)] * 2)
@@ -2056,8 +2056,8 @@ class BulgeGraph(object):
         """
         Get the strand on which this multiloop is located.
 
-        @param multiloop: The name of the multiloop
-        @return: 0 for being on the lower numbered strand and 1 for
+        :param multiloop: The name of the multiloop
+        :return: 0 for being on the lower numbered strand and 1 for
                  being on the higher numbered strand.
         """
         conn = self.connections(multiloop)
@@ -2078,8 +2078,8 @@ class BulgeGraph(object):
 
         If it is single stranded it will be (0, x). Otherwise it will be (x, y).
 
-        @param bulge: The name of the bulge.
-        @return: A pair containing its dimensions
+        :param bulge: The name of the bulge.
+        :return: A pair containing its dimensions
         """
 
         bd = self.defines[bulge]
@@ -2142,7 +2142,7 @@ class BulgeGraph(object):
 
         If it's a bulge, then the length is the smaller of it's dimensions.
 
-        @param vertex: The name of the vertex.
+        :param vertex: The name of the vertex.
         """
         if vertex[0] == 's':
             return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
@@ -2165,8 +2165,8 @@ class BulgeGraph(object):
         of the previous stem and the highest residue number of the next
         stem.
 
-        @param bulge_name: The name of the bulge
-        @param side: The side of the bulge (indicating the strand)
+        :param bulge_name: The name of the bulge
+        :param side: The side of the bulge (indicating the strand)
         """
         c = self.connections(bulge_name)
 
@@ -2237,7 +2237,7 @@ class BulgeGraph(object):
         In the fitted region, the residues (2,6) will be the ones that will
         be aligned to the handles.
 
-        @return: (orig_chain_res1, orig_chain_res1, flanking_res1, flanking_res2)
+        :return: (orig_chain_res1, orig_chain_res1, flanking_res1, flanking_res2)
         """
         f1 = self.get_flanking_region(bulge_name, side)
         c = self.connections(bulge_name)
@@ -2274,9 +2274,9 @@ class BulgeGraph(object):
         Are two stems separated by only one element. If multiloops should not
         count as edges, then the appropriate parameter should be set.
 
-        @param s1: The name of the first stem
-        @param s2: The name of the second stem
-        @param multiloops_count: Whether to count multiloops as an edge linking
+        :param s1: The name of the first stem
+        :param s2: The name of the second stem
+        :param multiloops_count: Whether to count multiloops as an edge linking
                                  two stems
         """
         for e in self.edges[s1]:
@@ -2291,7 +2291,7 @@ class BulgeGraph(object):
         """
         Return a random subgraph of this graph.
 
-        @return: A list containing a the nodes comprising a random subgraph
+        :return: A list containing a the nodes comprising a random subgraph
         """
         if subgraph_length == None:
             subgraph_length = random.randint(1, len(self.defines.keys()))
@@ -2328,8 +2328,8 @@ class BulgeGraph(object):
         Return the index of the define that is on the same end of the
         stem as the index sd.
 
-        @param sd: An index into a define.
-        @return: The index pointing to the nucleotide on the other strand 
+        :param sd: An index into a define.
+        :return: The index pointing to the nucleotide on the other strand 
                  on the same side as the stem.
         """
         if sd == 0:
@@ -2346,8 +2346,8 @@ class BulgeGraph(object):
         Extract the chain identifier from a chain/residue
         identifier.
 
-        @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
-        @return: A chain identifier.
+        :param chainres: A chain and residue identifier (i.e. 'A12', or '14')
+        :return: A chain identifier.
         """
         return ftum.parse_chain_base(chainres)[0]
 
@@ -2355,8 +2355,8 @@ class BulgeGraph(object):
         """
         Extract the residue number from a chainres identifier.
 
-        @param chainres: A chain and residue identifier (i.e. 'A12', or '14')
-        @return: The residue number
+        :param chainres: A chain and residue identifier (i.e. 'A12', or '14')
+        :return: The residue number
         """
         return ftum.parse_chain_base(chainres)[1]
 
@@ -2364,8 +2364,8 @@ class BulgeGraph(object):
         """
         Return the pdb ids of the nucleotides in this define.
 
-        @param define: The name of this element.
-        @param: Return a tuple of two arrays containing the residue ids
+        :param define: The name of this element.
+        :param: Return a tuple of two arrays containing the residue ids
                 on each strand
         """
         resnames = []
