@@ -513,3 +513,16 @@ def load_structure(pdb_filename):
     chain = renumber_chain(chain)
      
     return chain
+
+def is_protein(chain):
+    '''
+    Determine if a Bio.PDB.Chain structure corresponds to an RNA
+    molecule.
+
+    @param chain: A Bio.PDB.Chain molecule
+    @return: True if it is an RNA molecule, False otherwise
+    '''
+    for res in chain:
+        if res.resname in ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL']:
+            return True
+    return False
