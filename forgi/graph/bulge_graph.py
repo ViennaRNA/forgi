@@ -2657,11 +2657,21 @@ class BulgeGraph(object):
         for c1, c2 in it.product(d1_corners, d2_corners):
             path_lengths += [nx.shortest_path_length(G, c1, c2)]
 
-        if e1 != e2 and e1 not in self.edges[e2]:
-            return min(path_lengths) + 1
-        else:
-            return min(path_lengths)
+        if e1 == e2:
+            return 0
 
+        if e1 in self.edges[e2]:
+            return min(path_lengths) + 1
+
+        # make some exceptions for edges which have length 0
+        common_edges = set.intersection(self.edges[e1], self.edges[e2])
+        for e in common_edges:
+            if e[0] == 'i' and len(self.defines[e]) < 4:
+                return min(path_lengths) + 1
+            elif e[0] == 'm' and len(self.defines[e]) < 2:
+                return min(path_lengths) + 1
+
+        return min(path_lengths) + 2
 
 def bg_from_subgraph(bg, sg):
     """

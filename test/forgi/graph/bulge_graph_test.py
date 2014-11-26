@@ -1259,13 +1259,18 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.from_dotbracket(db)
 
         fud.pv('bg.to_bg_string()')
-        self.assertEqual(bg.ss_distance('s0', 's1'), 1)
-        self.assertEqual(bg.ss_distance('i0', 'h0'), 2)
+        self.assertEqual(bg.ss_distance('s0', 's1'), 2)
+        self.assertEqual(bg.ss_distance('i0', 'h0'), 3)
         self.assertEqual(bg.ss_distance('s0', 's0'), 0)
-        self.assertEqual(bg.ss_distance('s0', 'i0'), 0)
-        self.assertEqual(bg.ss_distance('s0', 'h0'), 3)
+        self.assertEqual(bg.ss_distance('s0', 'i0'), 1)
+        self.assertEqual(bg.ss_distance('s0', 'h0'), 4)
 
         db = '((..))((..))'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        self.assertEqual(bg.ss_distance('s0', 's1'), 1)
+
+        db = '((((..))..)'
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         self.assertEqual(bg.ss_distance('s0', 's1'), 1)

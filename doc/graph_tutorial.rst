@@ -595,6 +595,30 @@ Example::
     >>> print bg.find_multiloop_loops()
     [set(['s3', 's2', 's4', 'm5', 'm3', 'm2']), set(['s2', 's1', 's5', 'm4', 'm1', 'm0'])]
 
+Calculating the Minimum Secondary Structure Distance Between Two Elements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The secondary structure distance, in our case, will be calculated as the
+distance along the backbone or along base-pair links. When calculated between
+two elements, it is the minimum distance between any two pairs of nucleotides
+in each of the two elements.
+
+Consider the following example::
+
+
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))((..))')
+    >>> bg.ss_distance('s0', 's1')
+    3
+    >>> bg.ss_distance('s0', 's2')
+    5
+    >>> bg.ss_distance('s0', 'h2')
+    7
+
+The first distance requires going over three backbone edges. The second distance
+Requires three backbone, one base pair, and one more backbone. The last distance
+requires three backbone, one base pair, and three more backbone links.
+
+
 Selecting a Random Subgraph
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
