@@ -20,6 +20,8 @@ import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 import forgi.threedee.utilities.mcannotate as ftum
 import os
+import itertools as it
+import operator as oper
 
 
 def add_bulge(bulges, bulge, context, message):
@@ -2617,6 +2619,48 @@ class BulgeGraph(object):
 
         self.remove_base_pairs(removed_pairs)
         return removed_pairs
+
+    def ss_distance(self, e1, e2):
+        '''
+        Calculate the distance between two elements (e1, e2)
+        along the secondary structure. The distance only starts
+        at the edge of each element, and is the closest distance
+        between the two elements.
+
+        :param e1: The name of the first element
+        :param e2: The name of the second element
+        :return: The integer distance between the two along the secondary
+                 structure.
+        '''
+        # get the edge nucleotides
+        # thanks to:
+        # http://stackoverflow.com/questions/2154249/identify-groups-of-continuous-numbers-in-a-list
+        # we get the edges, except that they might be one too close because we use adjacent
+        # nucleotides, nevertheless we'll take care of that later
+        d1_corners = []
+        d2_corners = []
+
+        for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e1, adjacent=True)), 
+                                  lambda(index, item): index - item):
+            group = map(oper.itemgetter(1), group)
+            d1_corners += group
+
+        for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e2, adjacent=True)), 
+                                  lambda(index, item): index - item):
+            group = map(oper.itemgetter(1), group)
+            d2_corners += group
+
+        import networkx as nx
+
+        G = self.to_networkx()
+        path_lengths = []
+        for c1, c2 in it.product(d1_corners, d2_corners):
+            path_lengths += [nx.shortest_path_length(G, c1, c2)]
+
+        if e1 != e2 and e1 not in self.edges[e2]:
+            return min(path_lengths) + 1
+        else:
+            return min(path_lengths)
 
 
 def bg_from_subgraph(bg, sg):

@@ -514,6 +514,21 @@ def load_structure(pdb_filename):
      
     return chain
 
+def interchain_contacts(struct):
+    all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
+
+    ns = bpdb.NeighborSearch(all_atoms)
+    pairs = ns.search_all(3)
+
+    ic_pairs = []
+
+    for (a1, a2) in pairs:
+        if a1.parent.parent != a2.parent.parent:
+            ic_pairs += [(a1,a2)]
+
+    return ic_pairs
+    #fud.pv('ic_pairs')
+
 def is_protein(chain):
     '''
     Determine if a Bio.PDB.Chain structure corresponds to an RNA

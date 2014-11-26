@@ -1252,3 +1252,20 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 
         #fud.pv('list(bg.stem_bp_iterator("s1"))')
         self.assertEqual(list(bg.stem_bp_iterator("s1")), [(9, 27), (10, 26), (11, 25)])
+
+    def test_ss_distance(self):
+        db = '((.((..))..))'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        fud.pv('bg.to_bg_string()')
+        self.assertEqual(bg.ss_distance('s0', 's1'), 1)
+        self.assertEqual(bg.ss_distance('i0', 'h0'), 2)
+        self.assertEqual(bg.ss_distance('s0', 's0'), 0)
+        self.assertEqual(bg.ss_distance('s0', 'i0'), 0)
+        self.assertEqual(bg.ss_distance('s0', 'h0'), 3)
+
+        db = '((..))((..))'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        self.assertEqual(bg.ss_distance('s0', 's1'), 1)
