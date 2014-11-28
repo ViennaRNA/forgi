@@ -38,6 +38,10 @@ class TestBulgeGraph(unittest.TestCase):
         for pt,db in self.pt_dbs:
             self.assertEqual(fus.dotbracket_to_pairtable(db), pt)
 
+    def test_dotbracket_to_pairtable1(self):
+        db = "....(((((.....((((((((((((.....(..(((....)))..)....))))))))))))......))))).."
+        fus.dotbracket_to_pairtable(db)
+
     def test_pairtable_to_tuples(self):
         """
         Convert a pairtable to base pair tuples.

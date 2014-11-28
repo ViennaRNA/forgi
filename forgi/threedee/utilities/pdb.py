@@ -513,3 +513,31 @@ def load_structure(pdb_filename):
     chain = renumber_chain(chain)
      
     return chain
+
+def interchain_contacts(struct):
+    all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
+
+    ns = bpdb.NeighborSearch(all_atoms)
+    pairs = ns.search_all(3)
+
+    ic_pairs = []
+
+    for (a1, a2) in pairs:
+        if a1.parent.parent != a2.parent.parent:
+            ic_pairs += [(a1,a2)]
+
+    return ic_pairs
+    #fud.pv('ic_pairs')
+
+def is_protein(chain):
+    '''
+    Determine if a Bio.PDB.Chain structure corresponds to an RNA
+    molecule.
+
+    @param chain: A Bio.PDB.Chain molecule
+    @return: True if it is an RNA molecule, False otherwise
+    '''
+    for res in chain:
+        if res.resname in ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL']:
+            return True
+    return False
