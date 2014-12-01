@@ -19,7 +19,7 @@ import sys
 
 import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as fud
-import forgi.threedee.utilities.my_math as cum
+import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.rmsd as cur
 import forgi.threedee.utilities.vector as cuv
@@ -836,7 +836,7 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     else:
         t2 = np.dot(stem_inv, twists[1])
 
-    ang = cum.atan3(t2[2], t2[1])
+    ang = ftum.atan3(t2[2], t2[1])
 
     # calculated from an ideal length 30 helix
     average_ang_per_nt = 0.636738030735
