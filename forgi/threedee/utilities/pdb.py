@@ -518,7 +518,7 @@ def interchain_contacts(struct):
     all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
 
     ns = bpdb.NeighborSearch(all_atoms)
-    pairs = ns.search_all(3)
+    pairs = ns.search_all(2.8)
 
     ic_pairs = []
 
