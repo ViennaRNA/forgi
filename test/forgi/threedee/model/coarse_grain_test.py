@@ -41,7 +41,7 @@ def cg_from_sg(cg, sg):
     return new_cg
 
 
-class TestCoarseGrainRNA(tfgb.GraphVerification):
+class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
 
@@ -108,6 +108,8 @@ class TestCoarseGrainRNA(tfgb.GraphVerification):
         elem_name = cg.get_node_from_residue_num(247, seq_id=True)
 
     def test_from_pdb(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
+
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
         self.check_cg_integrity(cg)
 
