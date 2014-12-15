@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 import sys
 
-import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
+import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
@@ -1061,8 +1061,8 @@ def junction_virtual_atom_distance(bg, bulge):
     (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)
 
     try:
-        a1_pos = cua.avg_stem_vres_atom_coords[strand1][r1][a1]
-        a2_pos = cua.avg_stem_vres_atom_coords[strand2][r2][a2]
+        a1_pos = ftus.avg_stem_vres_atom_coords[strand1][r1][a1.replace('*', "'")]
+        a2_pos = ftus.avg_stem_vres_atom_coords[strand2][r2][a2.replace('*', "'")]
     except KeyError as e:
         print >>sys.stderr, "KeyError in junction_virtual_atom_distance"
         fud.pv('strand1, r1, a1')
@@ -1204,7 +1204,7 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
 
     new_atoms = dict()
 
-    for a in cua.avg_stem_vres_atom_coords[strand][rs[strand]].items():
+    for a in ftus.avg_stem_vres_atom_coords[strand][rs[strand]].items():
         coords = a[1]
         new_coords = np.dot(basis, coords) + vpos
         #new_coords2 = cuv.change_basis(coords, cuv.standard_basis, basis)
@@ -1817,7 +1817,7 @@ def add_atoms(coords, twists, define, side, seq, new_coords):
         vbasis = virtual_res_basis_core(coords, twists, i, stem_len)
         vpos = virtual_res_3d_pos_core(coords, twists, i, stem_len)
 
-        for a in cua.avg_stem_vres_atom_coords[side][resname].items():
+        for a in ftus.avg_stem_vres_atom_coords[side][resname].items():
             c = a[1]
             new_coords[resnum][a[0]] = np.dot(vbasis.transpose(), c) + vpos[0]
     
