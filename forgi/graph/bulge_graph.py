@@ -1328,15 +1328,8 @@ class BulgeGraph(object):
         i.e. [5,5,4,0,2,1]
         '''
         pair_tuples = self.to_pair_tuples()
-        max_bp = max([max(x) for x in pair_tuples])
 
-        pt = [0] * (max_bp + 1)
-        pt[0] = max_bp
-
-        for tup in pair_tuples:
-            pt[tup[0]] = tup[1]
-
-        return pt
+        return fus.tuples_to_pairtable(pair_tuples)
 
     def to_pair_tuples(self):
         '''

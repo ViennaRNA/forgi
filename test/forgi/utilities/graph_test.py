@@ -1,4 +1,5 @@
 import sys
+
 import networkx as nx
 import unittest
 import forgi.utilities.graph as fug

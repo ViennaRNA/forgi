@@ -159,3 +159,22 @@ def pairtable_to_tuples(pt):
 
     return tuples
         
+def tuples_to_pairtable(pair_tuples):
+    '''
+    Convert a representation of an RNA consisting of a list of tuples
+    to a pair table:
+
+    i.e. [(1,3),(2,4),(3,1),(4,2)] -> [4,3,4,1,2]
+
+    :param tuples: A list of pair tuples
+    :return: A pair table
+    '''
+    max_bp = max([max(x) for x in pair_tuples])
+
+    pt = [0] * (max_bp + 1)
+    pt[0] = max_bp
+
+    for tup in pair_tuples:
+        pt[tup[0]] = tup[1]
+
+    return pt
