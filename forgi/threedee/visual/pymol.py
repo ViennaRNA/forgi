@@ -21,7 +21,6 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
-        self.constraints = None
         self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
@@ -54,6 +53,7 @@ class PymolPrinter:
         self.prev_obj_name = ''     # The name of the previously created
                                     # object which needs to be hidden
                                     # when creating a movie
+        self.only_elements = None
 
     def get_color_vec(self, color):
         if color == 'green':
@@ -609,8 +609,8 @@ class PymolPrinter:
         loops = list(cg.hloop_iterator())
 
         for key in cg.coords.keys():
-            if self.constraints is not None:
-                if key not in self.constraints:
+            if self.only_elements is not None:
+                if key not in self.only_elements:
                     continue
 
             (p, n) = cg.coords[key]
@@ -665,6 +665,9 @@ class PymolPrinter:
         if self.add_longrange:
             for key1 in cg.longrange.keys():
                 for key2 in cg.longrange[key1]:
+                    if self.only_elements is not None:
+                        if key1 not in self.only_elements or key2 not in self.only_elements:
+                            continue
                     try:
 
                         p = cuv.line_segment_distance(cg.coords[key1][0],

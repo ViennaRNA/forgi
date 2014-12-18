@@ -209,6 +209,8 @@ def k2n_main(input_filename, input_format=DEFAULT_INPUT_FORMAT,\
     try:
         if input_format == 'bpseq':
             header, seq, pairs = input_parser(open(input_filename,'U'))
+            import sys
+
             ks = KnottedStructure(pairs, Seq=seq, Header=header)
             input_data = [ks]
         else:

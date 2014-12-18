@@ -1,40 +1,43 @@
 import unittest
 import itertools as it
 
+import sys
+import os
+
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 
-class GraphVerification(object):
+
+class GraphVerification(unittest.TestCase):
     def check_for_overlapping_defines(self, bg):
-        '''
+        """
         Check to make sure none of the defines overlap.
-        '''
-        for d1,d2 in it.combinations(bg.defines.keys(), 2):
+        """
+        for d1, d2 in it.combinations(bg.defines.keys(), 2):
             for dx in bg.defines[d1]:
                 for dy in bg.defines[d2]:
                     self.assertNotEqual(dx, dy)
 
     def check_for_all_nucleotides(self, bg):
-        '''
+        """
         Check to make sure that the bulge_graph covers each nucleotide
         in the structure.
-        '''
-        nucs = [False for i in range(bg.seq_length)]
-
+        """
+        nucs = [False] * bg.seq_length
         for d in bg.defines.keys():
             for r in bg.define_residue_num_iterator(d):
                 nucs[r-1] = True
 
-        for i,n in enumerate(nucs):
+        for i, n in enumerate(nucs):
             self.assertTrue(n)
 
     def check_node_labels(self, bg):
-        '''
+        """
         There should be only six types of nodes in the graph. The internal
         representation sometimes uses nodes that start with 'x' or 'y' as
         intermediates, but these should always be removed.
-        '''
+        """
         for k in bg.defines:
             self.assertTrue(k[0] in ['s', 'h', 'i', 'm', 't', 'f'])
     
@@ -43,18 +46,21 @@ class GraphVerification(object):
         self.check_for_all_nucleotides(bg)
         self.check_for_overlapping_defines(bg)
 
-class BulgeGraphTest(unittest.TestCase, GraphVerification):
-    '''
+
+class BulgeGraphTest(GraphVerification):
+    """
     Simple tests for the BulgeGraph data structure.
 
     For now the main objective is to make sure that a graph is created
     and nothing crashes in the process. In the future, test cases for
     bugs should be added here.
-    '''
+    """
 
     def setUp(self):
-        self.dotbracket = '....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))........'
-        self.bg_string = '''
+        self.dotbracket = '....((((((....((.......((((.((((.(((...(((((..........)))))...\
+((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))........'
+
+        self.bg_string = """
 name temp
 length 71
 seq CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
@@ -71,7 +77,7 @@ define m0 60 63
 connect s3 h1 m0 m2
 connect s2 h0 m1 m2
 connect s0 f1 m1 m0 t1
-'''
+"""
         self.bpseq = dict()
         self.bpseq['1y26'] = """1 G 26
 2 A 25
@@ -101,7 +107,7 @@ connect s0 f1 m1 m0 t1
 26 C 1
 """
 
-        self.bpseq['pseudoknot'] ="""1 A 9
+        self.bpseq['pseudoknot'] = """1 A 9
 2 A 8
 3 A 0
 4 A 14
@@ -143,8 +149,8 @@ AAAA
 """
         bg = fgb.from_fasta_text(fasta_str)
 
-        self.assertEqual(bg.defines['s0'], [1,1,3,3])
-        self.assertEqual(bg.defines['s1'], [2,2,4,4])
+        self.assertEqual(bg.defines['s0'], [1, 1, 3, 3])
+        self.assertEqual(bg.defines['s1'], [2, 2, 4, 4])
 
         fasta_str = """
 >a
@@ -153,9 +159,8 @@ AAAAAAA
 """
         bg = fgb.from_fasta_text(fasta_str)
 
-        self.assertEqual(bg.defines['s0'], [1,1,5,5])
-        self.assertEqual(bg.defines['s1'], [3,3,7,7])
-
+        self.assertEqual(bg.defines['s0'], [1, 1, 5, 5])
+        self.assertEqual(bg.defines['s1'], [3, 3, 7, 7])
 
     def test_from_fasta1(self):
         a = """
@@ -221,7 +226,7 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
     def test_from_bpseq(self):
         bg = fgb.BulgeGraph()
 
-        bpstr="""1 G 8
+        bpstr = """1 G 8
 2 G 7
 3 C 6
 4 A 5
@@ -233,12 +238,12 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
         bg.from_bpseq_str(bpstr, dissolve_length_one_stems=False)
         bg.from_bpseq_str(bpstr, dissolve_length_one_stems=True)
 
-        seq= 'AAAAAAAAAAAAAAAAAAAAA'
-        db = '.((((..)).))..((..)).'
-        n  = '12345678901234567890.'
+        #seq = 'AAAAAAAAAAAAAAAAAAAAA'
+        #db = '.((((..)).))..((..)).'
+        #n = '12345678901234567890.'
 
         bg = fgb.BulgeGraph()
-        bpstr="""1 A 0
+        bpstr = """1 A 0
 2 A 12
 3 A 11
 4 A 9
@@ -263,12 +268,12 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
 
         bg.from_bpseq_str(bpstr)
 
-        self.assertEqual(bg.defines['i0'], [10,10])
-        self.assertEqual(bg.defines['h0'], [6,7])
-        self.assertEqual(bg.defines['h1'], [17,18])
-        self.assertEqual(bg.defines['s0'], [2,3,11,12])
-        self.assertEqual(bg.defines['s1'], [4,5,8,9])
-        self.assertEqual(bg.defines['s2'], [15,16,19,20])
+        self.assertEqual(bg.defines['i0'], [10, 10])
+        self.assertEqual(bg.defines['h0'], [6, 7])
+        self.assertEqual(bg.defines['h1'], [17, 18])
+        self.assertEqual(bg.defines['s0'], [2, 3, 11, 12])
+        self.assertEqual(bg.defines['s1'], [4, 5, 8, 9])
+        self.assertEqual(bg.defines['s2'], [15, 16, 19, 20])
         self.assertEqual(bg.defines['t1'], [21, 21])
 
         bg.get_node_from_residue_num(21)
@@ -317,10 +322,10 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
         bg.get_node_from_residue_num(1)
         bg.get_node_from_residue_num(2)
 
-        db='(.(.(.).).)'
-        nm='12345678901'
+        #db = '(.(.(.).).)'
+        #nm = '12345678901'
 
-        bpstr="""1 A 11
+        bpstr = """1 A 11
 2 A 0
 3 A 9
 4 A 0
@@ -334,10 +339,10 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
 """
         bg.from_bpseq_str(bpstr)
 
-        db='[.(.].)'
-        nm='1234567'
+        #db = '[.(.].)'
+        #nm = '1234567'
 
-        bpstr="""1 A 5
+        bpstr = """1 A 5
 2 A 0
 3 A 7
 4 A 0
@@ -348,8 +353,8 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
 
         bg.from_bpseq_str(bpstr)
 
-        db='[[.((..]]...))'
-        nm='12345678901234'
+        db = '[[.((..]]...))'
+        nm = '12345678901234'
 
         bpstr="""1 A 9
 2 A 8
@@ -443,6 +448,9 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
 
 
     def test_define_residue_num_iterator(self):
+        bg = fgb.BulgeGraph(dotbracket_str='((.).)')
+        self.assertEqual(list(bg.define_residue_num_iterator('s1', adjacent=True)), [1,2,3,4,5])
+
         bg = fgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
         drni = bg.define_residue_num_iterator('m2', adjacent=True)
         # the second multiloop should have at least two adjacent nucleotides
@@ -451,7 +459,7 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
         # the second multiloop should have at least two adjacent nucleotides
         self.assertEqual(len(list(drni)), 2)
 
-        drni = bg.define_residue_num_iterator('m1', adjacent=True)
+        bg.define_residue_num_iterator('m1', adjacent=True)
 
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('..((..((...))..))..((..))..')
@@ -498,9 +506,9 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         
 
     def test_dissolve_stem(self):
-        '''
+        """
         Test to make sure length one stems can be dissolved.
-        '''
+        """
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
         self.assertEquals(bg.to_dotbracket_string(), '((....((..))....))')
@@ -682,13 +690,13 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.from_dotbracket('')
 
     def test_get_bulge_dimensions(self):
-        bg = fgb.BulgeGraph(dotbracket_str='(.(.))')
-        bd = bg.get_bulge_dimensions('i0')
-        self.assertEquals(bd, (1,0))
-
         bg = fgb.BulgeGraph(dotbracket_str='((.).)')
         bd = bg.get_bulge_dimensions('i0')
         self.assertEquals(bd, (0,1))
+
+        bg = fgb.BulgeGraph(dotbracket_str='(.(.))')
+        bd = bg.get_bulge_dimensions('i0')
+        self.assertEquals(bd, (1,0))
 
         bg = fgb.BulgeGraph(dotbracket_str='().()')
         bd = bg.get_bulge_dimensions('m0')
@@ -729,6 +737,11 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(bg.get_length('i4'), 2)
 
     def test_get_define_seq_str(self):
+        bg = fgb.from_fasta_text(""">1Y26_X
+CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))""")
+        self.assertEqual(bg.get_define_seq_str("s0"), ['CGCUUCAUA', 'UAUGAAGUG'])
+
         bg = fgb.BulgeGraph(dotbracket_str="(.(.))") 
         bg.seq = 'acgauu'
         self.assertEquals(bg.get_define_seq_str("i0"), ['c', ''])
@@ -749,9 +762,9 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEquals(bg.get_define_seq_str('m2', True), ['aac'])
 
     def check_define_integrity(self, bg):
-        '''
+        """
         Check to make sure that the define regions are always 5' to 3'
-        '''
+        """
         for v in bg.defines.values():
             prev = 0
             i = iter(v)
@@ -924,9 +937,9 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg = fgb.BulgeGraph(dotbracket_str='(())(())')
 
     def test_create_mst(self):
-        '''
+        """
         Test the creation of a minimum spanning tree from the graph.
-        '''
+        """
         db = '....((((((...((((((.....(((.((((.(((..(((((((((....)))))))))..((.......))....)))......)))))))....))))))..)).)))).....((((...(((((((((...)))))))))..)))).......'
         bg = fgb.BulgeGraph(dotbracket_str=db)
         mst = bg.get_mst()
@@ -943,10 +956,10 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         build_order = bg.traverse_graph()
 
     def test_create_mst_telomerase(self):
-        '''
+        """
         Test the creation of a minimum spanning tree from the telomerase
         secondary structure.
-        '''
+        """
         bg = fgb.BulgeGraph('test/forgi/data/telomerase.cg')
 
         mst = bg.get_mst()
@@ -1152,4 +1165,112 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
         self.assertFalse(14 in sbl)
         self.assertFalse(4 in sbl)
 
+    def test_loop_contains_pseudoknot(self):
+        fasta = """>1L2X_A
+AAAAAAAAAAAAAAAAAAAAAAAAAA
+((...[[...{{...))..]]...}}
+"""
+
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        loops, loop_elems = bg.find_multiloop_loops()
+        for loop in loops:
+            self.assertTrue(bg.is_loop_pseudoknot(loop))
+
+        dotbracket = '....((((.........)))).((((.(((((..(((((((((....(((.(((..(((..((.((((((((((.....)))))))))).))))).\
+.....(((......((((((((..((...(((((((.(((((....((((((....)))))).....)))))....((((.(((((....))))).))))...((((...)))).))))\
+)))..))))))))))(((....(((..((((((((.......)))))))))))......)))..((((((((....))))...))))))).(((((............))))).(((((\
+..)))))...)))))).).....(.(((...(((((....)))).))))).)).))))))..((((......((((....)))).....))))....(((((...(....((((.....\
+)))).....)....)))))......(((((......(((((.....((....)).......))))))))))..)))))))))..........(((.....(.((((...(((.((((((\
+(.((((((((((......((((((.....))))))....))))))))..)))))))))..(((((((((...((((((((....((((((....((........)).......))))))\
+....).......((....)).)))))))..))))).)))..))))...))))....((((((...((...((((.........))))...))))))))..........((((((..(((\
+(((((((...))))))))))...((....)).....)))))))))).(((......((((....))))....)))........(((((.(((((((.((..(((((..((((((((((.\
+.....((........))........(.(((((((..(...(............((((....))))...........................)).((.(((...((((((.(....(((\
+((((((....)))...(((......)))...)))))).....((((.(((((.(..((...(((.....)))).)...).)))))..(..(((((....))))).....)..))))...\
+..).).)))...)).)))))....))))))))..)).)))))))).(...(((((((.....(((..((..((((....))))..))....))).....)))))))......(....((\
+(((((........)))))))....)..)..))))).....(((((((.(.....)..)))))))......))...)))))))))).))..(.(..((.(.((((.(((..((((((.((\
+((((...(.((((....(((....))).)))).)..)))))).))))))..))).))))..).))...)..)..(((((((((....)))))))))......'
+
+        bg.from_dotbracket(dotbracket)
+
+        loops, loop_elems = bg.find_multiloop_loops()
+        for loop in loops:
+            self.assertFalse(bg.is_loop_pseudoknot(loop))
+
+    def test_remove_pseudoknots(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#23456789012345678901234567
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        pairs = bg.remove_pseudoknots()
+        self.assertTrue((9,27) in pairs)
+        self.assertTrue((10,26) in pairs)
+        self.assertTrue((11,25) in pairs)
+
+        self.assertEqual(bg.pairing_partner(9), None)
+        self.assertEqual(bg.pairing_partner(12), None)
+
+        self.assertEqual(bg.pairing_partner(2), 17)
+        self.assertEqual(bg.pairing_partner(2), 17)
+
 #2345678901234
+
+    def test_find_external_loops(self):
+        db = '..((..))..'
+        bg = fgb.BulgeGraph()
+
+        bg.from_dotbracket(db)
+        eloops = bg.find_external_loops()
+
+        self.assertEqual(eloops, ['f1', 't1'])
+
+        bg.from_dotbracket('..((.)).((.))..')
+        eloops = bg.find_external_loops()
+        self.assertEqual(eloops, ['f1', 't1', 'm0'])
+
+        bg.from_dotbracket('..((.))((.))..')
+        eloops = bg.find_external_loops()
+        self.assertEqual(eloops, ['f1', 't1', 'm0'])
+
+        bg.from_dotbracket('..(((.))((.)))..(..)')
+        eloops = bg.find_external_loops()
+        self.assertEqual(eloops, ['f1', 'm2'])
+
+    def test_stem_bp_iterator(self):
+        fasta = """>1L2X_A
+GCGCGGCACCGUCCGCGGAACAAACGG
+.(((((..[[[.))))).......]]]
+"""
+#23456789012345678901234567
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+
+        #fud.pv('list(bg.stem_bp_iterator("s1"))')
+        self.assertEqual(list(bg.stem_bp_iterator("s1")), [(9, 27), (10, 26), (11, 25)])
+
+    def test_ss_distance(self):
+        db = '((.((..))..))'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        fud.pv('bg.to_bg_string()')
+        self.assertEqual(bg.ss_distance('s0', 's1'), 2)
+        self.assertEqual(bg.ss_distance('i0', 'h0'), 3)
+        self.assertEqual(bg.ss_distance('s0', 's0'), 0)
+        self.assertEqual(bg.ss_distance('s0', 'i0'), 1)
+        self.assertEqual(bg.ss_distance('s0', 'h0'), 4)
+
+        db = '((..))((..))'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        self.assertEqual(bg.ss_distance('s0', 's1'), 1)
+
+        db = '((((..))..)'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        self.assertEqual(bg.ss_distance('s0', 's1'), 1)

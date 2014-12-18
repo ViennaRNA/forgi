@@ -247,20 +247,15 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         #anames = a_5_names + a_3_names
 
         for a in anames:
-            if a in r1 and a in r2:
-                all_atoms1 += [r1[a]]
-                all_atoms2 += [r2[a]]
-                '''
-                except KeyError:
-                    print >>sys.stderr, "Residue number %d is missing an atom, continuing with the rest." % (i)
-                    continue
-                '''
+	    try:
+		at1 = r1[a]
+		at2 = r2[a]
 
-        '''
-        if len(atoms1) != len(atoms2):
-            print >>sys.stderr, "Number of atoms differs in the two chains."
-            raise Exception("Missing atoms.")
-        '''
+		all_atoms1 += [at1]
+		all_atoms2 += [at2]
+	    except:
+	        continue
+
     #print "rmsd len:", len(all_atoms1), len(all_atoms2)
     if superimpose:
         sup = bpdb.Superimposer()
@@ -513,3 +508,30 @@ def load_structure(pdb_filename):
     chain = renumber_chain(chain)
      
     return chain
+
+def interchain_contacts(struct):
+    all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
+
+    ns = bpdb.NeighborSearch(all_atoms)
+    pairs = ns.search_all(2.8)
+
+    ic_pairs = []
+
+    for (a1, a2) in pairs:
+        if a1.parent.parent != a2.parent.parent:
+            ic_pairs += [(a1,a2)]
+
+    return ic_pairs
+
+def is_protein(chain):
+    '''
+    Determine if a Bio.PDB.Chain structure corresponds to an RNA
+    molecule.
+
+    @param chain: A Bio.PDB.Chain molecule
+    @return: True if it is an RNA molecule, False otherwise
+    '''
+    for res in chain:
+        if res.resname in ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL']:
+            return True
+    return False

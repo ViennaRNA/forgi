@@ -13,6 +13,7 @@ import test.forgi.graph.bulge_graph_test as tfgb
 
 import copy, time
 
+
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.
@@ -21,7 +22,7 @@ def cg_from_sg(cg, sg):
     @param sg: The list of elements that are in the subgraph
     '''
     new_cg = ftmc.CoarseGrainRNA()
-    
+
     for d in sg:
         new_cg.defines[d] = cg.defines[d]
 
@@ -31,15 +32,16 @@ def cg_from_sg(cg, sg):
             new_cg.twists[d] = cg.twists[d]
         if d in cg.longrange.keys():
             new_cg.longrange[d] = cg.longrange[d]
-        
+
         for x in cg.edges[d]:
             if x in new_cg.defines.keys():
                 new_cg.edges[d].add(x)
                 new_cg.edges[x].add(d)
-    
+
     return new_cg
 
-class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
+
+class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
 
@@ -74,7 +76,6 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
             if multiloops:
                 continue
 
-
             self.assertFalse(np.allclose(cg.coords[edges[0]][0],
                                          cg.coords[edges[1]][0]))
             self.assertFalse(np.allclose(cg.coords[edges[0]][0],
@@ -100,19 +101,21 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         pass
 
     def test_get_node_from_residue_num(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
-                          intermediate_file_dir='tmp', chain_id='A')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',
+                           intermediate_file_dir='tmp', chain_id='A')
         self.check_cg_integrity(cg)
 
         elem_name = cg.get_node_from_residue_num(247, seq_id=True)
 
-    def test_from_pdb(self): 
+    def test_from_pdb(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
+
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
         self.check_cg_integrity(cg)
 
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', 
-                          intermediate_file_dir='tmp',
-                          remove_pseudoknots=False)
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb',
+                           intermediate_file_dir='tmp',
+                           remove_pseudoknots=False)
         self.check_cg_integrity(cg)
 
         node = cg.get_node_from_residue_num(25)
@@ -130,33 +133,33 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_missing.pdb', intermediate_file_dir='tmp')
         self.check_cg_integrity(cg)
 
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb', 
-                          intermediate_file_dir='tmp', chain_id='Y')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb',
+                           intermediate_file_dir='tmp', chain_id='Y')
         self.check_cg_integrity(cg)
 
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', 
-                          intermediate_file_dir='tmp', chain_id='A')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',
+                           intermediate_file_dir='tmp', chain_id='A')
         self.check_cg_integrity(cg)
 
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1FJG_reduced.pdb', 
-                          intermediate_file_dir='tmp')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1FJG_reduced.pdb',
+                           intermediate_file_dir='tmp')
         self.check_cg_integrity(cg)
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb',
-                          intermediate_file_dir='tmp')
+                           intermediate_file_dir='tmp')
 
         for d in cg.defines:
             for r in cg.define_residue_num_iterator(d):
                 # make sure all the seq_ids are there
-                print cg.seq_ids[r-1]
+                print cg.seq_ids[r - 1]
 
 
     def test_from_cg(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
-        
-        #self.assertEqual(len(cg.coords), 8)
+
+        # self.assertEqual(len(cg.coords), 8)
         for key in cg.defines.keys():
             self.assertTrue(key in cg.coords)
 
@@ -195,10 +198,11 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         (s1b, s1e) = cg.get_sides('s8', 't1')
 
     def test_cg_from_sg(self):
-        bg = ftmc.CoarseGrainRNA(dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
+        bg = ftmc.CoarseGrainRNA(
+            dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
         self.check_graph_integrity(bg)
 
-        #bg = cgb.BulgeGraph(dotbracket_str='.(((((........)))))..((((((((.(((.((...........((((((..(((((.((((((((..(((..)))...((((....)))).....))))))))..)))))................((((((...........))))))..((...(((((((...((((((..)))))).....((......))....)))))))...(((((((((.........))))))))).(((....))).))..........(((((.(((((.......))))))))))..........))))..))............(((.((((((((...((.......))...))))))..))))).........((((((((((((..(((((((((......))))))..))).((((.......)))).....)))))..))..))).))....((...............))....))..)))))))))))...')
+        # bg = cgb.BulgeGraph(dotbracket_str='.(((((........)))))..((((((((.(((.((...........((((((..(((((.((((((((..(((..)))...((((....)))).....))))))))..)))))................((((((...........))))))..((...(((((((...((((((..)))))).....((......))....)))))))...(((((((((.........))))))))).(((....))).))..........(((((.(((((.......))))))))))..........))))..))............(((.((((((((...((.......))...))))))..))))).........((((((((((((..(((((((((......))))))..))).((((.......)))).....)))))..))..))).))....((...............))....))..)))))))))))...')
 
         for j in range(40):
             sg = bg.random_subgraph()
@@ -216,7 +220,7 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         self.check_cg_integrity(cg)
 
         self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
-                         [[(' ',6,' '), (' ',10,' ')], [(' ',19,' '), (' ',21,' ')]])
+                         [[(' ', 6, ' '), (' ', 10, ' ')], [(' ', 19, ' '), (' ', 21, ' ')]])
 
     def test_get_stem_stats(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
@@ -238,13 +242,13 @@ class TestCoarseGrainRNA(unittest.TestCase, tfgb.GraphVerification ):
         cg.get_loop_stat('h3')
 
     def test_length_one_stems(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1byj.pdb', 
-                          intermediate_file_dir='tmp', remove_pseudoknots=False)
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1byj.pdb',
+                           intermediate_file_dir='tmp', remove_pseudoknots=False)
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
 
-        cg = ftmc.from_pdb('test/forgi/threedee/data/2QBZ.pdb', 
-                          intermediate_file_dir='tmp', remove_pseudoknots=False)
+        cg = ftmc.from_pdb('test/forgi/threedee/data/2QBZ.pdb',
+                           intermediate_file_dir='tmp', remove_pseudoknots=False)
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
 
