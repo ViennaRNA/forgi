@@ -92,21 +92,27 @@ def delete_from_stack(stack, j):
 	return k	
 
 def pairtable_to_dotbracket(pt):
-	"""
-	Converts arbitrary pair table array (ViennaRNa format) to structure in dot bracket format.
-	"""
-	stack = col.defaultdict(list)
-	res = ""
-	for i in range(1, pt[0]+1):
-		if pt[i]==0: 
-			res += '.'
-		else:
-			if pt[i]>i:						# '(' check if we can stack it...
-				res += bracket_left[insert_into_stack(stack, i, pt[i])]
-			else:									# ')'
-				res += bracket_right[delete_from_stack(stack, i)]
+    """
+    Converts arbitrary pair table array (ViennaRNa format) to structure in dot bracket format.
+    """
+    stack = col.defaultdict(list)
+    seen = set()
+    res = ""
+    for i in range(1, pt[0]+1):
+        if pt[i] != 0 and pt[i] in seen:
+            raise ValueError('Invalid pairtable contains duplicate entries')
 
-	return res
+        seen.add(pt[i])
+
+        if pt[i]==0: 
+            res += '.'
+        else:
+            if pt[i]>i:						# '(' check if we can stack it...
+                res += bracket_left[insert_into_stack(stack, i, pt[i])]
+            else:									# ')'
+                res += bracket_right[delete_from_stack(stack, i)]
+
+    return res
 
 def inverse_brackets(bracket):
 	res = col.defaultdict(int)
@@ -159,7 +165,7 @@ def pairtable_to_tuples(pt):
 
     return tuples
         
-def tuples_to_pairtable(pair_tuples):
+def tuples_to_pairtable(pair_tuples, seq_length=None):
     '''
     Convert a representation of an RNA consisting of a list of tuples
     to a pair table:
@@ -167,9 +173,14 @@ def tuples_to_pairtable(pair_tuples):
     i.e. [(1,3),(2,4),(3,1),(4,2)] -> [4,3,4,1,2]
 
     :param tuples: A list of pair tuples
+    :param seq_length: How long is the sequence? Only needs to be passed in when
+                       the unpaired nucleotides aren't passed in as (x,0) tuples.
     :return: A pair table
     '''
-    max_bp = max([max(x) for x in pair_tuples])
+    if seq_length is None:
+        max_bp = max([max(x) for x in pair_tuples])
+    else:
+        max_bp = seq_length
 
     pt = [0] * (max_bp + 1)
     pt[0] = max_bp
