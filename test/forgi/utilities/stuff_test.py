@@ -63,3 +63,4 @@ class TestBulgeGraph(unittest.TestCase):
 
         for pt, tup in pt_tuples:
             self.assertEqual(fus.tuples_to_pairtable(tup), pt)
+
