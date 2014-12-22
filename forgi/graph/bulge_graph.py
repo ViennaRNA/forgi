@@ -541,10 +541,9 @@ class BulgeGraph(object):
                 s1 = self.defines[conns[0]]
                 s2 = self.defines[conns[1]]
 
-                if adjacent:
-                    # offset by one, which will be reversed in the yield step
-                    # below
-                    ranges = [[s1[1] + 1, s2[0] - 1], [s2[3] + 1, s1[2] - 1]]
+                # offset by one, which will be reversed in the yield step
+                # below
+                ranges = [[s1[1] + 1, s2[0] - 1], [s2[3] + 1, s1[2] - 1]]
 
         if node[0] == 'm':
             if adjacent:
@@ -560,7 +559,7 @@ class BulgeGraph(object):
             if adjacent:
                 if ds1 > 1:
                     ds1 -= 1
-                if ds2 < self.seq_length - 1:
+                if ds2 < self.seq_length:
                     ds2 += 1
 
             if seq_ids:
@@ -1376,15 +1375,8 @@ class BulgeGraph(object):
         i.e. [5,5,4,0,2,1]
         """
         pair_tuples = self.to_pair_tuples()
-        max_bp = max([max(x) for x in pair_tuples])
 
-        pt = [0] * (max_bp + 1)
-        pt[0] = max_bp
-
-        for tup in pair_tuples:
-            pt[tup[0]] = tup[1]
-
-        return pt
+        return fus.tuples_to_pairtable(pair_tuples)
 
     def to_pair_tuples(self):
         """

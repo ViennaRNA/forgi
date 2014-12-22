@@ -1,5 +1,4 @@
 import sys
-print >>sys.stderr, sys.version
 
 import networkx as nx
 import unittest

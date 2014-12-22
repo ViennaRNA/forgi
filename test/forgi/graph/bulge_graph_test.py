@@ -447,6 +447,12 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
         bg.from_dotbracket('....')
 
 
+    def test_define_residue_num_iterator1(self):
+        bg = fgb.BulgeGraph(dotbracket_str='(.(...).)')
+        ress = list(bg.define_residue_num_iterator('i0', adjacent=True))
+
+        self.assertEqual(ress, [1,2,3,7,8,9])
+
     def test_define_residue_num_iterator(self):
         bg = fgb.BulgeGraph(dotbracket_str='((.).)')
         self.assertEqual(list(bg.define_residue_num_iterator('s1', adjacent=True)), [1,2,3,4,5])
@@ -1250,7 +1256,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_fasta(fasta)
 
-        #fud.pv('list(bg.stem_bp_iterator("s1"))')
         self.assertEqual(list(bg.stem_bp_iterator("s1")), [(9, 27), (10, 26), (11, 25)])
 
     def test_ss_distance(self):
@@ -1258,7 +1263,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
 
-        fud.pv('bg.to_bg_string()')
         self.assertEqual(bg.ss_distance('s0', 's1'), 2)
         self.assertEqual(bg.ss_distance('i0', 'h0'), 3)
         self.assertEqual(bg.ss_distance('s0', 's0'), 0)
