@@ -295,6 +295,22 @@ the base-pairing partner of nucleotide *n*. This is easily done with forgi::
     >>> bg.pairing_partner(13)
     33
 
+Extracting a Pair Table
+^^^^^^^^^^^^^^^^^^^^^^^
+
+We can obtain a pair table describing the pairing pattern of the nucleotides in
+this molecule. The first element of the pair table always contains the number
+of nucleotides in the secondary structure. Every subsequent element **i**
+either contains the number 0, indicating the nucleotide **i** is unpaired or an
+integer **j** which is the pairing partner of **i**::
+
+    >>> import forgi.graph.bulge_graph as cgb
+    >>> bg = cgb.BulgeGraph()
+    >>> bg.from_dotbracket('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
+    >>> bg.to_pair_table()
+    [71, 71, 70, 69, 68, 67, 66, 65, 64, 63, 0, 0, 0, 33, 32, 31, 30, 29, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 17, 16, 15, 14, 13, 0, 0, 0, 0, 0, 0, 0, 0, 60, 59, 58, 57, 56, 55, 0, 0, 0, 0, 0, 0, 0, 47, 46, 45, 44, 43, 42, 0, 0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+
+
 Getting the Name of an Element from the Residue Number
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

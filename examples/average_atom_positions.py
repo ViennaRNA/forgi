@@ -15,7 +15,7 @@ from optparse import OptionParser
 
 def main():
     usage = """
-    python average_atom_positions.py file1.pdb file2.pdb ...
+    python average_atom_positions.py atom_positions1.csv atom_positions2.csv ... etc
     """
     num_args= 1
     parser = OptionParser(usage=usage)
@@ -34,14 +34,21 @@ def main():
 
     poss = c.defaultdict(list)
 
-    for i,arg in enumerate(args):
-        with open(arg, 'r') as f:
-            for line in f:
-                parts = line.strip().split(':')
+    lines = []
 
-                identifier = parts[0]
-                pos = map(float,parts[1].split(','))
-                poss[identifier] += [pos]
+    if args[0] == '-':
+        lines = sys.stdin.readlines()
+    else:
+        for i,arg in enumerate(args):
+            with open(arg, 'r') as f:
+                lines = f.readlines()
+
+    for line in lines:
+        parts = line.strip().split(':')
+
+        identifier = parts[0]
+        pos = map(float,parts[1].split(','))
+        poss[identifier] += [pos]
 
     print "import collections as co"
 
