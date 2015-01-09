@@ -1,7 +1,8 @@
 .. _forgi_threedee_tutorial:
 
 RNA 3D Structure Using forgi.threedee
-==============
+=====================================
+
 Introduction
 ~~~~~~~~~~~~
 ``forgi.threedee`` is an extension of ``forgi`` capable of handling 3D data
@@ -157,6 +158,41 @@ The values stored by an ``AngleStat`` are the six parameters listed above as wel
 as the name of the pdb file the coarse grain model represents, the size of the
 joint and the sequence of its two strands (including the nucleotides in the
 Watson-crick base pairs which flank it).
+
+Find out How Much an Interior Loop Bends a Stem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Interior loops often place kinks in long stem-like structures. This leads
+to a change in the base stacking pattern and can indicate functional
+relevance. To extract this information for a given PDB file, we need to
+iterate over each interior loop and calculate the angle between the two
+stems it connects::
+
+    >>> import forgi.threedee.model.coarse_grain as ftmc
+    >>> import forgi.threedee.utilities.vector as ftuv
+    >>> cg = ftmc.from_pdb('test/forgi/threedee/data/1GID_native.pdb')
+    >>> for iloop in cg.iloop_iterator():
+    ...     conn = cg.connections(iloop)
+    ...     # conn contains two values ['s0', 's1']
+    ...     angle = ftuv.vec_angle(cg.coords[conn[0]][1] - cg.coords[conn[0]][0], cg.coords[conn[1]][1] - cg.coords[conn[1]][0]) 
+    ...     print iloop, angle
+    ... 
+    i3 0.307770762476
+    i2 2.74681004918
+    i1 0.1697963999
+    i0 0.491755788011
+    i5 0.456253974086
+    i4 0.261428615896
+    i7 0.15810445353
+    i6 0.510919193909
+
+ `conn[0]` and `conn[1]` are the identifiers of the first and second connected stems,
+ respectively, while `cg.coords[conn[0]][0]` contains the coordinates of the front end
+ of the first stem. Subtracting the coordinates of one end of the stem from the 
+ other gives us a vector which is used to calculate an angle.
+ This example, using the Group-I intron,
+ indicates the presence of a kink-turn at interior loop `i2`.
+
 
 Get the Largest RNA Chain from a PDB File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
