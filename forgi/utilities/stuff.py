@@ -138,13 +138,14 @@ def dotbracket_to_pairtable(struct):
 		else: 
 			if a in inverse_bracket_left: stack[inverse_bracket_left[a]].append(i)
 			else: 
-				if len(stack) = 0:
-                                    raise IndexError('Too many opening brackets!')
+				if len(stack[inverse_bracket_right[a]]) == 0:
+                                    raise ValueError('Too many opening brackets!')
                                 j = stack[inverse_bracket_right[a]].pop()
 				pt[i] = j
 				pt[j] = i
-        if len(stack) != 0:
-            raise IndexError('Too many closing brackets!')
+        
+        if len(stack[inverse_bracket_left[a]]) != 0:
+            raise ValueError('Too many closing brackets!')
 
 	return pt
 
