@@ -477,8 +477,8 @@ be on one side of it. Which side it's on can be elucidated using the
     (0, 1)
 
 The result shows that the loop `i0` is on side 1 of stem `s0` and side 0 of
-stem `s1`. The second number of the tuple is simple the boolean opposite of the
-first number. This needs to be changed in a future version.
+stem `s1`. If `bg.get_sides(s,b)` return a tuple `(sb, se)`, where the nucleotides
+in `bg.coords[sb]` are on the side of the loop. 
 
 Iteration
 ---------

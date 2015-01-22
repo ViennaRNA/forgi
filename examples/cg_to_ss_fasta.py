@@ -11,7 +11,7 @@ def main():
     Convert a coarse-grain RNA file to a dotbracket string.
     BEWARE: Structures with pseudoknots will give bogus output.
     """
-    num_args= 0
+    num_args= 1
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')

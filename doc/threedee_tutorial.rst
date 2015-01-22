@@ -186,12 +186,13 @@ stems it connects::
     i7 0.15810445353
     i6 0.510919193909
 
- `conn[0]` and `conn[1]` are the identifiers of the first and second connected stems,
- respectively, while `cg.coords[conn[0]][0]` contains the coordinates of the front end
- of the first stem. Subtracting the coordinates of one end of the stem from the 
- other gives us a vector which is used to calculate an angle.
- This example, using the Group-I intron,
- indicates the presence of a kink-turn at interior loop `i2`.
+
+`conn[0]` and `conn[1]` are the identifiers of the first and second connected stems,
+respectively, while `cg.coords[conn[0]][0]` contains the coordinates of the front end
+of the first stem. Subtracting the coordinates of one end of the stem from the 
+other gives us a vector which is used to calculate an angle.
+This example, using the Group-I intron,
+indicates the presence of a kink-turn at interior loop `i2`.
 
 
 Get the Largest RNA Chain from a PDB File

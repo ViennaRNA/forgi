@@ -51,6 +51,7 @@ class TestBulgeGraph(unittest.TestCase):
         db = "....(((((.....((((((((((((.....(..(((....)))..)....))))))))))))......))))).."
         fus.dotbracket_to_pairtable(db)
 
+
     def test_pairtable_to_tuples(self):
         """
         Convert a pairtable to base pair tuples.
