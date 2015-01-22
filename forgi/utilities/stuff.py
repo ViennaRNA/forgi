@@ -93,7 +93,7 @@ def delete_from_stack(stack, j):
 
 def pairtable_to_dotbracket(pt):
     """
-    Converts arbitrary pair table array (ViennaRNa format) to structure in dot bracket format.
+    Converts arbitrary pair table array (ViennaRNA format) to structure in dot bracket format.
     """
     stack = col.defaultdict(list)
     seen = set()
@@ -138,9 +138,14 @@ def dotbracket_to_pairtable(struct):
 		else: 
 			if a in inverse_bracket_left: stack[inverse_bracket_left[a]].append(i)
 			else: 
-				j = stack[inverse_bracket_right[a]].pop()
+				if len(stack[inverse_bracket_right[a]]) == 0:
+                                    raise ValueError('Too many closing brackets!')
+                                j = stack[inverse_bracket_right[a]].pop()
 				pt[i] = j
 				pt[j] = i
+        
+        if len(stack[inverse_bracket_left[a]]) != 0:
+            raise ValueError('Too many opening brackets!')
 
 	return pt
 
