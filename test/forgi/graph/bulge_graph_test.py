@@ -1274,7 +1274,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.from_dotbracket(db)
         self.assertEqual(bg.ss_distance('s0', 's1'), 1)
 
-        db = '((((..))..)'
+        db = '((((..))..))'
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         self.assertEqual(bg.ss_distance('s0', 's1'), 1)
