@@ -51,6 +51,15 @@ class TestBulgeGraph(unittest.TestCase):
         db = "....(((((.....((((((((((((.....(..(((....)))..)....))))))))))))......))))).."
         fus.dotbracket_to_pairtable(db)
 
+    @raises(ValueError)
+    def test_dotbracket_to_pairtable2(self):
+        db = "((((....))..)"
+        pt = fus.dotbracket_to_pairtable(db)
+
+    @raises(ValueError)
+    def test_dotbracket_to_pairtable3(self):
+        db = "((((....))..)).((..)))"
+        pt = fus.dotbracket_to_pairtable(db)
 
     def test_pairtable_to_tuples(self):
         """
