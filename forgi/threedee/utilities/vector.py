@@ -626,7 +626,7 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     pt_v = circ_pos - seg_a
     mag = math.sqrt(sum(seg_v * seg_v))
 
-    if m <= 0:
+    if mag <= 0:
         raise ValueError, "Invalid segment length"
     seg_v_unit = seg_v / mag
     proj = pt_v.dot(seg_v_unit)

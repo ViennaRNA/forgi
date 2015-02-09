@@ -76,7 +76,7 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node2].add(node1)
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
-                            chain_id=None, remove_pseudoknots=True):
+                            chain_id=None, remove_pseudoknots=True, parser=None):
     '''
     Create the coarse grain model from a pdb file and store all
     of the intermediate files in the given directory.
@@ -87,6 +87,9 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                                 for this coarsification.
     @param chain_id: The id of the chain to create the CG model from
     '''
+    if parser == None:
+        parser = bpdb.PDBParser()
+
     #chain = ftup.load_structure(pdb_filename)
     if chain_id == None:
         chain = ftup.get_biggest_chain(pdb_filename)
@@ -177,7 +180,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             # and loops
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                s = bpdb.PDBParser().get_structure('temp', f.name)
+                s = parser.get_structure('temp', f.name)
                 chains = list(s.get_chains())
                 if len(chains) < 1:
                     raise Exception("No chains in the PDB file")
@@ -206,7 +209,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
                      intermediate_file_dir=None, chain_id=None,
-                    remove_pseudoknots=True):
+                    remove_pseudoknots=True, parser=None):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -221,12 +224,12 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
 
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
                                      secondary_structure, chain_id=chain_id,
-                                    remove_pseudoknots=remove_pseudoknots)
+                                    remove_pseudoknots=remove_pseudoknots, parser=parser)
     else:
         with fus.make_temp_directory() as output_dir:
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
                                          secondary_structure, chain_id = chain_id,
-                                        remove_pseudoknots=remove_pseudoknots)
+                                        remove_pseudoknots=remove_pseudoknots, parser=parser)
 
     return cg
 
@@ -246,10 +249,10 @@ def from_file(cg_filename):
         return cg
     
 def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None, 
-             chain_id=None, remove_pseudoknots=True):
+             chain_id=None, remove_pseudoknots=True, parser=None):
     cg = load_cg_from_pdb(pdb_filename, secondary_structure, 
                           intermediate_file_dir, chain_id=chain_id,
-                         remove_pseudoknots=remove_pseudoknots)
+                         remove_pseudoknots=remove_pseudoknots, parser=parser)
 
     return cg
 
