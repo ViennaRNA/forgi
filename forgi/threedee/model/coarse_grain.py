@@ -92,9 +92,9 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     #chain = ftup.load_structure(pdb_filename)
     if chain_id == None:
-        chain = ftup.get_biggest_chain(pdb_filename)
+        chain = ftup.get_biggest_chain(pdb_filename, parser=parser)
     else:
-        chain = ftup.get_particular_chain(pdb_filename, chain_id)
+        chain = ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)
 
     chain = ftup.rename_modified_ress(chain)
     chain = ftup.rename_rosetta_atoms(chain)
@@ -108,6 +108,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         os.makedirs(output_dir)
 
     with open(op.join(output_dir, 'temp.pdb'), 'w') as f:
+        # TODO: the following should be changed to take the input parser
+        # and use that to output the chain
         ftup.output_chain(chain, f.name)
         f.flush()
 
@@ -180,7 +182,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             # and loops
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                s = parser.get_structure('temp', f.name)
+                s = bpdb.PDBParser().get_structure('temp', f.name)
                 chains = list(s.get_chains())
                 if len(chains) < 1:
                     raise Exception("No chains in the PDB file")
