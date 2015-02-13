@@ -13,6 +13,7 @@ import math as m
 #import fess.builder.config as cbc
 import forgi.config as cbc
 import forgi.utilities.debug as fud
+import forgi.threedee.utilities.vector as ftuv
 
 avg_stem_bp_length = 2.24
 avg_twist_rotation_per_bp = 360 / 11.
@@ -283,6 +284,24 @@ class AngleStat:
                                                              " ".join(map(str, self.define)),
                                                              " ".join(self.seqs))
         return out_str
+
+    def diff(self, other_angle, next_stem_length = 1):
+        '''
+        Calculate the distance between the start and end of the hypothetical
+        next stem defined by these two angles.
+
+        :param other_angle: The other angle stat
+        :param next_stem_length: the length of the stem that is attached to this angle.
+        :param return: The distance between the starts and ends of the two hypothetical
+                       next stems defined by this angle and the other angle
+        '''
+        this_stem_start = ftuv.spherical_polar_to_cartesian([self.r1, self.u1, self.v1])
+        this_stem_end = ftuv.spherical_polar_to_cartesian([next_stem_length, self.u, self.v])
+
+        other_stem_start = ftuv.spherical_polar_to_cartesian([other_angle.r1, other_angle.u1, other_angle.v1])
+        other_stem_end = ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v])
+
+        return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_end, other_stem_end)
 
 class RandomAngleStats():
     '''
