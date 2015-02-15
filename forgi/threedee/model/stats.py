@@ -295,13 +295,13 @@ class AngleStat:
         :param return: The distance between the starts and ends of the two hypothetical
                        next stems defined by this angle and the other angle
         '''
-        this_stem_start = ftuv.spherical_polar_to_cartesian([self.r1, self.u1, self.v1])
-        this_stem_end = ftuv.spherical_polar_to_cartesian([next_stem_length, self.u, self.v])
+        this_stem_start = np.array(ftuv.spherical_polar_to_cartesian([self.r1, self.u1, self.v1]))
+        this_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, self.u, self.v]))
 
-        other_stem_start = ftuv.spherical_polar_to_cartesian([other_angle.r1, other_angle.u1, other_angle.v1])
-        other_stem_end = ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v])
+        other_stem_start = np.array(ftuv.spherical_polar_to_cartesian([other_angle.r1, other_angle.u1, other_angle.v1]))
+        other_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v]))
 
-        return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_end, other_stem_end)
+        return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_start+this_stem_end, other_stem_start + other_stem_end)
 
 class RandomAngleStats():
     '''
