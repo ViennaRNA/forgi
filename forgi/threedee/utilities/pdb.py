@@ -537,7 +537,7 @@ def is_rna(chain):
     @return: True if it is an RNA molecule, False otherwise
     '''
     for res in chain:
-        if res.resname in ['A', 'C', 'G', 'U']:
+        if res.resname.strip() in ['A', 'C', 'G', 'U']:
             return True
     return False
 
