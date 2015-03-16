@@ -14,7 +14,6 @@ setup(name='forgi',
                'examples/pdb_to_cg.py', 'examples/pdb_to_ss_fasta.py',
                'examples/bpseq_to_bulge_graph.py', 
                'examples/ss_to_bulge_graph.py', 'examples/cg_to_ss_fasta.py',
-               'examples/cg_to_bpseq_string.py', 'examples/average_atom_positions.py',
-               'examples/all_atom_positions.py'],
+               'examples/cg_to_bpseq_string.py', 'examples/average_atom_positions.py'],
 
      )
