@@ -1794,7 +1794,7 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
                 try:
                     coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
-                    print >>sys.stderr, "virtual_atoms KeyError:", ke
+                    #print >>sys.stderr, "virtual_atoms KeyError:", ke
                     pass
     return coords
 
