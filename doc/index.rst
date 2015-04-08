@@ -13,10 +13,11 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
+ 
+    utilities_tutorial.rst
     graph_tutorial.rst
     threedee_tutorial.rst
     forgi_documentation.rst
-    utilities_tutorial.rst
     download.rst
 
 Indices and tables
