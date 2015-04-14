@@ -22,6 +22,7 @@ def main():
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
 
     (options, args) = parser.parse_args()
 
@@ -33,7 +34,7 @@ def main():
     sources = c.defaultdict(list)
 
     for i,arg in enumerate(args):
-        cg = ftmc.from_pdb(arg)
+        cg = ftmc.from_pdb(arg, remove_pseudoknots=not options.pseudoknots)
 
         if len(list(cg.stem_iterator())) == 0:
             print >>sys.stderr, "skipping {}: no stems".format(arg)
