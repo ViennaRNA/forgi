@@ -355,7 +355,7 @@ def output_chain(chain, filename, fr=None, to=None):
     io.set_structure(s)
     io.save(filename, HSelect()) 
 
-def get_particular_chain(in_filename, chain_id):
+def get_particular_chain(in_filename, chain_id, parser=None):
     '''
     Load a PDB file and return a particular chain.
 
@@ -363,16 +363,19 @@ def get_particular_chain(in_filename, chain_id):
     @param chain_id: The id of the chain.
     @return: A Bio.PDB.Chain object containing that particular chain.
     '''
+    if parser is None:
+        parser = bpdb.PDBParser()
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        s = bpdb.PDBParser().get_structure('temp', in_filename)
+        s = parser.get_structure('temp', in_filename)
 
     # always take the first model
     m = s.get_list()[0]
 
     return m[chain_id]
 
-def get_biggest_chain(in_filename):
+def get_biggest_chain(in_filename, parser=None):
     '''
     Load the PDB file located at filename, select the longest
     chain and return it.
@@ -381,10 +384,12 @@ def get_biggest_chain(in_filename):
     @return: A Bio.PDB chain structure corresponding to the longest
              chain in the structure stored in in_filename
     '''
+    if parser is None:
+        parser = bpdb.PDBParser()
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        s = bpdb.PDBParser().get_structure('temp', in_filename)
+        s = parser.get_structure('temp', in_filename)
 
     chains = list(s.get_chains())
     biggest = 0
@@ -523,13 +528,26 @@ def interchain_contacts(struct):
 
     return ic_pairs
 
-def is_protein(chain):
+def is_rna(chain):
     '''
     Determine if a Bio.PDB.Chain structure corresponds to an RNA
     molecule.
 
     @param chain: A Bio.PDB.Chain molecule
     @return: True if it is an RNA molecule, False otherwise
+    '''
+    for res in chain:
+        if res.resname.strip() in ['A', 'C', 'G', 'U']:
+            return True
+    return False
+
+def is_protein(chain):
+    '''
+    Determine if a Bio.PDB.Chain structure corresponds to an protein
+    molecule.
+
+    @param chain: A Bio.PDB.Chain molecule
+    @return: True if it is a protein molecule, False otherwise
     '''
     for res in chain:
         if res.resname in ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL']:

@@ -41,7 +41,7 @@ def main():
     else:
         for i,arg in enumerate(args):
             with open(arg, 'r') as f:
-                lines = f.readlines()
+                lines += f.readlines()
 
     for line in lines:
         parts = line.strip().split(':')

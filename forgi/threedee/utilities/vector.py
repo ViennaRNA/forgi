@@ -5,7 +5,7 @@
 import forgi.threedee.utilities.cytvec as ftuc
 import forgi.utilities.debug as fud
 import numpy as np
-import math as m
+import math
 import numpy.linalg as nl
 import numpy.testing as nt
 import random as rand
@@ -21,7 +21,7 @@ z_array = np.array([0., 0., 1.])
 identity_matrix = np.array([x_array, y_array, z_array])
 
 standard_basis = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
-tau = 2 * m.pi
+tau = 2 * math.pi
 
 def get_inter_distances(vecs):
     '''
@@ -45,7 +45,7 @@ def get_orthogonal_unit_vector(vec):
     vec3 = np.cross(vec, vec2)
     return normalize(vec3)
 
-def get_random_vector_pair(angle=rand.uniform(0, m.pi)):
+def get_random_vector_pair(angle=rand.uniform(0, math.pi)):
     vec1 = get_random_vector()
     vec2 = get_non_colinear_unit_vector(vec1)
     rot_vec = np.cross(vec1, vec2)
@@ -79,7 +79,7 @@ def get_double_alignment_matrix(vp1, vp2):
     basis1 = create_orthonormal_basis(normalize(vp1[0]), normalize(comp2))
     rej2 = change_basis(new_vp2_1, basis1, standard_basis)
 
-    angle = m.atan2(rej2[2], rej2[1])
+    angle = math.atan2(rej2[2], rej2[1])
 
     mat2 = rotation_matrix(vp1[0], angle)
 
@@ -200,10 +200,10 @@ def spherical_cartesian_to_polar(vec):
     @return: (r, u, v)
     '''
     r = magnitude(vec)
-    u = m.acos(vec[2] / r)
-    v = m.atan2(vec[1], vec[0])
+    u = math.acos(vec[2] / r)
+    v = math.atan2(vec[1], vec[0])
 
-    nt.assert_allclose(vec[0], r * m.sin(u) * m.cos(v), rtol=1e-7, atol=1e-7)
+    nt.assert_allclose(vec[0], r * math.sin(u) * math.cos(v), rtol=1e-7, atol=1e-7)
     return (r, u, v)
 
 def spherical_polar_to_cartesian(vec):
@@ -217,9 +217,9 @@ def spherical_polar_to_cartesian(vec):
     '''
     (r, u, v) = vec
 
-    x = r * m.sin(u) * m.cos(v)
-    y = r * m.sin(u) * m.sin(v)
-    z = r * m.cos(u)
+    x = r * math.sin(u) * math.cos(v)
+    y = r * math.sin(u) * math.sin(v)
+    z = r * math.cos(u)
 
     return [x, y, z]
 
@@ -243,7 +243,7 @@ def get_standard_basis(dim):
 def change_basis(coords, new_basis, old_basis):
     '''
     Change the basis of coordinates to a new basis. In a regular structure
-    we have the coordinates in the regular cartesian coordinate system. For helix-helix
+    we have the coordinates in the regular cartesian coordinate systemath. For helix-helix
     orientations, however, we want to express the coordinates in a coordinate system
     defined by the first helix.
 
@@ -398,7 +398,7 @@ def vector_set_rmsd(set1, set2):
         rmsd += magnitude(set2[i] - set1[i]) ** 2
         count += 1
     rmsd /= count
-    return m.sqrt(rmsd)
+    return math.sqrt(rmsd)
 
 def rotation_matrix(axis, theta):
     '''
@@ -413,9 +413,9 @@ def rotation_matrix(axis, theta):
     @return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
-    axis = axis/m.sqrt(np.dot(axis, axis))
-    a = m.cos(theta/2)
-    b, c, d = -axis*m.sin(theta/2)
+    axis = axis/math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta/2)
+    b, c, d = -axis*math.sin(theta/2)
 
     return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
                   [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
@@ -437,7 +437,7 @@ def get_vector_centroid(crds1):
     centroid1 /= float(len(crds1))
 
     for i in centroid1:
-        if m.isnan(i):
+        if math.isnan(i):
             raise Exception('nan encountered')
 
     return centroid1
@@ -459,17 +459,17 @@ def magnitude(vec):
     @return: The magnitude of the vector.
     '''
     return ftuc.magnitude(vec)
-    #return m.sqrt(np.dot(vec, vec))
+    #return math.sqrt(np.dot(vec, vec))
 
 def time_mag1():
     vec1 = get_random_vector()
 
-    return m.sqrt(np.dot(vec1, vec1))
+    return math.sqrt(np.dot(vec1, vec1))
 
 def time_mag2():
     vec1 = get_random_vector()
 
-    return m.sqrt(np.dot(vec1, vec1))
+    return math.sqrt(np.dot(vec1, vec1))
 
 def time_mag():
     t1 = timeit.Timer("time_mag1()", "from forgi.utilities.vector import time_mag1")
@@ -496,7 +496,7 @@ def vec_angle(vec1, vec2):
 
     A * B = |A||B| cos t
 
-    Where A and B are two vectors and t is the angle between them.
+    Where A and B are two vectors and t is the angle between themath.
 
     @param vec1: The first vector (A)
     @param vec2: The second vector (B)
@@ -515,7 +515,7 @@ def vec_angle(vec1, vec2):
     if d <= -1.:
         d = -1.
 
-    angle = m.acos(d)
+    angle = math.acos(d)
     return angle
 
 def vec_dot(a, b):
@@ -532,7 +532,7 @@ def cross(a, b):
 
 def vec_distance(vec1, vec2):
     return ftuc.vec_distance(vec1, vec2)
-    #return m.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
+    #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
 def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     '''
@@ -624,9 +624,9 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     '''
     seg_v = seg_b - seg_a
     pt_v = circ_pos - seg_a
-    mag = m.sqrt(sum(seg_v * seg_v))
+    mag = math.sqrt(sum(seg_v * seg_v))
 
-    if m <= 0:
+    if mag <= 0:
         raise ValueError, "Invalid segment length"
     seg_v_unit = seg_v / mag
     proj = pt_v.dot(seg_v_unit)
@@ -646,7 +646,7 @@ def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
     closest = closest_point_on_seg(seg_a, seg_b, circ_pos)
     dist_v = circ_pos - closest
-    mag = m.sqrt(sum(dist_v * dist_v))
+    mag = math.sqrt(sum(dist_v * dist_v))
     if m > circ_rad:
         return vec(0, 0)
     if mag(dist_v) <= 0:
@@ -692,14 +692,14 @@ def cylinder_line_intersection(cyl, line, r):
             (line_vec_t[0] *
             (p[0] - line_t[0][1]) / line_vec_t[1]))
     v = p - cyl_t[0][1:]
-    o = m.sqrt(sum(v * v))
+    o = math.sqrt(sum(v * v))
     p = [x, p[0], p[1]]
 
     if o > r:
         # no intersection
         return []
 
-    t = m.sqrt(r ** 2 - o ** 2)
+    t = math.sqrt(r ** 2 - o ** 2)
 
     i1 = p - t * line_vec_t_normed
     i2 = p + t * line_vec_t_normed
@@ -767,8 +767,8 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     cone_width_cyl2_start = cyl_width * (cyl1_len + cyl2_t[0][0]) / cyl1_len
     cone_width_cyl2_end = cyl_width * (cyl1_len + cyl2_t[1][0]) / cyl1_len
     
-    cyl2_start_offset = m.sqrt(cyl2_t[0][1] ** 2 + cyl2_t[0][2] ** 2)
-    cyl2_end_offset = m.sqrt(cyl2_t[1][1] ** 2 + cyl2_t[1][2] ** 2)
+    cyl2_start_offset = math.sqrt(cyl2_t[0][1] ** 2 + cyl2_t[0][2] ** 2)
+    cyl2_end_offset = math.sqrt(cyl2_t[1][1] ** 2 + cyl2_t[1][2] ** 2)
     
     if cyl2_start_offset > cone_width_cyl2_start:
         return False
@@ -808,3 +808,23 @@ def point_in_cylinder(pt1, pt2, r, testpt):
             return False
         else:
             return True
+
+def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
+    """ each point you get will be of form 'x, y, z'; in cartesian coordinates
+        eg. the 'l2 distance' from the origion [0., 0., 0.] for each point will be 1.0 
+        ------------
+        converted from:  http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere ) 
+    """
+    dlong = math.pi*(3.0-math.sqrt(5.0))  # ~2.39996323 
+    dz   =  2.0/numberOfPoints
+    long =  0.0
+    z    =  1.0 - dz/2.0
+    ptsOnSphere =[]
+    for k in range( 0, numberOfPoints): 
+        r    = math.sqrt(1.0-z*z)
+        ptNew = (math.cos(long)*r, math.sin(long)*r, z)
+        ptsOnSphere.append( ptNew )
+        z    = z - dz
+        long = long + dlong
+
+    return ptsOnSphere

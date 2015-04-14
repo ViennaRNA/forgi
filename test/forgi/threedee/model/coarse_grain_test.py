@@ -107,6 +107,14 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         elem_name = cg.get_node_from_residue_num(247, seq_id=True)
 
+    def test_from_mmcif(self):
+        import Bio.PDB as bpdb
+
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1Y26.cif', parser=bpdb.MMCIFParser())
+
+        fud.pv('cg.to_cg_string()')
+        fud.pv('cg.to_fasta_string()')
+
     def test_from_pdb(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
 

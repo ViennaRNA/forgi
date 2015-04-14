@@ -19,21 +19,22 @@ def main():
 
     Where the id will be the part of the filename without the extension.
     """
-    num_args= 0
+    num_args= 1
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
     parser.add_option('-c', '--chain', dest='chain', default=None, help="Extract the secondary structure of a particular chain in the PDB file")
+    parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Include pseudoknots?')
 
     (options, args) = parser.parse_args()
 
-    if len(args) < 1:
+    if len(args) < num_args:
         parser.print_help()
         sys.exit(1)
 
-    pdb_id = op.basename(op.splitext(args[0])[0])
-    cg = ftmc.from_pdb(args[0], chain_id=options.chain)
+    #pdb_id = op.basename(op.splitext(args[0])[0])
+    cg = ftmc.from_pdb(args[0], chain_id=options.chain, remove_pseudoknots = not options.pseudoknots)
 
     print cg.to_fasta_string()
 
