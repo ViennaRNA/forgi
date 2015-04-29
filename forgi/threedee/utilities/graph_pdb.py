@@ -28,7 +28,7 @@ import forgi
 
 import scipy.optimize as so
 
-catom_name = "C1'"
+catom_name = "C1', C5, C8"
 
 def stem_stem_orientation(cg, s1, s2):
     '''

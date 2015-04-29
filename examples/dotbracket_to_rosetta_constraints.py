@@ -25,7 +25,15 @@ def main():
         showing which necleotides need to pair with which other nucleotides.
         """
     parser = OptionParser(usage = usage)
+    parser.add_option('-f', '--fasta', action='store_true', default=False, 
+                      help='The structure is being input as a fasta file')
+    '''
+    parser.add_option('-p', '--pseudoknots', action='store_true', default=False, 
+                      help='Output constraints for pseudoknots')
+    '''
+
     (options, args) = parser.parse_args()
+
 
     if len(args) < 1:
         parser.print_help()
@@ -35,9 +43,13 @@ def main():
     else:
         f = open(args[0])
 
-    brackets = "".join(f.readlines()).replace('\n', '')
-    bg = cgb.BulgeGraph()
-    bg.from_dotbracket(brackets)
+    if options.fasta:
+        bg = cgb.from_fasta(args[0])
+    else:
+        brackets = "".join(f.readlines()).replace('\n', '')
+        bg = cgb.BulgeGraph()
+        bg.from_dotbracket(brackets)
+
     print_rosetta_constraints(bg)
 
 if __name__=="__main__":
