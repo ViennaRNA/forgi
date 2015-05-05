@@ -28,7 +28,7 @@ import forgi
 
 import scipy.optimize as so
 
-catom_name = "C1', C5, C8"
+catom_name = "C1'"
 
 def stem_stem_orientation(cg, s1, s2):
     '''
@@ -1794,7 +1794,6 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
                 try:
                     coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
-                    #print >>sys.stderr, "virtual_atoms KeyError ({}):".format(r), ke
                     pass
     return coords
 

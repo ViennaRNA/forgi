@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import subprocess as sp
 import tempfile as tf
+import time
 
 import forgi.threedee.model.coarse_grain as cmg
 import forgi.utilities.debug as fud
@@ -86,9 +87,11 @@ def main():
 
     (options, args) = parser.parse_args()
 
+    print "hi"
     if len(args) < num_args:
         parser.print_help()
         sys.exit(1)
+    print "hi1"
 
     pp = cvp.PymolPrinter()
     pp.add_loops = options.loops
@@ -171,13 +174,15 @@ def main():
             f1.write(pymol_cmd)
             f1.flush()
 
+            print "f1.name:", f1.name
+
             if options.batch:
                 p = sp.Popen(['pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
             else:
                 p = sp.Popen(['pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
             out, err = p.communicate()
-
+            print >>sys.stderr, "err:", err
 
 if __name__ == '__main__':
     main()
