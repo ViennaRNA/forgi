@@ -540,7 +540,7 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
     for (k1,k2,k3) in angle_stats.keys():
         if k3 == angle_type and len(angle_stats[(k1,k2,k3)]) >= min_entries:
             dist = m.sqrt((k1 - s1) ** 2 + (k2 - s2) ** 2)
-            available_stats += [(dist, k1,k2,k3)]
+            available_stats += [(dist, (k1,k2,k3))]
 
     available_stats.sort()
     return available_stats
@@ -685,7 +685,7 @@ class ConformationStats(object):
         '''
         pass
 
-    def sample_stats(self, bg, elem):
+    def sample_stats(self, bg, elem, min_entries = 100):
         '''
         Return a set of statistics compatible with this element.
 
@@ -699,13 +699,15 @@ class ConformationStats(object):
         dims = bg.get_node_dimensions(elem)
 
         if elem[0] == 's':
+            dims = [dims]
             stats = self.stem_stats
+            return stats[dims[0]]
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
             try:
                 dims = get_angle_stat_dims(dims[0], dims[1], 
-                                           ang_type, min_entries=1)[0][-3:]
+                                           ang_type, min_entries=1)
             except IndexError as ie:
                 #fud.pv('elem, dims, ang_type')
                 print >>sys.stderr, "Error in sample_stats:"
@@ -714,20 +716,28 @@ class ConformationStats(object):
         elif elem[0] == 'h':
             dims = dims[0]
             stats = self.loop_stats
+            dims = get_one_d_stat_dims(dims, stats)
         elif elem[0] == 't':
             dims = dims[0]
             stats = self.threeprime_stats
-            dims = get_one_d_stat_dims(dims, stats)[0][-1]
+            dims = get_one_d_stat_dims(dims, stats)
 
         elif elem[0] == 'f':
             dims = dims[0]
             stats = self.fiveprime_stats
-            dims = get_one_d_stat_dims(dims, stats)[0][-1]
+            dims = get_one_d_stat_dims(dims, stats)
 
-        if len(stats[dims]) == 0:
+        all_stats = []
+        for dim in dims:
+            if len(all_stats) > min_entries:
+                continue
+
+            all_stats += stats[dim[-1]]
+
+        if len(all_stats) == 0:
             print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
 
-        return stats[dims]
+        return all_stats
 
 class FilteredConformationStats(ConformationStats):
     def __init__(self, stats_file=cbc.Configuration.stats_file, filter_filename=None):

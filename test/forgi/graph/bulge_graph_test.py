@@ -1278,3 +1278,63 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         self.assertEqual(bg.ss_distance('s0', 's1'), 1)
+
+    def test_get_position_in_element(self):
+        db = '(((((...))....)))'
+        #     12345678901234567
+
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        p,l = bg.get_position_in_element(1)
+        self.assertEqual(p, 0)
+        self.assertEqual(l, 2)
+        p,l = bg.get_position_in_element(12)
+        self.assertEqual(p, 2)
+        self.assertEqual(l, 5)
+
+        db = '((..(((...))....)))'
+        #     1234567890123445678
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        p,l = bg.get_position_in_element(3)
+        fud.pv('p, l')
+        self.assertEqual(p, 1)
+        self.assertEqual(l, 3)
+
+        p,l = bg.get_position_in_element(8)
+        self.assertEqual(p, 1)
+        self.assertEqual(l, 2)
+
+        p,l = bg.get_position_in_element(9)
+        self.assertEqual(p, 2)
+        self.assertEqual(l, 2)
+
+        db = '((....))'
+        #     12345678
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        p,l = bg.get_position_in_element(3)
+        self.assertEqual(p, 1)
+        self.assertEqual(l, 2)
+        
+        p,l = bg.get_position_in_element(6)
+        self.assertEqual(p, 1)
+        self.assertEqual(l, 2)
+
+        db = '(.).(.)'
+        #     12345678
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        p,l = bg.get_position_in_element(4)
+        self.assertEqual(p, 1)
+        self.assertEqual(l, 2)
+
+        db = '(((......((((.(........).(((..(((((((((.((((.......))))))((((.....))))...(((.....((((.......))))...)))..)))..))))))))))).......))).....'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        p, l = bg.get_position_in_element(14)
+
+        self.assertEqual(p, 1)
+        self.assertEqual(l, 2)

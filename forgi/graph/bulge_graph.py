@@ -2665,6 +2665,40 @@ class BulgeGraph(object):
 
         return min(path_lengths) + 2
 
+    def get_position_in_element(self, resnum):
+        node = self.get_node_from_residue_num(resnum)
+
+        if node[0] == 's':
+            if self.defines[node][0] <= resnum <= self.defines[node][1]:
+                return resnum - self.defines[node][0], self.defines[node][1] - self.defines[node][0]
+            else:
+                return abs(resnum - self.defines[node][3]), self.defines[node][1] - self.defines[node][0]
+        elif node[0] == 'i':
+            s0,s1 = self.connections(node)
+            if self.defines[s0][1] <= resnum <= self.defines[s1][0]:
+                return resnum - self.defines[s0][1], self.defines[s1][0] - self.defines[s0][1]
+            else:
+                return abs(resnum - self.defines[s0][2]) - 1, self.defines[s0][2] - self.defines[s1][3]
+        elif node[0] == 'h':
+            pos1 = resnum - self.defines[node][0]
+            pos2 = abs(resnum - self.defines[node][1])
+
+            return min(pos1, pos2)+1, (self.defines[node][1] - self.defines[node][0] + 2) / 2
+
+
+        i = 0
+        while i < len(self.defines[node]):
+            s = self.defines[node][i]
+            e = self.defines[node][i+1]
+
+            if s <= resnum <= e:
+                return resnum - s+1, e - s + 2
+
+            i += 2
+
+        return None
+
+
 def bg_from_subgraph(bg, sg):
     """
     Create a BulgeGraph from a list containing the nodes
