@@ -1338,3 +1338,30 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 
         self.assertEqual(p, 1)
         self.assertEqual(l, 2)
+
+        db = '((.(.....).))...........((((..((((((((((((((.......))))).((((.....))))................................)))))..))))..))))................'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        p, l = bg.get_position_in_element(14)
+
+        self.assertEqual(p, 1)
+        fud.pv('l')
+        #self.assertEqual(l, 2)
+
+        db = '(((((...........)))))............'
+        #     123456789012345678901234567890123
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        p1, l1 = bg.get_position_in_element(8)
+        p2, l2 = bg.get_position_in_element(14)
+
+        fud.pv('p1,l1, p2, l2')
+
+    def test_connections(self):
+        db = '((.(.....).))...........((((..((((((((((((((.......))))).((((.....))))................................)))))..))))..))))................'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        connections = bg.connections('m0')
+        self.assertEqual(connections, ['s0', 's2'])
