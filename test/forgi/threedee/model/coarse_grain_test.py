@@ -112,9 +112,6 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/1Y26.cif', parser=bpdb.MMCIFParser())
 
-        fud.pv('cg.to_cg_string()')
-        fud.pv('cg.to_fasta_string()')
-
     def test_from_pdb(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
 
@@ -282,3 +279,11 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
 
         self.assertTrue('f1' in cg.coords)
+
+    def test_longrange_iterator(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        interactions = list(cg.longrange_iterator())
+
+        self.assertEqual(len(interactions), 4)
+        self.assertTrue(('i0', 's0') in interactions)

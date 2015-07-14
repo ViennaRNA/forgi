@@ -579,6 +579,25 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # uh oh, this shouldn't happen since every node                 
         # should have either one or two edges 
         return None                                                                                                   
+    def longrange_iterator(self):
+        '''
+        Iterate over all long range interactions in this molecule.
+        
+        @return: A generator yielding long-range interaction tuples (i.e. ('s7', 'i2'))
+        '''
+        seen = set()
+
+        for partner1 in self.longrange.keys():
+            for partner2 in self.longrange[partner1]:
+                interaction = tuple(sorted([partner1, partner2]))
+
+                # check if we've already seen this interaction
+                if interaction in seen:
+                    continue
+
+                seen.add(interaction)
+
+                yield interaction
 
     def total_length(self):
         '''
@@ -608,3 +627,4 @@ def cg_from_sg(cg, sg):
                 new_cg.edges[x].add(d)
     
     return new_cg
+

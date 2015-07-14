@@ -159,6 +159,15 @@ as the name of the pdb file the coarse grain model represents, the size of the
 joint and the sequence of its two strands (including the nucleotides in the
 Watson-crick base pairs which flank it).
 
+Iterate over Long Range Interactions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+>>> import forgi.threedee.model.coarse_grain as ftmc
+>>> cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+>>> list(cg.longrange_iterator())
+[('h0', 's9'), ('i7', 's9'), ('i0', 't1'), ('h0', 'i7'), ('h0', 'i6'), ('h1', 'i4'), ('i4', 's1'), ('i4', 'm3'), ('i6', 'i7'), ('s1', 't1')]
+
+
 Find out How Much an Interior Loop Bends a Stem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
