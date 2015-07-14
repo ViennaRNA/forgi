@@ -287,3 +287,11 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         self.assertEqual(len(interactions), 4)
         self.assertTrue(('i0', 's0') in interactions)
+    
+    def test_longrange_distance(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        
+        dist = cg.element_physical_distance('h0', 'h1')
+
+        self.assertTrue(dist < 10)
+

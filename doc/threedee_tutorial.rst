@@ -168,6 +168,16 @@ Iterate over Long Range Interactions
 [('h0', 's9'), ('i7', 's9'), ('i0', 't1'), ('h0', 'i7'), ('h0', 'i6'), ('h1', 'i4'), ('i4', 's1'), ('i4', 'm3'), ('i6', 'i7'), ('s1', 't1')]
 
 
+Calculate the Distance Between Two Coarse-Grain Elements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+>>> import forgi.threedee.model.coarse_grain as ftmc
+>>> cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+>>> dist = cg.element_physical_distance('h0', 'h1')
+>>> print dist
+7.87989954482
+
+
 Find out How Much an Interior Loop Bends a Stem
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

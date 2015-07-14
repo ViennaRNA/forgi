@@ -579,6 +579,22 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # uh oh, this shouldn't happen since every node                 
         # should have either one or two edges 
         return None                                                                                                   
+    def element_physical_distance(self, element1, element2):
+        '''
+        Calculate the physical distance between two coarse grain elements.
+
+        @param element1: The name of the first element (e.g. 's1')
+        @param element2: The name of the first element (e.g. 's2')
+        @return: The closest distance between the two elements.
+        '''
+        (i1, i2) = ftuv.line_segment_distance(self.coords[element1][0],
+                                              self.coords[element1][1],
+                                              self.coords[element2][0],
+                                              self.coords[element2][1])
+
+        return ftuv.vec_distance(i1, i2)
+        
+
     def longrange_iterator(self):
         '''
         Iterate over all long range interactions in this molecule.
