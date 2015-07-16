@@ -595,16 +595,23 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return ftuv.vec_distance(i1, i2)
         
 
-    def longrange_iterator(self):
+    def longrange_iterator(self, filter_connected=False):
         '''
         Iterate over all long range interactions in this molecule.
         
+        @param filter_connected: Filter interactions that are between elements
+                                 which are connected (mostly meaning multiloops
+                                 which connect to the same end of the same stem)
         @return: A generator yielding long-range interaction tuples (i.e. ('s7', 'i2'))
         '''
         seen = set()
 
         for partner1 in self.longrange.keys():
             for partner2 in self.longrange[partner1]:
+                if filter_connected:
+                    if self.connected(partner1, partner2):
+                        continue
+
                 interaction = tuple(sorted([partner1, partner2]))
 
                 # check if we've already seen this interaction

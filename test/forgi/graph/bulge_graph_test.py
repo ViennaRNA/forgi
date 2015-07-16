@@ -1297,7 +1297,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         p,l = bg.get_position_in_element(3)
-        fud.pv('p, l')
         self.assertEqual(p, 1)
         self.assertEqual(l, 3)
 
@@ -1345,7 +1344,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         p, l = bg.get_position_in_element(14)
 
         self.assertEqual(p, 1)
-        fud.pv('l')
         #self.assertEqual(l, 2)
 
         db = '(((((...........)))))............'
@@ -1356,8 +1354,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         p1, l1 = bg.get_position_in_element(8)
         p2, l2 = bg.get_position_in_element(14)
 
-        fud.pv('p1,l1, p2, l2')
-
     def test_connections(self):
         db = '((.(.....).))...........((((..((((((((((((((.......))))).((((.....))))................................)))))..))))..))))................'
         bg = fgb.BulgeGraph()
@@ -1365,3 +1361,31 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 
         connections = bg.connections('m0')
         self.assertEqual(connections, ['s0', 's2'])
+
+    def test_connected(self):
+        db = '((..((..))..((..))..((..))..))'
+        # clockwise from the bottom
+        # s0 m0 s1 m2 s2 m3 s3 m4
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        self.assertTrue(bg.connected('s0', 'm0'))
+        self.assertTrue(bg.connected('m0', 'm2'))
+
+        db = '((..((..)).((..((..))..((..))..))..((..))..))'
+        #     123456789012345678901234567890123456789012345
+        #clockwise from bottom:
+        # s0 m0 s1 m2 s2 m3 s3 m4
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        # clockwise from the bottom
+        # s0 m0 s1 m2 s2 m3 s3 m6 s4 m4 s2 m5 s5 m1 s0
+
+        self.assertTrue(bg.connected('s0', 'm0'))
+        self.assertTrue(bg.connected('m0', 'm2'))
+        self.assertTrue(bg.connected('m3', 'm4'))
+        self.assertFalse(bg.connected('m2', 'm3'))
+        self.assertFalse(bg.connected('m4', 'm5'))
+
+        self.assertFalse(bg.connected('m0', 'm4'))

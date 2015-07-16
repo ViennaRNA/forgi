@@ -2698,6 +2698,34 @@ class BulgeGraph(object):
 
         return None
 
+    def connected(self, n1, n2):
+        '''
+        Are the nucleotides n1 and n2 connected?
+
+        @param n1: A node in the BulgeGraph
+        @param n2: Another node in the BulgeGraph
+        @return: True or False indicating whether they are connected.
+        '''
+        if n1 in self.edges[n2] or n2 in self.edges[n1]:
+            return True
+
+        # two multiloops can be considered connected if they both
+        # link to the same side of the same stem
+        if n1[0] == 'm' and n2[0] == 'm':
+            common_stems = list(set.intersection(self.edges[n1], self.edges[n2]))
+            if len(common_stems) == 0:
+                return False
+
+            common_stem = common_stems[0]
+
+            (s1c, b1c) = self.get_sides_plus(common_stem, n1)
+            (s2c, b1c) = self.get_sides_plus(common_stem, n2)
+
+            if sorted([s1c, s2c]) == [0,3] or sorted([s1c, s2c]) == [1,2]:
+                return True
+
+        return False
+
 
 def bg_from_subgraph(bg, sg):
     """
