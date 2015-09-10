@@ -84,6 +84,8 @@ def main():
     parser.add_option('', '--only-elements', dest='only_elements', default=None, help='Display only these elements '
                                                                                       'element names should be '
                                                                                       'separated by commas')
+    parser.add_option('', '--color-gradual', dest='color_gradual', default=None, help='Color the specified elements'
+                                                                                      'gradually from one to the other, example (i1,i4,m1)', type='str')
 
     (options, args) = parser.parse_args()
 
@@ -114,12 +116,26 @@ def main():
     if options.align:
         align_cgs(cgs)
 
+    if options.color_gradual is not None:
+        pp.element_specific_colors = dict()
+        import matplotlib.pyplot as plt
+        cmap = plt.get_cmap('coolwarm')
+
+        for d in cgs[0].defines:
+            pp.element_specific_colors[d]= 'black'
+
+        to_color_nodes = options.color_gradual.split(',')
+        for i,node in enumerate(to_color_nodes):
+            print node, cmap(i / float(len(to_color_nodes)))
+            pp.element_specific_colors[node] = cmap(i / float(len(to_color_nodes)))
+
     for i, cg in enumerate(cgs):
         if i > 0:
             pp.color_modifier = .3
             #pp.override_color = 'middle gray'
 
         pp.coordinates_to_pymol(cg)
+
 
     for d in cg.defines:
         if d[0] == 'i' or d[0] == 's' or d[0] == 'm':

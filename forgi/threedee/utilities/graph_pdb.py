@@ -894,6 +894,22 @@ def bg_virtual_residues(bg):
 
     return np.array(vress)
 
+def numbered_virtual_residues(bg):
+    '''
+    Return a list of virtual residues, along with their
+    nucleotide positions.
+
+    @param bg: A coarse grain RNA
+    @return: A list of tuples containing nucleotides numbers and coordinates.
+    '''
+    vress = []
+
+    for s in bg.sorted_stem_iterator():
+        for i in range(bg.stem_length(s)):
+            vres = virtual_res_3d_pos(bg, s, i)
+            vress += [(bg.defines[s][0] + i, vres[0] + vres[2]), (bg.defines[s][3] - i, vres[0] + vres[3])]
+
+    return vress
 
 def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
     '''

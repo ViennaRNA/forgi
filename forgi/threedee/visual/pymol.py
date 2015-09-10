@@ -21,6 +21,7 @@ import Bio.PDB as bp
 
 class PymolPrinter:
     def __init__(self):
+        self.display_virtual_residues = False
         self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
@@ -37,6 +38,7 @@ class PymolPrinter:
         self.boxes = []
         self.virtual_atoms = False
         self.override_color = None
+        self.element_specific_colors = None
         self.print_text = True
         self.energy_function = None
         self.add_twists = True
@@ -114,8 +116,12 @@ class PymolPrinter:
         if self.override_color is not None:
             color = self.override_color
 
-        color = [str(c * self.color_modifier) for c in self.get_color_vec(color)]        
+        if not isinstance(color, (list, tuple)):
+            color = [str(c * self.color_modifier) for c in self.get_color_vec(color)]        
+        else:
+            color = [str(c) for c in color[:3]]
 
+        print >>sys.stderr, "color:", color
         #assert(not allclose(p, n))
         self.new_segments += [(np.array(p), np.array(n), color, width, text)]
 
@@ -447,8 +453,14 @@ class PymolPrinter:
                     self.labels += [('L', list(pos + mult * vec_l))]
                     self.labels += [('R', list(pos + mult * vec_r))]
 
-                #self.add_segment(pos, pos + mult * vec_l, "yellow", width, '')
-                #self.add_segment(pos, pos + mult * vec_r, "purple", width, '')
+                '''
+                self.add_segment(pos, pos + mult * vec_l, "yellow", width, '')
+                self.add_segment(pos, pos + mult * vec_r, "purple", width, '')
+                '''
+
+                if self.display_virtual_residues:
+                    self.add_sphere(pos + mult * vec_l, "cyan", 1.)
+                    self.add_sphere(pos + mult * vec_r, "magenta", 1.)
 
         '''
         self.add_sphere(p + mult * twist1, "white", width, key)
@@ -575,6 +587,10 @@ class PymolPrinter:
         @param elem_name: The name of the element.
         @return: A string with a color name
         '''
+        if self.element_specific_colors is not None:
+            if elem_name in self.element_specific_colors:
+                return self.element_specific_colors[elem_name]
+
         if elem_name[0] == 's':
             return 'green'
         elif elem_name[0] == 'i':
@@ -597,7 +613,6 @@ class PymolPrinter:
         direction = ftuv.normalize(point2 - point1)
 
         num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
-        fud.pv('num_dashes')
 
         for i in range(int(num_dashes)):
             self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
@@ -617,7 +632,7 @@ class PymolPrinter:
             color = self.get_element_color(key)
 
             if key[0] == 's':
-                self.add_stem_like(cg, key)
+                self.add_stem_like(cg, key, color=color)
                 self.draw_bounding_boxes(cg, key)
             else:
                 if key[0] == 'h':

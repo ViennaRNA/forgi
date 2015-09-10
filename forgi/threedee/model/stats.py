@@ -272,7 +272,7 @@ class AngleStat:
                                                               self.ang_type,
                                                               " ".join(map(str, self.define)))
         '''
-        out_str = "angle %s %d %d %f %f %f %f %f %f %s %s" % (self.pdb_name,
+        out_str = "angle %s %d %d %f %f %f %f %f %f %d %s %s" % (self.pdb_name,
                                                               self.dim1,
                                                               self.dim2,
                                                               self.u,
@@ -281,6 +281,7 @@ class AngleStat:
                                                               self.r1,
                                                               self.u1,
                                                               self.v1,
+                                                              self.ang_type,
                                                              " ".join(map(str, self.define)),
                                                              " ".join(self.seqs))
         return out_str

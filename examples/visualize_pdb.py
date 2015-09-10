@@ -29,6 +29,8 @@ def main():
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
     parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
+    parser.add_option('', '--virtual-residues', dest='virtual_residues', default=False, action='store_true', help='Display the virtual residues as spheres')
+    parser.add_option('', '--color-residues', dest='color_residues', default=False, action='store_true', help="Color the residues according to the element they're in")
 
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
@@ -38,6 +40,8 @@ def main():
     parser.add_option('', '--only-elements', dest='only_elements', default=None, help='Display only these elements '
                                                                                       'element names should be '
                                                                                       'separated by commas')
+    parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true',
+                      help='Display the virtual atoms')
 
     (options, args) = parser.parse_args()
 
@@ -49,9 +53,12 @@ def main():
         print >>sys.stderr, "File doesn't exist: %s" % (args[0])
         sys.exit(1)
 
+
     cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"),
                       remove_pseudoknots=not options.pseudoknots)
     pp = ftvp.PymolPrinter()
+    pp.display_virtual_residues = options.virtual_residues
+    pp.virtual_atoms = options.virtual_atoms
 
     if options.only_elements is not None:
         orig_only_elements = options.only_elements.split(',')
@@ -66,6 +73,7 @@ def main():
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
     pp.print_text = options.text
+    print >>sys.stderr, "virtual_residues:", options.virtual_residues
     #pp.print_text = False
     #pp.output_pymol_file()
 
@@ -116,6 +124,13 @@ def main():
 
                         for r in cg.define_residue_num_iterator(constraint, seq_ids=True):
                             pymol_cmd += "show sticks, resi %r\n" % (r[1])
+                            pymol_cmd += "color %s, resi %r\n" % (color, r[1])
+
+                if options.color_residues:
+                    for d in cg.defines:
+                        color = pp.get_element_color(d)
+
+                        for r in cg.define_residue_num_iterator(d, seq_ids=True):
                             pymol_cmd += "color %s, resi %r\n" % (color, r[1])
 
 
