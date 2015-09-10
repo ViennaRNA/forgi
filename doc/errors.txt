@@ -1,0 +1,20 @@
+ERROR: test_small_molecule (test.forgi.threedee.model.coarse_grain_test.CoarseGrainTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/mescalin/thiel/CODING/RNA3D/forgi/test/forgi/threedee/model/coarse_grain_test.py", line 282, in test_small_molecule
+    cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
+  File "/home/mescalin/thiel/CODING/RNA3D/forgi/forgi/threedee/model/coarse_grain.py", line 257, in from_pdb
+    remove_pseudoknots=remove_pseudoknots, parser=parser)
+  File "/home/mescalin/thiel/CODING/RNA3D/forgi/forgi/threedee/model/coarse_grain.py", line 234, in load_cg_from_pdb
+    remove_pseudoknots=remove_pseudoknots, parser=parser)
+  File "/home/mescalin/thiel/CODING/RNA3D/forgi/forgi/threedee/model/coarse_grain.py", line 126, in load_cg_from_pdb_in_dir
+    p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
+  File "/usr/lib64/python2.7/subprocess.py", line 710, in __init__
+    errread, errwrite)
+  File "/usr/lib64/python2.7/subprocess.py", line 1335, in _execute_child
+    raise child_exception
+OSError: [Errno 2] No such file or directory
+
+- This means that MC-Annotate is missing and needs to be installed in your local bin directory.
+
+
