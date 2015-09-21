@@ -183,7 +183,10 @@ CCCCCC
         self.assertEqual(len(bgs), 2)
         self.assertEqual(bgs[0].seq, 'ACGCCA')
         self.assertEqual(bgs[1].seq, 'CCCCCC')
-
+        self.assertEqual(bgs[0].name, 'a')
+        self.assertEqual(bgs[1].name, 'b')
+        self.assertEqual(bgs[0]..dotbracket_str, '((..))')
+        self.assertEqual(bgs[1]..dotbracket_str, '((()))')
         a = """
 GGGGGG
 ......

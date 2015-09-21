@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
@@ -9,6 +10,8 @@ __copyright__ = "Copyright 2012, 2013, 2014"
 __version__ = "0.2"
 __maintainer__ = "Peter Kerpedjiev"
 __email__ = "pkerp@tbi.univie.ac.at"
+
+
 
 import sys
 import collections as col
@@ -65,7 +68,7 @@ def from_fasta_text(fasta_text):
     # compile searches for the fasta id, sequence and 
     # secondary structure respectively
     id_search = re.compile('>(.+)')
-    seq_search = re.compile('^([acguACGU]+)$')
+    seq_search = re.compile('^([acguACGU]+)$') #BT: This does not allow for "t"/"T"(DNA)/"N". Is it on purpose?
 
     prev_id = None
     prev_seq = None
@@ -94,7 +97,8 @@ def from_fasta_text(fasta_text):
             if prev_seq is None:
                 raise Exception("No sequence for id: {}", prev_id)
             if prev_struct is None:
-                raise Exception("No sequence for id: {}", prev_id)
+                raise Exception("No sequence for id: {}", prev_id) 
+                #BT: This message not very helpful, if wrong character ("N"/..) in sequence
             if prev_id is None:
                 raise Exception("No previous id")
 
