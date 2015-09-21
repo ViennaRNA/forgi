@@ -178,15 +178,21 @@ ACGCCA
 >b
 CCCCCC
 ((()))
+>c
+AAAAAA
+(....)
 """
         bgs = fgb.from_fasta_text(a)
-        self.assertEqual(len(bgs), 2)
+        self.assertEqual(len(bgs), 3)
         self.assertEqual(bgs[0].seq, 'ACGCCA')
         self.assertEqual(bgs[1].seq, 'CCCCCC')
+        self.assertEqual(bgs[2].seq, 'AAAAAA')
         self.assertEqual(bgs[0].name, 'a')
         self.assertEqual(bgs[1].name, 'b')
-        self.assertEqual(bgs[0]..dotbracket_str, '((..))')
-        self.assertEqual(bgs[1]..dotbracket_str, '((()))')
+        self.assertEqual(bgs[2].name, 'c')
+        self.assertEqual(bgs[0].dotbracket_str, '((..))')
+        self.assertEqual(bgs[1].dotbracket_str, '((()))')
+        self.assertEqual(bgs[2].dotbracket_str, '(....)')
         a = """
 GGGGGG
 ......

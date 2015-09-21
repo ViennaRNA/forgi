@@ -73,6 +73,7 @@ def from_fasta_text(fasta_text):
     prev_id = None
     prev_seq = None
     prev_struct = None
+    curr_id=None
 
     bgs = []
 
@@ -85,9 +86,10 @@ def from_fasta_text(fasta_text):
         seq_match = seq_search.match(line)
 
         if id_match is not None:
+            prev_id=curr_id
             # we found an id, check if there's a previous
             # sequence and structure, and create a BG
-            prev_id = id_match.group(0).strip('>')
+            curr_id = id_match.group(0).strip('>')
 
             if prev_seq is None and prev_struct is None:
                 # must be the first sequence/structure
@@ -110,7 +112,7 @@ def from_fasta_text(fasta_text):
             if len(line) > 0:
                 prev_struct = line
 
-    bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
+    bgs += [from_id_seq_struct(curr_id, prev_seq, prev_struct)]
 
     if len(bgs) == 1:
         return bgs[0]
