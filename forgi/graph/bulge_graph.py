@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
+from __future__ import print_function
+from builtins import range
 
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
@@ -18,12 +20,11 @@ import collections as col
 import random
 import re
 import itertools as it
-import forgi.aux.k2n_standalone.knotted2nested as fak
-import forgi.utilities.debug as fud
-import forgi.utilities.stuff as fus
-import forgi.threedee.utilities.mcannotate as ftum
+from ..aux.k2n_standalone import knotted2nested as fak
+from ..utilities import debug as fud
+from ..utilities import stuff as fus
+from ..threedee.utilities import mcannotate as ftum
 import os
-import itertools as it
 import operator as oper
 
 
@@ -168,7 +169,7 @@ def print_bulges(bulges):
         bulge_str = "define b{} 1".format(i)
         bulge = bulges[i]
         bulge_str += " {} {}".format(bulge[0] + 1, bulge[1] + 1)
-        print bulge_str
+        print (bulge_str)
 
 
 def condense_stem_pairs(stem_pairs):
@@ -214,8 +215,8 @@ def print_brackets(brackets):
     :param brackets: A string with the dotplot passed as input to this script.
     """
     numbers = [chr(ord('0') + i % 10) for i in range(len(brackets))]
-    tens = [chr(ord('0') + i / 10) for i in range(len(brackets))]
-    print "brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers)
+    tens = [chr(ord('0') + i // 10) for i in range(len(brackets))]
+    print ("brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers))
 
 
 def find_bulges_and_stems(brackets):
@@ -292,7 +293,7 @@ def find_bulges_and_stems(brackets):
         dots_end = i
         bulges = add_bulge(bulges, (dots_start, dots_end), context, "7")
     elif prev == '(':
-        print >> sys.stderr, "Unmatched bracket at the end"
+        print ("Unmatched bracket at the end", file=sys.stderr)
         sys.exit(1)
     """
     elif prev == ')':
@@ -312,7 +313,7 @@ def find_bulges_and_stems(brackets):
 
 
 def print_name(filename):
-    print "name", os.path.splitext(filename)[0]
+    print( "name", os.path.splitext(filename)[0])
 
 
 class BulgeGraph(object):
@@ -826,7 +827,7 @@ class BulgeGraph(object):
 
         # use the nucleotide in the middle of this element as the starting point
         residues = sorted(list(self.define_residue_num_iterator(vertex, adjacent=True)))
-        mid_res = residues[len(residues) / 2]
+        mid_res = residues[len(residues) // 2]
 
         if len(residues) == 2:
             # no-residue multiloop
@@ -1206,7 +1207,7 @@ class BulgeGraph(object):
 
             # the whole stem is part of this multiloop
             if sides == [2, 3] or sides == [0, 1]:
-                residues += range(self.defines[s][sides[0]], self.defines[s][sides[1]] + 1)
+                residues += list(range(self.defines[s][sides[0]], self.defines[s][sides[1]] + 1))
             else:
                 residues += [self.defines[s][sides[0]], self.defines[s][sides[1]]]
 
@@ -1810,8 +1811,8 @@ class BulgeGraph(object):
                     bd = self.defines[e]
                     break
 
-        for i in xrange(4):
-            for k in xrange(len(bd)):
+        for i in range(4):
+            for k in range(len(bd)):
                 if s1d[i] - bd[k] == 1:
                     if i == 0:
                         s1b = 0
@@ -1856,7 +1857,7 @@ class BulgeGraph(object):
                     bd = self.defines[e]
                     break
 
-        for k in xrange(len(bd)):
+        for k in range(len(bd)):
             # before the stem on the 5' strand
             if s1d[0] - bd[k] == 1:
                 return (0, k)
@@ -2639,12 +2640,12 @@ class BulgeGraph(object):
         d2_corners = []
 
         for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e1, adjacent=True)), 
-                                  lambda(index, item): index - item):
+                                  lambda index_item: index_item[0] - index_item[1]):
             group = map(oper.itemgetter(1), group)
             d1_corners += group
 
         for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e2, adjacent=True)), 
-                                  lambda(index, item): index - item):
+                                  lambda index_item: index_item[0] - index_item[1]):
             group = map(oper.itemgetter(1), group)
             d2_corners += group
 
@@ -2689,7 +2690,7 @@ class BulgeGraph(object):
             pos1 = resnum - self.defines[node][0]
             pos2 = abs(resnum - self.defines[node][1])
 
-            return min(pos1, pos2)+1, (self.defines[node][1] - self.defines[node][0] + 2) / 2
+            return min(pos1, pos2)+1, (self.defines[node][1] - self.defines[node][0] + 2) // 2
 
 
         i = 0
