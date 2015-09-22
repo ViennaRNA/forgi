@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
 from builtins import range
-
+from builtins import map
+from builtins import zip
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
@@ -410,7 +412,7 @@ class BulgeGraph(object):
         # a method for sorting the defines
         def define_sorter(k):
             drni = self.define_residue_num_iterator(k, adjacent=True)
-            return drni.next()
+            return next(drni) #.next()
 
         for key in sorted(self.defines.keys(), key=define_sorter):
             defines_str += self.get_single_define_str(key)
@@ -537,7 +539,7 @@ class BulgeGraph(object):
         :return: A list of two-element lists
         """
         a = iter(self.defines[node])
-        ranges = it.izip(a, a)
+        ranges = zip(a, a)
 
         if node[0] == 'i':
             # interior loops have to be treated specially because
@@ -1482,7 +1484,7 @@ class BulgeGraph(object):
 
         tuples.sort()
         tuples = iter(tuples)
-        (t1, t2) = tuples.next()
+        (t1, t2) = next(tuples) #.next()
 
         prev_from = t1
         prev_to = t2
@@ -1608,7 +1610,7 @@ class BulgeGraph(object):
             if parts[0] == 'length':
                 self.seq_length = int(parts[1])
             elif parts[0] == 'define':
-                self.defines[parts[1]] = map(int, parts[2:])
+                self.defines[parts[1]] = list(map(int, parts[2:]))
             elif parts[0] == 'connect':
                 for p in parts[2:]:
                     self.edges[parts[1]].add(p)
@@ -1616,7 +1618,7 @@ class BulgeGraph(object):
             elif parts[0] == 'seq':
                 self.seq = parts[1]
             elif parts[0] == 'seq_ids':
-                self.seq_ids = map(ftum.parse_resid, parts[1:])
+                self.seq_ids = list(map(ftum.parse_resid, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
 
@@ -2641,12 +2643,12 @@ class BulgeGraph(object):
 
         for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e1, adjacent=True)), 
                                   lambda index_item: index_item[0] - index_item[1]):
-            group = map(oper.itemgetter(1), group)
+            group = list(map(oper.itemgetter(1), group))
             d1_corners += group
 
         for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e2, adjacent=True)), 
                                   lambda index_item: index_item[0] - index_item[1]):
-            group = map(oper.itemgetter(1), group)
+            group = list(map(oper.itemgetter(1), group))
             d2_corners += group
 
         import networkx as nx
