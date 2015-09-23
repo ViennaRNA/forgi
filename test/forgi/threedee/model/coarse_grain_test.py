@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import numpy as np
 import unittest, os
 import sys
@@ -156,7 +159,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         for d in cg.defines:
             for r in cg.define_residue_num_iterator(d):
                 # make sure all the seq_ids are there
-                print cg.seq_ids[r - 1]
+                print (cg.seq_ids[r - 1])
 
 
     def test_from_cg(self):
@@ -273,7 +276,8 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.CoarseGrainRNA()
         with open('test/forgi/threedee/data/1.fa', 'r') as f:
             text = f.read()
-            cg.from_fasta(text)
+        cg.from_fasta(text)
+        #TODO: assert something
 
     def test_small_molecule(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')

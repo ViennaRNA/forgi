@@ -26,6 +26,9 @@ tau = 2 * math.pi
 def get_inter_distances(vecs):
     '''
     Calculate all of the distances between the points of vecs.
+
+    :param vecs: a list of vectors (=points)
+    :return: a list containing all distances between any two vectors in vecs.
     '''
     distances = []
     for i in range(len(vecs)):
@@ -35,6 +38,12 @@ def get_inter_distances(vecs):
     return distances
 
 def get_random_vector(mult=1.):
+    """
+    Returns a random vector.
+
+    :param mult: Stretch the random vector by this value. This is the longest allowed value FOR EACH coordinate.
+    :return: A random vector
+    """
     return np.array([mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
 
 def get_orthogonal_unit_vector(vec):
@@ -46,6 +55,7 @@ def get_orthogonal_unit_vector(vec):
     return normalize(vec3)
 
 def get_random_vector_pair(angle=rand.uniform(0, math.pi)):
+    
     vec1 = get_random_vector()
     vec2 = get_non_colinear_unit_vector(vec1)
     rot_vec = np.cross(vec1, vec2)
@@ -148,7 +158,7 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
     If more than one is provided, it must be orthogonal to 
     the others.
     '''
-    if vec2 == None:
+    if vec2 is None:
         vec2 = get_non_colinear_unit_vector(vec1)
         vec2 = np.cross(vec1, vec2)
     #else:

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import unittest
 import itertools as it
 
@@ -790,7 +792,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
             for e in i:
                 self.assertTrue(e > prev)
                 prev = e
-                i.next()
+                next(i)
 
     def test_bulge_graph_define_sorting(self):
         bg = fgb.BulgeGraph(dotbracket_str='((..((..))..))..((..((..))...))')

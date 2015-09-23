@@ -1,15 +1,20 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+from builtins import map
 
-import forgi.graph.bulge_graph as fgb
-import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.model.stats as ftms
 
-import forgi.aux.k2n_standalone.knotted2nested as cak
-import forgi.threedee.utilities.mcannotate as ftum
-import forgi.threedee.utilities.pdb as ftup
-import forgi.threedee.utilities.rmsd as ftur
-import forgi.threedee.utilities.vector as ftuv
-import forgi.utilities.debug as fud
-import forgi.utilities.stuff as fus
+from ...graph import bulge_graph as fgb
+from ..utilities import graph_pdb as ftug
+from ..model import stats as ftms
+
+from ...aux.k2n_standalone import knotted2nested as cak
+from ..utilities import mcannotate as ftum
+from ..utilities import pdb as ftup
+from ..utilities import rmsd as ftur
+from ..utilities import vector as ftuv
+from ...utilities import debug as fud
+from ...utilities import stuff as fus
 
 import Bio.PDB as bpdb
 import collections as c
@@ -134,7 +139,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         try:
             (dotplot, residue_map) = ftum.get_dotplot(lines)
         except Exception as e:
-            print >>sys.stderr, e
+            print (e, file=sys.stderr)
             return cg
 
         # f2 will store the dotbracket notation
@@ -206,8 +211,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                 f3.flush()
 
             return cg
-    print >>sys.stderr, "Uh oh... couldn't generate the coarse-grain structure."
-    print >>sys.stderr, "Prepare for an incoming exception."
+    print ("Uh oh... couldn't generate the coarse-grain structure.", file=sys.stderr)
+    print ("Prepare for an incoming exception.", file=sys.stderr)
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
                      intermediate_file_dir=None, chain_id=None,
@@ -489,16 +494,16 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 continue
             if parts[0] == 'coord':
                 name = parts[1]
-                self.coords[name] = np.array([map(float, parts[2:5]), map(float, parts[5:8])])
+                self.coords[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
             if parts[0] == 'twist':
                 name = parts[1]
-                self.twists[name] = np.array([map(float, parts[2:5]), map(float, parts[5:8])])
+                self.twists[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
             if parts[0] == 'longrange':
                 self.longrange[parts[1]].add(parts[2])
                 self.longrange[parts[2]].add(parts[1])
 
             if parts[0] == 'sampled':
-                self.sampled[parts[1]] = [parts[2]] + map(int, parts[3:])
+                self.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
 
     def to_cg_file(self, filename):
         '''
