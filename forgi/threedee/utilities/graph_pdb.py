@@ -1101,7 +1101,7 @@ def add_virtual_residues(bg, stem):
     Create all of the virtual residues and the associated
     bases and inverses.
 
-    @param bg: The BulgeGraph containing the stem
+    @param bg: The CoarseGrainRNA bulge graph containing the stem
     @param stem: The name of the stem to be included
     '''
     stem_vec = bg.coords[stem][1] - bg.coords[stem][0]
