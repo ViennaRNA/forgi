@@ -540,6 +540,69 @@ def cross(a, b):
     return c
 '''
 
+def seg_intersect(line1, line2) :
+    """
+    Intersection of 2 line segments in 2D space (as lists or numpy array-like).
+    :param line1: a tuple/list (a1, a2): The first line segment, from a1 to a2
+    :param line2: a tuple/list (b1, b2):The 2nd line segment, from b1 to b2
+    """
+    a1,a2=line1
+    b1,b2=line2
+    if max(map(len, [a1,a2,b1,b2]))!=2:
+        raise ValueError("Expecting only 2-dimensional vectors. Found higher-dimensional vector.")
+    if min(map(len, [a1,a2,b1,b2]))!=2:
+        raise ValueError("Expecting only 2-dimensional vectors. Found lower-dimensional vector.")
+    if a1==a2 or b1==b2: raise ValueError("Start and end of a line must not be equal!")
+    dxa=a2[0]-a1[0]
+    dya=a2[1]-a1[1]
+    dxb=b2[0]-b1[0]
+    dyb=b2[1]-b1[1]
+    num=a1[0]*dya-a1[1]*dxa-b1[0]*dya+b1[1]*dxa
+    denom=float(dxb*dya-dyb*dxa)
+    try:
+        s=num/denom
+    except ZeroDivisionError:
+        #parallel or on same lines
+        if dxa==0:
+          t1=(b1[1]-a1[1])/dya
+          t2=(b2[1]-a1[1])/dya
+          t1test=t1
+        else:
+          t1=(b1[0]-a1[0])/dxa
+          t2=(b2[0]-a1[0])/dxa
+        if dya==0:
+          t1test=t1
+        else:
+          t1test=(b1[1]-a1[1])/dya
+        if t1!=t1test:
+            return []
+        #On same line
+        if dxa==0:
+          s1=(a1[1]-b1[1])/dyb
+          s2=(a2[1]-b1[1])/dyb
+        else:
+          s1=(a1[0]-b1[0])/dxb
+          s2=(a2[0]-b1[0])/dxb
+        if all(x<0 or x>1 for x in [s1, s2, t1, t2]):
+            return []
+        ts=min(t1, t2)
+        te=max(t1, t2)
+        toret=[]
+        if ts<0:
+            toret.append(a1)
+        else:
+            toret.append(b1)
+        if te<1:
+            toret.append(b2)
+        else:
+            toret.append(a2)
+        return toret
+    if s>=0 and s<=1:
+        return [np.array(b1)+s*(np.array(b2)-np.array(b1))]
+    return []
+    
+
+
 def vec_distance(vec1, vec2):
     return ftuc.vec_distance(vec1, vec2)
     #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))

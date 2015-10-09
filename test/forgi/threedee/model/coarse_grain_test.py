@@ -43,7 +43,6 @@ def cg_from_sg(cg, sg):
 
     return new_cg
 
-
 class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
