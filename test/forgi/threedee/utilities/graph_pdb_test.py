@@ -4,9 +4,11 @@ import unittest, os
 import warnings
 import numpy as np
 import forgi.threedee.model.coarse_grain as ftmc
+
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as ftuv
+import forgi.graph.bulge_graph as fgb
 
 import forgi.utilities.debug as fud
 
@@ -52,11 +54,47 @@ class TestGraphPDB(unittest.TestCase):
         self.verify_virtual_twist_angles(cg, 's2')
         self.verify_virtual_twist_angles(cg, 's0')
 
+
+    def test_coordinates_for_add_virtual_residues(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        ftug.add_virtual_residues(cg, 's0')
+        #XYZ coordinate for first residue are ok:
+        self.assertAlmostEqual(cg.vposs["s0"][0][0], 2.3, delta=3, 
+                  msg="Wrong x-position for virtual residue 0 of stem s0: {}".format(cg.vposs["s0"][0][0]))
+        self.assertAlmostEqual(cg.vposs["s0"][0][1], 1.3, delta=3, 
+                  msg="Wrong y-position for virtual residue 0 of stem s0: {}".format(cg.vposs["s0"][0][1]))
+        self.assertAlmostEqual(cg.vposs["s0"][0][2], 1.0, delta=3, 
+                  msg="Wrong z-position for virtual residue 0 of stem s0: {}".format(cg.vposs["s0"][0][2]))
+        last_residue=cg.stem_length("s0") - 1
+        self.assertAlmostEqual(cg.vposs["s0"][last_residue][0], 16, delta=4, 
+                  msg="Wrong x-position for virtual residue {} of stem s0: {}".format(last_residue,cg.vposs["s0"][last_residue][0]))
+        self.assertAlmostEqual(cg.vposs["s0"][last_residue][1], -13, delta=4, 
+                  msg="Wrong y-position for virtual residue {} of stem s0: {}".format(last_residue,cg.vposs["s0"][last_residue][1]))
+        self.assertAlmostEqual(cg.vposs["s0"][last_residue][2], 8, delta=4, 
+                  msg="Wrong z-position for virtual residue {} of stem s0: {}".format(last_residue,cg.vposs["s0"][last_residue][2]))
+
+    def test_basis_transformation_for_virtual_residues(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        ftug.add_virtual_residues(cg, 's0')
+        offset=cg.vposs["s0"][0]
+        vbasis=cg.vbases["s0"][0]
+        local_pos=np.array([0,0,1])
+        global_pos = np.dot(vbasis.transpose(), local_pos) + offset
+        #Checking dimensions of vectors, just in case...
+        self.assertEqual(len(global_pos),3)
+        self.assertEqual(len(vbasis),3)
+        self.assertEqual(len(vbasis[0]),3)
+        #Analytically true: 
+        self.assertTrue(all(global_pos[x]-vbasis[2][x]-offset[x]<0.0000001 for x in [0,1,2]), 
+                  msg="global pos for (0,0,1) should be {}+{}={}, but is {} instead.".format(
+                                                  vbasis[2], offset, vbasis[2]+offset, global_pos))
+        
     def test_virtual_residue_atoms(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
         ftug.add_virtual_residues(cg, 's0')
         va = ftug.virtual_residue_atoms(cg, 's0', 1, 0)
+        
 
     def test_virtual_atoms(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
@@ -68,5 +106,36 @@ class TestGraphPDB(unittest.TestCase):
 
         nres = ftug.numbered_virtual_residues(cg)
         fud.pv('nres')
+
+class TestDistanceCalculation(unittest.TestCase):
+    def setUp(self):
+        self.rs_random_281=ftmc.from_pdb('test/forgi/threedee/data/RS_random_281_S_0.pdb')
+        for key in self.rs_random_281.defines.keys():
+          if key[0] =="s":
+            ftug.add_virtual_residues(self.rs_random_281, key)
+        self.minimal_multiloop = ftmc.CoarseGrainRNA()
+        self.minimal_multiloop.from_file('test/forgi/threedee/data/minimal_multiloop.cg')
+        for key in self.minimal_multiloop.defines.keys():
+          if key[0] =="s":
+            ftug.add_virtual_residues(self.minimal_multiloop, key)
+
+    def test_junction_virtual_atom_distance_minimalMultiloop(self):
+        distance1=ftug.junction_virtual_atom_distance(self.minimal_multiloop, "m0")
+        self.assertLess(distance1, 4., msg="{} is not < {} for {}".format(distance1, 4., "m0"))
+        distance2=ftug.junction_virtual_atom_distance(self.minimal_multiloop, "m1")
+        self.assertLess(distance2, 4., msg="{} is not < {} for {}".format(distance1, 4., "m1"))
+    def test_junction_virtual_atom_distance_realPDB(self):
+        distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m4")
+        self.assertLess(distance, 4.)
+       
+
+
+
+
+
+
+
+
+
 
 
