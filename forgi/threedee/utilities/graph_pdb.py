@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 import sys
 
-import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
+import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Depricated
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
@@ -1034,10 +1034,10 @@ def junction_virtual_res_distance(bg, bulge):
 
     (vr2_p, vr2_v, vr2_v_l, vr2_v_r) = res
 
-    dist2 = cuv.vec_distance((vr1_p + 7 * vr1_v), (vr2_p + 7. * vr2_v))
+    dist2 = cuv.vec_distance((vr1_p + 7. * vr1_v), (vr2_p + 7. * vr2_v))
     return dist2
 
-
+"""
 def get_strand_atom_vrn(bg, s, i):
     '''
     Return the strand and which atom to use for the adjacent
@@ -1053,7 +1053,7 @@ def get_strand_atom_vrn(bg, s, i):
         return (1, 'P', bg.stem_length(s) - 1)
     if i == 3:
         return (1, 'O3*', 0)
-
+"""
 
 def junction_virtual_atom_distance(bg, bulge):
     '''
@@ -1065,36 +1065,22 @@ def junction_virtual_atom_distance(bg, bulge):
 
     @return: A single number corresponding to the distance above.
     '''
-    connecting_stems = bg.connections(bulge)
-
+    connecting_stems = bg.connections(bulge)    
     (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
-
-    r1 = bg.seq[bg.defines[connecting_stems[0]][i1]-1]
-    r2 = bg.seq[bg.defines[connecting_stems[0]][i2]-1]
-
-    (strand1, a1, vrn1) = get_strand_atom_vrn(bg, connecting_stems[0], i1)
-    (strand2, a2, vrn2) = get_strand_atom_vrn(bg, connecting_stems[1], i2)
-
-    try:
-        a1_pos = ftus.avg_stem_vres_atom_coords[strand1][r1][a1.replace('*', "'")]
-        a2_pos = ftus.avg_stem_vres_atom_coords[strand2][r2][a2.replace('*', "'")]
-    except KeyError as e:
-        print >>sys.stderr, "KeyError in junction_virtual_atom_distance"
-        fud.pv('strand1, r1, a1')
-        fud.pv('strand2, r2, a2')
-
-    vpos1 = bg.vposs[connecting_stems[0]][vrn1]
-    vbasis1 = bg.vbases[connecting_stems[0]][vrn1].transpose()
-
-    vpos2 = bg.vposs[connecting_stems[1]][vrn2]
-    vbasis2 = bg.vbases[connecting_stems[1]][vrn2].transpose()
-
-    a1_npos = np.dot(vbasis1, a1_pos) + vpos1
-    a2_npos = np.dot(vbasis2, a2_pos) + vpos2
-
-    return cuv.magnitude(a1_npos - a2_npos)
-
+    pos1=bg.defines[connecting_stems[0]][i1]
+    pos2=bg.defines[connecting_stems[1]][i2]
+    coords=virtual_atoms(bg)
+    if i1==0 or i1==2:
+        a1="P"
+    else:
+        a1="O3'"
+    if i2==0 or i2==2:
+        a2="P"
+    else:
+        a2="O3'"
+    assert a1!=a2
+    return cuv.magnitude(coords[pos1][a1]-coords[pos2][a2])
 
 def add_virtual_residues(bg, stem):
     '''
