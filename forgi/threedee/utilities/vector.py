@@ -127,6 +127,12 @@ def get_non_colinear_unit_vector(vec):
 
     return np.array(unit)
 
+def is_almost_colinear(vec1, vec2):
+    """
+    Returns true, if two vectors are almost colinear
+    """
+    factor=vec1/vec2
+    return all(x<0.000000001 for x in factor[1:]-factor[:1])
 def create_orthonormal_basis1(vec1, vec2=None, vec3=None):
     '''
     Create an orthonormal basis using the provided vectors.
@@ -548,20 +554,23 @@ def seg_intersect(line1, line2) :
     """
     a1,a2=line1
     b1,b2=line2
+    a1=np.array(a1)
+    a2=np.array(a2)
+    b1=np.array(b1)
+    b2=np.array(b2)
     if max(map(len, [a1,a2,b1,b2]))!=2:
-        raise ValueError("Expecting only 2-dimensional vectors. Found higher-dimensional vector.")
+        raise ValueError("Expecting only 2-dimensional vectors. Found higher-dimensional vector: a1={}, a2={}, b1={}, b2={}".format(a1,a2,b1,b2))
     if min(map(len, [a1,a2,b1,b2]))!=2:
         raise ValueError("Expecting only 2-dimensional vectors. Found lower-dimensional vector.")
-    if a1==a2 or b1==b2: raise ValueError("Start and end of a line must not be equal!")
+    if (a1==a2).all() or (b1==b2).all(): raise ValueError("Start and end of a line must not be equal! a1={}, a2={}, b1={}, b2={}".format(a1,a2,b1,b2))
     dxa=a2[0]-a1[0]
     dya=a2[1]-a1[1]
     dxb=b2[0]-b1[0]
     dyb=b2[1]-b1[1]
     num=a1[0]*dya-a1[1]*dxa-b1[0]*dya+b1[1]*dxa
     denom=float(dxb*dya-dyb*dxa)
-    try:
-        s=num/denom
-    except ZeroDivisionError:
+    s=num/denom
+    if np.isnan(s):
         #parallel or on same lines
         if dxa==0:
           t1=(b1[1]-a1[1])/dya
@@ -598,7 +607,13 @@ def seg_intersect(line1, line2) :
             toret.append(a2)
         return toret
     if s>=0 and s<=1:
-        return [np.array(b1)+s*(np.array(b2)-np.array(b1))]
+        c=np.array(b1)+s*(np.array(b2)-np.array(b1))
+        t=(a1[0]-c[0])/dxa
+        if np.isnan(t):
+            t=(a1[1]-c[1])/dya
+        print(t)
+        if t>=0 and t<=1:
+            return [c]
     return []
     
 
@@ -901,3 +916,22 @@ def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
         long = long + dlong
 
     return ptsOnSphere
+
+
+def sortAlongLine(start, end, points):
+    """
+    Sort all points in points along the line from start to end.
+    
+    :param start: A point
+    :param end: A point
+    :param points: A list of points
+
+    :returns: A list containing start, end and all elements of points, sorted by the distance from start 
+    """
+    print start, end, points
+    s_points=points+[start, end]
+    s_points.sort(key=lambda x: vec_distance(x, start))
+    return s_points
+
+
+
