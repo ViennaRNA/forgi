@@ -1398,3 +1398,24 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertFalse(bg.connected('m4', 'm5'))
 
         self.assertFalse(bg.connected('m0', 'm4'))
+
+    def test_cg_min_max_bp_distance(self):
+        db = '((..((..))..((..))..((..))..))'
+        # clockwise from the bottom
+        # s0 m0 s1 m2 s2 m3 s3 m4
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        fud.pv('bg.to_bg_string()')
+
+        (mi, mx) = bg.min_max_bp_distance('s1', 's2')
+        fud.pv('mi, mx')
+
+        self.assertEqual(mi, 3)
+        self.assertEqual(mx, 7)
+
+        (mi, mx) = bg.min_max_bp_distance('s1', 's1')
+        self.assertEqual(mi, 0)
+        self.assertEqual(mx, 2)
+
+

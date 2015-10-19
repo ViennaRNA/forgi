@@ -10,6 +10,7 @@ __version__ = "0.2"
 __maintainer__ = "Peter Kerpedjiev"
 __email__ = "pkerp@tbi.univie.ac.at"
 
+import networkx as nx
 import sys
 import collections as col
 import random
@@ -322,6 +323,7 @@ class BulgeGraph(object):
         self.edges = col.defaultdict(set)
         self.longrange = col.defaultdict(set)
         self.weights = dict()
+        self.nx_graph = None
 
         # sort the coordinate basis for each stem
         self.bases = dict()
@@ -2728,6 +2730,62 @@ class BulgeGraph(object):
 
         return False
 
+    def flanking_nucleotides(self, d):
+        '''
+        Return the nucleotides directly flanking an element.
+    
+        @param d: the name of the element
+        @return: a set of nucleotides
+        '''
+        set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
+        set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
+
+        return set_adjacent - set_not_adjacent
+
+    def min_max_bp_distance(self, e1, e2):
+        '''
+        Get the minimum and maximum base pair distance between
+        these two elements.
+
+        If they are connected, the minimum distance will be 1. 
+        The maximum will be 1 + length(e1) + length(e1)
+
+        @param e1: The name of the first element
+        @param e2: The name of the second element
+        @return: A tuple containing the minimum and maximum distance between
+                 the two elements.
+        '''
+
+        #flanking1 = self.flanking_nucleotides(e1)
+        #flanking2 = self.flanking_nucleotides(e2)
+
+        min_bp = sys.maxint
+        max_bp = 0
+
+        if self.nx_graph is None:
+            self.nx_graph = self.to_networkx()
+
+
+        for f1, f2 in it.product(self.defines[e1], self.defines[e2]):
+            d =  nx.dijkstra_path_length(self.nx_graph, f1, f2)
+
+            if d < min_bp:
+                min_bp = d
+            if d > max_bp:
+                max_bp = d
+
+        return (min_bp, max_bp)
+
+    def nd_define_iterator(self):
+        '''
+        Iterate over defines which contain some nucleotides.
+
+        @return: An iterator over all defines which contain some
+                 nucleotides.
+        '''
+        for d in self.defines:
+            if len(self.defines[d]) > 0:
+                yield d
 
 def bg_from_subgraph(bg, sg):
     """

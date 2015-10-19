@@ -64,7 +64,7 @@ def get_residue_num_list(cg, d):
     return nucleotide_list
 
 
-def extract_extra_links(cg, cutoff_dist=25):
+def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
     '''
     Get a list of extra_links that are within a certain distance of each 
     other.
@@ -74,11 +74,17 @@ def extract_extra_links(cg, cutoff_dist=25):
     '''
     links = []
 
-    for e1, e2 in it.combinations(cg.defines, r=2):
+    for e1, e2 in it.combinations(cg.nd_define_iterator(), r=2):
         if (e1[0] == 's' and cg.stem_length(e1) == 1) or (e2[0] == 's' and cg.stem_length(e2) == 1):
             continue
 
         if cg.connected(e1, e2):
+            continue
+
+        bp_dist = cg.min_max_bp_distance(e1, e2)[0]
+        #bp_dist = 1000
+
+        if bp_dist < bp_distance:
             continue
 
         dist = cg.element_physical_distance(e1,e2)
@@ -89,6 +95,7 @@ def extract_extra_links(cg, cutoff_dist=25):
         fud.pv('dist, cutoff_dist')
 
         if dist < cutoff_dist:
+            fud.pv('e1,e2,bp_dist')
             links1 = get_residue_num_list(cg, e1)
             links2 = get_residue_num_list(cg, e2)
 
@@ -108,6 +115,7 @@ def main():
     parser = OptionParser(usage=usage)
 
     parser.add_option('-d', '--distance', dest='distance', default=10000, help="Draw links between elements that are within a certain distance from each other", type='float')
+    parser.add_option('-b', '--bp-distance', dest='bp_distance', default=16, help="Draw links only between nucleotides which are so many nucleotides apart", type='int')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
     (options, args) = parser.parse_args()
@@ -121,7 +129,7 @@ def main():
 
     sequence_string = cg.seq
     structure_string = cg.to_dotbracket_string()
-    extra_links_string = extract_extra_links(cg, options.distance)
+    extra_links_string = extract_extra_links(cg, options.distance, options.bp_distance)
     print output_template.format(sequence_string, structure_string, extra_links_string)
 
 
