@@ -1766,6 +1766,7 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
 
     @param cg: The coarse grain structure.
     '''
+    return new_virtual_atoms(cg, given_atom_names, sidechain)
     import forgi.threedee.utilities.average_atom_positions as ftua
     coords = col.defaultdict(dict)
 
@@ -1798,6 +1799,57 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
                 except KeyError as ke:
                     pass
     return coords
+
+def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
+    '''
+    Get a VirtualAtomLookup Object for the virtual atoms for this structure.
+
+    @param cg: The coarse grain structure.
+    '''
+    return VirtualAtomsLookup(cg, given_atom_names, sidechain)
+class VirtualAtomsLookup(object):
+    def __init__(self, cg, given_atom_names=None, sidechain=True):
+        self.cg=cg  
+        self.given_atom_names=given_atom_names
+        self.sidechain=sidechain
+    def __getitem__(self, position):
+        #Find out the stem for which we have to calculate virtual atom positions
+        for key, value in self.cg.defines.items():
+            if len(value)<2:
+                print ("DEFINE {} HAS VALUE {}".format(key, value))
+            elif position>=value[0] and position<=value[1]:
+                return self._getitem_for_element(key, position)
+            elif len(value)==4 and position>=value[2] and position<=value[3]:
+                return self._getitem_for_element(key, position)
+        assert False, "No return for pos {}".format(position)
+    def _getitem_for_element(self, d, pos):
+        import forgi.threedee.utilities.average_atom_positions as ftua
+        e_coords=dict()
+        origin, basis = element_coord_system(self.cg, d)
+        if d[0] == 'i' or d[0] == 'm':
+            conn = self.cg.connections(d)
+            conn_type = self.cg.connection_type(d, conn)
+        else:
+            conn_type = 0
+        for i,r in it.izip(it.count(),
+                           self.cg.define_residue_num_iterator(d)):
+            if r!=pos: continue
+            if self.given_atom_names is None:
+                if self.sidechain:
+                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[self.cg.seq[r-1]]
+                else:
+                    atom_names = ftup.nonsidechain_atoms
+            else:
+                atom_names = given_atom_names
+            for aname in atom_names:
+                identifier = "%s %s %d %d %s" % (d[0],
+                                              " ".join(map(str, self.cg.get_node_dimensions(d))),
+                                              conn_type, i, aname)
+                try:
+                    e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
+                except KeyError as ke:
+                    pass
+            return e_coords
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l.
