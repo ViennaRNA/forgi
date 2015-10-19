@@ -325,6 +325,8 @@ class BulgeGraph(object):
         self.mst = None
         self.build_order = None
         self.name = "untitled"
+        #: The coarse grain element definitions: Keys are for example 's1'/ 'm2'/ 'h3'/ 'f1'/ 't1'
+        #: Values are the positions in the sequence (1D-coordinate) of start , end, ...
         self.defines = dict()
         self.edges = col.defaultdict(set)
         self.longrange = col.defaultdict(set)
