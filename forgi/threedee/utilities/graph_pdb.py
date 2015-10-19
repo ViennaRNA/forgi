@@ -1808,6 +1808,7 @@ def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     return VirtualAtomsLookup(cg, given_atom_names, sidechain)
 class VirtualAtomsLookup(object):
+    """An object with a dict-like interface that calculated the virtual atom positions on demand (lazy evaluation)"""
     def __init__(self, cg, given_atom_names=None, sidechain=True):
         self.cg=cg  
         self.given_atom_names=given_atom_names
@@ -1816,12 +1817,22 @@ class VirtualAtomsLookup(object):
         #Find out the stem for which we have to calculate virtual atom positions
         for key, value in self.cg.defines.items():
             if len(value)<2:
-                print ("DEFINE {} HAS VALUE {}".format(key, value))
+                pass #For multiloops of length 0, value is []
             elif position>=value[0] and position<=value[1]:
                 return self._getitem_for_element(key, position)
             elif len(value)==4 and position>=value[2] and position<=value[3]:
                 return self._getitem_for_element(key, position)
         assert False, "No return for pos {}".format(position)
+    def keys(self):
+        k=set()
+        for value in self.cg.defines.values():
+            if len(value)>1:
+                for i in range(value[0], value[1]+1):
+                    k.add(i)
+            if len(value)>3:
+                for i in range(value[2], value[3]+1):
+                    k.add(i)
+        return k     
     def _getitem_for_element(self, d, pos):
         import forgi.threedee.utilities.average_atom_positions as ftua
         e_coords=dict()
