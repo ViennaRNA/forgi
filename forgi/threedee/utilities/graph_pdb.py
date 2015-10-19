@@ -1810,10 +1810,18 @@ def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
 class VirtualAtomsLookup(object):
     """An object with a dict-like interface that calculated the virtual atom positions on demand (lazy evaluation)"""
     def __init__(self, cg, given_atom_names=None, sidechain=True):
+        """
+        :param cg: The coarse grain structure, for which the virtual atoms are generated. 
+        ..note :: If cg is modified, new virtual atom positions are calculated.
+        """
         self.cg=cg  
         self.given_atom_names=given_atom_names
         self.sidechain=sidechain
     def __getitem__(self, position):
+        """
+        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
+        :param position: The position of the residue in the RNA (starting with 1)
+        """
         #Find out the stem for which we have to calculate virtual atom positions
         for key, value in self.cg.defines.items():
             if len(value)<2:
@@ -1834,6 +1842,11 @@ class VirtualAtomsLookup(object):
                     k.add(i)
         return k     
     def _getitem_for_element(self, d, pos):
+        """
+        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
+        :param d: The coarse grained element (e.g. "s1")
+        :param pos: The position of the residue. It has to be in the element d!
+        """
         import forgi.threedee.utilities.average_atom_positions as ftua
         e_coords=dict()
         origin, basis = element_coord_system(self.cg, d)
