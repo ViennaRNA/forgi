@@ -1198,22 +1198,19 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
     if basis == None:
         basis = virtual_res_basis(bg, s, i, vvec).transpose()
     '''
-
+    if s[0]!="s":
+        raise ValueError("Expected stem (not single-stranded RNA element), got {}".format(s))
     vpos = bg.vposs[s][i]
     basis = bg.vbases[s][i].transpose()
 
-    rs = (bg.seq[bg.defines[s][0] + i - 1], bg.seq[bg.defines[s][3] - i - 1])
+    glob_pos = (bg.defines[s][0] + i - 1, bg.defines[s][3] - i - 1)
+    glob_pos = glob_pos[strand]
 
-    new_atoms = dict()
 
-    for a in ftus.avg_stem_vres_atom_coords[strand][rs[strand]].items():
-        coords = a[1]
-        new_coords = np.dot(basis, coords) + vpos
-        #new_coords2 = cuv.change_basis(coords, cuv.standard_basis, basis)
+    coords=virtual_atoms(bg)
+    
+    return coords[glob_pos]
 
-        new_atoms[a[0]] = new_coords
-
-    return new_atoms
 
 def calc_R(xc, yc, p):
     """ calculate the distance of each 2D points from the center (xc, yc) """

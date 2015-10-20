@@ -93,9 +93,24 @@ class TestGraphPDB(unittest.TestCase):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
         ftug.add_virtual_residues(cg, 's0')
-        va = ftug.virtual_residue_atoms(cg, 's0', 1, 0)
-        
-
+        ftug.add_virtual_residues(cg, 's1')
+        bases_to_test=[]
+        bases_to_test.append(ftug.virtual_residue_atoms(cg, 's0', 1, 0))
+        bases_to_test.append(ftug.virtual_residue_atoms(cg, 's0', 2, 1))
+        bases_to_test.append(ftug.virtual_residue_atoms(cg, 's1', 0, 0))
+ 
+        #Assert that any two atoms of the same base within reasonable distance to each other
+        #(https://en.wikipedia.org/wiki/Bond_length says than a CH-bond is >= 1.06A)
+        for va in bases_to_test:
+            for k1, v1 in va.items():
+                for k2, v2 in va.items():
+                    dist=ftuv.magnitude(v1-v2)
+                    self.assertLess(dist, 30, msg="Nucleotide too big: "
+                                    "Distance between {} and {} is {}".format(k1, k2, dist))
+                    if k1!=k2:
+                        dist=ftuv.magnitude(v1-v2)
+                        self.assertGreater(dist, 0.8, msg="Nucleotide too small: "
+                                    "Distance between {} and {} is {}".format(k1, k2, dist))
     def test_virtual_atoms(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
@@ -105,7 +120,8 @@ class TestGraphPDB(unittest.TestCase):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
         nres = ftug.numbered_virtual_residues(cg)
-        fud.pv('nres')
+        #fud.pv('nres')
+        #TODO assert something
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):

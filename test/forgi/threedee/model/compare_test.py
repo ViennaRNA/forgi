@@ -17,8 +17,8 @@ class CompareTest(unittest.TestCase):
 
         self.assertEqual(cm['fp'], 0)
         self.assertEqual(cm['fn'], 0)
-        fud.pv('cm')
-
+        #fud.pv('cm')
+        #TODO assert something
         pass
 
     def test_mcc(self):
