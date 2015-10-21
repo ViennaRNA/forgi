@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.model.comparison as ftme
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 
@@ -33,6 +34,7 @@ This after the RNA container.
     <script type='text/javascript' src='/js/d3.js'></script>
     <script type='text/javascript' src='/js/d3-grid.js'></script>
     <script type='text/javascript' src='/js/d3-rnaplot.js'></script>
+    <script type='text/javascript' src='/js/lib/d3-ForceEdgeBundling.js'></script>
 
     <script type='text/javascript'>
     // set all of the parameters
@@ -45,14 +47,18 @@ This after the RNA container.
 
     var root = {};
 
+    var minHeight = 500;
+
     // calculate the number of columns and the height of the SVG,
     // which is dependent on the on the number of data points
     var numCols = Math.floor((svgWidth + padding[0]) / (cellWidth + padding[0]));
-    var svgHeight = Math.ceil(root.length / numCols) * (cellHeight + padding[1]) - padding[1] + margin.bottom;
+    var svgHeight = Math.max(Math.ceil(root.length / numCols) * (cellHeight + padding[1]) - padding[1] + margin.bottom,
+                        minHeight);
 
     var chart = rnaPlot()
     .width(cellWidth)
     .height(cellHeight)
+    .bundleExternalLinks(true)
 
      var rectGrid = d3.layout.grid()
               .bands()
@@ -110,8 +116,6 @@ def reorder_structs(pair_bitmaps):
     one_d_bitmaps = pca.fit_transform(pair_bitmaps)[:,0]
 
     ix = np.argsort(one_d_bitmaps)
-    fud.pv('one_d_bitmaps')
-    fud.pv('one_d_bitmaps[ix]')
     return ix
 
 def get_residue_num_list(cg, d):
@@ -140,7 +144,8 @@ def get_residue_num_list(cg, d):
 
     return nucleotide_list
 
-def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
+def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint,
+                       correct_links = None):
     '''
     Get a list of extra_links that are within a certain distance of each 
     other.
@@ -175,13 +180,24 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
         pair_bitmap += [1]
 
         if dist < cutoff_dist:
-            fud.pv('e1,e2,bp_dist')
             links1 = get_residue_num_list(cg, e1)
             links2 = get_residue_num_list(cg, e2)
+            correct = False
 
-            links += [[links1, links2]]
+            if correct_links is not None:
+                for correct_link in correct_links:
+                    if ((links1 == correct_link['from'] and links2 == correct_link['to']) or
+                        (links1 == correct_link['from'] and links2 == correct_link['to'])):
+                        correct = True
+                        break
+            else:
+                correct = True
 
-    fud.pv('json.dumps(links)')
+            fud.pv('correct')
+            links += [{"from": links1, "to": links2, "linkType": 'correct' if correct else 'incorrect'}]
+
+    fud.pv('[l["linkType"] for l in links]')
+
     return (links, pair_bitmap)
 
 def main():
@@ -206,15 +222,25 @@ def main():
 
     structs = []
     pair_bitmaps = []
+    cgs = []
+    all_links = []
 
     for filename in args:
         cg = ftmc.CoarseGrainRNA(filename)
-        (links, pair_bitmap) = extract_extra_links(cg, options.distance, options.bp_distance)
+        cgs += [cg]
+        (links, pair_bitmap) = extract_extra_links(cg, options.distance, options.bp_distance,
+                                                  correct_links = None if len(all_links) == 0 else all_links[0])
+
+        all_links += [links]
+
         pair_bitmaps += [pair_bitmap]
+        mcc = ftme.mcc_between_cgs(cgs[0], cg)
+        rmsd = ftme.cg_rmsd(cgs[0], cg)
+
         seq_struct = {"sequence": cg.seq,
                       "structure": cg.to_dotbracket_string(),
                       "extraLinks": links,
-                      "name": op.basename(filename)}
+                      "name": op.basename(filename) + " ({:.2f},{:.1f})".format(mcc, rmsd)}
 
         structs += [seq_struct]
 
@@ -225,7 +251,6 @@ def main():
     for i,x in enumerate(ix):
         new_array[i] = structs[x]
 
-    fud.pv('ix')
     print output_template.format(json.dumps(new_array))
 
 if __name__ == '__main__':
