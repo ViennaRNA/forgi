@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from builtins import map
+from builtins import zip
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
@@ -16,12 +21,11 @@ import collections as col
 import random
 import re
 import itertools as it
-import forgi.aux.k2n_standalone.knotted2nested as fak
-import forgi.utilities.debug as fud
-import forgi.utilities.stuff as fus
-import forgi.threedee.utilities.mcannotate as ftum
+from ..aux.k2n_standalone import knotted2nested as fak
+from ..utilities import debug as fud
+from ..utilities import stuff as fus
+from ..threedee.utilities import mcannotate as ftum
 import os
-import itertools as it
 import operator as oper
 
 
@@ -66,7 +70,7 @@ def from_fasta_text(fasta_text):
     # compile searches for the fasta id, sequence and 
     # secondary structure respectively
     id_search = re.compile('>(.+)')
-    seq_search = re.compile('^([acguACGU]+)$')
+    seq_search = re.compile('^([acguACGU]+)$') #BT: This does not allow for "t"/"T"(DNA)/"N". Is it on purpose?
 
     prev_id = None
     prev_seq = None
@@ -97,7 +101,8 @@ def from_fasta_text(fasta_text):
             if prev_seq is None:
                 raise Exception("No sequence for id: {}", prev_id)
             if prev_struct is None:
-                raise Exception("No sequence for id: {}", prev_id)
+                raise Exception("No sequence for id: {}", prev_id) 
+                #BT: This message not very helpful, if wrong character ("N"/..) in sequence
             if prev_id is None:
                 raise Exception("No previous id")
 
@@ -165,7 +170,7 @@ def print_bulges(bulges):
         bulge_str = "define b{} 1".format(i)
         bulge = bulges[i]
         bulge_str += " {} {}".format(bulge[0] + 1, bulge[1] + 1)
-        print bulge_str
+        print (bulge_str)
 
 
 def condense_stem_pairs(stem_pairs):
@@ -211,8 +216,8 @@ def print_brackets(brackets):
     :param brackets: A string with the dotplot passed as input to this script.
     """
     numbers = [chr(ord('0') + i % 10) for i in range(len(brackets))]
-    tens = [chr(ord('0') + i / 10) for i in range(len(brackets))]
-    print "brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers)
+    tens = [chr(ord('0') + i // 10) for i in range(len(brackets))]
+    print ("brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers))
 
 
 def find_bulges_and_stems(brackets):
@@ -289,7 +294,7 @@ def find_bulges_and_stems(brackets):
         dots_end = i
         bulges = add_bulge(bulges, (dots_start, dots_end), context, "7")
     elif prev == '(':
-        print >> sys.stderr, "Unmatched bracket at the end"
+        print ("Unmatched bracket at the end", file=sys.stderr)
         sys.exit(1)
     """
     elif prev == ')':
@@ -309,7 +314,7 @@ def find_bulges_and_stems(brackets):
 
 
 def print_name(filename):
-    print "name", os.path.splitext(filename)[0]
+    print( "name", os.path.splitext(filename)[0])
 
 
 class BulgeGraph(object):
@@ -319,6 +324,8 @@ class BulgeGraph(object):
         self.mst = None
         self.build_order = None
         self.name = "untitled"
+        #: The coarse grain element definitions: Keys are for example 's1'/ 'm2'/ 'h3'/ 'f1'/ 't1'
+        #: Values are the positions in the sequence (1D-coordinate) of start , end, ...
         self.defines = dict()
         self.edges = col.defaultdict(set)
         self.longrange = col.defaultdict(set)
@@ -408,7 +415,7 @@ class BulgeGraph(object):
         # a method for sorting the defines
         def define_sorter(k):
             drni = self.define_residue_num_iterator(k, adjacent=True)
-            return drni.next()
+            return next(drni) #.next()
 
         for key in sorted(self.defines.keys(), key=define_sorter):
             defines_str += self.get_single_define_str(key)
@@ -535,7 +542,7 @@ class BulgeGraph(object):
         :return: A list of two-element lists
         """
         a = iter(self.defines[node])
-        ranges = it.izip(a, a)
+        ranges = zip(a, a)
 
         if node[0] == 'i':
             # interior loops have to be treated specially because
@@ -825,7 +832,7 @@ class BulgeGraph(object):
 
         # use the nucleotide in the middle of this element as the starting point
         residues = sorted(list(self.define_residue_num_iterator(vertex, adjacent=True)))
-        mid_res = residues[len(residues) / 2]
+        mid_res = residues[len(residues) // 2]
 
         if len(residues) == 2:
             # no-residue multiloop
@@ -1205,7 +1212,7 @@ class BulgeGraph(object):
 
             # the whole stem is part of this multiloop
             if sides == [2, 3] or sides == [0, 1]:
-                residues += range(self.defines[s][sides[0]], self.defines[s][sides[1]] + 1)
+                residues += list(range(self.defines[s][sides[0]], self.defines[s][sides[1]] + 1))
             else:
                 residues += [self.defines[s][sides[0]], self.defines[s][sides[1]]]
 
@@ -1480,7 +1487,7 @@ class BulgeGraph(object):
 
         tuples.sort()
         tuples = iter(tuples)
-        (t1, t2) = tuples.next()
+        (t1, t2) = next(tuples) #.next()
 
         prev_from = t1
         prev_to = t2
@@ -1606,7 +1613,7 @@ class BulgeGraph(object):
             if parts[0] == 'length':
                 self.seq_length = int(parts[1])
             elif parts[0] == 'define':
-                self.defines[parts[1]] = map(int, parts[2:])
+                self.defines[parts[1]] = list(map(int, parts[2:]))
             elif parts[0] == 'connect':
                 for p in parts[2:]:
                     self.edges[parts[1]].add(p)
@@ -1614,7 +1621,7 @@ class BulgeGraph(object):
             elif parts[0] == 'seq':
                 self.seq = parts[1]
             elif parts[0] == 'seq_ids':
-                self.seq_ids = map(ftum.parse_resid, parts[1:])
+                self.seq_ids = list(map(ftum.parse_resid, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
 
@@ -1809,8 +1816,8 @@ class BulgeGraph(object):
                     bd = self.defines[e]
                     break
 
-        for i in xrange(4):
-            for k in xrange(len(bd)):
+        for i in range(4):
+            for k in range(len(bd)):
                 if s1d[i] - bd[k] == 1:
                     if i == 0:
                         s1b = 0
@@ -1855,7 +1862,7 @@ class BulgeGraph(object):
                     bd = self.defines[e]
                     break
 
-        for k in xrange(len(bd)):
+        for k in range(len(bd)):
             # before the stem on the 5' strand
             if s1d[0] - bd[k] == 1:
                 return (0, k)
@@ -2638,13 +2645,13 @@ class BulgeGraph(object):
         d2_corners = []
 
         for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e1, adjacent=True)), 
-                                  lambda(index, item): index - item):
-            group = map(oper.itemgetter(1), group)
+                                  lambda index_item: index_item[0] - index_item[1]):
+            group = list(map(oper.itemgetter(1), group))
             d1_corners += group
 
         for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e2, adjacent=True)), 
-                                  lambda(index, item): index - item):
-            group = map(oper.itemgetter(1), group)
+                                  lambda index_item: index_item[0] - index_item[1]):
+            group = list(map(oper.itemgetter(1), group))
             d2_corners += group
 
         import networkx as nx
@@ -2688,7 +2695,7 @@ class BulgeGraph(object):
             pos1 = resnum - self.defines[node][0]
             pos2 = abs(resnum - self.defines[node][1])
 
-            return min(pos1, pos2)+1, (self.defines[node][1] - self.defines[node][0] + 2) / 2
+            return min(pos1, pos2)+1, (self.defines[node][1] - self.defines[node][0] + 2) // 2
 
 
         i = 0

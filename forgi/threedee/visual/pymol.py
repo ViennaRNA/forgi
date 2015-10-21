@@ -142,7 +142,7 @@ class PymolPrinter:
         for (p, n, color, width, text) in self.new_segments:
             p -= translation
             n -= translation
-
+/home/mescalin/thiel/CODING/RNA3D/forgi/venv/lib/python2.7/site-packages/forgi/threedee/visual/pymol.py
             new_p = np.dot(rotation, p)
             new_n = np.dot(rotation, n)
 

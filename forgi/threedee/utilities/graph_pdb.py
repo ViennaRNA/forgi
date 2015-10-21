@@ -1087,7 +1087,7 @@ def add_virtual_residues(bg, stem):
     Create all of the virtual residues and the associated
     bases and inverses.
 
-    @param bg: The BulgeGraph containing the stem
+    @param bg: The CoarseGrainRNA bulge graph containing the stem
     @param stem: The name of the stem to be included
     '''
     stem_vec = bg.coords[stem][1] - bg.coords[stem][0]
@@ -1198,22 +1198,19 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
     if basis == None:
         basis = virtual_res_basis(bg, s, i, vvec).transpose()
     '''
-
+    if s[0]!="s":
+        raise ValueError("Expected stem (not single-stranded RNA element), got {}".format(s))
     vpos = bg.vposs[s][i]
     basis = bg.vbases[s][i].transpose()
 
-    rs = (bg.seq[bg.defines[s][0] + i - 1], bg.seq[bg.defines[s][3] - i - 1])
+    glob_pos = (bg.defines[s][0] + i - 1, bg.defines[s][3] - i - 1)
+    glob_pos = glob_pos[strand]
 
-    new_atoms = dict()
 
-    for a in ftus.avg_stem_vres_atom_coords[strand][rs[strand]].items():
-        coords = a[1]
-        new_coords = np.dot(basis, coords) + vpos
-        #new_coords2 = cuv.change_basis(coords, cuv.standard_basis, basis)
+    coords=virtual_atoms(bg)
+    
+    return coords[glob_pos]
 
-        new_atoms[a[0]] = new_coords
-
-    return new_atoms
 
 def calc_R(xc, yc, p):
     """ calculate the distance of each 2D points from the center (xc, yc) """
@@ -1766,6 +1763,7 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
 
     @param cg: The coarse grain structure.
     '''
+    return new_virtual_atoms(cg, given_atom_names, sidechain)
     import forgi.threedee.utilities.average_atom_positions as ftua
     coords = col.defaultdict(dict)
 
@@ -1798,6 +1796,81 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
                 except KeyError as ke:
                     pass
     return coords
+
+def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
+    '''
+    Get a VirtualAtomLookup Object for the virtual atoms for this structure.
+
+    @param cg: The coarse grain structure.
+    '''
+    return VirtualAtomsLookup(cg, given_atom_names, sidechain)
+class VirtualAtomsLookup(object):
+    """An object with a dict-like interface that calculated the virtual atom positions on demand (lazy evaluation)"""
+    def __init__(self, cg, given_atom_names=None, sidechain=True):
+        """
+        :param cg: The coarse grain structure, for which the virtual atoms are generated. 
+        ..note :: If cg is modified, new virtual atom positions are calculated.
+        """
+        self.cg=cg  
+        self.given_atom_names=given_atom_names
+        self.sidechain=sidechain
+    def __getitem__(self, position):
+        """
+        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
+        :param position: The position of the residue in the RNA (starting with 1)
+        """
+        #Find out the stem for which we have to calculate virtual atom positions
+        for key, value in self.cg.defines.items():
+            if len(value)<2:
+                pass #For multiloops of length 0, value is []
+            elif position>=value[0] and position<=value[1]:
+                return self._getitem_for_element(key, position)
+            elif len(value)==4 and position>=value[2] and position<=value[3]:
+                return self._getitem_for_element(key, position)
+        assert False, "No return for pos {}".format(position)
+    def keys(self):
+        k=set()
+        for value in self.cg.defines.values():
+            if len(value)>1:
+                for i in range(value[0], value[1]+1):
+                    k.add(i)
+            if len(value)>3:
+                for i in range(value[2], value[3]+1):
+                    k.add(i)
+        return k     
+    def _getitem_for_element(self, d, pos):
+        """
+        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
+        :param d: The coarse grained element (e.g. "s1")
+        :param pos: The position of the residue. It has to be in the element d!
+        """
+        import forgi.threedee.utilities.average_atom_positions as ftua
+        e_coords=dict()
+        origin, basis = element_coord_system(self.cg, d)
+        if d[0] == 'i' or d[0] == 'm':
+            conn = self.cg.connections(d)
+            conn_type = self.cg.connection_type(d, conn)
+        else:
+            conn_type = 0
+        for i,r in it.izip(it.count(),
+                           self.cg.define_residue_num_iterator(d)):
+            if r!=pos: continue
+            if self.given_atom_names is None:
+                if self.sidechain:
+                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[self.cg.seq[r-1]]
+                else:
+                    atom_names = ftup.nonsidechain_atoms
+            else:
+                atom_names = given_atom_names
+            for aname in atom_names:
+                identifier = "%s %s %d %d %s" % (d[0],
+                                              " ".join(map(str, self.cg.get_node_dimensions(d))),
+                                              conn_type, i, aname)
+                try:
+                    e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
+                except KeyError as ke:
+                    pass
+            return e_coords
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l.

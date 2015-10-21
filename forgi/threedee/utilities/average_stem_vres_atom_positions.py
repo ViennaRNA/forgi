@@ -1,5 +1,5 @@
 import warnings
-warnings.warn("Module average_stem_vres_atom_positions.py is depricated and buggy.")
+warnings.warn("Module average_stem_vres_atom_positions.py is deprecated and buggy.")
 
 import collections as co
 avg_stem_vres_atom_coords = [co.defaultdict(dict), co.defaultdict(dict)]
