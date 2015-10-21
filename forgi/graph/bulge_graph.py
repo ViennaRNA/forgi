@@ -324,6 +324,7 @@ class BulgeGraph(object):
         self.longrange = col.defaultdict(set)
         self.weights = dict()
         self.nx_graph = None
+        self.nuc_bp_dists = None
 
         # sort the coordinate basis for each stem
         self.bases = dict()
@@ -2765,9 +2766,17 @@ class BulgeGraph(object):
         if self.nx_graph is None:
             self.nx_graph = self.to_networkx()
 
-
-        for f1, f2 in it.product(self.defines[e1], self.defines[e2]):
-            d =  nx.dijkstra_path_length(self.nx_graph, f1, f2)
+        if self.nuc_bp_dists is None:
+            import numpy as np
+            self.nuc_bp_dists = col.defaultdict(dict)
+            dist_matrix = np.array(nx.floyd_warshall_numpy(self.nx_graph))
+            for (i1,n1), (i2,n2) in it.product(enumerate(self.nx_graph.nodes()),
+                                               enumerate(self.nx_graph.nodes())):
+                self.nuc_bp_dists[n1][n2] = dist_matrix[i1][i2]
+            
+        for f1, f2 in it.product(set(self.defines[e1]), set(self.defines[e2])):
+            #d =  nx.dijkstra_path_length(self.nx_graph, f1, f2)
+            d = self.nuc_bp_dists[f1][f2]
 
             if d < min_bp:
                 min_bp = d

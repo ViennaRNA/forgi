@@ -7,6 +7,9 @@ import forgi.utilities.stuff as fus
 import itertools as it
 import json
 
+import numpy as np
+import os.path as op
+
 import sys
 from optparse import OptionParser
 
@@ -25,59 +28,91 @@ This is an RNA container.
 <div id='rna_ss'> </div>
 This after the RNA container.
 
-    <link rel='stylesheet' type='text/css' href='/css/fornac.css' />
+    <link rel='stylesheet' type='text/css' href='/css/d3-rnaplot.css' />
     <script type='text/javascript' src='/js/jquery.js'></script>
     <script type='text/javascript' src='/js/d3.js'></script>
-    <script type='text/javascript' src='/js/fornac.js'></script>
     <script type='text/javascript' src='/js/d3-grid.js'></script>
+    <script type='text/javascript' src='/js/d3-rnaplot.js'></script>
 
     <script type='text/javascript'>
-        var svgWidth = 1000;
-        var nodeWidth = 300;
-        var nodeHeight = 300;
-        var padding = [10,10];
-        var margin = {{top: 4, left: 4, bottom: 4, right: 4}};
+    // set all of the parameters
+    var padding = [10,10];   //the padding between the grid rectangles
+    var margin = {{top: 4, left: 4, bottom: 4, right: 4}};
+    var svgWidth = 1000 - margin.left - margin.right;  //the width of the svg
 
-        var seqs = {};
-        
-        var numCols = Math.floor((svgWidth + padding[0]) / (nodeWidth + padding[0]));
-        var svgHeight = Math.ceil(seqs.length / numCols) * (nodeHeight + padding[1]) - padding[1] + margin.bottom;
+    var cellWidth = 200; //the width of each cell
+    var cellHeight = 200;  //the height of each cell
 
-        var rectGrid = d3.layout.grid()
-        .bands()
-        .size(svgWidth, svgHeight)
-        .cols(numCols)
-        .padding(padding)
-        .nodeSize([nodeWidth, nodeHeight])
+    var root = {};
+
+    // calculate the number of columns and the height of the SVG,
+    // which is dependent on the on the number of data points
+    var numCols = Math.floor((svgWidth + padding[0]) / (cellWidth + padding[0]));
+    var svgHeight = Math.ceil(root.length / numCols) * (cellHeight + padding[1]) - padding[1] + margin.bottom;
+
+    var chart = rnaPlot()
+    .width(cellWidth)
+    .height(cellHeight)
+
+     var rectGrid = d3.layout.grid()
+              .bands()
+              .size([svgWidth, svgHeight])
+              .cols(numCols)
+              .padding(padding)
+              .nodeSize([cellWidth, cellHeight]);
+    var rectData = rectGrid(root)
+
+    // create an svg as a child of the #rna_ss div
+    // and then a g for each grid cell
+    var svg = d3.select('#rna_ss')
+    .append('svg')
+    .attr('width', svgWidth + margin.left + margin.right)
+    .attr('height', svgHeight + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + "," + margin.top + ")")
+
+    var gZoom = svg.append('g')
+    .call(d3.behavior.zoom().scaleExtent([1, 2 * root.length ]).on("zoom", zoom))
+
+    gZoom.append("rect")
+    .attr("class", "overlay")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
+
+    svg = svg.append('g')
+
+    function zoom() {{
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    }}
 
 
-        var rectData = rectGrid( seqs );
-
-        d3.select('#rna_ss')
-        .selectAll('.rna-struct')
-        .data(rectData)
-        .enter()
-        .append('div')
-        .style('position', 'absolute')
-        .attr('id', function(d,i) {{ return "rm" + i; }})
-        .style('left', function(d) {{ return d.x + "px"; }})
-        .style('top', function(d) {{ return d.y + "px"; }})
-        .style('width', function(d) {{ return nodeWidth + "px"; }})
-        .style('height', function(d) {{ return nodeHeight + "px"; }})
-        .classed('rna-struct', true)
-        .each(function(d, i) {{
-            console.log('d:', d, i);
-            var container = new FornaContainer("#rm" + i,
-                {{'applyForce': true, 'allowPanningAndZooming': true, 
-                'initialSize':[nodeWidth, nodeHeight],
-                'cssFileLocation':'/css/fornac.css'}});
-        
-                container.addRNA(d.structure, d);
-
-                }});
-        
+    svg.selectAll('.rna-cell')
+    .data(rectData)
+    .enter()
+    .append('g')
+    .attr('transform', function(d) {{ return 'translate(' + d.x + ',' + d.y + ')'; }})
+    .classed('rna-cell', true)
+    .call(chart);
     </script>
 """
+
+def reorder_structs(pair_bitmaps):
+    '''
+    Order the structures according to their first PC as evaluated
+    on the bitmap of the pairs.
+
+    @param pair_bitmaps: An array of length n, corresponding to each potentially
+        adjacent pair. 1 if that pair is adjacent, 0 if not.
+    @return: An array indicating the new ordering of the structures.
+    '''
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=1)
+    one_d_bitmaps = pca.fit_transform(pair_bitmaps)[:,0]
+
+    ix = np.argsort(one_d_bitmaps)
+    fud.pv('one_d_bitmaps')
+    fud.pv('one_d_bitmaps[ix]')
+    return ix
 
 def get_residue_num_list(cg, d):
     '''
@@ -105,7 +140,6 @@ def get_residue_num_list(cg, d):
 
     return nucleotide_list
 
-
 def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
     '''
     Get a list of extra_links that are within a certain distance of each 
@@ -113,8 +147,12 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
 
     @param cg: The coarse grain RNA structure in question.
     @param dist: The distance.
+    @return: A tuple of (links, pairs) where the links contains tuples of 
+             the #s of the linked nucleotides and pairs is a bitmap 
+             indicating whether a particular pair is linked.
     '''
     links = []
+    pair_bitmap = []
 
     for e1, e2 in it.combinations(cg.nd_define_iterator(), r=2):
         if (e1[0] == 's' and cg.stem_length(e1) == 1) or (e2[0] == 's' and cg.stem_length(e2) == 1):
@@ -132,7 +170,9 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
         dist = cg.element_physical_distance(e1,e2)
 
         if dist > cutoff_dist:
+            pair_bitmap += [0]
             continue
+        pair_bitmap += [1]
 
         if dist < cutoff_dist:
             fud.pv('e1,e2,bp_dist')
@@ -142,7 +182,7 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint):
             links += [[links1, links2]]
 
     fud.pv('json.dumps(links)')
-    return links
+    return (links, pair_bitmap)
 
 def main():
     usage = """
@@ -156,7 +196,7 @@ def main():
 
     parser.add_option('-d', '--distance', dest='distance', default=10000, help="Draw links between elements that are within a certain distance from each other", type='float')
     parser.add_option('-b', '--bp-distance', dest='bp_distance', default=16, help="Draw links only between nucleotides which are so many nucleotides apart", type='int')
-    #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
+    parser.add_option('-n', '--names', dest='names', default=False, action='store_true', help='Add the name of the structure to the display')
 
     (options, args) = parser.parse_args()
 
@@ -165,19 +205,28 @@ def main():
         sys.exit(1)
 
     structs = []
+    pair_bitmaps = []
 
     for filename in args:
         cg = ftmc.CoarseGrainRNA(filename)
+        (links, pair_bitmap) = extract_extra_links(cg, options.distance, options.bp_distance)
+        pair_bitmaps += [pair_bitmap]
         seq_struct = {"sequence": cg.seq,
                       "structure": cg.to_dotbracket_string(),
-                      "extraLinks": extract_extra_links(cg, options.distance, options.bp_distance)}
+                      "extraLinks": links,
+                      "name": op.basename(filename)}
 
         structs += [seq_struct]
 
 
-    fud.pv('json.dumps(structs)')
-    print output_template.format(json.dumps(structs))
 
+    ix = reorder_structs(pair_bitmaps) 
+    new_array = [0 for i in range(len(ix))]
+    for i,x in enumerate(ix):
+        new_array[i] = structs[x]
+
+    fud.pv('ix')
+    print output_template.format(json.dumps(new_array))
 
 if __name__ == '__main__':
     main()
