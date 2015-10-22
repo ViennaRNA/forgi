@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-from builtins import map
+
+try:
+    import builtins
+except ImportError:
+    builtins = __builtin__
 
 
 from ...graph import bulge_graph as fgb
