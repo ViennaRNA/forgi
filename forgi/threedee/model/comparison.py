@@ -43,7 +43,7 @@ def mcc(confusion_matrix):
                      sty(confusion_matrix['tp'],
                          confusion_matrix['fn']))
 
-def confusion_matrix(cg1, cg2, distance=30):
+def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
     '''
     Calculate the true_positive, false_positive,
     true_negative and false_negative rate for the tertiary
@@ -52,6 +52,8 @@ def confusion_matrix(cg1, cg2, distance=30):
     @param cg1: The first coarse grain model
     @param cg2: The second coarse grain model
     @param distance: The distance to consider for interactions
+    @param bp_distance: Only consider elements separated by this many more pair
+        and backbone bonds
     @return: A dictionary like this: {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
     '''
     nodes1 = set(cg1.defines.keys())
@@ -76,6 +78,10 @@ def confusion_matrix(cg1, cg2, distance=30):
             raise Exception("{} {} connected in cg2 but not cg1".format(n1, n2))
 
 
+        bp_dist = cg2.min_max_bp_distance(n1, n2)[0]
+        if bp_dist < bp_distance:
+            continue
+
         dist1 = cg1.element_physical_distance(n1, n2)
         dist2 = cg2.element_physical_distance(n1, n2)
 
@@ -98,15 +104,18 @@ def confusion_matrix(cg1, cg2, distance=30):
 
     return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
 
-def mcc_between_cgs(cg_query, cg_native, distance=30):
+def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     '''
     Calculate the MCC of the distance between two elements.
 
     @param cg_query: The second cg structure
     @param cg_native: The native cg structure
+    @param distance: The distance between which we consider interactions.
+    @param bp_distance: Only consider pairs of elements that are separated by no
+        more than this many base pairs
     @return: The MCC for interactions within a certain distance
     '''
-    cm = confusion_matrix(cg_query, cg_native, distance)
+    cm = confusion_matrix(cg_query, cg_native, distance, bp_distance=16)
     my_mcc = mcc(cm)
     return my_mcc
 

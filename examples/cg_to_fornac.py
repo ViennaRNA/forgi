@@ -27,8 +27,6 @@ output_template = """
 
 This is an RNA container.
 <div id='rna_ss'> </div>
-This after the RNA container.
-
     <link rel='stylesheet' type='text/css' href='/css/d3-rnaplot.css' />
     <script type='text/javascript' src='/js/jquery.js'></script>
     <script type='text/javascript' src='/js/d3.js'></script>
@@ -78,7 +76,7 @@ This after the RNA container.
     .attr('transform', 'translate(' + margin.left + "," + margin.top + ")")
 
     var gZoom = svg.append('g')
-    .call(d3.behavior.zoom().scaleExtent([1, 2 * root.length ]).on("zoom", zoom))
+    .call(d3.behavior.zoom().scaleExtent([0.5, 2 * root.length ]).on("zoom", zoom))
 
     gZoom.append("rect")
     .attr("class", "overlay")
@@ -193,10 +191,7 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxint,
             else:
                 correct = True
 
-            fud.pv('correct')
             links += [{"from": links1, "to": links2, "linkType": 'correct' if correct else 'incorrect'}]
-
-    fud.pv('[l["linkType"] for l in links]')
 
     return (links, pair_bitmap)
 
@@ -212,6 +207,7 @@ def main():
 
     parser.add_option('-d', '--distance', dest='distance', default=10000, help="Draw links between elements that are within a certain distance from each other", type='float')
     parser.add_option('-b', '--bp-distance', dest='bp_distance', default=16, help="Draw links only between nucleotides which are so many nucleotides apart", type='int')
+    parser.add_option('-s', '--sort-by', dest='sort_by', default='mcc', help="What to sort by (options: mcc, pca)", type='string')
     parser.add_option('-n', '--names', dest='names', default=False, action='store_true', help='Add the name of the structure to the display')
 
     (options, args) = parser.parse_args()
@@ -224,6 +220,7 @@ def main():
     pair_bitmaps = []
     cgs = []
     all_links = []
+    mccs = []
 
     for filename in args:
         cg = ftmc.CoarseGrainRNA(filename)
@@ -239,14 +236,24 @@ def main():
 
         seq_struct = {"sequence": cg.seq,
                       "structure": cg.to_dotbracket_string(),
-                      "extraLinks": links,
-                      "name": op.basename(filename) + " ({:.2f},{:.1f})".format(mcc, rmsd)}
+                      "extraLinks": links}
+
+        fud.pv('options.names')
+        if options.names:
+            seq_struct['name'] = op.basename(filename) + " ({:.2f},{:.1f})".format(mcc, rmsd)
+        else:
+            seq_struct['name'] = ''
 
         structs += [seq_struct]
+        mccs += [mcc]
 
+    if options.sort_by == 'pca':
+        print >>sys.stderr, "Sorting by pca"
+        ix = reorder_structs(pair_bitmaps) 
+    else:
+        print >>sys.stderr, "Sorting by mcc"
+        ix = np.argsort(-np.array(mccs))
 
-
-    ix = reorder_structs(pair_bitmaps) 
     new_array = [0 for i in range(len(ix))]
     for i,x in enumerate(ix):
         new_array[i] = structs[x]
