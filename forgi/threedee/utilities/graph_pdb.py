@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 import sys
 
-import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Depricated
+#import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Depricated
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
@@ -1781,7 +1781,7 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
 
             if given_atom_names is None:
                 if sidechain:
-                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[cg.seq[r-1]]
+                    atom_names = ftup.nonsidechain_atoms + [ cg.seq[r-1]+"."+x for x in ftup.side_chain_atoms[cg.seq[r-1]] ]
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
@@ -1857,7 +1857,7 @@ class VirtualAtomsLookup(object):
             if r!=pos: continue
             if self.given_atom_names is None:
                 if self.sidechain:
-                    atom_names = ftup.nonsidechain_atoms + ftup.side_chain_atoms[self.cg.seq[r-1]]
+                    atom_names = (ftup.nonsidechain_atoms + [ self.cg.seq[r-1]+"."+x for x in ftup.side_chain_atoms[self.cg.seq[r-1]] ])
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
@@ -1866,6 +1866,8 @@ class VirtualAtomsLookup(object):
                 identifier = "%s %s %d %d %s" % (d[0],
                                               " ".join(map(str, self.cg.get_node_dimensions(d))),
                                               conn_type, i, aname)
+                if "." in aname:
+                    _,_,aname=aname.partition(".")
                 try:
                     e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
@@ -1878,7 +1880,7 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
-def add_atoms(coords, twists, define, side, seq, new_coords):
+"""def add_atoms(coords, twists, define, side, seq, new_coords):
     stem_len = define[1] - define[0] + 1
 
     for i in range(stem_len):
@@ -1923,7 +1925,7 @@ def cg_atoms(cg):
         elif d[0] == 't':
             new_coords = add_atoms(coords, twists, cg.defines[d], 1, cg.seq, new_coords)
 
-    return new_coords
+    return new_coords"""
 
 def element_distance(cg, l1, l2):
     '''

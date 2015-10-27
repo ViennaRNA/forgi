@@ -76,8 +76,8 @@ def main():
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true',
                       help='Display the coordinate basis of each element')
     parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
-    parser.add_option('', '--stem-atoms', dest='stem_atoms', default=False, action='store_true',
-                      help='Display the stem atoms')
+    parser.add_option('', '--sidechain-atoms', dest='sidechain_atoms', default=False, action='store_true',
+                      help='Include the sidechain atoms. Automatically enables --virtual-atoms')
     parser.add_option('', '--rainbow', dest='rainbow', default=False, action='store_true',
                       help='Color each of the nucleotide positions (i.e. average atoms) according to the colors of \
                       the rainbow and their position')
@@ -103,6 +103,7 @@ def main():
     pp.print_text = options.text
     pp.encompassing_stems = options.encompassing_stems
     pp.virtual_atoms = options.virtual_atoms
+    pp.sidechain_atoms = options.sidechain_atoms
     pp.basis = options.basis
     pp.rainbow = options.rainbow
 
@@ -136,19 +137,6 @@ def main():
 
         pp.coordinates_to_pymol(cg)
 
-
-    for d in cg.defines:
-        if d[0] == 'i' or d[0] == 's' or d[0] == 'm':
-            if options.stem_atoms:
-                if d[0] == 'm':
-                    side = cg.get_strand(d)
-
-                    pp.stem_atoms(cg.coords[d], cg.get_twists(d),
-                                  cg.get_node_dimensions(d)[0], side=side)
-                elif d[0] == 's':
-                    for side in range(2):
-                        pp.stem_atoms(cg.coords[d], cg.get_twists(d),
-                                      cg.get_node_dimensions(d)[0], side=side)
 
     # highlight things in purple
     if options.highlight is not None:

@@ -8,8 +8,9 @@ import numpy as np
 import uuid
 import collections as col
 
+import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
+#import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
@@ -37,6 +38,7 @@ class PymolPrinter:
         self.new_spheres = []
         self.boxes = []
         self.virtual_atoms = False
+        self.sidechain_atoms = False
         self.override_color = None
         self.element_specific_colors = None
         self.print_text = True
@@ -60,6 +62,8 @@ class PymolPrinter:
     def get_color_vec(self, color):
         if color == 'green':
             return [0.0, 1.0, 0.0]
+        elif color == 'forest':
+            return [0.2, 0.6, 0.2]
         elif color == 'blue':
             return [0.0, 0.0, 1.0]
         elif color == 'red':
@@ -142,7 +146,6 @@ class PymolPrinter:
         for (p, n, color, width, text) in self.new_segments:
             p -= translation
             n -= translation
-/home/mescalin/thiel/CODING/RNA3D/forgi/venv/lib/python2.7/site-packages/forgi/threedee/visual/pymol.py
             new_p = np.dot(rotation, p)
             new_n = np.dot(rotation, n)
 
@@ -713,8 +716,8 @@ class PymolPrinter:
                     #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
                     self.add_segment(i1, i2, 'cyan', 0.3)
 
-        if self.virtual_atoms:
-            va = ftug.virtual_atoms(cg, sidechain=False)
+        if self.virtual_atoms or self.sidechain_atoms:
+            va = ftug.virtual_atoms(cg, sidechain=self.sidechain_atoms)
 
             atom_width = 0.5
             for i,r in enumerate(sorted(va.keys())):
@@ -730,7 +733,10 @@ class PymolPrinter:
                     else:
                         d = cg.get_node_from_residue_num(r)
                         if d[0] == 's':
-                            self.add_sphere(va[r][a], 'green', width=atom_width)
+                            if a in ftup.nonsidechain_atoms:
+                                self.add_sphere(va[r][a], 'green', width=atom_width)
+                            else:
+                                self.add_sphere(va[r][a], 'forest', width=atom_width)
                         elif d[0] == 'i':
                             self.add_sphere(va[r][a], 'yellow', width=atom_width)
                         elif d[0] == 'm':
@@ -888,7 +894,7 @@ class PymolPrinter:
                     else:
                         self.add_sphere(p, "yellow", 1.5, key)
 
-    def stem_atoms(self, coords, twists, stem_len, side=0):
+    """def stem_atoms(self, coords, twists, stem_len, side=0):
         '''
         Add the locations of the virtual atoms as spheres.
 
@@ -928,3 +934,4 @@ class PymolPrinter:
                     last_o3[j] = new_coords
 
         #self.add_segment(prev_p[0], last_o3[0], colors[0], 0.7)
+    """
