@@ -42,7 +42,7 @@ def main():
 
         for d in cg.defines.keys():
             if np.allclose(cg.coords[d][0], cg.coords[d][1]):
-                print >>sys.stderr, "Degenerate coordinates for element: {}".format(d)
+                print >>sys.stderr, "File {}: Degenerate coordinates for element: {}".format(i, d)
                 continue
 
             origin, basis = ftug.element_coord_system(cg, d)
@@ -65,8 +65,8 @@ def main():
                     continue
 
                 atoms = ftup.nonsidechain_atoms + ftup.chi_torsion_atoms[resname][-2:]
-
-                for aname in atoms:
+                scatoms=ftup.side_chain_atoms[resname]
+                for aname in atoms+scatoms:
                     try:
                         a = cg.chain[cg.seq_ids[r-1]][aname]
                     except KeyError as ke:
@@ -80,7 +80,8 @@ def main():
                         aname = 'B1'
                     elif aname == ftup.chi_torsion_atoms[resname][-1]:
                         aname = 'B2'
-
+                    elif aname in scatoms:
+                        aname=resname+"."+aname
                     avec = a.get_vector().get_array()
                     atom_pos = ftuv.change_basis(avec - origin, basis, ftuv.standard_basis)
                     identifier = "%s %s %d %d %s" % (d[0], 
