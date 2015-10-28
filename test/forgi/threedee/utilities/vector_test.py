@@ -49,18 +49,18 @@ class TestVector(unittest.TestCase):
         #one inside other
         isec=ftuv.seg_intersect(([0.,0.],[4.,4.]), ([1.,1.], [2.,2.]))
         self.assertEqual(len(isec), 2)
-        isec=sorted(isec)
+        isec=sorted(isec, key=lambda x: (x[0], x[1]))
         np.testing.assert_allclose(isec[0], [1., 1.])
         np.testing.assert_allclose(isec[1], [2., 2.])
         isec=ftuv.seg_intersect(([1.,1.], [2.,2.]), ([0.,0.],[4.,4.]))
         self.assertEqual(len(isec), 2)
-        isec=sorted(isec)
+        isec=sorted(isec, key=lambda x: (x[0], x[1]))
         np.testing.assert_allclose(isec[0], [1., 1.])
         np.testing.assert_allclose(isec[1], [2., 2.])
         #overlapping
         isec=ftuv.seg_intersect(([0.,2.], [2.,4.]), ([1.,3.],[3.,5.]))
         self.assertEqual(len(isec), 2)
-        isec=sorted(isec)
+        isec=sorted(isec, key=lambda x: (x[0], x[1]))
         np.testing.assert_allclose(isec[0], [1., 3.])
         np.testing.assert_allclose(isec[1], [2., 4.])
         #non-parallel, no intersection
@@ -73,6 +73,7 @@ class TestVector(unittest.TestCase):
         isec=ftuv.seg_intersect(([0.,1.], [0., 4.]), ([0.,1.], [-5.,7.]))
         self.assertEqual(len(isec), 1)
         np.testing.assert_allclose(isec[0], [0., 1.])
+        #Invalid inputs
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.,1.], [0., 4.]), ([0.,1.], [-5.,7., 5.]))
         with self.assertRaises(ValueError):
@@ -89,4 +90,8 @@ class TestVector(unittest.TestCase):
             ftuv.seg_intersect(([0., 5.], [4.34]), ([0.,1.], [-5.,7.]))
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
-
+    def test_is_almost_colinear(self):
+        self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,7]),np.array([9.,18.,21.])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,4.,-6.])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([3.,4.,6.])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,5.,6.])))

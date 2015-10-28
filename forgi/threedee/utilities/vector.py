@@ -132,7 +132,7 @@ def is_almost_colinear(vec1, vec2):
     Returns true, if two vectors are almost colinear
     """
     factor=vec1/vec2
-    return all(x<0.000000001 for x in factor[1:]-factor[:1])
+    return all(abs(x)<0.000000001 for x in factor[1:]-factor[:1])
 def create_orthonormal_basis1(vec1, vec2=None, vec3=None):
     '''
     Create an orthonormal basis using the provided vectors.
@@ -569,8 +569,8 @@ def seg_intersect(line1, line2) :
     dyb=b2[1]-b1[1]
     num=a1[0]*dya-a1[1]*dxa-b1[0]*dya+b1[1]*dxa
     denom=float(dxb*dya-dyb*dxa)
-    s=num/denom
-    if np.isnan(s):
+
+    if denom==0:
         #parallel or on same lines
         if dxa==0:
           t1=(b1[1]-a1[1])/dya
@@ -606,15 +606,17 @@ def seg_intersect(line1, line2) :
         else:
             toret.append(a2)
         return toret
-    if s>=0 and s<=1:
-        c=np.array(b1)+s*(np.array(b2)-np.array(b1))
-        t=(a1[0]-c[0])/dxa
-        if np.isnan(t):
-            t=(a1[1]-c[1])/dya
-        print(t)
-        if t>=0 and t<=1:
-            return [c]
-    return []
+    else:
+        s=num/denom
+        if s>=0 and s<=1:
+            c=np.array(b1)+s*(np.array(b2)-np.array(b1))
+            if dxa!=0:
+                t=(c[0]-a1[0])/dxa
+            else:
+                t=(c[1]-a1[1])/dya
+            if t>=0 and t<=1:
+                return [c]
+        return []
     
 
 
@@ -928,7 +930,7 @@ def sortAlongLine(start, end, points):
 
     :returns: A list containing start, end and all elements of points, sorted by the distance from start 
     """
-    print start, end, points
+    #print start, end, points
     s_points=points+[start, end]
     s_points.sort(key=lambda x: vec_distance(x, start))
     return s_points
