@@ -34,9 +34,9 @@ class TestVector(unittest.TestCase):
             self.assertAlmostEqual(np.linalg.norm(ortVec), 1, places=10)
         #Every vector is orthogonal to the zero-vector:
         vec=np.array([0., 0., 0.])
-        ortVec=ftuv.get_orthogonal_unit_vector(vec)
+        #ortVec=ftuv.get_orthogonal_unit_vector(vec)
         #Currently, ortVec==nan, so the assertion fails.
-        #self.assertAlmostEqual(np.dot(ortVec, vec), 0, places=10)
+        #self.assertAlmostEqual(np.dot(ortVec, vec), 0, places=10) 
         #self.assertAlmostEqual(np.linalg.norm(ortVec), 1, places=10)
     def test_seg_intersect(self):
         #normal case
@@ -89,7 +89,4 @@ class TestVector(unittest.TestCase):
             ftuv.seg_intersect(([0., 5.], [4.34]), ([0.,1.], [-5.,7.]))
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
-
-
-
 
