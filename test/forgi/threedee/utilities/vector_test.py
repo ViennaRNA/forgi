@@ -95,3 +95,13 @@ class TestVector(unittest.TestCase):
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,4.,-6.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([3.,4.,6.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,5.,6.])))
+    def test_middlepoint(self):
+        self.assertIsInstance(ftuv.middlepoint((1,2,3),(4,5,6)), tuple)
+        self.assertIsInstance(ftuv.middlepoint([1,2,3],[4,5,6]), list)
+        self.assertIsInstance(ftuv.middlepoint(np.array([1,2,3]),np.array([4,5,6])), type(np.array([1,2,3])))
+        self.assertEqual(ftuv.middlepoint((1,2),(3,4)), (2,3))
+        self.assertEqual(ftuv.middlepoint([1,2,3],[5,6,7]), [3,4,5])
+        mp=ftuv.middlepoint(np.array([1,2,-3]),np.array([1,0,-5]))
+        self.assertTrue(((mp==np.array([1,1,-4])).all()), msg="Middlepoint for np arrays: {} "
+                                                      "is not {}".format(mp, np.array([1,1,-4])))
+

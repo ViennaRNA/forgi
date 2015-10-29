@@ -26,8 +26,6 @@ class Projection2DTestWithData(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
-    def test_plot(self):
-        self.proj.plot()
     def test_get_bounding_square(self):
         s1=self.proj.get_bounding_square()
         s2=self.proj.get_bounding_square(5)
@@ -49,8 +47,28 @@ class Projection2DTestWithData(unittest.TestCase):
                                               "bounding square {} at the BOTTOM".format(point, s1))
             self.assertLessEqual(round(point[1], 7),round(s1[3], 7), msg="Point {} outside of "
                                               "bounding square {} at the TOP".format(point, s1))
-    def test_len_cycle_basis(self):
-        print(self.proj.proj_graph)
-        print(nx.cycle_basis(self.proj.proj_graph))
-        self.assertEqual(len([x for x in nx.cycle_basis(self.proj.proj_graph) if len(x)>1]), 4)
+
+    def test_condense(self):
+        self.proj.condensePoints()
+        self.assertEqual(len(self.proj.proj_graph.nodes()), 12)
+        self.proj.condensePoints(100)
+        self.assertEqual(len(self.proj.proj_graph.nodes()), 1)
+ 
+class Projection2DTestOnCondensedProjection(unittest.TestCase):
+    def setUp(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
+        self.proj.condensePoints(1)
+    #def test_plot(self):
+        #self.proj.plot()
+    def test_get_cyclebasis_len(self):
+        self.assertEqual(self.proj.get_cyclebasis_len(), 2)
+    def test_get_branchpoint_count(self):
+        self.assertEqual(self.proj.get_branchpoint_count(), 4)
+        self.assertEqual(self.proj.get_branchpoint_count(3), 3)
+        self.assertEqual(self.proj.get_branchpoint_count(4), 1)
+    def test_get_total_length(self):
+        self.assertAlmostEqual(self.proj.get_total_length(), 134.377646879)
+    def test_get_maximal_path_length(self):
+        self.assertAlmostEqual(self.proj.get_maximal_path_length(), 95.29668468051)
 

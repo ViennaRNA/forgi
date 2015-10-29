@@ -4,6 +4,12 @@ import numpy as np
 import itertools as it
 import networkx as nx
 
+
+
+
+
+
+
 class Projection2D(object):
     """A 2D Projection of a CoarseGrainRNA unto a 2D-plain"""
     def __init__(self, cg, proj_direction):
@@ -119,6 +125,7 @@ class Projection2D(object):
                     proj_graph.add_edge(oldpoint, point)                 
                 oldpoint=point
         self._proj_graph=proj_graph
+        self.condensePoints(0.00000000001)
     def _project(self, cg):
         """
         Calculates the 2D coordinates of all coarse grained elements by vector rejection.
@@ -162,9 +169,10 @@ class Projection2D(object):
         import matplotlib.pyplot as plt
         import matplotlib.lines as lines
         fig, ax = plt.subplots()
-        for s,e in self.proj_graph.edges():
+        for s,e in self.proj_graph.edges_iter():
             line=lines.Line2D([s[0], e[0]],[s[1],e[1]])                
             ax.add_line(line)
+        """
         for key,p in self._coords.items():
             plt.plot(p[0][0], p[0][1], 'ro')
             plt.plot(p[1][0], p[1][1], 'ro')
@@ -172,8 +180,114 @@ class Projection2D(object):
         for key,l in self.crossingPoints.items():
             for p in l:
                 #print("P", p)
-                plt.plot(p[0][0], p[0][1], 'go')
+                plt.plot(p[0][0], p[0][1], 'go')"""
         plt.axis(self.get_bounding_square(5))
         plt.show()
+    def condensePoints(self, cutoff=1):
+        """
+        Condenses several projection points that are within a range of less than cutoff into
+        one point. This function modifies this Projection2D object.
+  
+        :param cutoff: Two point with a distance smaller than cuttoff are contracted.
+        """
+        while self._condense_one(cutoff):
+            pass
+        self.proj_graph.remove_edges_from(self.proj_graph.selfloop_edges())
+    def _condense_one(self, cutoff):
+        """
+        Condenses two adjacent projection points into one.
+        :returns: true if a condensation was done, returns False if no condenstaion is possible..
+        """        
+        for i,node1 in enumerate(self.proj_graph.nodes_iter()):
+            for j, node2 in enumerate(self.proj_graph.nodes_iter()):
+                if j<=i: continue;                
+                if ftuv.vec_distance(node1, node2)<cutoff:
+                    newnode=ftuv.middlepoint(node1, node2)
+                    #self.proj_graph.add_node(newnode)
+                    for neighbor in self.proj_graph.edge[node1].keys():
+                        self.proj_graph.add_edge(newnode, neighbor)
+                    for neighbor in self.proj_graph.edge[node2].keys():
+                        self.proj_graph.add_edge(newnode, neighbor)
+                    if newnode!=node1: #Equality can happen because of floating point inaccuracy
+                        self.proj_graph.remove_node(node1)
+                    if newnode!=node2:
+                        self.proj_graph.remove_node(node2)
+                    return True
+        return False
+    def get_branchpoint_count(self, degree=None):
+        """
+        Returns the number of branchpoint.
+
+        :param degree: If degree is None, count all points with degree>=3
+                       Else: only count (branch)points of the given degree
+        """
+        if degree is None:
+            return len([x for x in nx.degree(self.proj_graph).values() if x>=3])
+        else:
+            return len([x for x in nx.degree(self.proj_graph).values() if x==degree])
+    def get_cyclebasis_len(self):
+        """
+        Returns the number of cycles of length>1 in the cycle basis.
+        """
+        return len([x for x in nx.cycle_basis(self.proj_graph) if len(x)>1])
+    def get_total_length(self):
+        """
+        Returns the sum of the lengths of all edges in the projection graph.      
+        """
+        l=0
+        for edge in self.proj_graph.edges_iter():
+            l+=ftuv.vec_distance(edge[0], edge[1])
+        return l
+
+    def get_longest_arm_length(self):
+        """
+        Get the length of the longest arm.
+
+        An arm is a simple path from a node of degree!=2 to a node of degree 1, if all the other 
+        nodes on the path have degree 2.
+        """
+        #Pick a leave node
+        #Walk until node of degree !=2
+        raise NotImplementedError
+    def get_maximal_path_length(self):
+        """
+        Get the maximal path length from all simple paths that traverses the projection graph from 
+        one leave node to another.
+        """
+        maxl=0
+        for i, node1 in enumerate(self.proj_graph.nodes_iter()):
+            for j, node2 in enumerate(self.proj_graph.nodes_iter()):
+                if j<=i: continue
+                all_paths=nx.all_simple_paths(self.proj_graph, node1, node2)
+                for path in all_paths:
+                    l=self._get_path_length(path)
+                    if l>maxl: maxl=l
+        return maxl
 
 
+    def _get_path_length(self, path):
+        """
+        :param path: a list of nodes
+        """
+        l=0
+        for i in range(len(path)-1):
+            l+=ftuv.vec_distance(path[i], path[i+1])
+        return l
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        

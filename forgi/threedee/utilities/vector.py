@@ -935,5 +935,10 @@ def sortAlongLine(start, end, points):
     s_points.sort(key=lambda x: vec_distance(x, start))
     return s_points
 
-
-
+def middlepoint(vec1, vec2):
+    """The point in the middle between vec1 and vec2."""
+    generator=((x+vec2[i])/2.0 for i,x in enumerate(vec1))
+    typ=type(vec1)
+    if typ==np.ndarray:
+        return np.fromiter(generator, float, len(vec1))
+    return typ(generator)
