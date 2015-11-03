@@ -1181,8 +1181,7 @@ def bounding_boxes(bg, chain, s, i):
     return (vpos, bases, corners)
 
 
-def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
-                          vpos=None, vvec=None):
+def virtual_residue_atoms(bg, s, i, strand=0):
     '''
     Return two sets of atoms for the virtual residue. One for the nucleotide
     on each strand.
@@ -1200,15 +1199,13 @@ def virtual_residue_atoms(bg, s, i, strand=0, basis=None,
     '''
     if s[0]!="s":
         raise ValueError("Expected stem (not single-stranded RNA element), got {}".format(s))
-    vpos = bg.vposs[s][i]
-    basis = bg.vbases[s][i].transpose()
 
-    glob_pos = (bg.defines[s][0] + i - 1, bg.defines[s][3] - i - 1)
+    glob_pos = (bg.defines[s][0] + i, bg.defines[s][3] - i)
     glob_pos = glob_pos[strand]
 
 
     coords=virtual_atoms(bg)
-    
+
     return coords[glob_pos]
 
 
@@ -1749,8 +1746,10 @@ def element_coord_system(cg, d):
 
     And the third will be equal to a x v2.
     '''
+
     vec_axis = ftuv.normalize(cg.coords[d][1] - cg.coords[d][0])
     twists = cg.get_twists(d)
+
 
     mid_twist = ftuv.normalize(twists[0] + twists[1])
     #return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
@@ -1870,7 +1869,11 @@ class VirtualAtomsLookup(object):
                     _,_,aname=aname.partition(".")
                 try:
                     e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
+                    if pos==571:
+                        print identifier, aname, e_coords[aname]
                 except KeyError as ke:
+                    if pos==571:
+                        print "KeyError", identifier, aname
                     pass
             return e_coords
 
