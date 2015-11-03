@@ -1869,11 +1869,7 @@ class VirtualAtomsLookup(object):
                     _,_,aname=aname.partition(".")
                 try:
                     e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
-                    if pos==571:
-                        print identifier, aname, e_coords[aname]
                 except KeyError as ke:
-                    if pos==571:
-                        print "KeyError", identifier, aname
                     pass
             return e_coords
 
