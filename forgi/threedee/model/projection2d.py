@@ -28,7 +28,7 @@ class Projection2D(object):
         self._proj_graph=None
 
         #Calculate orthonormal basis of projection plane.
-        proj_direction=np.array(proj_direction)
+        proj_direction=np.array(proj_direction, dtype=np.float)
         _, unit_vec1, unit_vec2=ftuv.create_orthonormal_basis(proj_direction)
         self._unit_vec1=unit_vec1
         self._unit_vec2=unit_vec2
@@ -125,7 +125,7 @@ class Projection2D(object):
                     proj_graph.add_edge(oldpoint, point)                 
                 oldpoint=point
         self._proj_graph=proj_graph
-        self.condensePoints(0.00000000001)
+        self.condense_points(0.00000000001) #To avoid floating point problems
     def _project(self, cg):
         """
         Calculates the 2D coordinates of all coarse grained elements by vector rejection.
@@ -164,11 +164,14 @@ class Projection2D(object):
         x=(bb[0]+bb[1])/2
         y=(bb[2]+bb[3])/2
         return x-length, x+length, y-length, y+length
-    def plot(self):
-        """Plots the 2D projection"""
+    def plot(self, ax):
+        """
+        Plots the 2D projection
+
+        :param ax: The axes to draw to
+        """
         import matplotlib.pyplot as plt
         import matplotlib.lines as lines
-        fig, ax = plt.subplots()
         for s,e in self.proj_graph.edges_iter():
             line=lines.Line2D([s[0], e[0]],[s[1],e[1]])                
             ax.add_line(line)
@@ -181,14 +184,17 @@ class Projection2D(object):
             for p in l:
                 #print("P", p)
                 plt.plot(p[0][0], p[0][1], 'go')"""
-        plt.axis(self.get_bounding_square(5))
-        plt.show()
-    def condensePoints(self, cutoff=1):
+        ax.axis(self.get_bounding_square(5))
+        out = ax.plot()
+        return out
+    def condense_points(self, cutoff=1):
         """
         Condenses several projection points that are within a range of less than cutoff into
         one point. This function modifies this Projection2D object.
   
-        :param cutoff: Two point with a distance smaller than cuttoff are contracted.
+        ..note: The result depends on the ordering of the dictionary holding the nodes and might thus be pseudorandomly
+
+        :param cutoff: Two point with a distance smaller than cuttoff are contracted. A value below 20 is reasonable.
         """
         while self._condense_one(cutoff):
             pass
@@ -196,11 +202,11 @@ class Projection2D(object):
     def _condense_one(self, cutoff):
         """
         Condenses two adjacent projection points into one.
-        :returns: true if a condensation was done, returns False if no condenstaion is possible..
+        :returns: True if a condensation was done, False if no condenstaion is possible.
         """        
         for i,node1 in enumerate(self.proj_graph.nodes_iter()):
             for j, node2 in enumerate(self.proj_graph.nodes_iter()):
-                if j<=i: continue;                
+                if j<=i: continue                
                 if ftuv.vec_distance(node1, node2)<cutoff:
                     newnode=ftuv.middlepoint(node1, node2)
                     #self.proj_graph.add_node(newnode)
@@ -214,6 +220,52 @@ class Projection2D(object):
                         self.proj_graph.remove_node(node2)
                     return True
         return False
+    def _condense_pointWithLine_step(self, cutoff):
+        """
+        Used by self.condense(cutoff) as a single condensation step of a point with a line segment.
+        """
+        for i,source in enumerate(self.proj_graph.nodes_iter()):
+            for j,target in enumerate(self.proj_graph.nodes_iter()):
+                if j>i and self.proj_graph.has_edge(source,target):
+                    for k, node in enumerate(self.proj_graph.nodes_iter()):
+                        if k==i or k==j:
+                            continue
+                        nearest=ftuv.closest_point_on_seg( source, target, node)
+                        nearest=tuple(nearest)
+                        if nearest==source or nearest==target: 
+                            continue   
+                        if (ftuv.vec_distance(nearest, node)<cutoff):
+                            newnode=ftuv.middlepoint(node, tuple(nearest))
+                            self.proj_graph.remove_edge(source, target)
+                            if source!=newnode:
+                                self.proj_graph.add_edge(source, newnode)
+                            if target!=newnode:
+                                self.proj_graph.add_edge(target, newnode)                        
+                            if newnode!=node: #Equality can happen because of floating point inaccuracy
+                                for neighbor in self.proj_graph.edge[node].keys():
+                                    self.proj_graph.add_edge(newnode, neighbor)
+                                self.proj_graph.remove_node(node)
+                            return True
+        return False
+
+    def condense(self, cutoff):
+        """
+        Condenses points that are within the cutoff of another point or edge (=line segment) into a new point.
+        This function modifies this Projection2D object.
+        
+        The contraction of two points works like documented in condense_points(self, cutoff).
+        If a node is close to a line segment, a new point is generated between this node and the line segment. 
+        Then the original line and the original node are deleted and all connections attached to the new point.
+  
+        ..note: The result depends on the ordering of the dictionary holding the nodes and might thus be pseudorandomly
+
+        
+        :param cutoff: Two point with a distance smaller than cuttoff are contracted. A value between 10 and 20 is reasonable.
+        """
+        self.condense_points(cutoff)
+        while self._condense_pointWithLine_step(cutoff):
+            self.condense_points(cutoff)
+
     def get_branchpoint_count(self, degree=None):
         """
         Returns the number of branchpoint.

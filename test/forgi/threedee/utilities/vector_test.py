@@ -10,6 +10,10 @@ class TestVector(unittest.TestCase):
     """Tests for the threedee.utilities.vector module"""
     def setUp(self):
         return
+    def test_closest_point_on_seg(self):
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(2,2))),(0,2))
+        #Outside segment: returns one endpoint of the segment.
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(2,4))),(0,3))
 
     def test_get_inter_distances(self):
         vecs=[np.array([1., 0., 0.]), np.array([0., 0., 0.]), np.array([0., 0., 0.]), np.array([-1., 0., 0.])]
@@ -18,9 +22,7 @@ class TestVector(unittest.TestCase):
     def test_get_random_vector(self):
         for _ in range(REPEAT_TESTS_CONTAINING_RANDOM):
             vec=ftuv.get_random_vector()
-            self.assertLessEqual(abs(vec[0]),1)        
-            self.assertLessEqual(abs(vec[1]),1)          
-            self.assertLessEqual(abs(vec[2]),1)
+            self.assertLessEqual(ftuv.magnitude(vec[0]),1.)
             vec1=ftuv.get_random_vector()
             vec2=ftuv.get_random_vector()
             self.assertTrue(all( vec1[j]!=vec2[j] for j in [0,1,2]),

@@ -49,16 +49,16 @@ class Projection2DTestWithData(unittest.TestCase):
                                               "bounding square {} at the TOP".format(point, s1))
 
     def test_condense(self):
-        self.proj.condensePoints()
+        self.proj.condense_points()
         self.assertEqual(len(self.proj.proj_graph.nodes()), 12)
-        self.proj.condensePoints(100)
+        self.proj.condense_points(100)
         self.assertEqual(len(self.proj.proj_graph.nodes()), 1)
  
 class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
-        self.proj.condensePoints(1)
+        self.proj.condense_points(1)
     #def test_plot(self):
         #self.proj.plot()
     def test_get_cyclebasis_len(self):

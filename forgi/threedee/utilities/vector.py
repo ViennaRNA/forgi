@@ -41,10 +41,15 @@ def get_random_vector(mult=1.):
     """
     Returns a random vector.
 
-    :param mult: Stretch the random vector by this value. This is the longest allowed value FOR EACH coordinate.
+    :param mult: Stretch the random vector by this value. This is the longest value allowed for the total length.
     :return: A random vector
     """
-    return np.array([mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
+    # Using rejection sampling to generate uniform distribution from points inside a sphere.
+    # Thanks to http://stats.stackexchange.com/a/7984/90399
+    while True:
+        vec=np.array([mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
+        if magnitude(vec)<=mult:
+            return vec
 
 def get_orthogonal_unit_vector(vec):
     '''
@@ -169,13 +174,10 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
         vec2 = np.cross(vec1, vec2)
     #else:
     #    nt.assert_allclose(np.dot(vec2, vec1), 0., rtol=1e-7, atol=1e-7)
-
     vec1 /= magnitude(vec1)
     vec2 /= magnitude(vec2)
-
     if vec3 == None:
         vec3 = np.cross(vec1, vec2)
-
     vec3 /= magnitude(vec3)
 
     return np.array([vec1, vec2, vec3])
@@ -712,6 +714,10 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
 
     http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html
     '''
+    if not isinstance(seg_a, np.ndarray):
+        seg_a=np.array(seg_a)
+        seg_b=np.array(seg_b)
+        circ_pos=np.array(circ_pos)
     seg_v = seg_b - seg_a
     pt_v = circ_pos - seg_a
     mag = math.sqrt(sum(seg_v * seg_v))
@@ -727,6 +733,8 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     proj_v = seg_v_unit * proj
     closest = proj_v + seg_a
     return closest
+
+ 
 
 def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
