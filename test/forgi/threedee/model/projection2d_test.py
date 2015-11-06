@@ -1,9 +1,18 @@
-import unittest
+from __future__ import absolute_import, division, print_function, unicode_literals
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      int, map, next, oct, open, pow, range, round,
+                      str, super, zip)
+from future.builtins.disabled import (apply, cmp, coerce, execfile,
+                             file, long, raw_input, reduce, reload,
+                             unicode, xrange, StandardError)
+
+import unittest, sys
 import numpy as np
 import networkx as nx
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.projection2d as ftmp
 import forgi.threedee.utilities.vector as ftuv
+import matplotlib.pyplot as plt
 class Projection2DBasicTest(unittest.TestCase):
     '''
     Simple tests for the BulgeGraph data structure.
@@ -26,6 +35,7 @@ class Projection2DTestWithData(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
+        self.proj2=ftmp.Projection2D(cg, [0.,0.,1.])
     def test_get_bounding_square(self):
         s1=self.proj.get_bounding_square()
         s2=self.proj.get_bounding_square(5)
@@ -48,19 +58,34 @@ class Projection2DTestWithData(unittest.TestCase):
             self.assertLessEqual(round(point[1], 7),round(s1[3], 7), msg="Point {} outside of "
                                               "bounding square {} at the TOP".format(point, s1))
 
-    def test_condense(self):
+    def test_condense_points(self):
         self.proj.condense_points()
         self.assertEqual(len(self.proj.proj_graph.nodes()), 12)
         self.proj.condense_points(100)
         self.assertEqual(len(self.proj.proj_graph.nodes()), 1)
+    def test_condense(self):
+        self.proj2.condense_points(1)
+        self.assertEqual(self.proj2.get_cyclebasis_len(), 1)
+        self.assertAlmostEqual(self.proj2.get_longest_arm_length(), 35.9558714421)
+        #self.proj.plot(show=True)
+        self.proj2.condense(5)
+        #self.proj2.plot(show=True)
+        self.assertEqual(self.proj2.get_cyclebasis_len(), 2)
+        self.assertAlmostEqual(self.proj2.get_longest_arm_length(), 20.5730384435)
  
 class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
         self.proj.condense_points(1)
-    #def test_plot(self):
-        #self.proj.plot()
+    def test_plot(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        for dire in [ (1.,0.,0.), (0.,0.,1.), (0.,1.,0.),(1.,1.,0.), (1.,0.,1.), (0.,1.,1.), (1.,1.,1.) ]:
+            self.proj=ftmp.Projection2D(cg, dire)
+            self.proj.condense_points(1)
+            self.proj.plot(show=True)
+            #plt.show()
+
     def test_get_cyclebasis_len(self):
         self.assertEqual(self.proj.get_cyclebasis_len(), 2)
     def test_get_branchpoint_count(self):
@@ -71,4 +96,10 @@ class Projection2DTestOnCondensedProjection(unittest.TestCase):
         self.assertAlmostEqual(self.proj.get_total_length(), 134.377646879)
     def test_get_maximal_path_length(self):
         self.assertAlmostEqual(self.proj.get_maximal_path_length(), 95.29668468051)
+    def test_get_longest_arm_length(self):
+        self.assertAlmostEqual(self.proj.get_longest_arm_length(), 20.301048998)
+
+
+
+
 

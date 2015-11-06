@@ -1,3 +1,11 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      int, map, next, oct, open, pow, range, round,
+                      str, super, zip)
+from future.builtins.disabled import (apply, cmp, coerce, execfile,
+                             file, long, raw_input, reduce, reload,
+                             unicode, xrange, StandardError)
+
 import forgi.threedee.utilities.vector as ftuv
 import collections as col
 import numpy as np
@@ -164,7 +172,7 @@ class Projection2D(object):
         x=(bb[0]+bb[1])/2
         y=(bb[2]+bb[3])/2
         return x-length, x+length, y-length, y+length
-    def plot(self, ax):
+    def plot(self, ax=None, show=False):
         """
         Plots the 2D projection
 
@@ -172,6 +180,8 @@ class Projection2D(object):
         """
         import matplotlib.pyplot as plt
         import matplotlib.lines as lines
+        if ax is None:
+            fig, ax = plt.subplots(1, 1)
         for s,e in self.proj_graph.edges_iter():
             line=lines.Line2D([s[0], e[0]],[s[1],e[1]])                
             ax.add_line(line)
@@ -186,6 +196,9 @@ class Projection2D(object):
                 plt.plot(p[0][0], p[0][1], 'go')"""
         ax.axis(self.get_bounding_square(5))
         out = ax.plot()
+        if show:
+            plt.show()
+            return
         return out
     def condense_points(self, cutoff=1):
         """
@@ -298,7 +311,26 @@ class Projection2D(object):
         An arm is a simple path from a node of degree!=2 to a node of degree 1, if all the other 
         nodes on the path have degree 2.
         """
-        #Pick a leave node
+        lengths={}
+        for leaf, degree in nx.degree(self.proj_graph).items():        
+            if degree!=1: continue              
+            lengths[leaf]=0          
+            previous=None
+            current=leaf
+            while True:
+              next=[ x for x in self.proj_graph[current].keys() if x != previous ]
+              assert len(next)==1
+              next=next[0]
+              lengths[leaf]+=ftuv.vec_distance(current, next)
+              if self.proj_graph.degree(next)!=2:
+                  break
+              previous=current
+              current=next
+        
+        print ("\n",lengths, "\n")
+        print (max(lengths.values()))
+        return max(lengths.values())
+
         #Walk until node of degree !=2
         raise NotImplementedError
     def get_maximal_path_length(self):

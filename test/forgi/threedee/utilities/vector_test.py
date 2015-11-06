@@ -12,9 +12,13 @@ class TestVector(unittest.TestCase):
         return
     def test_closest_point_on_seg(self):
         self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(2,2))),(0,2))
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((1,0),(3,0),(2,2))),(2,0))
+        #Not parallel to axis: Floating point values...
+        self.assertAlmostEqual(ftuv.closest_point_on_seg((0,0),(2,2),(0,2))[0],1.) #x-coordinate
+        self.assertAlmostEqual(ftuv.closest_point_on_seg((0,0),(2,2),(0,2))[0],1.) #y-coordinate
         #Outside segment: returns one endpoint of the segment.
         self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(2,4))),(0,3))
-
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(-2,0))),(0,1))
     def test_get_inter_distances(self):
         vecs=[np.array([1., 0., 0.]), np.array([0., 0., 0.]), np.array([0., 0., 0.]), np.array([-1., 0., 0.])]
         distances=ftuv.get_inter_distances(vecs)
