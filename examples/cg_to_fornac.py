@@ -125,6 +125,9 @@ def get_residue_num_list(cg, d):
     @param cg: A CoarseGrainRNA structure.
     @param d: The name of the coarse-grain element
     '''
+
+    return list(cg.define_residue_num_iterator(d, adjacent=True))
+
     if d[0] == 'm':
         return sorted(cg.shortest_bg_loop(d))
     if (d[0] != 's'):
