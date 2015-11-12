@@ -493,8 +493,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Populate this structure from the string
         representation of a graph.
         '''
+        # Reading the bulge_graph-part of the file
         self.from_bg_string(cg_string)
 
+        #Reading the part of the file responsible for 3D information
         lines = cg_string.split('\n')
         for line in lines:
             line = line.strip()
