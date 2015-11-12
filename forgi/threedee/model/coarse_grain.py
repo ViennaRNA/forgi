@@ -452,14 +452,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                  the other direction                    
         '''  
         if bulge == 'start':
-            return (ftms.AngleStat(), cbs.AngleStat())                                                                 
-        
-        connections = self.connections(bulge)                                                                         
-        
+            return (ftms.AngleStat(), cbs.AngleStat())
+
+        connections = self.connections(bulge)
+
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
-        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))  
-        
-        return (angle_stat1, angle_stat2)                                                                             
+        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))
+
+        return (angle_stat1, angle_stat2)
     
     def get_stem_stats(self, stem):                                                                                   
         '''
