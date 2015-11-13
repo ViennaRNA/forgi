@@ -626,11 +626,9 @@ def vec_distance(vec1, vec2):
     return ftuc.vec_distance(vec1, vec2)
     #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
-def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
+def elements_closer_then(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     '''
-    Calculate the two points on each of the segments that are closest to
-    each other. The first segment is defined as p1->p2 and the second as
-    p3->p4.
+    Code copied from line_segment_distance, but with optimizations for fast comparison to distance.
 
     Code shamelessly translated from:
     http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment
@@ -640,18 +638,29 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
 
     @param s2_p0: The start of the second segment
     @param s2_p1: The end of the second segment
+
     @return: A tuple of points (i1,i2) containing the point i1 on s1
-        closest to the point i2 on segment s2
+        closest to the point i2 on segment s2.
     '''
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
-    
-    a = np.dot(u,u)        # always >= 0
-    b = np.dot(u,v)
+    lenw=magnitude(w)
+    a = np.dot(u,u)        # always >= 0    
     c = np.dot(v,v)        # always >= 0
+    
+    if lenw <distance:
+        return True
+    if lenw > math.sqrt(a)+math.sqrt(c)+distance:
+        return False
+    
+
+    b = np.dot(u,v)
+
     d = np.dot(u,w)
     e = np.dot(v,w)
+
+
     D = a*c - b*b       # always >= 0
     sD = D      # sc = sN / sD, default sD = D >= 0
     tD = D      # tc = tN / tD, default tD = D >= 0
@@ -702,7 +711,92 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
 
     # get the difference of the two closest points
-    dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
+    #dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
+
+    return vec_distance(s1_p0 + sc * u, s2_p0 + tc * v)<distance
+
+
+
+def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
+    '''
+    Calculate the two points on each of the segments that are closest to
+    each other. The first segment is defined as p1->p2 and the second as
+    p3->p4.
+
+    Code shamelessly translated from:
+    http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment
+
+    @param s1_p0: The start of the first segment
+    @param s1_p1: The end of the first segment
+
+    @param s2_p0: The start of the second segment
+    @param s2_p1: The end of the second segment
+
+    @return: A tuple of points (i1,i2) containing the point i1 on s1
+        closest to the point i2 on segment s2.
+    '''
+    u = s1_p1 - s1_p0
+    v = s2_p1 - s2_p0
+    w = s1_p0 - s2_p0
+    
+    a = np.dot(u,u)        # always >= 0
+    b = np.dot(u,v)
+    c = np.dot(v,v)        # always >= 0
+    d = np.dot(u,w)
+    e = np.dot(v,w)
+
+
+    D = a*c - b*b       # always >= 0
+    sD = D      # sc = sN / sD, default sD = D >= 0
+    tD = D      # tc = tN / tD, default tD = D >= 0
+
+    SMALL_NUM = 0.000001
+
+    # compute the line parameters of the two closest points
+    if (D < SMALL_NUM):  # the lines are almost parallel
+        sN = 0.0        # force using point P0 on segment S1
+        sD = 1.0        # to prevent possible division by 0.0 later
+        tN = e
+        tD = c
+    else:                # get the closest points on the infinite lines
+        sN = (b*e - c*d)
+        tN = (a*e - b*d)
+        if (sN < 0.0):      # sc < 0 => the s=0 edge is visible
+            sN = 0.0
+            tN = e
+            tD = c
+        elif (sN > sD):  # sc > 1 => the s=1 edge is visible
+            sN = sD
+            tN = e + b
+            tD = c
+
+    if (tN < 0.0):           # tc < 0 => the t=0 edge is visible
+        tN = 0.0
+        # recompute sc for this edge
+        if (-d < 0.0):
+            sN = 0.0
+        elif (-d > a):
+            sN = sD
+        else:
+            sN = -d
+            sD = a
+    elif (tN > tD):      # tc > 1 => the t=1 edge is visible
+        tN = tD
+        # recompute sc for this edge
+        if ((-d + b) < 0.0):
+            sN = 0
+        elif ((-d + b) > a):
+            sN = sD
+        else:
+            sN = (-d + b)
+            sD = a
+            
+    # finally do the division to get sc and tc
+    sc = 0.0 if abs(sN) < SMALL_NUM else sN / sD
+    tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
+
+    # get the difference of the two closest points
+    #dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
 
     return (s1_p0 + sc * u, s2_p0 + tc * v)
 
