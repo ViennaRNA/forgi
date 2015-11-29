@@ -299,3 +299,21 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         self.assertTrue(dist < 10)
 
+    def test_get_load_coordinates(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        coords = cg.get_coordinates_array()
+        new_cg = copy.deepcopy(cg)
+
+        for key in new_cg.coords: 
+            for i in range(len(new_cg.coords[key])):
+                new_cg.coords[key][i] = [0,0,0]
+
+        new_cg.load_coordinates_array(coords)
+        for key in new_cg.coords: 
+            for i in range(len(new_cg.coords[key])):
+                self.assertTrue(np.allclose(new_cg.coords[key][i],
+                                            cg.coords[key][i]))
+
+
+

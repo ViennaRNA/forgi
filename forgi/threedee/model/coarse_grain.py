@@ -557,6 +557,37 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return all_coords
 
+    def get_coordinates_array(self):
+        '''
+        Get all of the coordinates in one large array.
+
+        The coordinates are sorted in the order of the keys
+        in coordinates dictionary.
+
+        :return: One large array containing a sequential list of coordinates
+        '''
+        all_coords = []
+        for key in sorted(self.coords.keys()):
+            for i in range(len(self.coords[key])):
+                all_coords += list(self.coords[key][i])
+        return all_coords
+
+    def load_coordinates_array(self, coords):
+        '''
+        Read in an array of coordinates (as may be produced by get_coordinates_array)
+        and replace the coordinates of this structure with it.
+
+        :param coords: A 1D array of coordinates
+        :return: self
+        '''
+        counter = 0
+
+        for key in sorted(self.coords.keys()):
+            for i in range(len(self.coords[key])):
+                self.coords[key][i] = coords[counter:counter+3]
+                counter += 3
+        return self
+
     def get_twists(self, node):
         ''' 
         Get the array of twists for this node. If the node is a stem,
