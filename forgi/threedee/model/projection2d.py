@@ -172,11 +172,13 @@ class Projection2D(object):
         x=(bb[0]+bb[1])/2
         y=(bb[2]+bb[3])/2
         return x-length, x+length, y-length, y+length
-    def plot(self, ax=None, show=False):
+    def plot(self, ax=None, show=False, margin=5):
         """
         Plots the 2D projection
 
-        :param ax: The axes to draw to
+        :param ax: The axes to draw to. You can get it by calling `fig, ax=matplotlib.pyplot.subplots()`
+        :param show: If true, the matplotlib.pyplot.show() will be called at the end of this function.
+        :param margin: A numeric value. The margin around the plotted projection inside the (sub-)plot.
         """
         import matplotlib.pyplot as plt
         import matplotlib.lines as lines
@@ -194,7 +196,7 @@ class Projection2D(object):
             for p in l:
                 #print("P", p)
                 plt.plot(p[0][0], p[0][1], 'go')"""
-        ax.axis(self.get_bounding_square(5))
+        ax.axis(self.get_bounding_square(margin))
         out = ax.plot()
         if show:
             plt.show()
