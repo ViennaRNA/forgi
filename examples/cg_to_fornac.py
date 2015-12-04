@@ -208,7 +208,7 @@ def main():
     num_args= 1
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-d', '--distance', dest='distance', default=10000, help="Draw links between elements that are within a certain distance from each other", type='float')
+    parser.add_option('-d', '--distance', dest='distance', default=25, help="Draw links between elements that are within a certain distance from each other", type='float')
     parser.add_option('-b', '--bp-distance', dest='bp_distance', default=16, help="Draw links only between nucleotides which are so many nucleotides apart", type='int')
     parser.add_option('-s', '--sort-by', dest='sort_by', default='mcc', help="What to sort by (options: mcc, pca)", type='string')
     parser.add_option('-n', '--names', dest='names', default=False, action='store_true', help='Add the name of the structure to the display')
