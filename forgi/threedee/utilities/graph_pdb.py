@@ -1865,6 +1865,7 @@ class VirtualAtomsLookup(object):
                 identifier = "%s %s %d %d %s" % (d[0],
                                               " ".join(map(str, self.cg.get_node_dimensions(d))),
                                               conn_type, i, aname)
+
                 if "." in aname:
                     _,_,aname=aname.partition(".")
                 try:

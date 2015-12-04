@@ -12,9 +12,10 @@ def magnitude(vec):
     @param vec: The vector in question.
     @return: The magnitude of the vector.
     '''
-    #return ftuc.magnitude(vec)
     return m.sqrt(np.dot(vec, vec))
 
 def vec_distance(vec1, vec2):
-    #return ftuc.vec_distance(vec1, vec2)
+    if not isinstance(vec1, np.ndarray):
+        vec1=np.array(vec1)
+        vec2=np.array(vec2)
     return m.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
