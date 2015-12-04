@@ -172,20 +172,30 @@ class Projection2D(object):
         x=(bb[0]+bb[1])/2
         y=(bb[2]+bb[3])/2
         return x-length, x+length, y-length, y+length
-    def plot(self, ax=None, show=False, margin=5):
+    def plot(self, ax=None, show=False, margin=5, linewidth=None, line2dproperties={}):
         """
         Plots the 2D projection
 
         :param ax: The axes to draw to. You can get it by calling `fig, ax=matplotlib.pyplot.subplots()`
         :param show: If true, the matplotlib.pyplot.show() will be called at the end of this function.
         :param margin: A numeric value. The margin around the plotted projection inside the (sub-)plot.
+        :param linewidth: The width of the lines projection.
+        :param line2dproperties: A dictionary. Will be passed as **kwargs to the constructor of `matplotlib.lines.Line2D`
+                                 See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D
         """
         import matplotlib.pyplot as plt
         import matplotlib.lines as lines
+
+        if "linewidth" in line2dproperties and linewidth is not None:
+            raise TypeError("Got multiple values for 'linewidth' (also present in line2dproperties)")
+        if linewidth is not None:
+            line2dproperties["linewidth"]=linewidth
+        if "solid_capstyle" not in line2dproperties:
+            line2dproperties["solid_capstyle"]="round"
         if ax is None:
             fig, ax = plt.subplots(1, 1)
         for s,e in self.proj_graph.edges_iter():
-            line=lines.Line2D([s[0], e[0]],[s[1],e[1]])                
+            line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **line2dproperties) 
             ax.add_line(line)
         """
         for key,p in self._coords.items():

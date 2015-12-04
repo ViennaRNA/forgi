@@ -19,7 +19,7 @@ import forgi.threedee.utilities.vector as ftuv
 #The CONDENSE constant is used to simulate a reduced resolution. 
 #The algorithm for doing so is work in progress.
 #For now, a value less than 20 is reasonable.
-CONDENSE=18
+CONDENSE=2
 
 if __name__=="__main__":
     #This script expects a list of *.cg/ *.coord files as command line arguments (and nothing else)
@@ -54,7 +54,7 @@ if __name__=="__main__":
         proj.condense(CONDENSE)
 
         #Plot the projection
-        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=5)
+        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=5, linewidth=5, line2dproperties={"color":"red", "linestyle":"--"})
 
         #Uncomment to set a substring of the filename as a title
         #current_axes.set_title(file[-15:])
@@ -69,9 +69,6 @@ if __name__=="__main__":
         #Uncomment the following line to change the backgroundcolor of the plot area.
         #current_axes.set_axis_bgcolor('black')
 
-        #Change the color of the projection
-        for line in current_axes.lines:
-            line.set_color('black')
     
     #Hide additional subplots with no projection on them.
     for i in range(len(files),int(math.ceil(totalFigures/figuresPerLine))*figuresPerLine):
