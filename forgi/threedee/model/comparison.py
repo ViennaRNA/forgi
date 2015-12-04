@@ -1,6 +1,7 @@
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as fud
 
+import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.rmsd as ftur
 
@@ -42,6 +43,59 @@ def mcc(confusion_matrix):
                          confusion_matrix['fp']) *
                      sty(confusion_matrix['tp'],
                          confusion_matrix['fn']))
+
+
+class ConfusionMatrix(object):
+    """
+    A class used for calculating the confusion_matrix.
+
+    It is initialized with a reference structure and a distance for interactions.
+    The evaluate() method is used for calculating this correlation matrix.
+    """
+    def __init__(self, reference_cg, distance=30.0):
+        self._distance=distance
+        self._reference_interactions=self.get_interactions(reference_cg)
+
+    def get_interactions(self, cg):
+        """
+        :return: A set of 2-tuples containing elements that pair.
+        """
+        interactions=set()
+        nodes=set(cg.defines.keys())
+        for n1, n2 in it.combinations(nodes, r=2):
+            n1,n2=sorted((n1,n2)) #TODO: Read itertools documentation, if this is necessary.
+            if cg.connected(n1, n2):
+                continue
+            if ftuv.elements_closer_then(cg.coords[n1][0],
+                                       cg.coords[n1][1],
+                                       cg.coords[n2][0],
+                                       cg.coords[n2][1], self._distance):
+            #dist = cg.element_physical_distance(n1, n2)
+            #if dist < self._distance:
+                interactions.add((n1,n2))
+        return interactions
+    
+    def evaluate(self, cg):
+        '''
+        Calculate the true_positive, false_positive,
+        true_negative and false_negative rate for the tertiary
+        distances of the elements of cg and the reference structure stored in this class.
+
+        @param cg: The first coarse grain model
+        @return: A dictionary like this: {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
+        '''
+        interactions=self.get_interactions(cg)
+        nodes=set(cg.defines.keys())
+        allIA=set()
+        for n1, n2 in it.combinations(nodes, r=2):
+            allIA.add(tuple(sorted((n1,n2))))
+
+        d={ "tp":0, "tn":0, "fp":0, "fn":0 }
+        d["tp"]=len(self._reference_interactions & interactions)
+        d["fp"]=len(interactions - self._reference_interactions)
+        d["fn"]=len(self._reference_interactions - interactions)
+        d["tn"]=len(allIA - (self._reference_interactions | interactions) )
+        return d
 
 def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
     '''

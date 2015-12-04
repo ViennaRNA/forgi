@@ -24,6 +24,7 @@ import Bio.PDB as bpdb
 import collections as c
 import contextlib
 import numpy as np
+import scipy.spatial
 import os
 import os.path as op
 import shutil
@@ -267,6 +268,7 @@ def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
 
     return cg
 
+
 class CoarseGrainRNA(fgb.BulgeGraph):
     '''
     A coarse grain model of RNA structure based on the
@@ -301,8 +303,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         if cg_file is not None:
             self.from_file(cg_file)
-        pass
-
+        pass 
     def get_coord_str(self):
         '''
         Place the start and end coordinates of each stem into a string.
@@ -451,14 +452,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                  the other direction                    
         '''  
         if bulge == 'start':
-            return (ftms.AngleStat(), cbs.AngleStat())                                                                 
-        
-        connections = self.connections(bulge)                                                                         
-        
+            return (ftms.AngleStat(), cbs.AngleStat())
+
+        connections = self.connections(bulge)
+
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
-        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))  
-        
-        return (angle_stat1, angle_stat2)                                                                             
+        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))
+
+        return (angle_stat1, angle_stat2)
     
     def get_stem_stats(self, stem):                                                                                   
         '''
@@ -493,8 +494,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Populate this structure from the string
         representation of a graph.
         '''
+        # Reading the bulge_graph-part of the file
         self.from_bg_string(cg_string)
 
+        #Reading the part of the file responsible for 3D information
         lines = cg_string.split('\n')
         for line in lines:
             line = line.strip()
@@ -639,7 +642,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return ftuv.vec_distance(i1, i2)
         
-
     def longrange_iterator(self, filter_connected=False):
         '''
         Iterate over all long range interactions in this molecule.

@@ -41,10 +41,15 @@ def get_random_vector(mult=1.):
     """
     Returns a random vector.
 
-    :param mult: Stretch the random vector by this value. This is the longest allowed value FOR EACH coordinate.
+    :param mult: Stretch the random vector by this value. This is the longest value allowed for the total length.
     :return: A random vector
     """
-    return np.array([mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
+    # Using rejection sampling to generate uniform distribution from points inside a sphere.
+    # Thanks to http://stats.stackexchange.com/a/7984/90399
+    while True:
+        vec=np.array([mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
+        if magnitude(vec)<=mult:
+            return vec
 
 def get_orthogonal_unit_vector(vec):
     '''
@@ -127,6 +132,12 @@ def get_non_colinear_unit_vector(vec):
 
     return np.array(unit)
 
+def is_almost_colinear(vec1, vec2):
+    """
+    Returns true, if two vectors are almost colinear
+    """
+    factor=vec1/vec2
+    return all(abs(x)<0.000000001 for x in factor[1:]-factor[:1])
 def create_orthonormal_basis1(vec1, vec2=None, vec3=None):
     '''
     Create an orthonormal basis using the provided vectors.
@@ -163,13 +174,10 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
         vec2 = np.cross(vec1, vec2)
     #else:
     #    nt.assert_allclose(np.dot(vec2, vec1), 0., rtol=1e-7, atol=1e-7)
-
     vec1 /= magnitude(vec1)
     vec2 /= magnitude(vec2)
-
     if vec3 == None:
         vec3 = np.cross(vec1, vec2)
-
     vec3 /= magnitude(vec3)
 
     return np.array([vec1, vec2, vec3])
@@ -540,15 +548,87 @@ def cross(a, b):
     return c
 '''
 
+def seg_intersect(line1, line2) :
+    """
+    Intersection of 2 line segments in 2D space (as lists or numpy array-like).
+    :param line1: a tuple/list (a1, a2): The first line segment, from a1 to a2
+    :param line2: a tuple/list (b1, b2):The 2nd line segment, from b1 to b2
+    """
+    a1,a2=line1
+    b1,b2=line2
+    a1=np.array(a1)
+    a2=np.array(a2)
+    b1=np.array(b1)
+    b2=np.array(b2)
+    if max(map(len, [a1,a2,b1,b2]))!=2:
+        raise ValueError("Expecting only 2-dimensional vectors. Found higher-dimensional vector: a1={}, a2={}, b1={}, b2={}".format(a1,a2,b1,b2))
+    if min(map(len, [a1,a2,b1,b2]))!=2:
+        raise ValueError("Expecting only 2-dimensional vectors. Found lower-dimensional vector.")
+    if (a1==a2).all() or (b1==b2).all(): raise ValueError("Start and end of a line must not be equal! a1={}, a2={}, b1={}, b2={}".format(a1,a2,b1,b2))
+    dxa=a2[0]-a1[0]
+    dya=a2[1]-a1[1]
+    dxb=b2[0]-b1[0]
+    dyb=b2[1]-b1[1]
+    num=a1[0]*dya-a1[1]*dxa-b1[0]*dya+b1[1]*dxa
+    denom=float(dxb*dya-dyb*dxa)
+
+    if denom==0:
+        #parallel or on same lines
+        if dxa==0:
+          t1=(b1[1]-a1[1])/dya
+          t2=(b2[1]-a1[1])/dya
+          t1test=t1
+        else:
+          t1=(b1[0]-a1[0])/dxa
+          t2=(b2[0]-a1[0])/dxa
+        if dya==0:
+          t1test=t1
+        else:
+          t1test=(b1[1]-a1[1])/dya
+        if t1!=t1test:
+            return []
+        #On same line
+        if dxa==0:
+          s1=(a1[1]-b1[1])/dyb
+          s2=(a2[1]-b1[1])/dyb
+        else:
+          s1=(a1[0]-b1[0])/dxb
+          s2=(a2[0]-b1[0])/dxb
+        if all(x<0 or x>1 for x in [s1, s2, t1, t2]):
+            return []
+        ts=min(t1, t2)
+        te=max(t1, t2)
+        toret=[]
+        if ts<0:
+            toret.append(a1)
+        else:
+            toret.append(b1)
+        if te<1:
+            toret.append(b2)
+        else:
+            toret.append(a2)
+        return toret
+    else:
+        s=num/denom
+        if s>=0 and s<=1:
+            c=np.array(b1)+s*(np.array(b2)-np.array(b1))
+            if dxa!=0:
+                t=(c[0]-a1[0])/dxa
+            else:
+                t=(c[1]-a1[1])/dya
+            if t>=0 and t<=1:
+                return [c]
+        return []
+    
+
+
 def vec_distance(vec1, vec2):
     return ftuc.vec_distance(vec1, vec2)
     #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
-def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
+def elements_closer_then(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     '''
-    Calculate the two points on each of the segments that are closest to
-    each other. The first segment is defined as p1->p2 and the second as
-    p3->p4.
+    Code copied from line_segment_distance, but with optimizations for fast comparison to distance.
 
     Code shamelessly translated from:
     http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment
@@ -558,18 +638,29 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
 
     @param s2_p0: The start of the second segment
     @param s2_p1: The end of the second segment
+
     @return: A tuple of points (i1,i2) containing the point i1 on s1
-        closest to the point i2 on segment s2
+        closest to the point i2 on segment s2.
     '''
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
-    
-    a = np.dot(u,u)        # always >= 0
-    b = np.dot(u,v)
+    lenw=magnitude(w)
+    a = np.dot(u,u)        # always >= 0    
     c = np.dot(v,v)        # always >= 0
+    
+    if lenw <distance:
+        return True
+    if lenw > math.sqrt(a)+math.sqrt(c)+distance:
+        return False
+    
+
+    b = np.dot(u,v)
+
     d = np.dot(u,w)
     e = np.dot(v,w)
+
+
     D = a*c - b*b       # always >= 0
     sD = D      # sc = sN / sD, default sD = D >= 0
     tD = D      # tc = tN / tD, default tD = D >= 0
@@ -620,7 +711,92 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
 
     # get the difference of the two closest points
-    dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
+    #dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
+
+    return vec_distance(s1_p0 + sc * u, s2_p0 + tc * v)<distance
+
+
+
+def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
+    '''
+    Calculate the two points on each of the segments that are closest to
+    each other. The first segment is defined as p1->p2 and the second as
+    p3->p4.
+
+    Code shamelessly translated from:
+    http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment
+
+    @param s1_p0: The start of the first segment
+    @param s1_p1: The end of the first segment
+
+    @param s2_p0: The start of the second segment
+    @param s2_p1: The end of the second segment
+
+    @return: A tuple of points (i1,i2) containing the point i1 on s1
+        closest to the point i2 on segment s2.
+    '''
+    u = s1_p1 - s1_p0
+    v = s2_p1 - s2_p0
+    w = s1_p0 - s2_p0
+    
+    a = np.dot(u,u)        # always >= 0
+    b = np.dot(u,v)
+    c = np.dot(v,v)        # always >= 0
+    d = np.dot(u,w)
+    e = np.dot(v,w)
+
+
+    D = a*c - b*b       # always >= 0
+    sD = D      # sc = sN / sD, default sD = D >= 0
+    tD = D      # tc = tN / tD, default tD = D >= 0
+
+    SMALL_NUM = 0.000001
+
+    # compute the line parameters of the two closest points
+    if (D < SMALL_NUM):  # the lines are almost parallel
+        sN = 0.0        # force using point P0 on segment S1
+        sD = 1.0        # to prevent possible division by 0.0 later
+        tN = e
+        tD = c
+    else:                # get the closest points on the infinite lines
+        sN = (b*e - c*d)
+        tN = (a*e - b*d)
+        if (sN < 0.0):      # sc < 0 => the s=0 edge is visible
+            sN = 0.0
+            tN = e
+            tD = c
+        elif (sN > sD):  # sc > 1 => the s=1 edge is visible
+            sN = sD
+            tN = e + b
+            tD = c
+
+    if (tN < 0.0):           # tc < 0 => the t=0 edge is visible
+        tN = 0.0
+        # recompute sc for this edge
+        if (-d < 0.0):
+            sN = 0.0
+        elif (-d > a):
+            sN = sD
+        else:
+            sN = -d
+            sD = a
+    elif (tN > tD):      # tc > 1 => the t=1 edge is visible
+        tN = tD
+        # recompute sc for this edge
+        if ((-d + b) < 0.0):
+            sN = 0
+        elif ((-d + b) > a):
+            sN = sD
+        else:
+            sN = (-d + b)
+            sD = a
+            
+    # finally do the division to get sc and tc
+    sc = 0.0 if abs(sN) < SMALL_NUM else sN / sD
+    tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
+
+    # get the difference of the two closest points
+    #dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
 
     return (s1_p0 + sc * u, s2_p0 + tc * v)
 
@@ -632,6 +808,10 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
 
     http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html
     '''
+    if not isinstance(seg_a, np.ndarray):
+        seg_a=np.array(seg_a)
+        seg_b=np.array(seg_b)
+        circ_pos=np.array(circ_pos)
     seg_v = seg_b - seg_a
     pt_v = circ_pos - seg_a
     mag = math.sqrt(sum(seg_v * seg_v))
@@ -647,6 +827,8 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     proj_v = seg_v_unit * proj
     closest = proj_v + seg_a
     return closest
+
+ 
 
 def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
@@ -838,3 +1020,27 @@ def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
         long = long + dlong
 
     return ptsOnSphere
+
+
+def sortAlongLine(start, end, points):
+    """
+    Sort all points in points along the line from start to end.
+    
+    :param start: A point
+    :param end: A point
+    :param points: A list of points
+
+    :returns: A list containing start, end and all elements of points, sorted by the distance from start 
+    """
+    #print start, end, points
+    s_points=points+[start, end]
+    s_points.sort(key=lambda x: vec_distance(x, start))
+    return s_points
+
+def middlepoint(vec1, vec2):
+    """The point in the middle between vec1 and vec2."""
+    generator=((x+vec2[i])/2.0 for i,x in enumerate(vec1))
+    typ=type(vec1)
+    if typ==np.ndarray:
+        return np.fromiter(generator, float, len(vec1))
+    return typ(generator)

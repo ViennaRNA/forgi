@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import unittest
 import numpy as np
-
 import forgi.threedee.utilities.vector as ftuv
 
 REPEAT_TESTS_CONTAINING_RANDOM = 10
@@ -11,7 +10,15 @@ class TestVector(unittest.TestCase):
     """Tests for the threedee.utilities.vector module"""
     def setUp(self):
         return
-
+    def test_closest_point_on_seg(self):
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(2,2))),(0,2))
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((1,0),(3,0),(2,2))),(2,0))
+        #Not parallel to axis: Floating point values...
+        self.assertAlmostEqual(ftuv.closest_point_on_seg((0,0),(2,2),(0,2))[0],1.) #x-coordinate
+        self.assertAlmostEqual(ftuv.closest_point_on_seg((0,0),(2,2),(0,2))[0],1.) #y-coordinate
+        #Outside segment: returns one endpoint of the segment.
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(2,4))),(0,3))
+        self.assertEqual(tuple(ftuv.closest_point_on_seg((0,1),(0,3),(-2,0))),(0,1))
     def test_get_inter_distances(self):
         vecs=[np.array([1., 0., 0.]), np.array([0., 0., 0.]), np.array([0., 0., 0.]), np.array([-1., 0., 0.])]
         distances=ftuv.get_inter_distances(vecs)
@@ -19,9 +26,7 @@ class TestVector(unittest.TestCase):
     def test_get_random_vector(self):
         for _ in range(REPEAT_TESTS_CONTAINING_RANDOM):
             vec=ftuv.get_random_vector()
-            self.assertLessEqual(abs(vec[0]),1)        
-            self.assertLessEqual(abs(vec[1]),1)          
-            self.assertLessEqual(abs(vec[2]),1)
+            self.assertLessEqual(ftuv.magnitude(vec[0]),1.)
             vec1=ftuv.get_random_vector()
             vec2=ftuv.get_random_vector()
             self.assertTrue(all( vec1[j]!=vec2[j] for j in [0,1,2]),
@@ -35,7 +40,74 @@ class TestVector(unittest.TestCase):
             self.assertAlmostEqual(np.linalg.norm(ortVec), 1, places=10)
         #Every vector is orthogonal to the zero-vector:
         vec=np.array([0., 0., 0.])
-        #ortVec=ftuv.get_orthogonal_unit_vector(vec) #Currently warns
-        #self.assertAlmostEqual(np.dot(ortVec, vec), 0, places=10) #Currently, ortVec==nan, so the assertion woulkd fail.
+        #ortVec=ftuv.get_orthogonal_unit_vector(vec)
+        #Currently, ortVec==nan, so the assertion fails.
+        #self.assertAlmostEqual(np.dot(ortVec, vec), 0, places=10) 
         #self.assertAlmostEqual(np.linalg.norm(ortVec), 1, places=10)
-     
+    def test_seg_intersect(self):
+        #normal case
+        isec=ftuv.seg_intersect(([0.,1.], [0., -1.]), ([-1.,0.], [1.,0.]))
+        self.assertEqual(len(isec), 1)
+        np.testing.assert_allclose(isec[0], [0., 0.])
+        #parallel, no intersection
+        isec=ftuv.seg_intersect(([0., 3.],[1., 3.]),([2.,3.], [3.,3.]))
+        self.assertEqual(isec, [])
+        #one inside other
+        isec=ftuv.seg_intersect(([0.,0.],[4.,4.]), ([1.,1.], [2.,2.]))
+        self.assertEqual(len(isec), 2)
+        isec=sorted(isec, key=lambda x: (x[0], x[1]))
+        np.testing.assert_allclose(isec[0], [1., 1.])
+        np.testing.assert_allclose(isec[1], [2., 2.])
+        isec=ftuv.seg_intersect(([1.,1.], [2.,2.]), ([0.,0.],[4.,4.]))
+        self.assertEqual(len(isec), 2)
+        isec=sorted(isec, key=lambda x: (x[0], x[1]))
+        np.testing.assert_allclose(isec[0], [1., 1.])
+        np.testing.assert_allclose(isec[1], [2., 2.])
+        #overlapping
+        isec=ftuv.seg_intersect(([0.,2.], [2.,4.]), ([1.,3.],[3.,5.]))
+        self.assertEqual(len(isec), 2)
+        isec=sorted(isec, key=lambda x: (x[0], x[1]))
+        np.testing.assert_allclose(isec[0], [1., 3.])
+        np.testing.assert_allclose(isec[1], [2., 4.])
+        #non-parallel, no intersection
+        isec=ftuv.seg_intersect(([0.,2.], [2.,4.]), ([5.,3.],[10,5.]))
+        self.assertEqual(isec, [])
+        #shared endpoint
+        isec=ftuv.seg_intersect(([0.,1.], [0., 4.]), ([0.,4.], [5.,7.]))
+        self.assertEqual(len(isec), 1)
+        np.testing.assert_allclose(isec[0], [0., 4.])
+        isec=ftuv.seg_intersect(([0.,1.], [0., 4.]), ([0.,1.], [-5.,7.]))
+        self.assertEqual(len(isec), 1)
+        np.testing.assert_allclose(isec[0], [0., 1.])
+        #Invalid inputs
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.,1.], [0., 4.]), ([0.,1.], [-5.,7., 5.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.,1., 3.], [0., 4.]), ([0.,1.], [-5.,7.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.,1.], [0., 4., 5.]), ([0.,1.], [-5.,7.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.,1.], [0., 4.]), ([0.,1., 7.], [-5.,7.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.,1.], [0., 4., 6.]), ([0.,1., 7.], [-5.,7.,8.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.], [0., 4.]), ([0.,1.], [-5.,7.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0., 5.], [4.34]), ([0.,1.], [-5.,7.]))
+        with self.assertRaises(ValueError):
+            ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
+    def test_is_almost_colinear(self):
+        self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,7]),np.array([9.,18.,21.])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,4.,-6.])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([3.,4.,6.])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,5.,6.])))
+    def test_middlepoint(self):
+        self.assertIsInstance(ftuv.middlepoint((1,2,3),(4,5,6)), tuple)
+        self.assertIsInstance(ftuv.middlepoint([1,2,3],[4,5,6]), list)
+        self.assertIsInstance(ftuv.middlepoint(np.array([1,2,3]),np.array([4,5,6])), type(np.array([1,2,3])))
+        self.assertEqual(ftuv.middlepoint((1,2),(3,4)), (2,3))
+        self.assertEqual(ftuv.middlepoint([1,2,3],[5,6,7]), [3,4,5])
+        mp=ftuv.middlepoint(np.array([1,2,-3]),np.array([1,0,-5]))
+        self.assertTrue(((mp==np.array([1,1,-4])).all()), msg="Middlepoint for np arrays: {} "
+                                                      "is not {}".format(mp, np.array([1,1,-4])))
+
