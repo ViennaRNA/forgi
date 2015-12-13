@@ -185,7 +185,7 @@ class Projection2D(object):
         if ax is None:
             fig, ax = plt.subplots(1, 1)
         for s,e in self.proj_graph.edges_iter():
-            line=lines.Line2D([s[0], e[0]],[s[1],e[1]])                
+            line=lines.Line2D([s[0], e[0]],[s[1],e[1]], lw=20) 
             ax.add_line(line)
         """
         for key,p in self._coords.items():

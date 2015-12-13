@@ -19,7 +19,7 @@ import forgi.threedee.utilities.vector as ftuv
 #The CONDENSE constant is used to simulate a reduced resolution. 
 #The algorithm for doing so is work in progress.
 #For now, a value less than 20 is reasonable.
-CONDENSE=18
+CONDENSE=0
 
 if __name__=="__main__":
     #This script expects a list of *.cg/ *.coord files as command line arguments (and nothing else)
@@ -31,7 +31,7 @@ if __name__=="__main__":
     #Prepare the pyplot figure
     totalFigures=len(files)
     figuresPerLine=int(math.ceil(math.sqrt(totalFigures)))
-    fig, ax=plt.subplots(int(math.ceil(totalFigures/figuresPerLine)),figuresPerLine, squeeze=False)
+    fig, ax=plt.subplots(int(math.ceil(totalFigures/figuresPerLine)),figuresPerLine, squeeze=False, figsize=(1.5,1.5))
     
     #Uncomment the following line to change the background color of the figure (not the plot).
     #fig.patch.set_facecolor('black')
@@ -46,6 +46,9 @@ if __name__=="__main__":
 
         # Random projection direction. Change to direction=[1.,1.,0.] to set a specific direction
         direction=ftuv.get_random_vector()
+
+        print("i: {}, file: {}, direction: {}".format(i, file, direction),
+              file=sys.stderr)
 
         #Generate the projection object
         proj=ftmp.Projection2D(cg, direction)   
