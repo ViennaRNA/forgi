@@ -12,14 +12,58 @@ import numpy as np
 import itertools as it
 import networkx as nx
 
+import copy
+
+"""
+Show how to override basic methods so an artist can contain another
+artist.  In this case, the line contains a Text instance to label it.
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.lines as lines
+import matplotlib.transforms as mtransforms
+import matplotlib.text as mtext
 
 
+class MyLine(lines.Line2D):
+    """Copied and modyfied from http://matplotlib.org/examples/api/line_with_text.html"""
+    def __init__(self, *args, **kwargs):
+        # we'll update the position when the line data is set
+        self.text = mtext.Text(0, 0, '')
+        lines.Line2D.__init__(self, *args, **kwargs)
 
+        # we can't access the label attr until *after* the line is
+        # inited
+        self.text.set_text(self.get_label())
 
+    def set_figure(self, figure):
+        self.text.set_figure(figure)
+        lines.Line2D.set_figure(self, figure)
+
+    def set_axes(self, axes):
+        self.text.set_axes(axes)
+        lines.Line2D.set_axes(self, axes)
+
+    def set_transform(self, transform):
+        # 2 pixel offset
+        texttrans = transform + mtransforms.Affine2D().translate(2, 2)
+        self.text.set_transform(texttrans)
+        lines.Line2D.set_transform(self, transform)
+
+    def set_data(self, x, y):
+        if len(x):
+            self.text.set_position(((x[0]+x[-1])/2, (y[0]+y[-1])/2))
+
+        lines.Line2D.set_data(self, x, y)
+
+    def draw(self, renderer):
+        # draw my label at the end of the line with 2 pixel offset
+        lines.Line2D.draw(self, renderer)
+        self.text.draw(renderer)
 
 
 class Projection2D(object):
-    """A 2D Projection of a CoarseGrainRNA unto a 2D-plain"""
+    """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
     def __init__(self, cg, proj_direction):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
@@ -43,8 +87,6 @@ class Projection2D(object):
         self._proj_direction=proj_direction
         self._project(cg)
 
-
-  
     @property
     def proj_direction(self):
         """A vector describing the direction of the projection"""
@@ -67,22 +109,10 @@ class Projection2D(object):
         """
         if self._cross_points is None:
             self._cross_points=col.defaultdict(list)
-            for i, key1 in enumerate(self._coords):
-                for j, key2 in enumerate(self._coords):
-                    if j>i: #_coords is not modified during the iteration, thus the order is the same for i and j.
-#                        import matplotlib.pyplot as plt
-#                        plt.plot(self._coords[key1][0][0], self._coords[key1][0][1], 'bo')
-#                        plt.plot(self._coords[key1][1][0], self._coords[key1][1][1], 'bo')
-#                        plt.plot(self._coords[key2][0][0], self._coords[key2][0][1], 'ro')
-#                        plt.plot(self._coords[key2][1][0], self._coords[key2][1][1], 'ro')
-#                        plt.axis(self.get_bounding_square(0))
-                        for cr in ftuv.seg_intersect(self._coords[key1], self._coords[key2]):
-#                            plt.plot(cr[0], cr[1], 'go')
-                            self._cross_points[key1].append((cr, key2))
-                            self._cross_points[key2].append((cr, key1))
-#                        plt.text(self._coords[key1][0][0], self._coords[key1][0][1], key1)
-#                       plt.text(self._coords[key2][0][0], self._coords[key2][0][1], key2)        
-#                        plt.show()  
+            for key1, key2 in it.combinations(self._coords, 2):
+              for cr in ftuv.seg_intersect(self._coords[key1], self._coords[key2]):
+                self._cross_points[key1].append((cr, key2))
+                self._cross_points[key2].append((cr, key1))
         return self._cross_points
     @property
     def proj_graph(self):
@@ -130,7 +160,7 @@ class Projection2D(object):
             for point in sortedCrs:
                 point=(point[0], point[1]) #Tuple, to be hashable
                 if oldpoint is not None:
-                    proj_graph.add_edge(oldpoint, point)                 
+                    proj_graph.add_edge(oldpoint, point, attr_dict={"label": key})                 
                 oldpoint=point
         self._proj_graph=proj_graph
         self.condense_points(0.00000000001) #To avoid floating point problems
@@ -172,7 +202,7 @@ class Projection2D(object):
         x=(bb[0]+bb[1])/2
         y=(bb[2]+bb[3])/2
         return x-length, x+length, y-length, y+length
-    def plot(self, ax=None, show=False, margin=5, linewidth=None, line2dproperties={}):
+    def plot(self, ax=None, show=False, margin=5, linewidth=None, add_labels=False, line2dproperties={}):
         """
         Plots the 2D projection
 
@@ -180,6 +210,7 @@ class Projection2D(object):
         :param show: If true, the matplotlib.pyplot.show() will be called at the end of this function.
         :param margin: A numeric value. The margin around the plotted projection inside the (sub-)plot.
         :param linewidth: The width of the lines projection.
+        :param add_labels: Display the name of the corresponding coarse grain element in the middle of each segment in the projection.
         :param line2dproperties: A dictionary. Will be passed as **kwargs to the constructor of `matplotlib.lines.Line2D`
                                  See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D
         """
@@ -192,20 +223,30 @@ class Projection2D(object):
             line2dproperties["linewidth"]=linewidth
         if "solid_capstyle" not in line2dproperties:
             line2dproperties["solid_capstyle"]="round"
+
         if ax is None:
-            fig, ax = plt.subplots(1, 1)
+            fig, ax = plt.subplots(1, 1)              
+        lprop=copy.copy(line2dproperties)
         for s,e in self.proj_graph.edges_iter():
-            line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **line2dproperties) 
+            if "color" not in line2dproperties:
+                label=self.proj_graph.edge[s][e]["label"]
+                if label.startswith("s"):
+                  lprop["color"]="green"
+                elif label.startswith("i"):
+                  lprop["color"]="yellow"
+                elif label.startswith("h"):
+                  lprop["color"]="blue"
+                elif label.startswith("m"):
+                  lprop["color"]="red"
+                elif label.startswith("f") or label.startswith("t"):
+                  lprop["color"]="blue"
+                else:
+                  lprop["color"]="black"
+            if add_labels:
+                lprop["label"]=self.proj_graph.edge[s][e]["label"]
+            #line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **lprop) 
+            line=MyLine([s[0], e[0]],[s[1],e[1]], **lprop) 
             ax.add_line(line)
-        """
-        for key,p in self._coords.items():
-            plt.plot(p[0][0], p[0][1], 'ro')
-            plt.plot(p[1][0], p[1][1], 'ro')
-            ax.text((p[0][0]+p[1][0])/2, (p[0][1]+p[1][1])/2, key)
-        for key,l in self.crossingPoints.items():
-            for p in l:
-                #print("P", p)
-                plt.plot(p[0][0], p[0][1], 'go')"""
         ax.axis(self.get_bounding_square(margin))
         out = ax.plot()
         if show:
@@ -236,9 +277,9 @@ class Projection2D(object):
                     newnode=ftuv.middlepoint(node1, node2)
                     #self.proj_graph.add_node(newnode)
                     for neighbor in self.proj_graph.edge[node1].keys():
-                        self.proj_graph.add_edge(newnode, neighbor)
+                        self.proj_graph.add_edge(newnode, neighbor, attr_dict=self.proj_graph.edge[node1][neighbor])
                     for neighbor in self.proj_graph.edge[node2].keys():
-                        self.proj_graph.add_edge(newnode, neighbor)
+                        self.proj_graph.add_edge(newnode, neighbor, attr_dict=self.proj_graph.edge[node2][neighbor])
                     if newnode!=node1: #Equality can happen because of floating point inaccuracy
                         self.proj_graph.remove_node(node1)
                     if newnode!=node2:
@@ -261,14 +302,16 @@ class Projection2D(object):
                             continue   
                         if (ftuv.vec_distance(nearest, node)<cutoff):
                             newnode=ftuv.middlepoint(node, tuple(nearest))
+                            attr_dict=self.proj_graph.edge[source][target]
                             self.proj_graph.remove_edge(source, target)
                             if source!=newnode:
-                                self.proj_graph.add_edge(source, newnode)
+                                self.proj_graph.add_edge(source, newnode, attr_dict=attr_dict)
                             if target!=newnode:
-                                self.proj_graph.add_edge(target, newnode)                        
+                                self.proj_graph.add_edge(target, newnode, attr_dict=attr_dict)             
                             if newnode!=node: #Equality can happen because of floating point inaccuracy
                                 for neighbor in self.proj_graph.edge[node].keys():
-                                    self.proj_graph.add_edge(newnode, neighbor)
+                                    attr_dict=self.proj_graph.edge[node][neighbor]
+                                    self.proj_graph.add_edge(newnode, neighbor, attr_dict=attr_dict)
                                 self.proj_graph.remove_node(node)
                             return True
         return False

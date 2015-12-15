@@ -54,7 +54,7 @@ if __name__=="__main__":
         proj.condense(CONDENSE)
 
         #Plot the projection
-        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=5, linewidth=5, line2dproperties={"color":"red", "linestyle":"--"})
+        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=5, linewidth=5, add_labels=True, line2dproperties={"color":"red", "linestyle":"--"})
 
         #Uncomment to set a substring of the filename as a title
         #current_axes.set_title(file[-15:])
