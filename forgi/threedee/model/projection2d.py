@@ -11,6 +11,7 @@ import collections as col
 import numpy as np
 import itertools as it
 import networkx as nx
+import warnings
 
 import copy
 
@@ -168,14 +169,26 @@ class Projection2D(object):
         :param line2dproperties: A dictionary. Will be passed as **kwargs to the constructor of `matplotlib.lines.Line2D`
                                  See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D
         """
-        import matplotlib.pyplot as plt
-        import matplotlib.lines as lines
-        import matplotlib.transforms as mtransforms
-        import matplotlib.text as mtext
-
-
+        # In case of ssh without -X option, a TypeError might be raised during the import of pyplot.
+        #This probably depends on the version of some library.
+        #This is also the reason why we import matplotlib only in the plot function.
+        try:
+            if ax is None or show:
+                import matplotlib.pyplot as plt
+            import matplotlib.lines as lines
+            import matplotlib.transforms as mtransforms
+            import matplotlib.text as mtext 
+        except TypeError as e:
+          warnings.warn("Cannot plot projection. Maybe you could not load Gtk (no X11 server available)? During the import of matplotlib the following Error occured:\n {}: {}".format(type(e).__name__, e))
+          return
+        except ImportError as e:
+          warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? The following error occured:\n {}: {}".format(type(e).__name__, e))
+          return
         class MyLine(lines.Line2D):
-            """Copied and modyfied from http://matplotlib.org/examples/api/line_with_text.html"""
+            """
+            Copied and modified from http://matplotlib.org/examples/api/line_with_text.html,
+            which is part of matplotlib 1.5.0 (Copyright (c) 2012-2013 Matplotlib Development Team; All Rights Reserved).
+            """
             def __init__(self, *args, **kwargs):
                 # we'll update the position when the line data is set
                 self.text = mtext.Text(0, 0, '')
@@ -211,14 +224,18 @@ class Projection2D(object):
                 self.text.draw(renderer)
 
         if "linewidth" in line2dproperties and linewidth is not None:
-            raise TypeError("Got multiple values for 'linewidth' (also present in line2dproperties)")
+            warnings.warn("Got multiple values for 'linewidth' (also present in line2dproperties)")
         if linewidth is not None:
             line2dproperties["linewidth"]=linewidth
         if "solid_capstyle" not in line2dproperties:
             line2dproperties["solid_capstyle"]="round"
 
         if ax is None:
-            fig, ax = plt.subplots(1, 1)              
+            try:
+                fig, ax = plt.subplots(1, 1)            
+            except Exception as e:
+                warnings.warn("Cannot create Axes  or Figure. You probably have no graphical display available. The Error was:\n {}: {}".format(type(e).__name__, e))
+                return      
         lprop=copy.copy(line2dproperties)
         for s,e in self.proj_graph.edges_iter():
             if "color" not in line2dproperties:
