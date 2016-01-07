@@ -626,7 +626,7 @@ def vec_distance(vec1, vec2):
     return ftuc.vec_distance(vec1, vec2)
     #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
-def elements_closer_then(s1_p0, s1_p1, s2_p0, s2_p1, distance):
+def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     '''
     Code copied from line_segment_distance, but with optimizations for fast comparison to distance.
 
