@@ -37,12 +37,12 @@ if __name__=="__main__":
     #fig.patch.set_facecolor('black')
 
     #Plot one projection per file.
-    for i, file in enumerate(files):
+    for i, file_ in enumerate(files):
         #get the subplot axes (Note: axes != axis in matplotlib)
         current_axes=ax[i//figuresPerLine, i%figuresPerLine]
 
         #Parse the file
-        cg=ftmc.CoarseGrainRNA(file)
+        cg=ftmc.CoarseGrainRNA(file_)
 
         # Random projection direction. Change to direction=[1.,1.,0.] to set a specific direction
         direction=ftuv.get_random_vector()
@@ -53,8 +53,9 @@ if __name__=="__main__":
         #Simulate a reduced resolution of the image.     
         proj.condense(CONDENSE)
 
-        #Plot the projection
-        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=5, linewidth=5, add_labels=True, line2dproperties={"color":"red", "linestyle":"--"})
+        #Plot the projection #
+        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=15, linewidth=5, add_labels=set(["h1","h2"]), line2dproperties={"color":"gray", "linestyle":"-"},
+                  show_distances=[("h1","h2")])
 
         #Uncomment to set a substring of the filename as a title
         #current_axes.set_title(file[-15:])
@@ -63,9 +64,9 @@ if __name__=="__main__":
         current_axes.get_xaxis().set_visible(False)
         current_axes.get_yaxis().set_visible(False)
 
-        #Uncomment the following line to print the projection direction in the plot.
-        #current_axes.text(0.01,0.01,"({},{},{})".format(round(direction[0],3), round(direction[1],3), round(direction[2],3)), transform=current_axes.transAxes)
-
+        #Uncomment the following lines to print the projection direction and the filename in the plot.
+        current_axes.text(0.01,0.01,"Projection direction: ({},{},{})".format(round(direction[0],3), round(direction[1],3), round(direction[2],3)), transform=current_axes.transAxes)
+        current_axes.text(0.01,0.97,"File: {}".format(file_), transform=current_axes.transAxes)
         #Uncomment the following line to change the backgroundcolor of the plot area.
         #current_axes.set_axis_bgcolor('black')
 
