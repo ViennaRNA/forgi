@@ -478,12 +478,16 @@ class Projection2D(object):
             import matplotlib.transforms as mtransforms
             import matplotlib.text as mtext
             import matplotlib.font_manager as font_manager
+            import matplotlib
+            from matplotlib.patches import Polygon
+            from matplotlib.collections import PatchCollection
         except TypeError as e:
           warnings.warn("Cannot plot projection. Maybe you could not load Gtk (no X11 server available)? During the import of matplotlib the following Error occured:\n {}: {}".format(type(e).__name__, e))
           return
         except ImportError as e:
           warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? The following error occured:\n {}: {}".format(type(e).__name__, e))
           return
+        polygons=[]
         class MyLine(lines.Line2D):
             """
             Copied and modified from http://matplotlib.org/examples/api/line_with_text.html,
@@ -563,7 +567,20 @@ class Projection2D(object):
             #line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **lprop) 
             line=MyLine([s[0]+xshift, e[0]+xshift],[s[1]+yshift,e[1]+yshift], **lprop) 
             ax.add_line(line)
-
+            s=s+np.array([xshift, yshift])
+            e=e+np.array([xshift, yshift])
+            vec=np.array(e)-np.array(s)
+            nvec=np.array([vec[1], -vec[0]])
+            try:
+              div=math.sqrt(nvec[0]**2+nvec[1]**2)
+            except ZeroDivisionError:
+              div=100000
+            a=e+nvec*10/div
+            b=e-nvec*10/div
+            c=s+nvec*10/div
+            d=s-nvec*10/div
+            polygon=Polygon(np.array([a,b,d,c]),True)
+            polygons.append(polygon)
         for s,e in show_distances:
             st=(self._coords[s][0]+self._coords[s][1])/2
             en=(self._coords[e][0]+self._coords[e][1])/2
@@ -579,6 +596,8 @@ class Projection2D(object):
         ax.axis(self.get_bounding_square(margin))
         fm=font_manager.FontProperties(["monospace"], size="x-small")
         ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
+        patchCollection = PatchCollection(polygons, cmap=matplotlib.cm.jet, alpha=0.5)
+        ax.add_collection(patchCollection)
         out = ax.plot()
         if show:
             plt.show()
