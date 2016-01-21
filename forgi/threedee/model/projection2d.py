@@ -446,7 +446,10 @@ class Projection2D(object):
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: Parts of the projection are cropped off.")
         return np.rot90(image)
 
-    def plot(self, ax=None, show=False, margin=5, linewidth=None, add_labels=False, line2dproperties={}, xshift=0, yshift=0, show_distances=[]):
+    def plot(self, ax=None, show=False, margin=5, 
+                   linewidth=None, add_labels=False,
+                   line2dproperties={}, xshift=0, yshift=0,
+                   show_distances=[], print_distances=False):
         """
         Plots the 2D projection
 
@@ -455,20 +458,26 @@ class Projection2D(object):
         :param margin: A numeric value. The margin around the plotted projection inside the (sub-)plot.
         :param linewidth: The width of the lines projection.
         :param add_labels: Display the name of the corresponding coarse grain element in the middle of each segment in the projection.
+                           Either a bool or a set of labels to display.
         :param line2dproperties: A dictionary. Will be passed as **kwargs to the constructor of `matplotlib.lines.Line2D`
                                  See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D
         :param xshift, yshift: Shift the projection by the given amount inside the canvas.
-        :param show_distances: A list of tuples of strings, e.g. [("h1","h8"),("h2","m15")]. Show the distances between these elements in the plot
+        :param show_distances: A list of tuples of strings, e.g. [("h1","h8"),("h2","m15")]. 
+                               Show the distances between these elements in the plot
+        :param print_distances: Bool. Print all distances from show_distances at the side of the plot
+                                instead of directly next to the distance
         """
         # In case of ssh without -X option, a TypeError might be raised during the import of pyplot.
         # This probably depends on the version of some library.
         # This is also the reason why we import matplotlib only in the plot function.
+        text=[]
         try:
             if ax is None or show:
                 import matplotlib.pyplot as plt
             import matplotlib.lines as lines
             import matplotlib.transforms as mtransforms
-            import matplotlib.text as mtext 
+            import matplotlib.text as mtext
+            import matplotlib.font_manager as font_manager
         except TypeError as e:
           warnings.warn("Cannot plot projection. Maybe you could not load Gtk (no X11 server available)? During the import of matplotlib the following Error occured:\n {}: {}".format(type(e).__name__, e))
           return
@@ -483,7 +492,8 @@ class Projection2D(object):
             """
             def __init__(self, *args, **kwargs):
                 # we'll update the position when the line data is set
-                self.text = mtext.Text(0, 0, '')
+                fm=font_manager.FontProperties(size="large", weight="demi")
+                self.text = mtext.Text(0, 0, '', fontproperties=fm)
                 lines.Line2D.__init__(self, *args, **kwargs)
 
                 # we can't access the label attr until *after* the line is
@@ -507,7 +517,6 @@ class Projection2D(object):
             def set_data(self, x, y):
                 if len(x):
                     self.text.set_position(((x[0]+x[-1])/2, (y[0]+y[-1])/2))
-
                 lines.Line2D.set_data(self, x, y)
 
             def draw(self, renderer):
@@ -556,12 +565,20 @@ class Projection2D(object):
             ax.add_line(line)
 
         for s,e in show_distances:
-            s=(self._coords[s][0]+self._coords[s][1])/2
-            e=(self._coords[e][0]+self._coords[e][1])/2
-            d=ftuv.vec_distance(s,e)
-            line=MyLine([s[0]+xshift, e[0]+xshift],[s[1]+yshift,e[1]+yshift], label=str(round(d,1)), color="orange",linestyle="--")
+            st=(self._coords[s][0]+self._coords[s][1])/2
+            en=(self._coords[e][0]+self._coords[e][1])/2
+            d=ftuv.vec_distance(st,en)
+            if print_distances:
+                line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], color="orange",linestyle="--")
+                text.append("{:3} - {:3}: {:5.2f}".format(s,e,d))
+            else:
+                line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], label=str(round(d,1)), color="orange",linestyle="--")
             ax.add_line(line)
+
+        #line.text.set_zorder(1000000)
         ax.axis(self.get_bounding_square(margin))
+        fm=font_manager.FontProperties(["monospace"], size="x-small")
+        ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
         out = ax.plot()
         if show:
             plt.show()

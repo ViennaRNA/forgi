@@ -7,6 +7,7 @@ from future.builtins.disabled import (apply, cmp, coerce, execfile,
                              unicode, xrange, StandardError)
 
 import sys, random, math
+import itertools as it
 import collections as col
 
 import numpy as np
@@ -53,9 +54,11 @@ if __name__=="__main__":
         #Simulate a reduced resolution of the image.     
         proj.condense(CONDENSE)
 
+        elems=["h1", "h2", "i1" ]
+        comb=list(it.combinations(elems, 2))
         #Plot the projection #
-        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=15, linewidth=5, add_labels=set(["h1","h2"]), line2dproperties={"color":"gray", "linestyle":"-"},
-                  show_distances=[("h1","h2")])
+        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=15, linewidth=5, add_labels=set(elems), line2dproperties={"color":"gray", "linestyle":"-"},
+                  show_distances=comb, print_distances=True)
 
         #Uncomment to set a substring of the filename as a title
         #current_axes.set_title(file[-15:])
