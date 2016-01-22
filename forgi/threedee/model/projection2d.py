@@ -595,9 +595,10 @@ class Projection2D(object):
         #line.text.set_zorder(1000000)
         ax.axis(self.get_bounding_square(margin))
         fm=font_manager.FontProperties(["monospace"], size="x-small")
-        ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
+        if print_distances:
+            ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
         patchCollection = PatchCollection(polygons, cmap=matplotlib.cm.jet, alpha=0.5)
-        ax.add_collection(patchCollection)
+        #ax.add_collection(patchCollection)
         out = ax.plot()
         if show:
             plt.show()

@@ -20,7 +20,7 @@ import forgi.threedee.utilities.vector as ftuv
 #The CONDENSE constant is used to simulate a reduced resolution. 
 #The algorithm for doing so is work in progress.
 #For now, a value less than 20 is reasonable.
-CONDENSE=2
+CONDENSE=0
 
 if __name__=="__main__":
     #This script expects a list of *.cg/ *.coord files as command line arguments (and nothing else)
@@ -46,15 +46,15 @@ if __name__=="__main__":
         cg=ftmc.CoarseGrainRNA(file_)
 
         # Random projection direction. Change to direction=[1.,1.,0.] to set a specific direction
-        direction=ftuv.get_random_vector()
+        direction=[ 0.45453935,  0.35148226, -0.81844634]#ftuv.get_random_vector()
 
         #Generate the projection object
-        proj=ftmp.Projection2D(cg, direction)   
+        proj=ftmp.Projection2D(cg, direction, rotation=180)   
 
         #Simulate a reduced resolution of the image.     
         proj.condense(CONDENSE)
 
-        elems=["h1", "h2", "i1" ]
+        elems=["h5", "h6", "m15", "m12", "h1" ]
         comb=list(it.combinations(elems, 2))
         #Plot the projection #
         proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=15, linewidth=5, add_labels=set(elems), line2dproperties={"color":"gray", "linestyle":"-"},
