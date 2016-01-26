@@ -46,7 +46,7 @@ if __name__=="__main__":
         cg=ftmc.CoarseGrainRNA(file_)
 
         # Random projection direction. Change to direction=[1.,1.,0.] to set a specific direction
-        direction=[ 0.45453935,  0.35148226, -0.81844634]#ftuv.get_random_vector()
+        direction= [ 0.75751814,  0.62657746,  0.18321286]#[ 0.75877538, -0.62935628, -0.16784102]#ftuv.get_random_vector()
 
         #Generate the projection object
         proj=ftmp.Projection2D(cg, direction, rotation=180)   
@@ -54,11 +54,11 @@ if __name__=="__main__":
         #Simulate a reduced resolution of the image.     
         proj.condense(CONDENSE)
 
-        elems=["h5", "h6", "m15", "m12", "h1" ]
+        elems=["h5", "h6", "m15", "h16" ]
         comb=list(it.combinations(elems, 2))
         #Plot the projection #
-        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=15, linewidth=5, add_labels=set(elems), line2dproperties={"color":"gray", "linestyle":"-"},
-                  show_distances=comb, print_distances=True)
+        proj.plot(ax[i//figuresPerLine, i%figuresPerLine], margin=15, linewidth=5, add_labels=set(elems), line2dproperties={"color":"darkgray", "linestyle":"-"},
+                  show_distances=comb, print_distances=False)
 
         #Uncomment to set a substring of the filename as a title
         #current_axes.set_title(file[-15:])

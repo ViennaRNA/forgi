@@ -478,15 +478,21 @@ class Projection2D(object):
             import matplotlib.transforms as mtransforms
             import matplotlib.text as mtext
             import matplotlib.font_manager as font_manager
-            import matplotlib
-            from matplotlib.patches import Polygon
-            from matplotlib.collections import PatchCollection
         except TypeError as e:
           warnings.warn("Cannot plot projection. Maybe you could not load Gtk (no X11 server available)? During the import of matplotlib the following Error occured:\n {}: {}".format(type(e).__name__, e))
           return
         except ImportError as e:
           warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? The following error occured:\n {}: {}".format(type(e).__name__, e))
           return
+        try:
+            import shapely.geometry as sg
+            import shapely.ops as so
+        except ImportError as e:
+            warnings.warn("Cannot import shapely. The following error occured:\n {}: {}".format(type(e).__name__, e))
+            area=False
+            #return
+        else:
+            area=True
         polygons=[]
         class MyLine(lines.Line2D):
             """
@@ -579,8 +585,11 @@ class Projection2D(object):
             b=e-nvec*10/div
             c=s+nvec*10/div
             d=s-nvec*10/div
-            polygon=Polygon(np.array([a,b,d,c]),True)
-            polygons.append(polygon)
+            #For now disabling area representation
+            area=False
+            if area:
+                polygon=sg.Polygon([a,b,d,c])
+                polygons.append(polygon)
         for s,e in show_distances:
             st=(self._coords[s][0]+self._coords[s][1])/2
             en=(self._coords[e][0]+self._coords[e][1])/2
@@ -592,13 +601,14 @@ class Projection2D(object):
                 line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], label=str(round(d,1)), color="orange",linestyle="--")
             ax.add_line(line)
 
-        #line.text.set_zorder(1000000)
         ax.axis(self.get_bounding_square(margin))
         fm=font_manager.FontProperties(["monospace"], size="x-small")
         if print_distances:
             ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
-        patchCollection = PatchCollection(polygons, cmap=matplotlib.cm.jet, alpha=0.5)
-        #ax.add_collection(patchCollection)
+        if area:
+            rnaArea=so.cascaded_union(polygons)
+            rnaXs,rnaYs=rnaArea.exterior.xy
+            ax.fill(rnaXs,rnaYs,alpha=0.5)
         out = ax.plot()
         if show:
             plt.show()
