@@ -573,9 +573,6 @@ class Projection2D(object):
                   lprop["color"]="black"
             if add_labels!=False and (add_labels==True or label in add_labels):
                 lprop["label"]=label
-                #Every label only once
-                if isinstance(add_labels, set):
-                    add_labels.remove(lprop["label"])
             else:
                 lprop["label"]=""
             #line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **lprop) 
@@ -589,10 +586,10 @@ class Projection2D(object):
               div=math.sqrt(nvec[0]**2+nvec[1]**2)
             except ZeroDivisionError:
               div=100000
-            a=e+nvec*10/div
-            b=e-nvec*10/div
-            c=s+nvec*10/div
-            d=s-nvec*10/div
+            a=e+nvec*5/div
+            b=e-nvec*5/div
+            c=s+nvec*5/div
+            d=s-nvec*5/div
             #For now disabling area representation
             area=False
             if area:

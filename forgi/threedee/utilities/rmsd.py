@@ -32,17 +32,14 @@ def centered_rmsd(crds1, crds2):
     '''
     Center the coordinate vectors on their centroid
     and then calculate the rmsd.
-    '''    
-
+    '''
     crds1 = ftuv.center_on_centroid(crds1)
     crds2 = ftuv.center_on_centroid(crds2)
 
     os = optimal_superposition(crds1, crds2)
-    print("os", os)
     crds_aligned = np.dot(crds1, os)
 
     diff_vecs = (crds2 - crds_aligned)
-    print("diff_vecs", diff_vecs)
     vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
 
     return math.sqrt(sum(vec_lengths) / len(vec_lengths))   #rmsd(crds1, crds2)

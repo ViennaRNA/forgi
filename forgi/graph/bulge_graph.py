@@ -1638,8 +1638,8 @@ class BulgeGraph(object):
 
     def sorted_element_iterator(self):
         """
-        Iterate over a list of the stems sorted by the lowest numbered
-        nucleotide in each stem.
+        Iterate over a list of the coarse grained elements sorted by the lowest numbered
+        nucleotide in each stem. Multiloops with no nucleotide coordinates come last.
         """
         elements = [d for d in self.defines ]
         elements.sort(key=lambda s: self.defines[s][0] if self.defines[s] else 10000+int(s[1:]))

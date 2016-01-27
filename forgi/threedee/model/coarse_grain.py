@@ -383,8 +383,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         curr_str += self.get_twist_str()
         curr_str += self.get_sampled_stems_str()
         curr_str += self.get_long_range_str()
-        if self.project_from:
-            curr_string+="project {} {} {}\n".format(*self.project_from)
+        if self.project_from is not None:
+            curr_str+="project {} {} {}\n".format(*self.project_from)
         return curr_str
 
     def to_file(self, filename):
