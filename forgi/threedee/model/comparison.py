@@ -66,7 +66,7 @@ class ConfusionMatrix(object):
             n1,n2=sorted((n1,n2)) #TODO: Read itertools documentation, if this is necessary.
             if cg.connected(n1, n2):
                 continue
-            if ftuv.elements_closer_then(cg.coords[n1][0],
+            if ftuv.elements_closer_than(cg.coords[n1][0],
                                        cg.coords[n1][1],
                                        cg.coords[n2][0],
                                        cg.coords[n2][1], self._distance):

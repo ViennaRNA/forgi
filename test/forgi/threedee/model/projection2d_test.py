@@ -13,6 +13,9 @@ import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.projection2d as ftmp
 import forgi.threedee.utilities.vector as ftuv
 import matplotlib.pyplot as plt
+
+#TODO: Add tests for the label of the projected segments!!!
+
 class Projection2DBasicTest(unittest.TestCase):
     '''
     Simple tests for the BulgeGraph data structure.
@@ -83,7 +86,7 @@ class Projection2DTestOnCondensedProjection(unittest.TestCase):
         for dire in [ (1.,0.,0.), (0.,0.,1.), (0.,1.,0.),(1.,1.,0.), (1.,0.,1.), (0.,1.,1.), (1.,1.,1.) ]:
             self.proj=ftmp.Projection2D(cg, dire)
             self.proj.condense_points(1)
-            self.proj.plot(show=True)
+            self.proj.plot(show=True, add_labels=True)
             #plt.show()
 
     def test_get_cyclebasis_len(self):
