@@ -69,12 +69,12 @@ class Projection2DTestWithData(unittest.TestCase):
     def test_condense(self):
         self.proj2.condense_points(1)
         self.assertEqual(self.proj2.get_cyclebasis_len(), 1)
-        self.assertAlmostEqual(self.proj2.get_longest_arm_length(), 35.9558714421)
+        self.assertAlmostEqual(self.proj2.get_longest_arm_length()[0], 35.95081565305)
         #self.proj.plot(show=True)
         self.proj2.condense(5)
         #self.proj2.plot(show=True)
         self.assertEqual(self.proj2.get_cyclebasis_len(), 2)
-        self.assertAlmostEqual(self.proj2.get_longest_arm_length(), 20.5730384435)
+        self.assertAlmostEqual(self.proj2.get_longest_arm_length()[0], 20.5730384435)
  
 class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def setUp(self):
@@ -100,7 +100,7 @@ class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def test_get_maximal_path_length(self):
         self.assertAlmostEqual(self.proj.get_maximal_path_length(), 95.29668468051)
     def test_get_longest_arm_length(self):
-        self.assertAlmostEqual(self.proj.get_longest_arm_length(), 20.301048998)
+        self.assertAlmostEqual(self.proj.get_longest_arm_length()[0], 20.301048998)
 
 
 
