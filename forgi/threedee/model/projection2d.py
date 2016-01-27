@@ -129,13 +129,15 @@ def bresenham(start,end):
 
 class Projection2D(object):
     """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
-    def __init__(self, cg, proj_direction, rotation=0):
+    def __init__(self, cg, proj_direction=None, rotation=0):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
                     .. note:: The projection is generated from this cg, but it is not associated with it after construction.
                               Thus future changes of the cg are not reflected in the projection.
         @param proj_direction: a vector (in 3D space) in the direction of projection. 
                                The length of this vector is not used.
+                               If proj_direction is None, cg.project_from is used.
+                               If proj_direction and cg.project_from is None, an error is raised.
         @param rotate: Degrees. Rotate the projection by this amount.
         
         """        
@@ -146,7 +148,14 @@ class Projection2D(object):
         self._proj_graph=None
 
         #Calculate orthonormal basis of projection plane.
-        proj_direction=np.array(proj_direction, dtype=np.float)
+        if proj_direction is not None: #Need to compare to none, because if x: will raise ValueError for np.arrays
+            proj_direction=np.array(proj_direction, dtype=np.float)
+        elif cg.project_from is not None:
+            # We make a copy here. In case cg.project_from is modified, 
+            # we still want to be able to look up from what direction the projection was generated.
+            proj_direction=np.array(project_from, dtype=np.float)
+        else:
+            raise ValueError("No projection direction given and none present in the cg Object.")
         _, unit_vec1, unit_vec2=ftuv.create_orthonormal_basis(proj_direction)
         self._unit_vec1=unit_vec1
         self._unit_vec2=unit_vec2
@@ -548,9 +557,8 @@ class Projection2D(object):
                 warnings.warn("Cannot create Axes  or Figure. You probably have no graphical display available. The Error was:\n {}: {}".format(type(e).__name__, e))
                 return      
         lprop=copy.copy(line2dproperties)
-        for s,e in self.proj_graph.edges_iter():
+        for label,(s,e) in self._coords.items():
             if "color" not in line2dproperties:
-                label=self.proj_graph.edge[s][e]["label"]
                 if label.startswith("s"):
                   lprop["color"]="green"
                 elif label.startswith("i"):
@@ -563,8 +571,8 @@ class Projection2D(object):
                   lprop["color"]="blue"
                 else:
                   lprop["color"]="black"
-            if add_labels!=False and (add_labels==True or self.proj_graph.edge[s][e]["label"] in add_labels):
-                lprop["label"]=self.proj_graph.edge[s][e]["label"]
+            if add_labels!=False and (add_labels==True or label in add_labels):
+                lprop["label"]=label
                 #Every label only once
                 if isinstance(add_labels, set):
                     add_labels.remove(lprop["label"])
@@ -642,7 +650,8 @@ class Projection2D(object):
         """
         self._coords=dict()
         #Project all coordinates to this plane
-        for key, val in cg.coords.items():
+        for key in cg.sorted_element_iterator():
+            val=cg.coords[key]
             start=np.array([np.dot(self._unit_vec1,val[0]), np.dot(self._unit_vec2,val[0])])
             end=np.array([np.dot(self._unit_vec1,val[1]), np.dot(self._unit_vec2,val[1])])
             self._coords[key]=(start, end)

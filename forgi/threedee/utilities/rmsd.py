@@ -32,16 +32,17 @@ def centered_rmsd(crds1, crds2):
     '''
     Center the coordinate vectors on their centroid
     and then calculate the rmsd.
-    '''
+    '''    
+
     crds1 = ftuv.center_on_centroid(crds1)
     crds2 = ftuv.center_on_centroid(crds2)
-    print(crds1)
+
     os = optimal_superposition(crds1, crds2)
-    print("OS", os)
+    print("os", os)
     crds_aligned = np.dot(crds1, os)
-    print("crds_aligned", crds_aligned)
-    s2 = sum(sum((crds2 - crds_aligned) * (crds2 - crds_aligned)))
+
     diff_vecs = (crds2 - crds_aligned)
+    print("diff_vecs", diff_vecs)
     vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
 
     return math.sqrt(sum(vec_lengths) / len(vec_lengths))   #rmsd(crds1, crds2)
@@ -65,15 +66,18 @@ def centered_drmsd(crds1, crds2):
     return drmsd(crds1, crds2)
 
 def optimal_superposition(crds1, crds2):
-    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""
-    #assert(crds1.shape[1] == 3)
+    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""        
     assert(crds1.shape == crds2.shape)
-    correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
-    v, s, w_tr = numpy.linalg.svd(correlation_matrix)
-    is_reflection = (numpy.linalg.det(v) * numpy.linalg.det(w_tr)) < 0.0
-    if is_reflection:
-        v[:, -1] = -v[:, -1]
-    return numpy.dot(v, w_tr)
+    if crds1.shape[1] == 3 or crds1.shape[1] == 2:
+        correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
+        v, s, w_tr = numpy.linalg.svd(correlation_matrix)
+        is_reflection = (numpy.linalg.det(v) * numpy.linalg.det(w_tr)) < 0.0
+        if is_reflection:
+            v[:, -1] = -v[:, -1]
+        return numpy.dot(v, w_tr)
+    else:
+        raise ValueError("Wrong dimension of crds1. Needs to be an array of "
+                         "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
   
 
 '''
