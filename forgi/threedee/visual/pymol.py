@@ -107,7 +107,7 @@ class PymolPrinter:
 
         self.new_spheres = []
 
-    def add_segment(self, p, n, color='green', width=0.2, text=""):
+    def add_segment(self, p, n, color='green', width=0.2, text="", key=''):
 
         # exaggerate the length of the stem
         '''
@@ -127,7 +127,7 @@ class PymolPrinter:
 
         print >>sys.stderr, "color:", color
         #assert(not allclose(p, n))
-        self.new_segments += [(np.array(p), np.array(n), color, width, text)]
+        self.new_segments += [(np.array(p), np.array(n), color, width, text, key)]
 
     def add_cone(self, p, n, color='white', width=2.4, text=''):
         if self.override_color is not None:
@@ -143,13 +143,13 @@ class PymolPrinter:
         self.new_cones += [(np.array(n) + cone_extension * cyl_vec, np.array(p), color, width, text)]
 
     def transform_segments(self, translation, rotation):
-        for (p, n, color, width, text) in self.new_segments:
+        for (p, n, color, width, text, key) in self.new_segments:
             p -= translation
             n -= translation
             new_p = np.dot(rotation, p)
             new_n = np.dot(rotation, n)
 
-            self.segments += [(new_p, new_n, color, width, text)]
+            self.segments += [(new_p, new_n, color, width, text, key)]
 
         self.new_segments = []
 
@@ -197,7 +197,7 @@ class PymolPrinter:
         self.segments += self.new_segments
 
         for seg in self.segments:
-            (p, n, color, width, text) = seg
+            (p, n, color, width, text, key) = seg
             if type(color) is not list:
                 color_vec = [str(c * self.color_modifier) for c in self.get_color_vec(color)]
             else:
@@ -207,6 +207,7 @@ class PymolPrinter:
                                                           n[0], n[1], n[2])
             s += "%f, %s, %s," % (width, ", ".join(color_vec),
                                   ", ".join(color_vec)) + '\n'
+            s += "\n# {}\n".format(key)
 
         return s
 
@@ -232,7 +233,7 @@ class PymolPrinter:
         pa_s = 'cmd.set("label_size", 20)\n'
         uids = []
 
-        for (p, n, color, width, text) in self.segments:
+        for (p, n, color, width, text, key) in self.segments:
             if len(text) == 0:
                 continue
 
@@ -411,7 +412,7 @@ class PymolPrinter:
         (p, n) = coords
 
         self.add_cone(p, n, 'white', width, key)
-        self.add_segment(p, n, color, width, key)
+        self.add_segment(p, n, color, width, key, key=key)
         #self.add_sphere(p, 'light gray', width=2.0 ) 
         #self.add_sphere(n, 'dark gray', width=2.0 ) 
 
@@ -422,8 +423,8 @@ class PymolPrinter:
             #twist2o = bg.get_twists(key)[1]
             (twist1o, twist2o) = twists
 
-            self.add_segment(p, p + mult * twist1o, "cyan", width, '')
-            self.add_segment(n, n + mult * twist2o, "magenta", width, '')
+            self.add_segment(p, p + mult * twist1o, "cyan", width, '', key=key)
+            self.add_segment(n, n + mult * twist2o, "magenta", width, '', key=key)
             '''
 
             twist_rot_mat_l = cuv.rotation_matrix(n - p, -(1.45 / 2.))
@@ -437,11 +438,11 @@ class PymolPrinter:
 
 
 
-            self.add_segment(p, p + mult * twist1, "white", width, '')
-            self.add_segment(n, n + mult * twist2, "white", width, '')
+            self.add_segment(p, p + mult * twist1, "white", width, '', key)
+            self.add_segment(n, n + mult * twist2, "white", width, '', key)
 
-            self.add_segment(p, p + mult * twist3, "red", width, '')
-            self.add_segment(n, n + mult * twist4, "red", width, '')
+            self.add_segment(p, p + mult * twist3, "red", width, '', key)
+            self.add_segment(n, n + mult * twist4, "red", width, '', key)
             '''
 
         #stem_len = bg.stem_length(key)
@@ -450,15 +451,15 @@ class PymolPrinter:
                 #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
                 res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
                 (pos, vec_c, vec_l, vec_r) = res
-                self.add_segment(pos, pos + mult * vec_c, "orange", width, '')
+                self.add_segment(pos, pos + mult * vec_c, "orange", width, '', key=key)
 
                 if self.add_letters:
                     self.labels += [('L', list(pos + mult * vec_l))]
                     self.labels += [('R', list(pos + mult * vec_r))]
 
                 '''
-                self.add_segment(pos, pos + mult * vec_l, "yellow", width, '')
-                self.add_segment(pos, pos + mult * vec_r, "purple", width, '')
+                self.add_segment(pos, pos + mult * vec_l, "yellow", width, '', key)
+                self.add_segment(pos, pos + mult * vec_r, "purple", width, '', key)
                 '''
 
                 if self.display_virtual_residues:
@@ -577,7 +578,7 @@ class PymolPrinter:
             start_point = -furthest * vv[0] + datamean
             end_point = furthest * vv[0] + datamean
 
-            self.add_segment(start_point, end_point, 'white', width=4, text='')
+            self.add_segment(start_point, end_point, 'white', width=4, text='', key=key)
 
 
         print >>sys.stderr, "YOOOOOOOOOOOOOOOOOOOOOOO"
@@ -620,7 +621,7 @@ class PymolPrinter:
         for i in range(int(num_dashes)):
             self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
                              point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
-                             width, "")
+                             width, "", key=key)
 
 
     def coordinates_to_pymol(self, cg):
@@ -642,7 +643,8 @@ class PymolPrinter:
                     if self.add_loops:
                         if key in loops:
                             self.add_segment(p, n, color, 1.0,
-                                             key + " " + str(cg.get_length(key)))
+                                             key + " " + str(cg.get_length(key)),
+                                            key=key)
                 elif key[0] == 'm':
                     twists = cg.get_twists(key)
 
@@ -650,35 +652,35 @@ class PymolPrinter:
                     # it has an empty define and we its length will be 1
                     if len(cg.defines[key]) == 0:
                         self.add_segment(p, n, color, 1.0,
-                                         key + " 1")
+                                         key + " 1", key=key)
                     else:
                         self.add_segment(p, n, color, 1.0,
                                          key + " " +
                                          str(cg.defines[key][1] -
-                                         cg.defines[key][0] + 1))
+                                         cg.defines[key][0] + 1), key=key)
 
-                    self.add_segment(p, p+ 7 * twists[0], 'light gray', 0.3)
-                    self.add_segment(n, n+ 7 * twists[1], 'light gray', 0.3)
+                    self.add_segment(p, p+ 7 * twists[0], 'light gray', 0.3, '', key=key)
+                    self.add_segment(n, n+ 7 * twists[1], 'light gray', 0.3, '', key=key)
 
                     x = (p + n) / 2
                     t = ftuv.normalize((twists[0] + twists[1]) / 2.)
-                    self.add_segment(x, x + 7 * t, 'middle gray', 0.3)
+                    self.add_segment(x, x + 7 * t, 'middle gray', 0.3, key=key)
                 elif key[0] == 'f':
                     if self.visualize_three_and_five_prime:
                         self.add_segment(p, n, color, 1.0,
                                          key + " " +
                                          str(cg.defines[key][1] -
-                                         cg.defines[key][0] + 1) + "")
+                                         cg.defines[key][0] + 1) + "", key=key)
 
                 elif key[0] == 't':
                     if self.visualize_three_and_five_prime:
                         self.add_segment(p, n, color, 1.0,
                                          key + " " +
                                          str(cg.defines[key][1] -
-                                         cg.defines[key][0]) + "")
+                                         cg.defines[key][0]) + "", key=key)
                 else:
                     #self.add_stem_like(cg, key, "yellow", 1.0)
-                    self.add_segment(p, n, color, 1.0, key)
+                    self.add_segment(p, n, color, 1.0, key, key=key)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():
@@ -697,7 +699,7 @@ class PymolPrinter:
 
                         '''
                         self.add_segment(point1, point2, "purple",
-                                         0.3, key1 + " " + key2)
+                                         0.3, key1 + " " + key2, key=key)
                         
                         '''
                     except:
@@ -713,8 +715,8 @@ class PymolPrinter:
                                                      cg.coords[s2][0],
                                                      cg.coords[s2][1])
                 if cuv.magnitude(i2 - i1) < self.max_stem_distances:
-                    #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2)
-                    self.add_segment(i1, i2, 'cyan', 0.3)
+                    #self.add_segment(i1, i2, 'cyan', 0.3, s1 + " " + s2, key=key)
+                    self.add_segment(i1, i2, 'cyan', 0.3, key=key)
 
         if self.virtual_atoms or self.sidechain_atoms:
             va = ftug.virtual_atoms(cg, sidechain=self.sidechain_atoms)
@@ -748,7 +750,7 @@ class PymolPrinter:
             for d in cg.defines.keys():
                 origin, basis = ftug.element_coord_system(cg, d)
 
-                self.add_segment(origin, origin + 7. * basis[1], 'purple', 2.)
+                self.add_segment(origin, origin + 7. * basis[1], 'purple', 2., key=key)
 
         print >>sys.stderr, "energy_function:", self.energy_function
         # print the contributions of the energy function, if one is specified
@@ -767,7 +769,7 @@ class PymolPrinter:
                           cg.get_point(interaction[1]))
                 scaled_energy = - max_energy[1] + energy
 
-                self.add_segment(p, n, 'purple', 3 * np.exp(scaled_energy))
+                self.add_segment(p, n, 'purple', 3 * np.exp(scaled_energy), key=key)
 
                 sum_energy += energy
 
@@ -826,7 +828,7 @@ class PymolPrinter:
                 '''
                 self.add_segment(start_point,
                                  start_point + 7 * cuv.normalize(s2_proj_in),
-                                 'white', 1.5)
+                                 'white', 1.5, key=key)
                 '''
                 #self.add_segment(start_point,
                                   start_point + 7 * cuv.normalize(s2_proj_out),

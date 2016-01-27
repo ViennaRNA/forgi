@@ -170,6 +170,10 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     @return: The MCC for interactions within a certain distance
     '''
     cm = confusion_matrix(cg_query, cg_native, distance, bp_distance=16)
+    cm['tp'] += 1
+    cm['fp'] += 1
+    cm['fn'] += 1
+    cm['tn'] += 1
     if cm['tp'] + cm['fp'] == 0:
         return None
     if cm['tp'] + cm['fn'] == 0:
