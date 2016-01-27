@@ -447,7 +447,10 @@ def get_vector_centroid(crds1):
 
     @return: The centroid of the rows of the matrix crds.
     '''
-    centroid1 = np.array([0., 0., 0.])
+    if crds1.shape[1] == 3:
+        centroid1 = np.array([0., 0., 0.])
+    else:
+        centroid1 = np.array([0., 0.])
 
     for i in range(len(crds1)):
         centroid1 += crds1[i]

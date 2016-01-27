@@ -13,7 +13,7 @@ import forgi.threedee.utilities.vector as ftuv
 
 def rmsd(crds1, crds2):
     """Returns RMSD between 2 sets of [nx3] numpy array"""
-    assert(crds1.shape[1] == 3)
+    #assert(crds1.shape[1] == 3)
     assert(crds1.shape == crds2.shape)
     n_vec = numpy.shape(crds1)[0]
     correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
@@ -35,10 +35,11 @@ def centered_rmsd(crds1, crds2):
     '''
     crds1 = ftuv.center_on_centroid(crds1)
     crds2 = ftuv.center_on_centroid(crds2)
-
+    print(crds1)
     os = optimal_superposition(crds1, crds2)
+    print("OS", os)
     crds_aligned = np.dot(crds1, os)
-
+    print("crds_aligned", crds_aligned)
     s2 = sum(sum((crds2 - crds_aligned) * (crds2 - crds_aligned)))
     diff_vecs = (crds2 - crds_aligned)
     sums = np.sum(diff_vecs * diff_vecs, axis=1)
@@ -66,7 +67,7 @@ def centered_drmsd(crds1, crds2):
 
 def optimal_superposition(crds1, crds2):
     """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""
-    assert(crds1.shape[1] == 3)
+    #assert(crds1.shape[1] == 3)
     assert(crds1.shape == crds2.shape)
     correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
     v, s, w_tr = numpy.linalg.svd(correlation_matrix)
