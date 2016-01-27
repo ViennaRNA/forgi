@@ -41,10 +41,9 @@ def centered_rmsd(crds1, crds2):
 
     s2 = sum(sum((crds2 - crds_aligned) * (crds2 - crds_aligned)))
     diff_vecs = (crds2 - crds_aligned)
-    sums = np.sum(diff_vecs * diff_vecs, axis=1)
-    sqrts = np.sqrt(sums)
+    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
 
-    return rmsd(crds1, crds2)
+    return math.sqrt(sum(vec_lengths) / len(vec_lengths))   #rmsd(crds1, crds2)
 
 def centered_drmsd(crds1, crds2):
     '''
