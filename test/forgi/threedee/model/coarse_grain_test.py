@@ -2,9 +2,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import numpy as np
+import numpy.testing as nptest
+
 import unittest, os
 import sys
-
 import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as ftmc
@@ -169,6 +170,27 @@ class CoarseGrainTest(tfgb.GraphVerification):
         # self.assertEqual(len(cg.coords), 8)
         for key in cg.defines.keys():
             self.assertTrue(key in cg.coords)
+
+    def test_from_and_to_cgstring(self):
+        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg1.project_from=np.array([1,2,3.5])
+        stri=cg1.to_cg_string()
+        cg2=ftmc.CoarseGrainRNA()
+        cg2.from_cg_string(stri)
+        
+        for key in set(cg1.defines):
+            self.assertTrue(key in cg2.defines)
+            self.assertTrue(key in cg2.coords)
+            nptest.assert_allclose(cg1.defines[key],cg2.defines[key])
+            nptest.assert_allclose(cg1.coords[key][0],cg2.coords[key][0])
+            nptest.assert_allclose(cg1.coords[key][1],cg2.coords[key][1])
+        for key in set(cg2.defines):
+            self.assertTrue(key in cg1.defines)
+            self.assertTrue(key in cg1.coords)
+            nptest.assert_allclose(cg1.defines[key],cg2.defines[key])
+            nptest.assert_allclose(cg1.coords[key][0],cg2.coords[key][0])
+            nptest.assert_allclose(cg1.coords[key][1],cg2.coords[key][1])
+        nptest.assert_allclose(cg1.project_from, cg2.project_from)
 
     def test_get_bulge_angle_stats_core(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')

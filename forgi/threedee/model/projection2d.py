@@ -129,13 +129,15 @@ def bresenham(start,end):
 
 class Projection2D(object):
     """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
-    def __init__(self, cg, proj_direction, rotation=0):
+    def __init__(self, cg, proj_direction=None, rotation=0):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
                     .. note:: The projection is generated from this cg, but it is not associated with it after construction.
                               Thus future changes of the cg are not reflected in the projection.
         @param proj_direction: a vector (in 3D space) in the direction of projection. 
                                The length of this vector is not used.
+                               If proj_direction is None, cg.project_from is used.
+                               If proj_direction and cg.project_from is None, an error is raised.
         @param rotate: Degrees. Rotate the projection by this amount.
         
         """        
@@ -146,7 +148,14 @@ class Projection2D(object):
         self._proj_graph=None
 
         #Calculate orthonormal basis of projection plane.
-        proj_direction=np.array(proj_direction, dtype=np.float)
+        if proj_direction is not None: #Need to compare to none, because if x: will raise ValueError for np.arrays
+            proj_direction=np.array(proj_direction, dtype=np.float)
+        elif cg.project_from is not None:
+            # We make a copy here. In case cg.project_from is modified, 
+            # we still want to be able to look up from what direction the projection was generated.
+            proj_direction=np.array(project_from, dtype=np.float)
+        else:
+            raise ValueError("No projection direction given and none present in the cg Object.")
         _, unit_vec1, unit_vec2=ftuv.create_orthonormal_basis(proj_direction)
         self._unit_vec1=unit_vec1
         self._unit_vec2=unit_vec2
@@ -478,15 +487,21 @@ class Projection2D(object):
             import matplotlib.transforms as mtransforms
             import matplotlib.text as mtext
             import matplotlib.font_manager as font_manager
-            import matplotlib
-            from matplotlib.patches import Polygon
-            from matplotlib.collections import PatchCollection
         except TypeError as e:
           warnings.warn("Cannot plot projection. Maybe you could not load Gtk (no X11 server available)? During the import of matplotlib the following Error occured:\n {}: {}".format(type(e).__name__, e))
           return
         except ImportError as e:
           warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? The following error occured:\n {}: {}".format(type(e).__name__, e))
           return
+        try:
+            import shapely.geometry as sg
+            import shapely.ops as so
+        except ImportError as e:
+            warnings.warn("Cannot import shapely. The following error occured:\n {}: {}".format(type(e).__name__, e))
+            area=False
+            #return
+        else:
+            area=True
         polygons=[]
         class MyLine(lines.Line2D):
             """
@@ -542,9 +557,8 @@ class Projection2D(object):
                 warnings.warn("Cannot create Axes  or Figure. You probably have no graphical display available. The Error was:\n {}: {}".format(type(e).__name__, e))
                 return      
         lprop=copy.copy(line2dproperties)
-        for s,e in self.proj_graph.edges_iter():
+        for label,(s,e) in self._coords.items():
             if "color" not in line2dproperties:
-                label=self.proj_graph.edge[s][e]["label"]
                 if label.startswith("s"):
                   lprop["color"]="green"
                 elif label.startswith("i"):
@@ -557,11 +571,8 @@ class Projection2D(object):
                   lprop["color"]="blue"
                 else:
                   lprop["color"]="black"
-            if add_labels!=False and (add_labels==True or self.proj_graph.edge[s][e]["label"] in add_labels):
-                lprop["label"]=self.proj_graph.edge[s][e]["label"]
-                #Every label only once
-                if isinstance(add_labels, set):
-                    add_labels.remove(lprop["label"])
+            if add_labels!=False and (add_labels==True or label in add_labels):
+                lprop["label"]=label
             else:
                 lprop["label"]=""
             #line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **lprop) 
@@ -575,12 +586,15 @@ class Projection2D(object):
               div=math.sqrt(nvec[0]**2+nvec[1]**2)
             except ZeroDivisionError:
               div=100000
-            a=e+nvec*10/div
-            b=e-nvec*10/div
-            c=s+nvec*10/div
-            d=s-nvec*10/div
-            polygon=Polygon(np.array([a,b,d,c]),True)
-            polygons.append(polygon)
+            a=e+nvec*5/div
+            b=e-nvec*5/div
+            c=s+nvec*5/div
+            d=s-nvec*5/div
+            #For now disabling area representation
+            area=False
+            if area:
+                polygon=sg.Polygon([a,b,d,c])
+                polygons.append(polygon)
         for s,e in show_distances:
             st=(self._coords[s][0]+self._coords[s][1])/2
             en=(self._coords[e][0]+self._coords[e][1])/2
@@ -592,12 +606,14 @@ class Projection2D(object):
                 line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], label=str(round(d,1)), color="orange",linestyle="--")
             ax.add_line(line)
 
-        #line.text.set_zorder(1000000)
         ax.axis(self.get_bounding_square(margin))
         fm=font_manager.FontProperties(["monospace"], size="x-small")
-        ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
-        patchCollection = PatchCollection(polygons, cmap=matplotlib.cm.jet, alpha=0.5)
-        ax.add_collection(patchCollection)
+        if print_distances:
+            ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
+        if area:
+            rnaArea=so.cascaded_union(polygons)
+            rnaXs,rnaYs=rnaArea.exterior.xy
+            ax.fill(rnaXs,rnaYs,alpha=0.5)
         out = ax.plot()
         if show:
             plt.show()
@@ -631,7 +647,8 @@ class Projection2D(object):
         """
         self._coords=dict()
         #Project all coordinates to this plane
-        for key, val in cg.coords.items():
+        for key in cg.sorted_element_iterator():
+            val=cg.coords[key]
             start=np.array([np.dot(self._unit_vec1,val[0]), np.dot(self._unit_vec2,val[0])])
             end=np.array([np.dot(self._unit_vec1,val[1]), np.dot(self._unit_vec2,val[1])])
             self._coords[key]=(start, end)

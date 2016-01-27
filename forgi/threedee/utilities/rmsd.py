@@ -13,7 +13,7 @@ import forgi.threedee.utilities.vector as ftuv
 
 def rmsd(crds1, crds2):
     """Returns RMSD between 2 sets of [nx3] numpy array"""
-    assert(crds1.shape[1] == 3)
+    #assert(crds1.shape[1] == 3)
     assert(crds1.shape == crds2.shape)
     n_vec = numpy.shape(crds1)[0]
     correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
@@ -39,7 +39,6 @@ def centered_rmsd(crds1, crds2):
     os = optimal_superposition(crds1, crds2)
     crds_aligned = np.dot(crds1, os)
 
-    s2 = sum(sum((crds2 - crds_aligned) * (crds2 - crds_aligned)))
     diff_vecs = (crds2 - crds_aligned)
     vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
 
@@ -64,15 +63,18 @@ def centered_drmsd(crds1, crds2):
     return drmsd(crds1, crds2)
 
 def optimal_superposition(crds1, crds2):
-    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""
-    assert(crds1.shape[1] == 3)
+    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""        
     assert(crds1.shape == crds2.shape)
-    correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
-    v, s, w_tr = numpy.linalg.svd(correlation_matrix)
-    is_reflection = (numpy.linalg.det(v) * numpy.linalg.det(w_tr)) < 0.0
-    if is_reflection:
-        v[:, -1] = -v[:, -1]
-    return numpy.dot(v, w_tr)
+    if crds1.shape[1] == 3 or crds1.shape[1] == 2:
+        correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)
+        v, s, w_tr = numpy.linalg.svd(correlation_matrix)
+        is_reflection = (numpy.linalg.det(v) * numpy.linalg.det(w_tr)) < 0.0
+        if is_reflection:
+            v[:, -1] = -v[:, -1]
+        return numpy.dot(v, w_tr)
+    else:
+        raise ValueError("Wrong dimension of crds1. Needs to be an array of "
+                         "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
   
 
 '''

@@ -283,7 +283,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Initialize the new structure.
         '''
         super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
-        #: Keys are element identifiers ("s1", "i3"), values are 2-tuples of vectors
+        #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
+        #: The first value corresponds to the start of the stem (the one with the lowest nucleotide number),
+        #: The second value to the end of the stem.
         self.coords = dict()
         self.twists = dict()
         self.sampled = dict()
@@ -292,7 +294,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.vposs = c.defaultdict( dict )    
         #: The coordinate system specific to each virtual residue (3x3 matrix, carthesian coordiantes; each row is one unit vector)
         self.vbases = c.defaultdict( dict )
-
+        #: A 3D vector. Used as hint, from what direction the Projection2D object 
+        #: should be generated in the default case.
+        self.project_from = None
 
         self.vvecs = c.defaultdict( dict )
         self.v3dposs = c.defaultdict( dict )
@@ -379,7 +383,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         curr_str += self.get_twist_str()
         curr_str += self.get_sampled_stems_str()
         curr_str += self.get_long_range_str()
-
+        if self.project_from is not None:
+            curr_str+="project {} {} {}\n".format(*self.project_from)
         return curr_str
 
     def to_file(self, filename):
@@ -516,6 +521,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             if parts[0] == 'sampled':
                 self.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
+            if parts[0] == 'project':
+                self.project_from=np.array(parts[1:], dtype=float)
 
     def to_cg_file(self, filename):
         '''
