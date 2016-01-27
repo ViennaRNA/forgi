@@ -242,6 +242,7 @@ def main():
                       "extraLinks": links}
 
         fud.pv('options.names')
+        fud.pv('mcc, rmsd')
         if options.names:
             seq_struct['name'] = op.basename(filename) + " ({:.2f},{:.1f})".format(mcc, rmsd)
         else:
