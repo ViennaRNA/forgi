@@ -275,11 +275,15 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.coords = dict()
         self.twists = dict()
         self.sampled = dict()
+        
+        #: Global (carthesian) position of the virtual residue (=offset of the residue's coordinate-system)
+        self.vposs = c.defaultdict( dict )    
+        #: The coordinate system specific to each virtual residue (3x3 matrix, carthesian coordiantes; each row is one unit vector)
+        self.vbases = c.defaultdict( dict )
 
-        self.vposs = c.defaultdict( dict )
+
         self.vvecs = c.defaultdict( dict )
         self.v3dposs = c.defaultdict( dict )
-        self.vbases = c.defaultdict( dict )
         self.vinvs = c.defaultdict( dict )
 
         self.longrange = c.defaultdict( set )
