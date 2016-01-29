@@ -153,7 +153,7 @@ class Projection2D(object):
         elif cg.project_from is not None:
             # We make a copy here. In case cg.project_from is modified, 
             # we still want to be able to look up from what direction the projection was generated.
-            proj_direction=np.array(project_from, dtype=np.float)
+            proj_direction=np.array(cg.project_from, dtype=np.float)
         else:
             raise ValueError("No projection direction given and none present in the cg Object.")
         _, unit_vec1, unit_vec2=ftuv.create_orthonormal_basis(proj_direction)
