@@ -430,8 +430,9 @@ class Projection2D(object):
                                 If None, automatically get a bounding_square that shows the whole projection
         :param warn:  If True, raise a warning if parts of the projection are not inside the given bounding square.
 
-        :returns: A r(esolution x resulution) numpy 2D array. The values are floats from 0.0 (black) to 1.0 (white).
+        :returns: A tuple (np.array, float). The first value is a r(esolution x resulution) numpy 2D array. The values are floats from 0.0 (black) to 1.0 (white).
                   This array can be directly plotted using matplotlib: pyplot.imshow(array, cmap='gray', interpolation='none')
+                  The second value is the length of oine pixle in angstrom.
         """
         if bounding_square is None:
             bounding_square=self.get_bounding_square()
@@ -453,7 +454,7 @@ class Projection2D(object):
                     image[p[0],p[1]]=min(1,image[p[0],p[1]]+weight)
                 except IndexError:
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: Parts of the projection are cropped off.")
-        return np.rot90(image)
+        return np.rot90(image), steplength
 
     def plot(self, ax=None, show=False, margin=5, 
                    linewidth=None, add_labels=False,
