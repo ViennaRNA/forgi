@@ -51,9 +51,13 @@ class ConfusionMatrix(object):
 
     It is initialized with a reference structure and a distance for interactions.
     The evaluate() method is used for calculating this correlation matrix.
+
+    This is significantly faster than the confusion_matrix function, if 
+    many structures will be compared to the same structure.
     """
-    def __init__(self, reference_cg, distance=30.0):
-        self._distance=distance
+    def __init__(self, reference_cg, distance=30.0, bp_distance=16):
+        self._distance=distance        
+        self._bp_distance=bp_distance
         self._reference_interactions=self.get_interactions(reference_cg)
 
     def get_interactions(self, cg):
@@ -65,6 +69,9 @@ class ConfusionMatrix(object):
         for n1, n2 in it.combinations(nodes, r=2):
             n1,n2=sorted((n1,n2)) #TODO: Read itertools documentation, if this is necessary.
             if cg.connected(n1, n2):
+                continue
+            bp_dist = cg.min_max_bp_distance(n1, n2)[0]
+            if bp_dist < self._bp_distance:
                 continue
             if ftuv.elements_closer_than(cg.coords[n1][0],
                                        cg.coords[n1][1],
@@ -88,6 +95,11 @@ class ConfusionMatrix(object):
         nodes=set(cg.defines.keys())
         allIA=set()
         for n1, n2 in it.combinations(nodes, r=2):
+            if cg.connected(n1, n2):
+                continue
+            bp_dist = cg.min_max_bp_distance(n1, n2)[0]
+            if bp_dist < self._bp_distance:
+                continue
             allIA.add(tuple(sorted((n1,n2))))
 
         d={ "tp":0, "tn":0, "fp":0, "fn":0 }
@@ -97,6 +109,7 @@ class ConfusionMatrix(object):
         d["tn"]=len(allIA - (self._reference_interactions | interactions) )
         return d
 
+#NOTE: could be deprecated in the future. Use ConfusionMatrix.
 def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
     '''
     Calculate the true_positive, false_positive,
@@ -158,6 +171,7 @@ def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
 
     return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
 
+# COVERAGE NOTE: Never used in forgi or ernwin.
 def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     '''
     Calculate the MCC of the distance between two elements.
@@ -165,15 +179,15 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     @param cg_query: The second cg structure
     @param cg_native: The native cg structure
     @param distance: The distance between which we consider interactions.
-    @param bp_distance: Only consider pairs of elements that are separated by no
-        more than this many base pairs
+    @param bp_distance: Only consider pairs of elements that are separated by 
+                        MORE than this many base pairs
     @return: The MCC for interactions within a certain distance
     '''
     cm = confusion_matrix(cg_query, cg_native, distance, bp_distance=16)
-    cm['tp'] += 1
-    cm['fp'] += 1
-    cm['fn'] += 1
-    cm['tn'] += 1
+    #cm['tp'] += 1
+    #cm['fp'] += 1
+    #cm['fn'] += 1
+    #cm['tn'] += 1
     if cm['tp'] + cm['fp'] == 0:
         return None
     if cm['tp'] + cm['fn'] == 0:

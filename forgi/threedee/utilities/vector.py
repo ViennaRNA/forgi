@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#import timeit, sys
+import timeit, sys
 
 import forgi.threedee.utilities.cytvec as ftuc
 import forgi.utilities.debug as fud
@@ -59,6 +59,7 @@ def get_orthogonal_unit_vector(vec):
     vec3 = np.cross(vec, vec2)
     return normalize(vec3)
 
+#COVERAGE NOTE: Not used in ernwin or forgi
 def get_random_vector_pair(angle=rand.uniform(0, math.pi)):
     
     vec1 = get_random_vector()
@@ -135,9 +136,39 @@ def get_non_colinear_unit_vector(vec):
 def is_almost_colinear(vec1, vec2):
     """
     Returns true, if two vectors are almost colinear
+    
+    Note that every vector is colinear to the zero vector.
     """
-    factor=vec1/vec2
-    return all(abs(x)<0.000000001 for x in factor[1:]-factor[:1])
+    for i in range(len(vec1)):
+        if vec2[i]!=0.:
+            factor=vec1[i]/vec2[i]
+            break
+    else:
+        return True
+    return all(vec1[i]==vec2[i]==0. or (vec2[i]!=0 and abs(vec1[i]/vec2[i]-factor)<0.000000001) for i in range(len(vec1)))
+
+def create_orthonormal_basis(vec1, vec2=None, vec3=None):
+    '''
+    Create an orthonormal basis using the provided vectors.
+
+    If more than one is provided, it must be orthogonal to 
+    the others.
+    '''
+    if vec2 is None:
+        vec2 = get_non_colinear_unit_vector(vec1)
+        vec2 = np.cross(vec1, vec2)
+    #else:
+    #    nt.assert_allclose(np.dot(vec2, vec1), 0., rtol=1e-7, atol=1e-7)
+    vec1 /= magnitude(vec1)
+    vec2 /= magnitude(vec2)
+    if vec3 is None:
+        vec3 = np.cross(vec1, vec2)
+    vec3 /= magnitude(vec3)
+
+    return np.array([vec1, vec2, vec3])
+
+"""
+# Code used for comparing the fastes method of creating an orthonormal basis:
 def create_orthonormal_basis1(vec1, vec2=None, vec3=None):
     '''
     Create an orthonormal basis using the provided vectors.
@@ -161,27 +192,6 @@ def create_orthonormal_basis1(vec1, vec2=None, vec3=None):
 
     return np.array([vec1, vec2, vec3])
 
-
-def create_orthonormal_basis(vec1, vec2=None, vec3=None):
-    '''
-    Create an orthonormal basis using the provided vectors.
-
-    If more than one is provided, it must be orthogonal to 
-    the others.
-    '''
-    if vec2 is None:
-        vec2 = get_non_colinear_unit_vector(vec1)
-        vec2 = np.cross(vec1, vec2)
-    #else:
-    #    nt.assert_allclose(np.dot(vec2, vec1), 0., rtol=1e-7, atol=1e-7)
-    vec1 /= magnitude(vec1)
-    vec2 /= magnitude(vec2)
-    if vec3 == None:
-        vec3 = np.cross(vec1, vec2)
-    vec3 /= magnitude(vec3)
-
-    return np.array([vec1, vec2, vec3])
-
 def time_cob1():
     vec1 = get_random_vector()
     vec2 = get_random_vector()
@@ -195,11 +205,12 @@ def time_cob2():
     basis = create_orthonormal_basis(vec1, vec2)
 
 def time_cob():
-    t1 = timeit.Timer("time_cob1()", "from forgi.utilities.vector import time_cob1")
-    t2 = timeit.Timer("time_cob2()", "from forgi.utilities.vector import time_cob2")
+    t1 = timeit.Timer("time_cob1()", "from forgi.threedee.utilities.vector import time_cob1")
+    t2 = timeit.Timer("time_cob2()", "from forgi.threedee.utilities.vector import time_cob2")
 
-    print t1.repeat(number=10000)
-    print t2.repeat(number=10000)
+    print "1: ", t1.repeat(number=100000) #prints [3.045403003692627, 3.0388529300689697, 3.0359420776367188]
+    print "2: ", t2.repeat(number=100000) #prints [2.7473390102386475, 2.74338698387146, 2.731964111328125]
+"""
 
 def spherical_cartesian_to_polar(vec):
     '''

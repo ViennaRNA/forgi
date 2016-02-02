@@ -31,7 +31,10 @@ def main(args):
     projs=[]
     for file_ in args.files:
         cgs.append(ftmc.CoarseGrainRNA(file_))
-        projs.append(ftmp.Projection2D(cgs[-1]))
+        try:
+            projs.append(ftmp.Projection2D(cgs[-1]))
+        except ValueError:
+            projs.append(None)
 
     p_rmsds=OrderedDict()
     cg_rmsds=OrderedDict()
@@ -47,17 +50,23 @@ def main(args):
         prmsd=0
         cgrmsd=0
         count=0
+        pcount=0
         for i in range(0,len(cgs)-diff):
             count+=1
-            vrs1 = np.array([x for p in sorted(projs[i]._coords.keys()) for x in projs[i]._coords[p]])
-            vrs2 = np.array([x for p in sorted(projs[i+diff]._coords.keys()) for x in projs[i+diff]._coords[p]])
-            prmsd+=ftur.centered_rmsd(vrs1, vrs2)
+            try:
+                vrs1 = np.array([x for p in sorted(projs[i]._coords.keys()) for x in projs[i]._coords[p]])
+                vrs2 = np.array([x for p in sorted(projs[i+diff]._coords.keys()) for x in projs[i+diff]._coords[p]])
+                prmsd+=ftur.centered_rmsd(vrs1, vrs2)
+                pcount+=1
+            except:
+                pass
             vrs1 = ftug.bg_virtual_residues(cgs[i])
             vrs2 = ftug.bg_virtual_residues(cgs[i+diff])
             cgrmsd+=ftur.centered_rmsd(vrs1,vrs2)
         if count:
-            p_rmsds[diff]=prmsd/count
             cg_rmsds[diff]=cgrmsd/count
+        if pcount:
+            p_rmsds[diff]=prmsd/pcount
     print "projection RMSDs:", p_rmsds
     print "3D-RMSDs:", cg_rmsds
     import matplotlib.pyplot as plt
@@ -72,9 +81,12 @@ def main(args):
         else:                
             target_vrs = np.array([x for p in sorted(target_proj._coords.keys()) for x in target_proj._coords[p]])
             for proj in projs:
-                vrs1 = np.array([x for p in sorted(proj._coords.keys()) for x in proj._coords[p]])
-                prmsd=ftur.centered_rmsd(vrs1, target_vrs)
-                target_proj_rmsds.append(prmsd)            
+                try:
+                    vrs1 = np.array([x for p in sorted(proj._coords.keys()) for x in proj._coords[p]])
+                    prmsd=ftur.centered_rmsd(vrs1, target_vrs)
+                    target_proj_rmsds.append(prmsd)
+                except:
+                    target_proj_rmsds.append(float("nan"))
         target_vrs = ftug.bg_virtual_residues(target)
         for cg in cgs:
             vrs1 = ftug.bg_virtual_residues(cg)
