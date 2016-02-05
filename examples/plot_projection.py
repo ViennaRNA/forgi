@@ -45,7 +45,9 @@ def main(args):
         cg=ftmc.CoarseGrainRNA(file_)
 
         # Random projection direction, if no direction present in the file
-        if cg.project_from is not None:
+        if args.proj_direction:
+            direction=list(map(float, args.proj_direction.split(",")))
+        elif cg.project_from is not None:
             direction=cg.project_from
         else:
             direction=ftuv.get_random_vector()
@@ -142,7 +144,8 @@ def get_parser():
     parser = argparse.ArgumentParser()
     #Argument(s)
     parser.add_argument('cgfiles', nargs='+', help='One or more *.cg/*.coord files holding the RNA to plot.')
-    parser.add_argument('--show-direction', action="store_true",help='Print the projection direction in the plot')      
+    parser.add_argument('--show-direction', action="store_true",help='Print the projection direction in the plot')
+    parser.add_argument('--proj-direction', type=str, help='Use the given projection direction instead of the one from the file. A comma seperated triple of floats (with no whitespace)')      
     parser.add_argument('--show-filename', action="store_true", default=False, help='Print the filename of the input file in the figure')  
     parser.add_argument('-p', action="store_true", help='Shortcut for --show-direction and -- show_filename. Note that texts are not visible in all styles.')
     parser.add_argument('--print-distances', default=False, action="store_true", help='Print distances for all elements given in --show-distances at the side in the plot')

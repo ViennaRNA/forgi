@@ -248,6 +248,8 @@ class Projection2D(object):
                 self._cross_points[key1].append((cr, key2))
                 self._cross_points[key2].append((cr, key1))
         return self._cross_points
+
+    #Note: This is SLOW the first time it is called. Should be avoided as much as possible.
     @property
     def proj_graph(self):
         """A graph describing the projected RNA.
@@ -439,8 +441,7 @@ class Projection2D(object):
         box=bounding_square
         steplength=(box[1]-box[0])/resolution
         image=np.zeros([resolution+1,resolution+1], dtype=np.float32)
-        for start, end in self.proj_graph.edges_iter():             
-            label=self.proj_graph.edge[start][end]["label"]           
+        for label, (start, end) in self._coords.items():             
             start=(int((start[0]-box[0])/steplength), int((start[1]-box[2])/steplength))
             end=(int((end[0]-box[0])/steplength), int((end[1]-box[2])/steplength))        
             points=bresenham(start, end)
@@ -451,6 +452,8 @@ class Projection2D(object):
                 weight=0.3
             for p in points:
                 try:
+                    if any( pi<0 for pi in p):
+                        raise IndexError
                     image[p[0],p[1]]=min(1,image[p[0],p[1]]+weight)
                 except IndexError:
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: Parts of the projection are cropped off.")
@@ -622,6 +625,7 @@ class Projection2D(object):
         return out
 
     ### Private functions ###
+    #Note: This is SLOW. Should be improved or removed in the future
     def _build_proj_graph(self):
         """
         Generate a graph from the 2D projection. 
