@@ -70,19 +70,36 @@ def score_3(ref_img, img):
     test=(img>np.zeros_like(img))
     return hausdorff_distance(img, ref_img)
 
+def spiral(X):
+    #Modified from Can Berk Gueder at http://stackoverflow.com/a/398302/5069869
+    #Gprof Note: with sort slower than np.where solution
+    x = y = 0
+    dx = 0
+    dy = -1
+    points=[]
+    for i in range(X**2):
+        if (-X/2 < x <= X/2) and (-X/2 < y <= X/2):
+            points.append( (x, y) )
+        if x == y or (x < 0 and x == -y) or (x > 0 and x == 1-y):
+            points.sort(key=lambda p: p[0]**2+p[1]**2)
+            for p in points:
+                yield p
+            dx, dy = -dy, dx
+        x, y = x+dx, y+dy
+
 def hausdorff_helperdist(p, img):
     """
     @param d: a point in matrix coordinates
     @param img: A binary matrix
     """
-    d=min((p[0]-x)**2+(p[1]-y)**2 for x,y in it.product(range(len(img)), range(len(img))) if img[x,y] )
+    d=min((p[0]-x)**2+(p[1]-y)**2 for x,y in np.transpose(np.where(img)) )
     return math.sqrt(d)
+
 
 def hausdorff_distance(img, ref_img):
     #Source: https://de.wikipedia.org/wiki/Hausdorff-Metrik
-    coms=it.product(range(len(img[0])), range(len(img[0]))) 
-    h1=max(hausdorff_helperdist([x,y], img) for x,y in coms if ref_img[x,y] )
-    h2=max(hausdorff_helperdist([x,y], ref_img) for x,y in it.product(range(len(img)), range(len(img))) if img[x,y] )
+    h1=max(hausdorff_helperdist([x,y], img) for x,y in np.transpose(np.where(ref_img) ))
+    h2=max(hausdorff_helperdist([x,y], ref_img) for x,y in np.transpose(np.where(img) ))
     return max( h1, h2)
     
 def compare(ref_img, proj, rotation=0, offset_x=0, offset_y=0, show=False):
@@ -137,14 +154,15 @@ def compare(ref_img, proj, rotation=0, offset_x=0, offset_y=0, show=False):
     """
     return score, img
 
-
+def from_polar(theta, phi):
+  return [math.sin(theta)*math.cos(phi), math.sin(theta)*math.sin(phi), math.cos(theta)]
 class Optimizer:
     def __init__(self, ref_img):
         self.ref_img=ref_img
         self.start_points=self.get_start_points(60)
     def get_start_points(self, numPoints):
         """
-        Return numPoints equally-distributed points on half the unit sphere.
+        Return numPoints equally-distributed points on half the unit sphere in polar coordinates.
 
         Implements the 2nd algorithm from https://www.cmu.edu/biolphys/deserno/pdf/sphere_equi.pdf
         """
@@ -160,103 +178,56 @@ class Optimizer:
             Mf=int(2*math.pi*math.sin(theta)/df)
             for n in range(Mf):
                 phi=2*math.pi*n/Mf
-                points.append((math.sin(theta)*math.cos(theta), math.sin(theta)*math.sin(phi), math.cos(theta)))
-        return [np.array(p) for p in points if p[0]>=0]  
-    def evaluate(self, cg, strategy="M"):
+                points.append((theta, phi))
+        return [np.array(p) for p in points if p[0]<=math.pi/2]
+
+    def evaluate(self, cg, strategy="O"):
         """
         @param strategy: One of "M". 
                          "M" = mixed: optimize all variables at once.
                          "O" = Other    
         """
-        assert strategy in "MO"       
-        self.scores=[]
-        self.directions=[]
-        self.rots=[]
-        self.offsets=[]
-        self.last_img=None
-        if strategy=="M":
-            return self._evaluate_M(cg)
-        elif strategy=="O":
-            return self._evaluate_O(cg)
+        return self._evaluate_O(cg)
 
     def _evaluate_O(self, cg):
         self.cg=cg
         best_score=float("inf")
         for start in self.start_points:
-            score, rot, xoff, yoff=self._scoreTR([start[0], start[1], start[2]])
+            score, rot, xoff, yoff=self._scoreTR([start[0], start[1]])
             if score<best_score:
                 best_score=score
-                best_x=[start[0], start[1], start[2], rot, xoff, yoff]
-        proj=ftmp.Projection2D(self.cg, proj_direction=[best_x[0], best_x[1], best_x[2]])
-        score, img = compare(self.ref_img, proj, rotation=best_x[3], offset_x=best_x[4], offset_y=best_x[5])
+                best_x=[start[0], start[1], rot, xoff, yoff]
+        proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(best_x[0], best_x[1]))
+        score, img = compare(self.ref_img, proj, rotation=best_x[2], offset_x=best_x[3], offset_y=best_x[4])
         self.other_img=img
-        c1={'type':'eq', 'fun':lambda x: x[0]**2+x[1]**2+x[2]**2-1}
-        c2={'type':'ineq', 'fun':lambda x: 180-abs(x[3])}
-        c3={'type':'ineq', 'fun':lambda x: 250-abs(x[4])}
-        c4={'type':'ineq', 'fun':lambda x: 250-abs(x[5])}
-        opt=scipy.optimize.minimize(self._optimizeAll, best_x, constraints=[c1,c2,c3,c4], options={"maxiter":500} )
+        # x1= phi, x0=theta
+
+        opt=scipy.optimize.minimize(self._optimizeAll, best_x, bounds=[(0,math.pi/2),(0, math.pi*2),(-90,270),(-250,250),(-250,250)], options={"maxiter":500} )
         if opt.success:
-            proj=ftmp.Projection2D(self.cg, proj_direction=[opt.x[0], opt.x[1], opt.x[2]])
-            score, img = compare(self.ref_img, proj, rotation=opt.x[3], offset_x=opt.x[4], offset_y=opt.x[5])
-            otherscore= self._optimizeAll(opt.x)
+            proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(opt.x[0],opt.x[1]))
+            score, img = compare(self.ref_img, proj, rotation=opt.x[2], offset_x=opt.x[3], offset_y=opt.x[4])
             self.last_img=img
-            assert otherscore == score == opt.fun, "{}, {}, {}".format(otherscore, score, opt.fun)
-            assert abs(score-opt.fun)<1, "{},{}".format(score, opt.fun)
-            #print (opt.fun)
+            assert score == opt.fun
             return opt.fun
         else:
             return 100000
 
-
-    def _evaluate_M(self, cg):
-        self.cg=cg
-        best_score=float("inf")
-        #The longest extention has been rotated in the correct direction.
-        for rot in  [ 180, 175, -175, 170, -170, 90, -90, 10, -10, 5, -5, 0 ]:                
-            for start in self.start_points:
-                #print("X= ", [start[0], start[1], start[2], rot])
-                score, xoff, yoff=self._score_withCrossCorr([start[0], start[1], start[2], rot])
-                if score<best_score:
-                    best_score=score
-                    best_x=[start[0], start[1], start[2], rot, xoff, yoff]        
-        proj=ftmp.Projection2D(self.cg, proj_direction=[best_x[0], best_x[1], best_x[2]])
-        score, img = compare(self.ref_img, proj, rotation=best_x[3], offset_x=best_x[4], offset_y=best_x[5])
-        self.other_img=img
-        #x0,x1,x2: proj-dir; x3=rot, x4=xoffset, x5=yoffset
-        c1={'type':'eq', 'fun':lambda x: x[0]**2+x[1]**2+x[2]**2-1}
-        c2={'type':'ineq', 'fun':lambda x: 180-abs(x[3])}
-        c3={'type':'ineq', 'fun':lambda x: 250-abs(x[4])}
-        c4={'type':'ineq', 'fun':lambda x: 250-abs(x[5])}
-        opt=scipy.optimize.minimize(self._optimizeAll, best_x, constraints=[c1,c2,c3,c4], options={"maxiter":500} )
-        if opt.success:
-            proj=ftmp.Projection2D(self.cg, proj_direction=[opt.x[0], opt.x[1], opt.x[2]])
-            score, img = compare(self.ref_img, proj, rotation=opt.x[3], offset_x=opt.x[4], offset_y=opt.x[5])
-            otherscore= self._optimizeAll(opt.x)
-            self.last_img=img
-            assert otherscore == score == opt.fun, "{}, {}, {}".format(otherscore, score, opt.fun)
-            assert abs(score-opt.fun)<1, "{},{}".format(score, opt.fun)
-            #print (opt.fun)
-            return opt.fun
-        else:
-            return 100000
 
     def _scoreTR(self,x):
-        assert len(x)==3
+        assert len(x)==2
         best_opt=float("inf")
         for startrot in [0, 180]:
-            c2={'type':'ineq', 'fun':lambda x: 180-abs(x[0])}
-            c3={'type':'ineq', 'fun':lambda x: 250-abs(x[1])}
-            c4={'type':'ineq', 'fun':lambda x: 250-abs(x[2])}
-            opt=scipy.optimize.minimize(self._optimizeTR, [startrot, 0, 0], constraints=[c2,c3,c4], options={"maxiter":50}, args=(x[:3]) )
+            opt=scipy.optimize.minimize(self._optimizeTR, [startrot, 0, 0], bounds=[(-90,270),(-250,250),(-250,250)], options={"maxiter":50}, args=(x) )
             if opt.fun<best_opt:
                 best_opt=opt.fun
                 best_x=opt.x
         return best_opt, best_x[0], best_x[1], best_x[2]
     def _optimizeTR(self, x, direct):
-        proj=ftmp.Projection2D(self.cg, proj_direction=[direct[0], direct[1], direct[2]])
+        proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(*direct))
         score, img = compare(self.ref_img, proj, rotation=x[0], offset_x=x[1], offset_y=x[2])
         return score
 
+    """
     def _score_withCrossCorr(self,x):
         assert len(x)==4
         proj=ftmp.Projection2D(self.cg, proj_direction=[x[0], x[1],x[2]])
@@ -272,11 +243,12 @@ class Optimizer:
         proj=ftmp.Projection2D(self.cg, proj_direction=[x[0], x[1],x[2]])
         score, img = compare(self.ref_img, proj, rotation=x[3], offset_x=off_x, offset_y=off_y)
         return score, off_x, off_y
+    """
 
     def _optimizeAll(self, x):
-        assert len(x)==6
-        proj=ftmp.Projection2D(self.cg, proj_direction=[x[0], x[1],x[2]])
-        score, img = compare(self.ref_img, proj, rotation=x[3], offset_x=x[4], offset_y=x[5])
+        assert len(x)==5
+        proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(x[0], x[1]))
+        score, img = compare(self.ref_img, proj, rotation=x[2], offset_x=x[3], offset_y=x[4])
         return score
 
 # Parser is made available if this file is loaded as a module, to allow
