@@ -224,17 +224,19 @@ def main():
     cgs = []
     all_links = []
     mccs = []
-
+    cm=None
     for filename in args:
         cg = ftmc.CoarseGrainRNA(filename)
         cgs += [cg]
+        if not cm:
+            cm=ConfusionMatrix(cg)
         (links, pair_bitmap) = extract_extra_links(cg, options.distance, options.bp_distance,
                                                   correct_links = None if len(all_links) == 0 else all_links[0])
 
         all_links += [links]
 
         pair_bitmaps += [pair_bitmap]
-        mcc = ftme.mcc_between_cgs(cgs[0], cg)
+        mcc = ftme.mcc(cm.evaluate(cg))
         rmsd = ftme.cg_rmsd(cgs[0], cg)
 
         seq_struct = {"sequence": cg.seq,

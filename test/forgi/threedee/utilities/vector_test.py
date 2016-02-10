@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
-import unittest
+import unittest, math
 import numpy as np
+import numpy.testing as nptest
 import forgi.threedee.utilities.vector as ftuv
 
 REPEAT_TESTS_CONTAINING_RANDOM = 10
@@ -32,6 +33,13 @@ class TestVector(unittest.TestCase):
             self.assertTrue(all( vec1[j]!=vec2[j] for j in [0,1,2]),
                               msg="Repeated calls should generate different results."
                                   "This tests depends on random values. if it fails, try running it again.")
+    def test_get_alignment_matrix(self):
+        vec1=np.array([0.5,0.7,0.9])
+        vec2=np.array([0.345,3.4347,0.55])
+        rotMat=ftuv.get_alignment_matrix(vec1,vec2)
+        self.assertTrue( ftuv.is_almost_colinear(vec2, np.dot(vec1, rotMat)) )
+        self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2), vec1) )
+
     def test_get_orthogonal_unit_vector(self):
         vecs=[np.array([1., 0., 0.]), np.array([2.7, 5.6, 8.2]), np.array([11., -40., 0.]), np.array([-1., 0., 0.])]
         for vec in vecs:
@@ -97,10 +105,19 @@ class TestVector(unittest.TestCase):
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
     def test_is_almost_colinear(self):
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0.,0.,0.])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,2]),np.array([0.,0.,3.])))
         self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,7]),np.array([9.,18.,21.])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,0]),np.array([9.,18.,0.])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([3,0,8]),np.array([9.,0.,24.])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0,20,0])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0.0004,0,0]),np.array([0.,0.,0.])))
+
+        self.assertFalse(ftuv.is_almost_colinear(np.array([0,0,3]),np.array([2.,0,0])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,4.,-6.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([3.,4.,6.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,5.,6.])))
+
     def test_middlepoint(self):
         self.assertIsInstance(ftuv.middlepoint((1,2,3),(4,5,6)), tuple)
         self.assertIsInstance(ftuv.middlepoint([1,2,3],[4,5,6]), list)
@@ -110,4 +127,34 @@ class TestVector(unittest.TestCase):
         mp=ftuv.middlepoint(np.array([1,2,-3]),np.array([1,0,-5]))
         self.assertTrue(((mp==np.array([1,1,-4])).all()), msg="Middlepoint for np arrays: {} "
                                                       "is not {}".format(mp, np.array([1,1,-4])))
+    def test_create_orthonormal_basis(self):
+        #Note: If the input vectors are not orthogonal, the result are 3 vectors that might not form a basis.
+        basis1=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]))      
+        self.assertTrue( ftuv.is_almost_colinear(basis1[0], np.array([0.,0.,2.])) )
+        basis2=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]))    
+        self.assertTrue( ftuv.is_almost_colinear(basis2[0], np.array([0.,0.,2.])) )
+        self.assertTrue( ftuv.is_almost_colinear(basis2[1], np.array([0.,3.6,0])) )
+        basis3=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]), np.array([1,0,0]))    
+        self.assertTrue( ftuv.is_almost_colinear(basis3[0], np.array([0.,0.,2.])) )
+        self.assertTrue( ftuv.is_almost_colinear(basis3[1], np.array([0.,3.6,0])) )
+        self.assertTrue( ftuv.is_almost_colinear(basis3[2], np.array([1.,0,0])) )
+        for basis in [basis1, basis2, basis3]:
+          self.assertAlmostEqual(np.dot(basis[0],basis[1]),0)
+          self.assertAlmostEqual(np.dot(basis[0],basis[2]),0)
+          self.assertAlmostEqual(np.dot(basis[2],basis[1]),0)
+          for b in basis:
+              self.assertAlmostEqual(ftuv.magnitude(b),1)
+
+    def test_spherical_coordinate_transforms(self):
+        for vec in [np.array([0,0,1]), np.array([0,2,0]), np.array([3,0,0]), np.array([4,5,0]), np.array([6,0,7]), np.array([8,9,0.4])]:
+            sphe=ftuv.spherical_cartesian_to_polar(vec)
+            nptest.assert_allclose(ftuv.spherical_polar_to_cartesian(sphe),vec, atol=0.0000001)
+        nptest.assert_allclose(ftuv.spherical_polar_to_cartesian([1,0,math.pi/2]), np.array([0,0,1]), atol=0.0000001)
+        nptest.assert_allclose(ftuv.spherical_polar_to_cartesian([2, math.pi/2, math.pi/4]), np.array([1,1,0])*2/math.sqrt(2), atol=0.0000001)
+        nptest.assert_allclose(ftuv.spherical_cartesian_to_polar(np.array([0,2,2])/math.sqrt(2)), [2,math.pi/4,math.pi/2], atol=0.0000001)
+
+    def test_get_standard_basis(self):
+        nptest.assert_allclose(ftuv.get_standard_basis(2), [[1,0],[0,1]])
+        nptest.assert_allclose(ftuv.get_standard_basis(3), [[1,0,0],[0,1,0], [0,0,1]])
+
 
