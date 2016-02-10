@@ -272,8 +272,6 @@ class Pairs(list):
                     first, second = second, first   #swap order so None is 2nd
             if second is None: #check first isn't paired
                 if partners.get(first, None) is not None:
-                    print >>sys.stderr, "here1"
-                    print >>sys.stderr, "first:", first, "second:", second
                     return True
                 else:
                     partners[first] = None
