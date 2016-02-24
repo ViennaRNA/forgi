@@ -194,3 +194,117 @@ def tuples_to_pairtable(pair_tuples, seq_length=None):
         pt[tup[0]] = tup[1]
 
     return pt
+
+def pairtable_to_elements(pt, level, i, j):
+    '''
+    Convert a pair table to a list of secondary structure 
+    elements:
+
+     [['s',1,[2,3]]
+
+      The 's' indicates that an element can be a stem. It can also be
+      an interior loop ('i'), a hairpin loop ('h') or a multiloop ('m')
+
+      The second number (1 in this case) indicates the depth or
+      how many base pairs have to be broken to get to this element.
+
+     Finally, there is the list of nucleotides which are part of
+     of this element.
+    '''
+    elements = []
+    u5 = [i-1]
+    u3 = [j+1]
+
+    if (i > j):
+        return []
+        
+    #iterate over the unpaired regions on either side
+    #this is either 5' and 3' unpaired if level == 0
+    #or an interior loop or a multiloop
+    while (pt[i] == 0):
+        u5.append(i)
+        i += 1
+    while (pt[j] == 0):
+        u3.append(j)
+        j -= 1
+
+    if (i > j):
+        #hairpin loop or one large unpaired molecule
+        u5.append(i);
+        if (level == 0):
+            return [['e',level, sorted(u5)]];
+        else:
+            # check to see if we have chain breaks due
+            # to multiple strands in the input
+            external = False
+            left = []
+            right = []
+            for k in range(0, len(u5)):
+                if (external):
+                    right.append(u5[k]);
+                else:
+                    left.append(u5[k]);
+
+            return [['h',level, sorted(u5) ]];
+
+    if (pt[i] != j):
+        # multiloop
+        m = u5;
+        k = i;
+
+        # the nucleotide before and the starting nucleotide
+        m.append(k);
+        while (k <= j):
+            # recurse into a stem
+            elements += pairtable_to_elements(pt, level, k, pt[k])
+
+            # add the nucleotides between stems
+            m.append(pt[k]);
+            k = pt[k] + 1;
+            while (pt[k] == 0 and k <= j):
+                m.append(k)
+                k += 1
+
+            m.append(k)
+
+        m.pop()
+        m += u3 
+        
+        if (len(m) > 0):
+            if (level == 0):
+                elements.append(['e', level, sorted(m) ]);
+            else:
+                elements.append(['m', level, sorted(m) ]);
+        
+        return elements;
+
+    if (pt[i] == j):
+        # interior loop
+        u5.append(i);
+        u3.append(j);
+
+        combined = u5 + u3
+        if len(combined) > 4:
+            if (level == 0):
+                elements.append(['e',level, sorted(u5 + u3)]);
+            else:
+                elements.append(['i',level, sorted(u5 + u3)]);
+
+    s = [];
+    #go through the stem
+    while (pt[i] == j and i < j):
+        #one stem
+        s.append(i)
+        s.append(j)
+
+        i += 1
+        j -= 1
+
+        level += 1
+
+    u5 = [i-1]
+    u3 = [j+1]
+    elements.append(['s', level, sorted(s)])
+
+    return elements + pairtable_to_elements(pt, level, i, j)
+

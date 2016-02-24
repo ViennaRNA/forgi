@@ -1,10 +1,11 @@
 import unittest, os
 import forgi.utilities.stuff as fus
+import sys
 
 from nose.tools import raises
 
 
-class TestBulgeGraph(unittest.TestCase):
+class StuffTest(unittest.TestCase):
     def setUp(self):
         """
 ([)]
@@ -85,3 +86,27 @@ class TestBulgeGraph(unittest.TestCase):
         for pt, tup in pt_tuples:
             self.assertEqual(fus.tuples_to_pairtable(tup, pt[0]), pt)
 
+    def test_pairtable_to_elements(self):
+        db = "((((....))..))"
+        #     12345678901234
+        pt = fus.dotbracket_to_pairtable(db)
+        print >>sys.stderr, "pt:", pt
+        elements = fus.pairtable_to_elements(pt, 0, 1, len(db))
+
+        self.assertTrue(['s',2,[1,2,13,14]] in elements)
+        self.assertTrue(['s',4,[3,4,9,10]] in elements)
+
+        self.assertTrue(['i',3,[2,3,10,11,12,13,]])
+        self.assertTrue(['h',5,[4,5,6,7,8,9]])
+
+        print >>sys.stderr, "pairtable_to_elements:", elements
+
+
+    def test_pairtable_to_elements1(self):
+        db = "(.[.).]"
+        #     12345678901234
+        pt = fus.dotbracket_to_pairtable(db)
+        print >>sys.stderr, "pt:", pt
+        #elements = fus.pairtable_to_elements(pt, 0, 1, len(db))
+
+        #print >>sys.stderr, "pairtable_to_elements:", elements
