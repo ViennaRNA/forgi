@@ -10,7 +10,7 @@ import unittest, sys
 import numpy as np
 import networkx as nx
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.projection2d as ftmp
+import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.vector as ftuv
 import matplotlib.pyplot as plt
 

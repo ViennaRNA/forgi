@@ -4,7 +4,7 @@ import sys
 import argparse
 
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.projection2d as ftmp
+import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.rmsd as ftur
 

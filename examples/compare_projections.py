@@ -12,13 +12,60 @@ import itertools as it
 import numpy as np
 
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.projection2d as ftmp
+import forgi.projection.projection2d as ftmp
  
 import matplotlib.pyplot as plt
 import scipy.signal
 import scipy.ndimage
+import scipy.misc
 
-RASTER=50
+RASTER=55
+WIDTH=520
+class HausdorffError(ArithmeticError):
+    pass
+
+class Hausdorff:
+    def __init__(self, length):
+        self.offsets=self.get_griddist_iterator(length)
+    @staticmethod
+    def get_griddist_iterator(length):
+        dists={}
+        for dx in range(-length-1, length+1):
+            for dy in range(-length-1, length+1):
+                dists[(dx,dy)]=dx**2+dy**2
+        return sorted(dists.keys(), key=lambda x: dists[x])
+
+    def hausdorff_helperdist(self, p, img):
+        """
+        Returns the shorthest distance from a given point p to any non-zero cell in img.
+
+        @param p: a point in matrix coordinates
+        @param img: A binary matrix
+        """
+        for (dx,dy) in self.offsets:
+            try:
+                if img[p[0]+dx, p[1]+dy]:
+                    return math.sqrt(dx**2+dy**2)
+            except IndexError: 
+                pass
+        else:
+            #this will rarely occur, which is why we do not check for it before the for loop.
+            if not np.any(img): 
+                return float('inf')
+            else:
+                raise HausdorffError("Cannot calculated distance between point ({},{}) and image {}".format(p[0], p[1], img))
+
+    def hausdorff_distance(self, img, ref_img):
+        #Source: https://de.wikipedia.org/wiki/Hausdorff-Metrik
+        #print(img)
+        #print(ref_img, np.min(ref_img), np.max(ref_img))
+        h1=max(self.hausdorff_helperdist([x,y], img) for x,y in np.transpose(np.where(ref_img) ))
+        h2=max(self.hausdorff_helperdist([x,y], ref_img) for x,y in np.transpose(np.where(img) ))
+        return max( h1, h2)
+
+#GLOBAL VARIABLE FOR NOW
+hdCalc=Hausdorff(RASTER)
+
 def get_parser():
     """
     Here all commandline & help-messages arguments are defined.
@@ -33,8 +80,9 @@ def get_parser():
     return parser
 
 
-def get_box(projection, width=500, offset_x=0, offset_y=0):
+def get_box(projection, width=WIDTH, offset_x=0, offset_y=0):
     left, right, down, up=projection.get_bounding_square()
+    #print(up-down)
     center_hor=left+(right-left)/2
     center_ver=down+(up-down)/2
     box=(center_hor-width/2+offset_x, center_hor+width/2+offset_x, center_ver-width/2+offset_y, center_ver+width/2+offset_y)
@@ -68,43 +116,11 @@ def score_2(ref_img, img):
 def score_3(ref_img, img):
     ref=(ref_img>np.zeros_like(ref_img))
     test=(img>np.zeros_like(img))
-    return hausdorff_distance(img, ref_img)
-
-def spiral(X):
-    #Modified from Can Berk Gueder at http://stackoverflow.com/a/398302/5069869
-    #Gprof Note: with sort slower than np.where solution
-    x = y = 0
-    dx = 0
-    dy = -1
-    points=[]
-    for i in range(X**2):
-        if (-X/2 < x <= X/2) and (-X/2 < y <= X/2):
-            points.append( (x, y) )
-        if x == y or (x < 0 and x == -y) or (x > 0 and x == 1-y):
-            points.sort(key=lambda p: p[0]**2+p[1]**2)
-            for p in points:
-                yield p
-            dx, dy = -dy, dx
-        x, y = x+dx, y+dy
-
-def hausdorff_helperdist(p, img):
-    """
-    @param d: a point in matrix coordinates
-    @param img: A binary matrix
-    """
-    d=min((p[0]-x)**2+(p[1]-y)**2 for x,y in np.transpose(np.where(img)) )
-    return math.sqrt(d)
-
-
-def hausdorff_distance(img, ref_img):
-    #Source: https://de.wikipedia.org/wiki/Hausdorff-Metrik
-    h1=max(hausdorff_helperdist([x,y], img) for x,y in np.transpose(np.where(ref_img) ))
-    h2=max(hausdorff_helperdist([x,y], ref_img) for x,y in np.transpose(np.where(img) ))
-    return max( h1, h2)
+    return hdCalc.hausdorff_distance(ref, test)
     
 def compare(ref_img, proj, rotation=0, offset_x=0, offset_y=0, show=False):
     proj.rotate(rotation)
-    box=get_box(proj, 500, offset_x, offset_y)
+    box=get_box(proj, WIDTH, offset_x, offset_y)
     img,_=proj.rasterize(RASTER, bounding_square=box)
     r_z=np.zeros_like(ref_img)
     score=score_3(img, ref_img)
@@ -154,6 +170,10 @@ def compare(ref_img, proj, rotation=0, offset_x=0, offset_y=0, show=False):
     """
     return score, img
 
+def to_polar(x):
+  theta=math.atan2(x[1],x[0])
+  phi=math.atan2(math.sqrt(x[0]**2+x[1]**2),x[2])
+  return theta, phi
 def from_polar(theta, phi):
   return [math.sin(theta)*math.cos(phi), math.sin(theta)*math.sin(phi), math.cos(theta)]
 class Optimizer:
@@ -192,35 +212,43 @@ class Optimizer:
     def _evaluate_O(self, cg):
         self.cg=cg
         best_score=float("inf")
-        for start in self.start_points:
-            score, rot, xoff, yoff=self._scoreTR([start[0], start[1]])
+        start=to_polar(cg.project_from)
+        for start in self.start_points+[start]:
+            score, rot, xoff, yoff=self._scoreTR([start[0], start[1]]) #Minimize over translation and rotation
             if score<best_score:
                 best_score=score
                 best_x=[start[0], start[1], rot, xoff, yoff]
         proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(best_x[0], best_x[1]))
         score, img = compare(self.ref_img, proj, rotation=best_x[2], offset_x=best_x[3], offset_y=best_x[4])
+        print("Intermediate score", score)
         self.other_img=img
         # x1= phi, x0=theta
-
-        opt=scipy.optimize.minimize(self._optimizeAll, best_x, bounds=[(0,math.pi/2),(0, math.pi*2),(-90,270),(-250,250),(-250,250)], options={"maxiter":500} )
+        #bounds=[(0,math.pi/2),(0, math.pi*2),(-90,270),(-250,250),(-250,250)]
+        opt=scipy.optimize.minimize(self._optimizeAll, best_x, options={"maxiter":500}, method="Powell" ) #or COBYLA
         if opt.success:
             proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(opt.x[0],opt.x[1]))
             score, img = compare(self.ref_img, proj, rotation=opt.x[2], offset_x=opt.x[3], offset_y=opt.x[4])
             self.last_img=img
+            print ("After final optimization:", opt.x)
+            #print(opt)
             assert score == opt.fun
             return opt.fun
         else:
+            print(opt)
             return 100000
 
 
     def _scoreTR(self,x):
         assert len(x)==2
         best_opt=float("inf")
-        for startrot in [0, 180]:
-            opt=scipy.optimize.minimize(self._optimizeTR, [startrot, 0, 0], bounds=[(-90,270),(-250,250),(-250,250)], options={"maxiter":50}, args=(x) )
+        for startrot in [0, 180]: 
+            #bounds=[(-90,270),(-250,250),(-250,250)],
+            opt=scipy.optimize.minimize(self._optimizeTR, [startrot, 0, 0], options={"maxiter":50}, args=(x), method="Powell" )
             if opt.fun<best_opt:
                 best_opt=opt.fun
                 best_x=opt.x
+                #print(opt)
+        #print ("Best translation and rotation: ", best_x)
         return best_opt, best_x[0], best_x[1], best_x[2]
     def _optimizeTR(self, x, direct):
         proj=ftmp.Projection2D(self.cg, proj_direction=from_polar(*direct))
@@ -255,22 +283,25 @@ class Optimizer:
 # the sphinxcontrib.autoprogram extension to work properly
 parser = get_parser()
 if __name__=="__main__":
-    args = parser.parse_args()
-    cg1=ftmc.CoarseGrainRNA(args.files[0])
-    cg2=ftmc.CoarseGrainRNA(args.files[1])
-    #direction=args.direction.split(",")
-    #if len(direction)!=3:
-    #    parser.error("The projection direction should have 3 coordinates. e.g.: '1.0,0.0,0.0'")
-
-    #Minimize over rotation and offset_x and offset_y (and proj-dir?)
+    args = parser.parse_args()    
+    cg2=ftmc.CoarseGrainRNA(args.files[1])    
+    proj=ftmp.Projection2D(cg2)#, proj_direction=[1,1,1])
+    if args.files[0][-3:]=="png":
+        ref_img=scipy.misc.imread(args.files[0], flatten=True)
+        ref_img=scipy.misc.imresize(ref_img,(50,50), "nearest")
+        ref_box=get_box(proj)
+    else:
+        cg1=ftmc.CoarseGrainRNA(args.files[0])    
+        ref_proj=ftmp.Projection2D(cg1)    
+        ref_img, _=ref_proj.rasterize(RASTER, bounding_square=ref_box)    
+        ref_box=get_box(ref_proj)
 
 
     scores=[]
     rots=[-180, -90, -45, -22, -10, -5, -2, 0, 2 ,5, 10, 22, 45, 90, 180]
-    ref_proj=ftmp.Projection2D(cg1)    
-    ref_box=get_box(ref_proj)
-    ref_img, _=ref_proj.rasterize(RASTER, bounding_square=ref_box)
-    proj=ftmp.Projection2D(cg2, proj_direction=[1,1,1])
+
+
+
     """for rot in rots:
         score, img = compare(ref_img, proj, rotation=rot)
         scores.append(score)
@@ -282,13 +313,16 @@ if __name__=="__main__":
         o_scores.append(score)
     """
     optimizer=Optimizer(ref_img)
-    print("Final score is:", optimizer.evaluate(cg2, "M"))
+    #print("boundingSquare", proj.get_bounding_square())
+    score=optimizer.evaluate(cg2, "M")
+    print("Final score is:", score)
     #Plotting 
-    #fig, axarr=plt.subplots(2,2)    
-    #axarr[0,0].imshow(ref_img, cmap='gray', interpolation='none')
-    #axarr[0,1].imshow(optimizer.last_img, cmap='gray', interpolation='none')
-    #axarr[1,0].plot(np.arange(len(optimizer.scores)), optimizer.scores )
+    fig, axarr=plt.subplots(2,2)    
+    axarr[0,0].imshow(ref_img, cmap='gray', interpolation='none')
+    axarr[0,1].imshow(optimizer.last_img, cmap='gray', interpolation='none')
+    axarr[0,1].set_title(score)
+    axarr[1,0].imshow(proj.rasterize(RASTER, bounding_square=ref_box)[0], cmap='gray', interpolation='none')
     #corr=scipy.signal.correlate2d(optimizer.last_img, ref_img)
     #axarr[1,0].imshow(corr)
-    #axarr[1,1].imshow(optimizer.other_img, cmap='gray', interpolation='none')
-    #plt.show()
+    axarr[1,1].imshow(optimizer.other_img, cmap='gray', interpolation='none')
+    plt.show()

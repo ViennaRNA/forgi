@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.projection2d as ftmp
+import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.vector as ftuv
 
 import argparse
@@ -94,7 +94,7 @@ def main(args):
             line2dproperties["color"]="white"
 
         #Plot the projection #
-        proj.plot(current_axes, margin=15, linewidth=5, add_labels=set(target_elems), line2dproperties=line2dproperties,
+        proj.plot(current_axes, margin=15, linewidth=3, add_labels=set(target_elems), line2dproperties=line2dproperties,
                   show_distances=comb, print_distances=args.print_distances)
 
         #Uncomment to set a substring of the filename as a title
