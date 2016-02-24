@@ -232,6 +232,20 @@ Example::
     >>> print c
     <Chain id=B>
 
+Check if a Bio.PDB Chain is RNA
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Example::
+
+    >>> import Bio
+    >>> import forgi.threedee.utilities.pdb as ftup
+    >>> import os.path as op
+    >>> 
+    >>> filename = op.expanduser('~/data/pdbs/1Y26.pdb')
+    >>> structure = Bio.PDB.PDBParser().get_structure('blah', filename)
+    >>> ftup.is_rna(list(structure.get_chains())[0])
+    True
+
 Calculate the RMSD Between two PDB Chains
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
