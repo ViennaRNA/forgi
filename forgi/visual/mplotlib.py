@@ -78,16 +78,27 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     ax.autoscale_view()
     return collection
 
-def plot_rna(cg, coords, ax=None, offset=(0,0)):
+def plot_rna(cg, ax=None, offset=(0,0)):
     '''
     Plot an RNA structure given a set of nucleotide coordinates
     
     :param cg: A forgi.threedee.model.coarse_grain.CoarseGrainRNA structure
-    :param coords: An array of (x,y) coordinate tuples
     :param ax: A matplotlib plotting area
     :param offset: Offset the plot by these coordinates. If a simple True is passed in, then
                    offset by the current width of the plot
+    :return: (ax, coords) The axes and the coordinates for each nucleotide
     '''
+    import RNA
+
+    RNA.cvar.rna_plot_type = 1
+
+    coords = []
+
+    bp_string = cg.to_dotbracket_string()
+    vrna_coords = RNA.get_xy_coordinates(bp_string)
+    for i,_ in enumerate(bp_string):
+        coords += [(vrna_coords.get(i).X, vrna_coords.get(i).Y)]
+
     if ax is None:
         fig, ax = plt.subplots()
     
@@ -109,4 +120,4 @@ def plot_rna(cg, coords, ax=None, offset=(0,0)):
         
         circles(xs, ys, 1)
 
-    return ax
+    return (ax, coords)
