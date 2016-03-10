@@ -4,6 +4,7 @@ import numpy as np
 from ..threedee.utilities import vector as ftuv
 from . import projection2d as fhp
 import random
+import itertools as it
 
 __all__=["offsets", "modified_hausdorff_distance", "hausdorff_distance", 
          "locally_minimal_distance", "globally_minimal_distance"]
@@ -58,7 +59,7 @@ def increase_range(to_iterate):
     """
     dists={}
     if to_iterate:
-        length=norm(to_iterate[-1])
+        length=norm(to_iterate[-1][0])
         newlength=int(length+25) #25 could be anything.
         for dx in range(-newlength, newlength+1):
             for dy in range(-newlength, newlength+1):
@@ -118,7 +119,7 @@ def hausdorff_distance_old(img, ref_img, cutoff=float("inf")):
     h2=max(hausdorff_helperdist([x,y], ref_img, cutoff) for x,y in np.transpose(np.where(img) ))
     return max( h1, h2)
 
-def modified_hausdorff_distance( img, ref_img, _):
+def modified_hausdorff_distance( img, ref_img, _=None):
     """
     Return the grid-based Modified Hausdorff distance between two aligned boolean matrices.
     This distance was proposed in the following paper.
@@ -320,11 +321,21 @@ def get_start_points(numPoints):
             points.append(np.array((theta, phi)))
     return points
 
+def get_longest_img_diameter(img, scale):
+    maxl=0
+    for x1,y1 in np.transpose(np.where(img)):
+        for x2,y2 in np.transpose(np.where(img)):
+            l=(x1-x2+1)**2+(y1-y2+1)**2
+            if l>maxl:
+                maxl=l
+    return math.sqrt(maxl)*scale/len(img)
+
 def globally_minimal_distance(ref_img, scale, cg, start_points=20, maxiter=5, 
                              distance=hausdorff_distance):
     """
     See parameters of locally_minimal_distance.
     Calls locally_minimal_distance for several starting projection directions.
+    Uses several Heuristics to speed up the process.
     :param maxiter: Maximal iteration for each local optimization
     :param start_points: Number of starting projection directions. For each, local
                          optimization with maxiter steps is performed.
@@ -332,16 +343,30 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=20, maxiter=5,
     best_score=float("inf")
     decrease=float("inf")
     sp=get_start_points(start_points)
-    #We want to cover many different directions with few iterations.
+
+    #We want to cover many different directions with the frist few iterations.
     random.seed(1)
     random.shuffle(sp)
+    #Longest extention in the image
+    longest_distance_image=get_longest_img_diameter(ref_img, scale)
+    if longest_distance_image==0:
+        raise ValueError("Reference image not working. Probably empty")
+    la_heur=0
+    no_heur=0
+    score_heur=0
     for project_dir in sp:
+        proj=fhp.Projection2D(cg, from_polar([1]+list(project_dir)))
+        if abs(proj.get_longest_leaf_leaf_distance()-longest_distance_image)>4*scale/len(ref_img): #4 pixels is arbitrary heuristic
+            la_heur+=1
+            continue
         initial_score, _ = compare(ref_img, cg, scale, project_dir, distance=distance,
                                    rotation=0, offset=np.array((0,0)))        
         #print("Score ", initial_score)
         if initial_score>best_score+decrease*1.5:
             #print("cnt (cutoff = ",best_score+decrease*1.5 ," )")
+            score_heur+=1
             continue
+        no_heur+=1
         score, img, pro=locally_minimal_distance( ref_img, scale, cg, project_dir, 
                                                   maxiter, distance )
         #print ("optimized to ", score, " (curr_best is {})".format(best_score))
@@ -350,9 +375,12 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=20, maxiter=5,
             best_img=img
             best_pro=pro
             decrease=initial_score-score
+    if no_heur==0:
+        return float("inf"), None, None
     score, img, pro=locally_minimal_distance( ref_img, scale, cg, best_pro, 
-                                                  10*maxiter, distance )
-    return best_score, best_img, best_pro
+                                                  20*maxiter, distance )
+    #print("Calculations performed: {}, skipped (longest distance): {}, skipped (score): {}".format(no_heur, la_heur, score_heur))
+    return score, img, pro
 
 
 

@@ -97,24 +97,35 @@ if __name__=="__main__":
         if not args.dpi:
             parser.error("--dpi is required if no reference is given!")
         numFiles=len(args.files)
-        distances=np.zeros((numFiles, numFiles))
+        distances=np.full((numFiles, numFiles), np.inf)
         combinations=numFiles*numFiles
-        for i in range(numFiles):
-            cg1=ftmc.CoarseGrainRNA(args.files[i])
-            ref_proj=ftmp.Projection2D(cg1)
-            if args.scale:            
-                ref_box=fph.get_box(ref_proj, args.scale)
-            else:
-                ref_box=ref_proj.get_bounding_square(margin=50)
-            ref_img, _=ref_proj.rasterize(args.dpi, bounding_square=ref_box)
-            ref_img=(ref_img>np.zeros_like(ref_img)) #Make it a boolean array
-            for j in range(numFiles):
-                a=i*numFiles+j+1
-                sys.stdout.flush()
-                sys.stdout.write("\rPerforming comparison {} of {}".format(a,combinations))
-                cg=ftmc.CoarseGrainRNA(args.files[j])
-                distance, img, direction = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
-                distances[i,j]=distance
+        try:
+            for i in range(numFiles):
+                cg1=ftmc.CoarseGrainRNA(args.files[i])
+                try:
+                    ref_proj=ftmp.Projection2D(cg1)
+                except ValueError:
+                    continue
+                if args.scale:            
+                    ref_box=fph.get_box(ref_proj, args.scale)
+                else:
+                    ref_box=ref_proj.get_bounding_square(margin=50)
+                ref_img, _=ref_proj.rasterize(args.dpi, bounding_square=ref_box)
+                ref_img=(ref_img>np.zeros_like(ref_img)) #Make it a boolean array
+                for j in range(numFiles):
+                    a=i*numFiles+j+1
+                    sys.stdout.flush()
+                    sys.stdout.write("\rPerforming comparison {} of {}".format(a,combinations))
+                    cg=ftmc.CoarseGrainRNA(args.files[j])
+                    distance, img, direction = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+                    distances[i,j]=distance
+        except BaseException as e:
+            print("Programm crashing because of a {}".format(type(e)))
+            print("Distances calculated so far:")
+            np.set_printoptions(threshold='nan')
+            print(", ".join(os.path.basename(x) for x in args.files))
+            print(distances)
+            raise
         if args.show:
             fig, ax=plt.subplots(2)
             ax[0].imshow(ref_img, interpolation="none", cmap='gray')

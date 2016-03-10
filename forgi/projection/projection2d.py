@@ -383,6 +383,21 @@ class Projection2D(object):
             lengths.append(ftuv.vec_distance(leaf1, leaf2))
         lengths.sort(reverse=True)
         return lengths
+    def get_longest_leaf_leaf_distance(self):
+        """
+        The distance is approximated in direct line, not along the path
+
+        returns: a floats (length in Angstrom)
+        """
+        lengths=[]
+        leaves=[ self._coords[leaf] for leaf in self._coords if leaf[0]=="h"]
+        for leaf1, leaf2 in it.combinations(leaves, 2):
+            leaf1=(leaf1[0]+leaf1[1])/2
+            leaf2=(leaf2[0]+leaf2[1])/2
+            lengths.append((ftuv.vec_distance(leaf1, leaf2), leaf1, leaf2))
+        lengths.sort(reverse=True,key=lambda x: x[0])
+        return lengths[0][0]
+
     def get_some_leaf_leaf_distances(self):
         """
         Get a list of distances between some pairs of leaf nodes.
