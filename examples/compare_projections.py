@@ -89,7 +89,9 @@ if __name__=="__main__":
         if args.show:
             fig, ax=plt.subplots(2)
             ax[0].imshow(ref_img, interpolation="none", cmap='gray')
-            ax[1].imshow(img, interpolation="none", cmap='gray')
+            try:
+                ax[1].imshow(img, interpolation="none", cmap='gray')
+            except TypeError: pass # img is probably None
             ax[0].set_title("Reference")
             ax[1].set_title("{}: {} distance".format(fname, distance))
             plt.show()

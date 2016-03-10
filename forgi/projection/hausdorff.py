@@ -169,12 +169,15 @@ def compare(ref_img, cg, scale, projection_direction, distance,
     # Convert img to a boolean image
     img=(img>np.zeros_like(img))
     return distance(ref_img, img, cutoff), img
-    
-def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxiter, distance):
+
+def locally_minimal_distance_one_a(ref_img, scale, cg, start_rot, proj_dir, maxiter, distance, advanced=False):
+    return locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxiter, distance)
+def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxiter, distance, advanced=False):
     """
     A helper function for locally_minimal_distance.
     For parameters see documentation of locally_minimal_distance
     :startrot: The starting rotation in the projection plane (in degrees).
+    :param advanced: Try steps in more directions (takes longer)
     """
     curr_best_rotation=start_rot
     curr_best_offs=np.array((0,0))
@@ -191,7 +194,10 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
         # Optimize offset      
         # --------------- 
         change_offs=np.array((0,0)) #Angstrom dx,dy
-        for co in [np.array((1,0)), np.array((0,1)), np.array((-1,0)), np.array((0,-1))]:
+        directions=[np.array((1,0)), np.array((0,1)), np.array((-1,0)), np.array((0,-1))]
+        if advanced:
+            directions+=[np.array((1,1)), np.array((1,-1)), np.array((-1,1)), np.array((-1,-1))]
+        for co in directions:
             for i in range(10):
                 tmp_score, _ = compare(ref_img, cg, scale, curr_best_pro, distance=distance,
                                        rotation=curr_best_rotation, offset=curr_best_offs+co,
@@ -241,8 +247,11 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
         # Optimize projection direction      
         # -----------------------------
         change_pro=np.array((0.,0.)) #polar coordinates
-        for cp in [(0,0.002), (0.002,0), (0,-0.002), (-0.002,0),(0.002,0.002),
-                                  (-0.002,-0.002), (0.002,-0.002),(-0.002,0.002)]:
+        directions=[(0,0.002), (0.002,0), (0,-0.002), (-0.002,0),(0.002,0.002),
+                                  (-0.002,-0.002), (0.002,-0.002),(-0.002,0.002)]
+        if advanced:
+            directions+=[(0.001,0.002), (-0.001, 0.002), (0.002,0.001), (0.002,-0.001),(0.001,-0.002), (-0.001, -0.002), (-0.002,0.001), (-0.002,-0.001)]
+        for cp in directions:
             for i in range(10):
                 tmp_score, _ = compare(ref_img, cg, scale, curr_best_pro+cp, distance=distance, 
                                        rotation=curr_best_rotation, offset=curr_best_offs,
@@ -273,7 +282,7 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
     return curr_best_score, img, curr_best_pro
 
 def locally_minimal_distance(ref_img, scale, cg, proj_dir=None, maxiter=50, 
-                             distance=hausdorff_distance):
+                             distance=hausdorff_distance, advanced=False):
     """
     :param ref_img: The reference image. A boolean square matrix.
     :param scale: The edge length in Angstrom of the reference image.
@@ -296,8 +305,12 @@ def locally_minimal_distance(ref_img, scale, cg, proj_dir=None, maxiter=50,
             best_score=initial_score
             best_rot=start_rot
     #Now minimize locally
-    best_score, best_img, best_pro=locally_minimal_distance_one(ref_img, scale, cg, best_rot, 
-                                                     proj_dir, int(maxiter/2+1), distance)   
+    if advanced: #The branching in two functions is for profiling
+        best_score, best_img, best_pro=locally_minimal_distance_one_a(ref_img, scale, cg, best_rot, 
+                                                     proj_dir, int(maxiter/2+1), distance, advanced=True)   
+    else:
+        best_score, best_img, best_pro=locally_minimal_distance_one(ref_img, scale, cg, best_rot, 
+                                                     proj_dir, int(maxiter/2+1), distance, advanced=advanced)   
     return best_score, best_img, best_pro
 
 
@@ -330,7 +343,7 @@ def get_longest_img_diameter(img, scale):
                 maxl=l
     return math.sqrt(maxl)*scale/len(img)
 
-def globally_minimal_distance(ref_img, scale, cg, start_points=20, maxiter=5, 
+def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5, 
                              distance=hausdorff_distance):
     """
     See parameters of locally_minimal_distance.
@@ -356,7 +369,8 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=20, maxiter=5,
     score_heur=0
     for project_dir in sp:
         proj=fhp.Projection2D(cg, from_polar([1]+list(project_dir)))
-        if abs(proj.get_longest_leaf_leaf_distance()-longest_distance_image)>4*scale/len(ref_img): #4 pixels is arbitrary heuristic
+        if abs(proj.get_longest_elem_elem_distance()-longest_distance_image)>4*scale/len(ref_img): #4 pixels is arbitrary heuristic
+            #print("abs({}-{})>{}".format(proj.get_longest_elem_elem_distance(), longest_distance_image, 4*scale/len(ref_img)))
             la_heur+=1
             continue
         initial_score, _ = compare(ref_img, cg, scale, project_dir, distance=distance,
@@ -376,11 +390,10 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=20, maxiter=5,
             best_pro=pro
             decrease=initial_score-score
     if no_heur==0:
+        #print("skipped (longest distance): {}, skipped (score): {}".format(la_heur, score_heur))
         return float("inf"), None, None
     score, img, pro=locally_minimal_distance( ref_img, scale, cg, best_pro, 
-                                                  20*maxiter, distance )
+                                                  20*maxiter, distance, advanced=True )
     #print("Calculations performed: {}, skipped (longest distance): {}, skipped (score): {}".format(no_heur, la_heur, score_heur))
     return score, img, pro
-
-
 
