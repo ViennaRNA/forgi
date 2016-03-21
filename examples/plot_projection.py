@@ -53,7 +53,7 @@ def main(args):
             direction=ftuv.get_random_vector()
 
         #Generate the projection object
-        proj=ftmp.Projection2D(cg, direction, rotation=180)   
+        proj=ftmp.Projection2D(cg, direction, rotation=180, project_virtual_atoms=args.virtual_atoms)   
 
         #Simulate a reduced resolution of the image.
         if args.condense:
@@ -86,7 +86,7 @@ def main(args):
                     others=[ x for x in elems if x not in target_elems]
                     target_elems.append(others[0])
         comb=list(it.combinations(target_elems, 2))
-        print(comb, target_elems)
+        #print(comb, target_elems)
         line2dproperties={}
         if args.style=="BOW":
             line2dproperties["color"]="black"
@@ -157,6 +157,7 @@ def get_parser():
                         help='Plot style. "DEF" (default: color on white), "WOB" (white on black), "BOW" (Black on white), "COL" same as "DEF" ')
     parser.add_argument('--condense', type=float, help='Simulate resolution reduction. This is an experimental featyure and does not work very well.')
     parser.add_argument('--show-distances', type=str, help='Either an Integer, or a ","-separated list of coarse grained elements.')
+    parser.add_argument('--virtual-atoms', action="store_true", help='Show virtual atoms (Slow).')
     parser.add_argument('--show', action="store_true", help='Show the plot. If args.out is not given, this is implicitely set to true..')
     return parser
 parser=get_parser()

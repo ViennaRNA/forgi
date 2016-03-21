@@ -15,7 +15,7 @@ __version__ = "0.2"
 __maintainer__ = "Peter Kerpedjiev"
 __email__ = "pkerp@tbi.univie.ac.at"
 
-import networkx as nx
+#import networkx as nx #This is left inside functions, because it may take up to 2 seconds time.
 import sys
 import collections as col
 import random
@@ -2785,7 +2785,7 @@ class BulgeGraph(object):
             self.nx_graph = self.to_networkx()
 
         if self.nuc_bp_dists is None:
-            import numpy as np
+            import networkx as nx
             self.nuc_bp_dists = col.defaultdict(dict)
             dist_matrix = np.array(nx.floyd_warshall_numpy(self.nx_graph))
             for (i1,n1), (i2,n2) in it.product(enumerate(self.nx_graph.nodes()),

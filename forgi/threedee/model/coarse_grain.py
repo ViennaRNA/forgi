@@ -19,6 +19,7 @@ from ..utilities import rmsd as ftur
 from ..utilities import vector as ftuv
 from ...utilities import debug as fud
 from ...utilities import stuff as fus
+from ...utilities.observedDict import observedDict
 
 import Bio.PDB as bpdb
 import collections as c
@@ -283,10 +284,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Initialize the new structure.
         '''
         super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
+
+        
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
         #: The first value corresponds to the start of the stem (the one with the lowest nucleotide number),
         #: The second value to the end of the stem.
-        self.coords = dict()
+        self.coords = observedDict(on_change=self.reset_vatom_cache)
         self.twists = dict()
         self.sampled = dict()
         
@@ -304,6 +307,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         self.longrange = c.defaultdict( set )
         self.chain = None #the PDB chain if loaded from a PDB file
+
+        self._virtual_atom_cache={}
 
         if cg_file is not None:
             self.from_file(cg_file)
@@ -484,7 +489,19 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ss.define = self.defines[stem]
 
         return ss  
-
+    def get_loop_from_residue(self, residue):
+        """
+        Return the coarse grained element a residfue specified as a position along the RNA chain.
+        :param residue: An Integer. The position of the residue in the RNA.
+        """
+        for key, value in self.defines.items():
+            if len(value)<2:
+                pass #For multiloops of length 0
+            elif residue>=value[0] and residue<=value[1]:
+                return key
+            elif len(value)==4 and residue>=value[2] and residue<=value[3]:
+                return key
+        return None #Not found
     def from_file(self, cg_filename):
         '''
         Load this data structure from a file.
@@ -681,6 +698,35 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Calculate the combined length of all the elements.
         '''
         return sum([len(list(self.define_residue_num_iterator(d))) for d in self.defines])
+
+    def virtual_atoms(self, key=None):
+        """
+        Get virtual atoms for a key.
+
+        :param key: An INTEGER: The number of the base in the RNA. Returns a dict {"C8":np.array([x,y,z]), ...}
+        """
+        if isinstance(key, int):
+             if key not in self._virtual_atom_cache:
+                self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
+             return self._virtual_atom_cache[key]
+
+    def reset_vatom_cache(self, key):
+        """
+        Used as on_call function for the observing of the self.coords dictionary.
+
+        :param key: A coarse grain element name, e.g. "s1" or "m15"
+        """
+        if not self._virtual_atom_cache:
+            return
+        define=self.defines[key]
+        if len(define)>1:
+            for i in range(define[0], define[1]+1):
+                if key in self._virtual_atom_cache:
+                    del self._virtual_atom_cache[key]
+        if len(define)>3:
+            for i in range(define[2], define[3]+1):
+                if key in self._virtual_atom_cache:
+                    del self._virtual_atom_cache[key]
 
 def cg_from_sg(cg, sg):
     '''

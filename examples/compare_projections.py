@@ -22,8 +22,45 @@ import scipy.signal
 import scipy.ndimage
 import scipy.misc
 
+import multiprocessing
+from functools import partial
+
+
+
+class KeyboardInterruptError(Exception):
+  pass
+
+
+
+
 RASTER=60
 WIDTH=500
+
+def async_calculation((ref_img, ref_box), numFiles, filenames):
+    try:
+        distances=[]
+        for j in range(numFiles):
+            cg=ftmc.CoarseGrainRNA(filenames[j])
+            distance, img, direction = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+            distances.append(distance)
+        return distances
+    except KeyboardInterrupt:
+        print("In worker {}: Keyboard Interrupt".format(id(ref_img)))
+        return 
+
+def parallel_localOpt((ref_img, ref_box), numFiles, filenames):
+    try:
+        distances=[]
+        for j in range(numFiles):
+            cg=ftmc.CoarseGrainRNA(filenames[j])
+            distance, img, direction = fph.locally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+            distances.append(distance)
+        return distances
+    except KeyboardInterrupt:
+        print("In worker {}: Keyboard Interrupt".format(id(ref_img)))
+        return
+
+
 
 def get_parser():
     """
@@ -43,6 +80,7 @@ def get_parser():
     parser.add_argument('--scale', type=int, help='The width of the whole image in Angstrom. This is required if reference is a png image.')
     parser.add_argument('--outfile', type=str, help='Currently only used if no reference is present. Write the resulting distance matrix to this file.')
     parser.add_argument('--show', action='store_true', help='Show a figure. The figure does not show all calculated distances.')
+    parser.add_argument('--cores', type=int, default=1, help='Only used for many to many comparison. Number of cores for paralellization.')
     return parser
 
 # Parser is made available if this file is loaded as a module, to allow
@@ -63,7 +101,7 @@ if __name__=="__main__":
         else:
             ref_cg=ftmc.CoarseGrainRNA(args.reference)    
             try:
-                ref_proj=ftmp.Projection2D(ref_cg)
+                ref_proj=ftmp.Projection2D(ref_cg, project_virtual_atoms=True)
             except ValueError:
                   parser.error('The reference *.cg file needs a "project" line.')
             if args.scale:            
@@ -101,33 +139,55 @@ if __name__=="__main__":
         numFiles=len(args.files)
         distances=np.full((numFiles, numFiles), np.inf)
         combinations=numFiles*numFiles
+        toProcess=[]
+        for i in range(numFiles):
+            cg1=ftmc.CoarseGrainRNA(args.files[i])
+            try:
+                ref_proj=ftmp.Projection2D(cg1, project_virtual_atoms=True)
+            except ValueError:
+                continue
+            if args.scale:            
+                ref_box=fph.get_box(ref_proj, args.scale)
+            else:
+                ref_box=ref_proj.get_bounding_square(margin=50)
+            ref_img, _=ref_proj.rasterize(args.dpi, bounding_square=ref_box)
+            ref_img=(ref_img>np.zeros_like(ref_img)) #Make it a boolean array
+            #if args.show:
+            #    fig, ax=plt.subplots()
+            #    ax.imshow(ref_img, interpolation="none", cmap='gray')
+            #    ax.set_title(args.files[i])
+            #    plt.show()
+            toProcess.append((ref_img, ref_box))
+        if args.global_search:
+            partial_calculation=partial(async_calculation, numFiles=numFiles, filenames=args.files)
+        else:
+            partial_calculation=partial(parallel_localOpt, numFiles=numFiles, filenames=args.files)
+        pool = multiprocessing.Pool(args.cores)              
         try:
-            for i in range(numFiles):
-                cg1=ftmc.CoarseGrainRNA(args.files[i])
-                try:
-                    ref_proj=ftmp.Projection2D(cg1)
-                except ValueError:
-                    continue
-                if args.scale:            
-                    ref_box=fph.get_box(ref_proj, args.scale)
-                else:
-                    ref_box=ref_proj.get_bounding_square(margin=50)
-                ref_img, _=ref_proj.rasterize(args.dpi, bounding_square=ref_box)
-                ref_img=(ref_img>np.zeros_like(ref_img)) #Make it a boolean array
-                for j in range(numFiles):
+            for i, line in enumerate(pool.imap(partial_calculation, toProcess)):
+                sys.stderr.write('\rCalculation {}/{} done'.format(i+1,numFiles))
+                sys.stderr.flush()
+                distances[i]=line
+
+            """for j in range(numFiles):
                     a=i*numFiles+j+1
                     sys.stdout.flush()
                     sys.stdout.write("\rPerforming comparison {} of {}".format(a,combinations))
                     cg=ftmc.CoarseGrainRNA(args.files[j])
                     distance, img, direction = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
-                    distances[i,j]=distance
+                    distances[i,j]=distance"""
         except BaseException as e:
             print("Programm crashing because of a {}".format(type(e)))
             print("Distances calculated so far:")
             np.set_printoptions(threshold='nan')
             print(", ".join(os.path.basename(x) for x in args.files))
             print(distances)
+            pool.terminate()
+            print("terminated pool")
             raise
+        finally:
+            pool.close()
+            pool.join()
         if args.show:
             fig, ax=plt.subplots(2)
             ax[0].imshow(ref_img, interpolation="none", cmap='gray')
@@ -139,4 +199,6 @@ if __name__=="__main__":
         print(distances)        
         if args.outfile:
             np.savetxt(args.outfile, distances , delimiter=",", header=", ".join(os.path.basename(x) for x in args.files))
+
+
 

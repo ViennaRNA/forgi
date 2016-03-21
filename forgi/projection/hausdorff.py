@@ -162,7 +162,7 @@ def compare(ref_img, cg, scale, projection_direction, distance,
     if write_fev:
         print("Number of function evaluations: ", nfev[-1])
         nfev[-1]=0
-    proj=fhp.Projection2D(cg, from_polar([1]+list(projection_direction)))
+    proj=fhp.Projection2D(cg, from_polar([1]+list(projection_direction)), project_virtual_atoms=True)
     proj.rotate(rotation)
     box=get_box(proj, scale, offset)
     img,_=proj.rasterize(len(ref_img)-1, bounding_square=box, warn=False)
@@ -242,6 +242,7 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
             # If we didn't change the offset and didn't change the rotation, found stays True
             found=False
         curr_best_rotation=curr_best_rotation+change_rot
+        if not curr_best_score: break #We reached zero
 
         # -----------------------------
         # Optimize projection direction      
@@ -271,7 +272,7 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
             # If we didn't change offset, projection or rotation, found still stays True
             found=False
         curr_best_pro=curr_best_pro+change_pro
-        if found:
+        if found or not curr_best_score:
             break
     else:
         pass #print("Max-iter reached", maxiter)
@@ -368,16 +369,16 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5,
     no_heur=0
     score_heur=0
     for project_dir in sp:
-        proj=fhp.Projection2D(cg, from_polar([1]+list(project_dir)))
-        if abs(proj.get_longest_elem_elem_distance()-longest_distance_image)>4*scale/len(ref_img): #4 pixels is arbitrary heuristic
-            #print("abs({}-{})>{}".format(proj.get_longest_elem_elem_distance(), longest_distance_image, 4*scale/len(ref_img)))
+        proj=fhp.Projection2D(cg, from_polar([1]+list(project_dir)), project_virtual_atoms=True)
+        if abs(proj.longest_axis-longest_distance_image)>6*scale/len(ref_img): #4 pixels is arbitrary heuristic
+            #print("abs({}-{})={}>{}".format(proj.longest_axis, longest_distance_image, abs(proj.longest_axis-longest_distance_image), 6*scale/len(ref_img)))
             la_heur+=1
             continue
         initial_score, _ = compare(ref_img, cg, scale, project_dir, distance=distance,
                                    rotation=0, offset=np.array((0,0)))        
         #print("Score ", initial_score)
         if initial_score>best_score+decrease*1.5:
-            #print("cnt (cutoff = ",best_score+decrease*1.5 ," )")
+            #print("cnt (cutoff = ",best_score+decrease*1.5 ," curr_best {}, score {} )".format(best_score,initial_score))
             score_heur+=1
             continue
         no_heur+=1
@@ -389,9 +390,11 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5,
             best_img=img
             best_pro=pro
             decrease=initial_score-score
+        if best_score==0: break
     if no_heur==0:
         #print("skipped (longest distance): {}, skipped (score): {}".format(la_heur, score_heur))
         return float("inf"), None, None
+    #print("Optimizing score {}".format(best_score))
     score, img, pro=locally_minimal_distance( ref_img, scale, cg, best_pro, 
                                                   20*maxiter, distance, advanced=True )
     #print("Calculations performed: {}, skipped (longest distance): {}, skipped (score): {}".format(no_heur, la_heur, score_heur))

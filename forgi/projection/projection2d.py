@@ -7,6 +7,7 @@ from future.builtins.disabled import (apply, cmp, coerce, execfile,
                              unicode, xrange, StandardError)
 
 import forgi.threedee.utilities.vector as ftuv
+import forgi.threedee.utilities.graph_pdb as ftug
 import collections as col
 import numpy as np
 import itertools as it
@@ -129,7 +130,7 @@ def bresenham(start,end):
 
 class Projection2D(object):
     """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
-    def __init__(self, cg, proj_direction=None, rotation=0):
+    def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
                     .. note:: The projection is generated from this cg, but it is not associated with it after construction.
@@ -140,7 +141,7 @@ class Projection2D(object):
                                If proj_direction and cg.project_from is None, an error is raised.
         @param rotate: Degrees. Rotate the projection by this amount.
         
-        """        
+        """ 
         #: The projected coordinates of all stems
         self._coords=dict()
 
@@ -160,8 +161,8 @@ class Projection2D(object):
         self._unit_vec1=unit_vec1
         self._unit_vec2=unit_vec2
         self._proj_direction=proj_direction
-        self._project(cg)
-        
+        self._project(cg, project_virtual_atoms)
+            
 
         #Rotate and translate projection into a standard orientation
         points=list(self.points)
@@ -173,6 +174,8 @@ class Projection2D(object):
         v2=np.array(v2)
         for key,edge in self._coords.items():
             self._coords[key]=(edge[0]-v1/2-v2/2, edge[1]-v1/2-v2/2)
+        for i, v_atom in enumerate(self._virtual_atoms):
+            self._virtual_atoms[i]=v_atom-v1/2-v2/2
         rot=math.atan2(*(v2-v1))
         rot=math.degrees(rot)
         self.rotate(rot)
@@ -180,7 +183,8 @@ class Projection2D(object):
         ymean=np.mean([ x[1] for p in self._coords.values() for x in p])
         for key,edge in self._coords.items():
             self._coords[key]=(edge[0]-(xmean,ymean), edge[1]-(xmean,ymean))
-
+        for i, v_atom in enumerate(self._virtual_atoms):
+            self._virtual_atoms[i]=v_atom-(xmean,ymean)
         #From this, further rotate if requested by the user.
         if rotation!=0:
             self.rotate(rotation)
@@ -195,6 +199,8 @@ class Projection2D(object):
         self._proj_graph=None
         for key,edge in self._coords.items():
             self._coords[key]=(rotate2D(edge[0], angle), rotate2D(edge[1], angle))
+        for i, v_atom in enumerate(self._virtual_atoms):
+            self._virtual_atoms[i]=rotate2D(v_atom, angle)
 
     def condense_points(self, cutoff=1):
         """
@@ -383,20 +389,6 @@ class Projection2D(object):
             lengths.append(ftuv.vec_distance(leaf1, leaf2))
         lengths.sort(reverse=True)
         return lengths
-    def get_longest_elem_elem_distance(self):
-        """
-        The distance is approximated in direct line, not along the path
-
-        returns: a floats (length in Angstrom)
-        """
-        lengths=[]
-        leaves=[ self._coords[leaf] for leaf in self._coords ]
-        for leaf1, leaf2 in it.combinations(leaves, 2):
-            leaf1=(leaf1[0]+leaf1[1])/2
-            leaf2=(leaf2[0]+leaf2[1])/2
-            lengths.append((ftuv.vec_distance(leaf1, leaf2), leaf1, leaf2))
-        lengths.sort(reverse=True,key=lambda x: x[0])
-        return lengths[0][0]
 
     def get_some_leaf_leaf_distances(self):
         """
@@ -437,7 +429,7 @@ class Projection2D(object):
         return maxl
 
     ### Functions for graphical representations of the projection ###
-    def rasterize(self, resolution=50, bounding_square=None, warn=True):
+    def rasterize(self, resolution=50, bounding_square=None, warn=True, virtual_atoms=True):
         """
         Rasterize the projection to a square image of the given resolution.
         Uses the Bresenham algorithm for line rasterization.
@@ -456,15 +448,16 @@ class Projection2D(object):
         box=bounding_square
         steplength=(box[1]-box[0])/resolution
         image=np.zeros([resolution+1,resolution+1], dtype=np.float32)
-        for label, (start, end) in self._coords.items():             
+        for label, (start, end) in self._coords.items():                
+            if label.startswith("s"):
+                if virtual_atoms:
+                    continue
+                weight=1
+            else:
+                weight=0.3         
             start=(int((start[0]-box[0])/steplength), int((start[1]-box[2])/steplength))
             end=(int((end[0]-box[0])/steplength), int((end[1]-box[2])/steplength))        
             points=bresenham(start, end)
-            if label.startswith("s"):
-                weight=1
-                #print("W", label, start, end, "Points", points, weight)
-            else:
-                weight=0.3
             for p in points:
                 try:
                     if any( pi<0 for pi in p):
@@ -472,14 +465,25 @@ class Projection2D(object):
                     image[p[0],p[1]]=min(1,image[p[0],p[1]]+weight)
                 except IndexError:
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: Parts of the projection are cropped off.")
+        if virtual_atoms:
+            for pos in self._virtual_atoms:
+                point=(int((pos[0]-box[0])/steplength), int((pos[1]-box[2])/steplength))
+                if 0<=point[0]<len(image) and 0<=point[1]<len(image[0]):
+                    image[point[0],point[1]]=1
+                else:                    
+                    if warn: warnings.warn("WARNING during rasterization of virtual atoms: Parts of the projection are cropped off.")
         return np.rot90(image), steplength
 
     def plot(self, ax=None, show=False, margin=5, 
                    linewidth=None, add_labels=False,
                    line2dproperties={}, xshift=0, yshift=0,
-                   show_distances=[], print_distances=False):
+                   show_distances=[], print_distances=False,
+                   virtual_atoms=True):
         """
-        Plots the 2D projection
+        Plots the 2D projection.
+
+        This uses modified copy-paste code by Syrtis Major (c)2014-2015 under the BSD 3-Clause license
+        and code from matplotlib under the PSF license.
 
         :param ax: The axes to draw to. You can get it by calling `fig, ax=matplotlib.pyplot.subplots()`
         :param show: If true, the matplotlib.pyplot.show() will be called at the end of this function.
@@ -522,6 +526,89 @@ class Projection2D(object):
         else:
             area=True
         polygons=[]
+
+        def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
+            """
+            Make a scatter of circles plot of x vs y, where x and y are sequence 
+            like objects of the same lengths. The size of circles are in data scale.
+
+            Parameters
+            ----------
+            x,y : scalar or array_like, shape (n, )
+                Input data
+            s : scalar or array_like, shape (n, ) 
+                Radius of circle in data scale (ie. in data unit)
+            c : color or sequence of color, optional, default : 'b'
+                `c` can be a single color format string, or a sequence of color
+                specifications of length `N`, or a sequence of `N` numbers to be
+                mapped to colors using the `cmap` and `norm` specified via kwargs.
+                Note that `c` should not be a single numeric RGB or
+                RGBA sequence because that is indistinguishable from an array of
+                values to be colormapped.  `c` can be a 2-D array in which the
+                rows are RGB or RGBA, however.
+            ax : Axes object, optional, default: None
+                Parent axes of the plot. It uses gca() if not specified.
+            vmin, vmax : scalar, optional, default: None
+                `vmin` and `vmax` are used in conjunction with `norm` to normalize
+                luminance data.  If either are `None`, the min and max of the
+                color array is used.  (Note if you pass a `norm` instance, your
+                settings for `vmin` and `vmax` will be ignored.)
+
+            Returns
+            -------
+            paths : `~matplotlib.collections.PathCollection`
+
+            Other parameters
+            ----------------
+            kwargs : `~matplotlib.collections.Collection` properties
+                eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap
+
+            Examples
+            --------
+            a = np.arange(11)
+            circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
+
+            License
+            --------
+            This function is copied (and potentially modified) from 
+            http://stackoverflow.com/a/24567352/5069869
+
+            Copyright Syrtis Major, 2014-2015
+
+            This function is under [The BSD 3-Clause License]
+            (http://opensource.org/licenses/BSD-3-Clause)
+            """
+            from matplotlib.patches import Circle
+            from matplotlib.collections import PatchCollection
+            import pylab as plt
+            #import matplotlib.colors as colors
+
+            if ax is None:
+                ax = plt.gca()    
+
+            if isinstance(c,basestring):
+                color = c     # ie. use colors.colorConverter.to_rgba_array(c)
+            else:
+                color = None  # use cmap, norm after collection is created
+            kwargs.update(color=color)
+
+            if np.isscalar(x):
+                patches = [Circle((x, y), s),]
+            elif np.isscalar(s):
+                patches = [Circle((x_,y_), s) for x_,y_ in zip(x,y)]
+            else:
+                patches = [Circle((x_,y_), s_) for x_,y_,s_ in zip(x,y,s)]
+            collection = PatchCollection(patches, **kwargs)
+
+            if color is None:
+                collection.set_array(np.asarray(c))
+                if vmin is not None or vmax is not None:
+                    collection.set_clim(vmin, vmax)
+
+            ax.add_collection(collection)
+            ax.autoscale_view()
+            return collection
+
         class MyLine(lines.Line2D):
             """
             Copied and modified from http://matplotlib.org/examples/api/line_with_text.html,
@@ -576,6 +663,8 @@ class Projection2D(object):
                 warnings.warn("Cannot create Axes  or Figure. You probably have no graphical display available. The Error was:\n {}: {}".format(type(e).__name__, e))
                 return      
         lprop=copy.copy(line2dproperties)
+        if virtual_atoms and len(self._virtual_atoms)>0:
+            circles(self._virtual_atoms[:,0],self._virtual_atoms[:,1], c="gray", s=0.7, ax=ax)
         for label,(s,e) in self._coords.items():
             if "color" not in line2dproperties:
                 if label.startswith("s"):
@@ -660,18 +749,26 @@ class Projection2D(object):
         self._proj_graph=proj_graph
         self.condense_points(0.00000000001) #To avoid floating point problems
 
-    def _project(self, cg):
+    def _project(self, cg, project_virtual_atoms):
         """
         Calculates the 2D coordinates of all coarse grained elements by vector rejection.
         Stores them inside self._coords
         """
         self._coords=dict()
+        self._virtual_atoms=[]
         #Project all coordinates to this plane
         for key in cg.sorted_element_iterator():
             val=cg.coords[key]
             start=np.array([np.dot(self._unit_vec1,val[0]), np.dot(self._unit_vec2,val[0])])
             end=np.array([np.dot(self._unit_vec1,val[1]), np.dot(self._unit_vec2,val[1])])
             self._coords[key]=(start, end)
+
+        if project_virtual_atoms:        
+            for residuePos in range(1,cg.total_length()):
+                residue=cg.virtual_atoms(residuePos)
+                for pos in residue.values():
+                    self._virtual_atoms.append(np.array([np.dot(self._unit_vec1, pos), np.dot(self._unit_vec2, pos)]))
+        self._virtual_atoms=np.array(self._virtual_atoms)
 
     def _condense_one(self, cutoff):
         """
