@@ -32,8 +32,6 @@ class KeyboardInterruptError(Exception):
 
 
 
-
-RASTER=60
 WIDTH=500
 
 def async_calculation((ref_img, ref_box), numFiles, filenames):
@@ -41,7 +39,7 @@ def async_calculation((ref_img, ref_box), numFiles, filenames):
         distances=[]
         for j in range(numFiles):
             cg=ftmc.CoarseGrainRNA(filenames[j])
-            distance, img, direction = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+            distance, img, direction, _ = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
             distances.append(distance)
         return distances
     except KeyboardInterrupt:
@@ -53,14 +51,12 @@ def parallel_localOpt((ref_img, ref_box), numFiles, filenames):
         distances=[]
         for j in range(numFiles):
             cg=ftmc.CoarseGrainRNA(filenames[j])
-            distance, img, direction = fph.locally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+            distance, img, direction, _ = fph.locally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
             distances.append(distance)
         return distances
     except KeyboardInterrupt:
         print("In worker {}: Keyboard Interrupt".format(id(ref_img)))
         return
-
-
 
 def get_parser():
     """
@@ -98,6 +94,10 @@ if __name__=="__main__":
                 ref_box=-s/2, s/2, -s/2, s/2
             else:
                 parser.error("--scale is required if the reference is a png image")
+            if args.show:
+                fig, ax=plt.subplots()
+                ax.imshow(ref_img, interpolation="none", cmap='gray')
+                plt.show()
         else:
             ref_cg=ftmc.CoarseGrainRNA(args.reference)    
             try:
@@ -117,11 +117,11 @@ if __name__=="__main__":
         for f in args.files:
             cg=ftmc.CoarseGrainRNA(f)
             if args.global_search or cg.project_from is None:
-                distance, img, direction = fph.globally_minimal_distance(ref_img, args.scale, cg)
+                distance, img, direction,_ = fph.globally_minimal_distance(ref_img, args.scale, cg)
                 fname = os.path.basename(f)
                 print ("{}:\t{} distance (projected from {}, Globally optimized)".format(fname, distance, direction))
             else:
-                distance, img, direction = fph.locally_minimal_distance(ref_img, args.scale, cg)
+                distance, img, direction,_ = fph.locally_minimal_distance(ref_img, args.scale, cg)
                 fname = os.path.basename(f)
                 print ("{}:\t{} distance (projected from {}, Locally optimized)".format(fname, distance, direction))
         if args.show:
@@ -174,7 +174,7 @@ if __name__=="__main__":
                     sys.stdout.flush()
                     sys.stdout.write("\rPerforming comparison {} of {}".format(a,combinations))
                     cg=ftmc.CoarseGrainRNA(args.files[j])
-                    distance, img, direction = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+                    distance, img, direction, _ = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
                     distances[i,j]=distance"""
         except BaseException as e:
             print("Programm crashing because of a {}".format(type(e)))

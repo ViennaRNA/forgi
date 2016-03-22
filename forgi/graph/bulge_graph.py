@@ -27,7 +27,7 @@ from ..utilities import stuff as fus
 from ..threedee.utilities import mcannotate as ftum
 import os
 import operator as oper
-
+import numpy as np
 
 def add_bulge(bulges, bulge, context, message):
     """

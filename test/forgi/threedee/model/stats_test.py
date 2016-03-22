@@ -13,7 +13,7 @@ class TestStats(unittest.TestCase):
     '''
 
     def setUp(self):
-        #self.angle_stats = ftms.get_angle_stats('test/forgi/threedee/data/real.stats')
+        self.angle_stats = ftms.get_angle_stats('test/forgi/threedee/data/real.stats')
         pass
 
     def testRandom(self):

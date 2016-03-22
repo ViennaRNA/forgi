@@ -1,7 +1,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
-                      int, map, next, oct, open, pow, range, round,
-                      str, super, zip)
+                      map, next, oct, open, pow, range, round,
+                      str, super, zip) 
+# int is not imported from builtins here for performance reasons. 
+# See: https://github.com/PythonCharmers/python-future/issues/136
 from future.builtins.disabled import (apply, cmp, coerce, execfile,
                              file, long, raw_input, reduce, reload,
                              unicode, xrange, StandardError)
@@ -76,9 +78,32 @@ def rotate2D(vector, angle):
     :returns: a tuple (x,y) of new coordinates.
     """
     angle=math.radians(angle)
-    x=vector[0]*math.cos(angle)-vector[1]*math.sin(angle)
-    y=vector[0]*math.sin(angle)+vector[1]*math.cos(angle)
-    return np.array((x,y))
+    c=math.cos(angle) #For scalar, math.cos is faster than numpy.cos
+    s=math.sin(angle)
+    x=vector[0]*c-vector[1]*s
+    y=vector[0]*s+vector[1]*c
+    return np.array([x,y])
+def rotate2D_new(vector, cosPhi, sinPhi):
+    x=vector[0]*cosPhi-vector[1]*sinPhi
+    y=vector[0]*sinPhi+vector[1]*cosPhi
+    return np.array([x,y])
+
+'''
+@profile: slower than rotate2D
+def rotate2Dalternative(vector, angle):
+    """
+    Rotate a vector in 2D space (i.e. a point) around the origin (0,0) by angle.
+
+    :param vector: A sequence of length 2
+    :param angle: the angle for rotation
+    :returns: a tuple (x,y) of new coordinates.
+    """
+    angle=math.radians(angle)
+    c=np.cos(angle)
+    s=np.sin(angle)
+    rotMat=np.array([[c, -s],[s, c]])
+    return np.dot(rotMat, vector)
+'''
 
 def bresenham(start,end):
     """
@@ -130,6 +155,7 @@ def bresenham(start,end):
 
 class Projection2D(object):
     """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
+
     def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
@@ -196,11 +222,17 @@ class Projection2D(object):
 
         :param angle: Rotation angle in degrees.
         """
+        angle=math.radians(angle)
+        c=np.cos(angle)
+        s=np.sin(angle)        
         self._proj_graph=None
         for key,edge in self._coords.items():
-            self._coords[key]=(rotate2D(edge[0], angle), rotate2D(edge[1], angle))
-        for i, v_atom in enumerate(self._virtual_atoms):
-            self._virtual_atoms[i]=rotate2D(v_atom, angle)
+            self._coords[key]=(rotate2D_new(edge[0], c, s), rotate2D_new(edge[1], c,s))
+
+        transRotMat=np.array([[c, s],[-s, c]])
+        if len(self._virtual_atoms):
+            self._virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
+
 
     def condense_points(self, cutoff=1):
         """
@@ -441,7 +473,7 @@ class Projection2D(object):
 
         :returns: A tuple (np.array, float). The first value is a r(esolution x resulution) numpy 2D array. The values are floats from 0.0 (black) to 1.0 (white).
                   This array can be directly plotted using matplotlib: pyplot.imshow(array, cmap='gray', interpolation='none')
-                  The second value is the length of oine pixle in angstrom.
+                  The second value is the length of one pixle in angstrom.
         """
         if bounding_square is None:
             bounding_square=self.get_bounding_square()
@@ -767,7 +799,7 @@ class Projection2D(object):
             for residuePos in range(1,cg.total_length()):
                 residue=cg.virtual_atoms(residuePos)
                 for pos in residue.values():
-                    self._virtual_atoms.append(np.array([np.dot(self._unit_vec1, pos), np.dot(self._unit_vec2, pos)]))
+                    self._virtual_atoms.append([np.dot(self._unit_vec1, pos), np.dot(self._unit_vec2, pos)])
         self._virtual_atoms=np.array(self._virtual_atoms)
 
     def _condense_one(self, cutoff):

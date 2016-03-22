@@ -285,7 +285,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
 
-        
+        self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
         #: The first value corresponds to the start of the stem (the one with the lowest nucleotide number),
         #: The second value to the end of the stem.
@@ -308,7 +308,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.longrange = c.defaultdict( set )
         self.chain = None #the PDB chain if loaded from a PDB file
 
-        self._virtual_atom_cache={}
+
 
         if cg_file is not None:
             self.from_file(cg_file)
@@ -716,8 +716,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         :param key: A coarse grain element name, e.g. "s1" or "m15"
         """
-        if not self._virtual_atom_cache:
-            return
+        try:
+            if not self._virtual_atom_cache:
+                return
+        except AttributeError: #Happens during deepcopy
+            return 
+
         define=self.defines[key]
         if len(define)>1:
             for i in range(define[0], define[1]+1):
@@ -727,7 +731,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             for i in range(define[2], define[3]+1):
                 if key in self._virtual_atom_cache:
                     del self._virtual_atom_cache[key]
-
+    #def __deepcopy__(self, memo):
+        
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.
