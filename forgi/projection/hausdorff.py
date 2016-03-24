@@ -240,6 +240,12 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
     :startrot: The starting rotation in the projection plane (in degrees).
     :param advanced: Try steps in more directions (takes longer)
     """
+    cell_length=scale/len(ref_img)
+    #: The minimal stepwidth in angstrom for offsets is determined by the width a single pixel.
+    offset_stepwidth=max(1, int(cell_length/2.5))
+    #: The change in projection direction also depends on the resolution, but the correlation is less straight forward.
+    scale_projectionsteps=max(1, int(cell_length/5))
+
     curr_best_rotation=start_rot
     curr_best_offs=np.array((0,0))
     if proj_dir is not None:
@@ -259,15 +265,18 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
         if advanced:
             directions+=[np.array((1,1)), np.array((1,-1)), np.array((-1,1)), np.array((-1,-1))]
         for co in directions:
+            co=co*offset_stepwidth
             for i in range(10):
                 tmp_score, _ = compare(ref_img, cg, scale, curr_best_pro, distance=distance,
                                        rotation=curr_best_rotation, offset=curr_best_offs+co,
                                        cutoff=curr_best_score,virtual_atoms=virtual_atoms)
                 if tmp_score>curr_best_score:
+                    #print("co was {}".format(co))
                     break
                 elif tmp_score<curr_best_score:
                     curr_best_score=tmp_score
                     change_offs=co
+                    #print("co was {}".format(co))
                     break
                 else:
                    #Function value did not change. Our stepwidth was to small.
@@ -289,10 +298,12 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
                                        rotation=curr_best_rotation+cr, offset=curr_best_offs,
                                        cutoff=curr_best_score, virtual_atoms=virtual_atoms)
                 if tmp_score>curr_best_score:
+                    #print("cr was {}".format(cr))
                     break
                 elif tmp_score<curr_best_score:
                     curr_best_score=tmp_score
                     change_rot=cr
+                    #print("cr was {}".format(cr))
                     break
                 else:
                    #Function value did not change. Our stepwidth was to small.
@@ -314,15 +325,18 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
         if advanced:
             directions+=[(0.001,0.002), (-0.001, 0.002), (0.002,0.001), (0.002,-0.001),(0.001,-0.002), (-0.001, -0.002), (-0.002,0.001), (-0.002,-0.001)]
         for cp in directions:
+            cp=(cp[0]*scale_projectionsteps, cp[1]*scale_projectionsteps)
             for i in range(10):
                 tmp_score, _ = compare(ref_img, cg, scale, curr_best_pro+cp, distance=distance, 
                                        rotation=curr_best_rotation, offset=curr_best_offs,
                                        cutoff=curr_best_score,virtual_atoms=virtual_atoms)
                 if tmp_score>curr_best_score:
+                    #print("cp was {}".format(cp))
                     break
                 elif tmp_score<curr_best_score:
                     curr_best_score=tmp_score
                     change_pro=cp
+                    #print("cp was {}".format(cp))
                     break
                 else:
                    #Function value did not change. Our stepwidth was to small.
@@ -336,7 +350,8 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
         if found or not curr_best_score:
             break
     else:
-        pass #print("Max-iter reached", maxiter)
+        pass
+        #print("Max-iter reached:", maxiter)
     best_score, img = compare(ref_img, cg, scale, curr_best_pro, distance=distance,
                               rotation=curr_best_rotation, offset=curr_best_offs,
                               cutoff=curr_best_score, virtual_atoms=virtual_atoms)#, write_fev=True)
@@ -345,7 +360,7 @@ def locally_minimal_distance_one(ref_img, scale, cg, start_rot, proj_dir, maxite
 
 def locally_minimal_distance(ref_img, scale, cg, proj_dir=None, maxiter=50, 
                              distance=hausdorff_distance, advanced=False,
-                             virtual_atoms=True, is_aligned=True):
+                             virtual_atoms=True, is_aligned=True, starting_rotations=[]):
     """
     :param ref_img: The reference image. A boolean square matrix.
     :param scale: The edge length in Angstrom of the reference image.
@@ -360,10 +375,11 @@ def locally_minimal_distance(ref_img, scale, cg, proj_dir=None, maxiter=50,
     #Estimate the best in-plane rotation (without local optimization)        
     if proj_dir is  None:
         proj_dir=to_polar(cg.project_from)[1:]
-    if is_aligned:
-        starting_rotations=[0,180]
-    else:
-        starting_rotations=[0, 90, 180, 270]
+    if not starting_rotations:
+        if is_aligned:
+            starting_rotations=[0,180]
+        else:
+            starting_rotations=[0, 90, 180, 270]
     for start_rot in starting_rotations:
 
         initial_score, _ = compare(ref_img, cg, scale, proj_dir, distance=distance,
@@ -411,7 +427,8 @@ def get_longest_img_diameter(img, scale):
     return math.sqrt(maxl)*scale/len(img)
 
 def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5, 
-                             distance=hausdorff_distance, virtual_atoms=True):
+                              distance=hausdorff_distance, virtual_atoms=True, 
+                              starting_rotations=[]):
     """
     See parameters of locally_minimal_distance.
     Calls locally_minimal_distance for several starting projection directions.
@@ -420,12 +437,13 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5,
     :param start_points: Number of starting projection directions. For each, local
                          optimization with maxiter steps is performed.
     """
+    import matplotlib.pyplot as plt
     best_score=float("inf")
     decrease=float("inf")
     sp=get_start_points(start_points)
 
     #We want to cover many different directions with the frist few iterations.
-    random.seed(1)
+    ### random.seed(1)
     random.shuffle(sp)
     #Longest extention in the image
     longest_distance_image=get_longest_img_diameter(ref_img, scale)
@@ -440,21 +458,39 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5,
             #print("abs({}-{})={}>{}".format(proj.longest_axis, longest_distance_image, abs(proj.longest_axis-longest_distance_image), 6*scale/len(ref_img)))
             la_heur+=1
             continue
-        initial_score, _ = compare(ref_img, cg, scale, project_dir, distance=distance,
-                                   rotation=0, offset=np.array((0,0)), virtual_atoms=virtual_atoms)        
-        #print("Score ", initial_score)
+        if starting_rotations:
+            sr=starting_rotations
+        else: 
+            sr=[0,180]
+        initial_score=float("inf")
+        for srot in sr:
+            s,i = compare(ref_img, cg, scale, project_dir, distance=distance,
+                          rotation=srot, offset=np.array((0,0)), virtual_atoms=virtual_atoms)
+            if s<initial_score:
+                initial_score=s
+                initial_img=i
+                initial_rot=srot
+        #print("Initial Score ", initial_score, initial_rot)
+        #fig, ax=plt.subplots(2)
+        #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+        #ax[1].imshow(initial_img, interpolation="none", cmap='gray')
+        #ax[0].set_title("Reference (initial compare)")
+        #ax[1].set_title("{} distance (rot: {})".format(initial_score, initial_rot))
+        #plt.show()
         if initial_score>best_score+decrease*1.5:
             #print("cnt (cutoff = ",best_score+decrease*1.5 ," curr_best {}, score {} )".format(best_score,initial_score))
             score_heur+=1
             continue
         no_heur+=1
         score, img, pro, rot=locally_minimal_distance( ref_img, scale, cg, project_dir, 
-                                                  maxiter, distance, virtual_atoms=virtual_atoms, is_aligned=False )
+                                                  maxiter, distance, virtual_atoms=virtual_atoms, is_aligned=False,
+                                                  starting_rotations=starting_rotations )
         #print ("optimized to ", score, " (curr_best is {})".format(best_score))
         if score<best_score:
             best_score=score
             best_img=img
             best_pro=pro
+            best_rot=rot
             decrease=initial_score-score
         if best_score==0: break
     if no_heur==0:
@@ -462,7 +498,15 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5,
         return float("inf"), None, None
     #print("Optimizing score {}".format(best_score))
     score, img, pro, rot=locally_minimal_distance( ref_img, scale, cg, best_pro, 
-                                                  20*maxiter, distance, advanced=True, virtual_atoms=virtual_atoms, is_aligned=False )
+                                                   20*maxiter, distance, advanced=True, virtual_atoms=virtual_atoms, 
+                                                   is_aligned=False, starting_rotations=[best_rot] )
+    #fig, ax=plt.subplots(2)
+    #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+    #ax[1].imshow(initial_img, interpolation="none", cmap='gray')
+    #ax[0].set_title("Reference (after optimization)")
+    #ax[1].set_title("{} distance".format(score))
+    #plt.show()
+    #print("Optimized to {}".format(score))
     #print("Calculations performed: {}, skipped (longest distance): {}, skipped (score): {}".format(no_heur, la_heur, score_heur))
     return score, img, pro, rot
 

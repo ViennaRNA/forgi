@@ -17,14 +17,22 @@ import networkx as nx
 import warnings, math
 import copy
 
+try:
+  profile
+except:
+  def profile(x): 
+    return x
+
 ### The following functions are from http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 ### Used under the PSF License
+############################################################################################
 ### convex hull (Graham scan by x-coordinate) and diameter of a set of points
 ### David Eppstein, UC Irvine, 7 Mar 2002
 def orientation(p,q,r):
     '''Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.'''
     return (q[1]-p[1])*(r[0]-p[0]) - (q[0]-p[0])*(r[1]-p[1])
 
+@profile
 def hulls(Points):
     '''Graham scan to find upper and lower convex hulls of a set of 2d points.'''
     U = []
@@ -83,6 +91,7 @@ def rotate2D(vector, angle):
     x=vector[0]*c-vector[1]*s
     y=vector[0]*s+vector[1]*c
     return np.array([x,y])
+@profile
 def rotate2D_new(vector, cosPhi, sinPhi):
     x=vector[0]*cosPhi-vector[1]*sinPhi
     y=vector[0]*sinPhi+vector[1]*cosPhi
@@ -155,7 +164,7 @@ def bresenham(start,end):
 
 class Projection2D(object):
     """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
-
+    @profile
     def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
@@ -167,7 +176,7 @@ class Projection2D(object):
                                If proj_direction and cg.project_from is None, an error is raised.
         @param rotate: Degrees. Rotate the projection by this amount.
         
-        """ 
+        """
         #: The projected coordinates of all stems
         self._coords=dict()
 
@@ -175,7 +184,7 @@ class Projection2D(object):
         self._proj_graph=None
 
         #Calculate orthonormal basis of projection plane.
-        if proj_direction is not None: #Need to compare to none, because if x: will raise ValueError for np.arrays
+        if proj_direction is not None: #Need to compare to none, because `if np.array:` will raise ValueError.
             proj_direction=np.array(proj_direction, dtype=np.float)
         elif cg.project_from is not None:
             # We make a copy here. In case cg.project_from is modified, 
@@ -198,24 +207,28 @@ class Projection2D(object):
 
         v1=np.array(v1)
         v2=np.array(v2)
+        shift=(v1+v2)/2
         for key,edge in self._coords.items():
-            self._coords[key]=(edge[0]-v1/2-v2/2, edge[1]-v1/2-v2/2)
+            self._coords[key]=(edge[0]-shift, edge[1]-shift)
         for i, v_atom in enumerate(self._virtual_atoms):
-            self._virtual_atoms[i]=v_atom-v1/2-v2/2
+            self._virtual_atoms[i]=v_atom-shift
         rot=math.atan2(*(v2-v1))
         rot=math.degrees(rot)
         self.rotate(rot)
         xmean=np.mean([ x[0] for p in self._coords.values() for x in p])
         ymean=np.mean([ x[1] for p in self._coords.values() for x in p])
+        mean=np.array([xmean,ymean])
         for key,edge in self._coords.items():
-            self._coords[key]=(edge[0]-(xmean,ymean), edge[1]-(xmean,ymean))
-        for i, v_atom in enumerate(self._virtual_atoms):
-            self._virtual_atoms[i]=v_atom-(xmean,ymean)
+            self._coords[key]=(edge[0]-mean, edge[1]-mean)
+        #Thanks to numpy broadcasting, this works without a loop.
+        if project_virtual_atoms:
+            self._virtual_atoms=self._virtual_atoms-mean
         #From this, further rotate if requested by the user.
         if rotation!=0:
             self.rotate(rotation)
 
     ### Functions modifying the projection in place ###
+    @profile
     def rotate(self, angle):
         """
         Rotate the projection in place around the origin (0,0)
@@ -305,7 +318,8 @@ class Projection2D(object):
 
         :returns: A generator yielding all points.
         """
-        return ( p for x in self._coords.values() for p in x )
+        #k[0]!="s": Avoid duplicate points. Every stem is flanked by other loop types.
+        return ( p for k,x in self._coords.items() for p in x if k[0]!="s") 
 
     ### Function returning descriptors of the projection, mostly independent on the resolution ###
     def get_largest_axis(self):
@@ -461,6 +475,7 @@ class Projection2D(object):
         return maxl
 
     ### Functions for graphical representations of the projection ###
+    @profile
     def rasterize(self, resolution=50, bounding_square=None, warn=True, virtual_atoms=True):
         """
         Rasterize the projection to a square image of the given resolution.
@@ -479,7 +494,8 @@ class Projection2D(object):
             bounding_square=self.get_bounding_square()
         box=bounding_square
         steplength=(box[1]-box[0])/resolution
-        image=np.zeros([resolution+1,resolution+1], dtype=np.float32)
+        image=np.zeros([resolution,resolution], dtype=np.float32)
+        img_length=len(image)
         for label, (start, end) in self._coords.items():                
             if label.startswith("s"):
                 if virtual_atoms:
@@ -500,7 +516,7 @@ class Projection2D(object):
         if virtual_atoms:
             for pos in self._virtual_atoms:
                 point=(int((pos[0]-box[0])/steplength), int((pos[1]-box[2])/steplength))
-                if 0<=point[0]<len(image) and 0<=point[1]<len(image[0]):
+                if 0<=point[0]<img_length and 0<=point[1]<img_length:
                     image[point[0],point[1]]=1
                 else:                    
                     if warn: warnings.warn("WARNING during rasterization of virtual atoms: Parts of the projection are cropped off.")
@@ -781,6 +797,7 @@ class Projection2D(object):
         self._proj_graph=proj_graph
         self.condense_points(0.00000000001) #To avoid floating point problems
 
+    @profile
     def _project(self, cg, project_virtual_atoms):
         """
         Calculates the 2D coordinates of all coarse grained elements by vector rejection.
@@ -788,19 +805,20 @@ class Projection2D(object):
         """
         self._coords=dict()
         self._virtual_atoms=[]
+        basis=np.array([self._unit_vec1,self._unit_vec2]).T
         #Project all coordinates to this plane
         for key in cg.sorted_element_iterator():
             val=cg.coords[key]
-            start=np.array([np.dot(self._unit_vec1,val[0]), np.dot(self._unit_vec2,val[0])])
-            end=np.array([np.dot(self._unit_vec1,val[1]), np.dot(self._unit_vec2,val[1])])
+            start=np.dot(val[0], basis)
+            end=np.dot(val[1], basis)
             self._coords[key]=(start, end)
-
+        va=[]
         if project_virtual_atoms:        
             for residuePos in range(1,cg.total_length()):
                 residue=cg.virtual_atoms(residuePos)
                 for pos in residue.values():
-                    self._virtual_atoms.append([np.dot(self._unit_vec1, pos), np.dot(self._unit_vec2, pos)])
-        self._virtual_atoms=np.array(self._virtual_atoms)
+                    va.append(pos)
+            self._virtual_atoms=np.dot(np.array(va), basis)
 
     def _condense_one(self, cutoff):
         """

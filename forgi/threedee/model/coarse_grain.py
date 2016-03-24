@@ -725,12 +725,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         define=self.defines[key]
         if len(define)>1:
             for i in range(define[0], define[1]+1):
-                if key in self._virtual_atom_cache:
-                    del self._virtual_atom_cache[key]
+                if i in self._virtual_atom_cache:
+                    del self._virtual_atom_cache[i]
         if len(define)>3:
             for i in range(define[2], define[3]+1):
-                if key in self._virtual_atom_cache:
-                    del self._virtual_atom_cache[key]
+                if i in self._virtual_atom_cache:
+                    del self._virtual_atom_cache[i]
     #def __deepcopy__(self, memo):
         
 def cg_from_sg(cg, sg):
