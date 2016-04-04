@@ -18,7 +18,7 @@ import warnings, math
 import copy
 
 try:
-  profile
+  profile  #The @profile decorator from line_profiler (kernprof)
 except:
   def profile(x): 
     return x
@@ -168,9 +168,11 @@ class Projection2D(object):
     def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False):
         """
         @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
-                    .. note:: The projection is generated from this cg, but it is not associated with it after construction.
-                              Thus future changes of the cg are not reflected in the projection.
-        @param proj_direction: a vector (in 3D space) in the direction of projection. 
+                    .. note:: 
+                         The projection is generated from this cg, but it is not associated 
+                         with it after construction.
+                         Thus future changes of the cg are not reflected in the projection.
+        @param proj_direction: a carthesian vector (in 3D space) in the direction of projection. 
                                The length of this vector is not used.
                                If proj_direction is None, cg.project_from is used.
                                If proj_direction and cg.project_from is None, an error is raised.
@@ -476,7 +478,7 @@ class Projection2D(object):
 
     ### Functions for graphical representations of the projection ###
     @profile
-    def rasterize(self, resolution=50, bounding_square=None, warn=True, virtual_atoms=True):
+    def rasterize(self, resolution=50, bounding_square=None, warn=True, virtual_atoms=True, rotate=0):
         """
         Rasterize the projection to a square image of the given resolution.
         Uses the Bresenham algorithm for line rasterization.
@@ -485,8 +487,10 @@ class Projection2D(object):
         :param bounding_square: Rasterize onto the given square. 
                                 If None, automatically get a bounding_square that shows the whole projection
         :param warn:  If True, raise a warning if parts of the projection are not inside the given bounding square.
-
-        :returns: A tuple (np.array, float). The first value is a r(esolution x resulution) numpy 2D array. The values are floats from 0.0 (black) to 1.0 (white).
+        :param virtual_atoms: If True, virtual atoms are also rasterized.
+        :param rot: The in-plane rotation in degrees, applied before rotation.
+        :returns: A tuple (np.array, float). The first value is a r(esolution x resolution) numpy 2D array. 
+                  The values are floats from 0.0 (black) to 1.0 (white).
                   This array can be directly plotted using matplotlib: pyplot.imshow(array, cmap='gray', interpolation='none')
                   The second value is the length of one pixle in angstrom.
         """
@@ -496,13 +500,19 @@ class Projection2D(object):
         steplength=(box[1]-box[0])/resolution
         image=np.zeros([resolution,resolution], dtype=np.float32)
         img_length=len(image)
+        angle=math.radians(rotate)
+        c=np.cos(angle)
+        s=np.sin(angle) 
         for label, (start, end) in self._coords.items():                
             if label.startswith("s"):
                 if virtual_atoms:
                     continue
                 weight=1
             else:
-                weight=0.3         
+                weight=0.3
+            if rotate:
+              start=rotate2D_new(start, c, s)
+              end=rotate2D_new(end, c, s)
             start=(int((start[0]-box[0])/steplength), int((start[1]-box[2])/steplength))
             end=(int((end[0]-box[0])/steplength), int((end[1]-box[2])/steplength))        
             points=bresenham(start, end)
@@ -513,8 +523,10 @@ class Projection2D(object):
                     image[p[0],p[1]]=min(1,image[p[0],p[1]]+weight)
                 except IndexError:
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: Parts of the projection are cropped off.")
-        if virtual_atoms:
-            for pos in self._virtual_atoms:
+        if virtual_atoms and len(self._virtual_atoms):
+            transRotMat=np.array([[c, s],[-s, c]])
+            rot_virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
+            for pos in rot_virtual_atoms:
                 point=(int((pos[0]-box[0])/steplength), int((pos[1]-box[2])/steplength))
                 if 0<=point[0]<img_length and 0<=point[1]<img_length:
                     image[point[0],point[1]]=1

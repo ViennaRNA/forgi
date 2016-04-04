@@ -7,7 +7,7 @@ import random
 import itertools as it
 
 __all__=["offsets", "modified_hausdorff_distance", "hausdorff_distance", 
-         "locally_minimal_distance", "globally_minimal_distance"]
+         "locally_minimal_distance", "globally_minimal_distance", "get_box"]
 __author__ = "Bernhard Thiel"
 __copyright__ = "Copyright 2016"
 __maintainer__ = "Bernhard Thiel"
@@ -495,7 +495,7 @@ def globally_minimal_distance(ref_img, scale, cg, start_points=40, maxiter=5,
         if best_score==0: break
     if no_heur==0:
         #print("skipped (longest distance): {}, skipped (score): {}".format(la_heur, score_heur))
-        return float("inf"), None, None
+        return float("inf"), None, project_dir, 0
     #print("Optimizing score {}".format(best_score))
     score, img, pro, rot=locally_minimal_distance( ref_img, scale, cg, best_pro, 
                                                    20*maxiter, distance, advanced=True, virtual_atoms=virtual_atoms, 

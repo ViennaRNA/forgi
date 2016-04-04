@@ -17,11 +17,17 @@ import numpy as np
 import scipy.misc
 import scipy.ndimage
 
-WIDTH=490
+WIDTH=350
 if __name__=="__main__":
     for filename in sys.argv[1:]:
         cg=ftmc.CoarseGrainRNA(filename)
-        proj=fpp.Projection2D(cg, project_virtual_atoms=True)
+        try:
+            proj=fpp.Projection2D(cg, project_virtual_atoms=True)
+        except ValueError:
+            a=random.random()
+            b=random.random()
+            c=random.random()
+            proj=fpp.Projection2D(cg, project_virtual_atoms=True, proj_direction=[a,b,c])
         rot=random.randrange(0,3600)/10
         proj.rotate(rot)
         box=fph.get_box(proj, WIDTH)
