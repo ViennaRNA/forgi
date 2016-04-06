@@ -1,6 +1,7 @@
 * Create a release branch form develop. (Only bugfixes in release branch)
 * Update setup.py to include all relevant subpackages and scripts
 * Update api-documentation to include all (new) modules and subpackages
+* Verify all issues on github are solved
 * Run nosetests
 * Check test coverage. Add tests if required.
 * Check whether example scripts still work

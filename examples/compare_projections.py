@@ -121,7 +121,7 @@ if __name__=="__main__":
                 fname = os.path.basename(f)
                 print ("{}:\t{} distance (projected from {}, Globally optimized)".format(fname, distance, direction))
             else:
-                distance, img, direction,_ = fph.locally_minimal_distance(ref_img, args.scale, cg)
+                distance, img, direction,_ = fph.try_parameters(ref_img, args.scale, cg)
                 fname = os.path.basename(f)
                 print ("{}:\t{} distance (projected from {}, Locally optimized)".format(fname, distance, direction))
         if args.show:
