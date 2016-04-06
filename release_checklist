@@ -1,0 +1,12 @@
+* Create a release branch form develop. (Only bugfixes in release branch)
+* Update setup.py to include all relevant subpackages and scripts
+* Update api-documentation to include all (new) modules and subpackages
+* Run nosetests
+* Check test coverage. Add tests if required.
+* Check whether example scripts still work
+* Verify that all files are included in the git repo. Try fresh install on different machine
+* Write a change log to document API changes
+* Increment version number in setup.py, doc/conf.py
+* Run nosetests again.
+* Merge into master and develop
+* Tag inside master
