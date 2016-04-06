@@ -76,20 +76,20 @@ def make_temp_directory():
     shutil.rmtree(temp_dir)
 
 def insert_into_stack(stack, i, j):
-	#print "add", i,j
-	k = 0
-	while len(stack[k])>0 and stack[k][len(stack[k])-1] < j:
-		k+=1
-	stack[k].append(j)
-	return k
+    #print "add", i,j
+    k = 0
+    while len(stack[k])>0 and stack[k][len(stack[k])-1] < j:
+        k+=1
+    stack[k].append(j)
+    return k
 
 def delete_from_stack(stack, j):
-	#print "del", j 
-	k = 0
-	while len(stack[k])==0 or stack[k][len(stack[k])-1] != j:
-		k+=1
-	stack[k].pop()
-	return k	
+    #print "del", j 
+    k = 0
+    while len(stack[k])==0 or stack[k][len(stack[k])-1] != j:
+        k+=1
+    stack[k].pop()
+    return k    
 
 def pairtable_to_dotbracket(pt):
     """
@@ -107,47 +107,48 @@ def pairtable_to_dotbracket(pt):
         if pt[i]==0: 
             res += '.'
         else:
-            if pt[i]>i:						# '(' check if we can stack it...
+            if pt[i]>i:                        # '(' check if we can stack it...
                 res += bracket_left[insert_into_stack(stack, i, pt[i])]
-            else:									# ')'
+            else:                                    # ')'
                 res += bracket_right[delete_from_stack(stack, i)]
 
     return res
 
 def inverse_brackets(bracket):
-	res = col.defaultdict(int)
-	for i,a in enumerate(bracket):
-		res[a] = i
-	return res
+    res = col.defaultdict(int)
+    for i,a in enumerate(bracket):
+        res[a] = i
+    return res
 
 def dotbracket_to_pairtable(struct):
-	"""
-	Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).
-	"""	
-	pt = [0] * (len(struct)+1)
-	pt[0] = len(struct)
+    """
+    Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).
+    """    
+    pt = [0] * (len(struct)+1)
+    pt[0] = len(struct)
 
-	stack = col.defaultdict(list)
-	inverse_bracket_left = inverse_brackets(bracket_left)
-	inverse_bracket_right = inverse_brackets(bracket_right)
+    stack = col.defaultdict(list)
+    inverse_bracket_left = inverse_brackets(bracket_left)
+    inverse_bracket_right = inverse_brackets(bracket_right)
 
-	for i,a in enumerate(struct):
-		i += 1
-		#print i,a, pt
-		if a == ".": pt[i] = 0
-		else: 
-			if a in inverse_bracket_left: stack[inverse_bracket_left[a]].append(i)
-			else: 
-				if len(stack[inverse_bracket_right[a]]) == 0:
-                                    raise ValueError('Too many closing brackets!')
-                                j = stack[inverse_bracket_right[a]].pop()
-				pt[i] = j
-				pt[j] = i
+    for i,a in enumerate(struct):
+        i += 1
+        #print i,a, pt
+        if a == ".": pt[i] = 0
+        else: 
+            if a in inverse_bracket_left: 
+                stack[inverse_bracket_left[a]].append(i)
+            else: 
+                if len(stack[inverse_bracket_right[a]]) == 0:
+                    raise ValueError('Too many closing brackets!')
+                j = stack[inverse_bracket_right[a]].pop()
+                pt[i] = j
+                pt[j] = i
         
-        if len(stack[inverse_bracket_left[a]]) != 0:
-            raise ValueError('Too many opening brackets!')
+    if len(stack[inverse_bracket_left[a]]) != 0:
+        raise ValueError('Too many opening brackets!')
 
-	return pt
+    return pt
 
 def pairtable_to_tuples(pt):
     '''

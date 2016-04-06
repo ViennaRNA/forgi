@@ -23,7 +23,8 @@ except:
   def profile(x): 
     return x
 
-### The following functions are from http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+### The following functions are from 
+### http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 ### Used under the PSF License
 ############################################################################################
 ### convex hull (Graham scan by x-coordinate) and diameter of a set of points
@@ -163,20 +164,24 @@ def bresenham(start,end):
 
 
 class Projection2D(object):
-    """A 2D Projection of a CoarseGrainRNA unto a 2D-plane"""
+    """
+    A 2D Projection of a CoarseGrainRNA unto a 2D-plane
+    """
     @profile
     def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False):
         """
-        @param cg:  an CoarseGrainRNA object with 3D coordinates for every element
-                    .. note:: 
-                         The projection is generated from this cg, but it is not associated 
-                         with it after construction.
-                         Thus future changes of the cg are not reflected in the projection.
-        @param proj_direction: a carthesian vector (in 3D space) in the direction of projection. 
+        :param cg: a CoarseGrainRNA object with 3D coordinates for every element
+
+                   .. note:: 
+                      The projection is generated from this cg, but it is not associated 
+                      with it after construction.
+                      Thus future changes of the cg are not reflected in the projection.
+
+        :param proj_direction: a carthesian vector (in 3D space) in the direction of projection. 
                                The length of this vector is not used.
                                If proj_direction is None, cg.project_from is used.
                                If proj_direction and cg.project_from is None, an error is raised.
-        @param rotate: Degrees. Rotate the projection by this amount.
+        :param rotate: Degrees. Rotate the projection by this amount.
         
         """
         #: The projected coordinates of all stems
@@ -186,7 +191,7 @@ class Projection2D(object):
         self._proj_graph=None
 
         #Calculate orthonormal basis of projection plane.
-        if proj_direction is not None: #Need to compare to none, because `if np.array:` will raise ValueError.
+        if proj_direction is not None: #Compare to none, because `if np.array:` raises ValueError.
             proj_direction=np.array(proj_direction, dtype=np.float)
         elif cg.project_from is not None:
             # We make a copy here. In case cg.project_from is modified, 
@@ -254,9 +259,12 @@ class Projection2D(object):
         Condenses several projection points that are within a range of less than cutoff into
         one point. This function modifies this Projection2D object.
   
-        ..note: The result depends on the ordering of the dictionary holding the nodes and might thus be pseudorandomly
+        .. note::
+           The result depends on the ordering of the dictionary holding 
+           the nodes and might thus be pseudorandomly
 
-        :param cutoff: Two point with a distance smaller than cuttoff are contracted. A value below 20 is reasonable.
+        :param cutoff: Two point with a distance smaller than cuttoff are contracted. 
+                       A value below 20 is reasonable.
         """
         if cutoff<=0: return
         while self._condense_one(cutoff):
@@ -265,17 +273,22 @@ class Projection2D(object):
 
     def condense(self, cutoff):
         """
-        Condenses points that are within the cutoff of another point or edge (=line segment) into a new point.
-        This function modifies this Projection2D object.
+        Condenses points that are within the cutoff of another point or edge (=line segment) 
+        into a new point. This function modifies this Projection2D object.
         
-        The contraction of two points works like documented in condense_points(self, cutoff).
-        If a node is close to a line segment, a new point is generated between this node and the line segment. 
-        Then the original line and the original node are deleted and all connections attached to the new point.
+        The contraction of two points works like documented in 
+        `self.condense_points(self, cutoff)`.
+        If a node is close to a line segment, a new point is generated between 
+        this node and the line segment. Then the original line and the original node
+        are deleted and all connections attached to the new point.
   
-        ..note: The result depends on the ordering of the dictionary holding the nodes and might thus be pseudorandomly
+        .. note::
+           The result depends on the ordering of the dictionary holding the nodes and 
+           might thus be pseudorandomly
 
         
-        :param cutoff: Two point with a distance smaller than cuttoff are contracted. A value below 20 is reasonable.
+        :param cutoff: Two point with a distance smaller than cuttoff are contracted. 
+                       A value below 20 is reasonable.
         """
         if cutoff<=0: return
         self.condense_points(cutoff)
@@ -292,7 +305,7 @@ class Projection2D(object):
         """
         All points, where 2 segments intersect
         
-        A list of triples (key1, key2, coordinate), where coordinate is a 2D vector.
+        A list of triples `(key1, key2, coordinate)`, where coordinate is a 2D vector.
         """
         if self._cross_points is None:
             self._cross_points=col.defaultdict(list)
@@ -307,7 +320,7 @@ class Projection2D(object):
     def proj_graph(self):
         """A graph describing the projected RNA.
 
-        This graph is stored as a networkx graph object.
+        This graph is stored as a `networkx` graph object.
         """
         if self._proj_graph is None:
             self._build_proj_graph()
@@ -364,8 +377,9 @@ class Projection2D(object):
         """
         Returns the number of branchpoint.
 
-        Note: This measure is sensitive to the resolution of a projection.
-              In an AFM image, one might not see all branching points.
+        .. note:: 
+           This measure is sensitive to the resolution of a projection.
+           In an AFM image, one might not see all branching points.
     
         :param degree: If degree is None, count all points with degree>=3
                        Else: only count (branch)points of the given degree
@@ -385,8 +399,9 @@ class Projection2D(object):
         """
         Returns the sum of the lengths of all edges in the projection graph.      
 
-        Note: This measure is sensitive to the resolution of a projection.
-              In an AFM image, one might not see all cycles.
+        .. note:: 
+           This measure is sensitive to the resolution of a projection.
+           In an AFM image, one might not see all cycles.
         """
         l=0
         for edge in self.proj_graph.edges_iter():
@@ -397,12 +412,13 @@ class Projection2D(object):
         """
         Get the length of the longest arm.
 
-        An arm is a simple path from a node of degree!=2 to a node of degree 1, if all the other 
-        nodes on the path have degree 2.
+        An arm is a simple path from a node of `degree!=2` to a node of `degree 1`, 
+        if all the other nodes on the path have `degree 2`.
 
-        Note: This measure is sensitive to the resolution of a projection 
-              the same way the length of a coastline is sensitive to the resoltuion.
-        returns: The length and a tuple of points (leaf_node, corresponding_branch_point)
+        .. note:: This measure is sensitive to the resolution of a projection 
+                  the same way the length of a coastline is sensitive to the resolution.
+
+        :returns: The length and a tuple of points `(leaf_node, corresponding_branch_point)`
         """
         lengths={}
         target={}
@@ -429,7 +445,7 @@ class Projection2D(object):
         Get a list of distances between any pair of leaf nodes.
         The distances are measured in direct line, not along the path
 
-        returns: a list of floats (lengths in Angstrom)
+        :returns: a list of floats (lengths in Angstrom)
         """
         lengths=[]
         leaves=[ leaf for leaf in self.proj_graph.nodes() if self.proj_graph.degree(leaf)==1]
@@ -443,7 +459,7 @@ class Projection2D(object):
         Get a list of distances between some pairs of leaf nodes.
         The distances are measured in direct line, not along the path
 
-        returns: a list of floats (lengths in Angstrom)
+        :returns: a list of floats (lengths in Angstrom)
         """
         lengths=[]
         leaves=[ leaf for leaf in self.proj_graph.nodes() if self.proj_graph.degree(leaf)==1]
@@ -463,8 +479,9 @@ class Projection2D(object):
         Get the maximal path length from all simple paths that traverses the projection graph from 
         one leave node to another.
 
-        Note: This measure is sensitive to the resolution of a projection 
-              the same way the length of a coastline is sensitive to the resoltuion.
+        .. note:: 
+           This measure is sensitive to the resolution of a projection 
+           the same way the length of a coastline is sensitive to the resoltuion.
         """
         maxl=0
         for i, node1 in enumerate(self.proj_graph.nodes_iter()):
@@ -478,21 +495,34 @@ class Projection2D(object):
 
     ### Functions for graphical representations of the projection ###
     @profile
-    def rasterize(self, resolution=50, bounding_square=None, warn=True, virtual_atoms=True, rotate=0):
+    def rasterize(self, resolution=50, bounding_square=None, warn=True, 
+                  virtual_atoms=True, rotate=0):
         """
         Rasterize the projection to a square image of the given resolution.
         Uses the Bresenham algorithm for line rasterization.
 
-        :param resolution: The number of pixels in each direction.
-        :param bounding_square: Rasterize onto the given square. 
-                                If None, automatically get a bounding_square that shows the whole projection
-        :param warn:  If True, raise a warning if parts of the projection are not inside the given bounding square.
-        :param virtual_atoms: If True, virtual atoms are also rasterized.
-        :param rot: The in-plane rotation in degrees, applied before rotation.
-        :returns: A tuple (np.array, float). The first value is a r(esolution x resolution) numpy 2D array. 
-                  The values are floats from 0.0 (black) to 1.0 (white).
-                  This array can be directly plotted using matplotlib: pyplot.imshow(array, cmap='gray', interpolation='none')
-                  The second value is the length of one pixle in angstrom.
+        :param resolution: 
+                        The number of pixels in each direction.
+
+        :param bounding_square: 
+                        Rasterize onto the given square. 
+                        If `None`, automatically get a bounding_square that
+                        shows the whole projection
+
+        :param warn:    If True, raise a warning if parts of the projection are not inside 
+                        the given bounding square.
+
+        :param virtual_atoms: 
+                        If True, virtual atoms are also rasterized.
+  
+        :param rot:     The in-plane rotation in degrees, applied before rotation.
+
+        :returns:       A tuple `(np.array, float)`. The first value is a resolution x resolution
+                        numpy 2D array. 
+                        The values are floats from 0.0 (black) to 1.0 (white).
+                        This array can be directly plotted using matplotlib: 
+                        `pyplot.imshow(array, cmap='gray', interpolation='none')`
+                        The second value is the length of one pixle in angstrom.
         """
         if bounding_square is None:
             bounding_square=self.get_bounding_square()
@@ -522,7 +552,8 @@ class Projection2D(object):
                         raise IndexError
                     image[p[0],p[1]]=min(1,image[p[0],p[1]]+weight)
                 except IndexError:
-                    if warn: warnings.warn("WARNING during rasterization of the 2D Projection: Parts of the projection are cropped off.")
+                    if warn: warnings.warn("WARNING during rasterization of the 2D Projection: "
+                                           "Parts of the projection are cropped off.")
         if virtual_atoms and len(self._virtual_atoms):
             transRotMat=np.array([[c, s],[-s, c]])
             rot_virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
@@ -531,7 +562,8 @@ class Projection2D(object):
                 if 0<=point[0]<img_length and 0<=point[1]<img_length:
                     image[point[0],point[1]]=1
                 else:                    
-                    if warn: warnings.warn("WARNING during rasterization of virtual atoms: Parts of the projection are cropped off.")
+                    if warn: warnings.warn("WARNING during rasterization of virtual atoms: "
+                                           "Parts of the projection are cropped off.")
         return np.rot90(image), steplength
 
     def plot(self, ax=None, show=False, margin=5, 
@@ -542,26 +574,44 @@ class Projection2D(object):
         """
         Plots the 2D projection.
 
-        This uses modified copy-paste code by Syrtis Major (c)2014-2015 under the BSD 3-Clause license
-        and code from matplotlib under the PSF license.
+        This uses modified copy-paste code by Syrtis Major (c)2014-2015 
+        under the BSD 3-Clause license and code from matplotlib under the PSF license.
 
-        :param ax: The axes to draw to. You can get it by calling `fig, ax=matplotlib.pyplot.subplots()`
-        :param show: If true, the matplotlib.pyplot.show() will be called at the end of this function.
-        :param margin: A numeric value. The margin around the plotted projection inside the (sub-)plot.
-        :param linewidth: The width of the lines projection.
-        :param add_labels: Display the name of the corresponding coarse grain element in the middle of each segment in the projection.
-                           Either a bool or a set of labels to display.
-        :param line2dproperties: A dictionary. Will be passed as **kwargs to the constructor of `matplotlib.lines.Line2D`
-                                 See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D
-        :param xshift, yshift: Shift the projection by the given amount inside the canvas.
-        :param show_distances: A list of tuples of strings, e.g. [("h1","h8"),("h2","m15")]. 
-                               Show the distances between these elements in the plot
-        :param print_distances: Bool. Print all distances from show_distances at the side of the plot
-                                instead of directly next to the distance
+        :param ax:          The axes to draw to. 
+                            You can get it by calling `fig, ax=matplotlib.pyplot.subplots()`
+
+        :param show:        If true, the matplotlib.pyplot.show() will be called at the 
+                            end of this function.
+
+        :param margin:      A numeric value. 
+                            The margin around the plotted projection inside the (sub-)plot.
+
+        :param linewidth:   The width of the lines projection.
+
+        :param add_labels:  Display the name of the corresponding coarse grain element in 
+                            the middle of each segment in the projection.
+                            Either a bool or a set of labels to display.
+
+        :param line2dproperties: 
+                            A dictionary. Will be passed as `**kwargs` to the constructor of 
+                            `matplotlib.lines.Line2D`.
+                            See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D
+
+        :param xshift, yshift: 
+                            Shift the projection by the given amount inside the canvas.
+
+        :param show_distances: 
+                            A list of tuples of strings, e.g. `[("h1","h8"),("h2","m15")]`. 
+                            Show the distances between these elements in the plot
+
+        :param print_distances: 
+                            Bool. Print all distances from show_distances at the side of the plot
+                            instead of directly next to the distance
         """
-        # In case of ssh without -X option, a TypeError might be raised during the import of pyplot.
+        # In case of ssh without -X option, a TypeError might be raised 
+        # during the import of pyplot
         # This probably depends on the version of some library.
-        # This is also the reason why we import matplotlib only in the plot function.
+        # This is also the reason why we import matplotlib only inside the plot function.
         text=[]
         try:
             if ax is None or show:
@@ -571,20 +621,25 @@ class Projection2D(object):
             import matplotlib.text as mtext
             import matplotlib.font_manager as font_manager
         except TypeError as e:
-          warnings.warn("Cannot plot projection. Maybe you could not load Gtk (no X11 server available)? During the import of matplotlib the following Error occured:\n {}: {}".format(type(e).__name__, e))
+          warnings.warn("Cannot plot projection. Maybe you could not load Gtk "
+                        "(no X11 server available)? During the import of matplotlib"
+                        "the following Error occured:\n {}: {}".format(type(e).__name__, e))
           return
         except ImportError as e:
-          warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? The following error occured:\n {}: {}".format(type(e).__name__, e))
+          warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? "
+                        "The following error occured:\n {}: {}".format(type(e).__name__, e))
           return
-        try:
-            import shapely.geometry as sg
-            import shapely.ops as so
-        except ImportError as e:
-            warnings.warn("Cannot import shapely. The following error occured:\n {}: {}".format(type(e).__name__, e))
-            area=False
-            #return
-        else:
-            area=True
+        #try:
+        #    import shapely.geometry as sg
+        #    import shapely.ops as so
+        #except ImportError as e:
+        #    warnings.warn("Cannot import shapely. "
+        #                  "The following error occured:\n {}: {}".format(type(e).__name__, e))
+        #    area=False
+        #    #return
+        #else:
+        #    area=True
+        area=False
         polygons=[]
 
         def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
@@ -672,7 +727,8 @@ class Projection2D(object):
         class MyLine(lines.Line2D):
             """
             Copied and modified from http://matplotlib.org/examples/api/line_with_text.html,
-            which is part of matplotlib 1.5.0 (Copyright (c) 2012-2013 Matplotlib Development Team; All Rights Reserved).
+            which is part of matplotlib 1.5.0 (Copyright (c) 2012-2013 Matplotlib Development 
+            Team; All Rights Reserved).
             Used under the matplotlib license: http://matplotlib.org/users/license.html
             """
             def __init__(self, *args, **kwargs):
@@ -720,7 +776,8 @@ class Projection2D(object):
             try:
                 fig, ax = plt.subplots(1, 1)            
             except Exception as e:
-                warnings.warn("Cannot create Axes  or Figure. You probably have no graphical display available. The Error was:\n {}: {}".format(type(e).__name__, e))
+                warnings.warn("Cannot create Axes  or Figure. You probably have no graphical "                             
+                          "display available. The Error was:\n {}: {}".format(type(e).__name__, e))
                 return      
         lprop=copy.copy(line2dproperties)
         if virtual_atoms and len(self._virtual_atoms)>0:
@@ -768,16 +825,19 @@ class Projection2D(object):
             en=(self._coords[e][0]+self._coords[e][1])/2
             d=ftuv.vec_distance(st,en)
             if print_distances:
-                line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], color="orange",linestyle="--")
+                line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], 
+                            color="orange",linestyle="--")
                 text.append("{:3} - {:3}: {:5.2f}".format(s,e,d))
             else:
-                line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], label=str(round(d,1)), color="orange",linestyle="--")
+                line=MyLine([st[0]+xshift, en[0]+xshift],[st[1]+yshift,en[1]+yshift], 
+                            label=str(round(d,1)), color="orange",linestyle="--")
             ax.add_line(line)
 
         ax.axis(self.get_bounding_square(margin))
         fm=font_manager.FontProperties(["monospace"], size="x-small")
         if print_distances:
-            ax.text(0.01,0.05,"\n".join(["Distances:"]+text), transform=ax.transAxes, fontproperties=fm)
+            ax.text(0.01,0.05,"\n".join(["Distances:"]+text), 
+                    transform=ax.transAxes, fontproperties=fm)
         if area:
             rnaArea=so.cascaded_union(polygons)
             rnaXs,rnaYs=rnaArea.exterior.xy
@@ -835,6 +895,7 @@ class Projection2D(object):
     def _condense_one(self, cutoff):
         """
         Condenses two adjacent projection points into one.
+
         :returns: True if a condensation was done, False if no condenstaion is possible.
         """        
         for i,node1 in enumerate(self.proj_graph.nodes_iter()):
@@ -844,9 +905,11 @@ class Projection2D(object):
                     newnode=ftuv.middlepoint(node1, node2)
                     #self.proj_graph.add_node(newnode)
                     for neighbor in self.proj_graph.edge[node1].keys():
-                        self.proj_graph.add_edge(newnode, neighbor, attr_dict=self.proj_graph.edge[node1][neighbor])
+                        self.proj_graph.add_edge(newnode, neighbor, 
+                                                attr_dict=self.proj_graph.edge[node1][neighbor])
                     for neighbor in self.proj_graph.edge[node2].keys():
-                        self.proj_graph.add_edge(newnode, neighbor, attr_dict=self.proj_graph.edge[node2][neighbor])
+                        self.proj_graph.add_edge(newnode, neighbor, 
+                                                 attr_dict=self.proj_graph.edge[node2][neighbor])
                     if newnode!=node1: #Equality can happen because of floating point inaccuracy
                         self.proj_graph.remove_node(node1)
                     if newnode!=node2:
@@ -856,7 +919,8 @@ class Projection2D(object):
 
     def _condense_pointWithLine_step(self, cutoff):
         """
-        Used by self.condense(cutoff) as a single condensation step of a point with a line segment.
+        Used by `self.condense(cutoff)` as a single condensation step of a point 
+        with a line segment.
         """
         for i,source in enumerate(self.proj_graph.nodes_iter()):
             for j,target in enumerate(self.proj_graph.nodes_iter()):
@@ -876,10 +940,11 @@ class Projection2D(object):
                                 self.proj_graph.add_edge(source, newnode, attr_dict=attr_dict)
                             if target!=newnode:
                                 self.proj_graph.add_edge(target, newnode, attr_dict=attr_dict)             
-                            if newnode!=node: #Equality can happen because of floating point inaccuracy
+                            if newnode!=node: #Equality possible bcse of floating point inaccuracy
                                 for neighbor in self.proj_graph.edge[node].keys():
                                     attr_dict=self.proj_graph.edge[node][neighbor]
-                                    self.proj_graph.add_edge(newnode, neighbor, attr_dict=attr_dict)
+                                    self.proj_graph.add_edge(newnode, neighbor, 
+                                                             attr_dict=attr_dict)
                                 self.proj_graph.remove_node(node)
                             return True
         return False
@@ -892,18 +957,3 @@ class Projection2D(object):
         for i in range(len(path)-1):
             l+=ftuv.vec_distance(path[i], path[i+1])
         return l
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        

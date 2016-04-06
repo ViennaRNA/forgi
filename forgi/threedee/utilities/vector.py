@@ -73,8 +73,8 @@ def get_double_alignment_matrix(vp1, vp2):
     '''
     Align two sets of two vectors onto each other.
 
-    @param vp1: A pair of two vectors.
-    @param vp2: Another pair of two vectors.
+    :param vp1: A pair of two vectors.
+    :param vp2: Another pair of two vectors.
     '''
     angle1 = vec_angle(vp1[0], vp1[1])
     angle2 = vec_angle(vp2[0], vp2[1])
@@ -106,8 +106,8 @@ def get_alignment_matrix(vec1, vec2):
     '''
     Return a rotation matrix that will align vec1 along vec2.
 
-    @param vec1: The target vector.
-    @param vec2: The vector to be aligned.
+    :param vec1: The target vector.
+    :param vec2: The vector to be aligned.
     '''
 
     comp = np.cross(vec1, vec2)
@@ -122,8 +122,8 @@ def get_non_colinear_unit_vector(vec):
 
     This is done by creating a vector along the least represented axis in vec.
 
-    @param vec: The vector under consideration.
-    @return: A vector along an axis.
+    :param vec: The vector under consideration.
+    :return: A vector along an axis.
     '''
     absvec = [abs(v) for v in vec]
     m = min(absvec)
@@ -225,8 +225,8 @@ def spherical_cartesian_to_polar(vec):
 
     Where u is the polar angle and v is the azimuth angle.
 
-    @param vec: A vector of 3 cartesian coordinates.
-    @return: (r, u, v)
+    :param vec: A vector of 3 cartesian coordinates.
+    :return: (r, u, v)
     '''
     r = magnitude(vec)
     u = math.acos(vec[2] / r)
@@ -241,8 +241,8 @@ def spherical_polar_to_cartesian(vec):
 
     See the definition of spherical_cartesian_to_polar.
 
-    @param vec: A vector of the 3 polar coordinates (r, u, v)
-    @return: (x, y, z)
+    :param vec: A vector of the 3 polar coordinates (r, u, v)
+    :return: (x, y, z)
     '''
     (r, u, v) = vec
 
@@ -258,8 +258,8 @@ def get_standard_basis(dim):
 
     For 2D, this equals [[1.,0.],[0.,1.]]
 
-    @param dim: The dimension of the vector space.
-    @return: A vector of vectors that constitute the standard basis.
+    :param dim: The dimension of the vector space.
+    :return: A vector of vectors that constitute the standard basis.
     '''
 
     standard_basis = [[0. for j in range(dim)] for i in range(dim)]
@@ -282,10 +282,10 @@ def change_basis(coords, new_basis, old_basis):
 
     # http://tutorial.math.lamar.edu/Classes/LinAlg/ChangeOfBasis.aspx
 
-    @param coords: The coordinates to transform (array of n elements).
-    @param new_basis: The new basis vectors (n x n matrix)
-    @param old_basis: The old basis for the coordinates(n x n matrix)
-    @return: The new coordinates according to the new basis
+    :param coords: The coordinates to transform (array of n elements).
+    :param new_basis: The new basis vectors (n x n matrix)
+    :param old_basis: The old basis for the coordinates(n x n matrix)
+    :return: The new coordinates according to the new basis
     '''
     #assert(len(coords) == len(new_basis))
     #assert(len(new_basis) == len(old_basis))
@@ -356,9 +356,9 @@ def vector_rejection(a, b):
     Return the vector rejection of a from b. In other words, return the orthogonal
     projection of a onto the plane orthogonal to b.
 
-    @param a: The vector to be projected.
-    @param b: The vector defining the normal of the plane.
-    @return: The rejection of the vector a from b. (a - (np.dot(a, b) / np.dot(b, b)) * b)
+    :param a: The vector to be projected.
+    :param b: The vector defining the normal of the plane.
+    :return: The rejection of the vector a from b. (a - (np.dot(a, b) / np.dot(b, b)) * b)
     '''
 
     n = np.dot(a, b)
@@ -377,9 +377,9 @@ def rotation_matrix_weave(axis, theta, mat = None):
 
     http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
 
-    @param axis: The axis around which to rotate
-    @param theta: The angle of rotation
-    @return: A matrix which can be used to perform the given rotation. The coordinates
+    :param axis: The axis around which to rotate
+    :param theta: The angle of rotation
+    :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
     if mat == None:
@@ -416,10 +416,10 @@ def vector_set_rmsd(set1, set2):
     '''
     Calculate the rmsd between two sets of vectors.
 
-    @param set1: A matrix
-    @param set2: Another matrix.
+    :param set1: A matrix
+    :param set2: Another matrix.
 
-    @return: The rmsd between the rows of the matrix.
+    :return: The rmsd between the rows of the matrix.
     '''
     rmsd = 0
     count = 0
@@ -437,9 +437,9 @@ def rotation_matrix(axis, theta):
 
     http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
 
-    @param axis: The axis around which to rotate
-    @param theta: The angle of rotation
-    @return: A matrix which can be used to perform the given rotation. The coordinates
+    :param axis: The axis around which to rotate
+    :param theta: The angle of rotation
+    :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
     axis = axis/math.sqrt(np.dot(axis, axis))
@@ -454,9 +454,9 @@ def get_vector_centroid(crds1):
     '''
     Find the centroid of a set of vectors.
 
-    @param crds: A matrix containing all of the vectors.
+    :param crds: A matrix containing all of the vectors.
 
-    @return: The centroid of the rows of the matrix crds.
+    :return: The centroid of the rows of the matrix crds.
     '''
     if crds1.shape[1] == 3:
         centroid1 = np.array([0., 0., 0.])
@@ -485,10 +485,10 @@ def center_on_centroid(crds1):
 
 def magnitude(vec):
     '''
-    Return the magnitude of a vector (|V|).
+    Return the magnitude of a vector `(|V|)`.
 
-    @param vec: The vector in question.
-    @return: The magnitude of the vector.
+    :param vec: The vector in question.
+    :return: The magnitude of the vector.
     '''
     return ftuc.magnitude(vec)
     #return math.sqrt(np.dot(vec, vec))
@@ -516,8 +516,8 @@ def normalize(vec):
     Normalize a vector so that its magnitude becomes 1.0 while
     its direction remains the same.
 
-    @param vec: The vector in question.
-    @return: A normalized version of the vector.
+    :param vec: The vector in question.
+    :return: A normalized version of the vector.
     '''
 
     return vec / magnitude(vec)
@@ -526,13 +526,13 @@ def vec_angle(vec1, vec2):
     '''
     Get the angle between two vectors using the identity:
 
-    A * B = |A||B| cos t
+    `A * B = |A||B| cos t`
 
     Where A and B are two vectors and t is the angle between themath.
 
-    @param vec1: The first vector (A)
-    @param vec2: The second vector (B)
-    @return: The angle between the two vectors.
+    :param vec1: The first vector (A)
+    :param vec2: The second vector (B)
+    :return: The angle between the two vectors.
     '''
 
     vec1n = normalize(vec1)
@@ -647,13 +647,13 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     Code shamelessly translated from:
     http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment
 
-    @param s1_p0: The start of the first segment
-    @param s1_p1: The end of the first segment
+    :param s1_p0: The start of the first segment
+    :param s1_p1: The end of the first segment
 
-    @param s2_p0: The start of the second segment
-    @param s2_p1: The end of the second segment
+    :param s2_p0: The start of the second segment
+    :param s2_p1: The end of the second segment
 
-    @return: A tuple of points (i1,i2) containing the point i1 on s1
+    :return: A tuple of points (i1,i2) containing the point i1 on s1
         closest to the point i2 on segment s2.
     '''
     u = s1_p1 - s1_p0
@@ -740,13 +740,13 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     Code shamelessly translated from:
     http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment
 
-    @param s1_p0: The start of the first segment
-    @param s1_p1: The end of the first segment
+    :param s1_p0: The start of the first segment
+    :param s1_p1: The end of the first segment
 
-    @param s2_p0: The start of the second segment
-    @param s2_p1: The end of the second segment
+    :param s2_p0: The start of the second segment
+    :param s2_p1: The end of the second segment
 
-    @return: A tuple of points (i1,i2) containing the point i1 on s1
+    :return: A tuple of points (i1,i2) containing the point i1 on s1
         closest to the point i2 on segment s2.
     '''
     u = s1_p1 - s1_p0
@@ -957,10 +957,10 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     This function approximates an answer by projecting a circle on 
     the plane normal to the axis of cylinder1.
 
-    @param cyl1: The coordinates of cylinder1
-    @param cyl2: The coordinates of cylinder2
-    @param cyl_width: The widths of the two cylinders
-    @return: True or False
+    :param cyl1: The coordinates of cylinder1
+    :param cyl2: The coordinates of cylinder2
+    :param cyl_width: The widths of the two cylinders
+    :return: True or False
     '''
     basis = create_orthonormal_basis(cyl1[1] - cyl1[0])
     cyl2 = np.array([cyl2[0] - cyl1[1], cyl2[1] - cyl1[1]])
@@ -991,11 +991,11 @@ def point_in_cylinder(pt1, pt2, r, testpt):
 
         http://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml
 
-    @param pt1: The start of the cylinder axis.
-    @param pt2: The end of the cylinder axis.
-    @param r: The radius of the cylinder.
-    @param testpt: The point we are testing.
-    @return: True if the point is within the cylinder, False otherwise.
+    :param pt1: The start of the cylinder axis.
+    :param pt2: The end of the cylinder axis.
+    :param r: The radius of the cylinder.
+    :param testpt: The point we are testing.
+    :return: True if the point is within the cylinder, False otherwise.
     '''
     d = pt2 - pt1
     lengthsq = np.dot(d, d)

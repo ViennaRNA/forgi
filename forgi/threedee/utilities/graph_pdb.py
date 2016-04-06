@@ -41,10 +41,10 @@ def stem_stem_orientation(cg, s1, s2):
        to each on both stems.
     3. The angle of s2 out of the plane formed by their axes.
 
-    @param bg: The BulgeGraph containing the stems.
-    @param s1: The name of the first stem
-    @param s2: The name of the second stem
-    @return: (x,y,z) where x,y and z are the parameters described in
+    :param bg: The BulgeGraph containing the stems.
+    :param s1: The name of the first stem
+    :param s2: The name of the second stem
+    :return: (x,y,z) where x,y and z are the parameters described in
         the description above.
     '''
     # shorten the names a little bit
@@ -94,7 +94,7 @@ def get_stem_phys_length(coords):
     '''
     Return the physical length of a stem.
 
-    @param coords: The coordinates of the ends of the helix axis.
+    :param coords: The coordinates of the ends of the helix axis.
     '''
 
     return cuv.magnitude(coords[1] - coords[0])
@@ -108,8 +108,8 @@ def base_normals(pdb_filename):
     and C2-C6 vectors and the N3-C6 and N3-C5 vectors. The origin of
     the vector will be the centroid of these four atoms.
 
-    @param pdb_filename: The name of the pdb file containing the structure
-    @return: A list of pairs containing the origin the normal as well as the
+    :param pdb_filename: The name of the pdb file containing the structure
+    :return: A list of pairs containing the origin the normal as well as the
         normal itself.
     '''
     with warnings.catch_warnings():
@@ -140,9 +140,9 @@ def get_twist_angle(coords, twists):
     '''
     Get the angle of the twists with respect to each other.
 
-    @param coords: The coordinates of the ends of the stem.
-    @param twists: The two twist vectors.
-    @return angle: The angle between the two twist vectors.
+    :param coords: The coordinates of the ends of the stem.
+    :param twists: The two twist vectors.
+    :return angle: The angle between the two twist vectors.
     '''
 
     stem_vec = coords[1] - coords[0]
@@ -160,9 +160,9 @@ def twist2_from_twist1(stem_vec, twist1, angle):
     Get an orientation for the second twist which will place it an
     angle of angle from the first twist.
 
-    @param stem_vec: The vector of the stem.
-    @param twist1: The vector of the first twist.
-    @param angle: The angular difference between the two twists.
+    :param stem_vec: The vector of the stem.
+    :param twist1: The vector of the first twist.
+    :param angle: The angular difference between the two twists.
     '''
     basis = cuv.create_orthonormal_basis(stem_vec, twist1)
 
@@ -173,16 +173,17 @@ def twist2_from_twist1(stem_vec, twist1, angle):
     return twist2
 
 
-def get_twist_parameter(twist1, twist2, (u, v)):
+def get_twist_parameter(twist1, twist2, u_v):
     '''
     Calculate how much stem1 must be twisted for its twist vector
     to coincide with that of stem2.
 
-    @param twist1: The twist notator of stem1
-    @param twist2: The twist notator of stem2
-    @param (u,v): The parameters for rotating stem2 onto stem1
+    :param twist1: The twist notator of stem1
+    :param twist2: The twist notator of stem2
+    :param u_v: The parameters u and v for rotating stem2 onto stem1
     '''
 
+    u,v = u_v
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
     rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2)
 
@@ -201,9 +202,9 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
 
     stem1 -> bulge -> stem2
 
-    @param stem1_vec: The vector representing the axis of stem1
-    @param twist1: The twist of stem1 closest to the bulge
-    @param stem2_vec: The vector representing teh axis of stem2
+    :param stem1_vec: The vector representing the axis of stem1
+    :param twist1: The twist of stem1 closest to the bulge
+    :param stem2_vec: The vector representing teh axis of stem2
     '''
 
     # Since we will denote the orientation of stem2 with respect to stem1
@@ -228,8 +229,8 @@ def get_stem_separation_parameters(stem, twist, bulge):
     '''
     Parameterize the location of the bulge with respect to the stem.
 
-    @param stem: The stem vector.
-    @param bulge: the bulge vector.
+    :param stem: The stem vector.
+    :param bulge: the bulge vector.
     '''
 
     stem_basis = cuv.create_orthonormal_basis(stem, twist)
@@ -249,9 +250,9 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
 
     The twists will be the two closest to the bulge.
 
-    @param bulge: The name of the bulge separating the two helices.
-    @param connections: The two stems that are connected to this bulge.
-    @return: (stem1, twist1, stem2, twist2, bulge)
+    :param bulge: The name of the bulge separating the two helices.
+    :param connections: The two stems that are connected to this bulge.
+    :return: (stem1, twist1, stem2, twist2, bulge)
     '''
 
     s1 = connections[0]
@@ -286,9 +287,9 @@ def stem2_pos_from_stem1(stem1, twist1, params):
     Get the starting point of a second stem, given the parameters
     about where it's located with respect to stem1
 
-    @param stem1: The vector representing the axis of stem1's cylinder
-    @param twist1: The twist parameter of stem1
-    @param params: The parameters describing the orientaiton of stem2 wrt stem1
+    :param stem1: The vector representing the axis of stem1's cylinder
+    :param twist1: The twist parameter of stem1
+    :param params: The parameters describing the orientaiton of stem2 wrt stem1
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
@@ -304,9 +305,9 @@ def stem2_pos_from_stem1_1(stem1_basis, params):
     Get the starting point of a second stem, given the parameters
     about where it's located with respect to stem1
 
-    @param stem1: The vector representing the axis of stem1's cylinder
-    @param twist1: The twist parameter of stem1
-    @param params: The parameters describing the orientaiton of stem2 wrt stem1
+    :param stem1: The vector representing the axis of stem1's cylinder
+    :param twist1: The twist parameter of stem1
+    :param params: The parameters describing the orientaiton of stem2 wrt stem1
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
@@ -315,17 +316,17 @@ def stem2_pos_from_stem1_1(stem1_basis, params):
     return stem2_start
 
 
-def twist2_orient_from_stem1(stem1, twist1, (u, v, t)):
+def twist2_orient_from_stem1(stem1, twist1, u_v_t):
     '''
     Calculate the position of the twist factor of the 2nd stem from its
     parameters and the first stem.
 
-    @param stem1: The vector representing the axis of stem1's cylinder
-    @param twist1: The twist factor of stem1.
-    @param (u, v, t): The parameters describing how the twist of stem2 is
-                      oriented with respect to stem1
+    :param stem1: The vector representing the axis of stem1's cylinder
+    :param twist1: The twist factor of stem1.
+    :param u_v_t: The parameters describing how the twist of stem2 is
+                      oriented with respect to stem1. A triple `(u, v, t)`
     '''
-
+    u, v, t = u_v_t
     twist2_new = np.array([0., m.cos(t), m.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
@@ -346,17 +347,17 @@ def twist2_orient_from_stem1(stem1, twist1, (u, v, t)):
     return twist2_new_basis
 
 
-def twist2_orient_from_stem1_1(stem1_basis, (u, v, t)):
+def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
     '''
     Calculate the position of the twist factor of the 2nd stem from its
     parameters and the first stem.
 
-    @param stem1: The vector representing the axis of stem1's cylinder
-    @param twist1: The twist factor of stem1.
-    @param (u, v, t): The parameters describing how the twist of stem2 is
-                      oriented with respect to stem1
+    :param stem1: The vector representing the axis of stem1's cylinder
+    :param twist1: The twist factor of stem1.
+    :param u_v_t: The parameters describing how the twist of stem2 is
+                      oriented with respect to stem1. A triple `(u, v, t)`
     '''
-
+    u, v, t = u_v_t
     twist2_new = np.array([0., m.cos(t), m.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
@@ -370,15 +371,16 @@ def twist2_orient_from_stem1_1(stem1_basis, (u, v, t)):
     return twist2_new_basis
 
 
-def stem2_orient_from_stem1(stem1, twist1, (r, u, v)):
+def stem2_orient_from_stem1(stem1, twist1, r_u_v):
     '''
     Calculate the orientation of the second stem, given its parameterization
     and the parameterization of stem1
 
-    @param stem1: The vector representing the axis of stem1's cylinder
-    @param twist1: The twist factor of stem1.
-    @param (r,u,v): The orientation of stem2 wrt stem1
+    :param stem1: The vector representing the axis of stem1's cylinder
+    :param twist1: The twist factor of stem1.
+    :param r_u_v: The orientation of stem2 wrt stem1, a triple `(r, u, v)`
     '''
+    r,u,v = r_u_v
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
     stem1_basis = cuv.create_orthonormal_basis(stem1, twist1)
     stem2 = cuv.change_basis(stem2, cuv.standard_basis, stem1_basis)
@@ -386,15 +388,16 @@ def stem2_orient_from_stem1(stem1, twist1, (r, u, v)):
     return stem2
 
 
-def stem2_orient_from_stem1_1(stem1_basis, (r, u, v)):
+def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
     '''
     Calculate the orientation of the second stem, given its parameterization
     and the parameterization of stem1
 
-    @param stem1: The vector representing the axis of stem1's cylinder
-    @param twist1: The twist factor of stem1.
-    @param (r,u,v): The orientation of stem2 wrt stem1
+    :param stem1: The vector representing the axis of stem1's cylinder
+    :param twist1: The twist factor of stem1.
+    :param r_u_v: The orientation of stem2 wrt stem1, a triple `(r, u, v)`
     '''
+    r,u,v = r_u_v
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
     #stem1_basis = cuv.create_orthonormal_basis(stem1, twist1)
     #stem2 = cuv.change_basis(stem2, cuv.standard_basis, stem1_basis)
@@ -640,6 +643,7 @@ def get_mids_core_a(chain, start1, start2, end1, end2,
 
 def get_mids_core(cg, chain, define,
                   use_template=True, seq_ids=True):
+    """"""
     ######## Debug function
     '''
     vec = mids[1] - mids[0]
@@ -755,10 +759,10 @@ def get_mids(cg, chain, define, method=cc.Configuration.mids_method, seq_ids=Tru
     '''
     Get the mid points of the abstract cylinder which represents a helix.
 
-    @param chain: The Bio.PDB representation of the 3D structure.
-    @param define: The define of the helix, as per the BulgeGraph
+    :param chain: The Bio.PDB representation of the 3D structure.
+    :param define: The define of the helix, as per the BulgeGraph
                    definition standard.
-    @return: An array of two vectors representing the two endpoints of the
+    :return: An array of two vectors representing the two endpoints of the
              helix.
     '''
 
@@ -788,10 +792,10 @@ def get_twists(cg, chain, define, mids=None, method=cc.Configuration.mids_method
     Get the projection of the (ca - mids) vectors onto the helix axis. This,
     in a sense will define how much the helix twists.
 
-    @param cg: The CoarseGrainRNA representation
-    @param chain: The Bio.PDB representation of the 3D structure.
-    @param define: The name of the define
-    @return: Two vectors which represent the twist of the helix.
+    :param cg: The CoarseGrainRNA representation
+    :param chain: The Bio.PDB representation of the 3D structure.
+    :param define: The name of the define
+    :return: Two vectors which represent the twist of the helix.
     '''
 
     return get_twists_core(cg, chain, define, mids, method, seq_ids)
@@ -811,11 +815,11 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     The virtual position extrapolates the position of the residues based
     on the twists of the helix.
 
-    @param bg: The BulgeGraph structure
-    @param stem: The name of the stem
-    @param i: The i'th residue of the stem
+    :param bg: The BulgeGraph structure
+    :param stem: The name of the stem
+    :param i: The i'th residue of the stem
 
-    @return: A tuple containing the point located on the axis of the stem
+    :return: A tuple containing the point located on the axis of the stem
              and a vector away from that point in the direction of the
              residue.
     '''
@@ -899,8 +903,8 @@ def numbered_virtual_residues(bg):
     Return a list of virtual residues, along with their
     nucleotide positions.
 
-    @param bg: A coarse grain RNA
-    @return: A list of tuples containing nucleotides numbers and coordinates.
+    :param bg: A coarse grain RNA
+    :return: A list of tuples containing nucleotides numbers and coordinates.
     '''
     vress = []
 
@@ -918,11 +922,11 @@ def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
     The basis will be defined by the direction of the stem, the direction
     of the virtual residue.
 
-    @param bg: The BulgeGraph structure
-    @param stem: The name of the stem
-    @param i: The i'th residue of the stem
+    :param bg: The BulgeGraph structure
+    :param stem: The name of the stem
+    :param i: The i'th residue of the stem
 
-    @return: A 3x3 matrix defining the coordinate system above.
+    :return: A 3x3 matrix defining the coordinate system above.
     '''
 
     if vec is None:
@@ -944,11 +948,11 @@ def pos_to_spos(bg, s1, i1, s2, i2):
     Convert the location of s2, i2 into the coordinate system
     defined by (s1, i1)
 
-    @param bg: The BulgeGraph containing the stems
-    @param s1: The basis stem name
-    @param i1: The basis res position
-    @param s2: The stem containing the nucleotide to be converted
-    @param i2: The nucleotide to be converted position
+    :param bg: The BulgeGraph containing the stems
+    :param s1: The basis stem name
+    :param i1: The basis res position
+    :param s2: The stem containing the nucleotide to be converted
+    :param i2: The nucleotide to be converted position
     '''
     sbasis = virtual_res_basis(bg, s1, i1)
     (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = virtual_res_3d_pos(bg, s1, i1)
@@ -972,13 +976,13 @@ def spos_to_pos(bg, stem, i, spos):
     Convert the location of spos from the coordinate system
     of (stem, i) into the standard coordinate system.
 
-    @param bg: The BulgeGraph
-    @param stem: The name of the stem in the BulgeGraph
-    @param i: The i'th residue in 'stem' which will define the coordinate
+    :param bg: The BulgeGraph
+    :param stem: The name of the stem in the BulgeGraph
+    :param i: The i'th residue in 'stem' which will define the coordinate
               system
-    @param spos: The position in the alternate coordinate system
+    :param spos: The position in the alternate coordinate system
 
-    @return: The coordinates in the cartesian coordinate system of the
+    :return: The coordinates in the cartesian coordinate system of the
         rest of the model.
     '''
     sbasis = virtual_res_basis(bg, stem, i)
@@ -998,10 +1002,10 @@ def get_residue_type(i, stem_len):
     of the stem vector. Nucleotides, in the middle shoubulge not due
     to the excluded volume of the stem they occupy.
 
-    @param i: The position of the nucleotide.
-    @param stem_len: The length of the stem.
+    :param i: The position of the nucleotide.
+    :param stem_len: The length of the stem.
 
-    @return: The type of nucleotide position.
+    :return: The type of nucleotide position.
     '''
     assert(i < stem_len)
 
@@ -1013,8 +1017,8 @@ def junction_virtual_res_distance(bg, bulge):
     Compute the distance between the two virtual residues flanking
     a bulge region.
 
-    @param bg: The BulgeGraph containing the bulge.
-    @param bulge: The name of the bulge.
+    :param bg: The BulgeGraph containing the bulge.
+    :param bulge: The name of the bulge.
     '''
     cs = list(bg.edges[bulge])
 
@@ -1060,10 +1064,10 @@ def junction_virtual_atom_distance(bg, bulge):
     Compute the distance between the O3' atom and P' atom
     of the two residues that flank the junction segment.
 
-    @param bg: The BulgeGraph containing the bulge.
-    @param bulge: The name of the bulge
+    :param bg: The BulgeGraph containing the bulge.
+    :param bulge: The name of the bulge
 
-    @return: A single number corresponding to the distance above.
+    :return: A single number corresponding to the distance above.
     '''
     connecting_stems = bg.connections(bulge)    
     (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
@@ -1087,8 +1091,8 @@ def add_virtual_residues(bg, stem):
     Create all of the virtual residues and the associated
     bases and inverses.
 
-    @param bg: The CoarseGrainRNA bulge graph containing the stem
-    @param stem: The name of the stem to be included
+    :param bg: The CoarseGrainRNA bulge graph containing the stem
+    :param stem: The name of the stem to be included
     '''
     stem_vec = bg.coords[stem][1] - bg.coords[stem][0]
     stem_basis = cuv.create_orthonormal_basis(stem_vec, bg.get_twists(stem)[0])
@@ -1114,12 +1118,12 @@ def stem_vres_reference_atoms(bg, chain, s, i):
     Calculate the position of each atom in the reference of the
     stem and virtual residue.
 
-    @param bg: The BulgeGraph
-    @param chain: The PDB representation of the chain
-    @param s: The stem identifier
-    @param i: The i'th base-pair in the stem
+    :param bg: The BulgeGraph
+    :param chain: The PDB representation of the chain
+    :param s: The stem identifier
+    :param i: The i'th base-pair in the stem
 
-    @return (origin, bases, [dict(atoms), dict(atoms)])
+    :return (origin, bases, [dict(atoms), dict(atoms)])
         The origin of the coordinate system (vpos)
         The basises (one for each nucleotide)
         Two dictionaries containing the positions of each atom in its
@@ -1154,12 +1158,12 @@ def bounding_boxes(bg, chain, s, i):
     Return the bounding boxes of the two nucleotides at the
     i'th position on the stem.
 
-    @param bg: The BulgeGraph
-    @param chain: The PDB representation of the chain
-    @param s: The stem identifier
-    @param i: The i'th base-pair in the stem
+    :param bg: The BulgeGraph
+    :param chain: The PDB representation of the chain
+    :param s: The stem identifier
+    :param i: The i'th base-pair in the stem
 
-    @return: (origin, bases, [(c1, c2), (c1, c2)]) The bases
+    :return: (origin, bases, [(c1, c2), (c1, c2)]) The bases
             (one for each nucleotide) and the corners defining the bounding box
             of the two nucleotides
     '''
@@ -1186,10 +1190,10 @@ def virtual_residue_atoms(bg, s, i, strand=0):
     Return two sets of atoms for the virtual residue. One for the nucleotide
     on each strand.
 
-    @param bg: The BulgeGraph
-    @param s: The stem
-    @param i: The virtual residue number
-    @param strand: The strand for which to get the virtual atoms
+    :param bg: The BulgeGraph
+    :param s: The stem
+    :param i: The virtual residue number
+    :param strand: The strand for which to get the virtual atoms
     '''
     '''
     if vpos == None or vvec == None:
@@ -1476,7 +1480,7 @@ def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
     gives a circle with the least residuals will be considered the ideal
     stem vector.
 
-    @return: stem_vector
+    :return: stem_vector
     '''
     atom_poss = []
     #stem_name = 's0'
@@ -1543,8 +1547,8 @@ def add_stem_information_from_pdb_chain(cg, chain, seq_ids=True):
 
     Add all of this information to the BulgeGraph data structure.
 
-    @param bg: The BulgeGraph.
-    @param chain: The Bio.PDB chain representation of the 3D structure.
+    :param bg: The BulgeGraph.
+    :param chain: The Bio.PDB chain representation of the 3D structure.
     '''
     chain = ftup.rename_rosetta_atoms(chain)
 
@@ -1565,8 +1569,8 @@ def add_bulge_information_from_pdb_chain(bg, chain):
 
     Modifies the structure bg.
 
-    @param bg: The BulgeGraph.
-    @param chain: The Bio.PDB chain representation of the 3D structure.
+    :param bg: The BulgeGraph.
+    :param chain: The Bio.PDB chain representation of the 3D structure.
     '''
     for d in bg.defines.keys():
         if d[0] != 's':
@@ -1760,7 +1764,7 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     Get a list of virtual atoms for this structure.
 
-    @param cg: The coarse grain structure.
+    :param cg: The coarse grain structure.
     '''
     return new_virtual_atoms(cg, given_atom_names, sidechain)
     import forgi.threedee.utilities.average_atom_positions as ftua
@@ -1800,15 +1804,19 @@ def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     Get a VirtualAtomLookup Object for the virtual atoms for this structure.
 
-    @param cg: The coarse grain structure.
+    :param cg: The coarse grain structure.
     '''
     return VirtualAtomsLookup(cg, given_atom_names, sidechain)
 class VirtualAtomsLookup(object):
-    """An object with a dict-like interface that calculated the virtual atom positions on demand (lazy evaluation)"""
+    """
+    An object with a dict-like interface that calculated the virtual atom positions on demand.
+    """
     def __init__(self, cg, given_atom_names=None, sidechain=True):
         """
         :param cg: The coarse grain structure, for which the virtual atoms are generated. 
-        ..note :: If cg is modified, new virtual atom positions are calculated.
+
+        ..note :: 
+            If cg is modified, new virtual atom positions are calculated.
         """
         self.cg=cg  
         self.given_atom_names=given_atom_names

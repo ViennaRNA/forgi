@@ -12,9 +12,9 @@ def ppv(tp, fp):
     '''
     Calculate the positive predictive value.
 
-    @param tp: The true positives
-    @param fp: The false positives
-    @return: The ppv
+    :param tp: The true positives
+    :param fp: The false positives
+    :return: The ppv
     '''
     return tp / float(tp + fp)
 
@@ -22,9 +22,9 @@ def sty(tp, fn):
     '''
     Calculate the sensitivity.
 
-    @param tp: True positives
-    @param fn: False negatives
-    @return: The sensitivity
+    :param tp: True positives
+    :param fn: False negatives
+    :return: The sensitivity
     '''
     return tp / float(tp + fn)
 
@@ -33,10 +33,10 @@ def mcc(confusion_matrix):
     Calculate the Matthews correlation coefficient for
     the given confusion matrix.
 
-    MCC = sqrt(ppv * sty)
+    `MCC = sqrt(ppv * sty)`
 
-    @param confustion_matrix: A dictionary like this: {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
-    @return: The MCC
+    :param confustion_matrix: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
+    :return: The MCC
     '''
 
     return math.sqrt(ppv(confusion_matrix['tp'],
@@ -88,8 +88,8 @@ class ConfusionMatrix(object):
         true_negative and false_negative rate for the tertiary
         distances of the elements of cg and the reference structure stored in this class.
 
-        @param cg: The first coarse grain model
-        @return: A dictionary like this: {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
+        :param cg: The first coarse grain model
+        :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
         '''
         interactions=self.get_interactions(cg)
         nodes=set(cg.defines.keys())
@@ -116,12 +116,12 @@ def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
     true_negative and false_negative rate for the tertiary
     distances of the elements of two structures, cg1 and cg2.
 
-    @param cg1: The first coarse grain model
-    @param cg2: The second coarse grain model
-    @param distance: The distance to consider for interactions
-    @param bp_distance: Only consider elements separated by this many more pair
-        and backbone bonds
-    @return: A dictionary like this: {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
+    :param cg1: The first coarse grain model
+    :param cg2: The second coarse grain model
+    :param distance: The distance to consider for interactions
+    :param bp_distance: Only consider elements separated by this many more pair
+                        and backbone bonds
+    :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
     '''
     nodes1 = set(cg1.defines.keys())
     nodes2 = set(cg2.defines.keys())
@@ -176,12 +176,12 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     '''
     Calculate the MCC of the distance between two elements.
 
-    @param cg_query: The second cg structure
-    @param cg_native: The native cg structure
-    @param distance: The distance between which we consider interactions.
-    @param bp_distance: Only consider pairs of elements that are separated by 
+    :param cg_query: The second cg structure
+    :param cg_native: The native cg structure
+    :param distance: The distance between which we consider interactions.
+    :param bp_distance: Only consider pairs of elements that are separated by 
                         MORE than this many base pairs
-    @return: The MCC for interactions within a certain distance
+    :return: The MCC for interactions within a certain distance
     '''
     cm = confusion_matrix(cg_query, cg_native, distance, bp_distance=16)
     #cm['tp'] += 1
@@ -201,9 +201,9 @@ def cg_rmsd(cg1, cg2):
     Calculate the RMSD between two Coarse Grain models using their
     set of virtual residues.
 
-    @param cg1: The first coarse grain model.
-    @param cg2: The second coarse-grain model.
-    @return: The RMSD
+    :param cg1: The first coarse grain model.
+    :param cg2: The second coarse-grain model.
+    :return: The RMSD
     '''
 
     residues1 = ftug.bg_virtual_residues(cg1)

@@ -112,9 +112,9 @@ def extract_subchain(chain, start_res, end_res):
     Extract a portion of a particular chain. The new chain
     will contain residues copied from the original chain.
 
-    @param chain: The source chain.
-    @param start_res: The number of the first nucleotide to extract
-    @param last_res: The number of the last nucleotide to extract
+    :param chain: The source chain.
+    :param start_res: The number of the first nucleotide to extract
+    :param last_res: The number of the last nucleotide to extract
     '''
     new_chain = bpdb.Chain.Chain(' ')
     for r in chain:
@@ -128,8 +128,8 @@ def extract_subchain_from_res_list(chain, res_list):
     Extract a portion of a particular chain. The new chain
     will contain residues copied from the original chain.
 
-    @param chain: The source chain.
-    @param res_list: The list of residue identifiers of the nucleotides
+    :param chain: The source chain.
+    :param res_list: The list of residue identifiers of the nucleotides
                      to extract
     '''
     new_chain = bpdb.Chain.Chain(' ')
@@ -142,9 +142,9 @@ def is_covalent(contact):
     '''
     Determine if a particular contact is covalent.
 
-    @param contact: A pair of two Atom objects
-    @return True if they are covalently bonded
-            False otherwise
+    :param contact: A pair of two Atom objects
+    :return: `True` if they are covalently bonded
+             `False` otherwise
     '''
     r1 = contact[0].parent
     r2 = contact[1].parent
@@ -173,8 +173,8 @@ def num_noncovalent_clashes(chain):
     Check if a chain has non-covalent clashes. Non-covalent clashes are found
     when two atoms that aren't covalently linked are within 1.8 A of each other.
 
-    @param chain: The chain to evaluate
-    @param return: The number of non-covalent clashes.
+    :param chain: The chain to evaluate
+    :param return: The number of non-covalent clashes.
     '''
     all_atoms = bpdb.Selection.unfold_entities(chain, 'A')
     ns = bpdb.NeighborSearch(all_atoms)
@@ -188,8 +188,8 @@ def noncovalent_distances(chain, cutoff=0.3):
     Print out the distances between all non-covalently bonded atoms
     which are closer than cutoff to each other.
 
-    @param chain: The Bio.PDB chain.
-    @param cutoff: The maximum distance
+    :param chain: The Bio.PDB chain.
+    :param cutoff: The maximum distance
     '''
     all_atoms = bpdb.Selection.unfold_entities(chain, 'A')
     ns = bpdb.NeighborSearch(all_atoms)
@@ -202,9 +202,9 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     '''
     Calculate the all-atom rmsd between two RNA chains.
 
-    @param c1: A Bio.PDB.Chain
-    @param c2: Another Bio.PDB.Chain
-    @return: The rmsd between the locations of all the atoms in the chains.
+    :param c1: A Bio.PDB.Chain
+    :param c2: Another Bio.PDB.Chain
+    :return: The rmsd between the locations of all the atoms in the chains.
     '''
 
     a_5_names = ['P', 'O5*', 'C5*', 'C4*', 'O4*', 'O2*']
@@ -276,7 +276,7 @@ def get_first_chain(filename):
     '''
     Load a PDB file using the Bio.PDB module and return the first chain.
 
-    @param filename: The path to the pdb file
+    :param filename: The path to the pdb file
     '''
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -287,9 +287,9 @@ def pdb_file_rmsd(fn1, fn2):
     '''
     Calculate the RMSD of all the atoms in two pdb structures.
 
-    @param fn1: The first filename.
-    @param fn2: The second filename.
-    @return: The rmsd between the two structures.
+    :param fn1: The first filename.
+    :param fn2: The second filename.
+    :return: The rmsd between the two structures.
     '''
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -309,8 +309,8 @@ def renumber_chain(chain, resids=None):
     Renumber all the residues in this chain so that they start at 1 and end at
     len(chain)
     
-    @param chain: A Bio.PDB.Chain object
-    @return: The same chain, but with renamed nucleotides
+    :param chain: A Bio.PDB.Chain object
+    :return: The same chain, but with renamed nucleotides
     '''
 
     counter = 1
@@ -336,8 +336,8 @@ def output_chain(chain, filename, fr=None, to=None):
     '''                                                                                                            
     Dump a chain to an output file. Remove the hydrogen atoms.                                                     
     
-    @param chain: The Bio.PDB.Chain to dump.
-    @param filename: The place to dump it.
+    :param chain: The Bio.PDB.Chain to dump.
+    :param filename: The place to dump it.
     '''                                                                                                            
     class HSelect(bpdb.Select):
         def accept_atom(self, atom):
@@ -359,9 +359,9 @@ def get_particular_chain(in_filename, chain_id, parser=None):
     '''
     Load a PDB file and return a particular chain.
 
-    @param in_filename: The name of the pdb file.
-    @param chain_id: The id of the chain.
-    @return: A Bio.PDB.Chain object containing that particular chain.
+    :param in_filename: The name of the pdb file.
+    :param chain_id: The id of the chain.
+    :return: A Bio.PDB.Chain object containing that particular chain.
     '''
     if parser is None:
         parser = bpdb.PDBParser()
@@ -380,8 +380,8 @@ def get_biggest_chain(in_filename, parser=None):
     Load the PDB file located at filename, select the longest
     chain and return it.
 
-    @param in_filename: The location of the original file.
-    @return: A Bio.PDB chain structure corresponding to the longest
+    :param in_filename: The location of the original file.
+    :return: A Bio.PDB chain structure corresponding to the longest
              chain in the structure stored in in_filename
     '''
     if parser is None:
@@ -426,8 +426,8 @@ def rename_modified_ress(chain):
     Rename the modified residues so that they have the same
     names as unmodified residues
 
-    @param chain: A Bio.PDB.Chain structure
-    @return: The same chain, but with modified residue names.
+    :param chain: A Bio.PDB.Chain structure
+    :return: The same chain, but with modified residue names.
     '''
     for r in chain:
         # rename rosetta-generated structures
@@ -469,8 +469,8 @@ def rename_rosetta_atoms(chain):
     Rosetta names all the backbone atoms with an asterisk rather than an
     apostrophe. All that needs to be reversed.
 
-    @param chain. A Bio.PDB.Chain structure generated by Rosetta
-    @return: The same chain with renamed atoms
+    :param chain. A Bio.PDB.Chain structure generated by Rosetta
+    :return: The same chain with renamed atoms
     '''
     for a in bpdb.Selection.unfold_entities(chain, 'A'):
         oldid = a.id
@@ -487,8 +487,8 @@ def remove_hetatm(chain):
     '''
     Remove all the hetatms in the chain.
 
-    @param chain: A Bio.PDB.Chain
-    @return: The same chain, but missing all hetatms
+    :param chain: A Bio.PDB.Chain
+    :return: The same chain, but missing all hetatms
     '''
     to_detach = []
     for r in chain:
@@ -533,8 +533,8 @@ def is_rna(chain):
     Determine if a Bio.PDB.Chain structure corresponds to an RNA
     molecule.
 
-    @param chain: A Bio.PDB.Chain molecule
-    @return: True if it is an RNA molecule, False otherwise
+    :param chain: A Bio.PDB.Chain molecule
+    :return: True if it is an RNA molecule, False otherwise
     '''
     for res in chain:
         if res.resname.strip() in ['A', 'C', 'G', 'U']:
@@ -546,8 +546,8 @@ def is_protein(chain):
     Determine if a Bio.PDB.Chain structure corresponds to an protein
     molecule.
 
-    @param chain: A Bio.PDB.Chain molecule
-    @return: True if it is a protein molecule, False otherwise
+    :param chain: A Bio.PDB.Chain molecule
+    :return: True if it is a protein molecule, False otherwise
     '''
     for res in chain:
         if res.resname in ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'HIS', 'ILE', 'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL']:

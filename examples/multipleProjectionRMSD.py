@@ -135,7 +135,6 @@ def main(args):
         for cg in cgs:            
             score, img, params = fph.try_parameters(ref_img, args.hausdorff_scale, cg, degrees)
             local_optima.append(score)
-            """
             s, i, params = fph.globally_minimal_distance(ref_quarter, args.hausdorff_scale, cg,  
                                                           start_points=40, 
                                                           starting_rotations=degrees,
@@ -143,12 +142,6 @@ def main(args):
             score, img, params = fph.locally_minimal_distance(ref_img, args.hausdorff_scale, cg, 
                                                               params[1], params[2], params[0], 
                                                               maxiter=200)
-            """
-            newdegrees=[]
-            for degree in degrees:
-                newdegrees+=[degree, degree-5, degree+5]
-            newoffsets=[np.array([0,0]),np.array([0,10]), np.array([0,-10]), np.array([-10,0]), np.array([10,0])]
-            score, img, params = fph.try_parameters(ref_img, args.hausdorff_scale, cg, newdegrees, newoffsets)
             global_optima.append(score)
 
         axH.plot(xval,global_optima, label="Global Minimization", color="red")        

@@ -122,7 +122,7 @@ Using the structure 2MIS as an example::
 
 The first stem in the structure ('s0'), is composed of nucleotides 1 - 6 and 21
 - 26, has a length of 14.735 Angstroms and a twist of 2.82 radians. It contains
-  6 base pairs and comes from a structure named `2mis_A`.
+6 base pairs and comes from a structure named `2mis_A`.
 
 Get A Description of an Angle Between Two Stems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

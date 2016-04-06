@@ -139,8 +139,9 @@ def hausdorff_helperdist(p, img, cutoff=float("inf"), skip=0):
 def hausdorff_distance(img, ref_img, cutoff=float("inf")):
     """
     Return the grid-based Hausdorff distance between two aligned boolean matrices.
+
     :param img, ref_img: Two aligned boolean 2D matrices with the same shape.
-    :param cutoff: A float. Idf the distance is greater than cutoff, return float("inf").
+    :param cutoff: A float. If the distance is greater than cutoff, return float("inf").
                    (Used to increase execution speed in certain cases)
     """
     return hausdorff_distance_new(img, ref_img, cutoff)

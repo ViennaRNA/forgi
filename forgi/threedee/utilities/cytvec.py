@@ -7,10 +7,10 @@ import math as m
 
 def magnitude(vec):
     '''
-    Return the magnitude of a vector (|V|).
+    Return the magnitude of a vector `(|V|)`.
 
-    @param vec: The vector in question.
-    @return: The magnitude of the vector.
+    :param vec: The vector in question.
+    :return: The magnitude of the vector.
     '''
     return m.sqrt(np.dot(vec, vec))
 

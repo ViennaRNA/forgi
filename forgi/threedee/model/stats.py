@@ -84,7 +84,7 @@ class LoopStat:
         '''
         Parse a line containing statistics about the shape of a stem.
 
-        @param line: The line from the statistics file.
+        :param line: The line from the statistics file.
         '''
 
         parts =  line.strip().split()
@@ -99,7 +99,8 @@ class LoopStat:
         self.define = map(int, parts[6:])
 
     def __str__(self):
-        return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, " ".join(map(str, self.define)))
+        return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, 
+                                                self.phys_length, " ".join(map(str, self.define)))
 
 class StemStat:
     '''
@@ -127,7 +128,7 @@ class StemStat:
         '''
         Parse a line containing statistics about the shape of a stem.
 
-        @param line: The line from the statistics file.
+        :param line: The line from the statistics file.
         '''
 
         parts =  line.strip().split()
@@ -147,7 +148,8 @@ class AngleStat:
     Class for storing an individual statistic about inter-helical angles.
     '''
 
-    def __init__(self, pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x', define=[], seqs=[]):
+    def __init__(self, pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
+                 define=[], seqs=[]):
         self.pdb_name = pdb_name
         self.dim1 = dim1
         self.dim2 = dim2
@@ -235,7 +237,7 @@ class AngleStat:
         Return a tuple containing the parameters which specify the orientation
         of one stem with respect to another.
 
-        @return: (u, v)
+        :return: (u, v)
         '''
 
         return (self.u, self.v)
@@ -245,7 +247,7 @@ class AngleStat:
         Returns a tuple containing the parameters which specify the difference in
         twist between two stems.
 
-        @return (u, v, t)
+        :return (u, v, t)
         '''
         return (self.u, self.v, self.t)
 
@@ -254,7 +256,7 @@ class AngleStat:
         Return a tuple containing the parameters which specify the position
         of one stem with respect to another.
 
-        @return (r1, u1, v1)
+        :return: `(r1, u1, v1)`
         '''
         return (self.r1, self.u1, self.v1)
 
@@ -317,8 +319,8 @@ class RandomAngleStats():
         Create a function that returns a random value for
         each column in the statistics.
 
-        @param stats: A table containing n rows and m columns
-        @return: A function returning m random values with a 
+        :param stats: A table containing n rows and m columns
+        :return: A function returning m random values with a 
                  maximum and minimum no greater than the largest
                  and least values in that column, respectively.
         '''
@@ -359,7 +361,7 @@ class RandomAngleStats():
         '''
         Sample a set of statistics.
 
-        @param dims: The dimensions of the bulge for which to sample.
+        :param dims: The dimensions of the bulge for which to sample.
         '''
         new_stats = self.cont_stats[dims]()
         s = AngleStat()
@@ -371,8 +373,8 @@ class RandomAngleStats():
         Return a set of n AngleStats for a bulge with a dimension
         of of dims.
 
-        @param dims: The dimensions of the bulge (i.e. (1,2))
-        @params n: The number of angle stats to return. If n is greater
+        :param dims: The dimensions of the bulge (i.e. `(1,2)`)
+        :params n: The number of angle stats to return. If n is greater
             than the number of stats stored, then return the number of
             stats available.
         '''
@@ -396,7 +398,7 @@ class ContinuousAngleStats():
         dimensions necessary for describing the orientation of one
         helix with respect to another.
 
-        @param discrete_angle_statistics: A dictionary of dictionaries,
+        :param discrete_angle_statistics: A dictionary of dictionaries,
             each one containing and AngleStats structure.
         '''
         import scipy.stats as ss
@@ -424,7 +426,7 @@ class ContinuousAngleStats():
         '''
         Sample a set of statistics.
 
-        @param dims: The dimensions of the bulge for which to sample.
+        :param dims: The dimensions of the bulge for which to sample.
         '''
         new_stats = self.cont_stats[dims].resample(size=1)
         s = AngleStat()
@@ -436,8 +438,8 @@ class ContinuousAngleStats():
         Return a set of n AngleStats for a bulge with a dimension
         of of dims.
 
-        @param dims: The dimensions of the bulge (i.e. (1,2))
-        @params n: The number of angle stats to return. If n is greater
+        :param dims: The dimensions of the bulge (i.e. (1,2))
+        :params n: The number of angle stats to return. If n is greater
             than the number of stats stored, then return the number of
             stats available.
         '''
@@ -463,25 +465,24 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     The file format should be as follows:
 
-    angle pdb_name dim1 dim2 r u v t r1 u1 v1 s1b s2b
+    `angle pdb_name dim1 dim2 r u v t r1 u1 v1 s1b s2b`
 
     Where the parameters are as follows:
 
-    angle: identifier for a type of statistics... should always just be 'angle'
-    pdb_name: the name of the pdb file these statistics came from
-    dim1: the smaller dimension of the bulge
-    dim2: the larger dimension of the bulge
-    r: the length of the second stem
-    u: the polar angle of the orientation of the 2nd stem
-    v: the azimuth of the orientation of the 2nd stem
-    t: the orientation of the twist of the second stem
-    
-    r1: the distance of the start of the 2nd stem helix from the end of the 1st
-        stem helix
-    u1: the polar angle of the separation vector of the two helices
-    v1: the azimuth of the separation vector of the two helices
-    s1b: The side of the first stem closest to the bulge
-    s2b: The side of the second stem closest to the bulge
+    * `angle`: identifier for a type of statistics... should always just be 'angle'
+    * `pdb_name`: the name of the pdb file these statistics came from
+    * `dim1`: the smaller dimension of the bulge
+    * `dim2`: the larger dimension of the bulge
+    * `r`: the length of the second stem
+    * `u`: the polar angle of the orientation of the 2nd stem
+    * `v`: the azimuth of the orientation of the 2nd stem
+    * `t`: the orientation of the twist of the second stem
+    * `r1`: the distance of the start of the 2nd stem helix from the end of the 1st
+            stem helix
+    * `u1`: the polar angle of the separation vector of the two helices
+    * `v1`: the azimuth of the separation vector of the two helices
+    * `s1b`: The side of the first stem closest to the bulge
+    * `s2b`: The side of the second stem closest to the bulge
 
     The azimuth is always defined with respect to the coordinate system defined
     by the stem1 helix axis vector and it's twist vector (the one adjacent to the
@@ -530,10 +531,10 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
     Return a list of tuples which indicate the dimensions for which angle
     stats are avilable.
 
-    @param s1: The first size
-    @param s2: The second size
-    @param angle_type: The type of the angle.
-    @param min_entries: The minimum number of stats that have to be available
+    :param s1: The first size
+    :param s2: The second size
+    :param angle_type: The type of the angle.
+    :param min_entries: The minimum number of stats that have to be available
     '''
     available_stats = []
     angle_stats = get_angle_stats()
@@ -564,7 +565,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     stem pdb_name bp_length phys_length twist_angle
 
-    @param filename: The name of the file.
+    :param filename: The name of the file.
     '''
     if ConstructionStats.stem_stats != None and not refresh:
         return ConstructionStats.stem_stats
@@ -594,9 +595,9 @@ def get_fiveprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     format:
 
-    fiveprime pdb_name bp_length phys_length
+    `fiveprime pdb_name bp_length phys_length`
 
-    @param filename: The name of the file.
+    :param filename: The name of the file.
     '''
     if ConstructionStats.fiveprime_stats != None and not refresh:
         return ConstructionStats.fiveprime_stats
@@ -620,9 +621,9 @@ def get_threeprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     format:
 
-    threeprime pdb_name bp_length phys_length
+    `threeprime pdb_name bp_length phys_length`
 
-    @param filename: The name of the file.
+    :param filename: The name of the file.
     '''
     if ConstructionStats.threeprime_stats != None and not refresh:
         return ConstructionStats.threeprime_stats
@@ -646,9 +647,9 @@ def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     format:
 
-    loop pdb_name bp_length phys_length
+    `loop pdb_name bp_length phys_length`
 
-    @param filename: The name of the file.
+    :param filename: The name of the file.
     '''
     if ConstructionStats.loop_stats != None and not refresh:
         return ConstructionStats.loop_stats
@@ -682,9 +683,9 @@ class ConformationStats(object):
         Constrain the statistics for certain regions of the molecule. This 
         is created for use with the JAR3D annotations for loop regions.
 
-        @param constraint_file: A file containing the allowed statistics for
+        :param constraint_file: A file containing the allowed statistics for
                                 a particular loop.
-        @return: Nothing
+        :return: Nothing
         '''
         pass
 
@@ -692,9 +693,9 @@ class ConformationStats(object):
         '''
         Return a set of statistics compatible with this element.
 
-        @param bg: The graph representation we're using.
-        @param elem: The name of the element
-        @return: A list of compatible statistics
+        :param bg: The graph representation we're using.
+        :param elem: The name of the element
+        :return: A list of compatible statistics
         '''
         if elem in self.constrained_stats:
             return self.constrained_stats[elem]
@@ -754,7 +755,7 @@ class FilteredConformationStats(ConformationStats):
 
     def from_file(self, filename):
         '''
-        Read the statistics in from a file, with the following formatting:
+        Read the statistics in from a file, with the following formatting::
 
             sampled i3 1X8W_A 4 27 31 101 104 ""
             sampled i2 3U5F_6 4 1348 1348 1365 1367 "cWW AG or UU"

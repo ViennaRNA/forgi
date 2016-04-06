@@ -37,9 +37,9 @@ def create_fornac_page_for_structure(bg, color_string):
     point values. These will be uniformly scaled according to the color
     scale passed in.
 
-    @param color_string: The color string to be passed to fornac.
+    :param color_string: The color string to be passed to fornac.
                           e.g. "11-12: red 14-17: rgb(14,15,120)"
-    @return: The html text of the resulting web page.
+    :return: The html text of the resulting web page.
     """
     return fornac_template.format(bg.to_dotbracket_string(),
                                   bg.seq, color_string) 
@@ -52,10 +52,10 @@ def scale_colors(colors_dict, cmap = None, reverse = False):
     The color map will be normalized to the range of values within 
     color_dict.
 
-    @param colors_dict: The dictionary containing the values to be color scaled.
-    @param cmap: A color map to be used to scale the colors.
-    @param reverse: Reverse the color map
-    @return: Another dictionary containing rgb triples as values.
+    :param colors_dict: The dictionary containing the values to be color scaled.
+    :param cmap: A color map to be used to scale the colors.
+    :param reverse: Reverse the color map
+    :return: Another dictionary containing rgb triples as values.
     '''
 
     if cmap is None:
@@ -81,8 +81,8 @@ def element_to_nucleotide_colors(bg, element_colors):
     '''
     Convert a dictionary of per-element colors to a dictionary of per-nucleotide colors
 
-    @param element_colors: A dictionary of element colors (e.g. {'i0': (255,0,0), 'm1': {255,255,255)}
-    @return: A dictionary of nucleotide numbers: (e.g {1: (14,15,120), 2: (255,255,255)})
+    :param element_colors: A dictionary of element colors (e.g. {'i0': (255,0,0), 'm1': {255,255,255)}
+    :return: A dictionary of nucleotide numbers: (e.g {1: (14,15,120), 2: (255,255,255)})
     '''
     new_dict = {}
     for key in element_colors:
@@ -96,9 +96,9 @@ def nucleotide_colors_to_fornac_color_string(nucleotide_colors):
     Convert a dictionary of per nucleotide colors to a fornac
     color string.
 
-    @param nucleotide_colors: A dictionary with nucleotide numbers as keys and colors as values.
+    :param nucleotide_colors: A dictionary with nucleotide numbers as keys and colors as values.
                               (e.g. {1: (255,0,0), 2: (255,255,0)})
-    @return: A color string (e.g "1:rgb(255,0,0) 2:rgb(255,0,0)")
+    :return: A color string (e.g "1:rgb(255,0,0) 2:rgb(255,0,0)")
     '''
     color_string = ""
     for key in nucleotide_colors:

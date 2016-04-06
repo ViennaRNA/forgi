@@ -17,7 +17,7 @@ Contents:
     utilities_tutorial.rst
     graph_tutorial.rst
     threedee_tutorial.rst
-    forgi_documentation.rst
+    apidoc/forgi.rst
     download.rst
 
 Indices and tables

@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'forgi'
-copyright = u'2012,2013,2014 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>'
+copyright = u'2012,2013,2014,2015,2016 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>; 2015,2016 Bernhard thiel <thiel@tbi.univie.ac.at>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -69,7 +69,7 @@ release = '0.2'
 exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
-#default_role = None
+default_role = "code"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
@@ -94,7 +94,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = 'haiku2'
-html_theme_path = '.'
+html_theme_path = ['.']
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -123,7 +123,7 @@ html_theme_path = '.'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -243,3 +243,6 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+#Show docstring form class and from init function
+autoclass_content="both"

@@ -319,6 +319,12 @@ def print_name(filename):
 
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
+        """
+        A bulge graph object.
+
+        :var self.defines: The coarse grain element definitions: Keys are for example 's1'/ 'm2'/ 'h3'/ 'f1'/ 't1'
+                       Values are the positions in the sequence (1D-coordinate) of start , end, ...
+        """
         self.seq_length = 0
         self.ang_types = None
         self.mst = None
@@ -2242,11 +2248,11 @@ class BulgeGraph(object):
         """
         Get the indices of the residues for fitting bulge regions.
 
-        So if there is a loop like so (between residues 7 and 16):
-
-        (((...))))
-        7890123456
-          ^   ^
+        So if there is a loop like so (between residues 7 and 16)::
+        
+          (((...))))
+          7890123456
+            ^   ^
 
         Then residues 9 and 13 will be used as the handles against which
         to align the fitted region.
@@ -2725,9 +2731,9 @@ class BulgeGraph(object):
         '''
         Are the nucleotides n1 and n2 connected?
 
-        @param n1: A node in the BulgeGraph
-        @param n2: Another node in the BulgeGraph
-        @return: True or False indicating whether they are connected.
+        :param n1: A node in the BulgeGraph
+        :param n2: Another node in the BulgeGraph
+        :return: True or False indicating whether they are connected.
         '''
         if n1 in self.edges[n2] or n2 in self.edges[n1]:
             return True
@@ -2753,8 +2759,8 @@ class BulgeGraph(object):
         '''
         Return the nucleotides directly flanking an element.
     
-        @param d: the name of the element
-        @return: a set of nucleotides
+        :param d: the name of the element
+        :return: a set of nucleotides
         '''
         set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
         set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
@@ -2769,10 +2775,10 @@ class BulgeGraph(object):
         If they are connected, the minimum distance will be 1. 
         The maximum will be 1 + length(e1) + length(e1)
 
-        @param e1: The name of the first element
-        @param e2: The name of the second element
-        @return: A tuple containing the minimum and maximum distance between
-                 the two elements.
+        :param e1: The name of the first element
+        :param e2: The name of the second element
+        :return:   A tuple containing the minimum and maximum distance between
+                   the two elements.
         '''
 
         #flanking1 = self.flanking_nucleotides(e1)
@@ -2807,7 +2813,7 @@ class BulgeGraph(object):
         '''
         Iterate over defines which contain some nucleotides.
 
-        @return: An iterator over all defines which contain some
+        :return: An iterator over all defines which contain some
                  nucleotides.
         '''
         for d in self.defines:

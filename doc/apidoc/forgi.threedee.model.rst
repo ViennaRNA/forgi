@@ -1,0 +1,19 @@
+forgi.threedee.model package
+============================
+
+Submodules
+----------
+
+.. toctree::
+
+   forgi.threedee.model.coarse_grain
+   forgi.threedee.model.comparison
+   forgi.threedee.model.stats
+
+Module contents
+---------------
+
+.. automodule:: forgi.threedee.model
+    :members:
+    :undoc-members:
+    :show-inheritance:

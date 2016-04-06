@@ -583,10 +583,10 @@ Traversing the Graph
 We can traverse all of the loops in a graph in breadth-first manner using the
 `traverse_graph` function::
 
->>> import forgi.graph.bulge_graph as fgb
->>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
->>> bg.traverse_graph()
-[('s0', 'i0', 's1'), ('s1', 'm1', 's5'), ('s5', 'm4', 's2'), ('s2', 'm3', 's4'), ('s4', 'm5', 's3')]
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+    >>> bg.traverse_graph()
+    [('s0', 'i0', 's1'), ('s1', 'm1', 's5'), ('s5', 'm4', 's2'), ('s2', 'm3', 's4'), ('s4', 'm5', 's3')]
 
 Starting with the first stem, *s0*, we visit each loop that connects it to
 another stem and return all the visited loops as a list of tuples. Each tuple
@@ -604,6 +604,7 @@ contains the elements that are part of a particular junction.
     :align: center
 
 .. python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
+
 Example::
 
     >>> import forgi.graph.bulge_graph as fgb
