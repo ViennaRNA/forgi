@@ -42,13 +42,19 @@ def main():
         for line in lines[2:]:
             bg = cgb.BulgeGraph()
             bg.from_dotbracket(line.strip())
+            multiloops, _ = bg.find_multiloop_loops()
 
-            for m in bg.find_multiloop_loops():
+            for m in multiloops:
                 loop = [d for d in m if d[0] == 'm']
                 for l in loop:
                     print l, bg.defines[l]
-                loop.sort(key=lambda x: bg.defines[x][0])
-                sizes = [bg.defines[d][1] - bg.defines[d][0] for d in loop]
+                loop.sort(key=lambda x: bg.defines[x][0] if bg.defines[x] else 1000000)
+                sizes=[]
+                for d in loop:
+                    if bg.defines[d]:
+                        sizes.append(bg.defines[d][1] - bg.defines[d][0])
+                    else:
+                        sizes.append("-")
 
                 print "".join(loop), " ".join(map(str,sizes))
 

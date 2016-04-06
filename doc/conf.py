@@ -43,14 +43,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'forgi'
-copyright = u'2012,2013,2014,2015,2016 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>; 2015,2016 Bernhard thiel <thiel@tbi.univie.ac.at>'
+copyright = u'2012-2016 Peter Kerpedjiev <pkerp@tbi.univie.ac.at>; 2015,2016 Bernhard Thiel <thiel@tbi.univie.ac.at>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '0.2'
+version = '0.3'
 # The full version, including alpha/beta/rc tags.
 release = '0.2'
 

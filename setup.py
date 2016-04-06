@@ -1,10 +1,10 @@
 from distutils.core import setup
 
 setup(name='forgi',
-      version='0.20',
+      version='0.30',
       description='RNA Graph Library',
-      author='Peter Kerpedjiev',
-      author_email='pkerp@tbi.univie.ac.at',
+      author='Peter Kerpedjiev, Bernhard Thiel',
+      author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
       packages=['forgi', 'forgi.graph', 'forgi.threedee', 'forgi.threedee.model', 
                 'forgi.utilities', 'forgi.threedee.utilities', 'forgi.aux', 
@@ -15,6 +15,7 @@ setup(name='forgi',
                'examples/bpseq_to_bulge_graph.py', 
                'examples/ss_to_bulge_graph.py', 'examples/cg_to_ss_fasta.py',
                'examples/cg_to_bpseq_string.py', 'examples/average_atom_positions.py',
-              'examples/dotbracket_to_element_string.py'],
+               'examples/dotbracket_to_element_string.py', 'examples/compare_projections.py', 
+               'examples/multipleProjectionRMSD.py', 'examples/plot_projection.py'],
 
      )

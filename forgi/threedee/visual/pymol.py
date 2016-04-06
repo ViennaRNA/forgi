@@ -7,6 +7,7 @@ import math as m
 import numpy as np
 import uuid
 import collections as col
+import warnings
 
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.graph_pdb as ftug
@@ -159,12 +160,14 @@ class PymolPrinter:
 
         for (p, color, width, text) in self.new_spheres:
             color_vec = color
-            s += "COLOR, %s," % (",  ".join([str(c) for c in color_vec]))
-            s += '\n'
-            s += "SPHERE, %s, %f," % (", ".join([str(pi) for pi in p]),
-                                      width)
-            s += '\n'
-
+            if np.ndim(p)>0:
+                s += "COLOR, %s," % (",  ".join([str(c) for c in color_vec]))
+                s += '\n'
+                s += "SPHERE, %s, %f," % (", ".join([str(pi) for pi in p]),
+                                          width)
+                s += '\n'
+            else:
+                warnings.warn("p is not iterable! It is {} (for '{}'). IGNORING. ".format(p, text))
         return s
 
     def pymol_axis_string(self):

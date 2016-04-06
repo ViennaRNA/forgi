@@ -44,7 +44,7 @@ def main():
     elif len(options.pdb) > 0:
         filename = options.pdb
         cg = cmc.from_pdb(options.pdb)
-        bg = cg.bg
+        bg = cg
 
     if bg is None:
         parser.print_help()
@@ -55,10 +55,11 @@ def main():
     print bg.seq
     print bg.to_dotbracket_string()
 
-    multiloops = bg.find_multiloop_loops()
+    multiloops, _ = bg.find_multiloop_loops()
     for multi in multiloops:
         shortened = set()
-        for m in [d for d in multi if d[0] == 'm']:
+        for m in multi:
+            if m[0] != 'm': continue
             connected_stems = list(bg.edges[m])
             for to_shorten in connected_stems:
                 if to_shorten in shortened:

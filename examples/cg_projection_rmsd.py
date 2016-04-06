@@ -16,7 +16,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Calculate the RMSD in 2D space between 2 projections.')
     parser.add_argument('files', type=str, nargs=2, help="The *.coord files")
     parser.add_argument('--directions', nargs=2, type=str, help="The projection directions: e.g. 1.0,1.0,2.4 2.4,0,1")
-    parser.add_argument('--plot', type=bool, default=False help="Plot the projections")
+    parser.add_argument('--plot', action="store_true",  help="Plot the projections")
     return parser
 
 

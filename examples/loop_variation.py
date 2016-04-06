@@ -35,7 +35,7 @@ def calculate_variation(angle_stats, loop_size):
         if ang_dims in angle_stats:
 
             fud.pv('ang_dims')
-            fud.pv('angle_stats[ang_dims]')
+            fud.pv('len(angle_stats[ang_dims])')
 
 def main():
     usage = """

@@ -16,6 +16,8 @@ import forgi.utilities.debug as fud
 def main():
     usage = """
     python plot_average_atom_positions.py
+
+    Currently works for certain multiloops (hardcoded).
     """
 
     num_args= 0
@@ -23,7 +25,7 @@ def main():
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
-    parser.add_option('-a', '--all', dest='all_entries_file', default=None, help='Use a file containin the positions of each entry for this cg element.', type='str')
+    parser.add_option('-a', '--all', dest='all_entries_file', default=None, help='Use a file containing the positions of each entry for this cg element.', type='str')
 
     (options, args) = parser.parse_args()
 

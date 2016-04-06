@@ -276,7 +276,7 @@ def locally_minimal_distance(ref_img, scale, cg,
     else:
         curr_best_offs=offset
     if proj_dir is not None:
-        curr_best_pro=proj_dir
+        curr_best_pro=np.array(proj_dir)
     else:
         curr_best_pro=to_polar(cg.project_from)[1:]
 

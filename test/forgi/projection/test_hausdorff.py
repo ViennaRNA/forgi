@@ -3,7 +3,9 @@ import unittest, math
 import numpy as np
 import numpy.testing as nptest
 import forgi.projection.hausdorff as fph
-
+import forgi.projection.projection2d as fpp
+import forgi.threedee.model.coarse_grain as ftmc
+import matplotlib.pyplot as plt
 import sys
 
 class TestOffsetbasedIteration(unittest.TestCase):
@@ -114,5 +116,38 @@ class TestHausdorffDistances(unittest.TestCase):
         self.assertEqual(fph.modified_hausdorff_distance(self.img, self.img),0)
         self.assertEqual(fph.modified_hausdorff_distance(self.img2, self.img2),0)
 
-
+class TestDistanceCgToImg(unittest.TestCase):
+    def setUp(self):
+        self.cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        self.ref_proj =  fpp.Projection2D(self.cg, [1., 1.,   1.   ], project_virtual_atoms=True)
+        self.ref_proj_na =  fpp.Projection2D(self.cg, [1., 1.,   1.   ], project_virtual_atoms=False)
+    def test_local_search(self):
+        ref_box=self.ref_proj.get_bounding_square(margin=30)
+        ref_img, _=self.ref_proj.rasterize(70, bounding_square=ref_box, rotate=0)
+        scale=ref_box[1]-ref_box[0]
+        distance, img, params = fph.locally_minimal_distance(ref_img, scale, self.cg, proj_dir=list(fph.to_polar([1,1.1,1.2]))[1:])
+        self.assertLessEqual(distance, 2)
+        self.assertLessEqual(abs(params[1]%360), 5)
+        nptest.assert_allclose(params[0], list(fph.to_polar([1,1.1,1.2]))[1:], atol=5)
+    def test_try_parameters(self):
+        ref_box=self.ref_proj.get_bounding_square(margin=30)
+        ref_img, _=self.ref_proj.rasterize(70, bounding_square=ref_box, rotate=45)
+        scale=ref_box[1]-ref_box[0]
+        distance, img, params = fph.try_parameters(ref_img, scale, self.cg, rotations=[0, 30, 60, 90, 180, 270 ], proj_directions=[list(fph.to_polar([1,1.1,1.2]))[1:]])
+        self.assertLessEqual(distance, 2)
+        self.assertLessEqual(abs(params[1]-45), 5)
+        nptest.assert_allclose(params[0], list(fph.to_polar([1,1.1,1.2]))[1:], atol=5)
+    def test_global_search(self):
+        ref_box=self.ref_proj_na.get_bounding_square(margin=30)
+        ref_img, _=self.ref_proj_na.rasterize(70, bounding_square=ref_box, rotate=45)
+        scale=ref_box[1]-ref_box[0]
+        distance, img, params = fph.globally_minimal_distance(ref_img, scale, self.cg, virtual_atoms=False)
+        #fig, ax=plt.subplots(2)
+        #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+        #ax[1].imshow(img, interpolation="none", cmap='gray')
+        #ax[1].set_title("{} distance".format(distance))
+        #plt.show()
+        self.assertLessEqual(distance, 3)
+        #self.assertLessEqual(abs(params[1]-45), 5)
+        nptest.assert_allclose(params[0], fph.to_polar([2,0,-1.2])[1:], atol=5)
 

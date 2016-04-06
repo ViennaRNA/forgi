@@ -39,7 +39,7 @@ def async_calculation((ref_img, ref_box), numFiles, filenames):
         distances=[]
         for j in range(numFiles):
             cg=ftmc.CoarseGrainRNA(filenames[j])
-            distance, img, direction, _ = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+            distance, img, _ = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
             distances.append(distance)
         return distances
     except KeyboardInterrupt:
@@ -51,7 +51,7 @@ def parallel_localOpt((ref_img, ref_box), numFiles, filenames):
         distances=[]
         for j in range(numFiles):
             cg=ftmc.CoarseGrainRNA(filenames[j])
-            distance, img, direction, _ = fph.locally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+            distance, img, _ = fph.locally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
             distances.append(distance)
         return distances
     except KeyboardInterrupt:
@@ -117,13 +117,13 @@ if __name__=="__main__":
         for f in args.files:
             cg=ftmc.CoarseGrainRNA(f)
             if args.global_search or cg.project_from is None:
-                distance, img, direction,_ = fph.globally_minimal_distance(ref_img, args.scale, cg)
+                distance, img, params = fph.globally_minimal_distance(ref_img, args.scale, cg)
                 fname = os.path.basename(f)
-                print ("{}:\t{} distance (projected from {}, Globally optimized)".format(fname, distance, direction))
+                print ("{}:\t{} distance (projected from {}, rotated by {}, offset {}. Globally optimized)".format(fname, distance, params[0], params[1], params[2] ))
             else:
-                distance, img, direction,_ = fph.try_parameters(ref_img, args.scale, cg)
+                distance, img, params = fph.try_parameters(ref_img, args.scale, cg)
                 fname = os.path.basename(f)
-                print ("{}:\t{} distance (projected from {}, Locally optimized)".format(fname, distance, direction))
+                print ("{}:\t{} distance (projected from {}, rotated by {}, offset {}. Locally optimized)".format(fname, distance, params[0], params[1], params[2]))
         if args.show:
             fig, ax=plt.subplots(2)
             ax[0].imshow(ref_img, interpolation="none", cmap='gray')
@@ -174,7 +174,7 @@ if __name__=="__main__":
                     sys.stdout.flush()
                     sys.stdout.write("\rPerforming comparison {} of {}".format(a,combinations))
                     cg=ftmc.CoarseGrainRNA(args.files[j])
-                    distance, img, direction, _ = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
+                    distance, img, _ = fph.globally_minimal_distance(ref_img, ref_box[1]-ref_box[0], cg)
                     distances[i,j]=distance"""
         except BaseException as e:
             print("Programm crashing because of a {}".format(type(e)))

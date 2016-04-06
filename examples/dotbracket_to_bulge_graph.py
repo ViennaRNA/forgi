@@ -6,7 +6,7 @@ import forgi.graph.bulge_graph as cgb
 def main():
 
     usage = """
-        Usage: ./create_bulge_graph.py file.dotbracket [name]"
+        Usage: ./dotbracket_to_bulge_graph.py file.dotbracket [name]"
         
         Creates a graph of the paired and unpaired regions within a
         dotplot. Paired regions are called stems while unpaired regions

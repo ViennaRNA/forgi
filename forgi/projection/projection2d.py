@@ -939,7 +939,8 @@ class Projection2D(object):
                             if source!=newnode:
                                 self.proj_graph.add_edge(source, newnode, attr_dict=attr_dict)
                             if target!=newnode:
-                                self.proj_graph.add_edge(target, newnode, attr_dict=attr_dict)             
+                                self.proj_graph.add_edge(target, newnode,
+                                                         attr_dict=attr_dict)             
                             if newnode!=node: #Equality possible bcse of floating point inaccuracy
                                 for neighbor in self.proj_graph.edge[node].keys():
                                     attr_dict=self.proj_graph.edge[node][neighbor]

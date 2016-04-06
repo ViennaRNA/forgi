@@ -23,6 +23,11 @@ def main():
 
     with open(args[0], 'r') as f:
         text = f.read()
+        try:
+          int(text[0])
+        except ValueError:
+          i=text.find("\n1 ")
+          text=text[i+1:]
         bg = fgb.BulgeGraph()
         bg.from_bpseq_str(text)
         print bg.to_bg_string()
