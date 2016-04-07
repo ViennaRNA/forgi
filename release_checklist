@@ -1,6 +1,5 @@
-	--> For version 0.3
 * Create a release branch form develop. (Only bugfixes in release branch)
-* Increment version number in setup.py, doc/conf.py
+* Increment version number in setup.py, bulge_graph.py, doc/conf.py (2 times) and in doc/index.rst
 * Run nosetests
 * Update api-documentation to include all (new) modules and subpackages
 * Verify all issues on github are solved
