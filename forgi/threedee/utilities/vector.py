@@ -59,15 +59,9 @@ def get_orthogonal_unit_vector(vec):
     vec3 = np.cross(vec, vec2)
     return normalize(vec3)
 
-#COVERAGE NOTE: Not used in ernwin or forgi
-def get_random_vector_pair(angle=rand.uniform(0, math.pi)):
-    
-    vec1 = get_random_vector()
-    vec2 = get_non_colinear_unit_vector(vec1)
-    rot_vec = np.cross(vec1, vec2)
-    rotmat = rotation_matrix(rot_vec, angle)
-    vec2 = np.dot(rotmat, vec1)
-    return (vec1, vec2)
+
+#def get_random_vector_pair(angle=rand.uniform(0, math.pi)) -> Removed, because it was never used.
+
 
 def get_double_alignment_matrix(vp1, vp2):
     '''
@@ -291,22 +285,13 @@ def change_basis(coords, new_basis, old_basis):
     #assert(len(new_basis) == len(old_basis))
 
     dim = len(coords)
-    #print "coords:", coords
     standard_coords = np.dot(old_basis.transpose(), coords)
-    '''
-    #print "standard_coords:", standard_coords
-    standard_to_new = inv(new_basis.transpose())
-    #print "standard_to_new:", standard_to_new
-    new_coords = np.dot(standard_to_new, standard_coords)
-    print "new_coords:", new_coords
-    '''
-
     new_coords = nl.solve(new_basis.transpose(), standard_coords)
-    #print "new_coords1:", new_coords1
 
     return new_coords
 
-
+""" # CODE USED FOR BENCHMARKING 
+    # change_basis1 is slightly faster or the same (4.61 vs 4.67)
 def change_basis1(coords, new_basis, old_basis):
     '''
     '''
@@ -344,12 +329,13 @@ def change_basis2_benchmark():
     nc = change_basis2(coords, basis1, basis2)
 
 def time_basis1():
-    t1 = timeit.Timer("change_basis1_benchmark()","from forgi.utilities.vector import change_basis1_benchmark")
-    print t1.repeat(number=10000)
+    t1 = timeit.Timer("change_basis1_benchmark()","from forgi.threedee.utilities.vector import change_basis1_benchmark")
+    print t1.repeat(number=100000)
 
 def time_basis2():
-    t2 = timeit.Timer("change_basis2_benchmark()","from forgi.utilities.vector import change_basis2_benchmark")
-    print t2.repeat(number=10000)
+    t2 = timeit.Timer("change_basis2_benchmark()","from forgi.threedee.utilities.vector import change_basis2_benchmark")
+    print t2.repeat(number=100000)
+"""
 
 def vector_rejection(a, b):
     '''
@@ -493,6 +479,7 @@ def magnitude(vec):
     return ftuc.magnitude(vec)
     #return math.sqrt(np.dot(vec, vec))
 
+"""
 def time_mag1():
     vec1 = get_random_vector()
 
@@ -509,7 +496,7 @@ def time_mag():
 
     print t1.repeat(number=10000)
     print t2.repeat(number=10000)
-
+"""
 
 def normalize(vec):
     '''
@@ -550,7 +537,14 @@ def vec_angle(vec1, vec2):
     angle = math.acos(d)
     return angle
 
+
 def vec_dot(a, b):
+    """
+    Vector dot product for vectors of length 3.
+
+    For small vectors of length 3, this naive python implementation might be 
+    faster than the corresponding numpy implementation.
+    """
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 
 '''
@@ -843,7 +837,7 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     return closest
 
  
-
+# COVERAGE: Not used in forgi and ernwin. Consider deprecation
 def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
     Something. Lifted from:
@@ -872,14 +866,14 @@ def cylinder_line_intersection(cyl, line, r):
     cyl = np.array(cyl)
     line = np.array(line)
     cyl_vec = cyl[1] - cyl[0]
-    line_vec = line[1] - line[0]
+    #line_vec = line[1] - line[0]
 
     cyl_basis = create_orthonormal_basis(cyl_vec)
 
     line_t = change_basis(line.T, cyl_basis, standard_basis).T
     cyl_t = change_basis(cyl.T, cyl_basis, standard_basis).T
 
-    cyl_vec_t = cyl_t[1] - cyl_t[0]
+    #cyl_vec_t = cyl_t[1] - cyl_t[0]
     line_vec_t = line_t[1] - line_t[0]
 
     line_vec_t_normed = normalize(line_vec_t)
@@ -949,6 +943,7 @@ def cylinder_line_intersection(cyl, line, r):
 
     return change_basis(intersects_t.T, standard_basis, cyl_basis).T
 
+#COVERAGE: Not used in ernwin and forgi
 def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     '''
     If we create a cone that starts at one end of cylinder1, does it
@@ -983,6 +978,7 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     
     return True
 
+#COVERAGE: Not used in ernwin and forgi
 def point_in_cylinder(pt1, pt2, r, testpt):
     '''
     Determine if testpt is within a cylinder of radius r.

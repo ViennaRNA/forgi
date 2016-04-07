@@ -27,7 +27,6 @@ def align_cgs(cgs):
     @param cgs: A list of CoarseGrainRNA structures.
     @return: Nothing, the cgs are modified in place
     '''
-    centroid0 = ftuv.get_vector_centroid(ftug.bg_virtual_residues(cgs[0]))
     crds0 = ftuv.center_on_centroid(ftug.bg_virtual_residues(cgs[0]))
 
     for cg in cgs:

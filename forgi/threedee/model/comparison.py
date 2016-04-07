@@ -172,6 +172,8 @@ def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
     return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
 
 # COVERAGE NOTE: Never used in forgi or ernwin.
+# This is left in the code as an example for the usage of confusiom_matrix,
+# but might be removed in the future.
 def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     '''
     Calculate the MCC of the distance between two elements.
@@ -211,3 +213,17 @@ def cg_rmsd(cg1, cg2):
 
     return ftur.centered_rmsd(residues1, residues2)
 
+def cg_virtual_atoms_rmsd(cg1, cg2):
+    '''
+    Calculate the RMSD between two Coarse Grain models using their
+    set of virtual atoms.
+
+    :param cg1: The first coarse grain model.
+    :param cg2: The second coarse-grain model.
+    :return: The RMSD
+    '''
+
+    residues1 = ftug.bg_virtual_residues(cg1)
+    residues2 = ftug.bg_virtual_residues(cg2)
+
+    return ftur.centered_rmsd

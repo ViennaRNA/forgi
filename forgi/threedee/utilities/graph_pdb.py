@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 import sys
 
-#import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Depricated
+#import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Deprecated
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
@@ -88,16 +88,6 @@ def stem_stem_orientation(cg, s1, s2):
 
     return (cuv.magnitude(i_vec), ang1,
             ang2, cuv.vec_angle(s1_vec, s2_vec), lateral_offset, ortho_offset)
-
-
-def get_stem_phys_length(coords):
-    '''
-    Return the physical length of a stem.
-
-    :param coords: The coordinates of the ends of the helix axis.
-    '''
-
-    return cuv.magnitude(coords[1] - coords[0])
 
 
 def base_normals(pdb_filename):
@@ -407,6 +397,9 @@ def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
 
 
 def get_centroid(chain, residue_num):
+    """
+    :param residue_num: A list of integers
+    """
     residue_num = [int(i) for i in residue_num]
     #print >>sys.stderr, "residue_num:", residue_num
     atoms = []
@@ -542,7 +535,8 @@ def estimate_mids_core(chain, start1, start2, end1, end2):
 
     return (mid1, mid2)
 
-
+"""
+#The implementation of this is incomplete!
 def basenormals_mids(chain, start1, start2, end1, end2):
     '''
     Calculate a helix axis based on the base normal vectors.
@@ -587,8 +581,9 @@ def basenormals_mids(chain, start1, start2, end1, end2):
 
     print start_pos, end_pos
     '''
+"""
 
-
+# This function seems to be unused. Consider deprecation...
 def get_mids_core_a(chain, start1, start2, end1, end2, 
                     use_template=True):
     '''
@@ -1266,10 +1261,6 @@ def circle_error(c, p):
     return sum([e ** 2 for e in errors])
 
 
-def sum_square(nums):
-    return sum([n ** 2 for n in nums])
-
-
 def f_3(vec, points, est):
     """ calculate the optimal circle for the points (p) projected onto
     the plane orthogonal to v """
@@ -1469,7 +1460,7 @@ def get_mids_fit_method(cg, chain, define):
     return [bpdb.Vector(mids_standard_basis[0]),
             bpdb.Vector(mids_standard_basis[1])]
 
-
+# @COVERAGE: Currently not used.
 def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
     '''
     Attempt to find the stem direcion vector given a set of atom positions.
@@ -1514,7 +1505,7 @@ def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
                           start_pos, end_pos, stem_chain,
                           bg.stem_length(stem_name), bg.defines[stem_name])
 
-
+# @COVERAGE: Currently not used.
 def receptor_angle(bg, l, s):
     (i1, i2) = cuv.line_segment_distance(bg.coords[l][0],
                                          bg.coords[l][1],
@@ -1577,8 +1568,8 @@ def add_bulge_information_from_pdb_chain(bg, chain):
             if len(bg.edges[d]) == 2:
                 edges = list(bg.edges[d])
 
-                s1d = bg.defines[edges[0]]
-                s2d = bg.defines[edges[1]]
+                #s1d = bg.defines[edges[0]]
+                #s2d = bg.defines[edges[1]]
 
                 (s1b, s1e) = bg.get_sides(edges[0], d)
                 (s2b, s2e) = bg.get_sides(edges[1], d)
@@ -1628,19 +1619,6 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
 
         bg.coords[d] = (start_point, centroid)
 
-
-def bg_rmsd(bg1, bg2, rmsd_function=None):
-    '''
-    Calculate the rmsd between the virtual residues of bg1 and bg2.
-    '''
-    if rmsd_function == None:
-        rmsd_function = cur.centered_rmsd
-
-    centers1 = bg_virtual_residues(bg1)
-    centers2 = bg_virtual_residues(bg2)
-
-    return rmsd_function(centers1, centers2)
-
 def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
     '''
     Check if all of these points are inside the cylinder.
@@ -1662,11 +1640,12 @@ def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
     
     dist_vec = (a - p) - (np.dot((a-p), n)[:,np.newaxis]) * n
     mags = [ftuv.magnitude(c) for c in dist_vec]
-    
+
+    '''
     linepts = vv[0] * np.mgrid[-7:7:2j][:, np.newaxis]
     linepts += datamean
     
-    '''
+    
     import matplotlib.pyplot as plt
     import mpl_toolkits.mplot3d as m3d
     
@@ -1688,12 +1667,10 @@ def get_encompassing_cylinders(cg, radius=6.):
     stems_to_cylinders = dict()
     cylinders_to_stems = col.defaultdict(list)
     
-    in_cylinder = set()
     #cylinders_to_stems = {0: ['s0']}
     
     # the first cylinder is equal to the first stem
     #cylinders = {0: cg.coords['s0']}
-    cylinders = dict()
     to_visit = [random.choice(cg.defines.keys())]
     
     cylinder_counter = 0
@@ -1881,12 +1858,6 @@ class VirtualAtomsLookup(object):
                 except KeyError as ke:
                     pass
             return e_coords
-
-def chunks(l, n):
-    """ Yield successive n-sized chunks from l.
-    """
-    for i in xrange(0, len(l), n):
-        yield l[i:i+n]
 
 """def add_atoms(coords, twists, define, side, seq, new_coords):
     stem_len = define[1] - define[0] + 1

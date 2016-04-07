@@ -1,12 +1,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-
-try:
-    import builtins
-except ImportError:
-    builtins = __builtin__
-
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      map, next, oct, pow, range, round,
+                      str, super, zip)
 
 from ...graph import bulge_graph as fgb
 from ..utilities import graph_pdb as ftug
@@ -499,19 +496,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ss.define = self.defines[stem]
 
         return ss  
-    def get_loop_from_residue(self, residue):
-        """
-        Return the coarse grained element a residfue specified as a position along the RNA chain.
-        :param residue: An Integer. The position of the residue in the RNA.
-        """
-        for key, value in self.defines.items():
-            if len(value)<2:
-                pass #For multiloops of length 0
-            elif residue>=value[0] and residue<=value[1]:
-                return key
-            elif len(value)==4 and residue>=value[2] and residue<=value[3]:
-                return key
-        return None #Not found
+
+    #def get_loop_from_residue(self, residue) ->  use BulgeGraph.get_node_from_residue_num()!
+
     def from_file(self, cg_filename):
         '''
         Load this data structure from a file.

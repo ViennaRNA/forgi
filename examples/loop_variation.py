@@ -28,7 +28,6 @@ def calculate_variation(angle_stats, loop_size):
     # ang_type indicates whether it's an iloop forward/backward 
     # or a multiloop forward/backward
     ang_types = [1,2,3,4]
-    min_stats = ftms.AngleStat()
 
     for ang_type in ang_types:
         ang_dims = tuple(list(loop_size) + [ang_type])

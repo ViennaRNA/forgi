@@ -25,7 +25,7 @@ from ..aux.k2n_standalone import knotted2nested as fak
 from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..threedee.utilities import mcannotate as ftum
-import os
+import os, warnings
 import operator as oper
 import numpy as np
 
@@ -311,11 +311,6 @@ def find_bulges_and_stems(brackets):
     stems = condense_stem_pairs(stem_pairs)
 
     return finished_bulges, stems
-
-
-def print_name(filename):
-    print( "name", os.path.splitext(filename)[0])
-
 
 class BulgeGraph(object):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
@@ -788,7 +783,6 @@ class BulgeGraph(object):
 
         :param vertices: A list of vertex names to combine into one.
         """
-        merge_str = ""
         new_vertex = self.get_vertex()
         self.weights[new_vertex] = 0
 
@@ -797,7 +791,6 @@ class BulgeGraph(object):
         connections = set()
 
         for v in vertices:
-            merge_str += " {}".format(v)
 
             # what are we gonna merge?
             for item in self.edges[v]:
@@ -859,7 +852,7 @@ class BulgeGraph(object):
 
     def nucleotides_to_elements(self, nucleotides):
         """
-        Convert a list of nucleotides to element names.
+        Convert a list of nucleotides (nucleotide numbers) to element names.
 
         Remove redundant entries and return a set.
         """
@@ -1199,6 +1192,7 @@ class BulgeGraph(object):
         else:
             return ends
 
+    # This function seems to be unused. Consider deprecation...
     def get_multiloop_nucleotides(self, multiloop_loop):
         """
         Return a list of nucleotides which make up a particular
@@ -1660,6 +1654,9 @@ class BulgeGraph(object):
         Single stranded regions are five-prime and three-prime unpaired
         regions, multiloops, and hairpins
 
+        .. warning::
+            Interior loops are never considered single stranded by this function.
+
         :param node: The name of the node
         :return: True if yes, False if no
         """
@@ -2045,6 +2042,7 @@ class BulgeGraph(object):
 
             return seqs
 
+    # This function seems to be unused. Consider deprecation...
     def get_stem_direction(self, s1, s2):
         """
         Return 0 if the lowest numbered residue in s1
@@ -2075,6 +2073,8 @@ class BulgeGraph(object):
 
         return (p1[0], p2[0])
 
+    # This function seems to be unused here. This code is possible duplicated somewhere.
+    # Requires cleanup.
     def get_strand(self, multiloop):
         """
         Get the strand on which this multiloop is located.
@@ -2355,6 +2355,8 @@ class BulgeGraph(object):
         :return: The index pointing to the nucleotide on the other strand 
                  on the same side as the stem.
         """
+        warnings.warn("BulgeGraph.same_stem_end() is deprecated and will be removed in the future."
+                       "Use ??? instead." , DeprecationWarning, stacklevel=2)
         if sd == 0:
             return 3
         elif sd == 1:
@@ -2363,25 +2365,6 @@ class BulgeGraph(object):
             return 1
         else:
             return 0
-
-    def extract_chain_id(self, chainres):
-        """
-        Extract the chain identifier from a chain/residue
-        identifier.
-
-        :param chainres: A chain and residue identifier (i.e. 'A12', or '14')
-        :return: A chain identifier.
-        """
-        return ftum.parse_chain_base(chainres)[0]
-
-    def extract_resnum(self, chainres):
-        """
-        Extract the residue number from a chainres identifier.
-
-        :param chainres: A chain and residue identifier (i.e. 'A12', or '14')
-        :return: The residue number
-        """
-        return ftum.parse_chain_base(chainres)[1]
 
     def get_resseqs(self, define, seq_ids=True):
         """
@@ -2418,6 +2401,8 @@ class BulgeGraph(object):
 
             self.seq_ids += [ftum.parse_resid(from_base)]
 
+    # This function seems to be dead code, but might be useful in the future.
+    # Consider adding this to whitelist.oy
     def connected_stem_iterator(self):
         """
         Iterate over all pairs of connected stems.
@@ -2512,6 +2497,7 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
 
+        #: This attribute seems to be unused. Consider removing it.
         self.build_paths = build_paths
         self.build_order = build_order
 
@@ -2755,6 +2741,7 @@ class BulgeGraph(object):
 
         return False
 
+    # This function seems to be unused. Consider deprecation...
     def flanking_nucleotides(self, d):
         '''
         Return the nucleotides directly flanking an element.

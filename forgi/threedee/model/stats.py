@@ -2,7 +2,7 @@
 
 import csv
 import itertools as it
-import sys
+import sys, warnings
 
 import random as rand
 import numpy as np
@@ -15,49 +15,46 @@ import forgi.config as cbc
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 
-avg_stem_bp_length = 2.24
+# The two constants seem to be unused.
+avg_stem_bp_length = 2.24 
 avg_twist_rotation_per_bp = 360 / 11.
 
-loop_lengths = [ 
-        (0., 0.),
-        ( 7.0 , 9.0 ), 
-        ( 7.459 , 9.33 ), 
-        ( 7.774 , 8.945 ), 
-        ( 8.102 , 8.985 ), 
-        ( 6.771 , 8.182 ), 
-        ( 6.465 , 7.533 ), 
-        ( 6.435 , 7.676 ), 
-        ( 6.605 , 8.987 ), 
-        ( 8.396 , 9.367 ), 
-        ( 12.13 , 18.68 ), 
-        ( 19.76 , 22.32 ), 
-        ( 11.57 , 14.59 ), 
-        ( 8.702 , 8.744 ), 
-        ( 15.46 , 15.46 ), 
-        ( 15.0 , 30.0 ), 
-        ( 15.0 , 30.0 ), 
-        ( 15.0 , 30.0 ), 
-        ( 15. , 30. ), 
-        ( 15. , 30. ), 
-        ( 15. , 30. ), 
-        ( 15. , 30. ), 
-        ( 15. , 30. ), 
-        ( 15. , 30. ), 
-        ( 33.02 , 33.02 ) ]
 
-#ang_end_types = {0: (1,0,0), 1:(0,1,1), 2: (0,0,0), 3: (0,0,1)}
-#end_ang_types = { (1,0,1): 0, (0,1,0): 1, (1,0,0) : 0, (0,1,1): 1, (0,0,0): 2, (0,0,1): 3}
-#end_ang_types = { (1,0,1): 1, (1,0,0) : 2, (0,1,0): 3, (0,1,1): 4, (0,0,0): 5, (0,0,1): 6}
-
-def get_loop_length(bg, key):
-
-    if int(bg.defines[key][0]) > int(bg.defines[key][1]):
-        loop_length = 1. 
-    else:
-        loop_length = int(bg.defines[key][1]) - int(bg.defines[key][0])
-
-    return rand.uniform(loop_lengths[loop_length][0], loop_lengths[loop_length][1])
-
+#loop_lengths = [ 
+#        (0., 0.),
+#        ( 7.0 , 9.0 ), 
+#        ( 7.459 , 9.33 ), 
+#        ( 7.774 , 8.945 ), 
+#        ( 8.102 , 8.985 ), 
+#        ( 6.771 , 8.182 ), 
+#        ( 6.465 , 7.533 ), 
+#        ( 6.435 , 7.676 ), 
+#        ( 6.605 , 8.987 ), 
+#        ( 8.396 , 9.367 ), 
+#        ( 12.13 , 18.68 ), 
+#        ( 19.76 , 22.32 ), 
+#        ( 11.57 , 14.59 ), 
+#        ( 8.702 , 8.744 ), 
+#        ( 15.46 , 15.46 ), 
+#        ( 15.0 , 30.0 ), 
+#        ( 15.0 , 30.0 ), 
+#        ( 15.0 , 30.0 ), 
+#        ( 15. , 30. ), 
+#        ( 15. , 30. ), 
+#        ( 15. , 30. ), 
+#        ( 15. , 30. ), 
+#        ( 15. , 30. ), 
+#        ( 15. , 30. ), 
+#        ( 33.02 , 33.02 ) ]
+#
+#def get_loop_length(bg, key):
+#
+#    if int(bg.defines[key][0]) > int(bg.defines[key][1]):
+#        loop_length = 1. 
+#    else:
+#        loop_length = int(bg.defines[key][1]) - int(bg.defines[key][0])
+#
+#    return rand.uniform(loop_lengths[loop_length][0], loop_lengths[loop_length][1])
 
 class LoopStat:
     '''
@@ -368,6 +365,7 @@ class RandomAngleStats():
         (s.u, s.v, s.v, s.r1, s.u1, s.v1) = new_stats
         return s
 
+    # This function seems to be unused. Consider deprecation...
     def stats_by_dimensions(dims, n):
         '''
         Return a set of n AngleStats for a bulge with a dimension
@@ -379,6 +377,7 @@ class RandomAngleStats():
             stats available.
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
+
 
 class ContinuousAngleStats():
     '''
@@ -456,6 +455,7 @@ class ConstructionStats:
 def defaultdict_list():
     return c.defaultdict(list)
 
+# @COVERAGE: Unused
 def defaultdict_defaultdict_list():
     return c.defaultdict(defaultdict_list)
 
@@ -687,6 +687,7 @@ class ConformationStats(object):
                                 a particular loop.
         :return: Nothing
         '''
+        warnings.warn("Function does nothing!!!")
         pass
 
     def sample_stats(self, bg, elem, min_entries = 10):

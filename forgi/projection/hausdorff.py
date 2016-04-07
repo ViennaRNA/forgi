@@ -557,7 +557,7 @@ def globally_minimal_distance(ref_img, scale, cg,
                 loc_best_score=score
                 loc_best_rot=rot
                 loc_best_offs=offset
-                loc_best_img=img
+                #loc_best_img=img
         if use_heuristic and loc_best_score>best_score+decrease*1.5:
             score_heur+=1 
             #print("Score")

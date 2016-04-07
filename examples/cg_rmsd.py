@@ -5,7 +5,7 @@ from optparse import OptionParser
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.utilities.comparison as ftuc
 
 def main():
     usage = """
@@ -28,11 +28,8 @@ def main():
     cg1 = ftmc.CoarseGrainRNA(args[0])
     cg2 = ftmc.CoarseGrainRNA(args[1])
 
-    vrs1 = ftug.bg_virtual_residues(cg1)
-    vrs2 = ftug.bg_virtual_residues(cg2)
 
-    print ftur.centered_rmsd(vrs1, vrs2)
-
+    print ftuc.cg_rmsd(cg1, cg2)
 if __name__ == '__main__':
     main()
 

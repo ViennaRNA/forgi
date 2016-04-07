@@ -7,6 +7,7 @@ import forgi.threedee.model.coarse_grain as ftmc
 import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.utilities.comparison as ftuc
 import forgi.projection.hausdorff as fph
 
 import numpy as np
@@ -75,9 +76,7 @@ def main(args):
                 pcount+=1
             except:
                 pass
-            vrs1 = ftug.bg_virtual_residues(cgs[i])
-            vrs2 = ftug.bg_virtual_residues(cgs[i+diff])
-            cgrmsd+=ftur.centered_rmsd(vrs1,vrs2)
+            cgrmsd+=ftuc.cg_rmsd(cgs[i],cgs[i+diff])
         if count:
             cg_rmsds[diff]=cgrmsd/count
         if pcount:

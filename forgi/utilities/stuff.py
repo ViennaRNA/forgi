@@ -10,6 +10,7 @@ import forgi.utilities.debug as cud
 bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 bracket_right = ")]}>abcdefghijklmnopqrstuvwxyz"
 
+#COVERAGE: Not used
 def grouped(iterable, n):
     '''
     Return a list of every n elements in iterable.

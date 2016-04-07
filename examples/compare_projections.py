@@ -25,13 +25,6 @@ import scipy.misc
 import multiprocessing
 from functools import partial
 
-
-
-class KeyboardInterruptError(Exception):
-  pass
-
-
-
 WIDTH=500
 
 def async_calculation((ref_img, ref_box), numFiles, filenames):

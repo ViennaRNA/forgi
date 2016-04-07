@@ -17,6 +17,15 @@ import networkx as nx
 import warnings, math
 import copy
 
+"""
+This module uses code by David Eppstein 
+(http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/)
+under the PSF license and code by Syrtis Major 
+(c)2014-2015 (http://stackoverflow.com/a/24567352/5069869) under the BSD 3-Clause license 
+and potentially copyrighted code from matplotlib under the PSF license
+(http://matplotlib.org/examples/api/line_with_text.html).
+"""
+
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
 except:
@@ -76,44 +85,11 @@ def diameter(Points):
 
 #### END David Eppstein
 
-
-
-def rotate2D(vector, angle):
-    """
-    Rotate a vector in 2D space (i.e. a point) around the origin (0,0) by angle.
-
-    :param vector: A sequence of length 2
-    :param angle: the angle for rotation
-    :returns: a tuple (x,y) of new coordinates.
-    """
-    angle=math.radians(angle)
-    c=math.cos(angle) #For scalar, math.cos is faster than numpy.cos
-    s=math.sin(angle)
-    x=vector[0]*c-vector[1]*s
-    y=vector[0]*s+vector[1]*c
-    return np.array([x,y])
 @profile
-def rotate2D_new(vector, cosPhi, sinPhi):
+def rotate2D(vector, cosPhi, sinPhi):
     x=vector[0]*cosPhi-vector[1]*sinPhi
     y=vector[0]*sinPhi+vector[1]*cosPhi
     return np.array([x,y])
-
-'''
-@profile: slower than rotate2D
-def rotate2Dalternative(vector, angle):
-    """
-    Rotate a vector in 2D space (i.e. a point) around the origin (0,0) by angle.
-
-    :param vector: A sequence of length 2
-    :param angle: the angle for rotation
-    :returns: a tuple (x,y) of new coordinates.
-    """
-    angle=math.radians(angle)
-    c=np.cos(angle)
-    s=np.sin(angle)
-    rotMat=np.array([[c, -s],[s, c]])
-    return np.dot(rotMat, vector)
-'''
 
 def bresenham(start,end):
     """
@@ -247,7 +223,7 @@ class Projection2D(object):
         s=np.sin(angle)        
         self._proj_graph=None
         for key,edge in self._coords.items():
-            self._coords[key]=(rotate2D_new(edge[0], c, s), rotate2D_new(edge[1], c,s))
+            self._coords[key]=(rotate2D(edge[0], c, s), rotate2D(edge[1], c,s))
 
         transRotMat=np.array([[c, s],[-s, c]])
         if len(self._virtual_atoms):
@@ -336,12 +312,7 @@ class Projection2D(object):
         #k[0]!="s": Avoid duplicate points. Every stem is flanked by other loop types.
         return ( p for k,x in self._coords.items() for p in x if k[0]!="s") 
 
-    ### Function returning descriptors of the projection, mostly independent on the resolution ###
-    def get_largest_axis(self):
-        """
-        Return the largest length between any two points.
-        """
-        return self.longest_axis
+    ### Functions returning descriptors of the projection, mostly independent on the resolution ###
 
     ### Function returning descriptors of the projection, dependent on the resolution ###    
     def get_bounding_box(self, margin=0.):
@@ -381,6 +352,10 @@ class Projection2D(object):
            This measure is sensitive to the resolution of a projection.
            In an AFM image, one might not see all branching points.
     
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
+
         :param degree: If degree is None, count all points with degree>=3
                        Else: only count (branch)points of the given degree
         """
@@ -392,6 +367,11 @@ class Projection2D(object):
     def get_cyclebasis_len(self):
         """
         Returns the number of cycles of length>1 in the cycle basis.
+
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
+
         """
         return len([x for x in nx.cycle_basis(self.proj_graph) if len(x)>1])
 
@@ -402,6 +382,10 @@ class Projection2D(object):
         .. note:: 
            This measure is sensitive to the resolution of a projection.
            In an AFM image, one might not see all cycles.
+
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
         """
         l=0
         for edge in self.proj_graph.edges_iter():
@@ -417,6 +401,10 @@ class Projection2D(object):
 
         .. note:: This measure is sensitive to the resolution of a projection 
                   the same way the length of a coastline is sensitive to the resolution.
+
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
 
         :returns: The length and a tuple of points `(leaf_node, corresponding_branch_point)`
         """
@@ -445,6 +433,10 @@ class Projection2D(object):
         Get a list of distances between any pair of leaf nodes.
         The distances are measured in direct line, not along the path
 
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
+
         :returns: a list of floats (lengths in Angstrom)
         """
         lengths=[]
@@ -458,6 +450,10 @@ class Projection2D(object):
         """
         Get a list of distances between some pairs of leaf nodes.
         The distances are measured in direct line, not along the path
+
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
 
         :returns: a list of floats (lengths in Angstrom)
         """
@@ -474,6 +470,7 @@ class Projection2D(object):
             visited.add(leaf1)
             visited.add(leaf2)
         return newlengths
+
     def get_maximal_path_length(self):
         """
         Get the maximal path length from all simple paths that traverses the projection graph from 
@@ -482,6 +479,11 @@ class Projection2D(object):
         .. note:: 
            This measure is sensitive to the resolution of a projection 
            the same way the length of a coastline is sensitive to the resoltuion.
+
+        .. warning:: 
+            Whether this code will stay in the library or not depends 
+            on future evaluation of the usefulness of this and similar descriptors.
+
         """
         maxl=0
         for i, node1 in enumerate(self.proj_graph.nodes_iter()):
@@ -541,8 +543,8 @@ class Projection2D(object):
             else:
                 weight=0.3
             if rotate:
-              start=rotate2D_new(start, c, s)
-              end=rotate2D_new(end, c, s)
+              start=rotate2D(start, c, s)
+              end=rotate2D(end, c, s)
             start=(int((start[0]-box[0])/steplength), int((start[1]-box[2])/steplength))
             end=(int((end[0]-box[0])/steplength), int((end[1]-box[2])/steplength))        
             points=bresenham(start, end)

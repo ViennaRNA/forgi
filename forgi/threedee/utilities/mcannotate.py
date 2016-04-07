@@ -160,7 +160,7 @@ def get_dotplot(lines):
     paired = set()
     for line in iterate_over_interactions(lines):
         parts = line.split(' ')
-        bond_type = parts[3]
+        #bond_type = parts[3]
         #if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
         if ((line.find('Ww/Ww') >= 0 and (line.find('A-U') >= 0 or
                                         line.find('U-A') >= 0 or

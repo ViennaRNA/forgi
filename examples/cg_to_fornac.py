@@ -14,12 +14,12 @@ import os.path as op
 import sys
 from optparse import OptionParser
 
-rna_structure_template = """
-        var options = {{'sequence': '{}',
-                        'structure': '{}',
-                        'extraLinks': {}
-        }};
-"""
+#rna_structure_template = """
+#        var options = {{'sequence': '{}',
+#                        'structure': '{}',
+#                        'extraLinks': {}
+#        }};
+#"""
 
 output_template = """
 <!DOCTYPE html>
