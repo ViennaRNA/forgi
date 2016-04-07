@@ -9,3 +9,4 @@ doc/_templates/**
 doc/latex_output/**
 build/**
 pages/**
+venv/
