@@ -315,11 +315,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.longrange = c.defaultdict( set )
         self.chain = None #the PDB chain if loaded from a PDB file
 
-
-
         if cg_file is not None:
             self.from_file(cg_file)
-        pass 
+        pass
+
     def get_coord_str(self):
         '''
         Place the start and end coordinates of each stem into a string.
@@ -663,6 +662,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return ftuv.vec_distance(i1, i2)
     
+
     def longrange_iterator(self, filter_connected=False):
         '''
         Iterate over all long range interactions in this molecule.

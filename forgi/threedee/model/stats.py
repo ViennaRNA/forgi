@@ -378,7 +378,6 @@ class RandomAngleStats():
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
 
-
 class ContinuousAngleStats():
     '''
     Store all of the angle stats.

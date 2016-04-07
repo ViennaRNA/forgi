@@ -12,7 +12,7 @@ This after the RNA container.
     <script type='text/javascript' src='https://rawgit.com/pkerpedjiev/fornac/master/js/fornac.js'></script>
 
     <script type='text/javascript'>
-        var container = new FornaContainer("#rna_ss",
+        var container = new fornac.FornaContainer("#rna_ss",
             {{'applyForce': true, 'allowPanningAndZooming': true, "initialSize": [500,800], 'cssFileLocation': "https://raw.githubusercontent.com/pkerpedjiev/fornac/master/css/fornac.css"}});
 
         var options = {{'structure': '{}',

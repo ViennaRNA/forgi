@@ -15,6 +15,5 @@ Submodules
 .. toctree::
 
    forgi.projection.hausdorff
-   forgi.projection.hausdorff_neu
    forgi.projection.projection2d
 

@@ -9,13 +9,12 @@ from builtins import zip
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
 
-__author__ = "Peter Kerpedjiev"
-__copyright__ = "Copyright 2012, 2013, 2014"
-__version__ = "0.2"
+__author__ = "Peter Kerpedjiev, Bernhard Thiel"
+__copyright__ = "Copyright 2012 - 2016"
+__version__ = "0.3"
 __maintainer__ = "Peter Kerpedjiev"
 __email__ = "pkerp@tbi.univie.ac.at"
 
-#import networkx as nx #This is left inside functions, because it may take up to 2 seconds time.
 import sys
 import collections as col
 import random

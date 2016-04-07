@@ -1031,7 +1031,6 @@ def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
 
     return ptsOnSphere
 
-
 def sortAlongLine(start, end, points):
     """
     Sort all points in points along the line from start to end.
