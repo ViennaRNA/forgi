@@ -70,8 +70,7 @@ def main():
                 res_num += 1
             prev_cutpoint_open = "CUTPOINT_OPEN %d\n" % (res_num-1)
 
-a       # if the separating element is an interior loop, then we should add
-    etta_adjacent_stems.pyrint(multiloops)
+        # if the separating element is an interior loop, then we should add
         # a cutpoint that will be closed right after it's first nucleotide,
         # which is actually after the last nucleotide of the stem
         if e1[0] == 'i':
