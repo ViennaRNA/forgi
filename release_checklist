@@ -6,11 +6,8 @@
 * Verify all issues on github are solved
 * Update setup.py to include all relevant subpackages and scripts
 * Check whether example scripts still work
-	--> OK
 * Check test coverage. Add tests if required.
-	--> Need to add tests for observedDict
 * Find dead code with `venv/bin/vulture forgi/ examples/ test/ ../ernwin/fess/ | less`, but manually check the results (vulture reports false positives)
-
 * Verify that all files are included in the git repo. Try fresh install on different machine
 * Write a change log to document API changes
 * Run nosetests again.

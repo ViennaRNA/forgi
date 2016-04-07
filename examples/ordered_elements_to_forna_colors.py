@@ -20,17 +20,17 @@ This after the RNA container.
     <script type='text/javascript' src='/src/fornaf.js'></script>
 
     <script type='text/javascript'>
-        var container = new FornaContainer("#rna_ss",
+        var container = new fornac.FornaContainer("#rna_ss",
             {{'applyForce': true, 'allowPanningAndZooming': true, "initialSize": [500,800]}});
 
         var options = {{'structure': '{}',
                         'sequence': '{}'
         }};
 
-        colorStr = "{}" 
+        var colorStr = "{}" 
 
         container.addRNA(options.structure, options);
-        cs = ColorScheme(colorStr);
+        var cs = ColorScheme(colorStr);
 
         container.addCustomColors(cs.colorsJson);
         container.changeColorScheme('custom'); 

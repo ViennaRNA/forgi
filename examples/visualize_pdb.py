@@ -28,7 +28,7 @@ def main():
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
-    parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
+    #parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode') #Crashes currently
     parser.add_option('', '--virtual-residues', dest='virtual_residues', default=False, action='store_true', help='Display the virtual residues as spheres')
     parser.add_option('', '--color-residues', dest='color_residues', default=False, action='store_true', help="Color the residues according to the element they're in")
 
@@ -142,14 +142,14 @@ def main():
                 if options.output is not None:
                     pymol_cmd += 'ray\n'
                     pymol_cmd += 'png %s\n' % (options.output)
-                    pymol_cmd += 'quit\n'
+                    #pymol_cmd += 'quit\n' #This would lead to an error message
 
                 f1.write(pymol_cmd)
                 f1.flush()
 
-                if options.batch:
-                    p = sp.Popen(['pymol', '-cq', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
-                else:
+                #if options.batch:
+                #    p = sp.Popen(['pymol', '-cq', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
+                if True: #else:
                     p = sp.Popen(['pymol', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
                 out, err = p.communicate()
