@@ -451,12 +451,6 @@ class ConstructionStats:
     threeprime_stats = None
     conf_stats = None
 
-def defaultdict_list():
-    return c.defaultdict(list)
-
-# @COVERAGE: Unused
-def defaultdict_defaultdict_list():
-    return c.defaultdict(defaultdict_list)
 
 def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
@@ -572,7 +566,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     ConstructionStats.stem_stats = c.defaultdict(list)
 
     f = open(filename, 'r')
-
+    #print("Opening file", filename)
     for line in f:
         if line.strip().find('stem') == 0:
             stem_stat = StemStat(line)
@@ -687,7 +681,7 @@ class ConformationStats(object):
         :return: Nothing
         '''
         warnings.warn("Function does nothing!!!")
-        pass
+        raise NotImplementedError("TODO")
 
     def sample_stats(self, bg, elem, min_entries = 10):
         '''
@@ -705,7 +699,10 @@ class ConformationStats(object):
         if elem[0] == 's':
             dims = [dims]
             stats = self.stem_stats
-            return stats[dims[0]]
+            if stats[dims[0]]:
+                return stats[dims[0]]
+            else:
+                raise LookupError("No stats for element {} with dimensions {}. Stats keys are {}".format(elem, dims[0], sorted(stats.keys())))
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
             ang_type = bg.get_angle_type(elem)
@@ -805,11 +802,11 @@ class FilteredConformationStats(ConformationStats):
 
         return super(FilteredConformationStats, self).sample_stats(bg, elem)
 
-def get_conformation_stats():
+def get_conformation_stats(stats_file=cbc.Configuration.stats_file):
     if ConstructionStats.conf_stats is not None:
         return ConstructionStats.conf_stats
     else:
-        return ConformationStats()
+        return ConformationStats(stats_file)
 
 def set_conformation_stats(conf_stats):
     ConstructionStats.conf_stats = conf_stats

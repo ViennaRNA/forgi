@@ -884,6 +884,10 @@ def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
                                        stem_length, stem_inv)
 
 def bg_virtual_residues(bg):
+    warnings.warn("ftug.bg_virtual_residues will be removed in the future."
+                  "Use add_virtual_residues instead to store the virtual "
+                  "residues directly to the CoarseGrainRNA and cg.get_ordered_virtual_residue_poss"
+                  "to retrieve the virtual residue positions." , DeprecationWarning, stacklevel=2)
     vress = []
 
     for s in bg.sorted_stem_iterator():
@@ -1084,7 +1088,12 @@ def junction_virtual_atom_distance(bg, bulge):
 def add_virtual_residues(bg, stem):
     '''
     Create all of the virtual residues and the associated
-    bases and inverses.
+    bases and inverses for the given stem.
+
+    .. note::
+       This is a low-level function used if only the virtual residues of a single 
+       stems should be added. To add the virtual residues for all stems, use
+       `cg.add_all_virtual_residues`
 
     :param bg: The CoarseGrainRNA bulge graph containing the stem
     :param stem: The name of the stem to be included
@@ -1744,38 +1753,6 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     :param cg: The coarse grain structure.
     '''
     return new_virtual_atoms(cg, given_atom_names, sidechain)
-    import forgi.threedee.utilities.average_atom_positions as ftua
-    coords = col.defaultdict(dict)
-
-    for d in cg.defines.keys():
-        origin, basis = element_coord_system(cg, d)
-
-        if d[0] == 'i' or d[0] == 'm':
-            conn = cg.connections(d)
-            conn_type = cg.connection_type(d, conn)
-        else:
-            conn_type = 0
-
-        for i,r in it.izip(it.count(),
-                           cg.define_residue_num_iterator(d)):
-
-            if given_atom_names is None:
-                if sidechain:
-                    atom_names = ftup.nonsidechain_atoms + [ cg.seq[r-1]+"."+x for x in ftup.side_chain_atoms[cg.seq[r-1]] ]
-                else:
-                    atom_names = ftup.nonsidechain_atoms
-            else:
-                atom_names = given_atom_names
-
-            for aname in atom_names:
-                identifier = "%s %s %d %d %s" % (d[0],
-                                              " ".join(map(str, cg.get_node_dimensions(d))),
-                                              conn_type, i, aname)
-                try:
-                    coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
-                except KeyError as ke:
-                    pass
-    return coords
 
 def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
@@ -1800,7 +1777,8 @@ class VirtualAtomsLookup(object):
         self.sidechain=sidechain
     def __getitem__(self, position):
         """
-        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
+        :returns: A dictionary containing all atoms (as keys) and their 
+                  positions (as values) for the given residue.
         :param position: The position of the residue in the RNA (starting with 1)
         """
         #Find out the stem for which we have to calculate virtual atom positions
@@ -1856,6 +1834,7 @@ class VirtualAtomsLookup(object):
                 try:
                     e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
+                    print (ke)
                     pass
             return e_coords
 

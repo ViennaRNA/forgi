@@ -266,6 +266,8 @@ def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
 
     return cg
 
+class RnaMissing3dError(LookupError):
+    pass
 
 class CoarseGrainRNA(fgb.BulgeGraph):
     '''
@@ -287,11 +289,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         #: The first value corresponds to the start of the stem 
         #: (the one with the lowest nucleotide number),
         #: The second value to the end of the stem.
+        #: If the coordinates for an element change, the virtual atom and virtual residue 
+        #: coordinates are automatically invalidated.
         self.coords = observedDict(on_change=self.reset_vatom_cache)
         self.twists = dict()
         self.sampled = dict()
-        
-
         
         #: Global (carthesian) position of the virtual residue 
         #: (=offset of the residue's coordinate-system)
@@ -340,6 +342,56 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                            " ".join([str(pt) for pt in n]))
             out_str += '\n'
         return out_str
+
+    def add_all_virtual_residues(self):
+        """
+        Calls ftug.add_virtual_residues() for all stems of this RNA.
+    
+        .. note::
+           Don't forget to call this again if you changed the structure of the RNA,
+           to avoid leaving it in an inconsistent state.
+
+        .. warning::
+           Virtual residues are only added to stems, not to loop regions.
+           The position of residues in loops is much more flexible, which is why virtual 
+           residue positions for loops usually do not make sense.
+        """
+        for stem in self.stem_iterator():
+            try:
+                ftug.add_virtual_residues(self, stem)
+            except KeyError:
+                if stem not in self.coords:
+                    raise RnaMissing3dError("No 3D coordinates available for stem {}".format(stem))
+                elif stem not in self.twists:
+                    raise RnaMissing3dError("No twists available for stem {}".format(stem))
+                else: 
+                    raise
+
+    def get_ordered_stem_poss(self):
+        points = []
+        for s in self.sorted_stem_iterator():
+            points += [self.coords[s][0]]
+            points += [self.coords[s][1]]
+        return np.array(points)
+
+    def get_ordered_virtual_residue_poss(self):
+        """
+        Get the coordinates of the virtual residues in a consistent order.
+        
+        This is used for RMSD calculation and is ment to replace ftug.bg_virtual_residues
+        If no virtual_residue_positions are known, self.add_all_virtual_residues() is called 
+        automatically.
+    
+        :returns: A numpy array.
+        """
+        if not self.v3dposs:
+            self.add_all_virtual_residues()
+        vress = []
+        for s in self.sorted_stem_iterator():
+            for i in range(self.stem_length(s)):
+                vres=self.v3dposs[s][i]
+                vress += [vres[0] + vres[2], vres[0] + vres[3]]
+        return np.array(vress)
 
     def get_twist_str(self):
         '''
@@ -700,11 +752,22 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         Get virtual atoms for a key.
 
-        :param key: An INTEGER: The number of the base in the RNA. Returns a dict {"C8":np.array([x,y,z]), ...}
+        .. note:: In the current implementation, the virtual atoms 
+                  do not rely on the virtual residues.
+
+        :param key: An INTEGER: The number of the base in the RNA. 
+                    Returns a dict {"C8":np.array([x,y,z]), ...}
         """
         if isinstance(key, int):
              if key not in self._virtual_atom_cache:
-                self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
+                try:
+                    self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
+                except KeyError:
+                    if key not in self.coords:
+                        raise RnaMissing3dError("No 3D coordinates available for "
+                                                "element {}.".format(stem))
+                    else: 
+                        raise
              return self._virtual_atom_cache[key]
 
     def reset_vatom_cache(self, key):
@@ -720,6 +783,20 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             return 
 
         define=self.defines[key]
+
+        #Delete virtual residues
+        try: del self.vposs[key]
+        except KeyError: pass
+        try: del self.vbases[key]
+        except KeyError: pass
+        try: del self.vvecs[key]
+        except KeyError: pass
+        try: del self.v3dposs[key]
+        except KeyError: pass
+        try: del self.vinvs[key]
+        except KeyError: pass
+
+        #Delete virtual atoms
         if len(define)>1:
             for i in range(define[0], define[1]+1):
                 if i in self._virtual_atom_cache:

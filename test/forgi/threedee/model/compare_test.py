@@ -64,3 +64,7 @@ class CompareTest(unittest.TestCase):
         residues2 = ftug.bg_virtual_residues(cg2)
         self.assertAlmostEqual(ftur.centered_rmsd(residues1, residues2), ftme.cg_rmsd(cg1,cg2))
 
+    def test_cg_rmsd2(self):
+        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 25.170088934277373)
