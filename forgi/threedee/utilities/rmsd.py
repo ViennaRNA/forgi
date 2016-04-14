@@ -67,47 +67,6 @@ def optimal_superposition(crds1, crds2):
                          "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
   
 
-'''
-def main():
-    if len(sys.argv) < 3:
-        print "usage: ./rmsd.py coords1 coords2"
-        sys.exit(1)
-
-    bg1 = BulgeGraph(sys.argv[1])
-    bg2 = BulgeGraph(sys.argv[2])
-
-    coords1 = bg1.get_centers()
-    coords2 = bg2.get_centers()
-
-    mat1 = numpy.array(coords1)
-    mat2 = numpy.array(coords2)
-
-    centroid1 = numpy.array([0., 0., 0.])
-    centroid2 = numpy.array([0., 0., 0.])
-    
-    for i in range(len(mat2)):
-        centroid1 += mat1[i]
-        centroid2 += mat2[i]
-
-    centroid1 /= float(len(mat2))
-    centroid2 /= float(len(mat2))
-
-    print "centroid1:", centroid1
-    print "centroid2:", centroid2
-
-    for i in range(len(mat2)):
-        mat1[i] -= centroid1
-        mat2[i] -= centroid2
-
-    print "mat1:", mat1
-    print "mat2:", mat2
-
-    print "rmsd:", rmsd(mat1, mat2)
-
-if __name__ == '__main__':
-    main()
-'''
-
 def radius_of_gyration(coords):
     '''
     Calculate the radius of gyration, given a set of coordinates.

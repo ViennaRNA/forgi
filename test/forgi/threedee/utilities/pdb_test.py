@@ -78,7 +78,8 @@ class TestPDBUtilities(unittest.TestCase):
         r = ftup.pdb_file_rmsd('test/forgi/threedee/data/1GID_native.pdb',
                                'test/forgi/threedee/data/1GID_rosetta.pdb')
 
-        print "rmsd:", r[1]
+        self.assertLess(r[1], 28)
+        self.assertAlmostEqual( r[1], 27.700276108193787) 
 
     def test_is_protein(self):
         struct = bpdb.PDBParser().get_structure("temp", 'test/forgi/threedee/data/1MFQ.pdb')

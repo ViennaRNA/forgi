@@ -17,7 +17,7 @@ import numpy.linalg as nl
 import random
 import sys
 
-#import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Deprecated
+import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
@@ -985,8 +985,14 @@ def spos_to_pos(bg, stem, i, spos):
         rest of the model.
     '''
     sbasis = virtual_res_basis(bg, stem, i)
-    (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = virtual_res_3d_pos(bg, stem, i)
     pos = cuv.change_basis(spos, cuv.standard_basis, sbasis)
+
+    try:
+        (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
+    except KeyError:
+        add_virtual_residues(bg, stem)
+        (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
+
     return pos + (s1_pos + s1_vec)
 
 
@@ -1117,6 +1123,7 @@ def add_virtual_residues(bg, stem):
         bg.vinvs[stem][i] = vinv
 
 
+# TODO: This should probably use pos_to_spos to reduce code duplication.
 def stem_vres_reference_atoms(bg, chain, s, i):
     '''
     Calculate the position of each atom in the reference of the
@@ -1752,15 +1759,8 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
 
     :param cg: The coarse grain structure.
     '''
-    return new_virtual_atoms(cg, given_atom_names, sidechain)
-
-def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
-    '''
-    Get a VirtualAtomLookup Object for the virtual atoms for this structure.
-
-    :param cg: The coarse grain structure.
-    '''
     return VirtualAtomsLookup(cg, given_atom_names, sidechain)
+
 class VirtualAtomsLookup(object):
     """
     An object with a dict-like interface that calculated the virtual atom positions on demand.
@@ -1806,6 +1806,8 @@ class VirtualAtomsLookup(object):
         :param d: The coarse grained element (e.g. "s1")
         :param pos: The position of the residue. It has to be in the element d!
         """
+        if d[0]=="s":
+            return self._getitem_for_stem(d, pos) #Use virtual residues for stems.
         import forgi.threedee.utilities.average_atom_positions as ftua
         e_coords=dict()
         origin, basis = element_coord_system(self.cg, d)
@@ -1834,10 +1836,30 @@ class VirtualAtomsLookup(object):
                 try:
                     e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
-                    print (ke)
+                    #warnings.warn("KeyError in virtual_atoms. No coordinates found for: {}".format(ke))
                     pass
             return e_coords
+    def _getitem_for_stem(self, d, pos):
+        i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)        
+        residue = (self.cg.seq[pos])
 
+        atoms = dict()
+        if self.given_atom_names is None:
+            if self.sidechain:
+                atom_names = (ftup.nonsidechain_atoms +  ftup.side_chain_atoms[residue])
+            else:
+                atom_names = ftup.nonsidechain_atoms
+        else:
+            atom_names = given_atom_names
+        for aname in atom_names:
+            if "'" in aname:
+                aname_star=aname[:-1]+"*"
+            else:
+                aname_star=aname
+            spos = ftus.avg_stem_vres_atom_coords[side][residue][aname_star]
+            atoms[aname] = spos_to_pos(self.cg, d, i, spos)
+
+        return atoms
 """def add_atoms(coords, twists, define, side, seq, new_coords):
     stem_len = define[1] - define[0] + 1
 

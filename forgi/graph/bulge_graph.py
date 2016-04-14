@@ -1893,6 +1893,18 @@ class BulgeGraph(object):
                         % (" ".join(map(str, bd)),
                            " ".join(map(str, s1d))))
 
+    def stem_resn_to_stem_vres_side(self, stem, res):
+        d = self.defines[stem]
+        if res<=d[1]:
+            pos=res-d[0]
+            side = 0
+        elif res<=d[3]:
+            pos=d[3]-res
+            side = 1
+        else:
+            raise ValueError("Residue {} not in stem {} with define {}".format(res, stem, d))
+        return pos, side
+
     def stem_side_vres_to_resn(self, stem, side, vres):
         """
         Return the residue number given the stem name, the strand (side) it's on

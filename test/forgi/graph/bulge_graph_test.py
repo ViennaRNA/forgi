@@ -1549,4 +1549,19 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(mi, 0)
         self.assertEqual(mx, 2)
 
+    def test_global_pos_to_stem_pos(self):
+        db = '...((((((((...))))))))...'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        self.assertEqual(bg.stem_side_vres_to_resn("s0", 0, 3), 7)
+        self.assertEqual(bg.stem_side_vres_to_resn("s0", 1, 3), 19)
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",7),(3,0))
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",19),(3,1))
+
+        self.assertEqual(bg.stem_side_vres_to_resn("s0", 0, 0), 4)
+        self.assertEqual(bg.stem_side_vres_to_resn("s0", 1, 0), 22)
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",4),(0,0))
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",22),(0,1))
+
 
