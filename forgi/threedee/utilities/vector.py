@@ -444,7 +444,6 @@ def get_vector_centroid(crds1):
 
     :return: The centroid of the rows of the matrix crds.
     '''
-    print(crds1, crds1.shape)
     if crds1.shape[1] == 3:
         centroid1 = np.array([0., 0., 0.])
     else:

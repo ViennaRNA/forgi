@@ -128,7 +128,7 @@ def main(args):
             if args.out_path:
                 ofname=os.path.join(args.out_path, ofname)
             ofname=os.path.expanduser(ofname)
-            matplotlib.savefig(ofname,format=ofname[-3:])
+            plt.savefig(ofname,format=ofname[-3:])
     if not args.out or args.show:
         #Show the plot and clear it from the internal memory of matplotlib.
         plt.show()
