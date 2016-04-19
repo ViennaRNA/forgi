@@ -1841,7 +1841,7 @@ class VirtualAtomsLookup(object):
             return e_coords
     def _getitem_for_stem(self, d, pos):
         i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)        
-        residue = (self.cg.seq[pos])
+        residue = (self.cg.seq[pos-1]) #The sequence coordinates are 1-based!
 
         atoms = dict()
         if self.given_atom_names is None:

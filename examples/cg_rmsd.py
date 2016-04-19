@@ -5,7 +5,7 @@ from optparse import OptionParser
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.comparison as ftuc
+import forgi.threedee.model.comparison as ftuc
 
 def main():
     usage = """
