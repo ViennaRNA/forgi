@@ -499,7 +499,8 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     count = 0
     for line in f:
-        if line.strip().find('angle') == 0:
+        line=line.strip()
+        if line.startswith('angle'):
             angle_stat = AngleStat()
             angle_stat.parse_line(line)
 

@@ -31,5 +31,5 @@ if __name__=="__main__":
         rot=random.randrange(0,3600)/10
         proj.rotate(rot)
         box=fph.get_box(proj, WIDTH)
-        img, _= proj.rasterize(70, box)
+        img, _= proj.rasterize(700, box)
         scipy.misc.imsave(filename+".rot{}.width{}.png".format(rot, WIDTH), img)
