@@ -546,7 +546,7 @@ class Projection2D(object):
                     continue
                 weight=1
             else:
-                weight=0.3
+                weight=1
             if rotate:
               start=rotate2D(start, c, s)
               end=rotate2D(end, c, s)
@@ -564,8 +564,10 @@ class Projection2D(object):
         if virtual_atoms and len(self._virtual_atoms):
             transRotMat=np.array([[c, s],[-s, c]])
             rot_virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
-            for pos in rot_virtual_atoms:
+            for i,pos in enumerate(rot_virtual_atoms):
+                #if i%2==0: continue
                 point=(int((pos[0]-box[0])/steplength), int((pos[1]-box[2])/steplength))
+                #print(i, point)
                 if 0<=point[0]<img_length and 0<=point[1]<img_length:
                     image[point[0],point[1]]=1
                 else:                    
@@ -895,9 +897,22 @@ class Projection2D(object):
         if project_virtual_atoms:        
             for residuePos in range(1,cg.total_length()):
                 residue=cg.virtual_atoms(residuePos)
-                for pos in residue.values():
-                    va.append(pos)
-            self._virtual_atoms=np.dot(np.array(va), basis)
+                if project_virtual_atoms=="selected":
+                    try:             va.append(residue['P'])
+                    except KeyError: pass
+                    try:             va.append(residue["C1'"])
+                    except KeyError: assert False #Should never happen
+                    try:             va.append(residue['C1'])
+                    except KeyError: pass
+                    try:             va.append(residue["O3'"])
+                    except KeyError: pass
+                else:
+                    for pos in residue.values():
+                        va.append(pos)
+            if va:
+                self._virtual_atoms=np.dot(np.array(va), basis)
+            else:
+                warnings.warn("No virtual atoms present in {} of length {}!".format(cg.name, len(cg.seq)))
 
     def _condense_one(self, cutoff):
         """
