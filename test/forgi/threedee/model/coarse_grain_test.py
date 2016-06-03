@@ -320,6 +320,16 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         self.assertTrue(dist < 10)
 
+    def test_total_length(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.assertEqual(cg.total_length(), cg.seq_length)
+        cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
+        self.assertEqual(cg.total_length(), cg.seq_length)
+        cg = ftmc.CoarseGrainRNA()
+        cg.from_dotbracket('..((..((...))..))..((..))..')
+        self.assertEqual(cg.total_length(), cg.seq_length)
+        self.assertEqual(cg.total_length(),27)
+        
     def test_get_load_coordinates(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
 

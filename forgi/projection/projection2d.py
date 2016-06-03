@@ -113,9 +113,9 @@ def bresenham(start,end):
     dy=end[1]-start[1]
     x,y=start
     if dx==0: sx=0
-    else: sx=dx/abs(dx)
+    else: sx=dx//abs(dx)
     if dy==0: sy=0
-    else: sy=dy/abs(dy)
+    else: sy=dy//abs(dy)
     dx=abs(dx)
     dy=abs(dy)
     if dx>dy:
@@ -198,8 +198,9 @@ class Projection2D(object):
         shift=(v1+v2)/2
         for key,edge in self._coords.items():
             self._coords[key]=(edge[0]-shift, edge[1]-shift)
-        for i, v_atom in enumerate(self._virtual_atoms):
-            self._virtual_atoms[i]=v_atom-shift
+        
+        self._virtual_atoms = self._virtual_atoms-shift
+        
         rot=math.atan2(*(v2-v1))
         rot=math.degrees(rot)
         self.rotate(rot)
@@ -564,10 +565,11 @@ class Projection2D(object):
         if virtual_atoms and len(self._virtual_atoms):
             transRotMat=np.array([[c, s],[-s, c]])
             rot_virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
-            for i,pos in enumerate(rot_virtual_atoms):
-                #if i%2==0: continue
-                point=(int((pos[0]-box[0])/steplength), int((pos[1]-box[2])/steplength))
-                #print(i, point)
+            rot_virtual_atoms-=(box[0],box[2])
+            rot_virtual_atoms/=steplength
+            rot_virtual_atoms=rot_virtual_atoms.astype(int)
+            for point in rot_virtual_atoms:
+
                 if 0<=point[0]<img_length and 0<=point[1]<img_length:
                     image[point[0],point[1]]=1
                 else:                    
@@ -895,7 +897,7 @@ class Projection2D(object):
             self._coords[key]=(start, end)
         va=[]
         if project_virtual_atoms:        
-            for residuePos in range(1,cg.total_length()):
+            for residuePos in range(1,cg.seq_length+1):
                 residue=cg.virtual_atoms(residuePos)
                 if project_virtual_atoms=="selected":
                     try:             va.append(residue['P'])

@@ -45,17 +45,21 @@ def mcc(confusion_matrix):
                          confusion_matrix['fn']))
 
 
-class ConfusionMatrix(object):
+class AdjacencyCorrelation(object):
     """
-    A class used for calculating the confusion_matrix.
+    A class used for calculating the ACC.
+    
+    The adjacency correlation coefficient is calculated as the Matthews correlation 
+    coefficient of potential interactions, defined as nucleotides within 25 Angstrom
+    from each other. See chapter 9.3 of Peter's thesis.
 
-    It is initialized with a reference structure and a distance for interactions.
+    This object is initialized with a reference structure and a distance for interactions.
     The evaluate() method is used for calculating this correlation matrix.
 
     This is significantly faster than the confusion_matrix function, if 
-    many structures will be compared to the same structure.
+    many structures will be compared to the same reference structure.
     """
-    def __init__(self, reference_cg, distance=30.0, bp_distance=16):
+    def __init__(self, reference_cg, distance=25.0, bp_distance=16):
         self._distance=distance        
         self._bp_distance=bp_distance
         self._reference_interactions=self.get_interactions(reference_cg)
@@ -109,7 +113,7 @@ class ConfusionMatrix(object):
         d["tn"]=len(allIA - (self._reference_interactions | interactions) )
         return d
 
-#NOTE: could be deprecated in the future. Use ConfusionMatrix.
+#NOTE: could be deprecated in the future. Use AdjacencyCorrelation.
 def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
     '''
     Calculate the true_positive, false_positive,

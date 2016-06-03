@@ -58,3 +58,4 @@ if __name__=="__main__":
             outname=filename+".dpi{}.width{}.{}.png".format(args.dpi, args.width, n)
             scipy.misc.imsave(outname, img, "png")
             print("File {} written".format(outname))
+

@@ -10,3 +10,5 @@ doc/latex_output/**
 build/**
 pages/**
 venv/
+tmp/
+builtdoc/
