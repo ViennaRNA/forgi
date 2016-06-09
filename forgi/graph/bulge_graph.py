@@ -338,6 +338,9 @@ class BulgeGraph(object):
         self.stem_invs = dict()
         self.seq_ids = []
 
+        # Additional infos as key-value pairs are stored here.
+        self.infos = col.defaultdict(list)
+
         self.name_counter = 0
 
         if dotbracket_str != '':
@@ -396,6 +399,9 @@ class BulgeGraph(object):
         else:
             return min(self.get_bulge_dimensions(key))
 
+    def add_info(self, key, value):
+        self.infos[key].append(value)
+
     def get_single_define_str(self, key):
         """
         Get a define string for a single key.
@@ -425,6 +431,13 @@ class BulgeGraph(object):
 
     def get_length_str(self):
         return "length " + str(self.seq_length) + '\n'
+  
+    def get_info_str(self):
+        out=""
+        for info in self.infos:
+            for value in self.infos[info]:
+                out+="info "+info+" "+value+"\n"
+        return out
 
     def get_connect_str(self):
         """
@@ -496,7 +509,7 @@ class BulgeGraph(object):
         out_str += self.get_seq_ids_str()
         out_str += self.get_define_str()
         out_str += self.get_connect_str()
-
+        out_str += self.get_info_str()
         return out_str
 
     def to_file(self, filename):
@@ -1623,6 +1636,8 @@ class BulgeGraph(object):
                 self.seq_ids = list(map(ftum.parse_resid, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
+            elif parts[0] == 'info':
+                self.infos[parts[1]].append(" ".join(parts[2:]))
 
     def sorted_stem_iterator(self):
         """

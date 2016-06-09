@@ -132,7 +132,27 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 """
         bg = fgb.BulgeGraph()
         bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
+        stri = bg.to_bg_string()
+        bg2 = fgb.BulgeGraph()
+        bg2.from_bg_string(stri)
+        stri2 = bg2.to_bg_string()
+        self.assert_equal(stri, stri2)
+        self.assertTrue(bg.defines, bg2.defines)
+        self.assertTrue(bg.edges, bg2.edges)
 
+    def test_bg_string_infos(self):
+        self.fasta = """>1y26
+CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+(((((((((...((((((.........))))))........((((((.......))))))..)))))))))
+"""
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
+        bg.add_info("test", "This is a test info")
+        stri1 = bg.to_bg_string()
+        bg2 = fgb/BulgeGraph()
+        bg2.from_bg_string(stri1)
+        self.assertEqual(bg2.infos["test"], ["This is a test info"])
+        
     def test_from_fasta(self):
         bg = fgb.BulgeGraph()
 
@@ -1537,7 +1557,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
 
-        fud.pv('bg.to_bg_string()')
+        #fud.pv('bg.to_bg_string()')
 
         (mi, mx) = bg.min_max_bp_distance('s1', 's2')
         fud.pv('mi, mx')

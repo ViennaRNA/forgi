@@ -199,7 +199,8 @@ class Projection2D(object):
         for key,edge in self._coords.items():
             self._coords[key]=(edge[0]-shift, edge[1]-shift)
         
-        self._virtual_atoms = self._virtual_atoms-shift
+        if project_virtual_atoms:
+            self._virtual_atoms = self._virtual_atoms-shift
         
         rot=math.atan2(*(v2-v1))
         rot=math.degrees(rot)
