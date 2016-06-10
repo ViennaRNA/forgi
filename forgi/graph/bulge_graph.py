@@ -449,7 +449,7 @@ class BulgeGraph(object):
         """
 
         whole_str = ''
-        for key in self.edges:
+        for key in sorted(self.edges):
             if len(self.edges[key]) == 0:
                 continue
 

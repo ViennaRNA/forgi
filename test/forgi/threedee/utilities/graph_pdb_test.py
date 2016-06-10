@@ -192,21 +192,21 @@ class TestAtomPosition_VirtualAtoms(unittest.TestCase):
                 self.assertGreater(dist, 1.1, msg="Distance between nucleotide {} and {} is too small: "
                                               "the minimal distance is {}".format(i, j, mindist))
     def test_virtual_atoms_same_strand_nuc_distance(self):
-        """ Distance between nucleotides on same strand in stem"""
+        """ Distance between virtual atoms of nucleotides on same strand in stem"""
         for i in range(1,9):
             for j in range (i+1,10):
                 dist=ftuv.magnitude(self.va1[i]["C1'"]-self.va1[j]["C1'"])
-                self.assertLess(dist, 2+4.5*(j-i), msg="Distance between nucleotide {} and {} "
-                                                     "is too big: {}".format(i, j, dist))
-                self.assertGreater(dist, 2*(j-i), msg="Distance between nucleotide {} and {} "
-                                                     "is too small: {}".format(i, j, dist))
+                self.assertLess(dist, 2.2+4.5*(j-i))#, msg="Distance between nucleotide {} and {} "
+                                                  #   "is too big: {}".format(i, j, dist))
+                self.assertGreater(dist, 2*(j-i))#, msg="Distance between nucleotide {} and {} "
+                                                  #   "is too small: {}".format(i, j, dist))
         for i in range(63,71):
             for j in range (i+1,72):
                 dist=ftuv.magnitude(self.va1[i]["C1'"]-self.va1[j]["C1'"])
-                self.assertLess(dist, 2+4.5*(j-i), msg="Distance between nucleotide {} and {} "
-                                                     "is too big: {}".format(i, j, dist))
-                self.assertGreater(dist, 2*(j-i), msg="Distance between nucleotide {} and {} "
-                                                     "is too small: {}".format(i, j, dist)) 
+                self.assertLess(dist, 2.2+4.5*(j-i))#, msg="Distance between nucleotide {} and {} "
+                                                   #  "is too big: {}".format(i, j, dist))
+                self.assertGreater(dist, 2*(j-i))#, msg="Distance between nucleotide {} and {} "
+                                                    # "is too small: {}".format(i, j, dist)) 
     def test_virtual_atoms_distance_neighboring_atoms_in_nucleotide(self):
         # C2' is next to C3'
         for i in range(1,9):

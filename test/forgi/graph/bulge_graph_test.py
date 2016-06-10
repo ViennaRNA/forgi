@@ -136,7 +136,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg2 = fgb.BulgeGraph()
         bg2.from_bg_string(stri)
         stri2 = bg2.to_bg_string()
-        self.assert_equal(stri, stri2)
+        self.assertEqual(stri, stri2)
         self.assertTrue(bg.defines, bg2.defines)
         self.assertTrue(bg.edges, bg2.edges)
 
@@ -149,7 +149,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
         bg.add_info("test", "This is a test info")
         stri1 = bg.to_bg_string()
-        bg2 = fgb/BulgeGraph()
+        bg2 = fgb.BulgeGraph()
         bg2.from_bg_string(stri1)
         self.assertEqual(bg2.infos["test"], ["This is a test info"])
         
@@ -360,7 +360,9 @@ actgatagtttattagttttat
         fasta = ">hrv\n{}\n{}".format(seq, struct)
         
         bg = fgb.from_fasta_text(fasta)
-        print >>sys.stderr, "bg.defines:", bg.defines
+        self.assertEqual(bg.defines['s56'], [713,717,731,735])
+        self.assertEqual(len(bg.defines), 1167)
+        #print >>sys.stderr, "bg.defines:", bg.defines
 
     def test_from_bpseq_file(self):
         with open('test/forgi/data/1gid.bpseq', 'r') as f:
