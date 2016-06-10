@@ -45,10 +45,10 @@ class CompareTest(unittest.TestCase):
 
         cm = ftme.confusion_matrix(cg1, cg2)
         mcc = ftme.mcc(cm)
-        cm_new = ftme.AdjacencyCorrelation(cg1) #previousely ConfusionMatrix
+        cm_new = ftme.AdjacencyCorrelation(cg1) #previousely named ConfusionMatrix
         mcc_n = ftme.mcc(cm_new.evaluate(cg2))
         self.assertAlmostEqual(mcc, mcc_n)
-        self.assertLess(abs(mcc_n-0.086), 0.0001)
+        self.assertLess(abs(mcc_n-0.0761), 0.0001) #0.086 for distance=30, 0.0761 for 25
 
 
         cm = ftme.confusion_matrix(cg1, cg1)        

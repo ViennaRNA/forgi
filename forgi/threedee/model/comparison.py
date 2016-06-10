@@ -114,7 +114,7 @@ class AdjacencyCorrelation(object):
         return d
 
 #NOTE: could be deprecated in the future. Use AdjacencyCorrelation.
-def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
+def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
     '''
     Calculate the true_positive, false_positive,
     true_negative and false_negative rate for the tertiary
