@@ -333,7 +333,7 @@ class BulgeGraph(object):
         self.nx_graph = None
         self.nuc_bp_dists = None
 
-        # sort the coordinate basis for each stem
+        # store the coordinate basis for each stem
         self.bases = dict()
         self.stem_invs = dict()
         self.seq_ids = []

@@ -810,10 +810,6 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     The virtual position extrapolates the position of the residues based
     on the twists of the helix.
 
-    :param bg: The BulgeGraph structure
-    :param stem: The name of the stem
-    :param i: The i'th residue of the stem
-
     :return: A tuple containing the point located on the axis of the stem
              and a vector away from that point in the direction of the
              residue.
@@ -885,7 +881,7 @@ def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
 
 def bg_virtual_residues(bg):
     warnings.warn("ftug.bg_virtual_residues will be removed in the future."
-                  "Use add_virtual_residues instead to store the virtual "
+                  "Use cg.add_virtual_residues instead to store the virtual "
                   "residues directly to the CoarseGrainRNA and cg.get_ordered_virtual_residue_poss"
                   "to retrieve the virtual residue positions." , DeprecationWarning, stacklevel=2)
     vress = []
@@ -984,7 +980,10 @@ def spos_to_pos(bg, stem, i, spos):
     :return: The coordinates in the cartesian coordinate system of the
         rest of the model.
     '''
-    sbasis = virtual_res_basis(bg, stem, i)
+    if stem in bg.vbases and i in bg.vbases[stem]:
+        sbasis=bg.vbases[stem][i]
+    else:
+        sbasis = virtual_res_basis(bg, stem, i)
     pos = cuv.change_basis(spos, cuv.standard_basis, sbasis)
 
     try:
@@ -1079,7 +1078,6 @@ def junction_virtual_atom_distance(bg, bulge):
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
     pos1=bg.defines[connecting_stems[0]][i1]
     pos2=bg.defines[connecting_stems[1]][i2]
-    coords=virtual_atoms(bg)
     if i1==0 or i1==2:
         a1="P"
     else:
@@ -1089,7 +1087,8 @@ def junction_virtual_atom_distance(bg, bulge):
     else:
         a2="O3'"
     assert a1!=a2
-    return cuv.magnitude(coords[pos1][a1]-coords[pos2][a2])
+    return cuv.magnitude(bg.virtual_atoms(pos1)[a1]-bg.virtual_atoms(pos2)[a2])
+
 
 def add_virtual_residues(bg, stem):
     '''
@@ -1198,8 +1197,7 @@ def bounding_boxes(bg, chain, s, i):
 
 def virtual_residue_atoms(bg, s, i, strand=0):
     '''
-    Return two sets of atoms for the virtual residue. One for the nucleotide
-    on each strand.
+    Return the atoms for the virtual residue. 
 
     :param bg: The BulgeGraph
     :param s: The stem
@@ -1218,10 +1216,7 @@ def virtual_residue_atoms(bg, s, i, strand=0):
     glob_pos = (bg.defines[s][0] + i, bg.defines[s][3] - i)
     glob_pos = glob_pos[strand]
 
-
-    coords=virtual_atoms(bg)
-
-    return coords[glob_pos]
+    return bg.virtual_atoms(glob_pos)
 
 
 def calc_R(xc, yc, p):

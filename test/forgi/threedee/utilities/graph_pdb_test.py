@@ -3,6 +3,7 @@ import Bio.PDB as bpdb
 import unittest, os
 import warnings
 import numpy as np
+import numpy.testing as nptest
 import forgi.threedee.model.coarse_grain as ftmc
 import itertools as it
 
@@ -44,17 +45,18 @@ class TestGraphPDB(unittest.TestCase):
                                                                     cg.twists[s],i,sl)
 
             if i > 1:
-                self.assertGreater(ftuv.vec_angle(vec, prev_vec), 0.1)
-                self.assertLess(ftuv.vec_angle(vec, prev_vec), 0.95)
+                self.assertGreater(ftuv.vec_angle(vec, prev_vec), 0.53)
+                self.assertLess(ftuv.vec_angle(vec, prev_vec), 0.73)
 
             prev_vec = vec
 
     def test_angle_between_twists(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
-        self.verify_virtual_twist_angles(cg, 's2')
         self.verify_virtual_twist_angles(cg, 's0')
-
+        self.verify_virtual_twist_angles(cg, 's1')
+        self.verify_virtual_twist_angles(cg, 's2')
+        self.verify_virtual_twist_angles(cg, 's3')
 
     def test_coordinates_for_add_virtual_residues(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
@@ -112,14 +114,23 @@ class TestGraphPDB(unittest.TestCase):
                         dist=ftuv.magnitude(v1-v2)
                         self.assertGreater(dist, 0.8, msg="Nucleotide too small: "
                                     "Distance between {} and {} is {}".format(k1, k2, dist))
+    
+    def test_virtual_residue_atom_exact_match(self):
+        #This test serves to detect unwanted changes in the virtual atom calculation algorithm.
+        #It is allowed to fail, if the virtual atom calculation changes.
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        ftug.add_virtual_residues(cg, 's0')
+        vres= ftug.virtual_residue_atoms(cg, 's0', 1, 0)
+        nptest.assert_allclose(vres['C8'], np.array([ 5.60052258, -2.31817798, -2.74075904]))
+        nptest.assert_allclose(vres['N2'], np.array([ 7.27932017,  2.84403948, -2.83806392]))
 
 
-    def test_numbered_virtual_residues(self): 
+    """def test_numbered_virtual_residues(self): #Not USED (?)
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
         nres = ftug.numbered_virtual_residues(cg)
         #fud.pv('nres')
-        #TODO assert something
+        #TODO assert something"""
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
@@ -141,7 +152,7 @@ class TestDistanceCalculation(unittest.TestCase):
     def test_junction_virtual_atom_distance_realPDB(self):
         distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m4")
         self.assertLess(distance, 4.)
-       
+        self.assertAlmostEqual(distance, 3.4765561271716967)
 
 
 class TestAtomPosition_VirtualAtoms(unittest.TestCase):
