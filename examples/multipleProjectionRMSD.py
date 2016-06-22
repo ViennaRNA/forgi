@@ -7,7 +7,7 @@ import forgi.threedee.model.coarse_grain as ftmc
 import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.rmsd as ftur
-import forgi.threedee.utilities.comparison as ftuc
+import forgi.threedee.model.comparison as ftuc
 import forgi.projection.hausdorff as fph
 
 import numpy as np
