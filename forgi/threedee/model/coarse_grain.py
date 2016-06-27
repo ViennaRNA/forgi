@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from __future__ import print_function
 from __future__ import division
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
@@ -31,6 +31,7 @@ import sys
 import tempfile as tf
 import time
 import warnings
+import itertools as it
 
 def remove_hetatm(lines):
     '''
@@ -340,8 +341,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         out_str = ''
         for key in self.coords.keys():
             [p, n] = self.coords[key]
-            out_str += "coord %s %s %s" % (key, " ".join([str(pt) for pt in p]),
-                                           " ".join([str(pt) for pt in n]))
+            out_str += ("coord {k} {x[0]:.16f} {x[1]:.16f} {x[2]:.16f} "
+                        "{y[0]:.16f} {y[1]:.16f} {y[2]:.16f}".format(k=key, x=p, y=n))
             out_str += '\n'
         return out_str
 
@@ -410,8 +411,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         out_str = ''
         for key in self.twists.keys():
             [p, n] = self.twists[key]
-            out_str += "twist %s %s %s" % (key, " ".join([str(pt) for pt in p]),
-                                           " ".join([str(pt) for pt in n]))
+            out_str += ("twist {k} {x[0]:.16f} {x[1]:.16f} {x[2]:.16f} "
+                        "{y[0]:.16f} {y[1]:.16f} {y[2]:.16f}".format(k=key, x=p, y=n))
             out_str += '\n'
         return out_str
 
@@ -503,12 +504,15 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
         twist1_vec = self.twists[stem1][s1b]
-        bulge_vec = self.coords[d][1] - self.coords[d][0] + 0.1 * (stem1_vec / ftuv.magnitude(stem1_vec))
+        bulge_vec = self.coords[d][1] - self.coords[d][0] 
+        
+        if ftuv.magnitude(bulge_vec)<10**-3: #To avoid loops with 0 physical length. (If disconnects in the structure are modelled as loop)
+            bulge_vec += (10**-3) * (stem1_vec / ftuv.magnitude(stem1_vec))
 
         (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec, 
                                                       bulge_vec)
-        (loop_stat.r, loop_stat.u, loop_stat.v) = (r,u,v)
-
+        (loop_stat.r, loop_stat.u, loop_stat.v) = (r, u, v)
+        loop_stat.r = loop_stat.phys_length # Will this cause problems in other parts of the code base???
         return loop_stat
 
     def get_bulge_angle_stats(self, bulge):                                                                           
@@ -750,6 +754,21 @@ average_stem_vres_atom_positions_new.py
         '''
         return sum([len(list(self.define_residue_num_iterator(d))) for d in self.defines])
 
+    def sorted_edges_for_mst(self):
+        """
+        Keep track of all linked nodes. Used for the generation of the minimal spanning tree.
+
+        This overrides the function in bulge graph and adds an additional sorting criterion 
+        with lowest prioroity.
+        Elements that have no entry in self.sampled should be preferedly broken.
+        This should ensure that the minimal spanning tree is the same after saving 
+        and loading an RNA to/from a file.
+        """
+        priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
+        edges = sorted(it.chain(self.mloop_iterator(),
+                                self.iloop_iterator()),
+                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)),not x in self.sampled))
+        return edges
     def virtual_atoms(self, key):
         """
         Get virtual atoms for a key.

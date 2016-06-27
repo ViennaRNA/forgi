@@ -506,7 +506,9 @@ def normalize(vec):
     :param vec: The vector in question.
     :return: A normalized version of the vector.
     '''
-
+    mag = magnitude(vec)
+    if mag==0: #Numpy would return Nan and raise a RuntimeWarning.
+        raise ValueError("Cannot normalize zero- vector!")
     return vec / magnitude(vec)
 
 def vec_angle(vec1, vec2):

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from __future__ import print_function
 from __future__ import division
-from builtins import range
-from builtins import map
-from builtins import zip
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      map, next, oct, pow, range, round,
+                      str, super, zip)
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
@@ -12,8 +12,8 @@ from builtins import zip
 __author__ = "Peter Kerpedjiev, Bernhard Thiel"
 __copyright__ = "Copyright 2012 - 2016"
 __version__ = "0.3"
-__maintainer__ = "Peter Kerpedjiev"
-__email__ = "pkerp@tbi.univie.ac.at"
+__maintainer__ = "Peter Kerpedjiev, Bernhard Thiel"
+__email__ = "pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at"
 
 import sys
 import collections as col
@@ -2437,19 +2437,24 @@ class BulgeGraph(object):
             edge_list = list(self.edges[l])
             yield (edge_list[0], l, edge_list[1])
 
+    def sorted_edges_for_mst(self):
+        """
+        Keep track of all linked nodes. Used for the generation of the minimal spanning tree.
+        """
+        priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
+        edges = sorted(it.chain(self.mloop_iterator(),
+                                self.iloop_iterator()),
+                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x))))
+        return edges
     def get_mst(self):
         """
         Create a minimum spanning tree from this BulgeGraph. This is useful
         for constructing a structure where each section of a multiloop is
         sampled independently and we want to introduce a break at the largest
         multiloop section.
-        """
-        priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
-
+        """        
         # keep track of all linked nodes
-        edges = sorted(it.chain(self.mloop_iterator(),
-                                self.iloop_iterator()),
-                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x))))
+        edges = self.sorted_edges_for_mst()
 
         mst = set(it.chain(self.stem_iterator(),
                            self.floop_iterator(),
@@ -2523,8 +2528,6 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
 
-        #: This attribute seems to be unused. Consider removing it.
-        self.build_paths = build_paths
         self.build_order = build_order
 
         return build_order

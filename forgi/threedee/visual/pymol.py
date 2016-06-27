@@ -246,20 +246,23 @@ class PymolPrinter:
             uids += [uid]
 
             s += "cgox_%s = []" % (uid) + '\n'
+          
+            if np.all(n==p):
+                pos = n
+                axes = [ [2,0,0], [0,2,0], [0,0,2] ]
+            else:
+                comp1 = cuv.normalize(n - p)
 
-            comp1 = cuv.normalize(n - p)
+                ncl = cuv.get_non_colinear_unit_vector(comp1)
 
-            ncl = cuv.get_non_colinear_unit_vector(comp1)
+                comp2 = cuv.normalize(np.cross(ncl, comp1))
+                comp3 = cuv.normalize(np.cross(ncl, comp2))
 
-            comp2 = cuv.normalize(np.cross(ncl, comp1))
-            comp3 = cuv.normalize(np.cross(ncl, comp2))
+                pos = (p + n) / 2.0 + 3 * comp2
 
-            pos = (p + n) / 2.0 + 3 * comp2
-            #pos = p + (n - p) / 4.0 + 3 * comp2
-            axes = [list(comp1 * 2), list(comp2 * 2), list(comp3 * 2)]
+                axes = [list(comp1 * 2), list(comp2 * 2), list(comp3 * 2)]
 
             text = "%s: %.1f" % (text, cuv.magnitude(n - p))
-            #text = "%s" % (text)
 
             s += "cyl_text(cgox_%s, plain, %s, " % (uid, str(list(pos)))
             s += "\"%s\", 0.20, axes=%s)" % (text, str(axes)) + '\n'

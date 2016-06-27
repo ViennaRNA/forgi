@@ -265,7 +265,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
         cg.get_loop_stat("h0")
 
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg')
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg') #Contains a loop with r=0
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
         cg.get_loop_stat('h3')

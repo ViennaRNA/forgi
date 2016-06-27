@@ -71,6 +71,8 @@ class LoopStat:
         self.u = 0.
         self.v = 0.
 
+        self.define=[]
+
         if len(line) > 0:
             try:
                 self.parse_line(line)
@@ -833,7 +835,7 @@ class ConformationStats(object):
             all_stats += stats[dim[-1]]
 
         if len(all_stats) == 0:
-            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
+            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims, "and ang_type", ang_type
 
         return all_stats
 
