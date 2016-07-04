@@ -346,5 +346,13 @@ class CoarseGrainTest(tfgb.GraphVerification):
                 self.assertTrue(np.allclose(new_cg.coords[key][i],
                                             cg.coords[key][i]))
 
-
-
+    def test_is_stacking(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+        self.assertFalse(cg.is_stacking("m0")) #Distance
+        self.assertFalse(cg.is_stacking("m1")) #distance
+        self.assertFalse(cg.is_stacking("m2")) #shear angle
+    def test_is_stacking2(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
+        self.assertFalse(cg.is_stacking("m0"))
+        self.assertFalse(cg.is_stacking("m2"))
+        self.assertTrue(cg.is_stacking("m1"))

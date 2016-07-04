@@ -30,6 +30,7 @@ import subprocess as sp
 import sys
 import tempfile as tf
 import time
+import math
 import warnings
 import itertools as it
 
@@ -515,10 +516,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         loop_stat.r = loop_stat.phys_length # Will this cause problems in other parts of the code base???
         return loop_stat
 
-    def get_bulge_angle_stats(self, bulge):                                                                           
+    def get_bulge_angle_stats(self, bulge):               
         '''
-        Return the angle stats for a particular bulge. These stats describe the                                       
-        relative orientation of the two stems that it connects.                                                       
+        Return the angle stats for a particular bulge. These stats describe 
+        the relative orientation of the two stems that it connects.
 
         :param bulge: The name of the bulge.
         :param connections: The two stems that are connected by it.
@@ -535,15 +536,71 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return (angle_stat1, angle_stat2)
     
-    def get_stem_stats(self, stem):                                                                                   
+    def is_stacking(self, bulge):
+        """
+        Reports, whether the stems connected by the given bulge are coaxially stacking.
+
+        See  doi:10.1261/rna.305307, PMCID: PMC1894924 for cuttoffs for stacking
+
+        :param bulge: STRING. Name of a interior loop or multiloop (e.g. "m3")
+        :returns: A BOOLEAN.
+        """
+        DISTANCE_CUTOFF = [ 5, 12 ]
+        ANGLE_CUTOFF    = [ math.acos(0.9), math.acos(0.85) ]
+        SHEAR_ANGLE_CUTOFF = math.radians(60)
+        SHEAR_OFFSET_CUTOFF = 10
+        if bulge[0]=="m" and self.get_length(bulge) == 0:
+            is_flush = True #flush-stack vs. mismatch-mediated stack
+        else:
+            is_flush = False
+        
+        stem1, stem2 = self.connections(bulge)
+        side_nts = self.get_connected_residues(stem1, stem2)[0]
+        #Distance
+        bp_center1 = ftug.get_basepair_center(self, side_nts[0])
+        bp_center2 = ftug.get_basepair_center(self, side_nts[1])
+        print("Distance", ftuv.vec_distance(bp_center1, bp_center2))
+        if ftuv.vec_distance(bp_center1, bp_center2)>DISTANCE_CUTOFF[is_flush]:
+            return False
+        normalvec1 = ftug.get_basepair_plane(self, side_nts[0])
+        normalvec2 = ftug.get_basepair_plane(self, side_nts[1])
+        #Coaxial
+        angle = ftuv.vec_angle(normalvec1, normalvec2)
+        if angle>math.pi/2:
+            warnings.warn("Angle > 90 degrees: {} ({})".format(angle, math.degrees(angle)))
+            angle=math.pi-angle
+        print("angle", angle, math.degrees(angle))
+        if angle>ANGLE_CUTOFF[is_flush]:
+            return False
+        #Shear Angle
+        shear_angle1 = ftuv.vec_angle(normalvec1, bp_center2-bp_center1)        
+        print("Shear angle 1", math.degrees(shear_angle1))        
+        if shear_angle1>math.pi/2:
+            shear_angle1=math.pi-shear_angle1
+        if shear_angle1>SHEAR_ANGLE_CUTOFF: return False
+        shear_angle2 = ftuv.vec_angle(normalvec2, bp_center1-bp_center2)
+        if shear_angle2>math.pi/2:
+            shear_angle2=math.pi-shear_angle2
+        print("Shear angle 2", math.degrees(shear_angle2))
+        if shear_angle2>SHEAR_ANGLE_CUTOFF: return False
+        #Shear Offset
+        #Formula for distance between a point and a line 
+        #from http://onlinemschool.com/math/library/analytic_geometry/p_line/
+        if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
+           ftuv.magnitude(normalvec2))>SHEAR_OFFSET_CUTOFF: return False
+        if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec1))/
+           ftuv.magnitude(normalvec1))>SHEAR_OFFSET_CUTOFF: return False
+        return True
+
+    def get_stem_stats(self, stem):
         '''
-        Calculate the statistics for a stem and return them. These statistics will describe the                       
-        length of the stem as well as how much it twists.                                                             
+        Calculate the statistics for a stem and return them. These statistics will describe the 
+        length of the stem as well as how much it twists.
 
-        :param stem: The name of the stem.                                                                            
+        :param stem: The name of the stem.
 
-        :return: A StemStat structure containing the above information.                                               
-        '''                                                                                                           
+        :return: A StemStat structure containing the above information.
+        '''
         ss = ftms.StemStat()
         ss.pdb_name = self.name
         #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            

@@ -691,7 +691,7 @@ class BulgeGraph(object):
                                         stem_stems_set.add(j)
                                     stem_stems[i] = stem_stems_set
 
-        for d in self.defines.keys():
+        for d in list(self.defines.keys()): #list needed for 4W92.pdb??? TODO: Need to check this!
             if d[0] != 'y':
                 continue
 
@@ -2345,7 +2345,7 @@ class BulgeGraph(object):
         if subgraph_length == None:
             subgraph_length = random.randint(1, len(self.defines.keys()))
 
-        start_node = random.choice(self.defines.keys())
+        start_node = random.choice(list(self.defines.keys()))
         curr_length = 0
         visited = set()
         next_nodes = [start_node]

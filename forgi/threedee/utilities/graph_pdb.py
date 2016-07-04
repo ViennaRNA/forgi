@@ -1911,7 +1911,92 @@ def element_distance(cg, l1, l2):
     (i1, i2) = ftuv.line_segment_distance(cg.coords[l1][0],
                                        cg.coords[l1][1],
                                        cg.coords[l2][0],
-                                       cg.coords[l2][1])                                                             
+                                       cg.coords[l2][1])
     return ftuv.vec_distance(i1, i2)
-            
+
+def get_basepair_center(cg, pos):
+    """
+    The center of a basepair, as defined in doi: 10.1261/rna.305307 
+
+    :param pos: The number of one of the two pairing bases
+    """
+    pos2 = cg.pairing_partner(pos)
+    seq1 = cg.seq[pos-1]
+    seq2 = cg.seq[pos2-1]
+    atoms = {"A": ["C1'", "C8"], "G": ["C1'", "C8"], "U": ["C1'", "C6"], "C": ["C1'", "C6"]}
+    va1 = cg.virtual_atoms(pos)
+    va2 = cg.virtual_atoms(pos2)
+    avpos=np.zeros(3)
+    for atom in atoms[seq1]:
+        avpos+=va1[atom]
+    for atom in atoms[seq2]:
+        avpos+=va2[atom]
+    avpos/=(len(atoms[seq1])+len(atoms[seq2]))
+    return avpos
+
+def get_basepair_plane(cg, pos):
+    """
+    The plane of the basepair, as defined in figure 13 of doi: 10.1261/rna.305307 
+  
+    :param pos: The number of one of the two pairing bases
+    """
+    pos2 = cg.pairing_partner(pos)
+    seq1 = cg.seq[pos-1]
+    seq2 = cg.seq[pos2-1]
+    va1 = cg.virtual_atoms(pos)
+    va2 = cg.virtual_atoms(pos2)
+    h_bonds = {"U": {"A": [("O4", "N6"), ("N3", "N1")],
+                     "G": [("N3", "O6"), ("O2", "N1")]},
+               "A": {"U": [("N6", "O4"), ("N1", "N3")]},
+               "G": {"U": [("O6", "N3"), ("N1", "O2")],
+                     "C": [("O6", "N4"), ("N1", "N3"),("N2", "O2")]},
+               "C": {"G": [("N4", "O6"), ("N3", "N1"),("O2", "N2")]}
+              }
+    #print( seq1, seq2 )
+    try:
+        hb = h_bonds[seq1][seq2]
+    except KeyError:
+        # Non-canonical basepair
+        warnings.warn("Estimating plane from stem vector for "
+                      " non-canonical basepair {}-{} at positions"
+                      " {},{}".format(seq1, seq2, pos, pos2))
+        stem, = cg.nucleotides_to_elements([pos, pos2]) #ValueError, if cg.pairing_partner is buggy
+        return cg.coords[stem][0]-cg.coords[stem][1]
+    else:
+        plane = np.zeros(3)
+        contribs=0
+
+        for l1, l2 in it.combinations(hb, 2):
+            left_1=va1[l1[0]]
+            left_2=va1[l2[0]]
+            right_1=va2[l1[1]]
+            right_2=va2[l2[1]]
+            add=np.cross(right_1-left_1, right_2-left_1)
+            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            plane+=add
+            add=np.cross(right_1-left_1, left_2-right_1)
+            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            plane+=add
+            add=np.cross(right_2-left_2, right_2-left_1)
+            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            plane+=add
+            add=np.cross(right_2-left_2, left_2-right_1)
+            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            plane+=add
+        return ftuv.normalize(plane)  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
