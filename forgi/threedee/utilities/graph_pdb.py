@@ -16,6 +16,7 @@ import numpy as np
 import numpy.linalg as nl
 import random
 import sys
+import math
 
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
 import forgi.utilities.debug as fud
@@ -1972,16 +1973,21 @@ def get_basepair_plane(cg, pos):
             right_1=va2[l1[1]]
             right_2=va2[l2[1]]
             add=np.cross(right_1-left_1, right_2-left_1)
-            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            if np.any(plane!=np.zeros(3)): 
+                assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+                 " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
             plane+=add
             add=np.cross(right_1-left_1, left_2-right_1)
-            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+               " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
             plane+=add
             add=np.cross(right_2-left_2, right_2-left_1)
-            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+               " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
             plane+=add
             add=np.cross(right_2-left_2, left_2-right_1)
-            assert (plane[0]*add[0]>=0) #Same sign: Normal vector pointing in same direction.
+            assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+               " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
             plane+=add
         return ftuv.normalize(plane)  
 

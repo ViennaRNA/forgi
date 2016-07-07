@@ -621,6 +621,16 @@ class BulgeGraph(object):
 
         for i in range(i1, i2 + 1):
             yield self.seq_ids[i]
+    
+    def seq_id_to_pos(self, seq_id):
+        """
+        Convert a pdb seq_id to a 1-based nucleotide position
+
+        :param seq_id: A triple or an integer.
+        """
+        if isinstance(seq_id, int):
+            seq_id=(" ", seq_id, " ")
+        return self.seq_ids.index(seq_id)+1
 
     def create_bulge_graph(self, stems, bulges):
         """
@@ -1725,11 +1735,16 @@ class BulgeGraph(object):
         for i in range(stem_length):
             yield (d[0] + i, d[3] - i)
 
-    def get_connected_residues(self, s1, s2):
+    def get_connected_residues(self, s1, s2, bulge=None):
         """
         Get the nucleotides which are connected by the element separating
         s1 and s2. They should be adjacent stems.
 
+        :param s1, s2: 2 adjacent stems
+        :param bulge: Optional: The bulge seperating the two stems. 
+                      If s1 and s2 are connected by more than one element,
+                      this has to be given, or a ValueError will be raised.
+                      (useful for pseudeknots)
         The connected nucleotides are those which are spanned by a single
         interior loop or multiloop. In the case of an interior loop, this
         function will return a list of two tuples and in the case of multiloops
@@ -1752,11 +1767,18 @@ class BulgeGraph(object):
             # not connected
             return []
 
-        if len(common_edges) > 1:
-            raise Exception("Too many connections between the stems")
+        if len(common_edges) > 1 and bulge is None:
+            raise ValueError("Too many connections between the stems. "
+                            "Please provide the connectiong bulge you are interested in.")
+
+        if bulge and bulge not in common_edges:
+            raise ValueError("{}  does not connecty the stems {} and {}.".format(bulge, s1, s2))
 
         # the element linking the two stems
-        conn = list(common_edges)[0]
+        if bulge:
+            conn = bulge
+        else:
+            conn = list(common_edges)[0]
 
         # find out the sides of the stems that face the bulge
         (s1b, s1e) = self.get_sides(s1, conn)

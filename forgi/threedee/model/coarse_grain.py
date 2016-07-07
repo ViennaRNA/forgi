@@ -535,61 +535,139 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))
 
         return (angle_stat1, angle_stat2)
-    
-    def is_stacking(self, bulge):
+    def get_stacking_helices(self, method="Tyagi"):
+        """
+        Return all helices (longer stacking regions) as sets.
+
+        Two stems and one bulge are in a stacking relation, if self.is_stacking(bulge) is true and the stems are connected to the bulge.
+        Further more, a stem is in a stacking relation with itself.
+        A helix is the transitive closure this stacking relation.
+
+        :returns: A list of sets of element names.
+        """
+        helices=[]
+        for d in self.defines:
+            if d[0] in "mi" and self.is_stacking(d, method):
+                s1, s2 = self.connections(d)
+                helices.append(set([d, s1, s2]))
+            if d[0]=="s":
+                helices.append(set([d]))
+        while True:
+            for i,j in it.combinations(range(len(helices)),2):
+                stack_bag1 = helices[i]
+                stack_bag2 = helices[j]
+                if stack_bag1 & stack_bag2:
+                    stack_bag1|=stack_bag2
+                    del helices[j]
+                    break
+            else: 
+                break
+        return helices
+    def is_stacking(self, bulge, method="Tyagi", verbose=False):
         """
         Reports, whether the stems connected by the given bulge are coaxially stacking.
 
-        See  doi:10.1261/rna.305307, PMCID: PMC1894924 for cuttoffs for stacking
+        
 
         :param bulge: STRING. Name of a interior loop or multiloop (e.g. "m3")
+        :param method": STRING. "Tyagi": Use cutoffs from doi:10.1261/rna.305307, PMCID: PMC1894924.
         :returns: A BOOLEAN.
         """
-        DISTANCE_CUTOFF = [ 5, 12 ]
-        ANGLE_CUTOFF    = [ math.acos(0.9), math.acos(0.85) ]
-        SHEAR_ANGLE_CUTOFF = math.radians(60)
+
+        assert method in ["Tyagi", "CG" ]
+        if method=="Tyagi":
+            return self._is_stacking_tyagi(bulge, verbose)
+        return self._is_stacking_CG(bulge, verbose)
+
+    def _is_stacking_CG(self, bulge, verbose=False):
+        """"""
+        stem1, stem2 = self.connections(bulge)
+        angle = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0], 
+                               self.coords[stem2][1]-self.coords[stem2][0])
+        if angle>math.pi/2:
+            angle=math.pi-angle 
+        if angle>math.radians(45):
+            if verbose: print("Angle {}>45".format(math.degrees(angle)))
+            return False
+        shear_angle1 = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0], 
+                               self.coords[bulge][1]-self.coords[bulge][0])
+        if shear_angle1>math.pi/2:
+            shear_angle1=math.pi-shear_angle1 
+        shear_angle2 = ftuv.vec_angle(self.coords[stem2][1]-self.coords[stem2][0], 
+                               self.coords[bulge][1]-self.coords[bulge][0])
+        if shear_angle2>math.pi/2:
+            shear_angle2=math.pi-shear_angle2
+        if shear_angle1>math.radians(60) or shear_angle2>math.radians(60):
+            if verbose: print ("Shear angle 1 {}>60 or shear angle 2 {}>60".format(math.degrees(shear_angle1), math.degrees(shear_angle1)))
+            return False
+        return True
+
+    def _is_stacking_tyagi(self, bulge, verbose=False):
+        """
+        Implementation of the method described in doi:10.1261/rna.305307 (Tyagi and Matthews) for
+        the detection of coaxial stacking.
+
+        Called by self.is_stacking(bulge, "Tyagi")
+
+        ..note::
+            This does NOT implement the method for coaxial stacking prediction which is the main
+            focus of the paper, only the method for the detection of stacking in pdb files.
+        """
+        assert bulge[0] in "mi"
+        DISTANCE_CUTOFF = [ 14, 6 ]        
+        ANGLE_CUTOFF    = [  math.acos(0.75), math.acos(0.8) ]
+        SHEAR_ANGLE_CUTOFF = math.radians(60) #Relaxed compared to 60 in the paper, because we use
+                                              #virtual atom positions
         SHEAR_OFFSET_CUTOFF = 10
         if bulge[0]=="m" and self.get_length(bulge) == 0:
             is_flush = True #flush-stack vs. mismatch-mediated stack
         else:
             is_flush = False
-        
+
         stem1, stem2 = self.connections(bulge)
-        side_nts = self.get_connected_residues(stem1, stem2)[0]
+        side_nts = self.get_connected_residues(stem1, stem2, bulge)[0]
         #Distance
         bp_center1 = ftug.get_basepair_center(self, side_nts[0])
         bp_center2 = ftug.get_basepair_center(self, side_nts[1])
-        print("Distance", ftuv.vec_distance(bp_center1, bp_center2))
         if ftuv.vec_distance(bp_center1, bp_center2)>DISTANCE_CUTOFF[is_flush]:
+            if verbose: print ("Distance {} > {}".format(ftuv.vec_distance(bp_center1, bp_center2), DISTANCE_CUTOFF[is_flush]))
             return False
         normalvec1 = ftug.get_basepair_plane(self, side_nts[0])
         normalvec2 = ftug.get_basepair_plane(self, side_nts[1])
         #Coaxial
         angle = ftuv.vec_angle(normalvec1, normalvec2)
         if angle>math.pi/2:
-            warnings.warn("Angle > 90 degrees: {} ({})".format(angle, math.degrees(angle)))
+            #Triggered frequently
+            #warnings.warn("Angle > 90 degrees: {} ({})".format(angle, math.degrees(angle)))
             angle=math.pi-angle
-        print("angle", angle, math.degrees(angle))
         if angle>ANGLE_CUTOFF[is_flush]:
+            if verbose: print ("Angle {} > {}".format(angle, ANGLE_CUTOFF[is_flush]))
             return False
         #Shear Angle
         shear_angle1 = ftuv.vec_angle(normalvec1, bp_center2-bp_center1)        
-        print("Shear angle 1", math.degrees(shear_angle1))        
         if shear_angle1>math.pi/2:
             shear_angle1=math.pi-shear_angle1
-        if shear_angle1>SHEAR_ANGLE_CUTOFF: return False
+        if shear_angle1>SHEAR_ANGLE_CUTOFF: 
+            if verbose: print ("Shear angle 1 {} > {}".format(shear_angle1, SHEAR_ANGLE_CUTOFF))
+            return False
         shear_angle2 = ftuv.vec_angle(normalvec2, bp_center1-bp_center2)
         if shear_angle2>math.pi/2:
             shear_angle2=math.pi-shear_angle2
-        print("Shear angle 2", math.degrees(shear_angle2))
-        if shear_angle2>SHEAR_ANGLE_CUTOFF: return False
+        if shear_angle2>SHEAR_ANGLE_CUTOFF: 
+            if verbose: print ("Shear angle 2 {} > {}".format(shear_angle2, SHEAR_ANGLE_CUTOFF))
+            return False
         #Shear Offset
         #Formula for distance between a point and a line 
         #from http://onlinemschool.com/math/library/analytic_geometry/p_line/
         if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
-           ftuv.magnitude(normalvec2))>SHEAR_OFFSET_CUTOFF: return False
+                            ftuv.magnitude(normalvec2))>SHEAR_OFFSET_CUTOFF: 
+            if verbose: print ("Shear offset 1 wrong:", (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
+                                                         ftuv.magnitude(normalvec2)), ">" , SHEAR_OFFSET_CUTOFF)
+            return False
         if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec1))/
-           ftuv.magnitude(normalvec1))>SHEAR_OFFSET_CUTOFF: return False
+                            ftuv.magnitude(normalvec1))>SHEAR_OFFSET_CUTOFF: 
+            if verbose: print ("Shear offset 2 wrong")
+            return False
         return True
 
     def get_stem_stats(self, stem):
@@ -651,6 +729,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 self.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
             if parts[0] == 'project':
                 self.project_from=np.array(parts[1:], dtype=float)
+
 
     def to_cg_file(self, filename):
         '''
