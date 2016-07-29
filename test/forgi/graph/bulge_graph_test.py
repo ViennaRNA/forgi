@@ -1586,4 +1586,69 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",4),(0,0))
         self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",22),(0,1))
 
+    def test_get_stem_edge(self):
+        db = '........(((((((((.(((.((...)).))).)))))).)))..(((....)))....'
+        #     123456789012345678901234567890123456789012345678901234567890
+        # from 5' end
+        # f1 s0 s1 i1 s2 i0 s3 h0 i2 m0 s4 h1 t1]
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        
+        edge = bg.get_stem_edge('s0',9)
+        self.assertEqual(edge, 0)
+        
+        edge = bg.get_stem_edge('s0',42)
+        self.assertEqual(edge, 1)
+        
+        edge = bg.get_stem_edge('s1',12)
+        self.assertEqual(edge, 0)
+        
+        edge = bg.get_stem_edge('s1',40)
+        self.assertEqual(edge, 1)
+        
+        edge = bg.get_stem_edge('s2',19)
+        self.assertEqual(edge, 0)
+        
+        edge = bg.get_stem_edge('s2',33)
+        self.assertEqual(edge, 1)
+        
+        edge = bg.get_stem_edge('s3',24)
+        self.assertEqual(edge, 0)
+        
+        edge = bg.get_stem_edge('s3',28)
+        self.assertEqual(edge, 1)
+        
+        edge = bg.get_stem_edge('s4',48)
+        self.assertEqual(edge, 0)
+        
+        edge = bg.get_stem_edge('s4',55)
+        self.assertEqual(edge, 1)
+        
+    def test_shortest_path(self):
+        db =  '........(((((((((.(((.((...)).))).)))))).)))..(((....)))....'
+        #      123456789012345678901234567890123456789012345678901234567890
+        #
+        #      ffffffffsssssssssisssisshhhssisssissssssisssmmssshhhhssstttt
+        #node# 111111110001111111222033000330222111111120000044411114441111
+        
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        
+        sp = bg.shortest_path('s1', 'h0') # Path traverses stem from base to loop
+        self.assertEqual(sp, ['s1', 'i1', 's2', 'i0', 's3', 'h0'])
+        
+        sp = bg.shortest_path('s0', 's1') # Includes assymetric bulge w/ length of 0 on one side (i2)
+        self.assertEqual(sp, ['s0', 'i2', 's1'])
+        
+        sp = bg.shortest_path('f1', 'h0') # Includes assymetric bulge w/ length of 0 on one side (i2)
+        self.assertEqual(sp, ['f1', 's0', 'i2', 's1', 'i1', 's2', 'i0', 's3', 'h0'])
+       
+        sp = bg.shortest_path('f1', 't1') # Path traverses a multiloop
+        self.assertEqual(sp, ['f1', 's0', 'm0', 's4', 't1'])
+        
+        sp = bg.shortest_path('h0','h1') # Path traverses stem from loop to base
+        self.assertEqual(sp, ['h0', 's3', 'i0', 's2', 'i1', 's1', 'i2', 's0'])
+        
+        sp = bg.shortest_path('t1','f1') # Shortest path along graph in reverse
+        self.assertEqual(sp, ['t1', 's4', 'm0', 's0', 'f1'])
 
