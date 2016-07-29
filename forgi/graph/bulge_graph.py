@@ -2791,7 +2791,9 @@ class BulgeGraph(object):
         
         for n1, n2 in zip(sp, sp[1:]): # Iterate through adjacent pairs of elements in the list
             if n1.startswith('s') and n2.startswith('s'): # If two elements are both stems
-                connection = [conn for conn in traversal if conn[0] == n1 and conn[2] == n2][0] # Find their connection in graph traversal
+                connection = list([conn for conn in traversal if n1 in conn and n2 in conn][0]) # Find their connection in graph traversal
+                if connection.index(n1) > connection.index(n2): #If we're moving 'backwards' on the traversal
+                    connection.reverse()
                 for node in connection:
                     if node not in sp_set:
                         sp_set.add(node)    
@@ -2800,7 +2802,8 @@ class BulgeGraph(object):
                 if n1 not in sp_set:
                     sp_set.add(n1)
                     shortest_path.append(n1)
-        shortest_path.append(n2) # Append last item in path
+        if n2 not in sp_set:
+            shortest_path.append(n2) # Append last item in path
         
         return shortest_path
 
