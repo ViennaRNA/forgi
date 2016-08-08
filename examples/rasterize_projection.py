@@ -17,7 +17,7 @@ import numpy as np
 import scipy.misc
 import scipy.ndimage
 import argparse
-
+from PIL import Image
 WIDTH=350
 
 def get_parser():
@@ -33,21 +33,30 @@ def get_parser():
     parser.add_argument('-d', '--dpi', type=int, help='Number of pixels in the image', default = 50)
     parser.add_argument('-r', '--rotate', type=int, help='Degrees to rotate in plane', default=99999999999)
     parser.add_argument('-n', type=int, help='Number of images to produce.', default = 1)
+    parser.add_argument('--res-nums', type=str, help='A "," separated list of nucleotide positions.')
     return parser
 
 parser = get_parser()
 if __name__=="__main__":
-    args = parser.parse_args()
+    args = parser.parse_args()            
+    if args.res_nums:
+        res_nums = list(map(int, args.res_nums.split(",")))
+    else:
+        res_nums=[]
     for filename in args.cgfiles:
         for n in range(args.n):
-            cg=ftmc.CoarseGrainRNA(filename)
+            cg=ftmc.CoarseGrainRNA(filename)            
+
             try:
-                proj=fpp.Projection2D(cg, project_virtual_atoms=True)
+                proj=fpp.Projection2D(cg, project_virtual_atoms=True, 
+                                      project_virtual_residues=res_nums)
             except ValueError:
                 a=random.random()
                 b=random.random()
                 c=random.random()
-                proj=fpp.Projection2D(cg, project_virtual_atoms=True, proj_direction=[a,b,c])
+                print("Projecting from {}, {}, {}".format(a,b,c))
+                proj=fpp.Projection2D(cg, project_virtual_atoms=True, proj_direction=[a,b,c], 
+                                      project_virtual_residues=res_nums)
             if args.rotate==99999999999:
                 rot=random.randrange(0,3600)/10
             else:

@@ -288,9 +288,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
-        #: The first value corresponds to the start of the stem 
+        #: The first value corresponds to the start of the element 
         #: (the one with the lowest nucleotide number),
-        #: The second value to the end of the stem.
+        #: The second value to the end of the element.
         #: If the coordinates for an element change, the virtual atom and virtual residue 
         #: coordinates are automatically invalidated.
         self.coords = observedDict(on_change=self.reset_vatom_cache)
@@ -370,7 +370,51 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     raise RnaMissing3dError("No twists available for stem {}".format(stem))
                 else: 
                     raise
+    def get_virtual_residue(self, pos, allow_single_stranded = False):
+        """
+        Get the virtual residue for the nmucleotide at position pos (1-based)
 
+        :param allow_single_stranded: If True and pos is not in a stem, return a
+              rough estimate for the residue position instead of raising an error.
+              Currenly, for non-stem elements, these positions are on the axis of the cg-element.
+        """
+        elem = self.get_node_from_residue_num(pos)
+        if elem[0]=="s":
+            if elem not in self.v3dposs or not self.v3dposs[elem]:
+                ftug.add_virtual_residues(self, elem)
+            for i in range(self.stem_length(elem)):
+                if self.defines[elem][0] + i == pos:
+                    vres = self.v3dposs[elem][i]
+                    return vres[0] + vres [2]
+                elif self.defines[elem][3] - i == pos:
+                    vres = self.v3dposs[elem][i]
+                    return vres[0] + vres [2]
+            else:
+                assert False
+        else:
+            if not allow_single_stranded:
+                raise ValueError("Position {} is not in a stem! It is in {}.".format(pos, elem))
+            if elem[0]=="h":
+                #We estimate the vres position along the axis of the hairpin.
+                h_length = self.element_length(elem) / 2
+                if pos - self.defines[elem][0] > h_length:
+                    l = 2 * h_length - (pos - self.defines[elem][0])
+                else:
+                    l = pos - self.defines[elem][0]
+                perc = l / h_length
+            elif elem[0]=="i":
+                if pos<=self.defines[elem][1]:
+                    l = pos - self.defines[elem][0]
+                    perc = l / (self.defines[elem][1]-self.defines[elem][0])
+                else:
+                    l = pos - self.defines[elem][2]
+                    tl = (self.defines[elem][3]-self.defines[elem][2])
+                    perc = (tl - l)/tl
+            else:
+                l = pos - self.defines[elem][0]
+                perc = l / self.element_length(elem)
+            return self.coords[elem][0] + (self.coords[elem][1]-self.coords[elem][0]) * perc
+    
     def get_ordered_stem_poss(self):
         points = []
         for s in self.sorted_stem_iterator():
@@ -396,6 +440,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 vres=self.v3dposs[s][i]
                 vress += [vres[0] + vres[2], vres[0] + vres[3]]
         return np.array(vress)
+
+
 
     def get_twist_str(self):
         '''
@@ -734,7 +780,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def to_cg_file(self, filename):
         '''
         Save this structure as a string in a file.
-average_stem_vres_atom_positions_new.py
+
         :param filename: The filename to save it to.
         '''
         with open(filename, 'w') as f:

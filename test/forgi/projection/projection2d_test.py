@@ -8,9 +8,10 @@ from future.builtins.disabled import (apply, cmp, coerce, execfile,
 
 import unittest, sys
 import numpy as np
+import numpy.testing as nptest
 import networkx as nx
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.projection.projection2d as ftmp
+import forgi.projection.projection2d as fpp
 import forgi.threedee.utilities.vector as ftuv
 import matplotlib.pyplot as plt
 
@@ -29,7 +30,7 @@ class Projection2DBasicTest(unittest.TestCase):
         pass 
     def test_init_projection(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
-        proj=ftmp.Projection2D(cg, [1.,1.,1.])
+        proj=fpp.Projection2D(cg, [1.,1.,1.])
         self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])), 
                         msg="The projection direction was not stored correctly. Should be coliniar"
                             " with {}, got {}".format(np.array([1.,1.,1.]),proj.proj_direction))
@@ -37,8 +38,8 @@ class Projection2DBasicTest(unittest.TestCase):
 class Projection2DTestWithData(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
-        self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
-        self.proj2=ftmp.Projection2D(cg, [0.,0.,1.])
+        self.proj=fpp.Projection2D(cg, [1.,1.,1.])
+        self.proj2=fpp.Projection2D(cg, [0.,0.,1.])
     def test_get_bounding_square(self):
         s1=self.proj.get_bounding_square()
         s2=self.proj.get_bounding_square(5)
@@ -79,12 +80,13 @@ class Projection2DTestWithData(unittest.TestCase):
 class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
-        self.proj=ftmp.Projection2D(cg, [1.,1.,1.])
+        self.proj=fpp.Projection2D(cg, [1.,1.,1.])
         self.proj.condense_points(1)
     def test_plot(self):
+        assert False, "This is a manual Test. Comment out this line to enable it"
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         for dire in [ (1.,0.,0.), (0.,0.,1.), (0.,1.,0.),(1.,1.,0.), (1.,0.,1.), (0.,1.,1.), (1.,1.,1.) ]:
-            self.proj=ftmp.Projection2D(cg, dire)
+            self.proj=fpp.Projection2D(cg, dire)
             self.proj.condense_points(1)
             self.proj.plot(show=True, add_labels=True)
             #plt.show()
@@ -103,6 +105,59 @@ class Projection2DTestOnCondensedProjection(unittest.TestCase):
         self.assertAlmostEqual(self.proj.get_longest_arm_length()[0], 20.301048998)
 
 
-
-
+class Projection2DHelperfunctionsTests(unittest.TestCase):
+  def test_rasterize_2d_coordinates_single_point_X1(self):
+    a = np.array([[100.,0.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[10,0]]))
+  def test_rasterize_2d_coordinates_single_point_X2(self):
+    a = np.array([[109.99,0.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[10,0]]))
+  def test_rasterize_2d_coordinates_single_point_X3(self):
+    a = np.array([[110.,0.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[11,0]]))
+  def test_rasterize_2d_coordinates_single_point_Y1(self):
+    a = np.array([[0., 100.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[0,10]]))
+  def test_rasterize_2d_coordinates_single_point_Y2(self):
+    a = np.array([[0., 109.99]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[0,10]]))
+  def test_rasterize_2d_coordinates_single_point_Y3(self):
+    a = np.array([[0., 110.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[0,11]]))
+  def test_rasterize_2d_coordinates_many_points(self):
+    a = np.array([[100.,0.],[109.99,0.],[110., 0.], [0., 100.],[0.,109.99], [0.,110.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10)
+    nptest.assert_array_equal(a_rast, np.array([[10,0],[10,0], [11,0], [0,10], [0,10], [0,11]]))
+  def test_rasterize_2d_coordinates_many_points_with_origin(self):
+    a = np.array([[100.,0.],[109.99,0.],[110., 0.], [0., 100.],[0.,109.99], [0.,110.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10, np.array([-0.5,-25]))
+    nptest.assert_array_equal(a_rast, np.array([[10,2],[11,2], [11,2], [0,12], [0,13], [0,13]]))
+  def test_rasterize_2d_coordinates_single_point_with_origin(self):
+    a = np.array([[109.99,0.]])
+    b = np.array([[0.,109.99]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10, np.array([-0.5,-25]))
+    b_rast = fpp.rasterized_2d_coordinates(b, 10, np.array([-0.5,-25]))
+    nptest.assert_array_equal(a_rast, np.array([[11,2]]))
+    nptest.assert_array_equal(b_rast, np.array([[0,13]]))
+  def test_rasterize_2d_coordinates_many_points_with_rotation(self):
+    a = np.array([[100.,0.],[109.99,0.],[110., 0.], [0., 100.],[0.,109.99], [0.,110.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10, rotate = 90)
+    print(a_rast)
+    nptest.assert_array_equal(a_rast, np.array([[0,-10],[0,-11], [0,-11], [10,0], [10,0], [11,0]]))
+  def test_rasterize_2d_coordinates_many_points_with_rotation2(self):
+    a = np.array([[100.,0.],[109.99,0.],[110., 0.], [0., 100.],[0.,109.99], [0.,110.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10, rotate = -90)
+    print(a_rast)
+    nptest.assert_array_equal(a_rast, np.array([[0,10],[0,10], [0,11], [-10,0], [-11,0], [-11,0]]))
+  def test_rasterize_2d_coordinates_many_points_with_rotation_and_origin(self):
+    a = np.array([[100.,0.],[109.99,0.],[110., 0.], [0., 100.],[0.,109.99], [0.,110.]])
+    a_rast = fpp.rasterized_2d_coordinates(a, 10, np.array([-0.5, -25]), rotate = -90)
+    print(a_rast)
+    nptest.assert_array_equal(a_rast, np.array([[0,12],[0,13], [0,13], [-10,2], [-11,2], [-11,2]]))
 
