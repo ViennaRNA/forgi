@@ -1820,7 +1820,31 @@ class BulgeGraph(object):
             return (self.defines[stem][1], self.defines[stem][2])
 
         raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
+    
+    def get_stem_edge(self, stem, pos):
+        """
+        Returns the side of the stem that position is on
+        Side 0 corresponds to the 5' pairing residues in the
+        stem whereas as side 1 corresponds to the 3' pairing
+        residues in the stem.
 
+        :param stem: The name of the stem
+        :param pos: A position in the stem
+        :return: 0 if pos on 5' edge of stem
+        """
+        fp_side = self.get_side_nucleotides(stem, 0)
+        tp_side = self.get_side_nucleotides(stem, 1)
+        
+        fp_edge = range(fp_side[0],tp_side[0]+1)
+        tp_edge = range(tp_side[1],fp_side[1]+1)
+        
+        if pos in fp_edge:
+            return 0
+        elif pos in tp_edge:
+            return 1
+        
+        raise Exception("Position (%d) not in stem (%s)." % (pos, stem))
+    
     def get_any_sides(self, e1, e2):
         """
         Get the side of e1 that e2 is on. The only difference from the get_sides
@@ -2730,6 +2754,58 @@ class BulgeGraph(object):
                 return min(path_lengths) + 1
 
         return min(path_lengths) + 2
+
+    def shortest_path(self, e1, e2):
+        '''
+        Determine the shortest path between two elements (e1, e2)
+        along the secondary structure.
+        
+        :param e1: The name of the first element
+        :param e2: The name of the second element
+        :return: A list of the element names along the shortest path
+        
+        '''
+        
+        import networkx as nx
+        
+        # Get residue numbers of source and targets, for shortest_path in nx
+        source = min( [res for res in self.define_residue_num_iterator(e1)] )
+        target = min( [res for res in self.define_residue_num_iterator(e2)] )
+        
+        # Get nx graph, and the shortest path
+        G = self.to_networkx()
+        nx_sp = nx.shortest_path(G, source=source, target=target)
+        
+        # Convert shortest path of residue numbers to a shortest path of node names
+        sp, sp_set = [], set() # Use set to keep track of additions for faster lookup
+        for res in nx_sp:
+            node = self.get_node_from_residue_num(res)
+            if node not in sp_set:
+                sp_set.add(node)
+                sp.append(node)
+        
+        # assymetric bulges with a length of 0 on 1 side are missed,
+        # two adjacent stems indicate a bulge with length 0 along the path
+        shortest_path, sp_set = [], set()
+        traversal = self.traverse_graph() # Connections are ordered compared to connected_stem_iterator()
+        
+        for n1, n2 in zip(sp, sp[1:]): # Iterate through adjacent pairs of elements in the list
+            if n1.startswith('s') and n2.startswith('s'): # If two elements are both stems
+                connection = list([conn for conn in traversal if n1 in conn and n2 in conn][0]) # Find their connection in graph traversal
+                if connection.index(n1) > connection.index(n2): #If we're moving 'backwards' on the traversal
+                    connection.reverse()
+                for node in connection:
+                    if node not in sp_set:
+                        sp_set.add(node)    
+                        shortest_path.append(node)
+            else:
+                if n1 not in sp_set:
+                    sp_set.add(n1)
+                    shortest_path.append(n1)
+        if n2 not in sp_set:
+            shortest_path.append(n2) # Append last item in path
+        
+        return shortest_path
 
     def get_position_in_element(self, resnum):
         node = self.get_node_from_residue_num(resnum)
