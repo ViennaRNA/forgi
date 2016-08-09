@@ -38,19 +38,29 @@ def to_rgb(im):
     Convert an np array image from grayscale to RGB
     """
     # SEE http://www.socouldanyone.com/2013/03/converting-grayscale-to-rgb-with-numpy.html
-    w, h = im.shape
-    newImg = np.empty((w, h, 3), dtype=np.uint8)
-    newImg[:, :, 2] =  newImg[:, :, 1] =  newImg[:, :, 0] =  im * 255
-    return newImg
+    try:
+        w, h = im.shape    
+    except: #Probably RGB already
+        w, h, c = im.shape
+        return im
+    else:
+        newImg = np.empty((w, h, 3), dtype=np.uint8)
+        newImg[:, :, 2] =  newImg[:, :, 1] =  newImg[:, :, 0] =  im * 255
+        return newImg
+
 
 def to_grayscale(im):
     """
     Convert an np array image from RGB to grayscale
     """
-    w, h, _ = im.shape
-    newImg = np.empty((w, h), dtype=np.uint8)
-    newImg[:, :] = (im[:,:,0]/255+im[:,:,1]/255+im[:,:,2]/255)/3
-    return newImg
+    try:
+        w, h, _ = im.shape
+    except:
+        return im
+    else:
+        newImg = np.empty((w, h), dtype=np.uint8)
+        newImg[:, :] = (im[:,:,0]/255+im[:,:,1]/255+im[:,:,2]/255)/3
+        return newImg
 
 def rasterized_2d_coordinates(points, angstrom_per_cell = 10, origin = np.array([0,0]), rotate=0):
     angle=math.radians(rotate)
@@ -633,7 +643,6 @@ class Projection2D(object):
         if virtual_residues and self.virtual_residue_numbers:            
             image = to_rgb(image)
             rot_virtual_res = rasterized_2d_coordinates(self._virtual_residues, steplength, np.array([box[0],box[2]]), rotate)
-            print("FPP ROT VIRT RES", rot_virtual_res)
             for i, point in enumerate(rot_virtual_res):
                 color = (0,150,255*self.virtual_residue_numbers[i]//max(self.virtual_residue_numbers))
                 if 0<=point[0]<img_length and 0<=point[1]<img_length:

@@ -388,7 +388,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     return vres[0] + vres [2]
                 elif self.defines[elem][3] - i == pos:
                     vres = self.v3dposs[elem][i]
-                    return vres[0] + vres [2]
+                    return vres[0] + vres [3]
             else:
                 assert False
         else:
@@ -405,15 +405,15 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             elif elem[0]=="i":
                 if pos<=self.defines[elem][1]:
                     l = pos - self.defines[elem][0]
-                    perc = l / (self.defines[elem][1]-self.defines[elem][0])
+                    perc = l / (self.defines[elem][1]-self.defines[elem][0]+1)
                 else:
                     l = pos - self.defines[elem][2]
-                    tl = (self.defines[elem][3]-self.defines[elem][2])
+                    tl = (self.defines[elem][3]-self.defines[elem][2]+1)
                     perc = (tl - l)/tl
             else:
                 l = pos - self.defines[elem][0]
                 perc = l / self.element_length(elem)
-            return self.coords[elem][0] + (self.coords[elem][1]-self.coords[elem][0]) * perc
+            return self.coords[elem][0] + (self.coords[elem][1]-self.coords[elem][0]+1) * perc
     
     def get_ordered_stem_poss(self):
         points = []
