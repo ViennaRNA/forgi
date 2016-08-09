@@ -231,6 +231,8 @@ def tp_fp_distance( img, ref_img, _=None):
     alle=np.sum(np.logical_or(img,ref_img))
     return alle/tp
 
+def combined_distance(img, ref_img, _=None):
+    return tp_fp_distance(img, ref_img) + hausdorff_distance(img, ref_img)
 ##############################################################################
 # Helper functions for working with projections
 ##############################################################################
