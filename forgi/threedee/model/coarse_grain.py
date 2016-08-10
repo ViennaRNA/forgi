@@ -34,6 +34,13 @@ import math
 import warnings
 import itertools as it
 
+
+try:
+  profile  #The @profile decorator from line_profiler (kernprof)
+except:
+  def profile(x): 
+    return x
+
 def remove_hetatm(lines):
     '''
     Go through the lines of a pdb file and remove any which refer to a
@@ -951,6 +958,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                 self.iloop_iterator()),
                        key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)),not x in self.sampled))
         return edges
+    @profile
     def virtual_atoms(self, key):
         """
         Get virtual atoms for a key.

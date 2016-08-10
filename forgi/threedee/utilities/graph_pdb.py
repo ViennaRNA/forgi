@@ -31,6 +31,15 @@ import scipy.optimize as so
 
 catom_name = "C1'"
 
+
+try:
+  profile  #The @profile decorator from line_profiler (kernprof)
+except:
+  def profile(x): 
+    return x
+else:
+  import forgi.threedee.utilities.average_atom_positions as ftua #Takes forever if executed within a decorated method.
+
 def stem_stem_orientation(cg, s1, s2):
     '''
     Calculate the orientation of stem s2 in relation to stem s1
@@ -1748,7 +1757,7 @@ def element_coord_system(cg, d):
     #return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
-
+@profile
 def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     Get a list of virtual atoms for this structure.
@@ -1771,6 +1780,7 @@ class VirtualAtomsLookup(object):
         self.cg=cg  
         self.given_atom_names=given_atom_names
         self.sidechain=sidechain
+    @profile
     def __getitem__(self, position):
         """
         :returns: A dictionary containing all atoms (as keys) and their 
@@ -1786,6 +1796,7 @@ class VirtualAtomsLookup(object):
             elif len(value)==4 and position>=value[2] and position<=value[3]:
                 return self._getitem_for_element(key, position)
         assert False, "No return for pos {}".format(position)
+    @profile
     def keys(self):
         k=set()
         for value in self.cg.defines.values():
@@ -1795,7 +1806,8 @@ class VirtualAtomsLookup(object):
             if len(value)>3:
                 for i in range(value[2], value[3]+1):
                     k.add(i)
-        return k     
+        return k
+    @profile 
     def _getitem_for_element(self, d, pos):
         """
         :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
@@ -1835,6 +1847,7 @@ class VirtualAtomsLookup(object):
                     #warnings.warn("KeyError in virtual_atoms. No coordinates found for: {}".format(ke))
                     pass
             return e_coords
+    @profile
     def _getitem_for_stem(self, d, pos):
         i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
         assert pos>=1    #pos-1 should not be negative!  

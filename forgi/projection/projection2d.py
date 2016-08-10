@@ -76,6 +76,12 @@ def rasterized_2d_coordinates(points, angstrom_per_cell = 10, origin = np.array(
     assert (a==(b//angstrom_per_cell).astype(int)).all()
     return a
 
+def crop_coordinates_to_bounds(a, num_cells):
+    """
+    :a: an array of x,y coordinates (modified in place)
+    """
+    return a.clip(min=0, max=num_cells-1)
+
 ### The following functions are from 
 ### http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 ### Used under the PSF License
@@ -86,7 +92,7 @@ def orientation(p,q,r):
     '''Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.'''
     return (q[1]-p[1])*(r[0]-p[0]) - (q[0]-p[0])*(r[1]-p[1])
 
-@profile
+#@profile
 def hulls(Points):
     '''Graham scan to find upper and lower convex hulls of a set of 2d points.'''
     U = []
@@ -134,7 +140,7 @@ def diameter(Points):
 
 #### END David Eppstein
 
-@profile
+#@profile
 def rotate2D(vector, cosPhi, sinPhi):
     x=vector[0]*cosPhi-vector[1]*sinPhi
     y=vector[0]*sinPhi+vector[1]*cosPhi
@@ -634,12 +640,11 @@ class Projection2D(object):
 
         if virtual_atoms and len(self._virtual_atoms):
             rot_virtual_atoms = rasterized_2d_coordinates(self._virtual_atoms, steplength, np.array([box[0],box[2]]), rotate)
-            for point in rot_virtual_atoms:
-                if 0<=point[0]<img_length and 0<=point[1]<img_length:
-                    image[point[0],point[1]]=1
-                else:                    
-                    if warn: warnings.warn("WARNING during rasterization of virtual atoms: "
-                                           "Parts of the projection are cropped off.")
+            rot_virtual_atoms_clip = crop_coordinates_to_bounds(rot_virtual_atoms, img_length )
+            if warn and (rot_virtual_atoms_clip!=rot_virtual_atoms).any():
+                warnings.warn("WARNING during rasterization of virtual atoms: "
+                              "Parts of the projection are cropped off.")
+            image[rot_virtual_atoms_clip[:,0],rot_virtual_atoms_clip[:,1]]=1
         if virtual_residues and self.virtual_residue_numbers:            
             image = to_rgb(image)
             rot_virtual_res = rasterized_2d_coordinates(self._virtual_residues, steplength, np.array([box[0],box[2]]), rotate)

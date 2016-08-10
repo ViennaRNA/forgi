@@ -252,6 +252,7 @@ def get_box(projection, width, offset=np.array((0,0))):
         center_ver-width/2+offset[1], center_ver+width/2+offset[1])
     return box
 
+@profile
 def locally_minimal_distance(ref_img, scale, cg, 
                              start_rot=None, offset=None, proj_dir=None,
                              maxiter=50, advanced=False, virtual_atoms=True, 
