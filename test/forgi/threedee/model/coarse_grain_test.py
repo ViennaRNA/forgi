@@ -9,6 +9,7 @@ import sys
 import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.model.comparison as ftme
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.utilities.debug as fud
 import tempfile as tf
@@ -337,8 +338,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         new_cg = copy.deepcopy(cg)
 
         for key in new_cg.coords: 
-            for i in range(len(new_cg.coords[key])):
-                new_cg.coords[key][i] = [0,0,0]
+            new_cg.coords[key] = [0,0,0],[0,0,0]
 
         new_cg.load_coordinates_array(coords)
         for key in new_cg.coords: 
@@ -356,3 +356,29 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.assertFalse(cg.is_stacking("m0"))
         self.assertFalse(cg.is_stacking("m2"))
         self.assertTrue(cg.is_stacking("m1"))
+
+    def test_coords_from_direction(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
+        cg_old = copy.deepcopy(cg)
+        coords = cg.get_coordinates_array()
+        directions = coords[1::2]-coords[0::2]
+        cg.coords.clear()
+        cg.coords_from_directions(directions)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg_old), 0) #This only looks at stems
+        # The coordinates should be the same as before except for a constant offset
+        new_coords = cg.get_coordinates_array()
+        offset = (coords - new_coords)
+        assert np.allclose(offset,offset[0])
+    def test_coords_from_direction_with_pseudoknot(self):
+        #This tests the case where the link is inserted from reverse direction.
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg_old = copy.deepcopy(cg)
+        coords = cg.get_coordinates_array()
+        directions = cg.coords_to_directions()
+        cg.coords.clear()
+        cg.coords_from_directions(directions)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg_old), 0)
+        new_coords = cg.get_coordinates_array()
+        offset = (coords - new_coords)
+        assert np.allclose(offset,offset[0])
+

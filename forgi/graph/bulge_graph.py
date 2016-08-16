@@ -28,6 +28,12 @@ import os, warnings
 import operator as oper
 import numpy as np
 
+try:
+  profile  #The @profile decorator from line_profiler (kernprof)
+except:
+  def profile(x): 
+    return x
+
 def add_bulge(bulges, bulge, context, message):
     """
     A wrapper for a simple dictionary addition
@@ -593,6 +599,7 @@ class BulgeGraph(object):
             else:
                 yield [ds1, ds2]
 
+    @profile
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         """
         Iterate over the residue numbers that belong to this node.
@@ -1148,6 +1155,17 @@ class BulgeGraph(object):
 
         :param define: The name of the bulge separating the two stems
         :param connections: The two stems and their separation
+
+        :returns: INT connection type
+                  *   positive values mean forward (from the connected stem starting at the 
+                      lower nucleotide number to the one starting at the higher nuc. number)
+                  *   negative values mean backwards.
+                  1   interior loop
+                  2   first multi-loop segment of normal multiloops and most pseudoknots
+                  3   middle segment of a normal multiloop
+                  4   last segment of normal multiloops and most pseudoknots
+                  5   middle segments of pseudoknots
+                  
         """
 
         if define[0] == 'i':
@@ -1192,7 +1210,7 @@ class BulgeGraph(object):
 
         :param connection_type: The angle type, as determined by which corners
                                 of a stem are connected
-        :return: (s1e, s2b)
+        :return: (s1e, s2b) 0 means the side of the stem with the lowest nucleotide, 1 the other side
         """
         ends = ()
 
@@ -1753,9 +1771,9 @@ class BulgeGraph(object):
         If the two stems are not separated by a single element, then return
         an empty list.
         """
-        # sort the stems according to the number of their first nucleotide
-        stems = [s1, s2]
-        stems.sort(key=lambda x: self.defines[x][0])
+        ## sort the stems according to the number of their first nucleotide
+        #stems = [s1, s2]
+        #stems.sort(key=lambda x: self.defines[x][0])
 
         c1 = self.edges[s1]
         c2 = self.edges[s2]
@@ -1798,9 +1816,22 @@ class BulgeGraph(object):
 
         # return the ones which are closest to each other
         if conn[0] == 'i':
-            return sorted([sorted(dists[0][1:]), sorted(dists[1][1:])])
+            return sorted([list(dists[0][1:]), list(dists[1][1:])])
         else:
-            return sorted([sorted(dists[0][1:])])
+            return [list(dists[0][1:])]
+    def get_link_direction(self, stem1, stem2, bulge = None):
+        """
+        Get the direction in which stem1 and stem2 are linked (by the bulge)
+        
+        :returns: 1 if the bulge connects stem1 with stem2 in forward direction (5' to 3')
+                  -1 otherwise
+        """
+        linked = self.get_connected_residues(stem1, stem2, bulge)
+        #print ("LINKED FOR {}: {}".format(bulge, linked))
+        if linked[0][0]<linked[0][1]:
+            return 1
+        else:
+            return -1
 
     def get_side_nucleotides(self, stem, side):
         """
@@ -1880,7 +1911,7 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
-        # if the bulge is a length 0, multiloop then use the adjacent
+        # if the bulge is a length 0 multiloop then use the adjacent
         # stem to determine its side
         if len(bd) == 0:
             edges = self.edges[b]
@@ -1924,6 +1955,7 @@ class BulgeGraph(object):
         :return: A tuple indicating the corner of the stem that connects
                  to the bulge as well as the corner of the bulge that connects
                  to the stem.
+                 These sides are equivalent to the indices of the define.
         """
         s1d = self.defines[s1]
         bd = self.defines[b]
@@ -1933,7 +1965,7 @@ class BulgeGraph(object):
 
             for e in edges:
                 if e != s1:
-                    bd = self.defines[e]
+                    bd = self.defines[e] #For bulges of length 0, use the next stem
                     break
 
         for k in range(len(bd)):
@@ -2044,6 +2076,7 @@ class BulgeGraph(object):
                     return r1
         return None
 
+    @profile
     def connections(self, bulge):
         """
         Return the edges that connect to a bulge in a list form,
@@ -2114,7 +2147,9 @@ class BulgeGraph(object):
 
             return seqs
 
-    # This function seems to be unused. Consider deprecation...
+
+    
+    #Seems to be unused!
     def get_stem_direction(self, s1, s2):
         """
         Return 0 if the lowest numbered residue in s1
@@ -2573,7 +2608,8 @@ class BulgeGraph(object):
                 next_stem = set.difference(self.edges[current],
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
-
+                # If pseudoknots exist, the direction is not always 0! 
+                # assert  self.get_stem_direction(prev, build_order[-1][2])==0 does not hold!
         self.build_order = build_order
 
         return build_order

@@ -211,7 +211,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             cg.name = pdb_base
             cg.seqids_from_residue_map(residue_map)
             ftug.add_stem_information_from_pdb_chain(cg, chain)
-            ftug.add_bulge_information_from_pdb_chain(cg, chain)
+            cg.add_bulge_coords_from_stems()
             ftug.add_loop_information_from_pdb_chain(cg, chain)
 
             cg.chain = chain
@@ -295,9 +295,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
-        #: The first value corresponds to the start of the element 
+        #: The first value of stem coordinates corresponds to the start of the stem 
         #: (the one with the lowest nucleotide number),
-        #: The second value to the end of the element.
+        #: The second value to the end of the stem.
+        #: For bulges the order is currently undefined.
         #: If the coordinates for an element change, the virtual atom and virtual residue 
         #: coordinates are automatically invalidated.
         self.coords = observedDict(on_change=self.reset_vatom_cache)
@@ -348,11 +349,34 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             
         out_str = ''
         for key in self.coords.keys():
+            if key[0] in ["m", "i"]: continue #Bulge coordinates are redundant. They can be deduced from the stem coordinates.
             [p, n] = self.coords[key]
             out_str += ("coord {k} {x[0]:.16f} {x[1]:.16f} {x[2]:.16f} "
                         "{y[0]:.16f} {y[1]:.16f} {y[2]:.16f}".format(k=key, x=p, y=n))
             out_str += '\n'
         return out_str
+    def add_bulge_coords_from_stems(self):
+        '''
+        Add the information about the starts and ends of the bulges (i and m elements).
+        The stems have to be created beforehand.
+
+        This is called during loading of the RNA structure from pdb and from cg files.
+        '''
+        for d in self.defines.keys():
+            if d[0] != 's':                    
+                edges = list(self.edges[d])
+                if len(edges) == 2:
+                    (s1b, _) = self.get_sides(edges[0], d)
+                    (s2b, _) = self.get_sides(edges[1], d)
+
+                    mids1 = self.coords[edges[0]]
+                    mids2 = self.coords[edges[1]]
+
+                    #Save coordinates in direction of the strand.
+                    if self.get_link_direction(edges[0], edges[1],d)==1:
+                        self.coords[d] = (mids1[s1b], mids2[s2b])
+                    else:
+                        self.coords[d] = (mids2[s2b], mids1[s1b])
 
     def add_all_virtual_residues(self):
         """
@@ -782,6 +806,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 self.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
             if parts[0] == 'project':
                 self.project_from=np.array(parts[1:], dtype=float)
+        self.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
 
 
     def to_cg_file(self, filename):
@@ -794,7 +819,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             s = self.to_cg_string()
 
             f.write(s)
-
+    
     def radius_of_gyration(self):
         '''
         Calculate the radius of gyration of this structure.
@@ -834,28 +859,25 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         The coordinates are sorted in the order of the keys
         in coordinates dictionary.
 
-        :return: One large array containing a sequential list of coordinates
+        :return: A 2D numpy array containing all coordinates
         '''
         all_coords = []
         for key in sorted(self.coords.keys()):
             for i in range(len(self.coords[key])):
-                all_coords += list(self.coords[key][i])
-        return all_coords
+                all_coords.append(self.coords[key][i])
+        return np.array(all_coords)
 
     def load_coordinates_array(self, coords):
         '''
         Read in an array of coordinates (as may be produced by get_coordinates_array)
         and replace the coordinates of this structure with it.
 
-        :param coords: A 1D array of coordinates
+        :param coords: A 2D array of coordinates
         :return: self
         '''
-        counter = 0
 
-        for key in sorted(self.coords.keys()):
-            for i in range(len(self.coords[key])):
-                self.coords[key][i] = coords[counter:counter+3]
-                counter += 3
+        for j, key in enumerate(sorted(self.coords.keys())):
+            self.coords[key] = coords[ 2*j ], coords[ 2*j+1 ]
         return self
 
     def get_twists(self, node):
@@ -958,6 +980,67 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                 self.iloop_iterator()),
                        key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)),not x in self.sampled))
         return edges
+
+    def coords_to_directions(self):
+        """
+        The directions of each coarse grain element. One line per cg-element.
+
+        The array is sorted by the corresponding element names alphabetically (`sorted(defines.keys()`)
+        The directions usually point away from the elemnt's lowest nucleotide.
+        However h,t and f elements always point away from the connected stem.
+        """
+        coords = self.get_coordinates_array()
+        directions = coords[1::2]-coords[0::2]
+        return directions
+    def coords_from_directions(self, directions):
+        """
+        Generate coordinates from direction vectors (using also their lengths)
+
+        Currently ignores the twists!
+
+        :param directions: An array of vectors from the side of a cg-element with lower nucleotide number to the side with higher number
+                           The array is sorted by the corresponding element names alphabetically (`sorted(defines.keys()`)
+
+        """
+        sorted_defines = sorted(self.defines.keys())
+        assert len(sorted_defines)==len(directions)
+        if self.build_order is None:
+            self.traverse_graph()
+        self.coords["s0"]=np.array([0,0,0]), directions[sorted_defines.index("s0")]
+
+        for stem1, link, stem2 in self.build_order: #Bulges and stems
+            conn = self.connection_ends(self.connection_type(link, [stem1,stem2]))            
+            link_dir = self.get_link_direction(stem1, stem2, link)
+            if link_dir==1:
+                self.coords[link] = self.coords[stem1][conn[0]], self.coords[stem1][conn[0]]+directions[sorted_defines.index(link)]
+                if conn[1]==0:
+                    self.coords[stem2] = self.coords[link][1], self.coords[link][1]+directions[sorted_defines.index(stem2)]
+                else:
+                    self.coords[stem2] = self.coords[link][1] - directions[sorted_defines.index(stem2)], self.coords[link][1]
+            else:
+                self.coords[link] = self.coords[stem1][conn[0]] - directions[sorted_defines.index(link)], self.coords[stem1][conn[0]]
+                if conn[1]==0:
+                    self.coords[stem2] = self.coords[link][0], self.coords[link][0]+directions[sorted_defines.index(stem2)]
+                else:
+                    self.coords[stem2] = self.coords[link][0] - directions[sorted_defines.index(stem2)], self.coords[link][0]
+        for d in self.defines:
+            if d[0] == "m" and d not in self.mst:
+                edges = list(self.edges[d])
+                (s1b, _) = self.get_sides(edges[0], d)
+                (s2b, _) = self.get_sides(edges[1], d)
+                mids1 = self.coords[edges[0]]
+                mids2 = self.coords[edges[1]]
+                #Save coordinates in direction of the strand.
+                if self.get_link_direction(edges[0], edges[1],d)==1:
+                    self.coords[d] = (mids1[s1b], mids2[s2b])
+                else:
+                    self.coords[d] = (mids2[s2b], mids1[s1b])
+
+            if d[0] in "hft": #Loops
+                stem, = self.edges[d]
+                (s1b, _) = self.get_sides(stem, d)
+                self.coords[d] = self.coords[stem][s1b], self.coords[stem][s1b] + directions[sorted_defines.index(d)]
+
     @profile
     def virtual_atoms(self, key):
         """

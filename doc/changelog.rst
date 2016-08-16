@@ -1,3 +1,11 @@
+Changes in upcoming version
+===========================
+*  `average_stem_vres_positions` are back with recalculated values
+*  In `forgi.graph.bulge_graph` the function `BulgeGraph.get_connected_nucleotides` no longer sorts the 
+   output nucleotides. Now this function depends on the order of stem1 and stem2 and can thus be used 
+   to determine the direction of a bulge. This is used in the new member function `get_link_direction`.
+
+
 Changes in Version 0.3
 ======================
 

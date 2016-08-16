@@ -1162,13 +1162,16 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         self.assertEqual(len(cr), 2)
         self.assertEqual(cr[0], [2,5])
-        self.assertEqual(cr[1], [10, 13])
+        self.assertEqual(cr[1], [13, 10])
 
+        # The order depends on the order of the input stems. 
         cr = bg.get_connected_residues('s1', 's0')
 
         self.assertEqual(len(cr), 2)
-        self.assertEqual(cr[0], [2,5])
+        self.assertEqual(cr[0], [5,2])
         self.assertEqual(cr[1], [10, 13])
+
+
         db = '((..))..((..))'
         bg = fgb.BulgeGraph(dotbracket_str=db)
 

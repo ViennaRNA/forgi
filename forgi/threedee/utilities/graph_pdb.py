@@ -713,7 +713,7 @@ def get_mids_core(cg, chain, define,
     chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
     #chain_new_mids = [chain_new_mids[0] + mult * stem_vec, chain_new_mids[1] - mult * stem_vec]
 
-    # return it as a Bio.PDB.Vector for some strang reason
+    # return it as a Bio.PDB.Vector for some strange reason
     return (bpdb.Vector(chain_new_mids[0]), bpdb.Vector(chain_new_mids[1]))
 
 
@@ -1581,24 +1581,11 @@ def add_bulge_information_from_pdb_chain(bg, chain):
 
     Modifies the structure bg.
 
-    :param bg: The BulgeGraph.
-    :param chain: The Bio.PDB chain representation of the 3D structure.
+    :param bg: The CoarseGrainRNA.
     '''
-    for d in bg.defines.keys():
-        if d[0] != 's':
-            if len(bg.edges[d]) == 2:
-                edges = list(bg.edges[d])
-
-                #s1d = bg.defines[edges[0]]
-                #s2d = bg.defines[edges[1]]
-
-                (s1b, s1e) = bg.get_sides(edges[0], d)
-                (s2b, s2e) = bg.get_sides(edges[1], d)
-
-                mids1 = bg.coords[edges[0]] #get_mids(chain, s1d)
-                mids2 = bg.coords[edges[1]] #get_mids(chain, s2d)
-
-                bg.coords[d] = (mids1[s1b], mids2[s2b])
+    warnings.warn("add_bulge_information_from_pdb_chain is deprecated."
+                  " Use cg.add_bulge_coords_from_stems instead!")
+    bg.add_bulge_coords_from_stems()
 
 def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
     for d in it.chain(bg.hloop_iterator(), ['t1', 'f1']):

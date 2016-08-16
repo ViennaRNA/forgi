@@ -231,3 +231,7 @@ def cg_virtual_atoms_rmsd(cg1, cg2):
     residues2 = ftug.bg_virtual_residues(cg2)
 
     return ftur.centered_rmsd
+
+
+
+
