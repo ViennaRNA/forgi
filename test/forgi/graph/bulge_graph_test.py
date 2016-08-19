@@ -1650,7 +1650,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(sp, ['f1', 's0', 'm0', 's4', 't1'])
         
         sp = bg.shortest_path('h0','h1') # Path traverses stem from loop to base
-        self.assertEqual(sp, ['h0', 's3', 'i0', 's2', 'i1', 's1', 'i2', 's0'])
+        self.assertEqual(sp, ['h0', 's3', 'i0', 's2', 'i1', 's1', 'i2', 's0', 'm0', 's4', 'h1'])
         
         sp = bg.shortest_path('t1','f1') # Shortest path along graph in reverse
         self.assertEqual(sp, ['t1', 's4', 'm0', 's0', 'f1'])

@@ -1,7 +1,7 @@
 import numpy as np
 import math, warnings, sys
 import forgi.threedee.utilities.vector as ftuv
-import iterators as it
+import itertools as it
 
 """
 This module contains functions for characterising a single point-cloud.
