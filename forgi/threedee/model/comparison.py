@@ -212,25 +212,11 @@ def cg_rmsd(cg1, cg2):
     :return: The RMSD
     '''
 
-    residues1 = ftug.bg_virtual_residues(cg1)
-    residues2 = ftug.bg_virtual_residues(cg2)
+    residues1 = cg1.get_ordered_virtual_residue_poss()
+    residues2 = cg2.get_ordered_virtual_residue_poss()
 
     return ftur.centered_rmsd(residues1, residues2)
 
-def cg_virtual_atoms_rmsd(cg1, cg2):
-    '''
-    Calculate the RMSD between two Coarse Grain models using their
-    set of virtual atoms.
-
-    :param cg1: The first coarse grain model.
-    :param cg2: The second coarse-grain model.
-    :return: The RMSD
-    '''
-
-    residues1 = ftug.bg_virtual_residues(cg1)
-    residues2 = ftug.bg_virtual_residues(cg2)
-
-    return ftur.centered_rmsd
 
 
 

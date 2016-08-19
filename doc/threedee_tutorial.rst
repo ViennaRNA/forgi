@@ -304,6 +304,33 @@ compute the RMSD value amongst them::
     >>> print ftur.rmsd(v1,v2)
     0.0
 
+Scalar descriptors of RNA 3D strructures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To characterize an RNA 3D structures, a lot of descriptors could be potentially useful.
+The `forgi.threedee` library includes the following scalar descriptors.
+
+    1) The Radius of gyration
+    2) The anisotropy
+    3) The asphericity
+
+Note that 1-3 are related, as they could all be derived from the gyration tensor.
+An overview over these properties can be found for example in the introduction of
+of reference [3] and the papers referenced therein.
+
+    >>> import forgi.threedee.model.coarse_grain as ftmc
+    >>> import forgi.threedee.utilities.rmsd as ftur
+    >>> 
+    >>> cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+    >>>
+    >>> print "Radius of Gyration", cg.radius_of_gyration()
+    >>>
+    >>> coords = cg.get_ordered_stem_poss() #Use only coarse grained coordinates of stems
+    >>> coords = cg.get_ordered_virtual_residue_poss() #Alternatively use coordinates of virtual residues
+    >>> 
+    >>> print "Anisotropy", ftur.anisotropy(coords)
+    >>> print "Asphericity", ftur.asphericity(coords)
+
 Determine if two Atoms are Covalently Bonded
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -325,9 +352,13 @@ Example::
 Citations
 ~~~~~~~~~
 
-[1] *Gendron P, Lemieux S, Major F(2001)*. **Quantitative analysis of nucleic acid three-dimensional structures.** J Mol Biol 308:919–936.
+[1] *Gendron P, Lemieux S, Major F*. **Quantitative analysis of nucleic acid three-dimensional structures.** J Mol Biol (2001) 308:919–936.
 
 [2] *Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight*.
 **From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.**
 RNA (2008) 14(3):410-416.
+
+[3] *Handan Arkın and Wolfhard Janke*. 
+**Gyration tensor based analysis of the shapes of polymer chains in an attractive spherical cage**
+The Journal of Chemical Physics (2013) 138:054904, http://dx.doi.org/10.1063/1.4788616
 

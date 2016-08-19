@@ -449,13 +449,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def get_ordered_stem_poss(self):
         points = []
         for s in self.sorted_stem_iterator():
-            points += [self.coords[s][0]]
-            points += [self.coords[s][1]]
+            points += list(self.coords[s])
         return np.array(points)
 
     def get_ordered_virtual_residue_poss(self):
         """
-        Get the coordinates of the virtual residues in a consistent order.
+        Get the coordinates of all stem's virtual residues in a consistent order.
         
         This is used for RMSD calculation and is ment to replace ftug.bg_virtual_residues
         If no virtual_residue_positions are known, self.add_all_virtual_residues() is called 
@@ -820,37 +819,30 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             f.write(s)
     
-    def radius_of_gyration(self):
+    def radius_of_gyration(self, method = "fast"):
         '''
         Calculate the radius of gyration of this structure.
 
+        :param method: A STRING. one of 
+                       "fast" (use only coordinates of coarse grained stems) or
+                       "vres" (use virtual residue coordinates of stems)
+
         :return: A number with the radius of gyration of this structure.
-        '''
-        coords = []
+        '''        
+        if method=="fast":
+            coords=self.get_ordered_stem_poss()
+        elif method=="vres":
+            coords = self.get_ordered_virtual_residue_poss()
+        else:
+            raise ValueError("Wrong method {}. Choose one of 'fast' and 'vres'".format(method))
 
-        for s in self.sorted_stem_iterator():
-            coords += list(self.coords[s])
-
-        rmsd = ftur.radius_of_gyration(coords)
-
-        return rmsd
+        rog = ftur.radius_of_gyration(coords)
+        return rog
 
     def get_coordinates_list(self):
-        '''
-        Get all of the coordinates as a list of vectors.
-
-        The vectors are sorted according to the name of the
-        element they correspond to.
-
-        :return: A list of vectors.
-        '''
-        all_coords = []
-
-        for d in sorted(self.defines):
-            all_coords += [self.coords[d][0]]
-            all_coords += [self.coords[d][1]]
-
-        return all_coords
+        warnings.warn("CoarseGrainRNA.get_coordinates_list is deprecated and being "
+                      "replaced by get_coordinates_array!")
+        return self.get_coordinates_array()
 
     def get_coordinates_array(self):
         '''
