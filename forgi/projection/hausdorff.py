@@ -567,7 +567,7 @@ def _try_startpoints(ref_img, scale, cg, start_points, starting_rotations,
                 loc_best_rot=rot
                 loc_best_offs=offset
                 #loc_best_img=img
-        #print("HEUR?", loc_best_score, best_score, best_score+(decrease*1.5)
+        #print("HEUR?", loc_best_score, best_score, best_score+(decrease*1.5))
         if use_heuristic and loc_best_score>best_score+(decrease*1.75):
             score_heur+=1 
             #print("Score")
@@ -607,6 +607,7 @@ def _try_startpoints(ref_img, scale, cg, start_points, starting_rotations,
                   "\t{} attempts were skipped because the diameters didn't match.\n".format(la_heur))
         return float("inf"), None, [np.array([0,0]), 0, np.array([0,0])]
     return best_score, best_img, best_params
+
 def globally_minimal_distance(ref_img, scale, cg,                               
                               start_points=40,
                               starting_rotations=[0, 180], 
@@ -647,7 +648,6 @@ def globally_minimal_distance(ref_img, scale, cg,
     r.shuffle(sp)
     #random.shuffle(sp)
 
-##################
     best_score, best_img, best_params =_try_startpoints(ref_img, scale, cg, sp, 
                       starting_rotations, starting_offsets, local_maxiter, virtual_atoms, 
                       use_heuristic, distance, verbose)

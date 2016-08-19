@@ -116,6 +116,42 @@ class TestHausdorffDistances(unittest.TestCase):
         self.assertEqual(fph.modified_hausdorff_distance(self.img, self.img),0)
         self.assertEqual(fph.modified_hausdorff_distance(self.img2, self.img2),0)
 
+class TestHelperFunctions(unittest.TestCase):
+    def setUp(self):
+        self.img = np.zeros((10,10))
+        self.img[3,3]=1
+        self.img[3,4]=1
+        self.img[3,5]=1
+        self.img[3,6]=1
+        self.img[3,7]=1
+    def test_get_longest_img_diameter_straight(self):
+        self.assertAlmostEqual(fph.get_longest_img_diameter(self.img, 10), math.sqrt(26))
+        self.assertAlmostEqual(fph.get_longest_img_diameter(self.img, 100), 10*math.sqrt(26))
+    def test_get_longest_img_diameter_diagonal(self):
+        self.img[9,9]=1
+        self.assertAlmostEqual(fph.get_longest_img_diameter(self.img, 10), 7*math.sqrt(2))
+    def test_longest_axis_resolution_invariant(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        ref_proj =  fpp.Projection2D(cg, [1., 1.,   1.   ], project_virtual_atoms=True)
+        ref_box=ref_proj.get_bounding_square(margin=30)
+        scale=ref_box[1]-ref_box[0]
+        img1, _=ref_proj.rasterize(70, bounding_square=ref_box, rotate=0) 
+        img2, _=ref_proj.rasterize(40, bounding_square=ref_box, rotate=0) 
+        img3, _=ref_proj.rasterize(60, bounding_square=ref_box, rotate=10)
+        d1 = fph.get_longest_img_diameter(img1, scale)
+        d2 = fph.get_longest_img_diameter(img2, scale)
+        d3 = fph.get_longest_img_diameter(img3, scale)
+        self.assertAlmostEqual(d1, d2, places=-1 )
+        self.assertAlmostEqual(d1, d3, places=-1 )
+        self.assertAlmostEqual(d3, d2, places=-1 )
+    def test_proj_longest_axis_vs_img_diameter(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        ref_proj =  fpp.Projection2D(cg, [1., 1.,   1.   ], project_virtual_atoms=True)
+        ref_box=ref_proj.get_bounding_square(margin=30)
+        scale=ref_box[1]-ref_box[0]
+        ref_img, _=ref_proj.rasterize(70, bounding_square=ref_box, rotate=0)
+        self.assertAlmostEqual(ref_proj.longest_axis, fph.get_longest_img_diameter(ref_img, scale))
+
 class TestDistanceCgToImg(unittest.TestCase):
     def setUp(self):
         self.cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
@@ -141,12 +177,12 @@ class TestDistanceCgToImg(unittest.TestCase):
         ref_box=self.ref_proj_na.get_bounding_square(margin=30)
         ref_img, _=self.ref_proj_na.rasterize(70, bounding_square=ref_box, rotate=45)
         scale=ref_box[1]-ref_box[0]
-        distance, img, params = fph.globally_minimal_distance(ref_img, scale, self.cg, virtual_atoms=False)
-        #fig, ax=plt.subplots(2)
-        #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
-        #ax[1].imshow(img, interpolation="none", cmap='gray')
-        #ax[1].set_title("{} distance".format(distance))
-        #plt.show()
+        distance, img, params = fph.globally_minimal_distance(ref_img, scale, self.cg, virtual_atoms=False, verbose = True)
+        fig, ax=plt.subplots(2)
+        ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+        ax[1].imshow(img, interpolation="none", cmap='gray')
+        ax[1].set_title("{} distance".format(distance))
+        plt.show()
         self.assertLessEqual(distance, 3)
         #self.assertLessEqual(abs(params[1]-45), 5)
         nptest.assert_allclose(params[0], fph.to_polar([2,0,-1.2])[1:], atol=5)
