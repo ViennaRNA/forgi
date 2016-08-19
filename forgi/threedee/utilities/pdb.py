@@ -2,7 +2,6 @@ import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
 
-import forgi.threedee.utilities.rmsd as ftur
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 
@@ -269,7 +268,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         crvs1 = np.array([a.get_vector().get_array() for a in all_atoms1])
         crvs2 = np.array([a.get_vector().get_array() for a in all_atoms2])
 
-        #return (len(all_atoms1), ftur.rmsd(crvs1, crvs2), None)
         return (len(all_atoms1), ftuv.vector_set_rmsd(crvs1, crvs2), None)
 
 def get_first_chain(filename):

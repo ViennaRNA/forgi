@@ -7,7 +7,8 @@ Submodules
 .. toctree::
 
    forgi.threedee.model.coarse_grain
-   forgi.threedee.model.comparison
+   forgi.threedee.model.similarity
+   forgi.threedee.model.descriptors
    forgi.threedee.model.stats
 
 Module contents

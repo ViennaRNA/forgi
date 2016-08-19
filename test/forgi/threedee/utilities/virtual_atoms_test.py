@@ -1,7 +1,7 @@
 from __future__ import print_function
 import unittest
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.model.similarity as ftme
 import forgi.threedee.utilities.pdb as ftup
 import Bio.PDB as bp
 import warnings
@@ -37,11 +37,9 @@ def realatom_vatom_rmsd(cg):
                 else:
                     vposs.append(coords)
                     stemv.append(coords)
-        #if ftur.rmsd(np.array(stemv), np.array(stemr))>40:
-        #    print(stem, np.array(stemv), np.array(stemr))
     assert len(vposs)==len(rposs)
     #print (np.array(vposs).shape, file=sys.stderr)
-    return ftur.rmsd(np.array(vposs), np.array(rposs))
+    return ftme.rmsd(np.array(vposs), np.array(rposs))
 
 class VirtualAtomsTest(unittest.TestCase):
     def setUp(self):

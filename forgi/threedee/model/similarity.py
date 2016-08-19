@@ -3,10 +3,16 @@ import forgi.utilities.debug as fud
 
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.rmsd as ftur
 
 import itertools as it 
 import math
+import numpy as np
+
+__all__ = ['AdjacencyCorrelation', 'cg_rmsd', 'rmsd', 'drmsd']
+
+"""
+This module contains functions for the comparison of two cg objects or two ordered point-clouds.
+"""
 
 def ppv(tp, fp):
     '''
@@ -202,6 +208,20 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     my_mcc = mcc(cm)
     return my_mcc
 
+
+def optimal_superposition(crds1, crds2):
+    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""        
+    assert(crds1.shape == crds2.shape)
+    if crds1.shape[1] == 3 or crds1.shape[1] == 2:
+        correlation_matrix = np.dot(np.transpose(crds1), crds2)
+        v, s, w_tr = np.linalg.svd(correlation_matrix)
+        is_reflection = (np.linalg.det(v) * np.linalg.det(w_tr)) < 0.0
+        if is_reflection:
+            v[:, -1] = -v[:, -1]
+        return np.dot(v, w_tr)
+    else:
+        raise ValueError("Wrong dimension of crds1. Needs to be an array of "
+                         "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
 def cg_rmsd(cg1, cg2):
     '''
     Calculate the RMSD between two Coarse Grain models using their
@@ -215,9 +235,41 @@ def cg_rmsd(cg1, cg2):
     residues1 = cg1.get_ordered_virtual_residue_poss()
     residues2 = cg2.get_ordered_virtual_residue_poss()
 
-    return ftur.centered_rmsd(residues1, residues2)
+    return rmsd(residues1, residues2)
 
+def rmsd(crds1, crds2):
+    '''
+    Center the coordinate vectors on their centroid
+    and then calculate the rmsd.
+    '''
+    crds1 = ftuv.center_on_centroid(crds1)
+    crds2 = ftuv.center_on_centroid(crds2)
 
+    os = optimal_superposition(crds1, crds2)
+    crds_aligned = np.dot(crds1, os)
 
+    diff_vecs = (crds2 - crds_aligned)
+    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
+
+    return math.sqrt(sum(vec_lengths) / len(vec_lengths))
+
+def drmsd(coords1, coords2):
+    '''
+    Calculate the dRMSD measure.
+
+    This should be the RMSD between all of the inter-atom distances
+    in two structures.
+
+    :param coords1: The vectors of the 'atoms' in the first structure.
+    :param coords2: The vectors of the 'atoms' in the second structure.
+    :return: The dRMSD measure.
+    '''
+    ds1 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords1, r=2)])
+    ds2 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords2, r=2)])
+
+    rmsd = math.sqrt(np.mean((ds1 - ds2) * (ds1 - ds2)))
+    #rmsd = math.sqrt(np.mean(ftuv.vec_distance(ds1, ds2)))
+
+    return rmsd
 
 

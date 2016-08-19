@@ -16,7 +16,11 @@ class DSSRLookupError(LookupError): pass
 class WrongChain(LookupError): pass
 
 def dssr_to_pdb_atom_id(dssr_atomid):
-    chain, _, atomid = dssr_atomid.partition(".")
+    if '.' in dssr_atomid:
+        chain, _, atomid = dssr_atomid.partition(".")
+    else:
+        chain = None
+        atomid = dssr_atomid
     if "^" in atomid:
         atomid, _, letter = atomid.partition("^")
         nat = []

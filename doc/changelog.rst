@@ -1,5 +1,11 @@
 Changes in upcoming version
 ===========================
+*  Restructured forgi.threedee.model.comparison and forgi.threedee.utilities.rmsd into
+   `forgi.threedee.model.similarity` and `forgi.threedee.model.descriptors`
+   The `similarity` module contains all functions for the comparison of two point 
+   clouds or two cg structures.
+   The `descriptors` module contains functions for describing a single point cloud, 
+   such as the radius of gyration or new functions for the gyration tensor..
 *  `average_stem_vres_positions` are back with recalculated values
 *  In `forgi.graph.bulge_graph` the function `BulgeGraph.get_connected_nucleotides` no longer sorts the 
    output nucleotides. Now this function depends on the order of stem1 and stem2 and can thus be used 

@@ -82,8 +82,8 @@ class Projection2DTestOnCondensedProjection(unittest.TestCase):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         self.proj=fpp.Projection2D(cg, [1.,1.,1.])
         self.proj.condense_points(1)
+    @unittest.skip("This is a Manual Test")
     def test_plot(self):
-        assert False, "This is a manual Test. Comment out this line to enable it"
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         for dire in [ (1.,0.,0.), (0.,0.,1.), (0.,1.,0.),(1.,1.,0.), (1.,0.,1.), (0.,1.,1.), (1.,1.,1.) ]:
             self.proj=fpp.Projection2D(cg, dire)

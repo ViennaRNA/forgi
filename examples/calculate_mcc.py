@@ -3,7 +3,7 @@
 import sys
 from optparse import OptionParser
 
-import forgi.threedee.model.comparison as ftme
+import forgi.threedee.model.similarity as ftme
 import forgi.threedee.model.coarse_grain as ftmc
 
 def main():

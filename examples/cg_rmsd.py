@@ -14,25 +14,25 @@ import argparse
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.rmsd as ftur
-import forgi.threedee.model.comparison as ftme
+import forgi.threedee.model.similarity as ftms
 
 def main(args):
 
     if len(args.compareTo)==1:
         cg1 = ftmc.CoarseGrainRNA(args.reference)
         cg2 = ftmc.CoarseGrainRNA(args.compareTo[0])
-        print (ftme.cg_rmsd(cg1, cg2))
+        print (ftms.cg_rmsd(cg1, cg2))
     else:
         print ("{:15}\t{:6}\t{:6}\t{:6}".format("filename","RMSD", "dRMSD", "ACC"))
         ref_cg = ftmc.CoarseGrainRNA(args.reference)
         reference = ref_cg.get_ordered_virtual_residue_poss()
-        acc_calc = ftme.AdjacencyCorrelation(ref_cg)
+        acc_calc = ftms.AdjacencyCorrelation(ref_cg)
         for filename in args.compareTo:
             cg=ftmc.CoarseGrainRNA(filename)
             curr_vress=cg.get_ordered_virtual_residue_poss()
             rmsd  = ftur.rmsd(reference, curr_vress)
             drmsd = ftur.drmsd(reference, curr_vress)
-            acc   = ftme.mcc(acc_calc.evaluate(cg))
+            acc   = ftms.mcc(acc_calc.evaluate(cg))
             print ("{:15}\t{:6.3f}\t{:6.3f}\t{:6.3f}".format(filename[-15:], rmsd, drmsd, acc))
 
 

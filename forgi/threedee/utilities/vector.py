@@ -400,7 +400,7 @@ def rotation_matrix_weave(axis, theta, mat = None):
 
 def vector_set_rmsd(set1, set2):
     '''
-    Calculate the rmsd between two sets of vectors.
+    Calculate the not-centered rmsd between two sets of vectors.
 
     :param set1: A matrix
     :param set2: Another matrix.

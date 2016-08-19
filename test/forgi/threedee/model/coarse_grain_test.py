@@ -9,7 +9,7 @@ import sys
 import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.comparison as ftme
+import forgi.threedee.model.similarity as ftme
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.utilities.debug as fud
 import tempfile as tf

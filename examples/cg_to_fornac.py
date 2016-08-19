@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.comparison as ftme
+import forgi.threedee.model.similarity as ftme
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 

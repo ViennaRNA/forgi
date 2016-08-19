@@ -22,7 +22,6 @@ import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
-import forgi.threedee.utilities.rmsd as cur
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
 import forgi
