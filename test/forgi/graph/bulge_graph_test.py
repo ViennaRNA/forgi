@@ -1655,3 +1655,30 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         sp = bg.shortest_path('t1','f1') # Shortest path along graph in reverse
         self.assertEqual(sp, ['t1', 's4', 'm0', 's0', 'f1'])
 
+    def test_get_domains(self):
+        db =  '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
+        #      1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
+        #      ffsssiisssmmsssiisssssshhhsssiisssiisssssshhhsssmsssiiissssssssshhhsssmssshhhsssmmmsssisssisssmmmmsssssstt
+        #node# 1100000111002222233344400044411333222225551115552666333777888999222999500033300044488847773666111111100011
+        #                                                                             111   111
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        dom = bg.get_domains()
+        
+        mls = sorted([
+                    sorted(['m0', 'm6', 'm2', 'm1', 's1', 's2', 's5', 's6']),
+                    sorted(['m3', 'm5', 'm4', 's8', 's9', 's10'])
+                    ])
+        rods = sorted([
+                        sorted(['s0', 'i0', 's1']),
+                        sorted(['s2', 'i2', 's3', 'i1', 's4', 'h0']),
+                        sorted(['s5', 'h1']),
+                        sorted(['s6', 'i3', 's7', 'i4', 's8']),
+                        sorted(['s9', 'h2']),
+                        sorted(['s10', 'h3'])
+        ])
+        self.assertEqual(dom["multiloops"], mls)
+        self.assertEqual(dom["rods"], rods)
+        self.assertEqual(dom["pseudoknots"], [])
+
+

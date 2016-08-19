@@ -2970,6 +2970,53 @@ class BulgeGraph(object):
             if len(self.defines[d]) > 0:
                 yield d
 
+    def get_domains(self):
+        """
+        Get secondary structure domains. 
+
+        Currently domains found are:
+          * multiloops with connected stems
+          * rods: stretches of stems + interior loops (without branching), with trailing hairpins
+          * pseudoknots
+        """
+        domains = col.defaultdict(list)
+        multiloops, nucleotides = self.find_multiloop_loops()
+        for ml in multiloops:
+            ml = sorted(ml)
+            if self.is_loop_pseudoknot(ml):
+                domains["pseudoknots"].append(ml)
+            else:
+                domains["multiloops"].append(ml)
+
+        doublestr = []
+        for s in self.stem_iterator():
+            neighbors = self.edges[s]
+            for region in doublestr:
+                if s in region or any(n in region for n in neighbors):
+                    curr_region = region
+                    curr_region.add(s)
+                    break
+            else:
+                doublestr.append(set([s]))
+                curr_region = doublestr[-1]
+
+            for n in neighbors:
+                if n[0] in "sih":
+                    curr_region.add(n)
+        for reg1, reg2 in it.combinations(doublestr,2):
+            if reg1 & reg2:
+                doublestr.remove(reg1)
+                doublestr.remove(reg2)
+                doublestr.append(reg1&reg2)
+    
+        for region in doublestr:
+            domains["rods"].append(sorted(region))
+        domains["pseudoknots"].sort()
+        domains["multiloops"].sort()
+        domains["rods"].sort()
+        print(domains["rods"])
+        return domains
+
 def bg_from_subgraph(bg, sg):
     """
     Create a BulgeGraph from a list containing the nodes
