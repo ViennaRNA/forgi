@@ -1681,4 +1681,24 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(dom["rods"], rods)
         self.assertEqual(dom["pseudoknots"], [])
 
+    def test_cg_min_bp_distance(self):
+        db = '((..((..))..((..))..((..))..))'
+        # clockwise from the bottom
+        # s0 m0 s1 m2 s2 m3 s3 m4
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+
+        #fud.pv('bg.to_bg_string()')
+
+        self.assertEqual(bg.min_bp_distance('s1', 's2'), 3)
+        self.assertEqual(bg.min_bp_distance('s1', 's1'), 0)
+
+    def test_cg_min_bp_distance_vs_min_max_bp_distance(self):
+        db =  '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        self.assertEqual(bg.min_bp_distance('s1', 's4'), bg.min_max_bp_distance('s1', 's4')[0])
+        self.assertEqual(bg.min_bp_distance('s2', 's10'), bg.min_max_bp_distance('s2', 's10')[0])
+        self.assertEqual(bg.min_bp_distance('s3', 's6'), bg.min_max_bp_distance('s3', 's6')[0])
+        self.assertEqual(bg.min_bp_distance('s5', 's7'), bg.min_max_bp_distance('s5', 's7')[0])
 

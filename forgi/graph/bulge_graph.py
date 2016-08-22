@@ -338,6 +338,7 @@ class BulgeGraph(object):
         self.weights = dict()
         self.nx_graph = None
         self.nuc_bp_dists = None
+        self._elem_bp_dists = {}
 
         # store the coordinate basis for each stem
         self.bases = dict()
@@ -2917,6 +2918,10 @@ class BulgeGraph(object):
 
         return set_adjacent - set_not_adjacent
 
+
+
+
+    @profile
     def min_max_bp_distance(self, e1, e2):
         '''
         Get the minimum and maximum base pair distance between
@@ -2934,6 +2939,9 @@ class BulgeGraph(object):
         #flanking1 = self.flanking_nucleotides(e1)
         #flanking2 = self.flanking_nucleotides(e2)
 
+        if (e1,e2) in self._elem_bp_dists: #Shortcut if cached.
+            return self._elem_bp_dists[(e1,e2)]
+
         min_bp = sys.maxint
         max_bp = 0
 
@@ -2942,21 +2950,24 @@ class BulgeGraph(object):
 
         if self.nuc_bp_dists is None:
             import networkx as nx
-            self.nuc_bp_dists = col.defaultdict(dict)
+            self.nuc_bp_dists = np.zeros((self.seq_length+1, self.seq_length+1))#col.defaultdict(dict)
+            self.nuc_bp_dists[0,:]=np.nan
+            self.nuc_bp_dists[:,0]=np.nan
             dist_matrix = np.array(nx.floyd_warshall_numpy(self.nx_graph))
             for (i1,n1), (i2,n2) in it.product(enumerate(self.nx_graph.nodes()),
                                                enumerate(self.nx_graph.nodes())):
-                self.nuc_bp_dists[n1][n2] = dist_matrix[i1][i2]
-            
+                self.nuc_bp_dists[n1,n2] = dist_matrix[i1][i2]
+
         for f1, f2 in it.product(set(self.defines[e1]), set(self.defines[e2])):
             #d =  nx.dijkstra_path_length(self.nx_graph, f1, f2)
-            d = self.nuc_bp_dists[f1][f2]
+            d = self.nuc_bp_dists[f1,f2]
 
             if d < min_bp:
                 min_bp = d
             if d > max_bp:
                 max_bp = d
-
+        self._elem_bp_dists[(e1,e2)] = (min_bp, max_bp)
+        self._elem_bp_dists[(e2,e1)] = (min_bp, max_bp)
         return (min_bp, max_bp)
 
     def nd_define_iterator(self):
@@ -3003,18 +3014,23 @@ class BulgeGraph(object):
             for n in neighbors:
                 if n[0] in "sih":
                     curr_region.add(n)
-        for reg1, reg2 in it.combinations(doublestr,2):
-            if reg1 & reg2:
-                doublestr.remove(reg1)
-                doublestr.remove(reg2)
-                doublestr.append(reg1&reg2)
+        #print(doublestr)
+        while True:
+            for reg1, reg2 in it.combinations(doublestr,2):
+                if reg1 & reg2:
+                    doublestr.remove(reg1)
+                    doublestr.remove(reg2)
+                    doublestr.append(reg1|reg2)
+                    break
+            else:
+                break
     
         for region in doublestr:
             domains["rods"].append(sorted(region))
         domains["pseudoknots"].sort()
         domains["multiloops"].sort()
         domains["rods"].sort()
-        print(domains["rods"])
+        #print(domains)
         return domains
 
 def bg_from_subgraph(bg, sg):

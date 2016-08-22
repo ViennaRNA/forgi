@@ -471,6 +471,26 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 vress += [vres[0] + vres[2], vres[0] + vres[3]]
         return np.array(vress)
 
+    def get_poss_for_domain(self, elements, mode="fast"):
+        """
+        
+        """
+        points=[]
+        if mode=="fast":
+            for e in sorted(elements):
+                points += list(self.coords[e])
+                return np.array(points)
+        elif mode=="vres":
+            if not self.v3dposs:
+                self.add_all_virtual_residues()
+            vress = []
+            for s in sorted(elements):
+                if s[0]!="s": continue
+                for i in range(self.stem_length(s)):
+                    vres=self.v3dposs[s][i]
+                    vress += [vres[0] + vres[2], vres[0] + vres[3]]
+            return np.array(vress)
+
 
 
     def get_twist_str(self):
