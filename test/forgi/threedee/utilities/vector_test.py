@@ -134,7 +134,7 @@ class TestVector(unittest.TestCase):
         basis2=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]))    
         self.assertTrue( ftuv.is_almost_colinear(basis2[0], np.array([0.,0.,2.])) )
         self.assertTrue( ftuv.is_almost_colinear(basis2[1], np.array([0.,3.6,0])) )
-        basis3=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]), np.array([1,0,0]))    
+        basis3=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]), np.array([1.,0,0]))    
         self.assertTrue( ftuv.is_almost_colinear(basis3[0], np.array([0.,0.,2.])) )
         self.assertTrue( ftuv.is_almost_colinear(basis3[1], np.array([0.,3.6,0])) )
         self.assertTrue( ftuv.is_almost_colinear(basis3[2], np.array([1.,0,0])) )
