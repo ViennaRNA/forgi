@@ -385,12 +385,14 @@ class Projection2D(object):
         """
         All points that are at the ends of coarse-grain elements. 
         This does not include points where coarse grain elements intersect in the projection.
-
+  
+        Some points might be duplicates
+        
         :returns: A generator yielding all points.
         """
-        #k[0]!="s": Avoid duplicate points. Every stem is flanked by other loop types.
-        return ( p for k,x in self._coords.items() for p in x if k[0]!="s") 
-
+        
+        # Exclude m and i Elements, as they are always flanked by stems.
+        return ( p for k,x in self._coords.items() for p in x if k[0]!="i" and k[0]!="m") 
     ### Functions returning descriptors of the projection, mostly independent on the resolution ###
 
     ### Function returning descriptors of the projection, dependent on the resolution ###    
