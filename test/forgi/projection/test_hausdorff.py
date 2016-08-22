@@ -130,7 +130,7 @@ class TestHelperFunctions(unittest.TestCase):
     def test_get_longest_img_diameter_diagonal(self):
         self.img[9,9]=1
         self.assertAlmostEqual(fph.get_longest_img_diameter(self.img, 10), 7*math.sqrt(2))
-    def test_longest_axis_resolution_invariant(self):
+    def test_get_longest_img_diameter_resolution_invariant(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
         ref_proj =  fpp.Projection2D(cg, [1., 1.,   1.   ], project_virtual_atoms=True)
         ref_box=ref_proj.get_bounding_square(margin=30)
