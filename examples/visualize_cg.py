@@ -76,6 +76,10 @@ def main():
                       help="Draw a line between residue distances")
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true',
                       help='Display the coordinate basis of each element')
+    parser.add_option('', '--stem-color', dest='stem_color', default='green',
+                      help='The default color in coarse-grain drawings')
+    parser.add_option('', '--multiloop-color', dest='multiloop_color', default='red',
+                      help='The default color in coarse-grain drawings')
     parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
     parser.add_option('', '--sidechain-atoms', dest='sidechain_atoms', default=False, action='store_true',
                       help='Include the sidechain atoms. Automatically enables --virtual-atoms')
@@ -97,6 +101,8 @@ def main():
     print "hi1"
 
     pp = cvp.PymolPrinter()
+    pp.stem_color = options.stem_color
+    pp.multiloop_color = options.multiloop_color
     pp.add_loops = options.loops
     pp.draw_cones = options.cones
     # sys.exit(1)
@@ -166,11 +172,11 @@ def main():
         fr = int(fr)
         to = int(to)
 
-        node1 = cg.get_node_from_residue_num(fr)
-        node2 = cg.get_node_from_residue_num(to)
+        node1 = cg.get_node_from_residue_num(to)
+        node2 = cg.get_node_from_residue_num(fr)
 
-        pos1, len1 = cg.get_position_in_element(fr)
-        pos2, len2 = cg.get_position_in_element(to)
+        pos1, len1 = cg.get_position_in_element(to)
+        pos2, len2 = cg.get_position_in_element(fr)
 
         #fud.pv('node1, node2, pos1, pos2')
 

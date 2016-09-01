@@ -55,6 +55,8 @@ class PymolPrinter:
         self.pdb_file = None
         self.movie = False
         self.color_modifier=1.0
+        self.stem_color = 'green'
+        self.multiloop_color = 'red'
         self.prev_obj_name = ''     # The name of the previously created
                                     # object which needs to be hidden
                                     # when creating a movie
@@ -601,12 +603,13 @@ class PymolPrinter:
             if elem_name in self.element_specific_colors:
                 return self.element_specific_colors[elem_name]
 
+        print >>sys.stderr, "self.stem_color:", self.stem_color
         if elem_name[0] == 's':
-            return 'green'
+            return self.stem_color
         elif elem_name[0] == 'i':
             return 'yellow'
         elif elem_name[0] == 'm':
-            return 'red'
+            return self.multiloop_color
         elif elem_name[0] == 'h':
             return 'blue'
         elif elem_name[0] == 't':
@@ -746,13 +749,13 @@ class PymolPrinter:
                         d = cg.get_node_from_residue_num(r)
                         if d[0] == 's':
                             if a in ftup.nonsidechain_atoms:
-                                self.add_sphere(va[r][a], 'green', width=atom_width)
+                                self.add_sphere(va[r][a], self.stem_color, width=atom_width)
                             else:
                                 self.add_sphere(va[r][a], 'forest', width=atom_width)
                         elif d[0] == 'i':
                             self.add_sphere(va[r][a], 'yellow', width=atom_width)
                         elif d[0] == 'm':
-                            self.add_sphere(va[r][a], 'red', width=atom_width)
+                            self.add_sphere(va[r][a], self.multiloop_color, width=atom_width)
                         elif d[0] == 'h':
                             self.add_sphere(va[r][a], 'blue', width=atom_width)
 
