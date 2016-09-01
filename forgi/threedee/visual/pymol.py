@@ -419,8 +419,8 @@ class PymolPrinter:
 
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key, key=key)
-        self.add_sphere(p, 'light gray', width=2.0 ) 
-        self.add_sphere(n, 'dark gray', width=2.0 ) 
+        #self.add_sphere(p, 'light gray', width=2.0 ) 
+        #self.add_sphere(n, 'dark gray', width=2.0 ) 
 
         if self.add_twists:
             mult = 8.
@@ -623,6 +623,7 @@ class PymolPrinter:
         direction = ftuv.normalize(point2 - point1)
 
         num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
+        key=None
 
         for i in range(int(num_dashes)):
             self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
@@ -645,8 +646,8 @@ class PymolPrinter:
                 self.add_stem_like(cg, key, color=color)
                 self.draw_bounding_boxes(cg, key)
             else:
-                self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
-                self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
+                #self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
+                #self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
                 if key[0] == 'h':
                     if self.add_loops:
                         if key in loops:

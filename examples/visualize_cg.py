@@ -72,6 +72,8 @@ def main():
                       help='Display the virtual atoms')
     parser.add_option('-d', '--distance', dest='distance', default=None,
                       help="Draw the lines between specified virtual residues")
+    parser.add_option('-t', '--residue-distance', dest='residue_distance', default=None,
+                      help="Draw a line between residue distances")
     parser.add_option('-b', '--basis', dest='basis', default=False, action='store_true',
                       help='Display the coordinate basis of each element')
     parser.add_option('', '--batch', dest='batch', default=False, action='store_true', help='Start pymol in batch mode')
@@ -156,6 +158,34 @@ def main():
             to = int(to)
 
             pp.add_dashed(virtual_atoms[fr]["C1'"], virtual_atoms[to]["C1'"], width=1.2)
+
+    if options.residue_distance is not None:
+        dist_pair = options.residue_distance
+        fr, to = dist_pair.split(',')
+
+        fr = int(fr)
+        to = int(to)
+
+        node1 = cg.get_node_from_residue_num(fr)
+        node2 = cg.get_node_from_residue_num(to)
+
+        pos1, len1 = cg.get_position_in_element(fr)
+        pos2, len2 = cg.get_position_in_element(to)
+
+        #fud.pv('node1, node2, pos1, pos2')
+
+        vec1 = cg.coords[node1][1] - cg.coords[node1][0]
+        vec2 = cg.coords[node2][1] - cg.coords[node2][0]
+
+        #mid1 = (cg.coords[node1][0] + cg.coords[node1][1]) / 2
+        #mid2 = (cg.coords[node2][0] + cg.coords[node2][1]) / 2
+
+        mid1 = cg.coords[node1][0] + pos1 * (vec1 / len1)
+        mid2 = cg.coords[node2][0] + pos2 * (vec2 / len2)
+
+        pp.add_sphere(mid1, 'green', width=2)
+        pp.add_sphere(mid2, 'red', width=2)
+        
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:
