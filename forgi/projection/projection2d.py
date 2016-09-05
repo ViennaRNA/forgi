@@ -13,9 +13,9 @@ import forgi.threedee.utilities.graph_pdb as ftug
 import collections as col
 import numpy as np
 import itertools as it
-import networkx as nx
+# import networkx as nx Takes to long. Import only when needed
 import warnings, math
-import copy
+import copy, sys
 
 """
 This module uses code by David Eppstein 
@@ -27,10 +27,60 @@ and potentially copyrighted code from matplotlib under the PSF license
 """
 
 try:
-  profile  #The @profile decorator from line_profiler (kernprof)
-except:
-  def profile(x): 
-    return x
+    profile  #The @profile decorator from line_profiler (kernprof)
+except NameError:
+    def profile(x): 
+        return x
+
+
+def to_rgb(im):
+    """
+    Convert an np array image from grayscale to RGB
+    """
+    # SEE http://www.socouldanyone.com/2013/03/converting-grayscale-to-rgb-with-numpy.html
+    try:
+        w, h = im.shape
+    except ValueError: #Probably RGB already
+        w, h, c = im.shape
+        return im
+    else:
+        newImg = np.empty((w, h, 3), dtype=np.uint8)
+        newImg[:, :, 2] =  newImg[:, :, 1] =  newImg[:, :, 0] =  (im * 255).astype(np.uint8)
+        return newImg
+
+
+def to_grayscale(im):
+    """
+    Convert an np array image from RGB to grayscale
+    """
+    try:
+        w, h, _ = im.shape
+    except ValueError:
+        return im
+    else:
+        newImg = np.empty((w, h))
+        newImg[:, :] = (im[:,:,0]/255+im[:,:,1]/255+im[:,:,2]/255)/3
+        return newImg
+
+def rasterized_2d_coordinates(points, angstrom_per_cell = 10, origin = np.array([0,0]), rotate=0):
+    angle=math.radians(rotate)
+    c=np.cos(angle)
+    s=np.sin(angle)
+    rotMat=np.array([[c, -s],[s, c]])
+    #print("FPP: rasterization: rotationmatrix ",rotMat)
+    a = ((np.dot(points, rotMat) - origin)//angstrom_per_cell).astype(int)
+    b = np.dot(points, rotMat)
+    #print("FPP: rasterization: roatated: ", b)
+    b = b - origin
+    #print("FPP: rasterization: roatated and offset: ", b)
+    assert (a==(b//angstrom_per_cell).astype(int)).all()
+    return a
+
+def crop_coordinates_to_bounds(a, num_cells):
+    """
+    :a: an array of x,y coordinates (modified in place)
+    """
+    return a.clip(min=0, max=num_cells-1)
 
 ### The following functions are from 
 ### http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
@@ -42,7 +92,7 @@ def orientation(p,q,r):
     '''Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.'''
     return (q[1]-p[1])*(r[0]-p[0]) - (q[0]-p[0])*(r[1]-p[1])
 
-@profile
+#@profile
 def hulls(Points):
     '''Graham scan to find upper and lower convex hulls of a set of 2d points.'''
     U = []
@@ -78,14 +128,19 @@ of pairs of points touched by each pair of lines.'''
 
 def diameter(Points):
     '''Given a list of 2d points, returns the pair that's farthest apart.'''
-    diam,pair = max([((p[0]-q[0])**2 + (p[1]-q[1])**2, (p,q))
-                     for p,q in rotatingCalipers(Points)])
+    try:
+        diam,pair = max([((p[0]-q[0])**2 + (p[1]-q[1])**2, (p,q))
+                    for p,q in rotatingCalipers(Points)],key=lambda x: x[0])    
+    except:
+        print(repr([((p[0]-q[0])**2 + (p[1]-q[1])**2, (p,q))
+                     for p,q in rotatingCalipers(Points)]))
+        raise
     return pair
 
 
 #### END David Eppstein
 
-@profile
+#@profile
 def rotate2D(vector, cosPhi, sinPhi):
     x=vector[0]*cosPhi-vector[1]*sinPhi
     y=vector[0]*sinPhi+vector[1]*cosPhi
@@ -102,37 +157,37 @@ def bresenham(start,end):
     #See e.g. http://stackoverflow.com/a/32252934/5069869
     # or https://de.wikipedia.org/wiki/Bresenham-Algorithmus#C-Implementierung
     if start==end:
-      return [start]
+        return [start]
     points=[]
     dx=end[0]-start[0]
     dy=end[1]-start[1]
     x,y=start
     if dx==0: sx=0
-    else: sx=dx/abs(dx)
+    else: sx=dx//abs(dx)
     if dy==0: sy=0
-    else: sy=dy/abs(dy)
+    else: sy=dy//abs(dy)
     dx=abs(dx)
     dy=abs(dy)
     if dx>dy:
-      err=dx/2.
-      while x!=end[0]:
-        #print(x,y)
-        points.append((x,y))
-        err-=dy
-        if err<0:
-          y+=sy
-          err+=dx
-        x+=sx
+        err=dx/2.
+        while x!=end[0]:
+            #print(x,y)
+            points.append((x,y))
+            err-=dy
+            if err<0:
+                y+=sy
+                err+=dx
+            x+=sx
     else:
-      err=dy/2.
-      while y!=end[1]:
-        #print(x,y)
-        points.append((x,y))
-        err-=dx
-        if err<0:
-          x+=sx
-          err+=dy
-        y+=sy
+        err=dy/2.
+        while y!=end[1]:
+            #print(x,y)
+            points.append((x,y))
+            err-=dx
+            if err<0:
+                x+=sx
+                err+=dy
+            y+=sy
     points.append((x,y))
     #if abs(dx)>1 or abs(dy)>1:
       #print(start, end, points)
@@ -144,7 +199,8 @@ class Projection2D(object):
     A 2D Projection of a CoarseGrainRNA unto a 2D-plane
     """
     @profile
-    def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False):
+    def __init__(self, cg, proj_direction=None, rotation=0, project_virtual_atoms=False, 
+                 project_virtual_residues = []):
         """
         :param cg: a CoarseGrainRNA object with 3D coordinates for every element
 
@@ -179,8 +235,10 @@ class Projection2D(object):
         self._unit_vec1=unit_vec1
         self._unit_vec2=unit_vec2
         self._proj_direction=proj_direction
-        self._project(cg, project_virtual_atoms)
-            
+        self._virtual_residues = []
+        self.virtual_residue_numbers = project_virtual_residues
+        self._project(cg, project_virtual_atoms, project_virtual_residues)
+
 
         #Rotate and translate projection into a standard orientation
         points=list(self.points)
@@ -193,8 +251,11 @@ class Projection2D(object):
         shift=(v1+v2)/2
         for key,edge in self._coords.items():
             self._coords[key]=(edge[0]-shift, edge[1]-shift)
-        for i, v_atom in enumerate(self._virtual_atoms):
-            self._virtual_atoms[i]=v_atom-shift
+        
+        if project_virtual_atoms:
+            self._virtual_atoms = self._virtual_atoms-shift
+        if project_virtual_residues:
+            self._virtual_residues = self._virtual_residues-shift
         rot=math.atan2(*(v2-v1))
         rot=math.degrees(rot)
         self.rotate(rot)
@@ -206,6 +267,8 @@ class Projection2D(object):
         #Thanks to numpy broadcasting, this works without a loop.
         if project_virtual_atoms:
             self._virtual_atoms=self._virtual_atoms-mean
+        if project_virtual_residues:
+            self._virtual_residues = self._virtual_residues-mean
         #From this, further rotate if requested by the user.
         if rotation!=0:
             self.rotate(rotation)
@@ -228,7 +291,8 @@ class Projection2D(object):
         transRotMat=np.array([[c, s],[-s, c]])
         if len(self._virtual_atoms):
             self._virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
-
+        if self.virtual_residue_numbers:
+            self._virtual_residues=np.dot(self._virtual_residues, transRotMat)
 
     def condense_points(self, cutoff=1):
         """
@@ -270,6 +334,21 @@ class Projection2D(object):
         self.condense_points(cutoff)
         while self._condense_pointWithLine_step(cutoff):
             self.condense_points(cutoff)
+
+    ### Get virtual residues ###
+    @property
+    def vres_iterator(self):
+        for i, nr in enumerate(self.virtual_residue_numbers):
+            yield nr, self._virtual_residues[i]
+    def get_vres_by_position(self, pos):
+        """
+        :param pos: The nucleotide position in the sequence
+        """
+        for i, nr in enumerate(self.virtual_residue_numbers):
+            if nr == pos:
+                return self._virtual_residues[i]
+        else:
+            raise LookupError("This virtual residue was not projected")
     ### Properties ###
     @property
     def proj_direction(self):
@@ -286,9 +365,9 @@ class Projection2D(object):
         if self._cross_points is None:
             self._cross_points=col.defaultdict(list)
             for key1, key2 in it.combinations(self._coords, 2):
-              for cr in ftuv.seg_intersect(self._coords[key1], self._coords[key2]):
-                self._cross_points[key1].append((cr, key2))
-                self._cross_points[key2].append((cr, key1))
+                for cr in ftuv.seg_intersect(self._coords[key1], self._coords[key2]):
+                    self._cross_points[key1].append((cr, key2))
+                    self._cross_points[key2].append((cr, key1))
         return self._cross_points
 
     #Note: This is SLOW the first time it is called. Should be avoided as much as possible.
@@ -306,12 +385,14 @@ class Projection2D(object):
         """
         All points that are at the ends of coarse-grain elements. 
         This does not include points where coarse grain elements intersect in the projection.
-
+  
+        Some points might be duplicates
+        
         :returns: A generator yielding all points.
         """
-        #k[0]!="s": Avoid duplicate points. Every stem is flanked by other loop types.
-        return ( p for k,x in self._coords.items() for p in x if k[0]!="s") 
-
+        
+        # Exclude m and i Elements, as they are always flanked by stems.
+        return ( p for k,x in self._coords.items() for p in x if k[0]!="i" and k[0]!="m") 
     ### Functions returning descriptors of the projection, mostly independent on the resolution ###
 
     ### Function returning descriptors of the projection, dependent on the resolution ###    
@@ -359,6 +440,7 @@ class Projection2D(object):
         :param degree: If degree is None, count all points with degree>=3
                        Else: only count (branch)points of the given degree
         """
+        import networkx as nx
         if degree is None:
             return len([x for x in nx.degree(self.proj_graph).values() if x>=3])
         else:
@@ -373,6 +455,7 @@ class Projection2D(object):
             on future evaluation of the usefulness of this and similar descriptors.
 
         """
+        import networkx as nx
         return len([x for x in nx.cycle_basis(self.proj_graph) if len(x)>1])
 
     def get_total_length(self):
@@ -408,6 +491,7 @@ class Projection2D(object):
 
         :returns: The length and a tuple of points `(leaf_node, corresponding_branch_point)`
         """
+        import networkx as nx
         lengths={}
         target={}
         for leaf, degree in nx.degree(self.proj_graph).items():        
@@ -416,14 +500,14 @@ class Projection2D(object):
             previous=None
             current=leaf
             while True:
-              next=[ x for x in self.proj_graph[current].keys() if x != previous ]
-              assert len(next)==1
-              next=next[0]
-              lengths[leaf]+=ftuv.vec_distance(current, next)
-              if self.proj_graph.degree(next)!=2:
-                  break
-              previous=current
-              current=next
+                next=[ x for x in self.proj_graph[current].keys() if x != previous ]
+                assert len(next)==1
+                next=next[0]
+                lengths[leaf]+=ftuv.vec_distance(current, next)
+                if self.proj_graph.degree(next)!=2:
+                    break
+                previous=current
+                current=next
             target[leaf]=next
         best_leaf=max(lengths, key=lambda x: lengths[x])
         return lengths[best_leaf], (best_leaf, target[best_leaf])
@@ -485,6 +569,7 @@ class Projection2D(object):
             on future evaluation of the usefulness of this and similar descriptors.
 
         """
+        import networkx as nx
         maxl=0
         for i, node1 in enumerate(self.proj_graph.nodes_iter()):
             for j, node2 in enumerate(self.proj_graph.nodes_iter()):
@@ -498,7 +583,7 @@ class Projection2D(object):
     ### Functions for graphical representations of the projection ###
     @profile
     def rasterize(self, resolution=50, bounding_square=None, warn=True, 
-                  virtual_atoms=True, rotate=0):
+                  virtual_atoms=True, rotate=0, virtual_residues = True):
         """
         Rasterize the projection to a square image of the given resolution.
         Uses the Bresenham algorithm for line rasterization.
@@ -534,39 +619,44 @@ class Projection2D(object):
         img_length=len(image)
         angle=math.radians(rotate)
         c=np.cos(angle)
-        s=np.sin(angle) 
-        for label, (start, end) in self._coords.items():                
-            if label.startswith("s"):
-                if virtual_atoms:
-                    continue
-                weight=1
-            else:
-                weight=0.3
-            if rotate:
-              start=rotate2D(start, c, s)
-              end=rotate2D(end, c, s)
-            start=(int((start[0]-box[0])/steplength), int((start[1]-box[2])/steplength))
-            end=(int((end[0]-box[0])/steplength), int((end[1]-box[2])/steplength))        
-            points=bresenham(start, end)
+        s=np.sin(angle)
+        starts=[]
+        ends=[]
+        for label in self._coords:
+            if virtual_atoms and len(self._virtual_atoms): 
+                if label[0]=="s": continue
+            starts.append(self._coords[label][0])
+            ends.append(self._coords[label][1])
+        starts=np.array(starts)
+        ends=np.array(ends)
+        starts = rasterized_2d_coordinates(starts, steplength, np.array([box[0],box[2]]), rotate)
+        ends = rasterized_2d_coordinates(ends, steplength, np.array([box[0],box[2]]), rotate)
+        for i in range(len(starts)):
+            points=bresenham(tuple(starts[i]), tuple(ends[i]))
             for p in points:
-                try:
-                    if any( pi<0 for pi in p):
-                        raise IndexError
-                    image[p[0],p[1]]=min(1,image[p[0],p[1]]+weight)
-                except IndexError:
+                if 0<=p[0]<img_length and 0<=p[1]<img_length:
+                    image[p[0],p[1]]=1
+                else:
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: "
                                            "Parts of the projection are cropped off.")
         if virtual_atoms and len(self._virtual_atoms):
-            transRotMat=np.array([[c, s],[-s, c]])
-            rot_virtual_atoms=np.dot(self._virtual_atoms, transRotMat)
-            for pos in rot_virtual_atoms:
-                point=(int((pos[0]-box[0])/steplength), int((pos[1]-box[2])/steplength))
+            rot_virtual_atoms = rasterized_2d_coordinates(self._virtual_atoms, steplength, np.array([box[0],box[2]]), rotate)
+            rot_virtual_atoms_clip = crop_coordinates_to_bounds(rot_virtual_atoms, img_length )
+            if warn and (rot_virtual_atoms_clip!=rot_virtual_atoms).any():
+                warnings.warn("WARNING during rasterization of virtual atoms: "
+                              "Parts of the projection are cropped off.")
+            image[rot_virtual_atoms_clip[:,0],rot_virtual_atoms_clip[:,1]]=1
+        if virtual_residues and self.virtual_residue_numbers:            
+            image = to_rgb(image)
+            rot_virtual_res = rasterized_2d_coordinates(self._virtual_residues, steplength, np.array([box[0],box[2]]), rotate)
+            for i, point in enumerate(rot_virtual_res):
+                color = (0,150,255*self.virtual_residue_numbers[i]//max(self.virtual_residue_numbers))
                 if 0<=point[0]<img_length and 0<=point[1]<img_length:
-                    image[point[0],point[1]]=1
+                    image[point[0],point[1]]=color
                 else:                    
-                    if warn: warnings.warn("WARNING during rasterization of virtual atoms: "
+                    if warn: warnings.warn("WARNING during rasterization of virtual residues: "
                                            "Parts of the projection are cropped off.")
-        return np.rot90(image), steplength
+        return image, steplength
 
     def plot(self, ax=None, show=False, margin=5, 
                    linewidth=None, add_labels=False,
@@ -623,14 +713,14 @@ class Projection2D(object):
             import matplotlib.text as mtext
             import matplotlib.font_manager as font_manager
         except TypeError as e:
-          warnings.warn("Cannot plot projection. Maybe you could not load Gtk "
-                        "(no X11 server available)? During the import of matplotlib"
-                        "the following Error occured:\n {}: {}".format(type(e).__name__, e))
-          return
+            warnings.warn("Cannot plot projection. Maybe you could not load Gtk "
+                          "(no X11 server available)? During the import of matplotlib"
+                          "the following Error occured:\n {}: {}".format(type(e).__name__, e))
+            return
         except ImportError as e:
-          warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? "
-                        "The following error occured:\n {}: {}".format(type(e).__name__, e))
-          return
+            warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? "
+                          "The following error occured:\n {}: {}".format(type(e).__name__, e))
+            return
         #try:
         #    import shapely.geometry as sg
         #    import shapely.ops as so
@@ -697,11 +787,9 @@ class Projection2D(object):
             """
             from matplotlib.patches import Circle
             from matplotlib.collections import PatchCollection
-            import pylab as plt
             #import matplotlib.colors as colors
-
             if ax is None:
-                ax = plt.gca()    
+                raise TypeError()
 
             if isinstance(c,basestring):
                 color = c     # ie. use colors.colorConverter.to_rgba_array(c)
@@ -787,17 +875,17 @@ class Projection2D(object):
         for label,(s,e) in self._coords.items():
             if "color" not in line2dproperties:
                 if label.startswith("s"):
-                  lprop["color"]="green"
+                    lprop["color"]="green"
                 elif label.startswith("i"):
-                  lprop["color"]="gold"
+                    lprop["color"]="gold"
                 elif label.startswith("h"):
-                  lprop["color"]="blue"
+                    lprop["color"]="blue"
                 elif label.startswith("m"):
-                  lprop["color"]="red"
+                    lprop["color"]="red"
                 elif label.startswith("f") or label.startswith("t"):
-                  lprop["color"]="blue"
+                    lprop["color"]="blue"
                 else:
-                  lprop["color"]="black"
+                    lprop["color"]="black"
             if add_labels!=False and (add_labels==True or label in add_labels):
                 lprop["label"]=label
             else:
@@ -810,9 +898,9 @@ class Projection2D(object):
             vec=np.array(e)-np.array(s)
             nvec=np.array([vec[1], -vec[0]])
             try:
-              div=math.sqrt(nvec[0]**2+nvec[1]**2)
+                div=math.sqrt(nvec[0]**2+nvec[1]**2)
             except ZeroDivisionError:
-              div=100000
+                div=100000
             a=e+nvec*5/div
             b=e-nvec*5/div
             c=s+nvec*5/div
@@ -858,6 +946,7 @@ class Projection2D(object):
   
         This is implemented as a networkx.Graph with the coordinates as nodes.
         """
+        import networkx as nx
         proj_graph=nx.Graph()
         for key, element in self._coords.items():
             crs=self.crossingPoints
@@ -872,7 +961,7 @@ class Projection2D(object):
         self.condense_points(0.00000000001) #To avoid floating point problems
 
     @profile
-    def _project(self, cg, project_virtual_atoms):
+    def _project(self, cg, project_virtual_atoms, project_virtual_residues):
         """
         Calculates the 2D coordinates of all coarse grained elements by vector rejection.
         Stores them inside self._coords
@@ -888,12 +977,31 @@ class Projection2D(object):
             self._coords[key]=(start, end)
         va=[]
         if project_virtual_atoms:        
-            for residuePos in range(1,cg.total_length()):
+            for residuePos in range(1,cg.seq_length+1):
                 residue=cg.virtual_atoms(residuePos)
-                for pos in residue.values():
-                    va.append(pos)
-            self._virtual_atoms=np.dot(np.array(va), basis)
-
+                if project_virtual_atoms=="selected":
+                    try:             va.append(residue['P'])
+                    except KeyError: pass
+                    try:             va.append(residue["C1'"])
+                    except KeyError: assert False #Should never happen
+                    try:             va.append(residue['C1'])
+                    except KeyError: pass
+                    try:             va.append(residue["O3'"])
+                    except KeyError: pass
+                else:
+                    for pos in residue.values():
+                        va.append(pos)
+            if va:
+                self._virtual_atoms=np.dot(np.array(va), basis)
+            else:
+                warnings.warn("No virtual atoms present in {} of length {}!".format(cg.name, len(cg.seq)))
+        vr = []
+        for res in project_virtual_residues:
+            vr.append(np.dot(cg.get_virtual_residue(res, True), basis))
+        assert len(vr)==len(project_virtual_residues)
+        if vr:
+            self._virtual_residues = np.array(vr)
+  
     def _condense_one(self, cutoff):
         """
         Condenses two adjacent projection points into one.

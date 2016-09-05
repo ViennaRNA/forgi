@@ -16,12 +16,12 @@ import numpy as np
 import numpy.linalg as nl
 import random
 import sys
+import math
 
-#import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus #Deprecated
+import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
-import forgi.threedee.utilities.rmsd as cur
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
 import forgi
@@ -29,6 +29,15 @@ import forgi
 import scipy.optimize as so
 
 catom_name = "C1'"
+
+
+try:
+  profile  #The @profile decorator from line_profiler (kernprof)
+except:
+  def profile(x): 
+    return x
+else:
+  import forgi.threedee.utilities.average_atom_positions as ftua #Takes forever if executed within a decorated method.
 
 def stem_stem_orientation(cg, s1, s2):
     '''
@@ -305,7 +314,7 @@ def stem2_pos_from_stem1_1(stem1_basis, params):
 
     return stem2_start
 
-
+#Seems to be unused!
 def twist2_orient_from_stem1(stem1, twist1, u_v_t):
     '''
     Calculate the position of the twist factor of the 2nd stem from its
@@ -360,7 +369,7 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
 
     return twist2_new_basis
 
-
+#Seems to be unused!
 def stem2_orient_from_stem1(stem1, twist1, r_u_v):
     '''
     Calculate the orientation of the second stem, given its parameterization
@@ -414,7 +423,7 @@ def get_centroid(chain, residue_num):
 
     return cuv.get_vector_centroid(vectors)
 
-
+#Seems to be unused!
 def get_bulge_centroid(chain, define):
     i = 0
     res_nums = []
@@ -583,13 +592,14 @@ def basenormals_mids(chain, start1, start2, end1, end2):
     '''
 """
 
-# This function seems to be unused. Consider deprecation...
+
 def get_mids_core_a(chain, start1, start2, end1, end2, 
                     use_template=True):
     '''
     Estimate the stem cylinder using the old method and then refine it
     using fitted parameters.
     '''
+    warnings.warn("This is deprecated and will be removed in the future!", stacklevel=2)
     if use_template:
         template_stem_length = 30
     else:
@@ -703,7 +713,7 @@ def get_mids_core(cg, chain, define,
     chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
     #chain_new_mids = [chain_new_mids[0] + mult * stem_vec, chain_new_mids[1] - mult * stem_vec]
 
-    # return it as a Bio.PDB.Vector for some strang reason
+    # return it as a Bio.PDB.Vector for some strange reason
     return (bpdb.Vector(chain_new_mids[0]), bpdb.Vector(chain_new_mids[1]))
 
 
@@ -810,10 +820,6 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     The virtual position extrapolates the position of the residues based
     on the twists of the helix.
 
-    :param bg: The BulgeGraph structure
-    :param stem: The name of the stem
-    :param i: The i'th residue of the stem
-
     :return: A tuple containing the point located on the axis of the stem
              and a vector away from that point in the direction of the
              residue.
@@ -884,6 +890,10 @@ def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
                                        stem_length, stem_inv)
 
 def bg_virtual_residues(bg):
+    warnings.warn("ftug.bg_virtual_residues will be removed in the future."
+                  "Use cg.add_virtual_residues instead to store the virtual "
+                  "residues directly to the CoarseGrainRNA and cg.get_ordered_virtual_residue_poss"
+                  "to retrieve the virtual residue positions." , DeprecationWarning, stacklevel=2)
     vress = []
 
     for s in bg.sorted_stem_iterator():
@@ -893,6 +903,7 @@ def bg_virtual_residues(bg):
 
     return np.array(vress)
 
+#Seems to be unused!
 def numbered_virtual_residues(bg):
     '''
     Return a list of virtual residues, along with their
@@ -980,9 +991,18 @@ def spos_to_pos(bg, stem, i, spos):
     :return: The coordinates in the cartesian coordinate system of the
         rest of the model.
     '''
-    sbasis = virtual_res_basis(bg, stem, i)
-    (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = virtual_res_3d_pos(bg, stem, i)
+    if stem in bg.vbases and i in bg.vbases[stem]:
+        sbasis=bg.vbases[stem][i]
+    else:
+        sbasis = virtual_res_basis(bg, stem, i)
     pos = cuv.change_basis(spos, cuv.standard_basis, sbasis)
+
+    try:
+        (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
+    except KeyError:
+        add_virtual_residues(bg, stem)
+        (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
+
     return pos + (s1_pos + s1_vec)
 
 
@@ -1069,7 +1089,6 @@ def junction_virtual_atom_distance(bg, bulge):
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
     pos1=bg.defines[connecting_stems[0]][i1]
     pos2=bg.defines[connecting_stems[1]][i2]
-    coords=virtual_atoms(bg)
     if i1==0 or i1==2:
         a1="P"
     else:
@@ -1079,12 +1098,18 @@ def junction_virtual_atom_distance(bg, bulge):
     else:
         a2="O3'"
     assert a1!=a2
-    return cuv.magnitude(coords[pos1][a1]-coords[pos2][a2])
+    return cuv.magnitude(bg.virtual_atoms(pos1)[a1]-bg.virtual_atoms(pos2)[a2])
+
 
 def add_virtual_residues(bg, stem):
     '''
     Create all of the virtual residues and the associated
-    bases and inverses.
+    bases and inverses for the given stem.
+
+    .. note::
+       This is a low-level function used if only the virtual residues of a single 
+       stems should be added. To add the virtual residues for all stems, use
+       `cg.add_all_virtual_residues`
 
     :param bg: The CoarseGrainRNA bulge graph containing the stem
     :param stem: The name of the stem to be included
@@ -1108,6 +1133,7 @@ def add_virtual_residues(bg, stem):
         bg.vinvs[stem][i] = vinv
 
 
+# TODO: This should probably use pos_to_spos to reduce code duplication.
 def stem_vres_reference_atoms(bg, chain, s, i):
     '''
     Calculate the position of each atom in the reference of the
@@ -1182,8 +1208,7 @@ def bounding_boxes(bg, chain, s, i):
 
 def virtual_residue_atoms(bg, s, i, strand=0):
     '''
-    Return two sets of atoms for the virtual residue. One for the nucleotide
-    on each strand.
+    Return the atoms for the virtual residue. 
 
     :param bg: The BulgeGraph
     :param s: The stem
@@ -1202,10 +1227,7 @@ def virtual_residue_atoms(bg, s, i, strand=0):
     glob_pos = (bg.defines[s][0] + i, bg.defines[s][3] - i)
     glob_pos = glob_pos[strand]
 
-
-    coords=virtual_atoms(bg)
-
-    return coords[glob_pos]
+    return bg.virtual_atoms(glob_pos)
 
 
 def calc_R(xc, yc, p):
@@ -1460,7 +1482,7 @@ def get_mids_fit_method(cg, chain, define):
     return [bpdb.Vector(mids_standard_basis[0]),
             bpdb.Vector(mids_standard_basis[1])]
 
-# @COVERAGE: Currently not used.
+#Seems to be unused at least since version 0.3
 def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
     '''
     Attempt to find the stem direcion vector given a set of atom positions.
@@ -1505,7 +1527,7 @@ def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
                           start_pos, end_pos, stem_chain,
                           bg.stem_length(stem_name), bg.defines[stem_name])
 
-# @COVERAGE: Currently not used.
+#Seems to be unused at least since version 0.3
 def receptor_angle(bg, l, s):
     (i1, i2) = cuv.line_segment_distance(bg.coords[l][0],
                                          bg.coords[l][1],
@@ -1560,24 +1582,11 @@ def add_bulge_information_from_pdb_chain(bg, chain):
 
     Modifies the structure bg.
 
-    :param bg: The BulgeGraph.
-    :param chain: The Bio.PDB chain representation of the 3D structure.
+    :param bg: The CoarseGrainRNA.
     '''
-    for d in bg.defines.keys():
-        if d[0] != 's':
-            if len(bg.edges[d]) == 2:
-                edges = list(bg.edges[d])
-
-                #s1d = bg.defines[edges[0]]
-                #s2d = bg.defines[edges[1]]
-
-                (s1b, s1e) = bg.get_sides(edges[0], d)
-                (s2b, s2e) = bg.get_sides(edges[1], d)
-
-                mids1 = bg.coords[edges[0]] #get_mids(chain, s1d)
-                mids2 = bg.coords[edges[1]] #get_mids(chain, s2d)
-
-                bg.coords[d] = (mids1[s1b], mids2[s2b])
+    warnings.warn("add_bulge_information_from_pdb_chain is deprecated."
+                  " Use cg.add_bulge_coords_from_stems instead!")
+    bg.add_bulge_coords_from_stems()
 
 def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
     for d in it.chain(bg.hloop_iterator(), ['t1', 'f1']):
@@ -1671,7 +1680,7 @@ def get_encompassing_cylinders(cg, radius=6.):
     
     # the first cylinder is equal to the first stem
     #cylinders = {0: cg.coords['s0']}
-    to_visit = [random.choice(cg.defines.keys())]
+    to_visit = [random.choice(list(cg.defines.keys()))]
     
     cylinder_counter = 0
     
@@ -1743,47 +1752,8 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
 
     :param cg: The coarse grain structure.
     '''
-    return new_virtual_atoms(cg, given_atom_names, sidechain)
-    import forgi.threedee.utilities.average_atom_positions as ftua
-    coords = col.defaultdict(dict)
-
-    for d in cg.defines.keys():
-        origin, basis = element_coord_system(cg, d)
-
-        if d[0] == 'i' or d[0] == 'm':
-            conn = cg.connections(d)
-            conn_type = cg.connection_type(d, conn)
-        else:
-            conn_type = 0
-
-        for i,r in it.izip(it.count(),
-                           cg.define_residue_num_iterator(d)):
-
-            if given_atom_names is None:
-                if sidechain:
-                    atom_names = ftup.nonsidechain_atoms + [ cg.seq[r-1]+"."+x for x in ftup.side_chain_atoms[cg.seq[r-1]] ]
-                else:
-                    atom_names = ftup.nonsidechain_atoms
-            else:
-                atom_names = given_atom_names
-
-            for aname in atom_names:
-                identifier = "%s %s %d %d %s" % (d[0],
-                                              " ".join(map(str, cg.get_node_dimensions(d))),
-                                              conn_type, i, aname)
-                try:
-                    coords[r][aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
-                except KeyError as ke:
-                    pass
-    return coords
-
-def new_virtual_atoms(cg, given_atom_names=None, sidechain=True):
-    '''
-    Get a VirtualAtomLookup Object for the virtual atoms for this structure.
-
-    :param cg: The coarse grain structure.
-    '''
     return VirtualAtomsLookup(cg, given_atom_names, sidechain)
+
 class VirtualAtomsLookup(object):
     """
     An object with a dict-like interface that calculated the virtual atom positions on demand.
@@ -1798,9 +1768,11 @@ class VirtualAtomsLookup(object):
         self.cg=cg  
         self.given_atom_names=given_atom_names
         self.sidechain=sidechain
+    @profile
     def __getitem__(self, position):
         """
-        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
+        :returns: A dictionary containing all atoms (as keys) and their 
+                  positions (as values) for the given residue.
         :param position: The position of the residue in the RNA (starting with 1)
         """
         #Find out the stem for which we have to calculate virtual atom positions
@@ -1812,6 +1784,7 @@ class VirtualAtomsLookup(object):
             elif len(value)==4 and position>=value[2] and position<=value[3]:
                 return self._getitem_for_element(key, position)
         assert False, "No return for pos {}".format(position)
+    @profile
     def keys(self):
         k=set()
         for value in self.cg.defines.values():
@@ -1821,13 +1794,16 @@ class VirtualAtomsLookup(object):
             if len(value)>3:
                 for i in range(value[2], value[3]+1):
                     k.add(i)
-        return k     
+        return k
+
     def _getitem_for_element(self, d, pos):
         """
         :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
         :param d: The coarse grained element (e.g. "s1")
         :param pos: The position of the residue. It has to be in the element d!
         """
+        if d[0]=="s":
+            return self._getitem_for_stem(d, pos) #Use virtual residues for stems.
         import forgi.threedee.utilities.average_atom_positions as ftua
         e_coords=dict()
         origin, basis = element_coord_system(self.cg, d)
@@ -1845,7 +1821,7 @@ class VirtualAtomsLookup(object):
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
-                atom_names = given_atom_names
+                atom_names = self.given_atom_names
             for aname in atom_names:
                 identifier = "%s %s %d %d %s" % (d[0],
                                               " ".join(map(str, self.cg.get_node_dimensions(d))),
@@ -1856,9 +1832,31 @@ class VirtualAtomsLookup(object):
                 try:
                     e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
+                    #warnings.warn("KeyError in virtual_atoms. No coordinates found for: {}".format(ke))
                     pass
             return e_coords
+    def _getitem_for_stem(self, d, pos):
+        i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
+        assert pos>=1    #pos-1 should not be negative!  
+        residue = (self.cg.seq[pos-1]) #The sequence coordinates are 1-based!
 
+        atoms = dict()
+        if self.given_atom_names is None:
+            if self.sidechain:
+                atom_names = (ftup.nonsidechain_atoms +  ftup.side_chain_atoms[residue])
+            else:
+                atom_names = ftup.nonsidechain_atoms
+        else:
+            atom_names = self.given_atom_names
+        for aname in atom_names:
+            if "'" in aname:
+                aname_star=aname[:-1]+"*"
+            else:
+                aname_star=aname
+            spos = ftus.avg_stem_vres_atom_coords[side][residue][aname_star]
+            atoms[aname] = spos_to_pos(self.cg, d, i, spos)
+
+        return atoms
 """def add_atoms(coords, twists, define, side, seq, new_coords):
     stem_len = define[1] - define[0] + 1
 
@@ -1914,7 +1912,97 @@ def element_distance(cg, l1, l2):
     (i1, i2) = ftuv.line_segment_distance(cg.coords[l1][0],
                                        cg.coords[l1][1],
                                        cg.coords[l2][0],
-                                       cg.coords[l2][1])                                                             
+                                       cg.coords[l2][1])
     return ftuv.vec_distance(i1, i2)
-            
+
+def get_basepair_center(cg, pos):
+    """
+    The center of a basepair, as defined in doi: 10.1261/rna.305307 
+
+    :param pos: The number of one of the two pairing bases
+    """
+    pos2 = cg.pairing_partner(pos)
+    seq1 = cg.seq[pos-1]
+    seq2 = cg.seq[pos2-1]
+    atoms = {"A": ["C1'", "C8"], "G": ["C1'", "C8"], "U": ["C1'", "C6"], "C": ["C1'", "C6"]}
+    va1 = cg.virtual_atoms(pos)
+    va2 = cg.virtual_atoms(pos2)
+    avpos=np.zeros(3)
+    for atom in atoms[seq1]:
+        avpos+=va1[atom]
+    for atom in atoms[seq2]:
+        avpos+=va2[atom]
+    avpos/=(len(atoms[seq1])+len(atoms[seq2]))
+    return avpos
+
+def get_basepair_plane(cg, pos):
+    """
+    The plane of the basepair, as defined in figure 13 of doi: 10.1261/rna.305307 
+  
+    :param pos: The number of one of the two pairing bases
+    """
+    pos2 = cg.pairing_partner(pos)
+    seq1 = cg.seq[pos-1]
+    seq2 = cg.seq[pos2-1]
+    va1 = cg.virtual_atoms(pos)
+    va2 = cg.virtual_atoms(pos2)
+    h_bonds = {"U": {"A": [("O4", "N6"), ("N3", "N1")],
+                     "G": [("N3", "O6"), ("O2", "N1")]},
+               "A": {"U": [("N6", "O4"), ("N1", "N3")]},
+               "G": {"U": [("O6", "N3"), ("N1", "O2")],
+                     "C": [("O6", "N4"), ("N1", "N3"),("N2", "O2")]},
+               "C": {"G": [("N4", "O6"), ("N3", "N1"),("O2", "N2")]}
+              }
+    #print( seq1, seq2 )
+    try:
+        hb = h_bonds[seq1][seq2]
+    except KeyError:
+        # Non-canonical basepair
+        warnings.warn("Estimating plane from stem vector for "
+                      " non-canonical basepair {}-{} at positions"
+                      " {},{}".format(seq1, seq2, pos, pos2))
+        stem, = cg.nucleotides_to_elements([pos, pos2]) #ValueError, if cg.pairing_partner is buggy
+        return cg.coords[stem][0]-cg.coords[stem][1]
+    else:
+        plane = np.zeros(3)
+        contribs=0
+
+        for l1, l2 in it.combinations(hb, 2):
+            left_1=va1[l1[0]]
+            left_2=va1[l2[0]]
+            right_1=va2[l1[1]]
+            right_2=va2[l2[1]]
+            add=np.cross(right_1-left_1, right_2-left_1)
+            if np.any(plane!=np.zeros(3)): 
+                assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+                 " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
+            plane+=add
+            add=np.cross(right_1-left_1, left_2-right_1)
+            assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+               " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
+            plane+=add
+            add=np.cross(right_2-left_2, right_2-left_1)
+            assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+               " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
+            plane+=add
+            add=np.cross(right_2-left_2, left_2-right_1)
+            assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
+               " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
+            plane+=add
+        return ftuv.normalize(plane)  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

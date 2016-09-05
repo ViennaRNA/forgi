@@ -9,6 +9,7 @@ import math
 import numpy.linalg as nl
 import numpy.testing as nt
 import random as rand
+import warnings
 #import scipy as sp
 
 null_array = np.array([0., 0., 0.])
@@ -23,6 +24,7 @@ identity_matrix = np.array([x_array, y_array, z_array])
 standard_basis = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
 tau = 2 * math.pi
 
+# Seems to be unused
 def get_inter_distances(vecs):
     '''
     Calculate all of the distances between the points of vecs.
@@ -51,10 +53,12 @@ def get_random_vector(mult=1.):
         if magnitude(vec)<=mult:
             return vec
 
+
 def get_orthogonal_unit_vector(vec):
     '''
     Return a vector orthogonal to vec.
     '''
+    warnings.warn("This is deprecated. Use create_orthonormal_basis instead!", stacklevel=2)
     vec2 = get_non_colinear_unit_vector(vec)
     vec3 = np.cross(vec, vec2)
     return normalize(vec3)
@@ -147,6 +151,10 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
 
     If more than one is provided, it must be orthogonal to 
     the others.
+    
+    .. warning::
+
+        This does NOT verify whether the input vectors are orthogonal.
     '''
     if vec2 is None:
         vec2 = get_non_colinear_unit_vector(vec1)
@@ -400,7 +408,7 @@ def rotation_matrix_weave(axis, theta, mat = None):
 
 def vector_set_rmsd(set1, set2):
     '''
-    Calculate the rmsd between two sets of vectors.
+    Calculate the not-centered rmsd between two sets of vectors.
 
     :param set1: A matrix
     :param set2: Another matrix.
@@ -506,7 +514,9 @@ def normalize(vec):
     :param vec: The vector in question.
     :return: A normalized version of the vector.
     '''
-
+    mag = magnitude(vec)
+    if mag==0: #Numpy would return Nan and raise a RuntimeWarning.
+        raise ValueError("Cannot normalize zero- vector!")
     return vec / magnitude(vec)
 
 def vec_angle(vec1, vec2):
@@ -542,9 +552,21 @@ def vec_dot(a, b):
     """
     Vector dot product for vectors of length 3.
 
-    For small vectors of length 3, this naive python implementation might be 
-    faster than the corresponding numpy implementation.
+    For small vectors of length 3 that are represented as lists and not as np.arary, 
+    this naive python implementation might be faster than the corresponding numpy implementation.
+
+    If a and b are already numpy arrays, the numpy implementation seems to be faster 
+    (depending an how numpy was compiled)
+
     """
+    # >>> timeit.timeit('ftuv.vec_dot(a,b)', setup='import numpy as np;import forgi.threedee.utilities.vector as ftuv; a=np.array([1,2,3]); b=np.array([7,2,5]);')
+    # 0.7863450050354004
+    # >>> timeit.timeit('ftuv.vec_dot(a,b)', setup='import numpy as np;import forgi.threedee.utilities.vector as ftuv; a=[1,2,3]; b=[7,2,5];')
+    # 0.27366209030151367
+    # >>> timeit.timeit('np.dot(a,b)', setup='import numpy as np; a=[1,2,3]; b=[7,2,5]')
+    # 1.4038841724395752
+    # >>> timeit.timeit('np.dot(a,b)', setup='import numpy as np; a=np.array([1,2,3]); b=np.array([7,2,5])')
+    # 0.6194930076599121
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 
 '''
@@ -837,7 +859,7 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     return closest
 
  
-# COVERAGE: Not used in forgi and ernwin. Consider deprecation
+# COVERAGE: Not used in forgi and ernwin at least since forgi v0.3. Consider deprecation
 def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
     Something. Lifted from:
@@ -943,7 +965,7 @@ def cylinder_line_intersection(cyl, line, r):
 
     return change_basis(intersects_t.T, standard_basis, cyl_basis).T
 
-#COVERAGE: Not used in ernwin and forgi
+#COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
 def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     '''
     If we create a cone that starts at one end of cylinder1, does it
@@ -978,7 +1000,7 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     
     return True
 
-#COVERAGE: Not used in ernwin and forgi
+#COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
 def point_in_cylinder(pt1, pt2, r, testpt):
     '''
     Determine if testpt is within a cylinder of radius r.

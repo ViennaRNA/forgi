@@ -246,20 +246,23 @@ class PymolPrinter:
             uids += [uid]
 
             s += "cgox_%s = []" % (uid) + '\n'
+          
+            if np.all(n==p):
+                pos = n
+                axes = [ [2,0,0], [0,2,0], [0,0,2] ]
+            else:
+                comp1 = cuv.normalize(n - p)
 
-            comp1 = cuv.normalize(n - p)
+                ncl = cuv.get_non_colinear_unit_vector(comp1)
 
-            ncl = cuv.get_non_colinear_unit_vector(comp1)
+                comp2 = cuv.normalize(np.cross(ncl, comp1))
+                comp3 = cuv.normalize(np.cross(ncl, comp2))
 
-            comp2 = cuv.normalize(np.cross(ncl, comp1))
-            comp3 = cuv.normalize(np.cross(ncl, comp2))
+                pos = (p + n) / 2.0 + 3 * comp2
 
-            pos = (p + n) / 2.0 + 3 * comp2
-            #pos = p + (n - p) / 4.0 + 3 * comp2
-            axes = [list(comp1 * 2), list(comp2 * 2), list(comp3 * 2)]
+                axes = [list(comp1 * 2), list(comp2 * 2), list(comp3 * 2)]
 
             text = "%s: %.1f" % (text, cuv.magnitude(n - p))
-            #text = "%s" % (text)
 
             s += "cyl_text(cgox_%s, plain, %s, " % (uid, str(list(pos)))
             s += "\"%s\", 0.20, axes=%s)" % (text, str(axes)) + '\n'
@@ -416,8 +419,8 @@ class PymolPrinter:
 
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key, key=key)
-        #self.add_sphere(p, 'light gray', width=2.0 ) 
-        #self.add_sphere(n, 'dark gray', width=2.0 ) 
+        self.add_sphere(p, 'light gray', width=2.0 ) 
+        self.add_sphere(n, 'dark gray', width=2.0 ) 
 
         if self.add_twists:
             mult = 8.
@@ -581,7 +584,7 @@ class PymolPrinter:
             start_point = -furthest * vv[0] + datamean
             end_point = furthest * vv[0] + datamean
 
-            self.add_segment(start_point, end_point, 'white', width=4, text='', key=key)
+            self.add_segment(start_point, end_point, 'white', width=4, text='', key='')
 
 
         print >>sys.stderr, "YOOOOOOOOOOOOOOOOOOOOOOO"
@@ -642,6 +645,9 @@ class PymolPrinter:
                 self.add_stem_like(cg, key, color=color)
                 self.draw_bounding_boxes(cg, key)
             else:
+                #self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
+                #self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
+
                 if key[0] == 'h':
                     if self.add_loops:
                         if key in loops:
@@ -722,6 +728,7 @@ class PymolPrinter:
                     self.add_segment(i1, i2, 'cyan', 0.3, key=key)
 
         if self.virtual_atoms or self.sidechain_atoms:
+            cg.add_all_virtual_residues()
             va = ftug.virtual_atoms(cg, sidechain=self.sidechain_atoms)
 
             atom_width = 0.5

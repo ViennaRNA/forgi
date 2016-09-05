@@ -1,19 +1,20 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from __future__ import print_function
 from __future__ import division
-from builtins import range
-from builtins import map
-from builtins import zip
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      map, next, oct, pow, range, round,
+                      str, super, zip)
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
 
 __author__ = "Peter Kerpedjiev, Bernhard Thiel"
 __copyright__ = "Copyright 2012 - 2016"
-__version__ = "0.3"
-__maintainer__ = "Peter Kerpedjiev"
-__email__ = "pkerp@tbi.univie.ac.at"
+__license__ = "GNU Affero GPL v 3.0"
+__version__ = "0.4"
+__maintainer__ = "Peter Kerpedjiev, Bernhard Thiel"
+__email__ = "pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at"
 
 import sys
 import collections as col
@@ -98,7 +99,7 @@ def from_fasta_text(fasta_text):
 
             # make sure we have
             if prev_seq is None:
-                raise Exception("No sequence for id: {}", prev_id)
+                raise Error("No sequence for id: {}", prev_id)
             if prev_struct is None:
                 raise Exception("No sequence for id: {}", prev_id) 
                 #BT: This message not very helpful, if wrong character ("N"/..) in sequence
@@ -218,7 +219,7 @@ def print_brackets(brackets):
     tens = [chr(ord('0') + i // 10) for i in range(len(brackets))]
     print ("brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers))
 
-
+# @Coverage: Seems to be unused. If this is removed, condense_stem_pairs can be removed as well.
 def find_bulges_and_stems(brackets):
     """
     Iterate through the structure and enumerate the bulges and the stems that are
@@ -232,7 +233,7 @@ def find_bulges_and_stems(brackets):
     The returned bulges are of the form [(s,e), (s,e),...] where s is the start of a bulge
     and e is the end of a bulge
 
-    :param brackets: A string with the dotplot passed as input to this script.
+    :param brackets: A string with the dotbracket passed as input to this script.
     """
     prev = 'x'
     context = 0
@@ -332,11 +333,15 @@ class BulgeGraph(object):
         self.weights = dict()
         self.nx_graph = None
         self.nuc_bp_dists = None
+        self._elem_bp_dists = {}
 
-        # sort the coordinate basis for each stem
+        # store the coordinate basis for each stem
         self.bases = dict()
         self.stem_invs = dict()
         self.seq_ids = []
+
+        # Additional infos as key-value pairs are stored here.
+        self.infos = col.defaultdict(list)
 
         self.name_counter = 0
 
@@ -396,6 +401,9 @@ class BulgeGraph(object):
         else:
             return min(self.get_bulge_dimensions(key))
 
+    def add_info(self, key, value):
+        self.infos[key].append(value)
+
     def get_single_define_str(self, key):
         """
         Get a define string for a single key.
@@ -425,6 +433,13 @@ class BulgeGraph(object):
 
     def get_length_str(self):
         return "length " + str(self.seq_length) + '\n'
+  
+    def get_info_str(self):
+        out=""
+        for info in self.infos:
+            for value in self.infos[info]:
+                out+="info "+info+" "+value+"\n"
+        return out
 
     def get_connect_str(self):
         """
@@ -436,7 +451,7 @@ class BulgeGraph(object):
         """
 
         whole_str = ''
-        for key in self.edges:
+        for key in sorted(self.edges):
             if len(self.edges[key]) == 0:
                 continue
 
@@ -496,7 +511,7 @@ class BulgeGraph(object):
         out_str += self.get_seq_ids_str()
         out_str += self.get_define_str()
         out_str += self.get_connect_str()
-
+        out_str += self.get_info_str()
         return out_str
 
     def to_file(self, filename):
@@ -505,7 +520,7 @@ class BulgeGraph(object):
 
             f.write(out_str)
 
-    def to_element_string(self):
+    def to_element_string(self, with_numbers=False):
         """
         Create a string similar to dotbracket notation that identifies what
         type of element is present at each location.
@@ -521,14 +536,29 @@ class BulgeGraph(object):
         Indicating that it begins with a fiveprime region, continues with a
         stem, has a hairpin after the stem, the stem continues and it is terminated
         by a threeprime region.
+
+        :param with_numbers: show the last digit of the element id in a second line.::
+
+                                 (((.(((...))))))
+
+                             Could result in::
+
+                                 sssissshhhssssss
+                                 0000111000111000
+
+                             Indicating that the first stem is named 's0', followed by 'i0','
+                             s1', 'h0', the second strand of 's1' and the second strand of 's0'
         """
         output_str = [' '] * (self.seq_length + 1)
-
+        output_nr = [' '] * (self.seq_length + 1)
         for d in self.defines.keys():
             for resi in self.define_residue_num_iterator(d, adjacent=False):
                 output_str[resi] = d[0]
-
-        return "".join(output_str).strip()
+                output_nr[resi] = d[-1]
+        if with_numbers:
+            return "".join(output_str).strip()+"\n"+"".join(output_nr).strip()
+        else:
+            return "".join(output_str).strip()
 
     def define_range_iterator(self, node, adjacent=False, seq_ids=False):
         """
@@ -608,6 +638,16 @@ class BulgeGraph(object):
 
         for i in range(i1, i2 + 1):
             yield self.seq_ids[i]
+    
+    def seq_id_to_pos(self, seq_id):
+        """
+        Convert a pdb seq_id to a 1-based nucleotide position
+
+        :param seq_id: A triple or an integer.
+        """
+        if isinstance(seq_id, int):
+            seq_id=(" ", seq_id, " ")
+        return self.seq_ids.index(seq_id)+1
 
     def create_bulge_graph(self, stems, bulges):
         """
@@ -678,7 +718,7 @@ class BulgeGraph(object):
                                         stem_stems_set.add(j)
                                     stem_stems[i] = stem_stems_set
 
-        for d in self.defines.keys():
+        for d in list(self.defines.keys()):
             if d[0] != 'y':
                 continue
 
@@ -714,7 +754,7 @@ class BulgeGraph(object):
         del self.edges[v]
         del self.defines[v]
 
-    def reduce_defines(self):
+    def _reduce_defines(self):
         """
         Make defines like this:
 
@@ -772,7 +812,7 @@ class BulgeGraph(object):
 
                         break
 
-    def merge_vertices(self, vertices):
+    def _merge_vertices(self, vertices):
         """
         This is done when two of the outgoing strands of a stem
         go to different bulges
@@ -809,7 +849,7 @@ class BulgeGraph(object):
 
             # remove the old vertex, since it's been replaced by new_vertex
             self.remove_vertex(v)
-            self.reduce_defines()
+            self._reduce_defines()
 
         # self.weights[new_vertex] = 2
         for connection in connections:
@@ -854,15 +894,19 @@ class BulgeGraph(object):
         Convert a list of nucleotides (nucleotide numbers) to element names.
 
         Remove redundant entries and return a set.
+
+        ..note::
+            Use `self.get_node_from_residue_num` if you have only a single nucleotide number.
         """
         return set([self.get_node_from_residue_num(n) for n in nucleotides])
 
     def find_bulge_loop(self, vertex, max_length=4):
         """
         Find a set of nodes that form a loop containing the
-        given vertex and being no greater than 4 nodes long.
+        given vertex and being no greater than max_length nodes long.
 
         :param vertex: The vertex to start the search from.
+        :param max_length: Only fond loops that contain no mor then this many elements
         :returns: A list of the nodes in the loop.
         """
         visited = set()
@@ -930,7 +974,7 @@ class BulgeGraph(object):
 
         self.from_tuples(nt)
 
-    def collapse(self):
+    def _collapse(self):
         """
         If any vertices form a loop, then they are either a bulge region of 
         a fork region. The bulge (interior loop) regions will be condensed 
@@ -953,7 +997,7 @@ class BulgeGraph(object):
 
                     if all_connections == [[1, 2], [0, 3]]:
                         # interior loop
-                        self.merge_vertices([b1, b2])
+                        self._merge_vertices([b1, b2])
                         new_vertex = True
                         break
 
@@ -1117,14 +1161,30 @@ class BulgeGraph(object):
 
         Potential angle types for single stranded segments, and the ends of
         the stems they connect:
-
-            1   2 (1, 1) #pseudoknot
-            1   0 (1, 0)
-            3   2 (0, 1)
-            3   0 (0, 0)
+      
+        =   = ======  ===========
+        1   2 (1, 1)  #pseudoknot
+        1   0 (1, 0)
+        3   2 (0, 1)
+        3   0 (0, 0)
+        =   = ======  ===========
 
         :param define: The name of the bulge separating the two stems
         :param connections: The two stems and their separation
+
+        :returns: INT connection type
+
+                  =   ======================================================================
+                  +   positive values mean forward (from the connected stem starting at the 
+                      lower nucleotide number to the one starting at the higher nuc. number)
+                  -   negative values mean backwards.
+                  1   interior loop
+                  2   first multi-loop segment of normal multiloops and most pseudoknots
+                  3   middle segment of a normal multiloop
+                  4   last segment of normal multiloops and most pseudoknots
+                  5   middle segments of pseudoknots
+                  =   ======================================================================
+                  
         """
 
         if define[0] == 'i':
@@ -1169,7 +1229,7 @@ class BulgeGraph(object):
 
         :param connection_type: The angle type, as determined by which corners
                                 of a stem are connected
-        :return: (s1e, s2b)
+        :return: (s1e, s2b) 0 means the side of the stem with the lowest nucleotide, 1 the other side
         """
         ends = ()
 
@@ -1219,6 +1279,7 @@ class BulgeGraph(object):
             residues += self.define_residue_num_iterator(m, adjacent=False)
         return residues
 
+    # This function seems to be unused. Consider deprecation...
     def find_external_loops(self):
         '''
         Return all of the elements which are part of
@@ -1337,7 +1398,7 @@ class BulgeGraph(object):
 
         self.create_bulge_graph(stems, bulges)
         self.create_stem_graph(stems, len(bulges))
-        self.collapse()
+        self._collapse()
         self.relabel_nodes()
         self.remove_degenerate_nodes()
         self.sort_defines()
@@ -1623,6 +1684,8 @@ class BulgeGraph(object):
                 self.seq_ids = list(map(ftum.parse_resid, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
+            elif parts[0] == 'info':
+                self.infos[parts[1]].append(" ".join(parts[2:]))
 
     def sorted_stem_iterator(self):
         """
@@ -1710,10 +1773,16 @@ class BulgeGraph(object):
         for i in range(stem_length):
             yield (d[0] + i, d[3] - i)
 
-    def get_connected_residues(self, s1, s2):
+    def get_connected_residues(self, s1, s2, bulge=None):
         """
         Get the nucleotides which are connected by the element separating
         s1 and s2. They should be adjacent stems.
+
+        :param s1, s2: 2 adjacent stems
+        :param bulge: Optional: The bulge seperating the two stems. 
+                      If s1 and s2 are connected by more than one element,
+                      this has to be given, or a ValueError will be raised.
+                      (useful for pseudoknots)
 
         The connected nucleotides are those which are spanned by a single
         interior loop or multiloop. In the case of an interior loop, this
@@ -1723,9 +1792,6 @@ class BulgeGraph(object):
         If the two stems are not separated by a single element, then return
         an empty list.
         """
-        # sort the stems according to the number of their first nucleotide
-        stems = [s1, s2]
-        stems.sort(key=lambda x: self.defines[x][0])
 
         c1 = self.edges[s1]
         c2 = self.edges[s2]
@@ -1737,11 +1803,18 @@ class BulgeGraph(object):
             # not connected
             return []
 
-        if len(common_edges) > 1:
-            raise Exception("Too many connections between the stems")
+        if len(common_edges) > 1 and bulge is None:
+            raise ValueError("Too many connections between the stems. "
+                            "Please provide the connectiong bulge you are interested in.")
+
+        if bulge and bulge not in common_edges:
+            raise ValueError("{}  does not connecty the stems {} and {}.".format(bulge, s1, s2))
 
         # the element linking the two stems
-        conn = list(common_edges)[0]
+        if bulge:
+            conn = bulge
+        else:
+            conn = list(common_edges)[0]
 
         # find out the sides of the stems that face the bulge
         (s1b, s1e) = self.get_sides(s1, conn)
@@ -1761,9 +1834,22 @@ class BulgeGraph(object):
 
         # return the ones which are closest to each other
         if conn[0] == 'i':
-            return sorted([sorted(dists[0][1:]), sorted(dists[1][1:])])
+            return sorted([list(dists[0][1:]), list(dists[1][1:])])
         else:
-            return sorted([sorted(dists[0][1:])])
+            return [list(dists[0][1:])]
+
+    def get_link_direction(self, stem1, stem2, bulge = None):
+        """
+        Get the direction in which stem1 and stem2 are linked (by the bulge)
+        
+        :returns: 1 if the bulge connects stem1 with stem2 in forward direction (5' to 3')
+                  -1 otherwise
+        """
+        linked = self.get_connected_residues(stem1, stem2, bulge)
+        if linked[0][0]<linked[0][1]:
+            return 1
+        else:
+            return -1
 
     def get_side_nucleotides(self, stem, side):
         """
@@ -1784,6 +1870,31 @@ class BulgeGraph(object):
 
         raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
 
+    # Seems to be unused. Consider deprecation
+    def get_stem_edge(self, stem, pos):
+        """
+        Returns the side of the stem that position is on.
+        Side 0 corresponds to the 5' pairing residues in the
+        stem whereas as side 1 corresponds to the 3' pairing
+        residues in the stem.
+        :param stem: The name of the stem
+        :param pos: A position in the stem
+        :return: 0 if pos on 5' edge of stem
+        """
+        fp_side = self.get_side_nucleotides(stem, 0)
+        tp_side = self.get_side_nucleotides(stem, 1)
+        
+        fp_edge = range(fp_side[0],tp_side[0]+1)
+        tp_edge = range(tp_side[1],fp_side[1]+1)
+        
+        if pos in fp_edge:
+            return 0
+        elif pos in tp_edge:
+            return 1
+        
+        raise Exception("Position (%d) not in stem (%s)." % (pos, stem))
+
+    # Seems to be unused. Consider deprecation
     def get_any_sides(self, e1, e2):
         """
         Get the side of e1 that e2 is on. The only difference from the get_sides
@@ -1819,7 +1930,7 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
-        # if the bulge is a length 0, multiloop then use the adjacent
+        # if the bulge is a length 0 multiloop then use the adjacent
         # stem to determine its side
         if len(bd) == 0:
             edges = self.edges[b]
@@ -1863,6 +1974,7 @@ class BulgeGraph(object):
         :return: A tuple indicating the corner of the stem that connects
                  to the bulge as well as the corner of the bulge that connects
                  to the stem.
+                 These sides are equivalent to the indices of the define.
         """
         s1d = self.defines[s1]
         bd = self.defines[b]
@@ -1872,7 +1984,7 @@ class BulgeGraph(object):
 
             for e in edges:
                 if e != s1:
-                    bd = self.defines[e]
+                    bd = self.defines[e] #For bulges of length 0, use the next stem
                     break
 
         for k in range(len(bd)):
@@ -1892,6 +2004,18 @@ class BulgeGraph(object):
         raise Exception("Faulty multiloop %s connecting %s"
                         % (" ".join(map(str, bd)),
                            " ".join(map(str, s1d))))
+
+    def stem_resn_to_stem_vres_side(self, stem, res):
+        d = self.defines[stem]
+        if res<=d[1]:
+            pos=res-d[0]
+            side = 0
+        elif res<=d[3]:
+            pos=d[3]-res
+            side = 1
+        else:
+            raise ValueError("Residue {} not in stem {} with define {}".format(res, stem, d))
+        return pos, side
 
     def stem_side_vres_to_resn(self, stem, side, vres):
         """
@@ -2041,12 +2165,12 @@ class BulgeGraph(object):
 
             return seqs
 
-    # This function seems to be unused. Consider deprecation...
     def get_stem_direction(self, s1, s2):
         """
         Return 0 if the lowest numbered residue in s1
         is lower than the lowest numbered residue in s2.
         """
+        warnings.warn("get_stem_direction is deprecated and will be removed in the future!", stacklevel=2)
         if self.defines[s1][0] < self.defines[s2][0]:
             return 0
         return 1
@@ -2091,7 +2215,6 @@ class BulgeGraph(object):
             return 0
         else:
             return 2
-
         pass
 
     def get_bulge_dimensions(self, bulge):
@@ -2154,7 +2277,7 @@ class BulgeGraph(object):
                     if base_num >= a[0] and base_num <= a[1]:
                         return key
 
-        raise Exception("Base number %d not found in the defines." % (base_num))
+        raise LookupError("Base number %d not found in the defines." % (base_num))
 
     def get_length(self, vertex):
         """
@@ -2318,7 +2441,7 @@ class BulgeGraph(object):
         if subgraph_length == None:
             subgraph_length = random.randint(1, len(self.defines.keys()))
 
-        start_node = random.choice(self.defines.keys())
+        start_node = random.choice(list(self.defines.keys()))
         curr_length = 0
         visited = set()
         next_nodes = [start_node]
@@ -2344,26 +2467,6 @@ class BulgeGraph(object):
             curr_length += 1  # self.element_length(curr_node)
 
         return new_graph
-
-    def same_stem_end(self, sd):
-        """
-        Return the index of the define that is on the same end of the
-        stem as the index sd.
-
-        :param sd: An index into a define.
-        :return: The index pointing to the nucleotide on the other strand 
-                 on the same side as the stem.
-        """
-        warnings.warn("BulgeGraph.same_stem_end() is deprecated and will be removed in the future."
-                       "Use ??? instead." , DeprecationWarning, stacklevel=2)
-        if sd == 0:
-            return 3
-        elif sd == 1:
-            return 2
-        elif sd == 2:
-            return 1
-        else:
-            return 0
 
     def get_resseqs(self, define, seq_ids=True):
         """
@@ -2401,7 +2504,7 @@ class BulgeGraph(object):
             self.seq_ids += [ftum.parse_resid(from_base)]
 
     # This function seems to be dead code, but might be useful in the future.
-    # Consider adding this to whitelist.oy
+    # Consider adding this to whitelist.py
     def connected_stem_iterator(self):
         """
         Iterate over all pairs of connected stems.
@@ -2410,19 +2513,24 @@ class BulgeGraph(object):
             edge_list = list(self.edges[l])
             yield (edge_list[0], l, edge_list[1])
 
+    def sorted_edges_for_mst(self):
+        """
+        Keep track of all linked nodes. Used for the generation of the minimal spanning tree.
+        """
+        priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
+        edges = sorted(it.chain(self.mloop_iterator(),
+                                self.iloop_iterator()),
+                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x))))
+        return edges
     def get_mst(self):
         """
         Create a minimum spanning tree from this BulgeGraph. This is useful
         for constructing a structure where each section of a multiloop is
         sampled independently and we want to introduce a break at the largest
         multiloop section.
-        """
-        priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
-
+        """        
         # keep track of all linked nodes
-        edges = sorted(it.chain(self.mloop_iterator(),
-                                self.iloop_iterator()),
-                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x))))
+        edges = self.sorted_edges_for_mst()
 
         mst = set(it.chain(self.stem_iterator(),
                            self.floop_iterator(),
@@ -2495,9 +2603,8 @@ class BulgeGraph(object):
                 next_stem = set.difference(self.edges[current],
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
-
-        #: This attribute seems to be unused. Consider removing it.
-        self.build_paths = build_paths
+                # If pseudoknots exist, the direction is not always 0! 
+                # assert self.get_stem_direction(prev, build_order[-1][2])==0 does not hold!
         self.build_order = build_order
 
         return build_order
@@ -2564,17 +2671,6 @@ class BulgeGraph(object):
 
         return True
 
-
-    def is_pseudoknot(self):
-        """
-        Is this bulge part of a pseudoknot?
-        """
-        for d in self.mloop_iterator():
-            if self.is_node_pseudoknot(d):
-                return True
-
-        return False
-
     def to_networkx(self):
         """
         Convert this graph to a networkx representation. This representation
@@ -2626,6 +2722,7 @@ class BulgeGraph(object):
         self.remove_base_pairs(removed_pairs)
         return removed_pairs
 
+    #Seems to be unused...
     def ss_distance(self, e1, e2):
         '''
         Calculate the distance between two elements (e1, e2)
@@ -2678,6 +2775,58 @@ class BulgeGraph(object):
                 return min(path_lengths) + 1
 
         return min(path_lengths) + 2
+
+    def shortest_path(self, e1, e2):
+        '''
+        Determine the shortest path between two elements (e1, e2)
+        along the secondary structure.
+        
+        :param e1: The name of the first element
+        :param e2: The name of the second element
+        :return: A list of the element names along the shortest path
+        
+        '''
+        
+        import networkx as nx
+        
+        # Get residue numbers of source and targets, for shortest_path in nx
+        source = min( [res for res in self.define_residue_num_iterator(e1)] )
+        target = min( [res for res in self.define_residue_num_iterator(e2)] )
+        
+        # Get nx graph, and the shortest path
+        G = self.to_networkx()
+        nx_sp = nx.shortest_path(G, source=source, target=target)
+        
+        # Convert shortest path of residue numbers to a shortest path of node names
+        sp, sp_set = [], set() # Use set to keep track of additions for faster lookup
+        for res in nx_sp:
+            node = self.get_node_from_residue_num(res)
+            if node not in sp_set:
+                sp_set.add(node)
+                sp.append(node)
+        
+        # assymetric bulges with a length of 0 on 1 side are missed,
+        # two adjacent stems indicate a bulge with length 0 along the path
+        shortest_path, sp_set = [], set()
+        traversal = self.traverse_graph() # Connections are ordered compared to connected_stem_iterator()
+        
+        for n1, n2 in zip(sp, sp[1:]): # Iterate through adjacent pairs of elements in the list
+            if n1.startswith('s') and n2.startswith('s'): # If two elements are both stems
+                connection = list([conn for conn in traversal if n1 in conn and n2 in conn][0]) # Find their connection in graph traversal
+                if connection.index(n1) > connection.index(n2): #If we're moving 'backwards' on the traversal
+                    connection.reverse()
+                for node in connection:
+                    if node not in sp_set:
+                        sp_set.add(node)    
+                        shortest_path.append(node)
+            else:
+                if n1 not in sp_set:
+                    sp_set.add(n1)
+                    shortest_path.append(n1)
+        if n2 not in sp_set:
+            shortest_path.append(n2) # Append last item in path
+        
+        return shortest_path
 
     def get_position_in_element(self, resnum):
         node = self.get_node_from_residue_num(resnum)
@@ -2740,7 +2889,6 @@ class BulgeGraph(object):
 
         return False
 
-    # This function seems to be unused. Consider deprecation...
     def flanking_nucleotides(self, d):
         '''
         Return the nucleotides directly flanking an element.
@@ -2748,6 +2896,7 @@ class BulgeGraph(object):
         :param d: the name of the element
         :return: a set of nucleotides
         '''
+        warnings.warn("This is deprecated and will be removed in the future", stacklevel=2)
         set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
         set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
 
@@ -2770,6 +2919,9 @@ class BulgeGraph(object):
         #flanking1 = self.flanking_nucleotides(e1)
         #flanking2 = self.flanking_nucleotides(e2)
 
+        if (e1,e2) in self._elem_bp_dists: #Shortcut if cached.
+            return self._elem_bp_dists[(e1,e2)]
+
         min_bp = sys.maxint
         max_bp = 0
 
@@ -2778,21 +2930,24 @@ class BulgeGraph(object):
 
         if self.nuc_bp_dists is None:
             import networkx as nx
-            self.nuc_bp_dists = col.defaultdict(dict)
+            self.nuc_bp_dists = np.zeros((self.seq_length+1, self.seq_length+1))#col.defaultdict(dict)
+            self.nuc_bp_dists[0,:]=np.nan
+            self.nuc_bp_dists[:,0]=np.nan
             dist_matrix = np.array(nx.floyd_warshall_numpy(self.nx_graph))
             for (i1,n1), (i2,n2) in it.product(enumerate(self.nx_graph.nodes()),
                                                enumerate(self.nx_graph.nodes())):
-                self.nuc_bp_dists[n1][n2] = dist_matrix[i1][i2]
-            
+                self.nuc_bp_dists[n1,n2] = dist_matrix[i1][i2]
+
         for f1, f2 in it.product(set(self.defines[e1]), set(self.defines[e2])):
             #d =  nx.dijkstra_path_length(self.nx_graph, f1, f2)
-            d = self.nuc_bp_dists[f1][f2]
+            d = self.nuc_bp_dists[f1,f2]
 
             if d < min_bp:
                 min_bp = d
             if d > max_bp:
                 max_bp = d
-
+        self._elem_bp_dists[(e1,e2)] = (min_bp, max_bp)
+        self._elem_bp_dists[(e2,e1)] = (min_bp, max_bp)
         return (min_bp, max_bp)
 
     def nd_define_iterator(self):
@@ -2805,6 +2960,58 @@ class BulgeGraph(object):
         for d in self.defines:
             if len(self.defines[d]) > 0:
                 yield d
+
+    def get_domains(self):
+        """
+        Get secondary structure domains. 
+
+        Currently domains found are:
+          * multiloops with connected stems
+          * rods: stretches of stems + interior loops (without branching), with trailing hairpins
+          * pseudoknots
+        """
+        domains = col.defaultdict(list)
+        multiloops, nucleotides = self.find_multiloop_loops()
+        for ml in multiloops:
+            ml = sorted(ml)
+            if self.is_loop_pseudoknot(ml):
+                domains["pseudoknots"].append(ml)
+            else:
+                domains["multiloops"].append(ml)
+
+        doublestr = []
+        for s in self.stem_iterator():
+            neighbors = self.edges[s]
+            for region in doublestr:
+                if s in region or any(n in region for n in neighbors):
+                    curr_region = region
+                    curr_region.add(s)
+                    break
+            else:
+                doublestr.append(set([s]))
+                curr_region = doublestr[-1]
+
+            for n in neighbors:
+                if n[0] in "sih":
+                    curr_region.add(n)
+        #print(doublestr)
+        while True:
+            for reg1, reg2 in it.combinations(doublestr,2):
+                if reg1 & reg2:
+                    doublestr.remove(reg1)
+                    doublestr.remove(reg2)
+                    doublestr.append(reg1|reg2)
+                    break
+            else:
+                break
+    
+        for region in doublestr:
+            domains["rods"].append(sorted(region))
+        domains["pseudoknots"].sort()
+        domains["multiloops"].sort()
+        domains["rods"].sort()
+        #print(domains)
+        return domains
 
 def bg_from_subgraph(bg, sg):
     """

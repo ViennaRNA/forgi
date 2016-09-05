@@ -21,6 +21,7 @@ def main():
     parser = OptionParser(usage = usage)
     parser.add_option('-s', '--secondary-structure', dest='sec_struct', default=False, help="Display the dotbracket represenation of the secondary structure along with the element string.", action='store_true')
     parser.add_option('-n', '--numbers', dest='numbers', default=False, help='Display numbers for the nucleotides', action='store_true')
+    parser.add_option('-e', '--element-numbers', dest='element_numbers', default=False, help='Display numbers for the elements. This is used to distinguish stem "s1" from "s2" etc.', action='store_true')
 
     (options, args) = parser.parse_args()
 
@@ -46,10 +47,13 @@ def main():
     if options.sec_struct:
         print bg.dotbracket_str
 
-    print bg.to_element_string()
+    print bg.to_element_string(options.element_numbers)
 
     out_strs = []
+        
     if options.numbers:
+        if options.element_numbers:
+            print '-'*bg.seq_length
         l = bg.seq_length
         mult = 1
 

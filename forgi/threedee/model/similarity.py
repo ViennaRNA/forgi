@@ -3,10 +3,16 @@ import forgi.utilities.debug as fud
 
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.rmsd as ftur
 
 import itertools as it 
 import math
+import numpy as np
+
+__all__ = ['AdjacencyCorrelation', 'cg_rmsd', 'rmsd', 'drmsd']
+
+"""
+This module contains functions for the comparison of two cg objects or two ordered point-clouds.
+"""
 
 def ppv(tp, fp):
     '''
@@ -45,17 +51,21 @@ def mcc(confusion_matrix):
                          confusion_matrix['fn']))
 
 
-class ConfusionMatrix(object):
+class AdjacencyCorrelation(object):
     """
-    A class used for calculating the confusion_matrix.
+    A class used for calculating the ACC.
+    
+    The adjacency correlation coefficient is calculated as the Matthews correlation 
+    coefficient of potential interactions, defined as nucleotides within 25 Angstrom
+    from each other. See chapter 9.3 of Peter's thesis.
 
-    It is initialized with a reference structure and a distance for interactions.
+    This object is initialized with a reference structure and a distance for interactions.
     The evaluate() method is used for calculating this correlation matrix.
 
     This is significantly faster than the confusion_matrix function, if 
-    many structures will be compared to the same structure.
+    many structures will be compared to the same reference structure.
     """
-    def __init__(self, reference_cg, distance=30.0, bp_distance=16):
+    def __init__(self, reference_cg, distance=25.0, bp_distance=16):
         self._distance=distance        
         self._bp_distance=bp_distance
         self._reference_interactions=self.get_interactions(reference_cg)
@@ -109,8 +119,8 @@ class ConfusionMatrix(object):
         d["tn"]=len(allIA - (self._reference_interactions | interactions) )
         return d
 
-#NOTE: could be deprecated in the future. Use ConfusionMatrix.
-def confusion_matrix(cg1, cg2, distance=30, bp_distance=16):
+#NOTE: could be deprecated in the future. Use AdjacencyCorrelation.
+def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
     '''
     Calculate the true_positive, false_positive,
     true_negative and false_negative rate for the tertiary
@@ -198,6 +208,20 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     my_mcc = mcc(cm)
     return my_mcc
 
+
+def optimal_superposition(crds1, crds2):
+    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""        
+    assert(crds1.shape == crds2.shape)
+    if crds1.shape[1] == 3 or crds1.shape[1] == 2:
+        correlation_matrix = np.dot(np.transpose(crds1), crds2)
+        v, s, w_tr = np.linalg.svd(correlation_matrix)
+        is_reflection = (np.linalg.det(v) * np.linalg.det(w_tr)) < 0.0
+        if is_reflection:
+            v[:, -1] = -v[:, -1]
+        return np.dot(v, w_tr)
+    else:
+        raise ValueError("Wrong dimension of crds1. Needs to be an array of "
+                         "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
 def cg_rmsd(cg1, cg2):
     '''
     Calculate the RMSD between two Coarse Grain models using their
@@ -208,22 +232,44 @@ def cg_rmsd(cg1, cg2):
     :return: The RMSD
     '''
 
-    residues1 = ftug.bg_virtual_residues(cg1)
-    residues2 = ftug.bg_virtual_residues(cg2)
+    residues1 = cg1.get_ordered_virtual_residue_poss()
+    residues2 = cg2.get_ordered_virtual_residue_poss()
 
-    return ftur.centered_rmsd(residues1, residues2)
+    return rmsd(residues1, residues2)
 
-def cg_virtual_atoms_rmsd(cg1, cg2):
+def rmsd(crds1, crds2):
     '''
-    Calculate the RMSD between two Coarse Grain models using their
-    set of virtual atoms.
-
-    :param cg1: The first coarse grain model.
-    :param cg2: The second coarse-grain model.
-    :return: The RMSD
+    Center the coordinate vectors on their centroid
+    and then calculate the rmsd.
     '''
+    crds1 = ftuv.center_on_centroid(crds1)
+    crds2 = ftuv.center_on_centroid(crds2)
 
-    residues1 = ftug.bg_virtual_residues(cg1)
-    residues2 = ftug.bg_virtual_residues(cg2)
+    os = optimal_superposition(crds1, crds2)
+    crds_aligned = np.dot(crds1, os)
 
-    return ftur.centered_rmsd
+    diff_vecs = (crds2 - crds_aligned)
+    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
+
+    return math.sqrt(sum(vec_lengths) / len(vec_lengths))
+
+def drmsd(coords1, coords2):
+    '''
+    Calculate the dRMSD measure.
+
+    This should be the RMSD between all of the inter-atom distances
+    in two structures.
+
+    :param coords1: The vectors of the 'atoms' in the first structure.
+    :param coords2: The vectors of the 'atoms' in the second structure.
+    :return: The dRMSD measure.
+    '''
+    ds1 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords1, r=2)])
+    ds2 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords2, r=2)])
+
+    rmsd = math.sqrt(np.mean((ds1 - ds2) * (ds1 - ds2)))
+    #rmsd = math.sqrt(np.mean(ftuv.vec_distance(ds1, ds2)))
+
+    return rmsd
+
+

@@ -11,7 +11,6 @@ Submodules
    forgi.threedee.utilities.mcannotate
    forgi.threedee.utilities.my_math
    forgi.threedee.utilities.pdb
-   forgi.threedee.utilities.rmsd
    forgi.threedee.utilities.vector
 
 Module contents

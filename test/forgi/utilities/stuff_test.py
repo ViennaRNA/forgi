@@ -2,7 +2,7 @@ import unittest, os
 import forgi.utilities.stuff as fus
 import sys
 
-from nose.tools import raises
+#from nose.tools import raises
 
 
 class StuffTest(unittest.TestCase):
@@ -34,12 +34,11 @@ class StuffTest(unittest.TestCase):
         for pt,db in self.pt_dbs:
             self.assertEqual(fus.pairtable_to_dotbracket(pt), db)
 
-    @raises(ValueError)
+    #@raises(ValueError)
     def test_pairtable_to_dotbracket1(self):
         pairtable = [9, 3, 0, 1, 0, 0, 0, 3, 0, 1]
-
-        db = fus.pairtable_to_dotbracket(pairtable)
-        fud.pv('db')
+        with self.assertRaises(ValueError):
+            db = fus.pairtable_to_dotbracket(pairtable)
 
     def test_dotbracket_to_pairtable(self):
         """
@@ -52,15 +51,17 @@ class StuffTest(unittest.TestCase):
         db = "....(((((.....((((((((((((.....(..(((....)))..)....))))))))))))......))))).."
         fus.dotbracket_to_pairtable(db)
 
-    @raises(ValueError)
+    #@raises(ValueError)
     def test_dotbracket_to_pairtable2(self):
         db = "((((....))..)"
-        pt = fus.dotbracket_to_pairtable(db)
+        with self.assertRaises(ValueError):
+            pt = fus.dotbracket_to_pairtable(db)
 
-    @raises(ValueError)
+    #@raises(ValueError)
     def test_dotbracket_to_pairtable3(self):
         db = "((((....))..)).((..)))"
-        pt = fus.dotbracket_to_pairtable(db)
+        with self.assertRaises(ValueError):
+            pt = fus.dotbracket_to_pairtable(db)
 
     def test_pairtable_to_tuples(self):
         """

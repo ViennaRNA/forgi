@@ -3,14 +3,17 @@
 import sys
 from optparse import OptionParser
 
-import forgi.threedee.model.similarity as ftme
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.model.descriptors as ftmd
 
 def main():
     usage = """
-    python calculate_mcc.py struct1.cg struct2.cg
+    python cg_rmsd.py file1.cg
+
+    Calculate the ROG of a coarse grain models.
     """
-    num_args= 0
+    num_args= 1
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
@@ -23,15 +26,10 @@ def main():
         sys.exit(1)
 
     cg1 = ftmc.CoarseGrainRNA(args[0])
-    cg2 = ftmc.CoarseGrainRNA(args[1])
 
-    confusion_matrix = ftme.confusion_matrix(cg1, cg2)
 
-    
-    print "confusion_matrix:", confusion_matrix
-    print "mcc:", ftme.mcc(confusion_matrix)
-    print "rmsd:", ftme.cg_rmsd(cg1, cg2)
-
+    coords = cg1.get_ordered_stem_poss()
+    print ftmd.radius_of_gyration(coords)
 if __name__ == '__main__':
     main()
 

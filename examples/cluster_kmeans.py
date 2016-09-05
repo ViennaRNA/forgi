@@ -7,6 +7,7 @@ import os
 import os.path as op
 import scipy.cluster.vq as scv
 import sys
+import numpy as np
 from optparse import OptionParser
 
 def main():
@@ -33,18 +34,20 @@ def main():
         sys.exit(1)
 
     cgs = map(ftmc.CoarseGrainRNA, args)
-    points = map(oper.methodcaller('get_coordinates_array'), cgs)
+    points = []
+    for cg in cgs:
+        points.append(cg.get_coordinates_array().flatten())
     new_cgs = map(copy.deepcopy, [cgs[i] for i in range(options.number_of_clusters)])
 
     print >>sys.stderr, "len(points)", len(points)
 
     clusters = scv.kmeans(points, options.number_of_clusters)
     for i,cluster in enumerate(clusters[0]):
-        new_cgs[i].load_coordinates_array(cluster)
+        new_cgs[i].load_coordinates_array(cluster.reshape(-1,3))
 
         if not op.exists(options.output_dir):
             os.makedirs(options.output_dir)
-        new_cgs[i].to_cg_file(op.join(options.output_dir, 'cluster_{}.coord'.format(i)))
+        new_cgs[i].to_file(op.join(options.output_dir, 'cluster_{}.coord'.format(i)))
 
 if __name__ == '__main__':
     main()

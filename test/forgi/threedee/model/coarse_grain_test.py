@@ -9,7 +9,9 @@ import sys
 import itertools as it
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.model.similarity as ftme
 import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.debug as fud
 import tempfile as tf
 
@@ -54,7 +56,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
     '''
 
     def setUp(self):
-        pass
+        self.longMessage = True
 
     def compare_bg_to_cg(self, bg, cg):
         for d in bg.defines.keys():
@@ -199,6 +201,10 @@ class CoarseGrainTest(tfgb.GraphVerification):
         for d in cg.mloop_iterator():
             cg.get_bulge_angle_stats(d)
 
+    def test_get_bulge_angle_stats_for_start(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        s1, s2 = cg.get_bulge_angle_stats("start")
+
     def test_read_longrange_interactions(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
@@ -209,7 +215,24 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
 
-        cg.radius_of_gyration()
+        rog = cg.radius_of_gyration()
+        self.assertGreater(rog, 0.)
+        maxDist = max( ftuv.vec_distance(cg.coords[d1][0], cg.coords[d2][0]) for d1, d2 in it.combinations(cg.defines, 2))
+        estimated_radius_circum_cricle = maxDist/2
+        #NOTE: The ROG is 0.77 times the radius of the circumcircle, for m->inf many points
+        # in a 3D unit sphere with the nth point placed at radius (n/m)**1/3
+        self.assertLess(rog, estimated_radius_circum_cricle*0.77)
+
+    def test_radius_of_gyration_different_methods(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+
+        rog_fast = cg.radius_of_gyration(method = "fast")
+        rog_vres = cg.radius_of_gyration(method = "vres")
+        print(rog_fast, rog_vres, rog_fast - rog_vres, file=sys.stderr)
+        self.assertGreater(abs(rog_fast - rog_vres), 0, msg = "Different methods for ROG calculation "
+                               "producting the exactly same result? Something seems to be wrong.")
+        self.assertLess(abs(rog_fast - rog_vres), 1, msg = "Different methods for ROG calculation "
+                                                      "should produce roughly the same result.")
 
     def test_get_coordinates_list(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -265,7 +288,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
         cg.get_loop_stat("h0")
 
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg')
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg') #Contains a loop with r=0
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
         cg.get_loop_stat('h3')
@@ -320,6 +343,16 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         self.assertTrue(dist < 10)
 
+    def test_total_length(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.assertEqual(cg.total_length(), cg.seq_length)
+        cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
+        self.assertEqual(cg.total_length(), cg.seq_length)
+        cg = ftmc.CoarseGrainRNA()
+        cg.from_dotbracket('..((..((...))..))..((..))..')
+        self.assertEqual(cg.total_length(), cg.seq_length)
+        self.assertEqual(cg.total_length(),27)
+        
     def test_get_load_coordinates(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
 
@@ -327,14 +360,139 @@ class CoarseGrainTest(tfgb.GraphVerification):
         new_cg = copy.deepcopy(cg)
 
         for key in new_cg.coords: 
-            for i in range(len(new_cg.coords[key])):
-                new_cg.coords[key][i] = [0,0,0]
+            new_cg.coords[key] = [0,0,0],[0,0,0]
 
         new_cg.load_coordinates_array(coords)
         for key in new_cg.coords: 
             for i in range(len(new_cg.coords[key])):
                 self.assertTrue(np.allclose(new_cg.coords[key][i],
                                             cg.coords[key][i]))
+    """
+    def test_is_stacking(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+        self.assertFalse(cg.is_stacking("m0")) #Distance
+        self.assertFalse(cg.is_stacking("m1")) #distance
+        self.assertFalse(cg.is_stacking("m2")) #shear angle
+    def test_is_stacking2(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
+        self.assertFalse(cg.is_stacking("m0"))
+        self.assertFalse(cg.is_stacking("m2"))
+        self.assertTrue(cg.is_stacking("m1"))
+    """
+    def test_coords_from_direction(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
+        cg_old = copy.deepcopy(cg)
+        coords = cg.get_coordinates_array()
+        directions = coords[1::2]-coords[0::2]
+        cg.coords.clear()
+        cg.coords_from_directions(directions)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg_old), 0) #This only looks at stems
+        # The coordinates should be the same as before except for a constant offset
+        new_coords = cg.get_coordinates_array()
+        offset = (coords - new_coords)
+        assert np.allclose(offset,offset[0])
+    def test_coords_from_direction_with_pseudoknot(self):
+        #This tests the case where the link is inserted from reverse direction.
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg_old = copy.deepcopy(cg)
+        coords = cg.get_coordinates_array()
+        directions = cg.coords_to_directions()
+        cg.coords.clear()
+        cg.coords_from_directions(directions)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg_old), 0)
+        new_coords = cg.get_coordinates_array()
+        offset = (coords - new_coords)
+        assert np.allclose(offset,offset[0])
+    @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
+    def test_cg_from_sg_invalid_subgraph_breaking_m(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        """ 
+             /s3 --h1
+           m1  |
+          /    |
+        s0     m2
+          \    |
+           m0  |
+             \s1--i0--s2--h0
+        """
+        split_ml = ["s0", "m0", "s1"]
+        with self.assertRaises(Exception):
+            sg = ftmc.cg_from_sg(cg, split_ml)
+
+    @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
+    def test_cg_from_sg_breaking_after_i(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        """ 
+             /s3 --h1
+           m1  |
+          /    |
+        s0     m2
+          \    |
+           m0  |
+             \s1--i0--s2--h0
+        """
+        split_ml = ["s0", "m0", "s1", "m2", "s3", "m1", "h1", "i0"]
+
+        sg = ftmc.cg_from_sg(cg, split_ml)
+        self.check_graph_integrity(sg)
+
+    @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
+    def test_cg_from_sg_breaking_after_s(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        """ 
+             /s3 --h1
+           m1  |
+          /    |
+        s0     m2
+          \    |
+           m0  |
+             \s1--i0--s2--h0
+        """
+        split_ml = ["s0", "m0", "s1", "m2", "s3", "m1", "h1"]
+
+        sg = ftmc.cg_from_sg(cg, split_ml)
+        self.check_graph_integrity(sg)
+
+class TestVirtualAtoms(unittest.TestCase):
+    def setUp(self):
+        self.longMessage = True
+    @unittest.skip("This test currently fails. Should be fixed in version 0.5")
+    def test_virtual_atoms_only_single_stranded(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
+        va = cg.virtual_atoms(1)
+        self.assertIn("C1'", va )# C1' should be always present
+    
+    def test_virtual_atoms_stem_distance_to_pairing_partner(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        va1 = cg.virtual_atoms(1)
+        va2 = cg.virtual_atoms(cg.pairing_partner(1))  
+        self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 25, msg = "Virtual atoms too far apart") 
+        self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 8, msg = "Virtual atoms too close") 
+
+    def test_virtual_atoms_stem_distance_to_stacked_base(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        va1 = cg.virtual_atoms(1)
+        va2 = cg.virtual_atoms(2)  
+        self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 10, msg = "Virtual atoms too far apart") 
+        self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 2, msg = "Virtual atoms too close") 
+
+    def test_virtuel_atom_caching(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        va_old = cg.virtual_atoms(1)["C1'"]
+        cg.coords["s0"] = [0., 0., 0.], cg.coords["s0"][1]
+        va_new = cg.virtual_atoms(1)["C1'"]
+        self.assertTrue(np.any(np.not_equal(va_old, va_new)), msg="A stale virtual atom position was used.")
+        
+
+
+
+
+
+
+
+
+
+
 
 
 

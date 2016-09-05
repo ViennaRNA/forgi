@@ -10,7 +10,7 @@ import forgi.threedee.model.coarse_grain as cmg
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.pdb as cup
-import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.model.similarity as ftur
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.visual.pymol as cvp
 
@@ -111,7 +111,7 @@ def main():
 
     cgs = []
     for a in args:
-        cgs += [cmg.from_file(a)]
+        cgs += [cmg.CoarseGrainRNA(a)]
 
     if options.align:
         align_cgs(cgs)

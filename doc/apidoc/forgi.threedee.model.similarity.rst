@@ -1,7 +1,7 @@
-forgi.threedee.model.comparison module
+forgi.threedee.model.similarity module
 ======================================
 
-.. automodule:: forgi.threedee.model.comparison
+.. automodule:: forgi.threedee.model.similarity
     :members:
     :undoc-members:
     :show-inheritance:

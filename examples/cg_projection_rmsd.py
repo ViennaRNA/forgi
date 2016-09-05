@@ -6,7 +6,7 @@ import argparse
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.model.similarity as ftms
 
 import numpy as np
 
@@ -15,7 +15,7 @@ import numpy as np
 def get_parser():
     parser = argparse.ArgumentParser(description='Calculate the RMSD in 2D space between 2 projections.')
     parser.add_argument('files', type=str, nargs=2, help="The *.coord files")
-    parser.add_argument('--directions', nargs=2, type=str, help="The projection directions: e.g. 1.0,1.0,2.4 2.4,0,1")
+    parser.add_argument('--directions', nargs=2, type=str, help="The projection directions: e.g. 1.0,1.0,2.4 2.4,0,1", required=True)
     parser.add_argument('--plot', action="store_true",  help="Plot the projections")
     return parser
 
@@ -35,7 +35,7 @@ def main(parser):
     vrs1 = np.array([x for p in sorted(proj1._coords.keys()) for x in proj1._coords[p]])
     vrs2 = np.array([x for p in sorted(proj2._coords.keys()) for x in proj2._coords[p]])
 
-    print ftur.centered_rmsd(vrs1, vrs2)
+    print ftms.rmsd(vrs1, vrs2)
     if args.plot:
         import matplotlib.pyplot as plt
         fig,ax=plt.subplots()

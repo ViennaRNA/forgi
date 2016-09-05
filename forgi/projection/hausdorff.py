@@ -1,4 +1,4 @@
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, division
 import sys, math
 import numpy as np
 from ..threedee.utilities import vector as ftuv
@@ -24,24 +24,24 @@ These distances are based on the location of True-values in the two matrices.
 """
 
 try:
-  profile  #The @profile decorator from line_profiler (kernprof)
-except:
-  def profile(x): 
-    return x
+    profile  #The @profile decorator from line_profiler (kernprof)
+except NameError:
+    def profile(x): 
+        return x
 
 ##############################################################################
 # Helper functions for iterating the grid in "spirals"
 ##############################################################################
 
-def norm(offsets):
+def norm(offset):
     """
     Euclidean norm.
     :param offset: A tuple of length 2.
     :returns: A float
     """
-    return math.sqrt(offsets[0]**2+offsets[1]**2)
+    return math.sqrt(offset[0]**2+offset[1]**2)
 
-def offsets(skip=0, to_iterate=[], toskip={}):
+def offsets(skip=0, to_iterate=[], toskip={}): #pylint: disable=W0102
     """
     An iterator over offsets and their length ((dx,dy), norm((dx,dy))) in the order 
     of increasing norm((dx,dy))
@@ -88,6 +88,7 @@ def increase_range(to_iterate, to_skip):
                 if dd not in dists:
                     dists[dd]=norm(dd)
         oldlen=to_iterate[-1][0][0]**2+to_iterate[-1][0][1]**2
+        print ("sorting {} elements for newlength {}".format(len(dists.keys()), newlength))
         for x in sorted(dists.keys(), key=lambda x: dists[x]):
             if length<dists[x]<newlength:
                 to_iterate.append((x, dists[x]))
@@ -133,8 +134,7 @@ def hausdorff_helperdist(p, img, cutoff=float("inf"), skip=0):
             return n
         if n>cutoff:
             return float("inf")
-    else:
-        return float('inf')
+    return float('inf')
 
 def hausdorff_distance(img, ref_img, cutoff=float("inf")):
     """
@@ -157,41 +157,59 @@ def hausdorff_distance_new(img, ref_img, cutoff=float("inf")):
     A faster implementation using skip, called by hausdorff_distance().
     This implementation is faster for high Hausdorff distances.
     """
-    maxh=0
-    oldh=0
-    for x,y in np.transpose(np.where(ref_img)):
-        if oldh==0:
-            oldh=hausdorff_helperdist([x,y], img, cutoff)
-            oldx=x
-            oldy=y
-        else:
-            skip=max(0,int(oldh-norm([x-oldx, y-oldy])))
-            oldh=hausdorff_helperdist([x,y], img, cutoff, int(skip**2+0.5))
-            oldx=x
-            oldy=y
-        if oldh>maxh:
-            maxh=oldh
-        if oldh==float("inf"):
-            return float("inf")
-    h1=maxh
-    maxh=0
-    oldh=0
-    for x,y in np.transpose(np.where(img)):
-        if oldh==0:
-            oldh=hausdorff_helperdist([x,y], ref_img, cutoff)
-            oldx=x
-            oldy=y
-        else:
-            skip=max(0,int(oldh-norm([x-oldx, y-oldy])))
-            oldh=hausdorff_helperdist([x,y], ref_img, cutoff, int(skip**2+0.5))
-            oldx=x
-            oldy=y
-        if oldh>maxh:
-            maxh=oldh
-        if oldh==float("inf"):
-            return float("inf")
-    h2=maxh
-    return max( h1, h2)
+    x=0
+    y=0
+    oldx=None
+    oldy=None
+    skip=0
+    try:
+        maxh=0
+        oldh=0
+        for x,y in np.transpose(np.where(ref_img)):
+            if oldh==0:
+                oldh=hausdorff_helperdist([x,y], img, cutoff)
+                oldx=x
+                oldy=y
+            else:
+                #skip always has to be strictly smaller than oldh-norm(dx,dy)!
+                skip=max(0,int(oldh-norm([x-oldx, y-oldy])-0.1)) 
+                oldh=hausdorff_helperdist([x,y], img, cutoff, int(skip**2))
+                oldx=x
+                oldy=y
+            if oldh>maxh:
+                maxh=oldh
+            if oldh==float("inf"):
+                return float("inf")
+        h1=maxh
+        maxh=0
+        oldh=0
+        for x,y in np.transpose(np.where(img)):
+            if oldh==0:
+                oldh=hausdorff_helperdist([x,y], ref_img, cutoff)
+                oldx=x
+                oldy=y
+            else:
+                skip=max(0,int(oldh-norm([x-oldx, y-oldy])-0.1))
+                oldh=hausdorff_helperdist([x,y], ref_img, cutoff, int(skip**2))
+                oldx=x
+                oldy=y
+            if oldh>maxh:
+                maxh=oldh
+            if oldh==float("inf"):
+                return float("inf")
+        h2=maxh
+        return max( h1, h2)
+    except KeyboardInterrupt:
+        print("x: {}, y: {}, oldx: {}, oldy: {}, oldh: {}, maxh: {}, " 
+              "h1: {}, skip={}".format(x,y,oldx,oldy,oldh,maxh,h1,skip))
+        import matplotlib.pyplot as plt
+        fig, ax=plt.subplots(2)
+        ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+        ax[1].imshow(img, interpolation="none", cmap='gray')
+        ax[0].set_title("Reference")
+        ax[1].set_title("Image")
+        plt.show()
+        raise
 
 def modified_hausdorff_distance( img, ref_img, _=None):
     """
@@ -207,17 +225,23 @@ def modified_hausdorff_distance( img, ref_img, _=None):
            for x,y in np.transpose(np.where(img)))/np.sum(img)
     return max( h1, h2)
 
+def tp_fp_distance( img, ref_img, _=None):
+    tp=np.sum(np.logical_and(img, ref_img))
+    alle=np.sum(np.logical_or(img,ref_img))
+    return alle/tp
 
+def combined_distance(img, ref_img, _=None):
+    return tp_fp_distance(img, ref_img) + hausdorff_distance(img, ref_img)
 ##############################################################################
 # Helper functions for working with projections
 ##############################################################################
 
 
 def to_polar(x):
-  return np.array(ftuv.spherical_cartesian_to_polar(x))
+    return np.array(ftuv.spherical_cartesian_to_polar(x))
 
 def from_polar(x):
-  return ftuv.spherical_polar_to_cartesian(x)
+    return ftuv.spherical_polar_to_cartesian(x)
 
 def get_box(projection, width, offset=np.array((0,0))):
     left, right, down, up=projection.get_bounding_square()
@@ -314,8 +338,8 @@ def locally_minimal_distance(ref_img, scale, cg,
                     #print("co was {}".format(co))
                     break
                 else:
-                   #Function value did not change. Our stepwidth was to small.
-                   co=co*2
+                    #Function value did not change. Our stepwidth was to small.
+                    co=co*2
             else:
                 pass #print ("Offset: No change in direction ", co)
         if np.all(best_change_offs==np.array((0,0))):
@@ -345,8 +369,8 @@ def locally_minimal_distance(ref_img, scale, cg,
                     #print("cr was {}".format(cr))
                     break
                 else:
-                   #Function value did not change. Our stepwidth was to small.
-                   cr=cr*2
+                    #Function value did not change. Our stepwidth was to small.
+                    cr=cr*2
             else:
                 pass #print ("Rotation: No change in direction ", cr)
         if best_change_rot!=0:
@@ -385,9 +409,9 @@ def locally_minimal_distance(ref_img, scale, cg,
                     break
                     #cp=np.array(cp)*2
                 else:                
-                   #print ("Score stays at {} in direction {}".format(tmp_score, cp))
-                   #Function value did not change. Our stepwidth was to small.
-                   cp=np.array(cp)*2
+                    #print ("Score stays at {} in direction {}".format(tmp_score, cp))
+                    #Function value did not change. Our stepwidth was to small.
+                    cp=np.array(cp)*2
             else:
                 pass #print ("Projection: No change in direction ", cp)
         if not np.all(change_pro==np.array((0.,0.))):
@@ -418,7 +442,7 @@ def locally_minimal_distance(ref_img, scale, cg,
     return curr_best_score, img, [ curr_best_pro, curr_best_rotation, curr_best_offs ]
 
 def try_parameters(ref_img, scale, cg, 
-                   rotations=[0,180], offsets=[np.array([0,0])], proj_directions=None,
+                   rotations=(0,180), offsets=(np.array([0,0]),), proj_directions=None,
                    virtual_atoms=True):
     """
     Try all combinations of the given starting parameters 
@@ -430,7 +454,7 @@ def try_parameters(ref_img, scale, cg,
     :param cg: The coarse grain RNA to match to the projection.
 
     :param rotations: A list of in-plane rotations in degrees.
-    :param offset: A list/array of np.arrays of the type np.array([x,y]).
+    :param offsets: A list/array of np.arrays of the type np.array([x,y]).
     :param proj_directions: A list of projection_directions (tuples theta, phi) or None.
                             If None, uses cg.project_from.
     :param virtual_atoms: Boolean. If False, do not project virtual atoms (faster)
@@ -475,6 +499,25 @@ def get_start_points(numPoints):
             points.append(np.array((theta, phi)))
     return points
 
+def arclength(theta1, phi1, theta2, phi2):
+    return (math.acos(math.cos(theta1)*math.cos(theta2)+
+            math.sin(theta1)*math.sin(theta2)*math.cos(phi1-phi2)))
+
+def get_start_points_near(numPoints, ref_theta, ref_phi):
+    a=4*math.pi/numPoints
+    d=math.sqrt(a)
+    Mt=int(math.pi/d)
+    dt=math.pi/Mt
+    df=a/dt
+    points=[]
+    for m in range(Mt):
+        theta=math.pi*(m+0.5)/Mt
+        Mf=int(2*math.pi*math.sin(theta)/df)
+        for n in range(Mf):
+            phi=2*math.pi*n/Mf
+            points.append(np.array((theta, phi)))
+    return [ p for p in points if arclength(p[0], p[1], ref_theta, ref_phi)<math.pi/6]
+
 def get_longest_img_diameter(img, scale):
     maxl=0
     for x1,y1 in np.transpose(np.where(img)):
@@ -484,11 +527,90 @@ def get_longest_img_diameter(img, scale):
                 maxl=l
     return math.sqrt(maxl)*scale/len(img)
 
-@profile
+def _try_startpoints(ref_img, scale, cg, start_points, starting_rotations, 
+                     starting_offsets, local_maxiter, virtual_atoms, use_heuristic, distance, verbose):
+    #Longest extention in the image
+    longest_distance_image=get_longest_img_diameter(ref_img, scale)
+    if longest_distance_image==0:
+        raise ValueError("Reference image probably empty")
+
+    #We count, how often certain heuristics kicked in
+    la_heur=0
+    no_heur=0
+    score_heur=0
+    #
+    dpi=len(ref_img)
+    best_score=float('inf')
+    decrease=float("inf")
+    for i, project_dir in enumerate(start_points):
+        sys.stdout.write("{:2.0%}\r".format(i/len(start_points)))#Progress
+        sys.stdout.flush()
+        proj=fhp.Projection2D(cg, from_polar([1]+list(project_dir)), 
+                              project_virtual_atoms=virtual_atoms)
+        
+        if use_heuristic:
+            if abs(proj.longest_axis-longest_distance_image)>6*scale/dpi: #4 pixels is arbitrary heuristic
+                #print("abs({}-{})={}>{}".format(proj.longest_axis, longest_distance_image, abs(proj.longest_axis-longest_distance_image), 6*scale/dpi))                
+                #proj.plot(show=True)
+                la_heur+=1
+                continue
+        loc_best_rot=0
+        loc_best_offs=np.array([0,0])           
+        loc_best_score=float("inf")
+        for rot, offset in it.product(starting_rotations, starting_offsets):
+            box=get_box(proj, scale, offset)
+            img,_=proj.rasterize(dpi, bounding_square=box, warn=False, rotate=rot)
+            score = distance(ref_img, img)
+            if score<loc_best_score:
+                loc_best_score=score
+                loc_best_rot=rot
+                loc_best_offs=offset
+                #loc_best_img=img
+        #print("HEUR?", loc_best_score, best_score, best_score+(decrease*1.5))
+        if use_heuristic and loc_best_score>best_score+(decrease*1.75):
+            score_heur+=1 
+            #print("Score")
+            #proj.plot(show=True)
+            continue
+        #import matplotlib.pyplot as plt
+        #fig, ax=plt.subplots(3)
+        #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+        #ax[1].imshow(loc_best_img, interpolation="none", cmap='gray')
+        #ax[0].set_title("Reference")
+        #ax[1].set_title("Initial distance {}".format(loc_best_score))
+        no_heur+=1
+        score, img, params = locally_minimal_distance(ref_img, scale, cg, 
+                                                      loc_best_rot, loc_best_offs, project_dir,
+                                                      maxiter=local_maxiter, 
+                                                      virtual_atoms=virtual_atoms, distance=distance)
+        #ax[2].imshow(img, interpolation="none", cmap='gray')
+        #ax[2].set_title("Optimized to {}".format(score))
+        #plt.show()
+        if score<best_score:
+            best_score=score
+            best_img=img
+            best_params=params
+            decrease=loc_best_score-score #Can increase or decrease
+            #print("Decrease {} to {}".format(loc_best_score, score), decrease)
+        if best_score==0: 
+            break
+    sys.stdout.write("   \r")
+    if verbose:
+        print("Global optimization performe!\n"
+              "\t{} local optimizations performed\n"
+              "\t{} skipped (longest distance)\n"
+              "\t{} skipped (score)".format(no_heur, la_heur, score_heur))
+    if no_heur==0:
+        if verbose:
+            print("During global optimization, NO SMALL DISTANCE could be found.\n"
+                  "\t{} attempts were skipped because the diameters didn't match.\n".format(la_heur))
+        return float("inf"), None, [np.array([0,0]), 0, np.array([0,0])]
+    return best_score, best_img, best_params
+
 def globally_minimal_distance(ref_img, scale, cg,                               
                               start_points=40,
-                              starting_rotations=[0, 180], 
-                              starting_offsets=[np.array([0,0])], 
+                              starting_rotations=(0, 180), 
+                              starting_offsets=(np.array([0,0]), ), 
                               local_maxiter=5, use_heuristic=True, virtual_atoms=True,
                               verbose=False, distance=hausdorff_distance):
     """
@@ -524,70 +646,37 @@ def globally_minimal_distance(ref_img, scale, cg,
     r.seed(1)
     r.shuffle(sp)
     #random.shuffle(sp)
-    #Longest extention in the image
-    longest_distance_image=get_longest_img_diameter(ref_img, scale)
-    if longest_distance_image==0:
-        raise ValueError("Reference image probably empty")
 
-    #We count, how often certain heuristics kicked in
-    la_heur=0
-    no_heur=0
-    score_heur=0
-    #
-    dpi=len(ref_img)
+    best_score, best_img, best_params =_try_startpoints(ref_img, scale, cg, sp, 
+                      starting_rotations, starting_offsets, local_maxiter, virtual_atoms, 
+                      use_heuristic, distance, verbose)
+    #import matplotlib.pyplot as plt
+    #fig, ax=plt.subplots(2)
+    #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+    #ax[1].imshow(best_img, interpolation="none", cmap='gray')
+    #ax[0].set_title("Reference")
+    #ax[1].set_title("distance {}".format(best_score))
+    #plt.show()
 
-    for project_dir in sp:            
-        proj=fhp.Projection2D(cg, from_polar([1]+list(project_dir)), 
-                              project_virtual_atoms=virtual_atoms)
-        
-        if use_heuristic:
-            if abs(proj.longest_axis-longest_distance_image)>6*scale/dpi: #4 pixels is arbitrary heuristic
-                #print("abs({}-{})={}>{}".format(proj.longest_axis, longest_distance_image, abs(proj.longest_axis-longest_distance_image), 6*scale/dpi))                
-                #proj.plot(show=True)
-                la_heur+=1
-                continue
-        loc_best_rot=0
-        loc_best_offs=np.array([0,0])           
-        loc_best_score=float("inf")
-        for rot, offset in it.product(starting_rotations, starting_offsets):
-            box=get_box(proj, scale, offset)
-            img,_=proj.rasterize(dpi, bounding_square=box, warn=False, rotate=rot)
-            score = distance(ref_img, img)
-            if score<loc_best_score:
-                loc_best_score=score
-                loc_best_rot=rot
-                loc_best_offs=offset
-                #loc_best_img=img
-        if use_heuristic and loc_best_score>best_score+decrease*1.5:
-            score_heur+=1 
-            #print("Score")
-            #proj.plot(show=True)
-            continue
-        #import matplotlib.pyplot as plt
-        #fig, ax=plt.subplots(3)
-        #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
-        #ax[1].imshow(loc_best_img, interpolation="none", cmap='gray')
-        #ax[0].set_title("Reference")
-        #ax[1].set_title("Initial distance {}".format(loc_best_score))
-        no_heur+=1
-        score, img, params = locally_minimal_distance(ref_img, scale, cg, 
-                                                      loc_best_rot, loc_best_offs, project_dir,
-                                                      maxiter=local_maxiter, 
-                                                      virtual_atoms=virtual_atoms, distance=distance)
-        #ax[2].imshow(img, interpolation="none", cmap='gray')
-        #ax[2].set_title("Optimized to {}".format(score))
-        #plt.show()
-        if score<best_score:
-            best_score=score
-            best_img=img
-            best_params=params
-            decrease=loc_best_score-score
-        if best_score==0: break
-    if no_heur==0:
-        if verbose:
-            print("During global optimization, NO SMALL DISTANCE could be found.\n"
-                  "\t{} attempts were skipped because the diameters didn't match.\n".format(la_heur))
-        return float("inf"), None, [np.array([0,0]), 0, np.array([0,0])]
+    #Global search in vicinity of best match
+    sp = get_start_points_near(10*start_points, best_params[0][0], best_params[0][1])
+    print("Current best score {}, refining on {} points".format(best_score, len(sp)))
+    best_score1, best_img1, best_params1 =_try_startpoints(ref_img, scale, cg, sp,
+                      [best_params[1]], [best_params[2]], local_maxiter, virtual_atoms,
+                      use_heuristic, distance, verbose)
+    if best_score1<best_score:
+        best_score=best_score1
+        best_params=best_params1
+        best_img=best_img1
+        print("Refinement helped.", best_score)
+    #import matplotlib.pyplot as plt
+    #fig, ax=plt.subplots(2)
+    #ax[0].imshow(ref_img, interpolation="none", cmap='gray')
+    #ax[1].imshow(best_img, interpolation="none", cmap='gray')
+    #ax[0].set_title("Reference")
+    #ax[1].set_title("distance {}".format(best_score))
+    #plt.show()
+
     #Refinement of the best match
     score, img, params = locally_minimal_distance(ref_img, scale, cg, 
                                                   best_params[1], best_params[2], best_params[0],
@@ -595,11 +684,6 @@ def globally_minimal_distance(ref_img, scale, cg,
                                                   advanced=True,
                                                   virtual_atoms=virtual_atoms, distance=distance)
 
-    if verbose:
-        print("Global optimization performe!\n"
-              "\t{} local optimizations performed\n"
-              "\t{} skipped (longest distance)\n"
-              "\t{} skipped (score)".format(no_heur, la_heur, score_heur))
     return score, img, params
 
 

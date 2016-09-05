@@ -36,8 +36,8 @@ def main():
 
     if len(options.fasta) > 0:
         filename = options.fasta
-        with open(options.fastq, 'r'):
-            lines = bg.readlines()
+        with open(options.fasta, 'r') as ffile:
+            lines = ffile.readlines()
 
             bg = cgb.BulgeGraph()
             bg.from_fasta("".join(lines), False)

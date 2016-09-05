@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
@@ -87,6 +88,8 @@ def main(args):
                     target_elems.append(others[0])
         comb=list(it.combinations(target_elems, 2))
         #print(comb, target_elems)
+        if args.label_elements:
+            target_elems=list(proj._coords.keys())
         line2dproperties={}
         if args.style=="BOW":
             line2dproperties["color"]="black"
@@ -128,7 +131,7 @@ def main(args):
             if args.out_path:
                 ofname=os.path.join(args.out_path, ofname)
             ofname=os.path.expanduser(ofname)
-            matplotlib.savefig(ofname,format=ofname[-3:])
+            plt.savefig(ofname,format=ofname[-3:])
     if not args.out or args.show:
         #Show the plot and clear it from the internal memory of matplotlib.
         plt.show()
@@ -147,7 +150,8 @@ def get_parser():
     parser.add_argument('--show-direction', action="store_true",help='Print the projection direction in the plot')
     parser.add_argument('--proj-direction', type=str, help='Use the given projection direction instead of the one from the file. A comma seperated triple of floats (with no whitespace)')      
     parser.add_argument('--show-filename', action="store_true", default=False, help='Print the filename of the input file in the figure')  
-    parser.add_argument('-p', action="store_true", help='Shortcut for --show-direction and -- show_filename. Note that texts are not visible in all styles.')
+    parser.add_argument('-p', action="store_true", help='Shortcut for --show-direction and -- show_filename. Note that texts are not visible in all styles.')    
+    parser.add_argument('--label-elements', default=False, action="store_true", help='Label all coarse-grained elements in the plot.')
     parser.add_argument('--print-distances', default=False, action="store_true", help='Print distances for all elements given in --show-distances at the side in the plot')
     parser.add_argument('--out', '-o', type=str, nargs='+', help='One or more outfiles to save the resulting figure to. '
                         'The file format will be determined by the file ending. Formats could be e.g. "svg", "png" or "pgf"')

@@ -71,6 +71,8 @@ class LoopStat:
         self.u = 0.
         self.v = 0.
 
+        self.define=[]
+
         if len(line) > 0:
             try:
                 self.parse_line(line)
@@ -164,8 +166,6 @@ class AngleStat:
         self.define = define
         self.seqs = seqs
 
-    def __hash__(self):
-        return id(self)
 
     def __eq__(self, a_s):
         '''
@@ -284,6 +284,8 @@ class AngleStat:
                                                              " ".join(map(str, self.define)),
                                                              " ".join(self.seqs))
         return out_str
+    def __hash__(self):
+        return hash(str(self))
 
     def diff(self, other_angle, next_stem_length = 1):
         '''
@@ -302,6 +304,8 @@ class AngleStat:
         other_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v]))
 
         return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_start+this_stem_end, other_stem_start + other_stem_end)
+
+ 
 
 class RandomAngleStats():
     '''
@@ -366,7 +370,7 @@ class RandomAngleStats():
         return s
 
     # This function seems to be unused. Consider deprecation...
-    def stats_by_dimensions(dims, n):
+    def stats_by_dimensions(self, dims, n):
         '''
         Return a set of n AngleStats for a bulge with a dimension
         of of dims.
@@ -431,7 +435,8 @@ class ContinuousAngleStats():
         (s.u, s.v, s.v, s.r1, s.u1, s.v1) = new_stats.T[0]
         return s
 
-    def stats_by_dimensions(dims, n):
+    #Probably unused!
+    def stats_by_dimensions(self, dims, n):
         '''
         Return a set of n AngleStats for a bulge with a dimension
         of of dims.
@@ -451,12 +456,6 @@ class ConstructionStats:
     threeprime_stats = None
     conf_stats = None
 
-def defaultdict_list():
-    return c.defaultdict(list)
-
-# @COVERAGE: Unused
-def defaultdict_defaultdict_list():
-    return c.defaultdict(defaultdict_list)
 
 def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     '''
@@ -505,7 +504,8 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     count = 0
     for line in f:
-        if line.strip().find('angle') == 0:
+        line=line.strip()
+        if line.startswith('angle'):
             angle_stat = AngleStat()
             angle_stat.parse_line(line)
 
@@ -539,7 +539,7 @@ def get_angle_stat_dims(s1, s2, angle_type, min_entries=1):
     angle_stats = get_angle_stats()
 
     for (k1,k2,k3) in angle_stats.keys():
-        if k3 == angle_type and len(angle_stats[(k1,k2,k3)]) >= min_entries:
+        if k3 == angle_type:# and len(angle_stats[(k1,k2,k3)]) >= min_entries: #BT: I think this should't be here.
             dist = m.sqrt((k1 - s1) ** 2 + (k2 - s2) ** 2)
             available_stats += [(dist, (k1,k2,k3))]
 
@@ -572,7 +572,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     ConstructionStats.stem_stats = c.defaultdict(list)
 
     f = open(filename, 'r')
-
+    #print("Opening file", filename)
     for line in f:
         if line.strip().find('stem') == 0:
             stem_stat = StemStat(line)
@@ -666,10 +666,101 @@ def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     return ConstructionStats.loop_stats
 
+class ClusteredAngleStats(object):
+    def __init__(self, filename):
+        """
+        A collection of clustered angle_stats. Whenever stats for a certain key are retrieved, 
+        only one (randomly choosen) representative per cluster is returned.
+
+        Requires a clustered angle stats file (created by fess/scripts/cluster_stats.py).
+        The file should look like this:
+
+        '
+        # Cluster 0 for (1, 1, -1):
+        angle RS_1788_S_000008_A 1 1 1.520877 1.837257 -1.380352 11.237569 0.867246 2.057771 1 19 19 30 30 UCG CAA
+        # Cluster 1 for (1, 1, -1):
+        angle RS_1140_S_000002_A 1 1 1.563667 1.869580 -0.967966 16.241881 0.896602 2.177000 -1 13 13 24 24 ACG CUU
+        angle RS_1183_S_000008_A 1 1 1.533551 1.914482 -1.108396 15.780723 0.829850 2.255556 -1 4 4 46 46 UAG CAG
+        '
+
+        :param filename: The filename of the clustered angle stats file.
+        """
+        #: A dict `(dim1, dim2, ang_type)` : list of lists.
+        #: Each value is a list of clusters, and each cluster is a list.
+        self._stats_dict = c.defaultdict(list)
+        lastkey=None
+        with open(filename) as f:
+            for line in f:
+                if line.startswith('# Cluster'):
+                    fields = line.split()
+                    dim1 = int(fields[4].lstrip("(").rstrip(","))
+                    dim2 = int(fields[5].rstrip(","))
+                    ang_type = int(fields[6].rstrip("):"))
+                    self._stats_dict[(dim1, dim2, ang_type)].append([])
+                    lastkey = (dim1, dim2, ang_type)
+                elif line.startswith('#'):
+                    continue
+                else: 
+                    angle_stat = AngleStat()
+                    angle_stat.parse_line(line)
+                    # I don't know what this does, I just copied the following 2 lines from 
+                    # Peter's code in get_angle_stats
+                    if len(angle_stat.define) > 0 and angle_stat.define[0] == 1: 
+                        continue
+
+                    assert lastkey == (angle_stat.dim1, angle_stat.dim2, angle_stat.ang_type) or lastkey == (angle_stat.dim2, angle_stat.dim1, -angle_stat.ang_type)
+                    self._stats_dict[lastkey][-1].append(angle_stat)
+
+    def __getitem__(self, key):
+        """
+        Returns a list of stats with only one randomly choosen stat for each cluster.
+        """
+        return [ rand.choice(x) for x in self._stats_dict[key] ]
+    def keys(self):
+        return self._stats_dict.keys()
+
+    def lookup_stat(self, stat):
+        key = (stat.dim1, stat.dim2, stat.ang_type)
+        clusters = self._stats_dict[key]
+        total_length=sum(len(cluster) for cluster in clusters)
+        cluster_length=-1
+        num_clusters=len(clusters)
+        for cluster in clusters:
+            if stat in cluster:
+                cluster_length=len(cluster)
+                break
+        return cluster_length, total_length, num_clusters
+    def cluster_of(self, stat):
+        key = (stat.dim1, stat.dim2, stat.ang_type)
+        clusters = self._stats_dict[key]
+        for i, cluster in enumerate(clusters):
+            if stat in cluster:
+                return i
+        return -1
+
+    def get_angle_stat_dims(self, dim0, dim1, ang_type):
+        """
+        Returns a list of pairs,`(dist, key)` ordered by increasing distance of the key to the query key.
+
+        :param dim1: dim1 of the query key
+        :param dim2: dim2 of the query key
+        :param ang_type: angle_type of the query key.
+        """
+        available_stats = []
+        for (k1,k2,k3) in self.keys():
+            if k3 == ang_type:
+               dist = m.sqrt((k1 - dim0) ** 2 + (k2 - dim1) ** 2)
+               available_stats += [(dist, (k1,k2,k3))]
+
+        available_stats.sort()
+        return available_stats
 
 class ConformationStats(object):
-    def __init__(self, stats_file=cbc.Configuration.stats_file):
-        self.angle_stats = get_angle_stats(stats_file, refresh=True)
+    def __init__(self, stats_file=cbc.Configuration.stats_file, clustered_angle_stats_file=None):
+        if clustered_angle_stats_file is None:
+            self.angle_stats = get_angle_stats(stats_file, refresh=True)
+        else:
+            self.angle_stats = ClusteredAngleStats(clustered_angle_stats_file)
         self.stem_stats = get_stem_stats(stats_file, refresh=True)
         self.fiveprime_stats = get_fiveprime_stats(stats_file, refresh=True)
         self.threeprime_stats = get_threeprime_stats(stats_file, refresh=True)
@@ -687,7 +778,7 @@ class ConformationStats(object):
         :return: Nothing
         '''
         warnings.warn("Function does nothing!!!")
-        pass
+        raise NotImplementedError("TODO")
 
     def sample_stats(self, bg, elem, min_entries = 10):
         '''
@@ -705,13 +796,20 @@ class ConformationStats(object):
         if elem[0] == 's':
             dims = [dims]
             stats = self.stem_stats
-            return stats[dims[0]]
+            if stats[dims[0]]:
+                return stats[dims[0]]
+            else:
+                raise LookupError("No stats for element {} with dimensions {}. Stats keys are {}".format(elem, dims[0], sorted(stats.keys())))
         elif elem[0] == 'i' or elem[0] == 'm':
             stats = self.angle_stats
+
             ang_type = bg.get_angle_type(elem)
             try:
-                dims = get_angle_stat_dims(dims[0], dims[1], 
-                                           ang_type, min_entries=min_entries)
+                if isinstance(stats, ClusteredAngleStats):
+                    dims = stats.get_angle_stat_dims(dims[0], dims[1], ang_type)
+                else: # assert isinstance(stats, defaultdict)
+                    dims = get_angle_stat_dims(dims[0], dims[1], 
+                                               ang_type, min_entries=min_entries)
             except IndexError:
                 print >>sys.stderr, "Error in sample_stats:"
                 print >>sys.stderr, "elem:", elem, "dims:", dims, "ang_type:", ang_type
@@ -738,17 +836,21 @@ class ConformationStats(object):
             all_stats += stats[dim[-1]]
 
         if len(all_stats) == 0:
-            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims
+            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims, "and ang_type", ang_type
 
         return all_stats
 
 class FilteredConformationStats(ConformationStats):
-    def __init__(self, stats_file=cbc.Configuration.stats_file, filter_filename=None):
+    def __init__(self, stats_file=cbc.Configuration.stats_file, filter_filename=None, filter_prob=1):
+        """
+        :param filter_prob: Return the filtered stats with this probability, else all stats.  
+                            Default=1 (100%)
+        """
         super(FilteredConformationStats, self).__init__(stats_file)
 
         self.filtered = None
         self.filtered_stats = None
-
+        self.filter_prob = filter_prob
         if filter_filename is not None:
             self.from_file(filter_filename)
 
@@ -792,24 +894,20 @@ class FilteredConformationStats(ConformationStats):
 
 
     def sample_stats(self, bg, elem):
-        if self.filtered_stats is not None:
+        r=rand.random()
+        if self.filtered_stats is not None and r<=self.filter_prob:
             ang_type = bg.get_angle_type(elem)
             if (elem, ang_type) in self.filtered_stats:
-                #print >>sys.stderr, "found:", elem, ang_type
-
-                if len(self.filtered_stats[(elem, ang_type)]) == 0:
-                    #print >>sys.stderr, "No filtered stats for elem: %s ang_type: %d" % (elem, ang_type)
-                    pass
-
-                return self.filtered_stats[(elem, ang_type)]
-
+                if len(self.filtered_stats[(elem, ang_type)]) > 0:
+                    return self.filtered_stats[(elem, ang_type)]
+        # No filtered stats found. Return normal stats for this element.
         return super(FilteredConformationStats, self).sample_stats(bg, elem)
 
-def get_conformation_stats():
+def get_conformation_stats(stats_file=cbc.Configuration.stats_file, angle_stats_file=None):
     if ConstructionStats.conf_stats is not None:
         return ConstructionStats.conf_stats
     else:
-        return ConformationStats()
+        return ConformationStats(stats_file, angle_stats_file)
 
 def set_conformation_stats(conf_stats):
     ConstructionStats.conf_stats = conf_stats
