@@ -370,7 +370,7 @@ class RandomAngleStats():
         return s
 
     # This function seems to be unused. Consider deprecation...
-    def stats_by_dimensions(dims, n):
+    def stats_by_dimensions(self, dims, n):
         '''
         Return a set of n AngleStats for a bulge with a dimension
         of of dims.
@@ -435,7 +435,8 @@ class ContinuousAngleStats():
         (s.u, s.v, s.v, s.r1, s.u1, s.v1) = new_stats.T[0]
         return s
 
-    def stats_by_dimensions(dims, n):
+    #Probably unused!
+    def stats_by_dimensions(self, dims, n):
         '''
         Return a set of n AngleStats for a bulge with a dimension
         of of dims.

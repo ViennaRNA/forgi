@@ -5,7 +5,7 @@ from optparse import OptionParser
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.model.descriptors as ftmd
 
 def main():
     usage = """
@@ -29,7 +29,7 @@ def main():
 
 
     coords = cg1.get_ordered_stem_poss()
-    print ftur.radius_of_gyration(coords)
+    print ftmd.radius_of_gyration(coords)
 if __name__ == '__main__':
     main()
 

@@ -6,8 +6,7 @@ import argparse
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.projection.projection2d as ftmp
 import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.rmsd as ftur
-import forgi.threedee.model.similarity as ftuc
+import forgi.threedee.model.similarity as ftms
 import forgi.projection.hausdorff as fph
 
 import numpy as np
@@ -72,11 +71,11 @@ def main(args):
             try:
                 vrs1 = np.array([x for p in sorted(projs[i]._coords.keys()) for x in projs[i]._coords[p]])
                 vrs2 = np.array([x for p in sorted(projs[i+diff]._coords.keys()) for x in projs[i+diff]._coords[p]])
-                prmsd+=ftur.centered_rmsd(vrs1, vrs2)
+                prmsd+=ftms.rmsd(vrs1, vrs2)
                 pcount+=1
             except:
                 pass
-            cgrmsd+=ftuc.cg_rmsd(cgs[i],cgs[i+diff])
+            cgrmsd+=ftms.cg_rmsd(cgs[i],cgs[i+diff])
         if count:
             cg_rmsds[diff]=cgrmsd/count
         if pcount:
@@ -106,14 +105,14 @@ def main(args):
             for proj in projs:
                 try:
                     vrs1 = np.array([x for p in sorted(proj._coords.keys()) for x in proj._coords[p]])
-                    prmsd=ftur.centered_rmsd(vrs1, target_vrs)
+                    prmsd=ftms.rmsd(vrs1, target_vrs)
                     target_proj_rmsds.append(prmsd)
                 except:
                     target_proj_rmsds.append(float("nan"))
         target_vrs = ftug.bg_virtual_residues(target)
         for cg in cgs:
             vrs1 = ftug.bg_virtual_residues(cg)
-            cgrmsd=ftur.centered_rmsd(vrs1,target_vrs)
+            cgrmsd=ftms.rmsd(vrs1,target_vrs)
             target_rmsds.append(cgrmsd)
         xval=np.arange(len(cgs))*args.step_size
         if target_proj_rmsds:

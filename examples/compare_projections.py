@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
@@ -25,7 +27,6 @@ import scipy.misc
 import multiprocessing
 from functools import partial
 
-WIDTH=500
 
 def async_calculation((ref_img, ref_box), numFiles, filenames):
     try:

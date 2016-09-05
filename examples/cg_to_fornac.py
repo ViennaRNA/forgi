@@ -229,7 +229,7 @@ def main():
         cg = ftmc.CoarseGrainRNA(filename)
         cgs += [cg]
         if not cm:
-            cm=ftme.ConfusionMatrix(cg)
+            cm=ftme.AdjacencyCorrelation(cg)
         (links, pair_bitmap) = extract_extra_links(cg, options.distance, options.bp_distance,
                                                   correct_links = None if len(all_links) == 0 else all_links[0])
 

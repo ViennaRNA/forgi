@@ -3,7 +3,7 @@
 import sys
 import forgi.utilities.debug as cud
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.utilities.rmsd as ftur
+import forgi.threedee.model.descriptors as ftmd
 from optparse import OptionParser
 
 def main():
@@ -36,7 +36,7 @@ def main():
             coords += [cg.coords[s][0]]
             coords += [cg.coords[s][1]]
 
-        rmsd = ftur.radius_of_gyration(coords)
+        rmsd = ftmd.radius_of_gyration(coords)
         total_length = sum([len(list(cg.define_residue_num_iterator(d))) for d in sg])
 
         print total_length, rmsd

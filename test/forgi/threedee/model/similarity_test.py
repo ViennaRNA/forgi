@@ -3,6 +3,11 @@ import forgi.threedee.model.similarity as ftme
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.graph_pdb as ftug 
 import unittest
+import unittest, os, math
+import numpy as np
+import forgi.threedee.utilities.vector as ftuv
+
+import forgi.utilities.debug as fud
 
 class CompareTest(unittest.TestCase):
 
@@ -68,12 +73,6 @@ class CompareTest(unittest.TestCase):
         cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
         self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 25.170088934277373)
 
-import unittest, os, math
-import numpy as np
-import forgi.threedee.utilities.rmsd as ftur
-import forgi.threedee.utilities.vector as ftuv
-
-import forgi.utilities.debug as fud
 
 class TestRMSD(unittest.TestCase):
     '''

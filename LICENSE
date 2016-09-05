@@ -1,30 +1,12 @@
+NOTE: The forgi library is copyrighted by 
+Peter Kerpedjiev, Bernhard Thiel and other contributors. 
+It is licensed under the Affero GPL License below. 
+If you want to obtain a different license for this product, 
+inquire at the Theoretical Biochemistry Group of the University of Vienna
+http://www.tbi.univie.ac.at
 
-Skip to content
-This repository
+--------------------------------------------------------------------------------
 
-    Pull requests
-    Issues
-    Gist
-
-    @Bernhard10
-
-1
-0
-
-    0
-
-Bernhard10/testlicense
-Code
-Issues 0
-Pull requests 0
-Wiki
-Pulse
-Graphs
-Settings
-testlicense/LICENSE
-f80ad5d just now
-@Bernhard10 Bernhard10 Initial commit
-662 lines (544 sloc) 33.7 KB
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
@@ -649,7 +631,7 @@ copy of the Program in return for a fee.
 
   If you develop a new program, and you want it to be of the greatest
 possible use to the public, the best way to achieve this is to make it
-free software which everyone can redistribute and change under these terms.
+free software which everyone can redistribute and change under these terms.S
 
   To do so, attach the following notices to the program.  It is safest
 to attach them to the start of each source file to most effectively

@@ -15,7 +15,7 @@ import numpy as np
 import itertools as it
 # import networkx as nx Takes to long. Import only when needed
 import warnings, math
-import copy
+import copy, sys
 
 """
 This module uses code by David Eppstein 
@@ -27,10 +27,10 @@ and potentially copyrighted code from matplotlib under the PSF license
 """
 
 try:
-  profile  #The @profile decorator from line_profiler (kernprof)
-except:
-  def profile(x): 
-    return x
+    profile  #The @profile decorator from line_profiler (kernprof)
+except NameError:
+    def profile(x): 
+        return x
 
 
 def to_rgb(im):
@@ -39,13 +39,13 @@ def to_rgb(im):
     """
     # SEE http://www.socouldanyone.com/2013/03/converting-grayscale-to-rgb-with-numpy.html
     try:
-        w, h = im.shape    
-    except: #Probably RGB already
+        w, h = im.shape
+    except ValueError: #Probably RGB already
         w, h, c = im.shape
         return im
     else:
         newImg = np.empty((w, h, 3), dtype=np.uint8)
-        newImg[:, :, 2] =  newImg[:, :, 1] =  newImg[:, :, 0] =  im * 255
+        newImg[:, :, 2] =  newImg[:, :, 1] =  newImg[:, :, 0] =  (im * 255).astype(np.uint8)
         return newImg
 
 
@@ -55,10 +55,10 @@ def to_grayscale(im):
     """
     try:
         w, h, _ = im.shape
-    except:
+    except ValueError:
         return im
     else:
-        newImg = np.empty((w, h), dtype=np.uint8)
+        newImg = np.empty((w, h))
         newImg[:, :] = (im[:,:,0]/255+im[:,:,1]/255+im[:,:,2]/255)/3
         return newImg
 
@@ -157,7 +157,7 @@ def bresenham(start,end):
     #See e.g. http://stackoverflow.com/a/32252934/5069869
     # or https://de.wikipedia.org/wiki/Bresenham-Algorithmus#C-Implementierung
     if start==end:
-      return [start]
+        return [start]
     points=[]
     dx=end[0]-start[0]
     dy=end[1]-start[1]
@@ -169,25 +169,25 @@ def bresenham(start,end):
     dx=abs(dx)
     dy=abs(dy)
     if dx>dy:
-      err=dx/2.
-      while x!=end[0]:
-        #print(x,y)
-        points.append((x,y))
-        err-=dy
-        if err<0:
-          y+=sy
-          err+=dx
-        x+=sx
+        err=dx/2.
+        while x!=end[0]:
+            #print(x,y)
+            points.append((x,y))
+            err-=dy
+            if err<0:
+                y+=sy
+                err+=dx
+            x+=sx
     else:
-      err=dy/2.
-      while y!=end[1]:
-        #print(x,y)
-        points.append((x,y))
-        err-=dx
-        if err<0:
-          x+=sx
-          err+=dy
-        y+=sy
+        err=dy/2.
+        while y!=end[1]:
+            #print(x,y)
+            points.append((x,y))
+            err-=dx
+            if err<0:
+                x+=sx
+                err+=dy
+            y+=sy
     points.append((x,y))
     #if abs(dx)>1 or abs(dy)>1:
       #print(start, end, points)
@@ -234,9 +234,9 @@ class Projection2D(object):
         _, unit_vec1, unit_vec2=ftuv.create_orthonormal_basis(proj_direction)
         self._unit_vec1=unit_vec1
         self._unit_vec2=unit_vec2
-        self._proj_direction=proj_direction        
+        self._proj_direction=proj_direction
         self._virtual_residues = []
-        self.virtual_residue_numbers = project_virtual_residues    
+        self.virtual_residue_numbers = project_virtual_residues
         self._project(cg, project_virtual_atoms, project_virtual_residues)
 
 
@@ -365,9 +365,9 @@ class Projection2D(object):
         if self._cross_points is None:
             self._cross_points=col.defaultdict(list)
             for key1, key2 in it.combinations(self._coords, 2):
-              for cr in ftuv.seg_intersect(self._coords[key1], self._coords[key2]):
-                self._cross_points[key1].append((cr, key2))
-                self._cross_points[key2].append((cr, key1))
+                for cr in ftuv.seg_intersect(self._coords[key1], self._coords[key2]):
+                    self._cross_points[key1].append((cr, key2))
+                    self._cross_points[key2].append((cr, key1))
         return self._cross_points
 
     #Note: This is SLOW the first time it is called. Should be avoided as much as possible.
@@ -500,14 +500,14 @@ class Projection2D(object):
             previous=None
             current=leaf
             while True:
-              next=[ x for x in self.proj_graph[current].keys() if x != previous ]
-              assert len(next)==1
-              next=next[0]
-              lengths[leaf]+=ftuv.vec_distance(current, next)
-              if self.proj_graph.degree(next)!=2:
-                  break
-              previous=current
-              current=next
+                next=[ x for x in self.proj_graph[current].keys() if x != previous ]
+                assert len(next)==1
+                next=next[0]
+                lengths[leaf]+=ftuv.vec_distance(current, next)
+                if self.proj_graph.degree(next)!=2:
+                    break
+                previous=current
+                current=next
             target[leaf]=next
         best_leaf=max(lengths, key=lambda x: lengths[x])
         return lengths[best_leaf], (best_leaf, target[best_leaf])
@@ -639,7 +639,6 @@ class Projection2D(object):
                 else:
                     if warn: warnings.warn("WARNING during rasterization of the 2D Projection: "
                                            "Parts of the projection are cropped off.")
-
         if virtual_atoms and len(self._virtual_atoms):
             rot_virtual_atoms = rasterized_2d_coordinates(self._virtual_atoms, steplength, np.array([box[0],box[2]]), rotate)
             rot_virtual_atoms_clip = crop_coordinates_to_bounds(rot_virtual_atoms, img_length )
@@ -714,14 +713,14 @@ class Projection2D(object):
             import matplotlib.text as mtext
             import matplotlib.font_manager as font_manager
         except TypeError as e:
-          warnings.warn("Cannot plot projection. Maybe you could not load Gtk "
-                        "(no X11 server available)? During the import of matplotlib"
-                        "the following Error occured:\n {}: {}".format(type(e).__name__, e))
-          return
+            warnings.warn("Cannot plot projection. Maybe you could not load Gtk "
+                          "(no X11 server available)? During the import of matplotlib"
+                          "the following Error occured:\n {}: {}".format(type(e).__name__, e))
+            return
         except ImportError as e:
-          warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? "
-                        "The following error occured:\n {}: {}".format(type(e).__name__, e))
-          return
+            warnings.warn("Cannot import matplotlib. Do you have matplotlib installed? "
+                          "The following error occured:\n {}: {}".format(type(e).__name__, e))
+            return
         #try:
         #    import shapely.geometry as sg
         #    import shapely.ops as so
@@ -788,11 +787,9 @@ class Projection2D(object):
             """
             from matplotlib.patches import Circle
             from matplotlib.collections import PatchCollection
-            import pylab as plt
             #import matplotlib.colors as colors
-
             if ax is None:
-                ax = plt.gca()    
+                raise TypeError()
 
             if isinstance(c,basestring):
                 color = c     # ie. use colors.colorConverter.to_rgba_array(c)
@@ -878,17 +875,17 @@ class Projection2D(object):
         for label,(s,e) in self._coords.items():
             if "color" not in line2dproperties:
                 if label.startswith("s"):
-                  lprop["color"]="green"
+                    lprop["color"]="green"
                 elif label.startswith("i"):
-                  lprop["color"]="gold"
+                    lprop["color"]="gold"
                 elif label.startswith("h"):
-                  lprop["color"]="blue"
+                    lprop["color"]="blue"
                 elif label.startswith("m"):
-                  lprop["color"]="red"
+                    lprop["color"]="red"
                 elif label.startswith("f") or label.startswith("t"):
-                  lprop["color"]="blue"
+                    lprop["color"]="blue"
                 else:
-                  lprop["color"]="black"
+                    lprop["color"]="black"
             if add_labels!=False and (add_labels==True or label in add_labels):
                 lprop["label"]=label
             else:
@@ -901,9 +898,9 @@ class Projection2D(object):
             vec=np.array(e)-np.array(s)
             nvec=np.array([vec[1], -vec[0]])
             try:
-              div=math.sqrt(nvec[0]**2+nvec[1]**2)
+                div=math.sqrt(nvec[0]**2+nvec[1]**2)
             except ZeroDivisionError:
-              div=100000
+                div=100000
             a=e+nvec*5/div
             b=e-nvec*5/div
             c=s+nvec*5/div

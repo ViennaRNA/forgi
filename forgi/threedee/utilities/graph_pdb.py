@@ -314,7 +314,7 @@ def stem2_pos_from_stem1_1(stem1_basis, params):
 
     return stem2_start
 
-
+#Seems to be unused!
 def twist2_orient_from_stem1(stem1, twist1, u_v_t):
     '''
     Calculate the position of the twist factor of the 2nd stem from its
@@ -369,7 +369,7 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
 
     return twist2_new_basis
 
-
+#Seems to be unused!
 def stem2_orient_from_stem1(stem1, twist1, r_u_v):
     '''
     Calculate the orientation of the second stem, given its parameterization
@@ -423,7 +423,7 @@ def get_centroid(chain, residue_num):
 
     return cuv.get_vector_centroid(vectors)
 
-
+#Seems to be unused!
 def get_bulge_centroid(chain, define):
     i = 0
     res_nums = []
@@ -592,13 +592,14 @@ def basenormals_mids(chain, start1, start2, end1, end2):
     '''
 """
 
-# This function seems to be unused. Consider deprecation...
+
 def get_mids_core_a(chain, start1, start2, end1, end2, 
                     use_template=True):
     '''
     Estimate the stem cylinder using the old method and then refine it
     using fitted parameters.
     '''
+    warnings.warn("This is deprecated and will be removed in the future!", stacklevel=2)
     if use_template:
         template_stem_length = 30
     else:
@@ -902,6 +903,7 @@ def bg_virtual_residues(bg):
 
     return np.array(vress)
 
+#Seems to be unused!
 def numbered_virtual_residues(bg):
     '''
     Return a list of virtual residues, along with their
@@ -1480,7 +1482,7 @@ def get_mids_fit_method(cg, chain, define):
     return [bpdb.Vector(mids_standard_basis[0]),
             bpdb.Vector(mids_standard_basis[1])]
 
-# @COVERAGE: Currently not used.
+#Seems to be unused at least since version 0.3
 def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
     '''
     Attempt to find the stem direcion vector given a set of atom positions.
@@ -1525,7 +1527,7 @@ def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
                           start_pos, end_pos, stem_chain,
                           bg.stem_length(stem_name), bg.defines[stem_name])
 
-# @COVERAGE: Currently not used.
+#Seems to be unused at least since version 0.3
 def receptor_angle(bg, l, s):
     (i1, i2) = cuv.line_segment_distance(bg.coords[l][0],
                                          bg.coords[l][1],
@@ -1678,7 +1680,7 @@ def get_encompassing_cylinders(cg, radius=6.):
     
     # the first cylinder is equal to the first stem
     #cylinders = {0: cg.coords['s0']}
-    to_visit = [random.choice(cg.defines.keys())]
+    to_visit = [random.choice(list(cg.defines.keys()))]
     
     cylinder_counter = 0
     
@@ -1743,7 +1745,7 @@ def element_coord_system(cg, d):
     #return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
-@profile
+
 def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     Get a list of virtual atoms for this structure.
@@ -1793,7 +1795,7 @@ class VirtualAtomsLookup(object):
                 for i in range(value[2], value[3]+1):
                     k.add(i)
         return k
-    @profile 
+
     def _getitem_for_element(self, d, pos):
         """
         :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
@@ -1819,7 +1821,7 @@ class VirtualAtomsLookup(object):
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
-                atom_names = given_atom_names
+                atom_names = self.given_atom_names
             for aname in atom_names:
                 identifier = "%s %s %d %d %s" % (d[0],
                                               " ".join(map(str, self.cg.get_node_dimensions(d))),
@@ -1833,7 +1835,6 @@ class VirtualAtomsLookup(object):
                     #warnings.warn("KeyError in virtual_atoms. No coordinates found for: {}".format(ke))
                     pass
             return e_coords
-    @profile
     def _getitem_for_stem(self, d, pos):
         i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
         assert pos>=1    #pos-1 should not be negative!  
@@ -1846,7 +1847,7 @@ class VirtualAtomsLookup(object):
             else:
                 atom_names = ftup.nonsidechain_atoms
         else:
-            atom_names = given_atom_names
+            atom_names = self.given_atom_names
         for aname in atom_names:
             if "'" in aname:
                 aname_star=aname[:-1]+"*"

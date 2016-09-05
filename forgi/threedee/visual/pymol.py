@@ -584,7 +584,7 @@ class PymolPrinter:
             start_point = -furthest * vv[0] + datamean
             end_point = furthest * vv[0] + datamean
 
-            self.add_segment(start_point, end_point, 'white', width=4, text='', key=key)
+            self.add_segment(start_point, end_point, 'white', width=4, text='', key='')
 
 
         print >>sys.stderr, "YOOOOOOOOOOOOOOOOOOOOOOO"
@@ -645,8 +645,9 @@ class PymolPrinter:
                 self.add_stem_like(cg, key, color=color)
                 self.draw_bounding_boxes(cg, key)
             else:
-                self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
-                self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
+                #self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
+                #self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
+
                 if key[0] == 'h':
                     if self.add_loops:
                         if key in loops:

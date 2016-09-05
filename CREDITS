@@ -1,0 +1,95 @@
+Credits & Citing
+================
+
+This is at least a partial list of contributors to this library:
+
+Main Library Code - CITING
+--------------------------
+
+===========  ================  ======================
+2012 - 2016  Peter Kerpedjiev  pkerp@tbi.univie.ac.at
+2015 - 2016  Bernhard Thiel    thiel@tbi.univie.ac.at
+===========  ================  ======================
+
+**Please Cite:**
+
+"Predicting RNA 3D structure using a coarse-grain helix-centered model"
+Peter Kerpedjiev, Christian Höner zu Siederdissen and Ivo L. Hofacker
+*RNA* (**2015**), http://dx.doi.org/10.1261/rna.047522.114 
+
+Contributions
+-------------
+
+====    =============== ===========================
+2015    Stephan Hammer  s.hammer@univie.ac.at
+2015    Marcel Kucharik marcel@tbi.univie.ac.at
+2016    tcarlile        https://github.com/tcarlile
+====	=============== ===========================
+
+ACKNOWLEDGEMENTS
+----------------
+
+Third-Party code used (and potentially modified) under the respective licenses
+
+Copyright 2007, Sandra Smit and The Cogent Project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We thank Sandra Smit for providing us with the code of the knotted2nested standalone package, 
+a stripped down version of code available as part of the PyCogent package.
+If you use this part of the library, please cite the paper mentioned below.
+
+The full source code is available as the pycogent package under the GPL License:
+
+========   ==================================================================
+Used_in    forgi.aux.k2n_standalone
+URI        https://github.com/pycogent/pycogent
+License    GPL
+Year       2007 - 2008
+Author     Sandra Smit (Sandra.Smit@colorado.edu)
+Author     Rob Knight (rob@spot.colorado.edu)
+Cite       Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight, 
+           "From knotted to nested RNA structures: a variety of computational 
+           methods for pseudoknot removal." *RNA* **2008**, 
+           http://dx.doi.org/10.1261/rna.881308
+========   ==================================================================
+
+
+
+Copyright 2002, David Eppstein
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+========   ======================================================================================
+Used_in    Convex hulls code in forgi.projection.projection2d
+URI        http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+License    PSF
+Year       2002
+Author     David Eppstein
+========   ======================================================================================
+
+
+
+
+Copyright 2014-2016, Syrtis Major
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+========   ======================================================================================
+Used_in    plot function in forgi.projection.projection2d
+URI        http://stackoverflow.com/a/24567352/5069869
+License    BSD 3-Clause License
+Year       2014-2016
+Author     Syrtis Major
+========   ======================================================================================
+
+
+
+Copyright Matplotlib development team
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+========   ======================================================================================
+Used_in    plot function in forgi.projection.projection2d
+URI        http://matplotlib.org/examples/api/line_with_text.html
+License    PSF
+Year       2008 - 2014
+Authors    Matplotlib development team
+========   ======================================================================================
+

@@ -24,24 +24,24 @@ These distances are based on the location of True-values in the two matrices.
 """
 
 try:
-  profile  #The @profile decorator from line_profiler (kernprof)
-except:
-  def profile(x): 
-    return x
+    profile  #The @profile decorator from line_profiler (kernprof)
+except NameError:
+    def profile(x): 
+        return x
 
 ##############################################################################
 # Helper functions for iterating the grid in "spirals"
 ##############################################################################
 
-def norm(offsets):
+def norm(offset):
     """
     Euclidean norm.
     :param offset: A tuple of length 2.
     :returns: A float
     """
-    return math.sqrt(offsets[0]**2+offsets[1]**2)
+    return math.sqrt(offset[0]**2+offset[1]**2)
 
-def offsets(skip=0, to_iterate=[], toskip={}):
+def offsets(skip=0, to_iterate=[], toskip={}): #pylint: disable=W0102
     """
     An iterator over offsets and their length ((dx,dy), norm((dx,dy))) in the order 
     of increasing norm((dx,dy))
@@ -134,8 +134,7 @@ def hausdorff_helperdist(p, img, cutoff=float("inf"), skip=0):
             return n
         if n>cutoff:
             return float("inf")
-    else:
-        return float('inf')
+    return float('inf')
 
 def hausdorff_distance(img, ref_img, cutoff=float("inf")):
     """
@@ -239,10 +238,10 @@ def combined_distance(img, ref_img, _=None):
 
 
 def to_polar(x):
-  return np.array(ftuv.spherical_cartesian_to_polar(x))
+    return np.array(ftuv.spherical_cartesian_to_polar(x))
 
 def from_polar(x):
-  return ftuv.spherical_polar_to_cartesian(x)
+    return ftuv.spherical_polar_to_cartesian(x)
 
 def get_box(projection, width, offset=np.array((0,0))):
     left, right, down, up=projection.get_bounding_square()
@@ -339,8 +338,8 @@ def locally_minimal_distance(ref_img, scale, cg,
                     #print("co was {}".format(co))
                     break
                 else:
-                   #Function value did not change. Our stepwidth was to small.
-                   co=co*2
+                    #Function value did not change. Our stepwidth was to small.
+                    co=co*2
             else:
                 pass #print ("Offset: No change in direction ", co)
         if np.all(best_change_offs==np.array((0,0))):
@@ -370,8 +369,8 @@ def locally_minimal_distance(ref_img, scale, cg,
                     #print("cr was {}".format(cr))
                     break
                 else:
-                   #Function value did not change. Our stepwidth was to small.
-                   cr=cr*2
+                    #Function value did not change. Our stepwidth was to small.
+                    cr=cr*2
             else:
                 pass #print ("Rotation: No change in direction ", cr)
         if best_change_rot!=0:
@@ -410,9 +409,9 @@ def locally_minimal_distance(ref_img, scale, cg,
                     break
                     #cp=np.array(cp)*2
                 else:                
-                   #print ("Score stays at {} in direction {}".format(tmp_score, cp))
-                   #Function value did not change. Our stepwidth was to small.
-                   cp=np.array(cp)*2
+                    #print ("Score stays at {} in direction {}".format(tmp_score, cp))
+                    #Function value did not change. Our stepwidth was to small.
+                    cp=np.array(cp)*2
             else:
                 pass #print ("Projection: No change in direction ", cp)
         if not np.all(change_pro==np.array((0.,0.))):
@@ -443,7 +442,7 @@ def locally_minimal_distance(ref_img, scale, cg,
     return curr_best_score, img, [ curr_best_pro, curr_best_rotation, curr_best_offs ]
 
 def try_parameters(ref_img, scale, cg, 
-                   rotations=[0,180], offsets=[np.array([0,0])], proj_directions=None,
+                   rotations=(0,180), offsets=(np.array([0,0]),), proj_directions=None,
                    virtual_atoms=True):
     """
     Try all combinations of the given starting parameters 
@@ -455,7 +454,7 @@ def try_parameters(ref_img, scale, cg,
     :param cg: The coarse grain RNA to match to the projection.
 
     :param rotations: A list of in-plane rotations in degrees.
-    :param offset: A list/array of np.arrays of the type np.array([x,y]).
+    :param offsets: A list/array of np.arrays of the type np.array([x,y]).
     :param proj_directions: A list of projection_directions (tuples theta, phi) or None.
                             If None, uses cg.project_from.
     :param virtual_atoms: Boolean. If False, do not project virtual atoms (faster)
@@ -610,8 +609,8 @@ def _try_startpoints(ref_img, scale, cg, start_points, starting_rotations,
 
 def globally_minimal_distance(ref_img, scale, cg,                               
                               start_points=40,
-                              starting_rotations=[0, 180], 
-                              starting_offsets=[np.array([0,0])], 
+                              starting_rotations=(0, 180), 
+                              starting_offsets=(np.array([0,0]), ), 
                               local_maxiter=5, use_heuristic=True, virtual_atoms=True,
                               verbose=False, distance=hausdorff_distance):
     """
@@ -666,10 +665,10 @@ def globally_minimal_distance(ref_img, scale, cg,
                       [best_params[1]], [best_params[2]], local_maxiter, virtual_atoms,
                       use_heuristic, distance, verbose)
     if best_score1<best_score:
-      best_score=best_score1
-      best_params=best_params1
-      best_img=best_img1
-      print("Refinement helped.", best_score)
+        best_score=best_score1
+        best_params=best_params1
+        best_img=best_img1
+        print("Refinement helped.", best_score)
     #import matplotlib.pyplot as plt
     #fig, ax=plt.subplots(2)
     #ax[0].imshow(ref_img, interpolation="none", cmap='gray')

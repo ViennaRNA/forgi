@@ -20,3 +20,6 @@ ftup.output_chain.HSelect.accept_atom
 
 ftuv.null_array
 ftuv.tau
+ftuv.is_almost_colinear([1],[2])
+ftuv.get_standard_basis(3)
+ftuv.vec_dot([0,2,2],[3,4,5])

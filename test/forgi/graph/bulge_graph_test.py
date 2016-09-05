@@ -152,7 +152,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg2 = fgb.BulgeGraph()
         bg2.from_bg_string(stri1)
         self.assertEqual(bg2.infos["test"], ["This is a test info"])
-        
+
     def test_from_fasta(self):
         bg = fgb.BulgeGraph()
 
@@ -164,36 +164,32 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
             bg.stem_length(s)
 
     def test_from_fasta2(self):
-        fasta_str = """
->a
-AAAA
-([)]
-"""
+        fasta_str = (">a\n"
+                     "AAAA\n"
+                     "([)]\n")
         bg = fgb.from_fasta_text(fasta_str)
 
         self.assertEqual(bg.defines['s0'], [1, 1, 3, 3])
         self.assertEqual(bg.defines['s1'], [2, 2, 4, 4])
 
-        fasta_str = """
->a
-AAAAAAA
-(.[.).]
-"""
+        fasta_str = (">a\n"
+                     "AAAAAAA\n"
+                     "(.[.).]\n")
         bg = fgb.from_fasta_text(fasta_str)
 
         self.assertEqual(bg.defines['s0'], [1, 1, 5, 5])
         self.assertEqual(bg.defines['s1'], [3, 3, 7, 7])
 
     def test_from_fasta1(self):
-        a = """
->a
-ACGCCA
-((..))
-"""
+        a = (">a\n"
+             "ACGCCA\n"
+             "((..))\n")
+
         x = fgb.from_fasta_text(a)
         self.assertEqual(x.seq, 'ACGCCA')
 
-        a = """
+        a = (
+"""
 >a
 ACGCCA
 ((..))
@@ -203,7 +199,7 @@ CCCCCC
 >c
 AAAAAA
 (....)
-"""
+""")
         bgs = fgb.from_fasta_text(a)
         self.assertEqual(len(bgs), 3)
         self.assertEqual(bgs[0].seq, 'ACGCCA')
@@ -1180,16 +1176,10 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(len(cr), 1)
         self.assertEqual(cr[0], [6,9])
 
-    def test_is_pseudoknot(self):
-
-        bg = fgb.BulgeGraph()
-
-        #db='[[.((..]]...))'
-        #nm='12345678901234'
-        bpstr = self.bpseq['pseudoknot']
-
-        bg.from_bpseq_str(bpstr)
-        self.assertTrue(bg.is_pseudoknot())
+    def test_nucleotides_to_elements(self):
+        db = '((..))..((..))'
+        bg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(bg.nucleotides_to_elements([1,5,7,11]), {"s0", "m0", "h1"})
 
     def test_to_bpseq_str(self):
         bpstr = self.bpseq['1y26']
@@ -1688,4 +1678,15 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(dom["rods"], rods)
         self.assertEqual(dom["pseudoknots"], [])
 
+    def test_get_domains2(self):
+        db =  '(((...(((...((((((...(((...(((...(((((((((...(((...))))))...)))...))))))...))))))...))))))).))'
 
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        dom = bg.get_domains()
+        
+
+        self.assertEqual(len(dom["multiloops"]), 0)
+        self.assertEqual(len(dom["rods"]), 1)
+        self.assertEqual(len(dom["rods"][0]), len(bg.defines))
+        self.assertEqual(len(dom["pseudoknots"]), 0)

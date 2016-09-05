@@ -1,4 +1,4 @@
-forgi.threedee.model.comparison module
+forgi.threedee.model.similarity module
 ======================================
 
 .. automodule:: forgi.threedee.model.similarity
