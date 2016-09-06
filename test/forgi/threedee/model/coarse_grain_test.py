@@ -305,7 +305,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.check_cg_integrity(cg)
 
     def test_pseudoknot(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1YMO.pdb', intermediate_file_dir='tmp')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', intermediate_file_dir='tmp')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
 
