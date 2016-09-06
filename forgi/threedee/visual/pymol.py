@@ -55,6 +55,8 @@ class PymolPrinter:
         self.pdb_file = None
         self.movie = False
         self.color_modifier=1.0
+        self.stem_color = 'green'
+        self.multiloop_color = 'red'
         self.prev_obj_name = ''     # The name of the previously created
                                     # object which needs to be hidden
                                     # when creating a movie
@@ -419,8 +421,8 @@ class PymolPrinter:
 
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key, key=key)
-        self.add_sphere(p, 'light gray', width=2.0 ) 
-        self.add_sphere(n, 'dark gray', width=2.0 ) 
+        #self.add_sphere(p, 'light gray', width=2.0 ) 
+        #self.add_sphere(n, 'dark gray', width=2.0 ) 
 
         if self.add_twists:
             mult = 8.
@@ -602,11 +604,11 @@ class PymolPrinter:
                 return self.element_specific_colors[elem_name]
 
         if elem_name[0] == 's':
-            return 'green'
+            return self.stem_color
         elif elem_name[0] == 'i':
             return 'yellow'
         elif elem_name[0] == 'm':
-            return 'red'
+            return self.multiloop_color
         elif elem_name[0] == 'h':
             return 'blue'
         elif elem_name[0] == 't':
@@ -623,6 +625,7 @@ class PymolPrinter:
         direction = ftuv.normalize(point2 - point1)
 
         num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
+        key=None
 
         for i in range(int(num_dashes)):
             self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
@@ -647,7 +650,6 @@ class PymolPrinter:
             else:
                 #self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
                 #self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
-
                 if key[0] == 'h':
                     if self.add_loops:
                         if key in loops:
@@ -746,13 +748,13 @@ class PymolPrinter:
                         d = cg.get_node_from_residue_num(r)
                         if d[0] == 's':
                             if a in ftup.nonsidechain_atoms:
-                                self.add_sphere(va[r][a], 'green', width=atom_width)
+                                self.add_sphere(va[r][a], self.stem_color, width=atom_width)
                             else:
                                 self.add_sphere(va[r][a], 'forest', width=atom_width)
                         elif d[0] == 'i':
                             self.add_sphere(va[r][a], 'yellow', width=atom_width)
                         elif d[0] == 'm':
-                            self.add_sphere(va[r][a], 'red', width=atom_width)
+                            self.add_sphere(va[r][a], self.multiloop_color, width=atom_width)
                         elif d[0] == 'h':
                             self.add_sphere(va[r][a], 'blue', width=atom_width)
 
