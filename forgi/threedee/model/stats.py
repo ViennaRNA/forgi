@@ -836,7 +836,11 @@ class ConformationStats(object):
             all_stats += stats[dim[-1]]
 
         if len(all_stats) == 0:
-            print >>sys.stderr, "No statistics for bulge %s with dims:" % (elem), dims, "and ang_type", ang_type
+            msg = "No statistics for bulge {} with dims {}".format(elem, dims)
+            if elem[0] in "mi":
+                msg+=" and ang_type {}".format(ang_type)
+            raise LookupError(msg)
+
 
         return all_stats
 

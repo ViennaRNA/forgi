@@ -88,7 +88,7 @@ def increase_range(to_iterate, to_skip):
                 if dd not in dists:
                     dists[dd]=norm(dd)
         oldlen=to_iterate[-1][0][0]**2+to_iterate[-1][0][1]**2
-        print ("sorting {} elements for newlength {}".format(len(dists.keys()), newlength))
+        #print ("sorting {} elements for newlength {}".format(len(dists.keys()), newlength))
         for x in sorted(dists.keys(), key=lambda x: dists[x]):
             if length<dists[x]<newlength:
                 to_iterate.append((x, dists[x]))
