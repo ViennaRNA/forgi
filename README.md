@@ -1,6 +1,6 @@
 #### forgi Library for RNA Secondary Structure Analysis ####
 
-Full documentation: [http://www.tbi.univie.ac.at/~pkerp/forgi/](http://www.tbi.univie.ac.at/~pkerp/forgi/)
+Full documentation: [http://www.tbi.univie.ac.at/~thiel/forgi/](http://www.tbi.univie.ac.at/~thiel/forgi/)
 
 ##### Build the documentation #####
 
