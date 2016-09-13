@@ -1444,6 +1444,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(p, 0)
         self.assertEqual(l, 2)
         p,l = bg.get_position_in_element(12)
+
         self.assertEqual(p, 2)
         self.assertEqual(l, 5)
 
