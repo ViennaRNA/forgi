@@ -874,6 +874,7 @@ class FilteredConformationStats(ConformationStats):
         with open(filename, 'r') as f:
             reader = csv.reader(f, delimiter=' ', quotechar='"')
             for row in reader:
+                if not row: continue; #Empty line
                 elem_name = row[0]
                 define_len = int(row[2])
                 pdb_id = row[1]
