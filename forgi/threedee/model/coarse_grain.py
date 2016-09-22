@@ -33,7 +33,9 @@ import time
 import math
 import warnings
 import itertools as it
-
+import StringIO
+import logging
+logger = logging.getLogger(__name__)
 
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
@@ -123,108 +125,107 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     if not op.exists(output_dir):
         os.makedirs(output_dir)
-
-    with open(op.join(output_dir, 'temp.pdb'), 'w') as f:
+    pdb_chain_fn = op.join(output_dir, 'temp.pdb') 
+    with open(pdb_chain_fn, 'w') as f:
         # TODO: the following should be changed to take the input parser
         # and use that to output the chain
         ftup.output_chain(chain, f.name)
         f.flush()
 
-        pdb_base = op.splitext(op.basename(pdb_filename))[0]
-        pdb_base += "_" + chain.id
+    pdb_base = op.splitext(op.basename(pdb_filename))[0]
+    pdb_base += "_" + chain.id
 
-        cg = CoarseGrainRNA()
-        cg.name = pdb_base
+    cg = CoarseGrainRNA()
+    cg.name = pdb_base
 
-        if len(chain.get_list()) == 0:
-            return cg
+    if len(chain.get_list()) == 0:
+        return cg
 
-        # first we annotate the 3D structure
-        p = sp.Popen(['MC-Annotate', f.name], stdout=sp.PIPE)
-        out, err = p.communicate()
+    # first we annotate the 3D structure
+    p = sp.Popen(['MC-Annotate', pdb_chain_fn], stdout=sp.PIPE)
+    out, err = p.communicate()
 
-        with open(op.join(output_dir, 'temp.mcannotate'), 'w') as f3:
-            f3.write(out)
+    #with open(op.join(output_dir, 'temp.mcannotate'), 'w') as f3:
+    #    f3.write(out)
 
-        lines = out.strip().split('\n')
-        # convert the mcannotate output into bpseq format
-        try:
-            (dotplot, residue_map) = ftum.get_dotplot(lines)
-        except Exception as e:
-            print (e, file=sys.stderr)
-            return cg
+    lines = out.strip().split('\n')
+    # convert the mcannotate output into bpseq format
+    
+    try:
+        (dotplot, residue_map) = ftum.get_dotplot(lines)
+    except Exception as e:
+        print (e, file=sys.stderr)
+        return cg
 
-        # f2 will store the dotbracket notation
-        with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-            f2.write(dotplot)
-            f2.flush()
+    # f2 will store the dotbracket notation
+    with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
+        f2.write(dotplot)
+        f2.flush()
 
-            # remove pseudoknots
-            '''
-            p = sp.Popen(['aux/k2n_standalone/knotted2nested.py', '-f', 'bpseq', 
-                          '-F', 'vienna', f2.name], stdout = sp.PIPE)
+    
+    # remove pseudoknots
+    if remove_pseudoknots:
+        out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
+                           #output_format = 'vienna',
+                           output_format = 'bpseq',
+                           method = cak.DEFAULT_METHOD,
+                           opt_method = cak.DEFAULT_OPT_METHOD,
+                           verbose = cak.DEFAULT_VERBOSE,
+                           removed= cak.DEFAULT_REMOVED)
 
-            out, err = p.communicate()
-            '''
-            if remove_pseudoknots:
-                out = cak.k2n_main(f2.name, input_format='bpseq',
-                                   #output_format = 'vienna',
-                                   output_format = 'bpseq',
-                                   method = cak.DEFAULT_METHOD,
-                                   opt_method = cak.DEFAULT_OPT_METHOD,
-                                   verbose = cak.DEFAULT_VERBOSE,
-                                   removed= cak.DEFAULT_REMOVED)
+        out = out.replace(' Nested structure', pdb_base)
+    else:
+        out = dotplot
+    #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
-                out = out.replace(' Nested structure', pdb_base)
-            else:
-                out = dotplot
-            #(out, residue_map) = add_missing_nucleotides(out, residue_map)
+    
+    if secondary_structure != '':
+        lines = out.split('\n')
 
-            '''
-            if secondary_structure != '':
-                lines = out.split('\n')
+        if len(secondary_structure) != len(lines[1].strip()):
+            print >>sys.stderr, "The provided secondary structure \
+                    does not match the length of the 3D structure"
+            print >>sys.stderr, "Sequence:", lines[1]
+            print >>sys.stderr, "ss_struc:", secondary_structure
+            raise ValueError("The provided secondary structure "
+                    "does not match the length of the 3D structure.\n"
+                    "Sequence: {}\n"
+                    "ss_struc: {}".format(lines[1],secondary_structure))
 
-                if len(secondary_structure) != len(lines[1].strip()):
-                    print >>sys.stderr, "The provided secondary structure \
-                            does not match the length of the 3D structure"
-                    print >>sys.stderr, "Sequence:", lines[1]
-                    print >>sys.stderr, "ss_struc:", secondary_structure
-                    sys.exit(1)
+        lines[-1] = secondary_structure
+        out = "\n".join(lines)
+    
 
-                lines[-1] = secondary_structure
-                out = "\n".join(lines)
-            '''
+    # Add the 3D information about the starts and ends of the stems
+    # and loops
+    
+    # BT: I think, we have chain already. No need to re-read!
+    #with warnings.catch_warnings():
+    #    warnings.simplefilter("ignore")
+    #    s = bpdb.PDBParser().get_structure('temp', pdb_chain_fn)
+    #    chains = list(s.get_chains())
+    #    if len(chains) < 1:
+    #        raise Exception("No chains in the PDB file")
+    #
+    #    chain = chains[0]
 
-            # Add the 3D information about the starts and ends of the stems
-            # and loops
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                s = bpdb.PDBParser().get_structure('temp', f.name)
-                chains = list(s.get_chains())
-                if len(chains) < 1:
-                    raise Exception("No chains in the PDB file")
+    cg.from_bpseq_str(out, dissolve_length_one_stems=False)
+    cg.name = pdb_base
+    cg.seqids_from_residue_map(residue_map)
+    
+    ftug.add_stem_information_from_pdb_chain(cg, chain)
+    cg.add_bulge_coords_from_stems()
+    ftug.add_loop_information_from_pdb_chain(cg, chain)
 
-                chain = chains[0]
+    cg.chain = chain
 
-            #cg.from_fasta(out, dissolve_length_one_stems=1)
-            cg.from_bpseq_str(out, dissolve_length_one_stems=False)
-            cg.name = pdb_base
-            cg.seqids_from_residue_map(residue_map)
-            ftug.add_stem_information_from_pdb_chain(cg, chain)
-            cg.add_bulge_coords_from_stems()
-            ftug.add_loop_information_from_pdb_chain(cg, chain)
+    add_longrange_interactions(cg, lines)
 
-            cg.chain = chain
+    #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
+    #    f3.write(cg.to_cg_string())
+    #    f3.flush()
 
-            add_longrange_interactions(cg, lines)
-
-            with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
-                f3.write(cg.to_cg_string())
-                f3.flush()
-
-            return cg
-    print ("Uh oh... couldn't generate the coarse-grain structure.", file=sys.stderr)
-    print ("Prepare for an incoming exception.", file=sys.stderr)
+    return cg
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='', 
                      intermediate_file_dir=None, chain_id=None,
@@ -569,16 +570,31 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         :param connections: The two stems that are connected by it.
         :return: ftms.AngleStat object
         '''
+        logger.debug("Define {}, connections {}".format(define, connections))
         (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, define, connections)
+        logger.debug("stem1 {}, twist1 {}, stem2 {}, twist2 {}, bulge {}".format(stem1, twist1, stem2, twist2, bulge))
 
-        # Get the orientations for orienting these two stems
-        (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, 
-                                                            stem2, twist2)
-        (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
-
+        if round(np.dot(stem1, twist1),10)!=0 or round(np.dot(stem2, twist2),10)!=0:
+            logger.error("Angle stem1-twist1 {} dot_product={}, Angle stem2-twist2 {} degrees dot_product={}".format(
+                                        math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
+                                        math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),))
+            raise RuntimeError("The twists are inconsistent. "
+                               "They should be orthogonal to the corresponding stem vectors."
+                               "Inconsistency found for {},{}".format(define, connections)
+                               )
+            
+        try:
+            # Get the orientations for orienting these two stems
+            (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, 
+                                                                stem2, twist2)
+            (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
+        except ZeroDivisionError:
+            print ("Cannot get stats for {}. The 3D coodinates are probably wrong.".format(define), file=sys.stderr)
+            raise
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
+        logger.debug("u {}, v {}".format(u, v))
 
         angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, 
                                     u1, v1, ang_type, self.defines[define], 
@@ -635,7 +651,143 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
         angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))
 
+        assert round(angle_stat1.get_angle(),5) == round(angle_stat2.get_angle(),5), ("{}!={}".format(angle_stat1.get_angle(), angle_stat2.get_angle()))
         return (angle_stat1, angle_stat2)
+
+    def get_stacking_helices(self, method="Tyagi"):
+        """
+        Return all helices (longer stacking regions) as sets.
+
+        Two stems and one bulge are in a stacking relation, if self.is_stacking(bulge) is true and the stems are connected to the bulge.
+        Further more, a stem is in a stacking relation with itself.
+        A helix is the transitive closure this stacking relation.
+
+        :returns: A list of sets of element names.
+        """
+        helices=[]
+        for d in self.defines:
+            if d[0] in "mi" and self.is_stacking(d, method):
+                s1, s2 = self.connections(d)
+                helices.append(set([d, s1, s2]))
+            if d[0]=="s":
+                helices.append(set([d]))
+        while True:
+            for i,j in it.combinations(range(len(helices)),2):
+                stack_bag1 = helices[i]
+                stack_bag2 = helices[j]
+                if stack_bag1 & stack_bag2:
+                    stack_bag1|=stack_bag2
+                    del helices[j]
+                    break
+            else: 
+                break
+        return helices
+    def is_stacking(self, bulge, method="Tyagi", verbose=False):
+        """
+        Reports, whether the stems connected by the given bulge are coaxially stacking.
+
+        
+
+        :param bulge: STRING. Name of a interior loop or multiloop (e.g. "m3")
+        :param method": STRING. "Tyagi": Use cutoffs from doi:10.1261/rna.305307, PMCID: PMC1894924.
+        :returns: A BOOLEAN.
+        """
+
+        assert method in ["Tyagi", "CG" ]
+        if method=="Tyagi":
+            return self._is_stacking_tyagi(bulge, verbose)
+        return self._is_stacking_CG(bulge, verbose)
+
+    def _is_stacking_CG(self, bulge, verbose=False):
+        """"""
+        stem1, stem2 = self.connections(bulge)
+        angle = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0], 
+                               self.coords[stem2][1]-self.coords[stem2][0])
+        if angle>math.pi/2:
+            angle=math.pi-angle 
+        if angle>math.radians(45):
+            if verbose: print("Angle {}>45".format(math.degrees(angle)))
+            return False
+        shear_angle1 = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0], 
+                               self.coords[bulge][1]-self.coords[bulge][0])
+        if shear_angle1>math.pi/2:
+            shear_angle1=math.pi-shear_angle1 
+        shear_angle2 = ftuv.vec_angle(self.coords[stem2][1]-self.coords[stem2][0], 
+                               self.coords[bulge][1]-self.coords[bulge][0])
+        if shear_angle2>math.pi/2:
+            shear_angle2=math.pi-shear_angle2
+        if shear_angle1>math.radians(60) or shear_angle2>math.radians(60):
+            if verbose: print ("Shear angle 1 {}>60 or shear angle 2 {}>60".format(math.degrees(shear_angle1), math.degrees(shear_angle1)))
+            return False
+        return True
+
+    def _is_stacking_tyagi(self, bulge, verbose=False):
+        """
+        Implementation of the method described in doi:10.1261/rna.305307 (Tyagi and Matthews) for
+        the detection of coaxial stacking.
+
+        Called by self.is_stacking(bulge, "Tyagi")
+
+        ..note::
+            This does NOT implement the method for coaxial stacking prediction which is the main
+            focus of the paper, only the method for the detection of stacking in pdb files.
+        """
+        assert bulge[0] in "mi"
+        DISTANCE_CUTOFF = [ 14, 6 ]        
+        ANGLE_CUTOFF    = [  math.acos(0.75), math.acos(0.8) ]
+        SHEAR_ANGLE_CUTOFF = math.radians(60) #Relaxed compared to 60 in the paper, because we use
+                                              #virtual atom positions
+        SHEAR_OFFSET_CUTOFF = 10
+        if bulge[0]=="m" and self.get_length(bulge) == 0:
+            is_flush = True #flush-stack vs. mismatch-mediated stack
+        else:
+            is_flush = False
+
+        stem1, stem2 = self.connections(bulge)
+        side_nts = self.get_connected_residues(stem1, stem2, bulge)[0]
+        #Distance
+        bp_center1 = ftug.get_basepair_center(self, side_nts[0])
+        bp_center2 = ftug.get_basepair_center(self, side_nts[1])
+        if ftuv.vec_distance(bp_center1, bp_center2)>DISTANCE_CUTOFF[is_flush]:
+            if verbose: print ("Distance {} > {}".format(ftuv.vec_distance(bp_center1, bp_center2), DISTANCE_CUTOFF[is_flush]))
+            return False
+        normalvec1 = ftug.get_basepair_plane(self, side_nts[0])
+        normalvec2 = ftug.get_basepair_plane(self, side_nts[1])
+        #Coaxial
+        angle = ftuv.vec_angle(normalvec1, normalvec2)
+        if angle>math.pi/2:
+            #Triggered frequently
+            #warnings.warn("Angle > 90 degrees: {} ({})".format(angle, math.degrees(angle)))
+            angle=math.pi-angle
+        if angle>ANGLE_CUTOFF[is_flush]:
+            if verbose: print ("Angle {} > {}".format(angle, ANGLE_CUTOFF[is_flush]))
+            return False
+        #Shear Angle
+        shear_angle1 = ftuv.vec_angle(normalvec1, bp_center2-bp_center1)        
+        if shear_angle1>math.pi/2:
+            shear_angle1=math.pi-shear_angle1
+        if shear_angle1>SHEAR_ANGLE_CUTOFF: 
+            if verbose: print ("Shear angle 1 {} > {}".format(shear_angle1, SHEAR_ANGLE_CUTOFF))
+            return False
+        shear_angle2 = ftuv.vec_angle(normalvec2, bp_center1-bp_center2)
+        if shear_angle2>math.pi/2:
+            shear_angle2=math.pi-shear_angle2
+        if shear_angle2>SHEAR_ANGLE_CUTOFF: 
+            if verbose: print ("Shear angle 2 {} > {}".format(shear_angle2, SHEAR_ANGLE_CUTOFF))
+            return False
+        #Shear Offset
+        #Formula for distance between a point and a line 
+        #from http://onlinemschool.com/math/library/analytic_geometry/p_line/
+        if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
+                            ftuv.magnitude(normalvec2))>SHEAR_OFFSET_CUTOFF: 
+            if verbose: print ("Shear offset 1 wrong:", (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
+                                                         ftuv.magnitude(normalvec2)), ">" , SHEAR_OFFSET_CUTOFF)
+            return False
+        if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec1))/
+                            ftuv.magnitude(normalvec1))>SHEAR_OFFSET_CUTOFF: 
+            if verbose: print ("Shear offset 2 wrong")
+            return False
+        return True
 
     def get_stem_stats(self, stem):
         '''

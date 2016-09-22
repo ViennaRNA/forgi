@@ -123,10 +123,10 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
         self.check_cg_integrity(cg)
 
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb',
-                           intermediate_file_dir='tmp',
-                           remove_pseudoknots=False)
-        self.check_cg_integrity(cg)
+        #cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb',
+        #                   intermediate_file_dir='tmp',
+        #                   remove_pseudoknots=False)
+        #self.check_cg_integrity(cg)
 
         node = cg.get_node_from_residue_num(25)
         self.assertFalse(node[0] == 'h')
@@ -281,8 +281,20 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     def test_get_angle_stats(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
+        for d in cg.defines:
+            if d[0] in "mi":
+                cg.get_bulge_angle_stats(d)
 
-        cg.get_bulge_angle_stats("i0")
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1byj.pdb')
+        for d in cg.defines:
+            if d[0] in "mi":
+                cg.get_bulge_angle_stats(d)
+        
+        cg = ftmc.from_pdb('test/forgi/threedee/data/2QBZ.pdb')
+        for d in cg.defines:
+            if d[0] in "mi":
+                cg.get_bulge_angle_stats(d)
+
 
     def test_get_loop_stat(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
@@ -305,9 +317,9 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.check_cg_integrity(cg)
 
     def test_pseudoknot(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', intermediate_file_dir='tmp')
-        self.check_graph_integrity(cg)
-        self.check_cg_integrity(cg)
+        #cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb', intermediate_file_dir='tmp')
+        #self.check_graph_integrity(cg)
+        #self.check_cg_integrity(cg)
 
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
         self.check_graph_integrity(cg)

@@ -2649,24 +2649,38 @@ class BulgeGraph(object):
         Is a particular loop a pseudoknot?
 
         :param loop: A list of elements that are part of the loop.
+        
+                        .. warning::
+                        
+                            The return value is undefined, if loop does not contain 
+                            all multiloop segments. Multiloop segments that form 
+                            together with `f1` and `t1` not a real loop would be 
+                            counted as pseudoknots.
+                            
         :return: Either True or false
         """
         allowed_ang_types = [2, 3, 4]
-        found_ang_types = set()
+        found_ang_types = col.defaultdict(int)
 
         for l in loop:
             if l[0] != 'm':
                 continue
 
             conn = self.connections(l)
-            ctype = self.connection_type(l, conn)
-
+            ctype = abs(self.connection_type(l, conn))
+            
+            at = self.get_angle_type(l)
+            if at is not None: #Not in mst
+                assert ctype == abs(at)
+            
             if ctype not in allowed_ang_types:
                 return True
 
-            found_ang_types.add(ctype)
-
-        if len(found_ang_types) == 3:
+            found_ang_types[ctype]+=1
+        
+        if (found_ang_types[2]==1 and 
+            found_ang_types[4]==1 and
+            found_ang_types[3]>=1):
             return False
 
         return True

@@ -44,8 +44,9 @@ HB -- maximize the number of hydrogen bonds in Watson-Crick and Wobble pairs
 Author: Sandra Smit (S.Smit@few.vu.nl)
 
 Revision History:
-File created on 20 Sep 2007.
 
+    File created on 20 Sep 2007.
+    Slightly restructured by B. Thiel on 19 Sep 2016: main now takes filehandle
 """
 from __future__ import division
 from sys import exit
@@ -158,7 +159,7 @@ def parse_command_line_parameters():
     return result.parse_args()
     
 
-def k2n_main(input_filename, input_format=DEFAULT_INPUT_FORMAT,\
+def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
     output_format=DEFAULT_OUTPUT_FORMAT, method=DEFAULT_METHOD,\
     opt_method=DEFAULT_OPT_METHOD, verbose=DEFAULT_VERBOSE,\
     removed=DEFAULT_REMOVED):
@@ -208,13 +209,13 @@ def k2n_main(input_filename, input_format=DEFAULT_INPUT_FORMAT,\
 
     try:
         if input_format == 'bpseq':
-            header, seq, pairs = input_parser(open(input_filename,'U'))
+            header, seq, pairs = input_parser(input_filehandle)
             import sys
 
             ks = KnottedStructure(pairs, Seq=seq, Header=header)
             input_data = [ks]
         else:
-            for header, seq, pairs in input_parser(open(input_filename,'U')):
+            for header, seq, pairs in input_parser(input_filehandle):
                 input_data.append(KnottedStructure(Knotted=pairs, Seq=seq,\
                     Header=header))
     except (BpseqParseError, CtError, ValueError), e:
@@ -327,8 +328,9 @@ if __name__ == "__main__":
         input_file = arg[0]
     except IndexError:
         raise ValueError("No input file specified")
-            
-    result = k2n_main(input_file, input_format=opts.input_format,\
-    output_format=opts.output_format, method=opts.method,\
-    opt_method=opts.opt_method, verbose=opts.verbose, removed=opts.removed)
+    
+    with open(input_filename, 'U') as input_filehandle:
+        result = k2n_main(input_filehandle, input_format=opts.input_format,\
+        output_format=opts.output_format, method=opts.method,\
+        opt_method=opts.opt_method, verbose=opts.verbose, removed=opts.removed)
     print result

@@ -158,3 +158,6 @@ class TestVector(unittest.TestCase):
         nptest.assert_allclose(ftuv.get_standard_basis(3), [[1,0,0],[0,1,0], [0,0,1]])
 
 
+    def test_change_basis(self):
+        new_v = ftuv.change_basis(np.array([1.,2.,3.]), np.array([[0,1.,0],[1.,0,0],[0,0,1.]]), np.array([[1.,0,0],[0,1.,0],[0,0,1.]]))
+        nptest.assert_allclose(new_v, np.array([2.,1.,3.]))

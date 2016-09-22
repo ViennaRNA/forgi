@@ -2,6 +2,7 @@
 import Bio.PDB as bpdb
 import unittest, os
 import warnings
+import math
 import numpy as np
 import numpy.testing as nptest
 import forgi.threedee.model.coarse_grain as ftmc
@@ -132,6 +133,31 @@ class TestGraphPDB(unittest.TestCase):
         #fud.pv('nres')
         #TODO assert something"""
 
+class TestOrientation(unittest.TestCase):
+    def setUp(self): 
+        pass
+    def test_get_stem_orientation_parameters(self):
+        stem1_vec = np.array([0., 0., 1.])
+        twist1    = np.array([0., 1., 0.])
+        stem2_vec = np.array([0., 0., 1.])
+        twist2    = np.array([1., 0., 0.])
+        r, u, v, t = ftug.get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2)
+        self.assertEqual(r, 1)
+        self.assertEqual(u, math.pi/2)
+        self.assertEqual(v, 0)
+
+        stem2_vec = np.array([0., 1., 0.])
+        r, u, v, t = ftug.get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2)
+        self.assertEqual(r, 1)
+        self.assertEqual(u, math.pi/2)
+        self.assertEqual(v, math.pi/2)
+        
+        stem2_vec = np.array([0., 1., 1.])
+        r, u, v, t = ftug.get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2)
+        self.assertEqual(r, math.sqrt(2))
+        self.assertEqual(u, math.pi/2)
+        self.assertEqual(v, math.pi/4)
+        
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
         self.rs_random_281=ftmc.from_pdb('test/forgi/threedee/data/RS_random_281_S_0.pdb')

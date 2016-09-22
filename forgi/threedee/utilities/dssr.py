@@ -128,6 +128,7 @@ class DSSRAnnotation(object):
             if mc[0][0]=="s":
                 return mc[0]
         raise RuntimeError("No stem matching dssr_stem {}, only single stranded region: {}.".format(dssr_stem, cg_stems.keys()))
+    
     def compare_coaxial_stack_annotation(self, forgi_method="Tyagi", allow_single_bp=False):
         """
         Compare the coaxial stack annotation between the DSSR method and the forgi method.
@@ -161,6 +162,7 @@ class DSSRAnnotation(object):
                 if [s1,s2] not in dssr_stacks and [s2,s1] not in dssr_stacks:
                     stacks_forgi.add(Stack((s1,s2), "stacking", "not stacking"))
         return stacks_forgi, stacks_dssr
+    
     def basepair_stacking(self, forgi_method="Tyagi"):
         if "_" in self._cg.name:
             chainname="chain_"+self._cg.name.split("_")[-1]
@@ -261,6 +263,7 @@ class DSSRAnnotation(object):
             else:
                 helixstri+=" "
         print(helixstri)
+        
     def compare_dotbracket(self):        
         if "_" in self._cg.name:
             chainname="chain_"+self._cg.name.split("_")[-1]

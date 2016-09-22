@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+from __future__ import division
 import timeit, sys
 
 import forgi.threedee.utilities.cytvec as ftuc
@@ -152,20 +152,26 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
     If more than one is provided, it must be orthogonal to 
     the others.
     
-    .. warning::
-
-        This does NOT verify whether the input vectors are orthogonal.
     '''
     if vec2 is None:
         vec2 = get_non_colinear_unit_vector(vec1)
         vec2 = np.cross(vec1, vec2)
-    #else:
-    #    nt.assert_allclose(np.dot(vec2, vec1), 0., rtol=1e-7, atol=1e-7)
-    vec1 /= magnitude(vec1)
-    vec2 /= magnitude(vec2)
+    else:
+        if round(vec_angle(vec2, vec1),14)!=round(math.pi/2,14):
+            raise ValueError("vec2 is not normal to vec1!")
+        
+    if magnitude(vec1) == 0:
+        raise ZeroDivisionError("vec 1 {}  has magnitude 0.".format(vec1))
+    vec1 = vec1 / magnitude(vec1)
+
+    if magnitude(vec2) == 0:
+        raise ZeroDivisionError("vec 2 has magnitude 0. vecs are so far {} and {} ".format(vec1, vec2))
+    vec2 = vec2 / magnitude(vec2)
     if vec3 is None:
         vec3 = np.cross(vec1, vec2)
-    vec3 /= magnitude(vec3)
+    if magnitude(vec3) == 0:
+        raise ZeroDivisionError("vec 3 has magnitude 0. vecs are {}, {} and {}".format(repr(vec1), repr(vec2), repr(vec3)))
+    vec3 = vec3 / magnitude(vec3)
 
     return np.array([vec1, vec2, vec3])
 
@@ -235,7 +241,7 @@ def spherical_cartesian_to_polar(vec):
     v = math.atan2(vec[1], vec[0])
 
     nt.assert_allclose(vec[0], r * math.sin(u) * math.cos(v), rtol=1e-7, atol=1e-7)
-    return (r, u, v)
+    return np.array((r, u, v))
 
 def spherical_polar_to_cartesian(vec):
     '''
@@ -252,7 +258,7 @@ def spherical_polar_to_cartesian(vec):
     y = r * math.sin(u) * math.sin(v)
     z = r * math.cos(u)
 
-    return [x, y, z]
+    return np.array([x, y, z])
 
 def get_standard_basis(dim):
     '''
@@ -274,7 +280,7 @@ def get_standard_basis(dim):
 def change_basis(coords, new_basis, old_basis):
     '''
     Change the basis of coordinates to a new basis. In a regular structure
-    we have the coordinates in the regular cartesian coordinate systemath. For helix-helix
+    we have the coordinates in the regular cartesian coordinate system. For helix-helix
     orientations, however, we want to express the coordinates in a coordinate system
     defined by the first helix.
 

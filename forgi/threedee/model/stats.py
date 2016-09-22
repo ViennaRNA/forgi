@@ -9,11 +9,13 @@ import numpy as np
 import numpy.random as nr
 import collections as c
 import math as m
+import math
 
 #import fess.builder.config as cbc
 import forgi.config as cbc
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
+import forgi.threedee.utilities.graph_pdb as ftug
 
 # The two constants seem to be unused.
 avg_stem_bp_length = 2.24 
@@ -256,7 +258,7 @@ class AngleStat:
         :return: `(r1, u1, v1)`
         '''
         return (self.r1, self.u1, self.v1)
-
+        
     def __str__(self):
         '''
         out_str = "angle %s %d %d %f %f %f %f %f %f %d %s" % (self.pdb_name,
@@ -304,9 +306,12 @@ class AngleStat:
         other_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v]))
 
         return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_start+this_stem_end, other_stem_start + other_stem_end)
-
- 
-
+    def get_angle(self):
+        '''
+        Return the angle between the two connected stems.
+        '''
+        return ftuv.vec_angle(np.array([-1.,0.,0.]), ftuv.spherical_polar_to_cartesian([1, self.u, self.v]))
+    
 class RandomAngleStats():
     '''
     Store all of the angle stats.
