@@ -29,6 +29,9 @@ import os, warnings
 import operator as oper
 import numpy as np
 
+import logging
+log = logging.getLogger(__name__)
+
 def add_bulge(bulges, bulge, context, message):
     """
     A wrapper for a simple dictionary addition
@@ -866,6 +869,7 @@ class BulgeGraph(object):
         :param vertex: The name of the vertex to find the loop.
         :return: A list containing the elements in the shortest cycle.
         """
+        log.debug("Starting shortest BG loop for {}".format(vertex))
         G = self.to_networkx()
 
         # use the nucleotide in the middle of this element as the starting point
@@ -888,7 +892,78 @@ class BulgeGraph(object):
 
         path = fug.shortest_cycle(G, mid_res)
         return path
+    
+    def _get_next_ml_segment(self, ml_segment):
+        """
+        """
+        if ml_segment[0]!="m":
+            raise ValueError("{} is not a multiloop".format(ml_segment))
+        f1, f2 = self.flanking_nucleotides(ml_segment)
+        if f1>f2:
+            f=f1
+        else:
+            f=f2        
+        s = self.get_node_from_residue_num(f)
+        
+        log.debug("_get_next_ml_segment:  f = {}, s = {}".format(f, s))
+        side_stem, _ = self.get_sides_plus(s, ml_segment)
+        log.debug("side {}".format(side_stem))
+        if side_stem == 0:
+            side_stem = 3
+        elif side_stem == 3:
+            side_stem = 0
+        elif side_stem ==1:
+            side_stem = 2
+        elif side_stem == 2:
+            side_stem = 1
+        else:
+            assert False
+        ml_nuc = self.flanking_nuc_at_stem_side(s, side_stem)
+        try:
+            elem =  self.get_node_from_residue_num(ml_nuc)        
+        except LookupError:
+            return None
+        log.debug("side now {}, ml_nuc {}, ml {}".format(side_stem, ml_nuc, elem))
+        if elem[0]=="s":
+            #0-length multiloop
+            elems=self.edges[elem]&self.edges[s]
+            for elem in elems:
+                if self.element_length(elem)==0:
+                    return elem
+            assert False
+        if elem[0]!="m":
+            return None
+        return elem
 
+    def shortest_mlonly_multiloop(self, ml_segment):
+        log.debug("Starting shortest_true_multiloop for {}".format(ml_segment))
+        loop_nodes = [ml_segment]
+        if ml_segment[0]!="m": return set()
+        while True:
+            ml_segment = self._get_next_ml_segment(ml_segment)
+            log.debug("Next segment is {}, loop_nodes: {}".format(ml_segment, loop_nodes))
+            if ml_segment is None:
+                return []
+            elif ml_segment in loop_nodes:
+                first_node = min(loop_nodes, key=self.compare_bulges)
+                i = loop_nodes.index(first_node)
+                return loop_nodes[i:]+loop_nodes[:i]
+            else:
+                loop_nodes.append(ml_segment)
+
+    def flanking_nuc_at_stem_side(self, s, side):
+        """
+        Return the nucleotide number that is next to the stem at the given stem side.
+        
+        :param side: 0, 1, 2 or 3, as returned by self.get_sides_plus
+        :returns: The nucleotide position. If the stem has no neighbor at that side,
+                  0 or self.length is returned instead.
+        """
+        stem_nuc = self.defines[s][side]
+        if side == 0 or side ==2:
+            return stem_nuc - 1
+        else:
+            return stem_nuc + 1
     def nucleotides_to_elements(self, nucleotides):
         """
         Convert a list of nucleotides (nucleotide numbers) to element names.
@@ -899,14 +974,26 @@ class BulgeGraph(object):
             Use `self.get_node_from_residue_num` if you have only a single nucleotide number.
         """
         return set([self.get_node_from_residue_num(n) for n in nucleotides])
+    def elements_to_nucleotides(self, elements):
+        """
+        Convert a list of element names to a list of nucleotide numbers.
 
+        Remove redundant entries.
+
+        """
+        nucs = set()
+        for elem in elements:
+            for def_range in self.define_range_iterator(elem, False):
+                for nuc in range(def_range[0], def_range[1]+1):                
+                    nucs.add(nuc)
+        return sorted(nucs)
     def find_bulge_loop(self, vertex, max_length=4):
         """
         Find a set of nodes that form a loop containing the
         given vertex and being no greater than max_length nodes long.
 
         :param vertex: The vertex to start the search from.
-        :param max_length: Only fond loops that contain no mor then this many elements
+        :param max_length: Only fond loops that contain no more then this many elements
         :returns: A list of the nodes in the loop.
         """
         visited = set()
@@ -1299,6 +1386,16 @@ class BulgeGraph(object):
 
         return ext_loop
 
+    def find_mlonly_multiloops(self):
+        nuc_loops = set()
+        node_loops = []
+        for d in self.mloop_iterator():
+            nodes = self.shortest_mlonly_multiloop(d)
+            nucs = self.elements_to_nucleotides(nodes)
+            if tuple(nucs) not in nuc_loops:
+                nuc_loops.add(tuple(nucs))
+                node_loops.append(nodes)
+        return node_loops, nuc_loops
     def find_multiloop_loops(self):
         """
         Find out which defines are connected in a multiloop.
@@ -1312,6 +1409,8 @@ class BulgeGraph(object):
             loop_nts = self.shortest_bg_loop(d)
 
             if len(loop_nts) > 0:
+                if tuple(sorted(loop_nts)) not in loops:
+                    log.debug("Adding a loop.")
                 loops.add(tuple(sorted(loop_nts)))
 
         loops = list(loops)
@@ -1325,7 +1424,8 @@ class BulgeGraph(object):
             for a, b in it.combinations(all_loops, r=2):
                 common_edges = set.intersection(self.edges[a], self.edges[b])
                 for e in common_edges:
-                    all_loops.add(e)
+                    if self.element_length(e)==0:
+                        all_loops.add(e)
 
             loop_elems += [all_loops]
 
@@ -2663,6 +2763,8 @@ class BulgeGraph(object):
         found_ang_types = col.defaultdict(int)
 
         for l in loop:
+            if l[0] == 'i':
+                return True
             if l[0] != 'm':
                 continue
 
@@ -2703,6 +2805,7 @@ class BulgeGraph(object):
                 G.add_node(r)
                 residues += [r]
 
+        #Add links along the backbone
         residues.sort()
         prev = None
         for r in residues:
@@ -2710,6 +2813,7 @@ class BulgeGraph(object):
                 G.add_edge(prev, r)
             prev = r
 
+        #Add links along basepairs
         for s in self.stem_iterator():
             for (f, t) in self.stem_bp_iterator(s):
                 G.add_edge(f, t)
@@ -2910,7 +3014,6 @@ class BulgeGraph(object):
         :param d: the name of the element
         :return: a set of nucleotides
         '''
-        warnings.warn("This is deprecated and will be removed in the future", stacklevel=2)
         set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
         set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
 

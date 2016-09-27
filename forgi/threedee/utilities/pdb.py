@@ -395,10 +395,6 @@ def get_biggest_chain(in_filename, parser=None):
 
     for i in range(len(chains)):
         c = chains[i]
-        #res_list = list(c.get_list())
-        
-        #print >> sys.stderr, res_list[0].resname
-        rna = False
 
         # Only count RNA residues
         num_residues = 0

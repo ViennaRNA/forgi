@@ -1691,3 +1691,52 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(len(dom["rods"]), 1)
         self.assertEqual(len(dom["rods"][0]), len(bg.defines))
         self.assertEqual(len(dom["pseudoknots"]), 0)
+
+class MultiloopFinding(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_shortest_mlonly_multiloop(self):
+        db = "(((..(((...)))(((...))).(((...)))...)))"
+        """
+        (((..(((...)))(((...))).(((...)))...)))
+        sssmmssshhhsssssshhhsssmssshhhsssmmmsss
+        000001110001112221112223333222333111000
+        """
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        ml = bg.shortest_mlonly_multiloop("m0")
+        print(bg.to_dotbracket_string())
+        print(bg.to_element_string(True))
+        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+    def test_shortest_mlonly_multiloop_first_0_length(self):
+        db = "((((((...))).(((...))).(((...)))...)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        ml = bg.shortest_mlonly_multiloop("m0")
+        print(bg.to_dotbracket_string())
+        print(bg.to_element_string(True))
+        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+    def test_shortest_mlonly_multiloop_first_longest(self):
+        db = "(((......(((...))).(((...))).(((...)))...)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        ml = bg.shortest_mlonly_multiloop("m0")
+        print(bg.to_dotbracket_string())
+        print(bg.to_element_string(True))
+        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+    def test_shortest_mlonly_multiloop_first_0_length_different_start(self):
+        db = "((((((...))).(((...))).(((...)))...)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        ml = bg.shortest_mlonly_multiloop("m2")
+        print(bg.to_dotbracket_string())
+        print(bg.to_element_string(True))
+        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+    def test_shortest_mlonly_multiloop_first_longest_different_start(self):
+        db = "(((......(((...))).(((...))).(((...)))...)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        ml = bg.shortest_mlonly_multiloop("m2")
+        print(bg.to_dotbracket_string())
+        print(bg.to_element_string(True))
+        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
