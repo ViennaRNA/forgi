@@ -108,51 +108,53 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                                 for this coarsification.
     :param chain_id: The id of the chain to create the CG model from
     '''
-    if parser == None:
-        parser = bpdb.PDBParser()
 
     #chain = ftup.load_structure(pdb_filename)
-    if chain_id == None:
-        chain = ftup.get_biggest_chain(pdb_filename, parser=parser)
+    chains = []
+    if chain_id == "all":
+        chains = ftup.get_all_chains(pdb_filename, parser=parser)
+    elif chain_id is None:  
+        chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
     else:
-        chain = ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)
+        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+    new_chains = []
+    for chain in chains:
+        chain = ftup.rename_modified_ress(chain)
+        chain = ftup.rename_rosetta_atoms(chain)
+        chain = ftup.remove_hetatm(chain)
+        new_chains.append(chain)
 
-    chain = ftup.rename_modified_ress(chain)
-    chain = ftup.rename_rosetta_atoms(chain)
-    chain = ftup.remove_hetatm(chain)
-
-    # output the biggest RNA chain
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
+
+    # output a pdb with RNA only (for MCAnnotate):
+    if len(new_chains)==1:
+        pdb_base += "_" + new_chains[-1].id
+    else:
+        pdb_base += "_allrna"
+        
     output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
 
     if not op.exists(output_dir):
         os.makedirs(output_dir)
-    pdb_chain_fn = op.join(output_dir, 'temp.pdb') 
-    with open(pdb_chain_fn, 'w') as f:
-        # TODO: the following should be changed to take the input parser
-        # and use that to output the chain
-        ftup.output_chain(chain, f.name)
+    rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
+    with open(rna_pdb_fn, 'w') as f:
+        #We need to output in pdb format for MC-Annotate
+        ftup.output_multiple_chains(new_chains, f.name) 
         f.flush()
-
-    pdb_base = op.splitext(op.basename(pdb_filename))[0]
-    pdb_base += "_" + chain.id
 
     cg = CoarseGrainRNA()
     cg.name = pdb_base
 
-    if len(chain.get_list()) == 0:
+    if sum(len(chain.get_list()) for chain in new_chains) == 0:
         return cg
 
     # first we annotate the 3D structure
-    p = sp.Popen(['MC-Annotate', pdb_chain_fn], stdout=sp.PIPE)
+    p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
     out, err = p.communicate()
 
-    #with open(op.join(output_dir, 'temp.mcannotate'), 'w') as f3:
-    #    f3.write(out)
-
     lines = out.strip().split('\n')
-    # convert the mcannotate output into bpseq format
     
+    # convert the mcannotate output into bpseq format
     try:
         (dotplot, residue_map) = ftum.get_dotplot(lines)
     except Exception as e:
@@ -160,9 +162,9 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         return cg
 
     # f2 will store the dotbracket notation
-    with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-        f2.write(dotplot)
-        f2.flush()
+    #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
+    #    f2.write(dotplot)
+    #    f2.flush()
 
     
     # remove pseudoknots
@@ -181,6 +183,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
     """
+    # Does not work. lines[1] never contained the secondary structure!
     if secondary_structure != '':
         lines = out.split('\n')
 
@@ -213,13 +216,16 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     cg.from_bpseq_str(out, dissolve_length_one_stems=False)
     cg.name = pdb_base
+    
+    cg.chains = { chain.id : chain for chain in newchains }
+        
     cg.seqids_from_residue_map(residue_map)
     
     ftug.add_stem_information_from_pdb_chain(cg, chain)
     cg.add_bulge_coords_from_stems()
     ftug.add_loop_information_from_pdb_chain(cg, chain)
 
-    cg.chain = chain
+
 
     add_longrange_interactions(cg, lines)
 

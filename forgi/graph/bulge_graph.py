@@ -2668,7 +2668,7 @@ class BulgeGraph(object):
         for r in residue_map:
             (from_chain, from_base) = ftum.parse_chain_base(r)
 
-            self.seq_ids += [ftum.parse_resid(from_base)]
+            self.seq_ids += [ftum.parse_resid(from_base)] 
 
     # This function seems to be dead code, but might be useful in the future.
     # Consider adding this to whitelist.py

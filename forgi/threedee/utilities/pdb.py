@@ -353,6 +353,31 @@ def output_chain(chain, filename, fr=None, to=None):
     io.set_structure(s)
     io.save(filename, HSelect()) 
 
+def output_multiple_chains(chains, filename):
+    '''                                                                                                            
+    Dump a chain to an output file. Remove the hydrogen atoms.
+    
+    :param chain: The Bio.PDB.Chain to dump.
+    :param filename: The place to dump it.
+    '''                                                                                                            
+    class HSelect(bpdb.Select):
+        def accept_atom(self, atom):
+            if atom.name.find('H') >= 0:
+                return False
+            else:
+                return True          
+    m = bpdb.Model.Model(' ') 
+    s = bpdb.Structure.Structure(' ')
+   
+    for chain in chains:
+       m.add(chain)
+   
+    s.add(m)    
+
+    io = bpdb.PDBIO()
+    io.set_structure(s)
+    io.save(filename, HSelect()) 
+    
 def get_particular_chain(in_filename, chain_id, parser=None):
     '''
     Load a PDB file and return a particular chain.
@@ -414,7 +439,39 @@ def get_biggest_chain(in_filename, parser=None):
 
     orig_chain = chains[biggest]
     return orig_chain
+    
+def get_all_chains(in_filename, parser=None):
+    '''
+    Load the PDB file located at filename, select the longest
+    chain and return it.
 
+    :param in_filename: The location of the original file.
+    :return: A Bio.PDB chain structure corresponding to the longest
+             chain in the structure stored in in_filename
+    '''
+    if parser is None:
+        if in_filename.endswith(".pdb"):
+            parser = bpdb.PDBParser()
+        elif in_filename.endswith(".cif"):
+            parser = bpdb.MMCIFParser()
+        else: #Cannot determine filetype by extention. Try to read first line.
+            with open(in_filename) as pdbfile:
+                line = pdbfile.readline(20)
+                # According to 
+                #page 10 of ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
+                # a HEADER entry is mandatory.
+                if line.startswith("HEADER"):
+                    parser = bpdb.PDBParser()
+                else:
+                    parser = bpdb.MMCIFParser()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        s = parser.get_structure('temp', in_filename)
+
+    chains = list(s.get_chains())
+    return chains
+    
 def rename_modified_ress(chain):
     '''
     Rename the modified residues so that they have the same
