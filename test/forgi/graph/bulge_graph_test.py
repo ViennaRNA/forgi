@@ -9,7 +9,7 @@ import os
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
-
+from pprint import pprint
 
 class GraphVerification(unittest.TestCase):
     def check_for_overlapping_defines(self, bg):
@@ -1692,6 +1692,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(len(dom["rods"][0]), len(bg.defines))
         self.assertEqual(len(dom["pseudoknots"]), 0)
 
+
 class MultiloopFinding(unittest.TestCase):
     def setUp(self):
         pass
@@ -1740,3 +1741,190 @@ class MultiloopFinding(unittest.TestCase):
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
         self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+        
+    def test_find_mlonly_multiloops_pseudoknotfree(self):
+        db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+            #"fffsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt"
+            #"111000000111222222000222555333111333333111444444222444666555333555111000111"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(sorted(mls),sorted([( "m2", "m5", "m3"),("m0", "m4", "m6", "m1" )]))
+    def test_find_mlonly_multiloops_pseudoknotfree_0lengthML(self):
+        db = "...(((((((((...)))(((...))))))(((...)))(((...))))))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        #print("\n".join(map(str,sorted(bg.edges.items()))))
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(sorted(mls),sorted([( "m1", "m2", "m4"),("m5", "m0", "m3", "m6" )]))
+    def test_find_mlonly_multiloops_pseudoknot_free_someML0length(self):
+        db = "...(((...((((((...)))...(((...)))...)))(((...)))...(((...))))))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(sorted(mls),sorted([("m0", "m4", "m6", "m1" ), ( "m2", "m5", "m3")]))
+    def test_find_mlonly_multiloops_254_pk_witht1(self):
+        db = "(((..[[[..)))..]]].."
+             #sssmmsssmmsssmmssstt
+             #00000111110002211111'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls,[("m0", "t1", "m2", "m1")])
+    def test_find_mlonly_multiloops_254_pk_witht1f1(self):
+        db = "..(((..[[[..)))..]]].."
+             #ffsssmmsssmmsssmmssstt
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls,[("f1", "m2", "m1", "m0", "t1")])
+
+        
+    def test_find_mlonly_multiloops_2534_pk(self):
+        db = "(((..[[[..)))(((...)))..]]]"
+            # sssmmsssmmsssssshhhsssmmsss
+            # 000001111100022200022233111
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls,[("m0", "m2", "m3", "m1")])
+        
+    
+    def test_find_mlonly_multiloops_combined(self):
+        db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..]]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+             #fffsssmmsssmmsssssshhhsssmmsssmmmsssmmmsssmmmsssmsssmmsssmmsssmmsssmmmsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt
+             #1110000011111000222000222331114443335554447775550666337774466655777111555222888111888888444999999222999666000333000666333111
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        pprint(mls)
+        self.assertEqual(sorted(mls), 
+                         sorted([("f1", "m2", "m3", "m1", "m0", "m4", "t1"),
+                                 ("m10", "m15", "m14", "m13", "m11"),
+                                 ("m5", "m9", "m16", "m6"),
+                                 ("m7", "m12", "m8")]))
+
+    def test_find_mlonly_multiloops_combined_with_il(self):
+        db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..].]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        pprint(mls)
+        self.assertEqual(sorted(mls), 
+                         sorted([("f1", "m2", "m3", "m1", "m0", "m4", "t1"),
+                                 ("m10", "m15", "m14", "m13", "m11"),
+                                 ("m5", "m9", "m16", "m6"),
+                                 ("m7", "m12", "m8")]))
+
+    def test_find_mlonly_multiloops_pk2455(self):
+        db = "...(((...(((...)))...(((...[[[...)))...(((...]]]...)))...)))..."
+            #"fffsssmmmssshhhsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssttt"
+            #"111000000111000111222222333333444222555444666333777444111000111"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        print(bg.to_element_string(True))
+        mls = bg.find_mlonly_multiloops()
+        pprint(mls)
+        self.assertEqual(sorted(mls), 
+                         sorted([("m0", "m2", "m5", "m1"), ("m3", "m7", "m6", "m4")]))
+
+
+class WalkBackboneTests(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_iter_elements_along_backbones(self):
+        db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, ["f1", "s0", "m0", "s1", "m2", "s2", "h0", "s2", "m5", "s3", "h1", "s3", 
+                            "m3", "s1", "m4", "s4", "h2", "s4", "m6", "s5", "h3", "s5", "m1", "s0", 
+                            "t1"])
+    def test_iter_elements_along_backbones_no_t1(self):
+        db = "(((...)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, ["s0", "h0", "s0"])
+    def test_iter_elements_along_backbones_onesided_i(self):
+        db = "((.((...))))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, ["s0", "i0", "s1", "h0", "s1", "s0"])
+    def test_iter_elements_along_backbones_empty_graph(self):
+        bg = fgb.BulgeGraph()
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, [])
+
+    def test_walk_backbone_pseudoknot_free(self):
+        db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+            #"fffsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt"
+            #"111000000111222222000222555333111333333111444444222444666555333555111000111"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        bg.walk_backbone()
+        self.assertEqual(bg.multiloops["pseudoknots"],[])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
+        self.assertEqual(bg.multiloops["multiloops"],[[ "m2", "m5", "m3"],["m0", "m4", "m6", "m1" ]])
+        
+    def test_walk_backbone_pseudoknot_free_0lengthML(self):
+        db = "...(((((((((...)))(((...))))))(((...)))(((...))))))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        print("\n".join(map(str,sorted(bg.edges.items()))))
+        bg.walk_backbone()
+        self.assertEqual(bg.multiloops["pseudoknots"],[])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
+        self.assertEqual(bg.multiloops["multiloops"],[[ "m1", "m2", "m4"],["m5", "m0", "m3", "m6" ]])
+    def test_walk_backbone_pseudoknot_free_someML0length(self):
+        db = "...(((...((((((...)))...(((...)))...)))(((...)))...(((...))))))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        bg.walk_backbone()
+        self.assertEqual(bg.multiloops["pseudoknots"],[])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
+        self.assertEqual(bg.multiloops["multiloops"],[[ "m2", "m5", "m3"],["m0", "m4", "m6", "m1" ]])
+    def test_walk_backbone_254_pk(self):
+        db = "(((..[[[..)))..]]].."
+             #sssmmsssmmsssmmssstt
+             #00000111110002211111'
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        bg.walk_backbone()
+        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2"]])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
+        self.assertEqual(bg.multiloops["multiloops"],[])
+    def test_walk_backbone_2534_pk(self):
+        db = "(((..[[[..)))(((...)))..]]].."
+            # sssmmsssmmsssssshhhsssmmssstt
+            # 00000111110002220002223311111
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        bg.walk_backbone()
+        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"]])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
+        self.assertEqual(bg.multiloops["multiloops"],[])
+    def test_walk_backbone_combined(self):
+        db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..]]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+             #fffsssmmsssmmsssssshhhsssmmsssmmmsssmmmsssmmmsssmsssmmsssmmsssmmsssmmmsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt
+             #1110000011111000222000222331114443335554447775550666337774466655777111555222888111888888444999999222999666000333000666333111
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        bg.walk_backbone()
+        pprint(bg.multiloops)
+        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"], ["m13", "m14", "m15"]])
+        self.assertEqual(bg.multiloops["pk_context"],[["m10", "m11"]])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[["m4"]])
+        self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])
+
+    def test_walk_backbone_combined_with_il(self):
+        db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..].]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        bg.walk_backbone()
+        pprint(bg.multiloops)
+        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"], ["m13", "m14", "m15"]])
+        self.assertEqual(bg.multiloops["pk_context"],[["m10", "m11"]])
+        self.assertEqual(bg.multiloops["pseudo_multiloop"],[["m4"]])
+        self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])

@@ -28,7 +28,7 @@ from ..threedee.utilities import mcannotate as ftum
 import os, warnings
 import operator as oper
 import numpy as np
-
+import functools
 import logging
 log = logging.getLogger(__name__)
 
@@ -896,33 +896,49 @@ class BulgeGraph(object):
     def _get_next_ml_segment(self, ml_segment):
         """
         """
-        if ml_segment[0]!="m":
-            raise ValueError("{} is not a multiloop".format(ml_segment))
-        f1, f2 = self.flanking_nucleotides(ml_segment)
-        if f1>f2:
-            f=f1
+        if ml_segment=="t1":
+            s = self.get_node_from_residue_num(1)
+            if s=="f1":
+                return "f1"
+            else:
+                side_stem = 3
+
         else:
-            f=f2        
-        s = self.get_node_from_residue_num(f)
-        
-        log.debug("_get_next_ml_segment:  f = {}, s = {}".format(f, s))
-        side_stem, _ = self.get_sides_plus(s, ml_segment)
-        log.debug("side {}".format(side_stem))
-        if side_stem == 0:
-            side_stem = 3
-        elif side_stem == 3:
-            side_stem = 0
-        elif side_stem ==1:
-            side_stem = 2
-        elif side_stem == 2:
-            side_stem = 1
-        else:
-            assert False
+            if ml_segment[0]=="f":
+                f, = self.flanking_nucleotides(ml_segment)
+            elif ml_segment[0]=="m":
+                f1, f2 = self.flanking_nucleotides(ml_segment)
+                if f1>f2:
+                    f=f1
+                else:
+                    f=f2     
+            else:
+                raise ValueError("{} is not a multiloop".format(ml_segment))
+
+            s = self.get_node_from_residue_num(f)
+
+            log.debug("_get_next_ml_segment:  f = {}, s = {}".format(f, s))
+            side_stem, _ = self.get_sides_plus(s, ml_segment)
+            log.debug("side {}".format(side_stem))
+            if side_stem == 0:
+                side_stem = 3
+            elif side_stem == 3:
+                side_stem = 0
+            elif side_stem ==1:
+                side_stem = 2
+            elif side_stem == 2:
+                side_stem = 1
+            else:
+                assert False
+                
         ml_nuc = self.flanking_nuc_at_stem_side(s, side_stem)
-        try:
-            elem =  self.get_node_from_residue_num(ml_nuc)        
-        except LookupError:
-            return None
+        if ml_nuc>self.seq_length:
+            s = self.get_node_from_residue_num(1)
+            if s=="f1":
+                return "f1"
+            else:
+                ml_nuc = self.flanking_nuc_at_stem_side(s, 3)
+        elem =  self.get_node_from_residue_num(ml_nuc)                    
         log.debug("side now {}, ml_nuc {}, ml {}".format(side_stem, ml_nuc, elem))
         if elem[0]=="s":
             #0-length multiloop
@@ -931,7 +947,7 @@ class BulgeGraph(object):
                 if self.element_length(elem)==0:
                     return elem
             assert False
-        if elem[0]!="m":
+        if elem[0] not in "mft":
             return None
         return elem
 
@@ -945,7 +961,11 @@ class BulgeGraph(object):
             if ml_segment is None:
                 return []
             elif ml_segment in loop_nodes:
-                first_node = min(loop_nodes, key=self.compare_bulges)
+                if "f1" in loop_nodes:
+                    first_node = "f1"
+                else:
+                    compare = functools.partial(self.compare_bulges, flank_nucs = True)
+                    first_node = min(set(loop_nodes)-set(["t1"]), key=compare)
                 i = loop_nodes.index(first_node)
                 return loop_nodes[i:]+loop_nodes[:i]
             else:
@@ -957,7 +977,7 @@ class BulgeGraph(object):
         
         :param side: 0, 1, 2 or 3, as returned by self.get_sides_plus
         :returns: The nucleotide position. If the stem has no neighbor at that side,
-                  0 or self.length is returned instead.
+                  0 or self.seq_length+1 is returned instead.
         """
         stem_nuc = self.defines[s][side]
         if side == 0 or side ==2:
@@ -974,6 +994,7 @@ class BulgeGraph(object):
             Use `self.get_node_from_residue_num` if you have only a single nucleotide number.
         """
         return set([self.get_node_from_residue_num(n) for n in nucleotides])
+
     def elements_to_nucleotides(self, elements):
         """
         Convert a list of element names to a list of nucleotide numbers.
@@ -1134,11 +1155,22 @@ class BulgeGraph(object):
         return (self.defines[b][0], 0)
 
 
-    def compare_bulges(self, b):
-        connections = self.connections(b)
+    def compare_bulges(self, b, flank_nucs = False):
+        """
+        :param flank_nucs: If True: sort according to the flanking nucleotides
+                           Else: Sort according to lowest nuc number of flanking stems.
+        """
+        if flank_nucs:
+            try:
+                f1, f2 = self.flanking_nucleotides(b)
+            except ValueError as e: #Too few values to unpack
+                raise ValueError("{} is not a bulge".format(b)) #from e
+            return sorted([f1, f2])
+        else: #Old version. Used to keep naming of cg elements consistent
+            connections = self.connections(b)
 
-        return (self.defines[connections[0]][0],
-                self.defines[connections[1]][0])
+            return (self.defines[connections[0]][0],
+                    self.defines[connections[1]][0])
 
     def compare_hairpins(self, b):
         connections = self.connections(b)
@@ -1387,15 +1419,48 @@ class BulgeGraph(object):
         return ext_loop
 
     def find_mlonly_multiloops(self):
-        nuc_loops = set()
         node_loops = []
         for d in self.mloop_iterator():
-            nodes = self.shortest_mlonly_multiloop(d)
-            nucs = self.elements_to_nucleotides(nodes)
-            if tuple(nucs) not in nuc_loops:
-                nuc_loops.add(tuple(nucs))
+            log.debug("Find_mlonly_multiloop: searching for {}".format(d))
+            nodes = tuple(self.shortest_mlonly_multiloop(d))
+            if nodes not in node_loops:
+                log.debug("Find_mlonly_multiloop: Adding multiloop: {}".format(nodes))
                 node_loops.append(nodes)
-        return node_loops, nuc_loops
+            else:
+                log.debug("Find_mlonly_multiloop: {} already known".format(nodes))
+
+        return node_loops
+    
+    def describe_multiloop(self, multiloop):
+        """
+        :param multiloop: An iterable of nodes (only "m", "t" and "f" elements)
+        """
+        descriptors = set()        
+        all_stems = col.Counter()
+        angle_types = col.Counter()
+        for elem in multiloop:
+            if elem[0] in "ft":
+                descriptors.add("open")
+                continue
+            conn = self.connections(elem)
+            ctype = abs(self.connection_type(elem, conn))
+            angle_types[ctype] += 1
+            if ctype == 5:
+                descriptors.add("pseudoknot")
+            all_stems.update(self.edges[elem])
+        if sum(v % 2 for v in all_stems.values())==2: #Odd number of occurrences for 2 stems.
+            descriptors.add("open")
+        else:
+            if sum(v % 2 for v in all_stems.values())!=0:
+                print(all_stems)
+                print(multiloop)
+                print(self.to_dotbracket_string())
+                print (self.to_element_string(True))
+            assert sum(v % 2 for v in all_stems.values())==0
+        if angle_types[2]==1 and angle_types[4]==1 and "pseudoknot" not in descriptors:
+            descriptors.add("regular_multiloop")
+        return descriptors
+    
     def find_multiloop_loops(self):
         """
         Find out which defines are connected in a multiloop.
@@ -1970,7 +2035,6 @@ class BulgeGraph(object):
 
         raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
 
-    # Seems to be unused. Consider deprecation
     def get_stem_edge(self, stem, pos):
         """
         Returns the side of the stem that position is on.
@@ -2786,6 +2850,139 @@ class BulgeGraph(object):
             return False
 
         return True
+
+    def iter_elements_along_backbone(self, startpos = 1):
+        """
+        Iterate all coarse grained elements along the backbone. 
+        
+        Note that stems are yielded twice (for forward and backward strand).
+        Interior loops may be yielded twice or once (if one side has no nucleotide)
+        
+        :param startpos: The nucleotide position at which tio start
+        :yields: Coarse grained element names, like "s0", "i0"
+        """
+        nuc = startpos
+        try:
+            node = self.get_node_from_residue_num(nuc)
+        except:
+            assert len(self.defines)==0
+            raise StopIteration("Empty Graph")
+        while True:
+            yield node
+            if node[0] in "si": #The strand matters
+                if node[0]=="s":
+                    strand = self.get_stem_edge(node, nuc)
+                    if strand == 0: #forward
+                        nuc = self.flanking_nuc_at_stem_side(node, 1)
+                    else:
+                        nuc = self.flanking_nuc_at_stem_side(node, 3)
+                else:
+                    f1,f2,f3,f4 = sorted(self.flanking_nucleotides(node))
+                    if f1<nuc<f2:
+                        nuc = f2
+                    elif f3<nuc<f4:
+                        nuc = f4
+                    else:
+                        assert False
+                try:
+                    next_node = self.get_node_from_residue_num(nuc)
+                except LookupError:
+                    raise StopIteration("End of chain reached")
+                else:
+                    #We need to make sure there is no 0-length multiloop between the two stems.
+                    intersect = self.edges[node] & self.edges[next_node]
+                    for el in intersect:
+                        if el[0]=="m" and self.defines[el]==[]:
+                            #In case of this structuire ([)], there are 2 0-length multiloops between the two stems.
+                            prev_nuc = min(self.flanking_nucleotides(el))
+                            if self.get_node_from_residue_num(prev_nuc) == node:
+                                node = el
+                                break
+                    else:
+                        node = next_node
+                
+            else:
+                try:
+                    f1, f2 = self.flanking_nucleotides(node)
+                except ValueError as e: #Too few values to unpack
+                    if node[0]=="f":
+                        if len(self.defines)==1:
+                            raise StopIteration("Single stranded-only RNA")
+                        nuc, = self.flanking_nucleotides(node)
+                    else:
+                        raise StopIteration("End of chain reached")
+                else:
+                    if f1>f2:
+                        nuc=f1
+                    else:
+                        nuc=f2
+                log.debug("Next nuc is {} ({})".format(nuc, repr(nuc)))
+                node =  self.get_node_from_residue_num(nuc)
+
+    def walk_backbone(self):
+        half_stems = []
+        open_multiloops = col.defaultdict(set)
+        multiloops = []
+        label = {}
+        pseudo_multiloop = [] #The "multiloop" formed together with 5', 3'
+        for node in self.iter_elements_along_backbone():
+            log.debug("node {}".format(node))
+            if node[0]=="s":
+                if node in half_stems:
+                    if node != half_stems[-1]:
+                        open_multiloops[half_stems[-1]]|=open_multiloops[node]
+                        for n in open_multiloops[half_stems[-1]]:
+                            label[n] = "pk"
+                        del open_multiloops[node]
+                    else:
+                        multiloops.append(open_multiloops[node])
+                        for n in open_multiloops[node]:
+                            if label.get(n, "") =="pk":
+                                for i in range(-2, -len(half_stems)-1, -1): #The innermost stem that has open multiloop segments is the context.
+                                    for m in open_multiloops[half_stems[i]]:
+                                        if m not in label:
+                                            label[m] ="context"
+                                    if open_multiloops[half_stems[i]]:
+                                        break
+                        del open_multiloops[node]
+                    half_stems.remove(node)
+                else:
+                    half_stems.append(node)
+            elif node[0]=="m":
+                if half_stems:
+                    open_multiloops[half_stems[-1]].add(node)
+                else:
+                    pseudo_multiloop.append(node)
+        log.debug("multiloops {}".format(multiloops))
+        self.multiloops = {"pseudoknots":[], "multiloops":[], "pseudo_multiloop":[], "pk_context":[]}
+        compare = functools.partial(self.compare_bulges, flank_nucs = True)
+        for multiloop in multiloops:
+            if multiloop:
+                multiloop = sorted(multiloop,key=compare)
+                c=None
+                for b in multiloop:
+                    if label.get(b) == "pk":
+                        c="pk"
+                        break
+                    elif label.get(b)== "context":
+                        c="context"
+                if c=="pk":
+                    self.multiloops["pseudoknots"].append(multiloop)
+                    assert self.is_loop_pseudoknot(multiloop)
+                elif c=="context":
+                    self.multiloops["pk_context"].append(multiloop)
+                else:
+                    self.multiloops["multiloops"].append(multiloop)
+                    if self.is_loop_pseudoknot(multiloop):
+                        print(self.to_dotbracket_string())
+                        print(self.to_element_string(True))
+                        print(multiloop)
+                        print(self.multiloops)
+                        assert False
+        if pseudo_multiloop:
+            pseudo_multiloop.sort(key=compare)
+            self.multiloops["pseudo_multiloop"].append(pseudo_multiloop)
+
 
     def to_networkx(self):
         """
