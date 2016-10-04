@@ -17,7 +17,7 @@ from ..utilities import vector as ftuv
 from ...utilities import debug as fud
 from ...utilities import stuff as fus
 from ...utilities.observedDict import observedDict
-
+from .Element import CoordinateStorage
 import Bio.PDB as bpdb
 import collections as c
 import contextlib
@@ -302,9 +302,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         #: The second value to the end of the stem.
         #: If the coordinates for an element change, the virtual atom and virtual residue 
         #: coordinates are automatically invalidated.
-        self.coords = observedDict(on_change=self.reset_vatom_cache)
-        self.twists = observedDict(on_change=self.reset_vatom_cache)
+        self.coords = None #We can only initialize this, when we know defines.keys()
+        self.twists = None
         self.sampled = dict()
+        
+        if self.defines:
+            self._init_coords()
         
         #:The following 5 defaultdicts are cleared when coords or twists change.
         #: Global (carthesian) position of the virtual residue 
@@ -331,7 +334,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         if cg_file is not None:
             self.from_file(cg_file)
-        pass
+
 
     def get_coord_str(self):
         '''
@@ -817,7 +820,18 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return ss
 
     #def get_loop_from_residue(self, residue) ->  use BulgeGraph.get_node_from_residue_num()!
-
+    def _init_coords(self):
+        self.coords = CoordinateStorage(self.defines.keys(), on_change = self.reset_vatom_cache)
+        self.twists = CoordinateStorage([x for x in self.defines if x[0] =="s"], on_change = self.reset_vatom_cache)
+    def from_fasta(self, fasta):
+        super(CoarseGrainRNA, self).from_fasta(fasta)
+        self._init_coords()
+    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False):
+        super(CoarseGrainRNA, self).from_bpseq_str(bpseq_str, dissolve_length_one_stems)
+        self._init_coords()
+    def from_dotbracket(self,  dotbracket_str, dissolve_length_one_stems=False):
+        super(CoarseGrainRNA, self).from_dotbracket(dotbracket_str, dissolve_length_one_stems)
+        self._init_coords()
     def from_file(self, cg_filename):
         '''
         Load this data structure from a file.
@@ -834,7 +848,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         # Reading the bulge_graph-part of the file
         self.from_bg_string(cg_string)
-
+        self._init_coords()
+        
         #Reading the part of the file responsible for 3D information
         lines = cg_string.split('\n')
         for line in lines:
@@ -1142,7 +1157,32 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     del self._virtual_atom_cache[i]
     #def __deepcopy__(self, memo):
 
-"""        
+    def rotate(self, angle, axis="x", unit="radians"):
+        if unit=="degrees":
+            angle=math.radians(angle)
+        elif unit!="radians":
+            raise ValueError("Unit {} not understood. Use 'degrees' or 'radians'".format(unit))
+        s = math.sin(angle)
+        c = math.cos(angle)
+        rotation_matrix = np.zeros((3,3))
+        if axis=="x":
+            rotation_matrix[0,0]=1
+            rotation_matrix[1,1]=rotation_matrix[2,2]=c
+            rotation_matrix[1,2]=-s
+            rotation_matrix[2,1]=s
+        elif axis=="y":
+            rotation_matrix[0,0]=1
+            rotation_matrix[0,0]=rotation_matrix[2,2]=c
+            rotation_matrix[0,2]=-s
+            rotation_matrix[2,0]=s        
+        elif axis=="z":
+            rotation_matrix[2,2]=1
+            rotation_matrix[0,0]=rotation_matrix[1,1]=c
+            rotation_matrix[0,1]=-s
+            rotation_matrix[1,0]=s
+        self.coords.rotate(rotation_matrix)
+        self.twists.rotate(rotation_matrix)
+"""
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.
@@ -1160,6 +1200,7 @@ def cg_from_sg(cg, sg):
     
     for d in sg:
         new_cg.defines[d] = cg.defines[d]
+        new_cg._init_coords()
         new_cg.coords[d] = cg.coords[d]
         if d in cg.twists:
             new_cg.twists[d] = cg.twists[d]

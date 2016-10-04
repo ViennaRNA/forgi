@@ -470,7 +470,7 @@ def get_vector_centroid(crds1):
 
     for i in centroid1:
         if math.isnan(i):
-            raise Exception('nan encountered')
+            raise ValueError('nan encountered in centroid: {}, len crds1 = {}.'.format(centroid1, len(crds1)))
 
     return centroid1
 
