@@ -661,6 +661,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def from_fasta(self, fasta):
         super(CoarseGrainRNA, self).from_fasta(fasta)
         self._init_coords()
+    def from_dotbracket(self,  dotbracket_str, dissolve_length_one_stems=False):
+        super(CoarseGrainRNA, self).from_dotbracket(dotbracket_str, dissolve_length_one_stems)
+        self._init_coords()
     def from_file(self, cg_filename):
         '''
         Load this data structure from a file.
