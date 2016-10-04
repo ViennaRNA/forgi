@@ -1576,7 +1576,10 @@ def add_stem_information_from_pdb_chain(cg, chain, seq_ids=True):
             twists = get_twists(cg, chain, d, seq_ids=seq_ids)
 
             cg.coords[d] = (mids[0].get_array(), mids[1].get_array())
+            stem_dir = cg.coords[d][1]-cg.coords[d][0]
             cg.twists[d] = (twists[0], twists[1])
+            assert abs(np.dot(stem_dir, twists[0]))<10**-10
+            assert abs(np.dot(stem_dir, twists[1]))<10**-10
             cg.sampled[d] = [cg.name] + cg.defines[d]
 
 
@@ -1745,9 +1748,10 @@ def element_coord_system(cg, d):
     vec_axis = ftuv.normalize(cg.coords[d][1] - cg.coords[d][0])
     twists = cg.get_twists(d)
 
-
     mid_twist = ftuv.normalize(twists[0] + twists[1])
-    #return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
+
+    assert abs(np.dot(vec_axis,twists[0])) < 10**-10
+    assert abs(np.dot(vec_axis,twists[1])) < 10**-10
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
 

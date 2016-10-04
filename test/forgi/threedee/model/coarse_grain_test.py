@@ -250,6 +250,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         (s1b, s1e) = cg.get_sides('s0', 'f1')
         (s1b, s1e) = cg.get_sides('s8', 't1')
 
+    '''
     def test_cg_from_sg(self):
         bg = ftmc.CoarseGrainRNA(
             dotbracket_str='.(((((..(((.(((((((.((.((((..((((((....))))))..)))).)).))........(((((.....((((...((((....))))...))))...))))).))))).)))...)))))')
@@ -266,7 +267,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
                 if len(c) != 2:
                     self.assertEqual(len(c), 2)
-
+    '''
     def test_define_residue_num_iterator(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
         self.check_graph_integrity(cg)
@@ -494,7 +495,8 @@ class TestVirtualAtoms(unittest.TestCase):
     def test_virtuel_atom_caching(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         va_old = cg.virtual_atoms(1)["C1'"]
-        cg.coords["s0"] = [0., 0., 0.], cg.coords["s0"][1]
+
+        cg.coords["s0"] = cg.coords["s0"][0] + (cg.coords["s0"][1]-cg.coords["s0"][0])*0.5, cg.coords["s0"][1] #Stay orthogonal to twists
         va_new = cg.virtual_atoms(1)["C1'"]
         self.assertTrue(np.any(np.not_equal(va_old, va_new)), msg="A stale virtual atom position was used.")
         

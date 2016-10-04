@@ -178,7 +178,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         out = dotplot
     #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
-    
+    """
     if secondary_structure != '':
         lines = out.split('\n')
 
@@ -194,7 +194,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
         lines[-1] = secondary_structure
         out = "\n".join(lines)
-    
+    """
 
     # Add the 3D information about the starts and ends of the stems
     # and loops
@@ -959,8 +959,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if len(connections) == 1:
             vec = ftuv.normalize(ftuv.vector_rejection( 
                                   self.twists[connections[0]][s1b],
-                                  self.coords[connections[0]][1] -  
-                                  self.coords[connections[0]][0]))
+                                  self.coords[node][1] -  
+                                  self.coords[node][0]))
+
             return (vec,vec)                                                  
 
         if len(connections) == 2: 
