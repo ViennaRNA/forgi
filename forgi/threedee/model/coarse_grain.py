@@ -496,7 +496,15 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     vres=self.v3dposs[s][i]
                     vress += [vres[0] + vres[2], vres[0] + vres[3]]
             return np.array(vress)
+        assert False
 
+
+    def steric_challenge(self, elements):
+        """
+        Estimate, how difficult a set of elements was to build, 
+        by counting the atom density around the center of these elements
+        """
+        pass
 
 
     def get_twist_str(self):

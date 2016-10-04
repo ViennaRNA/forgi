@@ -2921,7 +2921,7 @@ class BulgeGraph(object):
                         nuc=f2
                 log.debug("Next nuc is {} ({})".format(nuc, repr(nuc)))
                 node =  self.get_node_from_residue_num(nuc)
-
+    '''
     def walk_backbone(self):
         half_stems = []
         open_multiloops = col.defaultdict(set)
@@ -2984,7 +2984,7 @@ class BulgeGraph(object):
                         assert False
         if pseudo_multiloop:
             pseudo_multiloop.sort(key=compare)
-            self.multiloops["pseudo_multiloop"].append(pseudo_multiloop)
+            self.multiloops["pseudo_multiloop"].append(pseudo_multiloop)'''
 
 
     def to_networkx(self):

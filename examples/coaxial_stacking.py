@@ -203,6 +203,14 @@ def eq(data, key, value):
         print(e)
         raise
     return data[data[key]==value]
+def ne(data, key, value):
+    try:
+        if np.isnan(value):
+            return data[not np.isnan(data[key])]
+    except Exception as e:
+        print(e)
+        raise
+    return data[data[key]!=value]
 def gt(data, key, value):
     return data[data[key]>value]
 def lt(data, key, value):
@@ -249,7 +257,8 @@ def interactive_analysis(data):
         ">": gt,
         "<": lt,
         "<=": le,
-        ">=": ge
+        ">=": ge,
+        "!=": ne
     }
     while True:
         try:

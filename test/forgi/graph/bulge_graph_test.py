@@ -1856,7 +1856,7 @@ class WalkBackboneTests(unittest.TestCase):
         bg = fgb.BulgeGraph()
         l = list(bg.iter_elements_along_backbone())
         self.assertEqual(l, [])
-
+    '''
     def test_walk_backbone_pseudoknot_free(self):
         db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
             #"fffsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt"
@@ -1927,4 +1927,5 @@ class WalkBackboneTests(unittest.TestCase):
         self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"], ["m13", "m14", "m15"]])
         self.assertEqual(bg.multiloops["pk_context"],[["m10", "m11"]])
         self.assertEqual(bg.multiloops["pseudo_multiloop"],[["m4"]])
-        self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])
+        self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])\
+    '''
