@@ -1421,12 +1421,15 @@ class BulgeGraph(object):
     def find_mlonly_multiloops(self):
         node_loops = []
         for d in self.mloop_iterator():
+            if any(d in loop for loop in node_loops):
+                continue
             log.debug("Find_mlonly_multiloop: searching for {}".format(d))
             nodes = tuple(self.shortest_mlonly_multiloop(d))
             if nodes not in node_loops:
                 log.debug("Find_mlonly_multiloop: Adding multiloop: {}".format(nodes))
                 node_loops.append(nodes)
             else:
+                assert False
                 log.debug("Find_mlonly_multiloop: {} already known".format(nodes))
 
         return node_loops

@@ -11,7 +11,7 @@ import random
 import math
 import sys
 import warnings
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.dssr as ftud
 import pandas as pd
@@ -531,12 +531,17 @@ def generateParser():
 
     return parser
 
+class DummyAnnotation(object):
+    def __init__(self, cg):
+        self._cg = cg
+    def coaxial_stacks(self):
+        return []
 parser = generateParser()
 if __name__=="__main__":
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
-        logging.getLogger('forgi.threedee').setLevel(logging.ERROR)
+        #logging.getLogger('forgi.threedee').setLevel(logging.ERROR)
 
     if args.dssr_json and len(args.dssr_json)!=len(args.files):
         parser.error( '--dssr-json must have the same number of arguments as files.' )
@@ -550,8 +555,8 @@ if __name__=="__main__":
                 cg = ftmc.CoarseGrainRNA(filename)
                 try:
                     annot = ftud.DSSRAnnotation(args.dssr_json[i], cg)
-                except LookupError:
-                    continue;
+                except (LookupError, TypeError):
+                    annot = DummyAnnotation(cg)
                 update_ml_data(annot, data)
             if args.csv:
                 pd.DataFrame(data).to_csv(args.csv)
