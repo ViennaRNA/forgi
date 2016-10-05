@@ -9,7 +9,7 @@ Here some of the most useful are documented.
 Visualization scripts
 ~~~~~~~~~~~~~~~~~~~~~
 
-There are scripts vor visualizing PDB and coarse-grain RNA structures 
+There are scripts for visualizing PDB and coarse-grain RNA structures 
 (See :doc:`graph_tutorial` and :doc:`threedee_tutorial` 
 for more information on Coarse Grain Files).
 
@@ -27,7 +27,7 @@ Use :code:`visualize_cg.py --virtual-atoms 1y26.cg` to show virtual atoms for th
 
 Use :code:`visualize_cg.py --sidechain-atoms 1y26.cg` to show all virtual atoms.
 
-File format conersions
+File format conversions
 ~~~~~~~~~~~~~~~~~~~~~~
 
 To convert files between the file formats "fasta with secondary structure", "dotbracket string",
@@ -36,7 +36,7 @@ To convert files between the file formats "fasta with secondary structure", "dot
 View simulated electron microscopy images of a cg-file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The script :code:`investigate_projection.py` opens a graphica window that lets you generate 
+The script :code:`investigate_projection.py` opens a graphical window that lets you generate 
 projected images at different projection angles and different resolution.
 
 Get a representation of the coarse grain element names that correspond to dots and brackets
