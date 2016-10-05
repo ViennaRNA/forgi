@@ -519,17 +519,28 @@ class StericValueTest(unittest.TestCase):
         self.cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.cg2 = ftmc.from_pdb('test/forgi/threedee/data/1byj.pdb')
     def test_stericValue_1(self):
-        for d in ["s0", "s1", "s2", "s3", "h0", "h1", "i0", "m0", "m1", "m2"]:
-            print(d, self.cg1.steric_value([d]))
-        for d1,d2 in it.combinations(["s0", "s1", "s2", "s3", "h0", "h1", "i0", "m0", "m1", "m2"], 2):
-            print(d1, d2, self.cg1.steric_value([d1, d2]))
-        x, y, z = np.mgrid[-10:10, -10:10, -10:10]
+        print("m0, m1, m2", self.cg1.steric_value(["m0", "m1", "m2"]))
+        from_ = np.amin(self.cg1.coords._coordinates)
+        to_ = np.amax(self.cg1.coords._coordinates)
+        x, y, z = np.mgrid[from_:to_:4, from_:to_:4, from_:to_:4]
         from mayavi import mlab
         s = np.zeros_like(x)
         for i,j,k in np.ndindex(x.shape):
-            s[i,j,k] = self.cg1.steric_value(np.array([x[i,j,k], y[i,j,k],z[i,j,k]]))
+            s[i,j,k] = self.cg1.steric_value(np.array([x[i,j,k], y[i,j,k],z[i,j,k]]), "r**-3")           
+        #mlab.contour3d(x,y,z,s, contours= [0.5, 1, 2, 5], opacity=0.3)
+        src = mlab.pipeline.scalar_field(x,y,z,s)
+        mlab.pipeline.volume(src)
+        #mlab.pipeline.iso_surface(src, contours=[0.1, ], opacity=0.3)
+        #mlab.pipeline.iso_surface(src, contours=[0.5, ], opacity=0.7)
+        #mlab.pipeline.iso_surface(src, contours=[1, ])
 
-        mlab.contour3d(x,y,z,s)
+        colors = {"s":(0,1,0), "h":(0,0,1), "m": (1,0,0), "i":(1,1,0), "f":(0.5,0.5,0.5), "t":(0.5,0.5,0.5)}
+        for d in self.cg1.defines:
+            x = self.cg1.coords[d][0][0], self.cg1.coords[d][1][0]
+            y = self.cg1.coords[d][0][1], self.cg1.coords[d][1][1]
+            z = self.cg1.coords[d][0][2], self.cg1.coords[d][1][2]
+            mlab.plot3d(x,y,z, tube_radius = 2, color = colors[d[0]])
+        mlab.show()
         assert False
 
 

@@ -504,7 +504,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         assert False
 
 
-    def steric_value(self, elements):
+    def steric_value(self, elements, method = "r**-2"):
         """
         Estimate, how difficult a set of elements was to build, 
         by counting the atom density around the center of these elements
@@ -514,7 +514,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         elif elements.shape==(3,):
             center = elements
         else: assert False, repr(elements)
-        method = "r**-3"
 
         if method == "kde":
         #print(center)
@@ -527,11 +526,31 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             log.debug("Shape of all atoms {}".format(all_vas.shape))
             kde = scipy.stats.gaussian_kde(all_vas, 50) #randomly take 50 Angstrom bandwidth
             return kde(center)
-        if method == "r**-3":
+        elif method == "r**-3":
             value = 0
             for pos in range(1,self.seq_length+1):
                 for va in self.virtual_atoms(pos).values():
-                    value+=1/(ftuv.vec_distance(va, center))**3
+                    value+=1/(1+ftuv.vec_distance(va, center))**3
+            return value
+        elif method == "r**-2":
+            value = 0
+            for pos in range(1,self.seq_length+1):
+                for va in self.virtual_atoms(pos).values():
+                    value+=1/(1+ftuv.vec_distance(va, center))**2
+            return value
+        elif method == "r**-1":
+            value = 0
+            for pos in range(1,self.seq_length+1):
+                for va in self.virtual_atoms(pos).values():
+                    value+=1/(1+ftuv.vec_distance(va, center))
+            return value
+        elif method.startswith("cutoff"):
+            cutoff = float(method.split()[1])
+            value = 0
+            for pos in range(1,self.seq_length+1):
+                for va in self.virtual_atoms(pos).values():
+                    if ftuv.vec_distance(va, center)< cutoff:
+                        value+=1
             return value
     def get_twist_str(self):
         '''

@@ -482,6 +482,13 @@ def update_ml_data(annot, data):
                 min_nt_pos = min( x for m1 in ml for x in cg.defines[m1] )
             except ValueError as e:
                 min_nt_pos = float("nan") #All 0-length segments
+            steric_r = cg.steric_value(ml, method = "r**-1")
+            steric_r2 = cg.steric_value(ml, method = "r**-2")
+            steric_r3 = cg.steric_value(ml, method = "r**-3")
+            steric_c10 = cg.steric_value(ml, method = "cutoff 10")
+            steric_c20 = cg.steric_value(ml, method = "cutoff 20")
+            steric_c50 = cg.steric_value(ml, method = "cutoff 50")
+            steric_c100 = cg.steric_value(ml, method = "cutoff 100")
             for m in ml:      
                 #if m in known_segments:
                 #    continue
