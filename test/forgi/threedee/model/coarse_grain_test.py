@@ -513,4 +513,25 @@ class RotationTranslationTest(unittest.TestCase):
         cg2_rot = copy.deepcopy(self.cg2)
         cg2_rot.rotate(45, unit="degrees")
         self.assertAlmostEqual(ftme.cg_rmsd(self.cg2, cg2_rot), 0)
+
+class StericValueTest(unittest.TestCase):
+    def setUp(self):
+        self.cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.cg2 = ftmc.from_pdb('test/forgi/threedee/data/1byj.pdb')
+    def test_stericValue_1(self):
+        for d in ["s0", "s1", "s2", "s3", "h0", "h1", "i0", "m0", "m1", "m2"]:
+            print(d, self.cg1.steric_value([d]))
+        for d1,d2 in it.combinations(["s0", "s1", "s2", "s3", "h0", "h1", "i0", "m0", "m1", "m2"], 2):
+            print(d1, d2, self.cg1.steric_value([d1, d2]))
+        x, y, z = np.mgrid[-10:10, -10:10, -10:10]
+        from mayavi import mlab
+        s = np.zeros_like(x)
+        for i,j,k in np.ndindex(x.shape):
+            s[i,j,k] = self.cg1.steric_value(np.array([x[i,j,k], y[i,j,k],z[i,j,k]]))
+
+        mlab.contour3d(x,y,z,s)
+        assert False
+
+
+
     

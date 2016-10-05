@@ -23,6 +23,7 @@ import collections as c
 import contextlib
 import numpy as np
 import scipy.spatial
+import scipy.stats
 import os
 import os.path as op
 import shutil
@@ -35,6 +36,7 @@ import warnings
 import itertools as it
 import StringIO
 import logging
+from pprint import pprint
 log = logging.getLogger(__name__)
 
 try:
@@ -502,14 +504,35 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         assert False
 
 
-    def steric_challenge(self, elements):
+    def steric_value(self, elements):
         """
         Estimate, how difficult a set of elements was to build, 
         by counting the atom density around the center of these elements
         """
-        pass
+        if isinstance(elements, list):
+            center = ftuv.get_vector_centroid(self.coords[elements])
+        elif elements.shape==(3,):
+            center = elements
+        else: assert False, repr(elements)
+        method = "r**-3"
 
+        if method == "kde":
+        #print(center)
+            all_vas = []
+            for pos in range(1,self.seq_length+1):
+                for va in self.virtual_atoms(pos).values():
+                    all_vas.append(va)
 
+            all_vas = np.array(all_vas).T
+            log.debug("Shape of all atoms {}".format(all_vas.shape))
+            kde = scipy.stats.gaussian_kde(all_vas, 50) #randomly take 50 Angstrom bandwidth
+            return kde(center)
+        if method == "r**-3":
+            value = 0
+            for pos in range(1,self.seq_length+1):
+                for va in self.virtual_atoms(pos).values():
+                    value+=1/(ftuv.vec_distance(va, center))**3
+            return value
     def get_twist_str(self):
         '''
         Place the twist vectors into a string. 
@@ -1024,7 +1047,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         Calculate the combined length of all the elements.
         '''
-        return sum([len(list(self.define_residue_num_iterator(d))) for d in self.defines])
+        total_length = sum([len(list(self.define_residue_num_iterator(d))) for d in self.defines])
+        assert total_length == self.seq_length
+        return self.seq_length
 
     def sorted_edges_for_mst(self):
         """
