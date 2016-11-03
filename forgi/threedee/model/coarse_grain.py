@@ -124,83 +124,74 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chain = ftup.remove_hetatm(chain)
         new_chains.append(chain)
 
-    pdb_base = op.splitext(op.basename(pdb_filename))[0]
-
-    # output a pdb with RNA only (for MCAnnotate):
+    pdb_base = op.splitext(op.basename(pdb_filename))[0]        
+    
     if len(new_chains)==1:
         pdb_base += "_" + new_chains[-1].id
     else:
         pdb_base += "_allrna"
-        
-    output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
-
-    if not op.exists(output_dir):
-        os.makedirs(output_dir)
-    rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
-    with open(rna_pdb_fn, 'w') as f:
-        #We need to output in pdb format for MC-Annotate
-        ftup.output_multiple_chains(new_chains, f.name) 
-        f.flush()
-
+            
     cg = CoarseGrainRNA()
     cg.name = pdb_base
-
     if sum(len(chain.get_list()) for chain in new_chains) == 0:
         return cg
+        
+    if not secondary_structure:
+        # output a pdb with RNA only (for MCAnnotate):
 
-    # first we annotate the 3D structure
-    p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
-    out, err = p.communicate()
+        output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
 
-    lines = out.strip().split('\n')
-    
-    # convert the mcannotate output into bpseq format
-    try:
-        (dotplot, residue_map) = ftum.get_dotplot(lines)
-    except Exception as e:
-        print (e, file=sys.stderr)
-        return cg
+        if not op.exists(output_dir):
+            os.makedirs(output_dir)
+        rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
+        with open(rna_pdb_fn, 'w') as f:
+            #We need to output in pdb format for MC-Annotate
+            ftup.output_multiple_chains(new_chains, f.name) 
+            f.flush()
 
-    # f2 will store the dotbracket notation
-    #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-    #    f2.write(dotplot)
-    #    f2.flush()
+        # first we annotate the 3D structure
+        p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
+        out, err = p.communicate()
 
-    
-    # remove pseudoknots
-    if remove_pseudoknots:
-        out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
-                           #output_format = 'vienna',
-                           output_format = 'bpseq',
-                           method = cak.DEFAULT_METHOD,
-                           opt_method = cak.DEFAULT_OPT_METHOD,
-                           verbose = cak.DEFAULT_VERBOSE,
-                           removed= cak.DEFAULT_REMOVED)
+        lines = out.strip().split('\n')
+        
+        # convert the mcannotate output into bpseq format
+        try:
+            (dotplot, residue_map) = ftum.get_dotplot(lines)
+        except Exception as e:
+            print (e, file=sys.stderr)
+            return cg
 
-        out = out.replace(' Nested structure', pdb_base)
+        # f2 will store the dotbracket notation
+        #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
+        #    f2.write(dotplot)
+        #    f2.flush()
+
+        
+        # remove pseudoknots
+        if remove_pseudoknots:
+            out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
+                               #output_format = 'vienna',
+                               output_format = 'bpseq',
+                               method = cak.DEFAULT_METHOD,
+                               opt_method = cak.DEFAULT_OPT_METHOD,
+                               verbose = cak.DEFAULT_VERBOSE,
+                               removed= cak.DEFAULT_REMOVED)
+
+            out = out.replace(' Nested structure', pdb_base)
+        else:
+            out = dotplot
+        #(out, residue_map) = add_missing_nucleotides(out, residue_map)
+
+        cg.from_bpseq_str(out, dissolve_length_one_stems=False)    
+        cg.seqids_from_residue_map(residue_map)
+        add_longrange_interactions(cg, lines)
     else:
-        out = dotplot
-    #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-
-    """
-    # Does not work. lines[1] never contained the secondary structure!
-    if secondary_structure != '':
-        lines = out.split('\n')
-
-        if len(secondary_structure) != len(lines[1].strip()):
-            print >>sys.stderr, "The provided secondary structure \
-                    does not match the length of the 3D structure"
-            print >>sys.stderr, "Sequence:", lines[1]
-            print >>sys.stderr, "ss_struc:", secondary_structure
-            raise ValueError("The provided secondary structure "
-                    "does not match the length of the 3D structure.\n"
-                    "Sequence: {}\n"
-                    "ss_struc: {}".format(lines[1],secondary_structure))
-
-        lines[-1] = secondary_structure
-        out = "\n".join(lines)
-    """
-
+        warnings.warn("Not adding any longrange interactions because secondary structure is given.")
+        if remove_pesudoknots:
+            warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
+        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
+        
     # Add the 3D information about the starts and ends of the stems
     # and loops
     
@@ -214,20 +205,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     #
     #    chain = chains[0]
 
-    cg.from_bpseq_str(out, dissolve_length_one_stems=False)
-    cg.name = pdb_base
-    
-    cg.chains = { chain.id : chain for chain in newchains }
-        
-    cg.seqids_from_residue_map(residue_map)
-    
+    cg.chains = { chain.id : chain for chain in new_chains }
+            
     ftug.add_stem_information_from_pdb_chain(cg, chain)
     cg.add_bulge_coords_from_stems()
     ftug.add_loop_information_from_pdb_chain(cg, chain)
 
 
-
-    add_longrange_interactions(cg, lines)
 
     #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
     #    f3.write(cg.to_cg_string())

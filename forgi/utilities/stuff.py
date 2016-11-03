@@ -124,22 +124,27 @@ def inverse_brackets(bracket):
 def dotbracket_to_pairtable(struct):
     """
     Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).
+    
+    
     """    
-    pt = [0] * (len(struct)+1)
-    pt[0] = len(struct)
+    pt = [0] * ((len(struct)+1)-struct.count("&"))
+    pt[0] = len(struct)-struct.count("&")
 
     stack = col.defaultdict(list)
     inverse_bracket_left = inverse_brackets(bracket_left)
     inverse_bracket_right = inverse_brackets(bracket_right)
 
-    for i,a in enumerate(struct):
+    i = 0 
+    for a in struct:
+        if a=='&': continue
         i += 1
         #print i,a, pt
         if a == ".": pt[i] = 0
         else: 
             if a in inverse_bracket_left: 
                 stack[inverse_bracket_left[a]].append(i)
-            else: 
+            else:
+                assert a in inverse_bracket_right
                 if len(stack[inverse_bracket_right[a]]) == 0:
                     raise ValueError('Too many closing brackets!')
                 j = stack[inverse_bracket_right[a]].pop()
