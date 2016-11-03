@@ -186,6 +186,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         cg.from_bpseq_str(out, dissolve_length_one_stems=False)    
         cg.seqids_from_residue_map(residue_map)
         add_longrange_interactions(cg, lines)
+        
     else:
         warnings.warn("Not adding any longrange interactions because secondary structure is given.")
         if remove_pesudoknots:
@@ -195,24 +196,15 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     # Add the 3D information about the starts and ends of the stems
     # and loops
     
-    # BT: I think, we have chain already. No need to re-read!
-    #with warnings.catch_warnings():
-    #    warnings.simplefilter("ignore")
-    #    s = bpdb.PDBParser().get_structure('temp', pdb_chain_fn)
-    #    chains = list(s.get_chains())
-    #    if len(chains) < 1:
-    #        raise Exception("No chains in the PDB file")
-    #
-    #    chain = chains[0]
-
     cg.chains = { chain.id : chain for chain in new_chains }
-            
-    ftug.add_stem_information_from_pdb_chain(cg, chain)
-    cg.add_bulge_coords_from_stems()
-    ftug.add_loop_information_from_pdb_chain(cg, chain)
+    
+    for chain in new_chains:
+        ftug.add_stem_information_from_pdb_chain(cg, chain)
+        cg.add_bulge_coords_from_stems()
+        ftug.add_loop_information_from_pdb_chain(cg, chain)
 
 
-
+    assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
     #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
     #    f3.write(cg.to_cg_string())
     #    f3.flush()
@@ -953,6 +945,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         :return: A 2D numpy array containing all coordinates
         '''
         all_coords = []
+        assert len(self.coords) == len(self.defines), self.coords.keys()^self.defines.keys()
         for key in sorted(self.coords.keys()):
             for i in range(len(self.coords[key])):
                 all_coords.append(self.coords[key][i])
@@ -1099,7 +1092,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         """
         sorted_defines = sorted(self.defines.keys())
-        assert len(sorted_defines)==len(directions)
+        assert len(sorted_defines)==len(directions), "{} != {}".format(len(sorted_defines), len(directions))
         if self.build_order is None:
             self.traverse_graph()
         self.coords["s0"]=np.array([0,0,0]), directions[sorted_defines.index("s0")]
@@ -1148,7 +1141,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
              if key not in self._virtual_atom_cache:
                 try:
                     self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
-                except KeyError:
+                except KeyError as e:
+                    log.info("Key {} not present. Need to recreate all virtual residues".format(e))
                     self.add_all_virtual_residues()
                     self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
              return self._virtual_atom_cache[key]

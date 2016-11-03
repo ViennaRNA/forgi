@@ -1004,7 +1004,8 @@ def spos_to_pos(bg, stem, i, spos):
 
     try:
         (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
-    except KeyError:
+    except KeyError as e:
+        log.info("in spos_to_pos: KeyError {}. Adding virtual residues for stem {}".format(e, stem))
         add_virtual_residues(bg, stem)
         (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
 
@@ -1119,6 +1120,7 @@ def add_virtual_residues(bg, stem):
     :param bg: The CoarseGrainRNA bulge graph containing the stem
     :param stem: The name of the stem to be included
     '''
+    log.info("Adding virtual residues for {}".format(stem))
     stem_vec = bg.coords[stem][1] - bg.coords[stem][0]
     stem_basis = cuv.create_orthonormal_basis(stem_vec, bg.get_twists(stem)[0])
     stem_inv = nl.inv(stem_basis.transpose())
@@ -1597,7 +1599,8 @@ def add_bulge_information_from_pdb_chain(bg, chain):
     bg.add_bulge_coords_from_stems()
 
 def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
-    for d in it.chain(bg.hloop_iterator(), ['t1', 'f1']):
+    #log.info("add_loop_information_from_pdb_chain called")
+    for d in it.chain(bg.hloop_iterator(), bg.floop_iterator(), bg.tloop_iterator()):
         if d not in bg.defines:
             continue
 
@@ -1750,7 +1753,8 @@ def element_coord_system(cg, d):
 
     mid_twist = ftuv.normalize(twists[0] + twists[1])
 
-    assert abs(np.dot(vec_axis,twists[0])) < 10**-10
+
+    assert abs(np.dot(vec_axis,twists[0])) < 10**-10, "{}: {}".format(d, abs(np.dot(vec_axis,twists[0])))
     assert abs(np.dot(vec_axis,twists[1])) < 10**-10
     return (((cg.coords[d][0] + cg.coords[d][1]) / 2.),
             ftuv.create_orthonormal_basis(vec_axis, mid_twist))
@@ -1787,7 +1791,7 @@ class VirtualAtomsLookup(object):
         #Find out the stem for which we have to calculate virtual atom positions
         for key, value in self.cg.defines.items():
             if len(value)<2:
-                pass #For multiloops of length 0, value is []
+                continue #For multiloops of length 0, value is []
             elif position>=value[0] and position<=value[1]:
                 return self._getitem_for_element(key, position)
             elif len(value)==4 and position>=value[2] and position<=value[3]:
@@ -1826,7 +1830,7 @@ class VirtualAtomsLookup(object):
             if r!=pos: continue
             if self.given_atom_names is None:
                 if self.sidechain:
-                    atom_names = (ftup.nonsidechain_atoms + [ self.cg.seq[r-1]+"."+x for x in ftup.side_chain_atoms[self.cg.seq[r-1]] ])
+                    atom_names = (ftup.nonsidechain_atoms + [ self.cg.seq[r]+"."+x for x in ftup.side_chain_atoms[self.cg.seq[r]] ]) #Seq is now 1-based
                 else:
                     atom_names = ftup.nonsidechain_atoms
             else:
@@ -1846,8 +1850,8 @@ class VirtualAtomsLookup(object):
             return e_coords
     def _getitem_for_stem(self, d, pos):
         i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
-        assert pos>=1    #pos-1 should not be negative!  
-        residue = (self.cg.seq[pos-1]) #The sequence coordinates are 1-based!
+        assert pos>=1
+        residue = (self.cg.seq[pos]) #cg.seq is now 1-based
 
         atoms = dict()
         if self.given_atom_names is None:
@@ -1863,8 +1867,9 @@ class VirtualAtomsLookup(object):
             else:
                 aname_star=aname
             spos = ftus.avg_stem_vres_atom_coords[side][residue][aname_star]
+            log.debug("Element {}, nt {}, atom {},  i {}, spos {}".format(d, pos, aname, i, spos))
             atoms[aname] = spos_to_pos(self.cg, d, i, spos)
-
+        log.debug("Returning")
         return atoms
 """def add_atoms(coords, twists, define, side, seq, new_coords):
     stem_len = define[1] - define[0] + 1

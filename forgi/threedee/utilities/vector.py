@@ -157,7 +157,7 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
         vec2 = get_non_colinear_unit_vector(vec1)
         vec2 = np.cross(vec1, vec2)
     else:
-        if round(vec_angle(vec2, vec1),8)!=round(math.pi/2,8):#1GID does not allow 12 digits
+        if round(vec_angle(vec2, vec1),12)!=round(math.pi/2,12):
             raise ValueError("vec2 {} is not normal to vec1 {}! Angle is {} rad ({} degrees)".format(vec2, vec1, vec_angle(vec2, vec1), math.degrees(vec_angle(vec2, vec1)), math.pi/2))
         
     if magnitude(vec1) == 0:

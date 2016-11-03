@@ -14,11 +14,15 @@ import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.debug as fud
 import tempfile as tf
 
+
 from ...graph import bulge_graph_test as tfgb
 
 import copy
 import time
 import math
+import logging
+log = logging.getLogger(__name__)
+
 
 def cg_from_sg(cg, sg):
     '''
@@ -246,9 +250,10 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1gid.cg')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
-
-        (s1b, s1e) = cg.get_sides('s0', 'f1')
-        (s1b, s1e) = cg.get_sides('s8', 't1')
+        log.info(cg.to_dotbracket_string())
+        log.info(cg.to_element_string(True))
+        (s1b, s1e) = cg.get_sides('s0', 'f1') # The file 1gid.cg still starts with f1, not f0
+        (s1b, s1e) = cg.get_sides('s8', 't1') #
 
     '''
     def test_cg_from_sg(self):
@@ -339,8 +344,10 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     def test_small_molecule(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
-
-        self.assertTrue('f1' in cg.coords)
+        log.info(cg.to_dotbracket_string())
+        log.info(cg.to_element_string(True))
+        log.info("COORDS {}".format(cg.coords))
+        self.assertTrue('f0' in cg.coords)
 
     def test_longrange_iterator(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -412,8 +419,11 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         coords = cg.get_coordinates_array()
         directions = cg.coords_to_directions()
+
         cg._init_coords()
         cg.twists = cg_old.twists
+        log.info("len(coords):{}, len(directions):{}, len(defines):{}".format(len(coords), len(directions), len(cg.defines)))
+
         cg.coords_from_directions(directions)
         self.assertAlmostEqual(ftme.cg_rmsd(cg, cg_old), 0)
         new_coords = cg.get_coordinates_array()
@@ -492,10 +502,9 @@ class TestVirtualAtoms(unittest.TestCase):
         self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 10, msg = "Virtual atoms too far apart") 
         self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 2, msg = "Virtual atoms too close") 
 
-    def test_virtuel_atom_caching(self):
+    def test_virtuel_atom_caching_is_reset(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         va_old = cg.virtual_atoms(1)["C1'"]
-
         cg.coords["s0"] = cg.coords["s0"][0] + (cg.coords["s0"][1]-cg.coords["s0"][0])*0.5, cg.coords["s0"][1] #Stay orthogonal to twists
         va_new = cg.virtual_atoms(1)["C1'"]
         self.assertTrue(np.any(np.not_equal(va_old, va_new)), msg="A stale virtual atom position was used.")
