@@ -89,3 +89,54 @@ class CoordinateStorageTest2(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.cs2[None]
 
+class CoordinateStorageEqualityTests(unittest.TestCase):
+    def test_eq_with_nans(self):
+        cs1 = CoordinateStorage(["s1", "s2", "s3", "s4", "s5"])
+        cs2 = CoordinateStorage(["s2", "s3", "s1", "s5", "s4"])
+        self.assertEqual(cs1, cs2)
+    def test_eq_with_values(self):
+        cs1 = CoordinateStorage(["s1", "s2", "s3", "s4", "s5"])
+        cs2 = CoordinateStorage(["s2", "s3", "s1", "s5", "s4"])
+        cs1["s1"]=[0,0,0], [0,0,1]
+        cs1["s2"]=[0,0,1], [0,4,1]
+        cs1["s3"]=[0,0,0],[0,0,1]
+        cs1["s4"]=[0,1,0],[2,0,1]
+        cs1["s5"]=[1,2,3],[3,4,1]
+        cs2["s1"]=[0,0,0], [0,0,1]
+        cs2["s2"]=[0,0,1], [0,4,1]
+        cs2["s3"]=[0,0,0],[0,0,1]
+        cs2["s4"]=[0,1,0],[2,0,1]
+        cs2["s5"]=[1,2,3],[3,4,1]
+        self.assertEqual(cs1, cs2)
+    def test_ne_different_keys(self):
+        cs1 = CoordinateStorage(["s1", "s2", "s3", "s4", "s5"])
+        cs2 = CoordinateStorage(["s2", "s3", "s1", "s5", "i4"])
+        self.assertNotEqual(cs1, cs2)
+    def test_ne_different_values(self):
+        cs1 = CoordinateStorage(["s1", "s2", "s3", "s4", "s5"])
+        cs2 = CoordinateStorage(["s2", "s3", "s1", "s5", "s4"])
+        cs1["s1"]=[0,0,0], [0,0,1]
+        cs1["s2"]=[0,0,1], [0,4,1]
+        cs1["s3"]=[0,0,0],[0,0,1]
+        cs1["s4"]=[0,1,0],[2,0,1]
+        cs1["s5"]=[1,2,3],[3,4,1]
+        cs2["s1"]=[0,0,0], [0,0,1]
+        cs2["s2"]=[0,0,1], [0,4,1]
+        cs2["s3"]=[0,4,5],[0,0,1] #<== DIFFERENT
+        cs2["s4"]=[0,1,0],[2,0,1]
+        cs2["s5"]=[1,2,3],[3,4,1]
+        self.assertNotEqual(cs1, cs2)
+    def test_ne_some_nans(self):
+        cs1 = CoordinateStorage(["s1", "s2", "s3", "s4", "s5"])
+        cs2 = CoordinateStorage(["s2", "s3", "s1", "s5", "s4"])
+        cs1["s1"]=[0,0,0], [0,0,1]
+        cs1["s2"]=[0,0,1], [0,4,1]
+        cs1["s3"]=[0,0,0], [0,0,1]
+        cs1["s4"]=[0,1,0], [2,0,1]
+        cs1["s5"]=[1,2,3], [3,4,1]
+        cs2["s1"]=[0,0,0], [0,0,1]
+        cs2["s2"]=[0,0,1], [0,4,1]
+        # "s3" is not initialized
+        cs2["s4"]=[0,1,0],[2,0,1]
+        cs2["s5"]=[1,2,3],[3,4,1]
+        self.assertNotEqual(cs1, cs2)

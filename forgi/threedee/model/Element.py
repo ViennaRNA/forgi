@@ -2,9 +2,11 @@ from __future__ import absolute_import, division, print_function
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
+from future.utils import viewkeys
 import numpy as np
 from collections import Mapping
-
+import logging
+log=logging.getLogger(__name__)
 
 class CoordinateStorage(Mapping):
     """
@@ -22,12 +24,13 @@ class CoordinateStorage(Mapping):
         self._dimensions = 3
         self._coords_per_key = 2 
         self._coordinates = np.ones((self._coords_per_key*len(element_names),self._dimensions))*np.nan
-        self._elem_names = list(element_names)
+        self._elem_names = { elem: position for position, elem in enumerate(element_names)}
+            
         #: on-change function is called whenever coordinates are modified.
         self.on_change = on_change
     def _indices_for(self, elem_name):
         try:
-            i = self._elem_names.index(elem_name)
+            i = self._elem_names[elem_name]
         except ValueError:
             raise KeyError("Invalid index {}".format(elem_name))
         ret = []
@@ -44,10 +47,10 @@ class CoordinateStorage(Mapping):
                   If elem_name is a single string, return a tuple of coordinates.
                   If elem_name is a sequence of strings, return a 2*len(elem_name)x3 numpy array.
         """
-        if elem_name in self._elem_names: #Single element name
+        try: #Single element name
             indices = self._indices_for(elem_name)
             return tuple(self._coordinates[i] for i in indices)
-        else: # Sequence of element names or invalid
+        except TypeError: # Sequence of element names or invalid
             #Assume sequence of elements
             indices = []
             try:
@@ -100,3 +103,25 @@ class CoordinateStorage(Mapping):
         for elem in self._elem_names:
             lines.append("{}: ".format(elem)+",  ".join(str(val) for val in self[elem]))
         return("\n".join(lines))
+    
+    def __eq__(self, other):
+        log.debug("Testing equality")
+        if type(self)!=type(other):
+            log.debug("Typecheck failed")
+            return NotImplemented                   
+        if viewkeys(self._elem_names) != viewkeys(other._elem_names):
+            log.debug("Keys different: self only: {}, other only: {}".format(
+                                        viewkeys(self._elem_names)-viewkeys(other._elem_names), 
+                                        viewkeys(other._elem_names) - viewkeys(self._elem_names)))
+            return False
+        if np.all(np.isnan(self._coordinates)) and np.all(np.isnan(other._coordinates)):
+            log.debug("True: All is NAN")
+            return True
+        for key in self:
+            if not np.allclose(self[key], other[key]):
+                log.debug("Values for key {} different".format(key))
+                return False
+        return True
+    
+    def __ne__(self, other):
+        return not self == other
