@@ -415,6 +415,13 @@ def get_biggest_chain(in_filename, parser=None):
     orig_chain = chains[biggest]
     return orig_chain
 
+def change_residue_id(residue, new_id):
+    old_id = residue.id
+    chain = residue.parent
+    chain.child_dict[new_id] = residue
+    del chain.child_dict[old_id]
+    residue.id = new_id
+
 def rename_modified_ress(chain):
     '''
     Rename the modified residues so that they have the same
@@ -437,19 +444,19 @@ def rename_modified_ress(chain):
         # rename modified residues
         if r.id[0] == 'H_PSU':
             r.resname = '  U'
-            r.id = (' ', r.id[1], r.id[2])
+            change_residue_id(r, (' ', r.id[1], r.id[2]))
         elif r.id[0] == 'H_5MU':
             r.resname = '  U'
-            r.id = (' ', r.id[1], r.id[2])
+            change_residue_id(r, (' ', r.id[1], r.id[2]))
         elif r.id[0] == 'H_5MC':
             r.resname = '  C'
-            r.id = (' ', r.id[1], r.id[2])
+            change_residue_id(r, (' ', r.id[1], r.id[2]))
         elif r.id[0] == 'H_1MG':
             r.resname = '  G'
-            r.id = (' ', r.id[1], r.id[2])
+            change_residue_id(r, (' ', r.id[1], r.id[2]))
         elif r.id[0] == 'H_H2U':
             r.resname = '  U'
-            r.id = (' ', r.id[1], r.id[2])
+            change_residue_id(r, (' ', r.id[1], r.id[2]))
 
         # treat deoxyuridine as uridine
         # TODO: is this acceptable?

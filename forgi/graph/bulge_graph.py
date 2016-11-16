@@ -31,6 +31,7 @@ import numpy as np
 import functools
 import logging
 log = logging.getLogger(__name__)
+from pprint import pprint
 
 def add_bulge(bulges, bulge, context, message):
     """
@@ -57,6 +58,9 @@ def from_id_seq_struct(id_str, seq, struct):
     :param seq: the sequence (i.e. 'ACCGGG')
     :param struct: The dotplot secondary structure (i.e. '((..))')
     """
+    if len(seq)!=len(struct):
+        warnings.warn("Sequence and structure length are not equal! Returning empty BulgeGraph for id {}".format(id_str) )
+        return bg
     bg = BulgeGraph()
     bg.from_dotbracket(struct)
     bg.name = id_str
@@ -1794,6 +1798,11 @@ class BulgeGraph(object):
         pt = self.to_pair_table()
         return fus.pairtable_to_dotbracket(pt)
 
+    def print_debug(self):
+        print(self.to_dotbracket_string())
+        print(self.to_element_string(True))
+        print("DEFINES:", self.defines)
+        pprint(self.edges)
     def to_fasta_string(self):
         """
         Output the BulgeGraph representation as a fast string of the
@@ -1907,6 +1916,8 @@ class BulgeGraph(object):
         :param node: The name of the node
         :return: A pair containing its dimensions
         """
+        if node not in self.defines:
+            self.print_debug()
         if node[0] == 's':
             return (self.stem_length(node), self.stem_length(node))
             """
@@ -2388,7 +2399,8 @@ class BulgeGraph(object):
         """
         Return the dimensions of the bulge.
 
-        If it is single stranded it will be (0, x). Otherwise it will be (x, y).
+        If it is single stranded it will be (x, -1) for h,t,f or (x, 1000) for m. 
+        Otherwise it will be (x, y).
 
         :param bulge: The name of the bulge.
         :return: A pair containing its dimensions

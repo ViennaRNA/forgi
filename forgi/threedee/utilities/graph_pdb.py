@@ -18,6 +18,7 @@ import random
 import sys
 import math
 
+from pprint import pprint
 import logging
 log = logging.getLogger(__name__)
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
@@ -304,7 +305,7 @@ def stem2_pos_from_stem1(stem1, twist1, params):
     return stem2_start
 
 
-def stem2_pos_from_stem1_1(stem1_basis, params):
+def stem2_pos_from_stem1_1(transposed_stem1_basis, params):
     '''
     Get the starting point of a second stem, given the parameters
     about where it's located with respect to stem1
@@ -315,7 +316,7 @@ def stem2_pos_from_stem1_1(stem1_basis, params):
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
-    stem2_start = np.dot(stem1_basis, stem2)
+    stem2_start = np.dot(transposed_stem1_basis, stem2)
 
     return stem2_start
 
@@ -688,7 +689,6 @@ def get_mids_core(cg, chain, define,
     # and place them into a new chain
     stem_chain = bpdb.Chain.Chain(' ')
     resnames = cg.get_resseqs(define, seq_ids=seq_ids)
-
     for strand in resnames:
         for resname in strand:
             stem_chain.add(chain[resname])
@@ -1094,6 +1094,8 @@ def junction_virtual_atom_distance(bg, bulge):
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
     pos1=bg.defines[connecting_stems[0]][i1]
     pos2=bg.defines[connecting_stems[1]][i2]
+    if bulge[0]=="m":
+        assert set([pos1, pos2]) == bg.flanking_nucleotides(bulge)
     if i1==0 or i1==2:
         a1="P"
     else:
@@ -1103,7 +1105,17 @@ def junction_virtual_atom_distance(bg, bulge):
     else:
         a2="O3'"
     assert a1!=a2
-    return cuv.magnitude(bg.virtual_atoms(pos1)[a1]-bg.virtual_atoms(pos2)[a2])
+    dist = cuv.magnitude(bg.virtual_atoms(pos1)[a1]-bg.virtual_atoms(pos2)[a2])
+    #if bg.element_length(bulge)==0:
+    #    partner1 = bg.pairing_partner(pos1)
+    #    partner2 = bg.pairing_partner(pos2)
+    #    dist2 = cuv.magnitude(bg.virtual_atoms(pos1)[a2]-bg.virtual_atoms(pos2)[a1])
+    #    dist3 = cuv.magnitude(bg.virtual_atoms(partner1)[a1]-bg.virtual_atoms(partner2)[a2])
+    #    dist4 = cuv.magnitude(bg.virtual_atoms(partner1)[a2]-bg.virtual_atoms(partner2)[a1])
+    #    assert dist < dist2, "{} ({} nts): {} !< {}".format(bulge, bg.element_length(bulge), dist, dist2)
+    #    assert dist < dist3, "{} ({} nts): {} !< {}".format(bulge, bg.element_length(bulge), dist, dist3)
+    #    assert dist < dist4, "{} ({} nts): {} !< {}".format(bulge, bg.element_length(bulge), dist, dist4)
+    return dist
 
 
 def add_virtual_residues(bg, stem):
@@ -1119,13 +1131,16 @@ def add_virtual_residues(bg, stem):
     :param bg: The CoarseGrainRNA bulge graph containing the stem
     :param stem: The name of the stem to be included
     '''
-    stem_vec = bg.coords[stem][1] - bg.coords[stem][0]
-    stem_basis = cuv.create_orthonormal_basis(stem_vec, bg.get_twists(stem)[0])
-    stem_inv = nl.inv(stem_basis.transpose())
-
-    bg.bases[stem] = stem_basis
-    bg.stem_invs[stem] = stem_inv
-
+    stem_vec = bg.coords.get_direction(stem)
+    twist_vec = bg.get_twists(stem)[0]
+    if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):
+        stem_inv = bg.stem_invs[stem] 
+    else:
+        stem_basis = cuv.create_orthonormal_basis(stem_vec, )
+        stem_inv = nl.inv(stem_basis.transpose())
+        bg.bases[stem] = stem_basis
+        bg.stem_invs[stem] = stem_inv
+        
     for i in range(bg.stem_length(stem)):
         vpos = virtual_res_3d_pos(bg, stem, i, stem_inv=stem_inv)
         vbasis = virtual_res_basis(bg, stem, i, vec=vpos[1])
@@ -1815,7 +1830,16 @@ class VirtualAtomsLookup(object):
             return self._getitem_for_stem(d, pos) #Use virtual residues for stems.
         import forgi.threedee.utilities.average_atom_positions as ftua
         e_coords=dict()
-        origin, basis = element_coord_system(self.cg, d)
+        try:
+            origin, basis = element_coord_system(self.cg, d)
+        except ValueError as e:
+            if d[0]=="h" and np.array_equal(self.cg.coords[d][0],self.cg.coords[d][1]): #0-length hairpin.
+                warnings.warn("Returning empty set of virtual atoms for 0-length hairpin")
+                return e_coords
+            else: raise
+
+            print (e, "for position {} in element {} with define {}".format(pos, d, self.cg.defines[d]))
+            raise
         if d[0] == 'i' or d[0] == 'm':
             conn = self.cg.connections(d)
             conn_type = self.cg.connection_type(d, conn)
@@ -1846,8 +1870,12 @@ class VirtualAtomsLookup(object):
             return e_coords
     def _getitem_for_stem(self, d, pos):
         i, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
-        assert pos>=1    #pos-1 should not be negative!  
-        residue = (self.cg.seq[pos-1]) #The sequence coordinates are 1-based!
+        assert pos>=1    #pos-1 should not be negative!
+        try:
+            residue = (self.cg.seq[pos-1]) #The sequence coordinates are 1-based!
+        except IndexError:
+            log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
+            raise
 
         atoms = dict()
         if self.given_atom_names is None:
@@ -1858,11 +1886,12 @@ class VirtualAtomsLookup(object):
         else:
             atom_names = self.given_atom_names
         for aname in atom_names:
-            if "'" in aname:
+            if aname[-1]=="'":
                 aname_star=aname[:-1]+"*"
             else:
                 aname_star=aname
             spos = ftus.avg_stem_vres_atom_coords[side][residue][aname_star]
+            #TODO: Maybe we can vectorize this and calculate pos from spos for all atoms of the residue at once.
             atoms[aname] = spos_to_pos(self.cg, d, i, spos)
 
         return atoms

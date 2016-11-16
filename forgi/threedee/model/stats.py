@@ -11,6 +11,9 @@ import collections as c
 import math as m
 import math
 
+import logging
+log = logging.getLogger(__name__)
+
 #import fess.builder.config as cbc
 import forgi.config as cbc
 import forgi.utilities.debug as fud
@@ -64,7 +67,8 @@ class LoopStat:
 
     phys_length: The length between the start and the centroid of the loop.
     '''
-    def __init__(self, line=''):
+    def __init__(self, line='', s_type="loop"):
+        self.stat_type = s_type
         self.pdb_name = ''
         
         self.bp_length = 0
@@ -74,13 +78,14 @@ class LoopStat:
         self.v = 0.
 
         self.define=[]
-
+        
         if len(line) > 0:
             try:
                 self.parse_line(line)
             except:
                 print >>sys.stderr, "Error parsing line:", line
-
+                raise
+            
     def parse_line(self, line):
         '''
         Parse a line containing statistics about the shape of a stem.
@@ -100,9 +105,18 @@ class LoopStat:
         self.define = map(int, parts[6:])
 
     def __str__(self):
-        return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, 
-                                                self.phys_length, " ".join(map(str, self.define)))
+        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))
+        #return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, 
+        #                                        self.phys_length, " ".join(map(str, self.define)))
 
+    def __eq__(self, other):
+        if type(self)==type(other):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
+    
+    def __ne__(self, other):
+        return not self == other
+            
 class StemStat:
     '''
     Class for storing the individual statistics about helices.
@@ -139,11 +153,21 @@ class StemStat:
         self.bp_length = int(parts[2])
         self.phys_length = float(parts[3])
         self.twist_angle = float(parts[4])
-        self.define = [int(parts[5]), int(parts[6]), int(parts[7]), int(parts[8])]
+        if len(parts)>5:
+            self.define = [int(parts[5]), int(parts[6]), int(parts[7]), int(parts[8])]
 
     def __str__(self):
-        return "pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, " ".join(map(str, self.define)))
-
+        return "stem {} {} {} {} {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, *self.define)
+        #return "pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, " ".join(map(str, self.define)))
+    
+    def __eq__(self, other):
+        if type(self)==type(other):
+            return self.__dict__ == other.__dict__
+        return NotImplemented
+    
+    def __ne__(self, other):
+        return not self == other
+    
 class AngleStat:
     '''
     Class for storing an individual statistic about inter-helical angles.
@@ -151,6 +175,7 @@ class AngleStat:
 
     def __init__(self, pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
                  define=[], seqs=[]):
+        #log.debug("Stat init called")
         self.pdb_name = pdb_name
         self.dim1 = dim1
         self.dim2 = dim2
@@ -173,23 +198,32 @@ class AngleStat:
         '''
         Is this AngleStat equal to another one.
         '''
+        log.debug("Comparing angle stats {} and {}".format(self.pdb_name, a_s.pdb_name))
         if self.dim1 != a_s.dim1:
+            log.debug("Dim1 {} != {}".format(self.dim1, a_s.dim1))
             return False
         if self.dim2 != a_s.dim2:
+            log.debug("Dim2 {} != {}".format(self.dim2, a_s.dim2))
             return False
         if not np.allclose(self.u, a_s.u):
+            log.debug("u {} != {}".format(self.u, a_s.u))
             return False
         if not np.allclose(self.v, a_s.v):
+            log.debug("v {} != {}".format(self.v, a_s.v))
             return False
         if not np.allclose(self.t, a_s.t):
+            log.debug("t {} != {}".format(self.t, a_s.t))
             return False
         if not np.allclose(self.r1, a_s.r1):
+            log.debug("r1 {} != {}".format(self.r1, a_s.r1))
             return False
         if not np.allclose(self.u1, a_s.u1):
+            log.debug("u1 {} != {}".format(self.u1, a_s.u1))
             return False
         if not np.allclose(self.v1, a_s.v1):
+            log.debug("v1 {} != {}".format(self.v1, a_s.v1))
             return False
-
+        log.debug("Angle stats comparing equal")
         return True
 
     def parse_line(self, line):
@@ -312,6 +346,27 @@ class AngleStat:
         '''
         return ftuv.vec_angle(np.array([-1.,0.,0.]), ftuv.spherical_polar_to_cartesian([1, self.u, self.v]))
     
+    def get_virtual_atom_distance(self):
+        raise NotImplementedError("This does currently not produce valid results")
+        import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
+        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3*"]
+        #Let the basis of stem 1 be the standard basis. For vres 0 the stem basis is the same as the vres basis.
+        basis1 = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]) 
+        
+        #The stem seperation.
+        start_stem2 = ftug.stem2_pos_from_stem1_1(basis1.transpose(), self.position_params())
+        
+        #Basis of stem 2 expressed in the basis of stem1
+        stem2_orientation = ftug.stem2_orient_from_stem1_1(basis1.transpose(), [1] + list(self.orientation_params()))
+        twist2 = ftug.twist2_orient_from_stem1_1(basis1.transpose(), self.twist_params())
+        stem2_basis = ftuv.create_orthonormal_basis(stem2_orientation, twist2)
+        
+        spos_2 = ftus.avg_stem_vres_atom_coords[0]["A"]["P"]
+        spos2_in_basis_1 = ftuv.change_basis(spos_2, basis1, stem2_basis)+start_stem2
+        #print(stem2_basis, spos_1, spos2_in_basis_1)
+        return ftuv.vec_distance(spos_1, spos2_in_basis_1)
+        
+        
 class RandomAngleStats():
     '''
     Store all of the angle stats.
@@ -476,7 +531,6 @@ def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
     * `pdb_name`: the name of the pdb file these statistics came from
     * `dim1`: the smaller dimension of the bulge
     * `dim2`: the larger dimension of the bulge
-    * `r`: the length of the second stem
     * `u`: the polar angle of the orientation of the 2nd stem
     * `v`: the azimuth of the orientation of the 2nd stem
     * `t`: the orientation of the twist of the second stem

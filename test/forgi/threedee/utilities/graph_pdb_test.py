@@ -44,12 +44,20 @@ class TestGraphPDB(unittest.TestCase):
         for i in range(0, sl):
             (pos, vec, vec_l, vec_r) = ftug.virtual_res_3d_pos_core(cg.coords[s],
                                                                     cg.twists[s],i,sl)
+            
+            if i==0:
+                nptest.assert_array_equal(pos, cg.coords[s][0])
 
             if i > 1:
                 self.assertGreater(ftuv.vec_angle(vec, prev_vec), 0.53)
                 self.assertLess(ftuv.vec_angle(vec, prev_vec), 0.73)
 
             prev_vec = vec
+
+    def test_first_virtual_res_basis(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        basis = ftug.virtual_res_basis(cg, "s0", 0)
+        nptest.assert_array_equal(basis, ftuv.create_orthonormal_basis(cg.coords["s0"][1]-cg.coords["s0"][0], cg.twists["s0"][0]))
 
     def test_angle_between_twists(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')

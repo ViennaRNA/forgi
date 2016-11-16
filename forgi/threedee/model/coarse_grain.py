@@ -120,7 +120,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     chain = ftup.rename_modified_ress(chain)
     chain = ftup.rename_rosetta_atoms(chain)
     chain = ftup.remove_hetatm(chain)
-
+    log.info("Using chain {}".format(chain.id))
     # output the biggest RNA chain
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
     output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
@@ -208,7 +208,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     #    chains = list(s.get_chains())
     #    if len(chains) < 1:
     #        raise Exception("No chains in the PDB file")
-    #
     #    chain = chains[0]
 
     cg.from_bpseq_str(out, dissolve_length_one_stems=False)
@@ -509,12 +508,15 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Estimate, how difficult a set of elements was to build, 
         by counting the atom density around the center of these elements
         """
-        if isinstance(elements, list):
-            center = ftuv.get_vector_centroid(self.coords[elements])
-        elif elements.shape==(3,):
-            center = elements
-        else: assert False, repr(elements)
-
+        try:
+            if isinstance(elements, list) or isinstance(elements, tuple):
+                center = ftuv.get_vector_centroid(self.coords[elements])
+            elif elements.shape==(3,):
+                center = elements
+            else: assert False, repr(elements)
+        except:
+            print(elements, repr(elements))
+            raise
         if method == "kde":
         #print(center)
             all_vas = []
@@ -526,23 +528,17 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             log.debug("Shape of all atoms {}".format(all_vas.shape))
             kde = scipy.stats.gaussian_kde(all_vas, 50) #randomly take 50 Angstrom bandwidth
             return kde(center)
-        elif method == "r**-3":
+        elif method.startswith("r**"):
+            power=-int(method[3:5])
+            exclude=method[5:]
+            if exclude and exclude!="e":
+                raise ValueError("Not supported method")
             value = 0
             for pos in range(1,self.seq_length+1):
+                if exclude and self.get_node_from_residue_num(pos) in elements:
+                    continue
                 for va in self.virtual_atoms(pos).values():
-                    value+=1/(1+ftuv.vec_distance(va, center))**3
-            return value
-        elif method == "r**-2":
-            value = 0
-            for pos in range(1,self.seq_length+1):
-                for va in self.virtual_atoms(pos).values():
-                    value+=1/(1+ftuv.vec_distance(va, center))**2
-            return value
-        elif method == "r**-1":
-            value = 0
-            for pos in range(1,self.seq_length+1):
-                for va in self.virtual_atoms(pos).values():
-                    value+=1/(1+ftuv.vec_distance(va, center))
+                    value+=1/(1+ftuv.vec_distance(va, center))**power
             return value
         elif method.startswith("cutoff"):
             cutoff = float(method.split()[1])
@@ -655,6 +651,30 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return angle_stat
 
+    def get_stats(self, d):
+        '''
+        Calls get_loop_stat/ get_bulge_angle_stats or get_stem_stats, depending on the element d.
+        
+        :returns: A 1- or 2 tuple of stats (2 in case of bulges. One for each direction)
+        '''
+        if d[0]=="s":
+            return (self.get_stem_stats(d),)
+        elif d[0] in "mi":
+            return self.get_bulge_angle_stats(d)
+        else:
+            try:
+                stat = self.get_loop_stat(d)
+            except ValueError:
+                if len(self.defines)==1:
+                    return tuple() #A structure without any stem has no stats.
+                else:
+                    raise
+            if d[0] == "f":
+                stat.stat_type="5prime"
+            elif d[0] == "t":
+                stat.stat_type="3prime"
+            return (stat,)
+        
     def get_loop_stat(self, d):
         '''
         Return the statistics for this loop.
@@ -669,8 +689,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         loop_stat.bp_length = self.get_length(d)
         loop_stat.phys_length = ftuv.magnitude(self.coords[d][1] - self.coords[d][0])
-
-        stem1 = list(self.edges[d])[0]
+        
+        stem1, = self.edges[d] # Make sure there is only one edge
+        
         (s1b, s1e) = self.get_sides(stem1, d)
 
         stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
@@ -684,6 +705,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                                       bulge_vec)
         (loop_stat.r, loop_stat.u, loop_stat.v) = (r, u, v)
         loop_stat.r = loop_stat.phys_length # Will this cause problems in other parts of the code base???
+        loop_stat.define=self.defines[d]
+        if d[0]=="f":
+            loop_stat.stat_type = "5prime"
+        elif d[0]=="t":
+            loop_stat.stat_type = "3prime"
         return loop_stat
 
     def get_bulge_angle_stats(self, bulge):               
