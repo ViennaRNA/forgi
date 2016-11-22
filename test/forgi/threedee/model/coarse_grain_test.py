@@ -518,6 +518,7 @@ class StericValueTest(unittest.TestCase):
     def setUp(self):
         self.cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.cg2 = ftmc.from_pdb('test/forgi/threedee/data/1byj.pdb')
+    @unittest.skip("Manual test")
     def test_stericValue_1(self):
         print("m0, m1, m2", self.cg1.steric_value(["m0", "m1", "m2"]))
         from_ = np.amin(self.cg1.coords._coordinates)

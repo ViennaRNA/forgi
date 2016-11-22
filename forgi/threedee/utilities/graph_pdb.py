@@ -1218,7 +1218,7 @@ def add_virtual_residues(bg, stem):
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):
         stem_inv = bg.stem_invs[stem] 
     else:
-        stem_basis = cuv.create_orthonormal_basis(stem_vec, )
+        stem_basis = cuv.create_orthonormal_basis(stem_vec, twist_vec)
         stem_inv = nl.inv(stem_basis.transpose())
         bg.bases[stem] = stem_basis
         bg.stem_invs[stem] = stem_inv
