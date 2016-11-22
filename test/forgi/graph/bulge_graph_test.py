@@ -358,6 +358,7 @@ actgatagtttattagttttat
         bg = fgb.from_fasta_text(fasta)
         self.assertEqual(bg.defines['s56'], [713,717,731,735])
         self.assertEqual(len(bg.defines), 1167)
+        self.assertEqual(bg.seq, seq.replace("t", "u"))
         #print >>sys.stderr, "bg.defines:", bg.defines
 
     def test_from_bpseq_file(self):

@@ -77,7 +77,7 @@ def from_fasta_text(fasta_text):
     # compile searches for the fasta id, sequence and 
     # secondary structure respectively
     id_search = re.compile('>(.+)')
-    seq_search = re.compile('^([acguACGU]+)$') #BT: This does not allow for "t"/"T"(DNA)/"N". Is it on purpose?
+    seq_search = re.compile('^([acgutACGUT]+)$')
 
     prev_id = None
     prev_seq = None
@@ -117,8 +117,13 @@ def from_fasta_text(fasta_text):
 
         if seq_match is not None:
             prev_seq = seq_match.group(0)
-        log.info("Treating {} as structure".format(line))
-        if id_match is None and seq_match is None:
+            if "t" in prev_seq or "T" in prev_seq:
+                warnings.warn("Original sequence contained T. All occurrences of T/t were replaced by U/u respectively!")
+                prev_seq=prev_seq.replace("T", "U")
+                prev_seq=prev_seq.replace("t", "u")
+
+        if id_match is None and seq_match is None:        
+            log.debug("Treating '{}'... as structure".format(line[:20]))
             if len(line) > 0:
                 prev_struct = line
 
