@@ -32,6 +32,7 @@ class PymolPrinter:
         self.stem_stem_orientations = None
         self.new_segments = []
         self.segments = []
+        self.texts = []
         self.new_cones = []
         self.cones = []
         self.labels = []
@@ -101,6 +102,9 @@ class PymolPrinter:
             color_rgb = self.get_color_vec(color)
 
         self.new_spheres += [(np.array(p), color_rgb, width, text)]
+
+    def add_text(self, position, text, color="black"):
+        self.texts.append((np.array(position), str(text), self.get_color_vec(color)))
 
     def transform_spheres(self, translation, rotation):
         for (p, color, width, text) in self.new_spheres:
@@ -179,7 +183,7 @@ class PymolPrinter:
         d = w * 2.618  # cone base diameter
         s = ""
 
-        s += "CYLINDER, 0.0, 0.0, 0.0,   %f, 0.0, 0.0, %f" % (l, w)
+        s += "CYLINDER, 0.0, 0.0, 0.0,   %f, 0.0, 0.0, %f," % (l, w)
         s += " 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,"
         s += "CYLINDER, 0.0, 0.0, 0.0, 0.0,   %f, 0.0, %f, " % (l, w)
         s += "0.0, 0.0, 1.0, 0.0, 0.0, 1.0,"
@@ -271,6 +275,15 @@ class PymolPrinter:
             pa_s += "pa_%s = cmd.pseudoatom(pos=%s," % (uid, str(list(pos)))
             pa_s += "b=1.0, label=\"%s\")\n" % (text)
             counter += 1
+
+        for (p, text, color) in self.texts:
+            uid = str(uuid.uuid4()).replace('-', 'x')
+            uids += [uid]
+
+            pa_s += "pa_{uid} = cmd.pseudoatom(pos={pos}, b=1.0, color={c}, label=\"{text}\")\n".format(uid = uid, pos = str(list(p)), c=color, text=text)
+            counter += 1
+
+
 
         '''
         for (text, pos) in self.labels:

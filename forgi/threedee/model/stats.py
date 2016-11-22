@@ -347,9 +347,9 @@ class AngleStat:
         return ftuv.vec_angle(np.array([-1.,0.,0.]), ftuv.spherical_polar_to_cartesian([1, self.u, self.v]))
     
     def get_virtual_atom_distance(self):
-        raise NotImplementedError("This does currently not produce valid results")
+        #raise NotImplementedError("This does currently not produce valid results")
         import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
-        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3*"]
+        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3'"]
         #Let the basis of stem 1 be the standard basis. For vres 0 the stem basis is the same as the vres basis.
         basis1 = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]) 
         

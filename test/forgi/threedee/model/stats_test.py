@@ -163,3 +163,4 @@ class TestStats(unittest.TestCase):
         
         self.assertAlmostEqual(as1.get_angle(), math.radians(180))
         self.assertAlmostEqual(as2.get_angle(), math.radians(180))
+

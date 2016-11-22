@@ -117,9 +117,15 @@ def from_fasta_text(fasta_text):
 
         if seq_match is not None:
             prev_seq = seq_match.group(0)
+        log.info("Treating {} as structure".format(line))
         if id_match is None and seq_match is None:
             if len(line) > 0:
                 prev_struct = line
+
+    if prev_seq is None:
+        raise ValueError("Error during parsing of fasta file. No sequence found for id {} and structure {}".format(prev_id, prev_struct))
+    if prev_struct is None:
+        raise ValueError("Error during parsing of fasta file. No structure found for id {} and sequence {}".format(prev_id, prev_seq))
 
     bgs += [from_id_seq_struct(curr_id, prev_seq, prev_struct)]
 
@@ -2662,7 +2668,10 @@ class BulgeGraph(object):
             strand_resnames = []
             for x in range(r[0], r[1] + 1):
                 if seq_ids:
-                    strand_resnames += [self.seq_ids[x - 1]]
+                    res_id = self.seq_ids[x - 1]
+                    if hasattr(self, "chain") and self.chain is not None:
+                        assert res_id in self.chain
+                    strand_resnames.append(res_id)
                 else:
                     strand_resnames += [x]
 

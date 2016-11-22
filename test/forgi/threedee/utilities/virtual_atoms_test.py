@@ -56,14 +56,20 @@ class VirtualAtomsTest(unittest.TestCase):
         self.cg4  = ftmc.from_pdb(pdbfile4)
 
     def test_virtualatoms_close_to_pdb(self):
-        #print(realatom_vatom_rmsd(self.cg1), file=sys.stderr)
-        #print(realatom_vatom_rmsd(self.cg2), file=sys.stderr)
-        #print(realatom_vatom_rmsd(self.cg3), file=sys.stderr)
-        #print(realatom_vatom_rmsd(self.cg4), file=sys.stderr)
-        self.assertLess(realatom_vatom_rmsd(self.cg1), 1.16) # 1.32 using average atoms (no vres)
-        self.assertLess(realatom_vatom_rmsd(self.cg3), 1.36) # 1.33
-        self.assertLess(realatom_vatom_rmsd(self.cg4), 1.32) # 1.16
-        self.assertLess(realatom_vatom_rmsd(self.cg2), 1.42) # 1.30
-
+        rmsd = realatom_vatom_rmsd(self.cg1)
+        print(rmsd)
+        self.assertLess(rmsd, 0.94) # 1.32 using average atoms (no vres)
+        
+        rmsd = realatom_vatom_rmsd(self.cg3)
+        print(rmsd)
+        self.assertLess(rmsd, 0.94) # 1.33
+        
+        rmsd = realatom_vatom_rmsd(self.cg4)
+        print(rmsd)
+        self.assertLess(rmsd, 0.95) # 1.16
+        
+        rmsd = realatom_vatom_rmsd(self.cg2)
+        print(rmsd)
+        self.assertLess(rmsd, 1.04) # 1.30
 
 

@@ -28,7 +28,7 @@ side_chain_atoms['G'] = ['N1', 'C2', 'N2', 'N3', 'C4', 'C5', 'C6', 'O6', 'N7', '
 
 all_side_chains = set(side_chain_atoms['U'] + side_chain_atoms['C'] + side_chain_atoms['A'] + side_chain_atoms['G'])
 
-all_rna_atoms = backbone_atoms + ring_atoms
+all_rna_atoms = backbone_atoms_real + ring_atoms_real
 for v in side_chain_atoms.values():
     all_rna_atoms += v
 all_rna_atoms = set(all_rna_atoms)
