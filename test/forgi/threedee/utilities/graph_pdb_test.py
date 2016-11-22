@@ -130,8 +130,8 @@ class TestGraphPDB(unittest.TestCase):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
         ftug.add_virtual_residues(cg, 's0')
         vres= ftug.virtual_residue_atoms(cg, 's0', 1, 0)
-        nptest.assert_allclose(vres['C8'], np.array([ 5.60052258, -2.31817798, -2.74075904]))
-        nptest.assert_allclose(vres['N2'], np.array([ 7.27932017,  2.84403948, -2.83806392]))
+        nptest.assert_allclose(vres['C8'], np.array([ 5.23455929, -2.9606417 , -2.18156476]))
+        nptest.assert_allclose(vres['N2'], np.array([ 6.99285237,  2.32505693, -1.95868568]))
 
 
     """def test_numbered_virtual_residues(self): #Not USED (?)
@@ -185,8 +185,8 @@ class TestDistanceCalculation(unittest.TestCase):
         self.assertLess(distance2, 4., msg="{} is not < {} for {}".format(distance1, 4., "m1"))
     def test_junction_virtual_atom_distance_realPDB(self):
         distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m4")
-        self.assertLess(distance, 4.)
-        self.assertAlmostEqual(distance, 3.4765561271716967)
+        self.assertLess(distance, 4.)  #This should always hold!
+        self.assertAlmostEqual(distance, 3.4294889373610675) #This value might change, if we change the virtual atom calculation
 
 
 class TestAtomPosition_VirtualAtoms(unittest.TestCase):

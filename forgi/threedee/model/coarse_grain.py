@@ -1234,25 +1234,33 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         elif unit!="radians":
             raise ValueError("Unit {} not understood. Use 'degrees' or 'radians'".format(unit))
         s = math.sin(angle)
-        c = math.cos(angle)
+        cosi = math.cos(angle)
         rotation_matrix = np.zeros((3,3))
         if axis=="x":
             rotation_matrix[0,0]=1
-            rotation_matrix[1,1]=rotation_matrix[2,2]=c
+            rotation_matrix[1,1]=rotation_matrix[2,2]=cosi
             rotation_matrix[1,2]=-s
             rotation_matrix[2,1]=s
         elif axis=="y":
             rotation_matrix[0,0]=1
-            rotation_matrix[0,0]=rotation_matrix[2,2]=c
+            rotation_matrix[0,0]=rotation_matrix[2,2]=cosi
             rotation_matrix[0,2]=-s
             rotation_matrix[2,0]=s        
         elif axis=="z":
             rotation_matrix[2,2]=1
-            rotation_matrix[0,0]=rotation_matrix[1,1]=c
+            rotation_matrix[0,0]=rotation_matrix[1,1]=cosi
             rotation_matrix[0,1]=-s
             rotation_matrix[1,0]=s
         self.coords.rotate(rotation_matrix)
         self.twists.rotate(rotation_matrix)
+        
+        #Caching for virtual residues
+        self.vposs = c.defaultdict( dict )    
+        self.vbases = c.defaultdict( dict )
+        self.vvecs = c.defaultdict( dict )
+        self.v3dposs = c.defaultdict( dict )
+        self.vinvs = c.defaultdict( dict )
+
 """
 def cg_from_sg(cg, sg):
     '''
