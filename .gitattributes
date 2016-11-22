@@ -1,0 +1,6 @@
+*.py   text eol=lf   diff=python
+*.html text eol=lf   diff=html
+*.txt  text eol=lf
+*.rst  text eol=lf
+*.in   text eol=lf
+*.ini text eol=lf
