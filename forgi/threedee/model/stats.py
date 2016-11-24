@@ -347,24 +347,34 @@ class AngleStat:
         return ftuv.vec_angle(np.array([-1.,0.,0.]), ftuv.spherical_polar_to_cartesian([1, self.u, self.v]))
     
     def get_virtual_atom_distance(self):
-        #raise NotImplementedError("This does currently not produce valid results")
-        import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
-        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3'"]
-        #Let the basis of stem 1 be the standard basis. For vres 0 the stem basis is the same as the vres basis.
-        basis1 = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]) 
+        raise NotImplementedError("This does currently not produce valid results")
+        import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
+        if self.ang_type not in [3]:
+            warnings.warn("get_virtual_atom_distance not implemented for angle type {}".format(self.ang_type))
+            return float("nan")
+        
+        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3'"]        
+        
+        stem1_vec = [1.0,0,0]
+        stem1_twist1 = [0,1.0,0]
+        basis1_t = np.array([-np.array(stem1_vec), stem1_twist1, [0,0,1.0]]).transpose()
+
         
         #The stem seperation.
-        start_stem2 = ftug.stem2_pos_from_stem1_1(basis1.transpose(), self.position_params())
+        start_stem2 = ftug.stem2_pos_from_stem1_1(basis1_t, self.position_params())
         
-        #Basis of stem 2 expressed in the basis of stem1
-        stem2_orientation = ftug.stem2_orient_from_stem1_1(basis1.transpose(), [1] + list(self.orientation_params()))
-        twist2 = ftug.twist2_orient_from_stem1_1(basis1.transpose(), self.twist_params())
+        #Basis of stem 2 expressed in the basis of stem1 = standard basis
+        stem2_orientation = ftug.stem2_orient_from_stem1_1(basis1_t, [1] + list(self.orientation_params()))
+        twist2 = ftug.twist2_orient_from_stem1_1(basis1_t, self.twist_params())
+        
         stem2_basis = ftuv.create_orthonormal_basis(stem2_orientation, twist2)
         
         spos_2 = ftus.avg_stem_vres_atom_coords[0]["A"]["P"]
-        spos2_in_basis_1 = ftuv.change_basis(spos_2, basis1, stem2_basis)+start_stem2
+        
+        spos2_in_std_basis = ftug.vres_to_global_coordinates(start_stem2, stem2_basis, {"Atom": spos_2})["Atom"]
+        #ftuv.change_basis(spos_2, basis1, stem2_basis)+start_stem2
         #print(stem2_basis, spos_1, spos2_in_basis_1)
-        return ftuv.vec_distance(spos_1, spos2_in_basis_1)
+        return ftuv.vec_distance(spos_1, spos2_in_std_basis)
         
         
 class RandomAngleStats():

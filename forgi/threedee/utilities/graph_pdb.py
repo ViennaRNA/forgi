@@ -1990,10 +1990,9 @@ class VirtualAtomsLookup(object):
     
 def vres_to_global_coordinates(vres_pos, vres_basis, positions):
     newpos = {}
-    for key, global_pos in positions.items():
-        pos = ftuv.change_basis(global_pos, ftuv.standard_basis, vres_basis)
+    for key, v_pos in positions.items():
+        pos = ftuv.change_basis(v_pos, ftuv.standard_basis, vres_basis)
         newpos[key] = pos + vres_pos
-    #print("GP", global_pos, "NP", newpos[key], "vres_POS", vres_pos, "POS", pos, "vres_basis", vres_basis)
     return newpos
 
 """def add_atoms(coords, twists, define, side, seq, new_coords):

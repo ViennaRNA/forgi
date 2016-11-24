@@ -2197,9 +2197,11 @@ class BulgeGraph(object):
     def stem_resn_to_stem_vres_side(self, stem, res):
         d = self.defines[stem]
         if res<=d[1]:
+            assert d>= d[0]
             pos=res-d[0]
             side = 0
         elif res<=d[3]:
+            assert d>=d[2]
             pos=d[3]-res
             side = 1
         else:
