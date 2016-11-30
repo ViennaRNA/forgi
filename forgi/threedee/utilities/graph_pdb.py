@@ -440,16 +440,17 @@ def get_bulge_centroid(chain, define):
     return get_centroid(chain, res_nums)
 
 
-def get_furthest_c_alpha(cg, chain, stem_end, d, seq_ids=True):
+def get_furthest_c_alpha(cg, chain, stem_end, d):
     '''
     Get the position of the c-alpha atom furthest from the end of the stem.
     '''
+    seq_ids=True
     max_dist = 0
     furthest_pos = None
 
     res_ids = it.chain(*cg.get_resseqs(d, seq_ids=seq_ids))
 
-    for i in res_ids:
+    for chainId, i in res_ids: #seq_ids now contain chain
         try:
             c_apos = chain[i][catom_name].get_vector().get_array()
         except KeyError as ke:
@@ -651,31 +652,12 @@ def get_mids_core_a(chain, start1, start2, end1, end2,
     return mids
 
 
-def get_mids_core(cg, chain, define,
+def get_mids_core(cg, chains, define,
                   use_template=True, seq_ids=True):
-    """"""
-    ######## Debug function
-    '''
-    vec = mids[1] - mids[0]
-    n1 = []
-    n2 = []
-    for i in range(0, end1-start1+1):
-        notch1 = chain[start1+i][catom_name].get_vector().get_array()
-        notch2 = chain[start2-i][catom_name].get_vector().get_array()
-        basis = cuv.create_orthonormal_basis(vec)
-        notch1_n = cuv.change_basis(notch1, basis, cuv.standard_basis)
-        notch2_n = cuv.change_basis(notch2, basis, cuv.standard_basis)
-
-        n1 += [notch1_n[0]]
-        n2 += [notch2_n[0]]
-    dists1 = [j-i for i,j in zip(n1[:-1], n1[1:])]
-    dists2 = [j-i for i,j in zip(n2[:-1], n2[1:])]
-
-    for dist in dists1 + dists2:
-        print "ladder", dist
-    '''
-    ######## End debug
-
+    """
+    :param chains: A dictionary chain_id:chain
+    """
+    log.debug("get_mids_core: chains {}, define {}, all defines {}, breakpoints {}".format(chains, define, cg.defines, cg.backbone_breaks_after))
     stem_length = cg.stem_length(define)
 
     #filename =
@@ -691,7 +673,7 @@ def get_mids_core(cg, chain, define,
 
     for strand in resnames:
         for resname in strand:
-            stem_chain.add(chain[resname])
+            stem_chain.add(chains[resname[0]][resname[1]]) #seqids now contain chain
 
 
     # get the rotation and translation to rotate the ideal chain onto
@@ -722,31 +704,32 @@ def get_mids_core(cg, chain, define,
     return (bpdb.Vector(chain_new_mids[0]), bpdb.Vector(chain_new_mids[1]))
 
 
-def get_twists_core(cg, chain, define,
-                    mids=None, method=cc.Configuration.mids_method,
-                   seq_ids=True):
+def get_twists_core(cg, chains, define,
+                    mids=None, method=cc.Configuration.mids_method):
     '''
     Get the vectors indicating the twist of the cylinder. In actuality,
     this will be the projection of the (ca_start1 - mid1) onto the plane
     defined by (mid2 - mid1).
     '''
-
+    seq_ids = True
+    
     if mids is None:
-        mids = get_mids(cg, chain, define,
+        mids = get_mids(cg, chains, define,
                         method=cc.Configuration.mids_method, 
                         seq_ids=seq_ids)
 
-    resnames = cg.get_resseqs(define, seq_ids)
+    resnames_forw, resnames_backw = cg.get_resseqs(define, seq_ids) #Error if single_stranded
+    
 
     # the first nucleotide of the first strand
     # and the last nucleotide of the second strand
-    start_vec1 = chain[resnames[0][0]][catom_name].get_vector() - mids[0]
-    end_vec1 = chain[resnames[0][-1]][catom_name].get_vector() - mids[1]
+    start_vec1 = chains[resnames_forw[0][0]][resnames_forw[0][1]][catom_name].get_vector() - mids[0] #seq_id now contains chain
+    end_vec1 = chains[resnames_forw[-1][0]][resnames_forw[-1][1]][catom_name].get_vector() - mids[1] #seq_id now contains chain
 
     # the last nucleotide of the first strand
     # and the first nucleotide of the second strand
-    start_vec1a = chain[resnames[1][-1]][catom_name].get_vector() - mids[0]
-    end_vec1a = chain[resnames[1][0]][catom_name].get_vector() - mids[1]
+    start_vec1a = chains[resnames_backw[-1][0]][resnames_backw[-1][1]][catom_name].get_vector() - mids[0] #seq_id now contains chain
+    end_vec1a = chains[resnames_backw[0][0]][resnames_backw[0][1]][catom_name].get_vector() - mids[1] #seq_id now contains chain
 
     notch1 = cuv.vector_rejection(start_vec1.get_array(),
                                   (mids[0] - mids[1]).get_array())
@@ -765,7 +748,7 @@ def get_twists_core(cg, chain, define,
     #return (normalize(notch1), normalize(notch2))
 
 
-def get_mids(cg, chain, define, method=cc.Configuration.mids_method, seq_ids=True):
+def get_mids(cg, chains, define, method=cc.Configuration.mids_method, seq_ids=True):
     '''
     Get the mid points of the abstract cylinder which represents a helix.
 
@@ -777,11 +760,12 @@ def get_mids(cg, chain, define, method=cc.Configuration.mids_method, seq_ids=Tru
     '''
 
     if method == 'template':
-        return get_mids_core(cg, chain, define, seq_ids=seq_ids)
+        return get_mids_core(cg, chains, define, seq_ids=seq_ids)
     elif method == 'fit':
-        return get_mids_fit_method(cg, chain, define, seq_ids=seq_ids)
+        raise NotImplementedError("This does not work for multiple chains.")
+        #return get_mids_fit_method(cg, chains, define, seq_ids=seq_ids)
     elif method == 'superimpose':
-        return get_mids_core(cg, chain, define, 
+        return get_mids_core(cg, chains, define, 
                              use_template=False, seq_ids=seq_ids)
     else:
         print >>sys.stderr, "Unknown mids method:", method
@@ -796,8 +780,7 @@ def get_mids(cg, chain, define, method=cc.Configuration.mids_method, seq_ids=Tru
                                 stem_length=stem_length)
     '''
 
-def get_twists(cg, chain, define, mids=None, method=cc.Configuration.mids_method,
-              seq_ids=True):
+def get_twists(cg, chain, define, mids=None, method=cc.Configuration.mids_method):
     '''
     Get the projection of the (ca - mids) vectors onto the helix axis. This,
     in a sense will define how much the helix twists.
@@ -808,7 +791,7 @@ def get_twists(cg, chain, define, mids=None, method=cc.Configuration.mids_method
     :return: Two vectors which represent the twist of the helix.
     '''
 
-    return get_twists_core(cg, chain, define, mids, method, seq_ids)
+    return get_twists_core(cg, chain, define, mids, method)
 
 
 '''
@@ -1557,7 +1540,7 @@ def receptor_angle(bg, l, s):
     return cuv.vec_angle(vres, incoming_angle)
 
 
-def add_stem_information_from_pdb_chain(cg, chain, seq_ids=True):
+def add_stem_information_from_pdb_chains(cg):
     '''
     Get the 3D information of the stems.
 
@@ -1570,12 +1553,14 @@ def add_stem_information_from_pdb_chain(cg, chain, seq_ids=True):
     :param bg: The BulgeGraph.
     :param chain: The Bio.PDB chain representation of the 3D structure.
     '''
-    chain = ftup.rename_rosetta_atoms(chain)
+    new_chains = {}
+    for name, chain in cg.chains.items():
+        new_chains[name] = ftup.rename_rosetta_atoms(chain)
 
     for d in cg.defines.keys():
         if d[0] == 's':
-            mids = get_mids(cg, chain, d, seq_ids=seq_ids)
-            twists = get_twists(cg, chain, d, seq_ids=seq_ids)
+            mids = get_mids(cg, new_chains, d)
+            twists = get_twists(cg, new_chains, d)
 
             cg.coords[d] = (mids[0].get_array(), mids[1].get_array())
             stem_dir = cg.coords[d][1]-cg.coords[d][0]
@@ -1598,7 +1583,8 @@ def add_bulge_information_from_pdb_chain(bg, chain):
                   " Use cg.add_bulge_coords_from_stems instead!")
     bg.add_bulge_coords_from_stems()
 
-def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
+def add_loop_information_from_pdb_chain(bg, chain):
+    seq_ids=True
     #log.info("add_loop_information_from_pdb_chain called")
     for d in it.chain(bg.hloop_iterator(), bg.floop_iterator(), bg.tloop_iterator()):
         if d not in bg.defines:
@@ -1610,6 +1596,7 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
             # Odd case where there are no stems in the structure
             # We should find the furthest distance from the first
             # nucleotide
+            log.info("add_loop_information_from_pdb_chain: No stem in structure")
             first_res = None
             for res in chain.get_residues():
                 if catom_name in res:
@@ -1619,7 +1606,8 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
             start_point = first_res[catom_name].get_vector().get_array() 
             centroid = get_furthest_c_alpha(bg, chain, 
                                             first_res[catom_name].get_vector().get_array(), 
-                                            d, seq_ids=seq_ids)
+                                            d)
+           
         else:
             s1 = edges[0]
             s1d = bg.defines[s1]
@@ -1631,12 +1619,14 @@ def add_loop_information_from_pdb_chain(bg, chain, seq_ids=True):
             start_point = mids[s1b]
             #centroid = get_bulge_centroid(chain, bd)
 
-            centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d, seq_ids=seq_ids)
+            centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d)
 
             if centroid is None:
                 print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
                 centroid = mids[s1b]
 
+        assert start_point is not None
+        assert centroid is not None
         bg.coords[d] = (start_point, centroid)
 
 def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):

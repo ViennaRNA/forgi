@@ -86,8 +86,8 @@ def add_longrange_interactions(cg, lines):
     for line in ftum.iterate_over_interactions(lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
 
-        seq_id1 = cg.seq_ids.index(ftum.parse_resid(from_base)) + 1
-        seq_id2 = cg.seq_ids.index(ftum.parse_resid(to_base)) + 1
+        seq_id1 = cg.seq_ids.index((from_chain, ftum.parse_resid(from_base))) + 1
+        seq_id2 = cg.seq_ids.index((to_chain, ftum.parse_resid(to_base))) + 1
 
         node1 = cg.get_node_from_residue_num(seq_id1)
         node2 = cg.get_node_from_residue_num(seq_id2)
@@ -183,8 +183,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             out = dotplot
         #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
-        cg.from_bpseq_str(out, dissolve_length_one_stems=False)    
-        cg.seqids_from_residue_map(residue_map)
+        cg.from_bpseq_str(out, dissolve_length_one_stems=False)        
+        cg.seqids_from_residue_map(residue_map)        
         add_longrange_interactions(cg, lines)
         
     else:
@@ -197,10 +197,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     # and loops
     
     cg.chains = { chain.id : chain for chain in new_chains }
+    log.debug("seq-IDs of loaded structure are {}".format(cg.seq_ids))
+    #Stems can span 2 chains.    
+    ftug.add_stem_information_from_pdb_chains(cg)
+    cg.add_bulge_coords_from_stems()
     
     for chain in new_chains:
-        ftug.add_stem_information_from_pdb_chain(cg, chain)
-        cg.add_bulge_coords_from_stems()
+        # Loops cannot span multiple chains.
         ftug.add_loop_information_from_pdb_chain(cg, chain)
 
 
@@ -314,7 +317,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.project_from = None
 
         self.longrange = c.defaultdict( set )
-        self.chain = None #the PDB chain if loaded from a PDB file
+        self.chains = {} #the PDB chain if loaded from a PDB file
 
         if cg_file is not None:
             self.from_file(cg_file)
@@ -381,12 +384,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         for stem in self.stem_iterator():
             try:
                 ftug.add_virtual_residues(self, stem)
-            except KeyError:
-                if stem not in self.coords:
+            except (KeyError, ValueError):
+                if np.all(np.isnan(self.coords[stem])):
                     raise RnaMissing3dError("No 3D coordinates available for stem {}".format(stem))
-                elif stem not in self.twists:
+                elif np.all(np.isnan(self.twists[stem])):
                     raise RnaMissing3dError("No twists available for stem {}".format(stem))
-                else: 
+                else:
+                    log.warning("Reraising in add_all_virtual_residues")
                     raise
     def get_virtual_residue(self, pos, allow_single_stranded = False):
         """

@@ -469,7 +469,7 @@ def get_all_chains(in_filename, parser=None):
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
 
-    chains = list(s.get_chains())
+    chains = list(chain for chain in s.get_chains() if is_rna(chain))
     return chains
     
 def rename_modified_ress(chain):

@@ -36,6 +36,8 @@ VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 import logging
 log = logging.getLogger(__name__)
 
+
+RESID = col.namedtuple("complete_resid", ["chain", "resid"])
 def add_bulge(bulges, bulge, context, message):
     """
     A wrapper for a simple dictionary addition
@@ -333,8 +335,9 @@ class Sequence(str):
         if isinstance(key, slice):
             out = ""
             for i in range(*key.indices(len(self)+1)): #http://stackoverflow.com/questions/16652482/python-iterate-slice-object#16652549
-              out += self[i]
-              #log.debug("i is {}, out is now {}".format(i, out))
+                if i==0: continue
+                out += self[i]
+                log.debug("i is {}, out is now {}".format(i, out))
             return out
         elif isinstance(key, int):
             key-=1 #From 1-based to 0 based indexing.
@@ -400,9 +403,9 @@ class BulgeGraph(object):
         for i, seq_str in enumerate(seq_strs):
             self.seqs[VALID_CHAINIDS[i]]=seq_str #Index Error, if too many chains.
             self.chain_ids.append(VALID_CHAINIDS[i])
-            for i, s in enumerate(seq):
-                self.seq_ids += [(' ', str(i + 1), ' ')]
-        
+            for j, s in enumerate(seq):
+                self.seq_ids += [RESID(VALID_CHAINIDS[i], (' ', str(j + 1), ' '))] 
+
         #: If more than one chain is present.
         #: ((&))
         #: 12 34
@@ -963,13 +966,30 @@ class BulgeGraph(object):
         path = fug.shortest_cycle(G, mid_res)
         return path
     
+    def _chain_start_from_end(self, pos):
+      if pos not in self.backbone_breaks_after:
+        if pos == self.seq_length:
+          if self.backbone_breaks_after:
+            return self.backbone_breaks_after[-1]
+          else:
+            return 1
+        else:
+          raise ValueError("Pos {} is not at the end of a chain.".format(pos))
+      else:
+        i = self.backbone_breaks_after.index(pos)
+        if i==0:
+          return 1
+        else:
+          return self.backbone_breaks_after[i-1]+1
     def _get_next_ml_segment(self, ml_segment):
         """
         """
-        if ml_segment=="t1":
-            s = self.get_node_from_residue_num(1)
-            if s=="f1":
-                return "f1"
+        if ml_segment.startswith("t"):
+            nuc = self.defines[ml_segment][1]
+            next_nuc = self._chain_start_from_end(nuc)
+            s = self.get_node_from_residue_num(next_nuc)
+            if s.startswith("f"):
+                return s
             else:
                 side_stem = 3
 
@@ -1003,9 +1023,10 @@ class BulgeGraph(object):
                 
         ml_nuc = self.flanking_nuc_at_stem_side(s, side_stem)
         if ml_nuc>self.seq_length:
-            s = self.get_node_from_residue_num(1)
-            if s=="f1":
-                return "f1"
+            i = self._chain_start_from_end(ml_nuc-1)
+            s = self.get_node_from_residue_num(i)
+            if s[0]=="f":
+                return s
             else:
                 ml_nuc = self.flanking_nuc_at_stem_side(s, 3)
         elem =  self.get_node_from_residue_num(ml_nuc)                    
@@ -1022,6 +1043,15 @@ class BulgeGraph(object):
         return elem
 
     def shortest_mlonly_multiloop(self, ml_segment):
+        def compare_mls(b):
+          if b[0]=="f":
+            comp = [-1,-1] #f is first
+          elif b[0]=="t":
+            comp = [float("inf")]*2
+          else:
+            comp = self.compare_bulges(b, True)                      
+          log.debug("Comparison value for {} is {}".format(b, comp))
+          return comp
         log.debug("Starting shortest_true_multiloop for {}".format(ml_segment))
         loop_nodes = [ml_segment]
         if ml_segment[0]!="m": return set()
@@ -1031,11 +1061,9 @@ class BulgeGraph(object):
             if ml_segment is None:
                 return []
             elif ml_segment in loop_nodes:
-                if "f1" in loop_nodes:
-                    first_node = "f1"
-                else:
-                    compare = functools.partial(self.compare_bulges, flank_nucs = True)
-                    first_node = min(set(loop_nodes)-set(["t1"]), key=compare)
+                #compare = functools.partial(self.compare_bulges, flank_nucs = True)
+                first_node = min(set(loop_nodes), key=compare_mls)
+                log.info("First node of {} is {} ".format(loop_nodes, first_node))
                 i = loop_nodes.index(first_node)
                 return loop_nodes[i:]+loop_nodes[:i]
             else:
@@ -2644,10 +2672,11 @@ class BulgeGraph(object):
 
         return dims
 
-    def get_node_from_residue_num(self, base_num, seq_id=False):
+    def get_node_from_residue_num(self, base_num):
         """
         Iterate over the defines and see which one encompasses this base.
         """
+        seq_id=False
         for key in self.defines.keys():
             define = self.defines[key]
 
@@ -2882,11 +2911,16 @@ class BulgeGraph(object):
         residue map.
         """
         self.seq_ids = []
-
-        for r in residue_map:
+        old_chain = None
+        for i, r in enumerate(residue_map):
             (from_chain, from_base) = ftum.parse_chain_base(r)
-
-            self.seq_ids += [ftum.parse_resid(from_base)] 
+            if old_chain is not None and from_chain != old_chain:
+                breakpoint = i
+                self.backbone_breaks_after.append(breakpoint)
+                log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
+                self.seq = self.seq[:breakpoint+1]+"&"+self.seq[breakpoint+1:]
+            old_chain = from_chain
+            self.seq_ids += [RESID(from_chain, ftum.parse_resid(from_base))] 
 
     # This function seems to be dead code, but might be useful in the future.
     # Consider adding this to whitelist.py

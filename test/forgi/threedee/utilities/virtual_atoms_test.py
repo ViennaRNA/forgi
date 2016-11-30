@@ -8,37 +8,32 @@ import warnings
 import itertools as it
 import numpy as np
 import sys
-
+import logging
+log = logging.getLogger(__name__)
 def realatom_vatom_rmsd(cg):
     """
     The RMSD between the real atoms and the virtual atoms of the stems.
     """
     vposs=[]
     rposs=[]
-    #print(cg.seq)
-    #print("".join(r.get_segid() for r in chain.get_residues()))
-    #print(cg.seq[1], chain[2])
+
     for stem in cg.stem_iterator():
         stemv=[]
         stemr=[]
         resseqs=cg.get_resseqs(stem)
         resseqs=resseqs[0]+resseqs[1]
-        for posCg, posPdb in zip(cg.define_residue_num_iterator(stem), resseqs):
-            #try:
-            #    print( posCg, posPdb, cg.seq[posCg-1], cg.chain[posPdb] )
-            #except KeyError as e: print(e)
+        for posCg, idPdb in zip(cg.define_residue_num_iterator(stem), resseqs):
+            chainPdb, posPdb = idPdb
             vas=cg.virtual_atoms(posCg)
             for a, coords in vas.items():
                 try:
-                    rposs.append(cg.chain[posPdb][a].get_vector().get_array())
-                    stemr.append(cg.chain[posPdb][a].get_vector().get_array())
+                    rp = cg.chains[chainPdb][posPdb][a].get_vector().get_array()
                 except KeyError: 
                     pass
-                else:
+                else:                    
+                    rposs.append(rp)
                     vposs.append(coords)
-                    stemv.append(coords)
     assert len(vposs)==len(rposs)
-    #print (np.array(vposs).shape, file=sys.stderr)
     return ftme.rmsd(np.array(vposs), np.array(rposs))
 
 class VirtualAtomsTest(unittest.TestCase):

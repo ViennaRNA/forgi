@@ -1785,14 +1785,14 @@ class MultiloopFinding(unittest.TestCase):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("m0", "t1", "m2", "m1")])
+        self.assertEqual(mls,[("m0", "t0", "m2", "m1")])
     def test_find_mlonly_multiloops_254_pk_witht1f1(self):
         db = "..(((..[[[..)))..]]].."
              #ffsssmmsssmmsssmmssstt
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("f1", "m2", "m1", "m0", "t1")])
+        self.assertEqual(mls,[("f0", "m2", "m1", "m0", "t0")])
 
         
     def test_find_mlonly_multiloops_2534_pk(self):
@@ -1814,7 +1814,7 @@ class MultiloopFinding(unittest.TestCase):
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls), 
-                         sorted([("f1", "m2", "m3", "m1", "m0", "m4", "t1"),
+                         sorted([("f0", "m2", "m3", "m1", "m0", "m4", "t0"),
                                  ("m10", "m15", "m14", "m13", "m11"),
                                  ("m5", "m9", "m16", "m6"),
                                  ("m7", "m12", "m8")]))
@@ -1826,7 +1826,7 @@ class MultiloopFinding(unittest.TestCase):
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls), 
-                         sorted([("f1", "m2", "m3", "m1", "m0", "m4", "t1"),
+                         sorted([("f0", "m2", "m3", "m1", "m0", "m4", "t0"),
                                  ("m10", "m15", "m14", "m13", "m11"),
                                  ("m5", "m9", "m16", "m6"),
                                  ("m7", "m12", "m8")]))
@@ -1852,9 +1852,9 @@ class WalkBackboneTests(unittest.TestCase):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
-        self.assertEqual(l, ["f1", "s0", "m0", "s1", "m2", "s2", "h0", "s2", "m5", "s3", "h1", "s3", 
+        self.assertEqual(l, ["f0", "s0", "m0", "s1", "m2", "s2", "h0", "s2", "m5", "s3", "h1", "s3", 
                             "m3", "s1", "m4", "s4", "h2", "s4", "m6", "s5", "h3", "s5", "m1", "s0", 
-                            "t1"])
+                            "t0"])
     def test_iter_elements_along_backbones_no_t1(self):
         db = "(((...)))"
         bg = fgb.BulgeGraph()
