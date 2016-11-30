@@ -3,6 +3,7 @@
 **/*.swo
 **/*.swx
 **/*.swn
+**/*.pyo
 **/*~
 **/.DS_Store
 doc/_templates/**
