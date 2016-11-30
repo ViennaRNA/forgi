@@ -1945,3 +1945,14 @@ class WalkBackboneTests(unittest.TestCase):
         self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])\
     '''
 
+
+class SequenceTest(unittest.TestCase):
+    def test_subseq_with_cutpoints(self):
+        seq = fgb.Sequence("123&456&789")
+        self.assertEqual(seq.subseq_with_cutpoints(1,5), "123&4")
+        self.assertEqual(seq.subseq_with_cutpoints(1,9), "123&456&78")
+        self.assertEqual(seq.subseq_with_cutpoints(5,9), "56&78")
+        self.assertEqual(seq.subseq_with_cutpoints(5,None), "56&789")
+        seq = fgb.Sequence("12&3&4&56&789")
+        self.assertEqual(seq.subseq_with_cutpoints(5,8), "56&7")
+

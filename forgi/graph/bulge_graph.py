@@ -324,6 +324,29 @@ def find_bulges_and_stems(brackets):
 class Sequence(str):
     def __len__(self):
       return super(Sequence, self).__len__()-self.count('&')
+    def subseq_with_cutpoints(self,start, stop):
+        if stop is None:
+            stop=len(self)+1
+        seq = str(self)
+
+        out=""
+        if start!=1:
+            prev_seq=self.subseq_with_cutpoints(1,start)
+            start+=prev_seq.count('&')
+            stop+=prev_seq.count('&')
+        
+        i=start-1
+        log.debug("i={}, stop={},{}, {}".format(i, stop, seq, type(seq)))
+
+        while i<stop+out.count('&')-1:
+            o=seq[i]
+            log.debug("subseq_with_cutpoints: i={}, appending {}".format(i, o))
+            out+=o
+            i+=1
+        if out[0]=='&':
+            out=out[1:]
+        return out
+            
     def __getitem__(self, key):
         """
         Indexing with a 1-based index, ignoring cutpoints.
@@ -2918,7 +2941,8 @@ class BulgeGraph(object):
                 breakpoint = i
                 self.backbone_breaks_after.append(breakpoint)
                 log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
-                self.seq = self.seq[:breakpoint+1]+"&"+self.seq[breakpoint+1:]
+                self.seq = self.seq.subseq_with_cutpoints(1,breakpoint+1)+"&"+self.seq.subseq_with_cutpoints(breakpoint+1, None)
+                log.warning("seq now has {} cutpoints".format(self.seq.count('&')))
             old_chain = from_chain
             self.seq_ids += [RESID(from_chain, ftum.parse_resid(from_base))] 
 

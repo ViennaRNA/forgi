@@ -150,22 +150,37 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
             for r in cg.define_residue_num_iterator(d):
                 # make sure all the seq_ids are there
                 print (cg.seq_ids[r - 1])
-                
+             
+    def verify_multiple_chains(self, cg, single_chain_cgs):
+        print(cg.backbone_breaks_after)
+        self.assertEqual(len(cg.backbone_breaks_after), len(single_chain_cgs)-1)
+      
+        self.assertEqual(cg.seq_length, sum(x.seq_length for x in single_chain_cgs))
+        #There might be stems spanning multiple chains.
+        self.assertGreaterEqual(len([s for s in cg.defines if s[0]=="s"]), len([s for c in single_chain_cgs for s in c.defines if s[0]=="s"]))
+        self.assertEqual(cg.seq, "&".join(x.seq for x in single_chain_cgs))
+        
     def test_from_pdb_multiple(self):
         cgE = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
         cgF = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='F')
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
         self.assertEqual(set(cg.chains.keys()), set(["E", "F"]))
-        self.assertEqual(cg.seq_length, cgE.seq_length + cgF.seq_length)
-        #There might be stems spanning multiple chains.
-        self.assertGreater(len([s for s in cg.defines if s[0]=="s"]), len([s for s in cgE.defines if s[0]=="s"]) + len([s for s in cgF.defines if s[0]=="s"]))
         self.assertEqual(len(cg.backbone_breaks_after), 1)
-        self.assertEqual(cg.seq, cgE.seq+'&'+cgF.seq)
         bp = cg.backbone_breaks_after[0]
         self.assertEqual(bp, 3)
         self.assertEqual(cg.seq[:bp+1], cgE.seq)
         self.assertEqual(cg.seq[1:bp+1], cgE.seq)
         self.assertEqual(cg.seq[bp+1:], cgF.seq)
+        self.verify_multiple_chains(cg, [cgE, cgF])
+        
+        cgA = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='A')
+        cgB = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='B')
+        cgC = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='C')
+        cgD = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='D')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',  chain_id='all')
+        log.warning("cg now has {} cutpoints".format(cg.seq.count('&')))
+        self.verify_multiple_chains(cg, [cgA, cgB, cgC, cgD])                 
+                           
 class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
