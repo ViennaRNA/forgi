@@ -52,7 +52,7 @@ class CompareTest(unittest.TestCase):
         cm_new = ftme.AdjacencyCorrelation(cg1) #previousely named ConfusionMatrix
         mcc_n = ftme.mcc(cm_new.evaluate(cg2))
         self.assertAlmostEqual(mcc, mcc_n)
-        self.assertLess(abs(mcc_n-0.0761), 0.0001) #0.086 for distance=30, 0.0761 for 25
+        self.assertAlmostEqual(mcc_n, 0.6756639246921762)
 
 
         cm = ftme.confusion_matrix(cg1, cg1)        
@@ -70,8 +70,9 @@ class CompareTest(unittest.TestCase):
 
     def test_cg_rmsd2(self):
         cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg1), 0)
         cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
-        self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 25.170088934277373)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 7.684377397812648)
 
 
 class TestRMSD(unittest.TestCase):

@@ -66,19 +66,19 @@ class BulgeGraphTest(GraphVerification):
 name temp
 length 71
 seq CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
-define f1 0 1
+define f0 0 1
 define h1 47 55
 define s3 42 47 55 60
 define s2 13 19 27 33
 define h0 19 27
 define s0 1 9 63 71
-define t1 71 72
+define t0 71 72
 define m1 9 13
 define m2 33 42
 define m0 60 63
 connect s3 h1 m0 m2
 connect s2 h0 m1 m2
-connect s0 f1 m1 m0 t1
+connect s0 f0 m1 m0 t0
 """
         self.bpseq = dict()
         self.bpseq['1y26'] = """1 G 26
@@ -433,7 +433,7 @@ actgatagtttattagttttat
         self.assertEqual(bg.defines['s0'], [2, 3, 11, 12])
         self.assertEqual(bg.defines['s1'], [4, 5, 8, 9])
         self.assertEqual(bg.defines['s2'], [15, 16, 19, 20])
-        self.assertEqual(bg.defines['t1'], [21, 21])
+        self.assertEqual(bg.defines['t0'], [21, 21])
 
         bg.get_node_from_residue_num(21)
 
@@ -629,9 +629,9 @@ actgatagtttattagttttat
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('..((..((...))..))..((..))..')
 
-        self.assertEqual(list(bg.define_residue_num_iterator('f1')),
+        self.assertEqual(list(bg.define_residue_num_iterator('f0')),
                          [1,2])
-        self.assertEqual(list(bg.define_residue_num_iterator('t1')),
+        self.assertEqual(list(bg.define_residue_num_iterator('t0')),
                          [26, 27])
         self.assertEqual(list(bg.define_residue_num_iterator('s1')),
                          [7, 8, 12, 13])
@@ -663,9 +663,9 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         srange = list(bg.iterate_over_seqid_range(r1[0], r1[1]))
         self.assertEqual(srange[0], (' ', 5, ' '))
 
-        self.assertEqual(list(bg.define_range_iterator('f1')),
+        self.assertEqual(list(bg.define_range_iterator('f0')),
                          [[1,2]])
-        self.assertEqual(list(bg.define_range_iterator('t1')),
+        self.assertEqual(list(bg.define_range_iterator('t0')),
                          [[26,27]])
 
         
@@ -906,10 +906,16 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 ((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))""")
         self.assertEqual(bg.get_define_seq_str("s0"), ['CGCUUCAUA', 'UAUGAAGUG'])
-
+        #adjacent=True is ignored for stems
+        self.assertEqual(bg.get_define_seq_str("s0", True), ['CGCUUCAUA', 'UAUGAAGUG'])
+        
         bg = fgb.BulgeGraph(dotbracket_str="(.(.))") 
         bg.seq = 'acgauu'
         self.assertEquals(bg.get_define_seq_str("i0"), ['c', ''])
+        
+        self.assertEquals(bg.get_define_seq_str("h0"), ['a'])
+        self.assertEquals(bg.get_define_seq_str("h0", True), ['gau'])
+
 
         bg = fgb.BulgeGraph(dotbracket_str="(.(.))") 
         bg.seq = 'acgauu'
@@ -926,6 +932,14 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEquals(bg.get_define_seq_str('m2'), ['a'])
         self.assertEquals(bg.get_define_seq_str('m2', True), ['aac'])
 
+        bg = fgb.BulgeGraph(dotbracket_str=".(.).") 
+        bg.seq = 'acgau'
+        self.assertEquals(bg.get_define_seq_str("f0", True), ['ac'])
+        self.assertEquals(bg.get_define_seq_str("f0"), ['a'])
+        
+        self.assertEquals(bg.get_define_seq_str("t0", True), ['au'])
+        self.assertEquals(bg.get_define_seq_str("t0"), ['u'])
+        
     def check_define_integrity(self, bg):
         """
         Check to make sure that the define regions are always 5' to 3'
@@ -1007,6 +1021,7 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
         seq = fus.gen_random_sequence(len(dotbracket))
+        print(seq)
         bg = fgb.BulgeGraph(dotbracket_str=dotbracket, seq=seq)
         s = bg.get_flanking_sequence('m0')
 
@@ -1069,7 +1084,7 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(bg.stem_length('s1'), 3)
         self.assertEqual(bg.stem_length('m0'), 0)
         self.assertEqual(bg.stem_length('i0'), 1)
-        self.assertEqual(bg.stem_length('f1'), 1)
+        self.assertEqual(bg.stem_length('f0'), 1)
 
     def test_connection_type(self):
         bg = fgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
@@ -1095,8 +1110,8 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg = fgb.BulgeGraph(dotbracket_str='(())..(())..(())..')
 
         self.assertTrue(bg.has_connection('m0', 'm1'))
-        self.assertTrue(bg.has_connection('m1', 't1'))
-        self.assertFalse(bg.has_connection('m0', 't1'))
+        self.assertTrue(bg.has_connection('m1', 't0'))
+        self.assertFalse(bg.has_connection('m0', 't0'))
 
     def test_compare_hairpins(self):
         bg = fgb.BulgeGraph(dotbracket_str='(())(())')
@@ -1389,19 +1404,19 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.from_dotbracket(db)
         eloops = bg.find_external_loops()
 
-        self.assertEqual(eloops, ['f1', 't1'])
+        self.assertEqual(eloops, ['f0', 't0'])
 
         bg.from_dotbracket('..((.)).((.))..')
         eloops = bg.find_external_loops()
-        self.assertEqual(eloops, ['f1', 't1', 'm0'])
+        self.assertEqual(eloops, ['f0', 't0', 'm0'])
 
         bg.from_dotbracket('..((.))((.))..')
         eloops = bg.find_external_loops()
-        self.assertEqual(eloops, ['f1', 't1', 'm0'])
+        self.assertEqual(eloops, ['f0', 't0', 'm0'])
 
         bg.from_dotbracket('..(((.))((.)))..(..)')
         eloops = bg.find_external_loops()
-        self.assertEqual(eloops, ['f1', 'm2'])
+        self.assertEqual(eloops, ['f0', 'm2'])
 
     def test_stem_bp_iterator(self):
         fasta = """>1L2X_A
@@ -1592,7 +1607,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         db = '........(((((((((.(((.((...)).))).)))))).)))..(((....)))....'
         #     123456789012345678901234567890123456789012345678901234567890
         # from 5' end
-        # f1 s0 s1 i1 s2 i0 s3 h0 i2 m0 s4 h1 t1]
+        # f0 s0 s1 i1 s2 i0 s3 h0 i2 m0 s4 h1 t0
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         
@@ -1642,17 +1657,17 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         sp = bg.shortest_path('s0', 's1') # Includes assymetric bulge w/ length of 0 on one side (i2)
         self.assertEqual(sp, ['s0', 'i2', 's1'])
         
-        sp = bg.shortest_path('f1', 'h0') # Includes assymetric bulge w/ length of 0 on one side (i2)
-        self.assertEqual(sp, ['f1', 's0', 'i2', 's1', 'i1', 's2', 'i0', 's3', 'h0'])
+        sp = bg.shortest_path('f0', 'h0') # Includes assymetric bulge w/ length of 0 on one side (i2)
+        self.assertEqual(sp, ['f0', 's0', 'i2', 's1', 'i1', 's2', 'i0', 's3', 'h0'])
        
-        sp = bg.shortest_path('f1', 't1') # Path traverses a multiloop
-        self.assertEqual(sp, ['f1', 's0', 'm0', 's4', 't1'])
+        sp = bg.shortest_path('f0', 't0') # Path traverses a multiloop
+        self.assertEqual(sp, ['f0', 's0', 'm0', 's4', 't0'])
         
         sp = bg.shortest_path('h0','h1') # Path traverses stem from loop to base
         self.assertEqual(sp, ['h0', 's3', 'i0', 's2', 'i1', 's1', 'i2', 's0', 'm0', 's4', 'h1'])
         
-        sp = bg.shortest_path('t1','f1') # Shortest path along graph in reverse
-        self.assertEqual(sp, ['t1', 's4', 'm0', 's0', 'f1'])
+        sp = bg.shortest_path('t0','f0') # Shortest path along graph in reverse
+        self.assertEqual(sp, ['t0', 's4', 'm0', 's0', 'f0'])
 
     def test_get_domains(self):
         db =  '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
@@ -1771,14 +1786,14 @@ class MultiloopFinding(unittest.TestCase):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("m0", "t1", "m2", "m1")])
+        self.assertEqual(mls,[("m0", "t0", "m2", "m1")])
     def test_find_mlonly_multiloops_254_pk_witht1f1(self):
         db = "..(((..[[[..)))..]]].."
              #ffsssmmsssmmsssmmssstt
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("f1", "m2", "m1", "m0", "t1")])
+        self.assertEqual(mls,[("f0", "m2", "m1", "m0", "t0")])
 
         
     def test_find_mlonly_multiloops_2534_pk(self):
@@ -1800,7 +1815,7 @@ class MultiloopFinding(unittest.TestCase):
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls), 
-                         sorted([("f1", "m2", "m3", "m1", "m0", "m4", "t1"),
+                         sorted([("f0", "m2", "m3", "m1", "m0", "m4", "t0"),
                                  ("m10", "m15", "m14", "m13", "m11"),
                                  ("m5", "m9", "m16", "m6"),
                                  ("m7", "m12", "m8")]))
@@ -1812,7 +1827,7 @@ class MultiloopFinding(unittest.TestCase):
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls), 
-                         sorted([("f1", "m2", "m3", "m1", "m0", "m4", "t1"),
+                         sorted([("f0", "m2", "m3", "m1", "m0", "m4", "t0"),
                                  ("m10", "m15", "m14", "m13", "m11"),
                                  ("m5", "m9", "m16", "m6"),
                                  ("m7", "m12", "m8")]))
@@ -1838,9 +1853,9 @@ class WalkBackboneTests(unittest.TestCase):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
-        self.assertEqual(l, ["f1", "s0", "m0", "s1", "m2", "s2", "h0", "s2", "m5", "s3", "h1", "s3", 
+        self.assertEqual(l, ["f0", "s0", "m0", "s1", "m2", "s2", "h0", "s2", "m5", "s3", "h1", "s3", 
                             "m3", "s1", "m4", "s4", "h2", "s4", "m6", "s5", "h3", "s5", "m1", "s0", 
-                            "t1"])
+                            "t0"])
     def test_iter_elements_along_backbones_no_t1(self):
         db = "(((...)))"
         bg = fgb.BulgeGraph()
@@ -1930,3 +1945,15 @@ class WalkBackboneTests(unittest.TestCase):
         self.assertEqual(bg.multiloops["pseudo_multiloop"],[["m4"]])
         self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])\
     '''
+
+
+class SequenceTest(unittest.TestCase):
+    def test_subseq_with_cutpoints(self):
+        seq = fgb.Sequence("123&456&789")
+        self.assertEqual(seq.subseq_with_cutpoints(1,5), "123&4")
+        self.assertEqual(seq.subseq_with_cutpoints(1,9), "123&456&78")
+        self.assertEqual(seq.subseq_with_cutpoints(5,9), "56&78")
+        self.assertEqual(seq.subseq_with_cutpoints(5,None), "56&789")
+        seq = fgb.Sequence("12&3&4&56&789")
+        self.assertEqual(seq.subseq_with_cutpoints(5,8), "56&7")
+

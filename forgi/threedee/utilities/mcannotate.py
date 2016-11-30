@@ -3,6 +3,8 @@ import sys
 import copy
 
 import forgi.utilities.debug as fud
+import logging
+log = logging.getLogger(__name__)
 
 def parse_resid(mcann_resid):
     '''
@@ -35,6 +37,7 @@ def parse_chain_base(chain_base):
     @param chain_base: The MC-Annotate identification string (i.e. 'A33')
     @return: A pair containing the chain id and residue number (i.e. ('A', 33))
     """
+    log.debug("Chain_base is '{}'".format(chain_base))
     if (ord(chain_base[0]) >= ord('A') and ord(chain_base[0]) <= ord('Z')) or (ord(chain_base[0]) >= ord('a') and ord(chain_base[0]) <= ord('z')):
         # normal string
         chain = chain_base[0]
@@ -65,7 +68,7 @@ def parse_base_pair_id(base_pair_id):
     
     if len(parts) > 2:
         raise Exception("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
-
+    log.debug("Parts are '{}'".format(parts))
     (from_chain, from_base) = parse_chain_base(parts[0].strip())
     (to_chain, to_base) = parse_chain_base(parts[1].strip())
 
@@ -117,6 +120,7 @@ def iterate_over_interactions(mcannotate_lines):
             base_pair_line = False
             continue
         if base_pair_line:
+            log.debug("A Basepair line is '{}'".format(line))
             try:
                 (from_chain, from_base, to_chain, to_base) =  get_interacting_base_pairs(line)
             except ValueError as ve:

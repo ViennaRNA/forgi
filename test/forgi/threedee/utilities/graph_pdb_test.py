@@ -25,7 +25,8 @@ class TestGraphPDB(unittest.TestCase):
     def test_add_loop_information_from_pdb_chain(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1A34.pdb')
 
-    def test_add_stem_information_from_pdb_chain(self):
+    """
+    def test_add_stem_information_from_pdb_chains(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1gid.cg')
         pdb_filename = 'test/forgi/threedee/data/1gid_rosetta.pdb'
 
@@ -35,8 +36,8 @@ class TestGraphPDB(unittest.TestCase):
             chain = list(s.get_chains())[0]
 
         chain = ftup.renumber_chain(chain, cg.seq_ids)
-        ftug.add_stem_information_from_pdb_chain(cg, chain)
-
+        ftug.add_stem_information_from_pdb_chains(cg)
+    """
 
     def verify_virtual_twist_angles(self, cg, s):
         sl = cg.stem_length(s)
@@ -182,7 +183,7 @@ class TestDistanceCalculation(unittest.TestCase):
         distance1=ftug.junction_virtual_atom_distance(self.minimal_multiloop, "m0")
         self.assertLess(distance1, 4., msg="{} is not < {} for {}".format(distance1, 4., "m0"))
         distance2=ftug.junction_virtual_atom_distance(self.minimal_multiloop, "m1")
-        self.assertLess(distance2, 4., msg="{} is not < {} for {}".format(distance1, 4., "m1"))
+        self.assertLess(distance2, 4., msg="{} is not < {} for {}".format(distance2, 4., "m1"))
     def test_junction_virtual_atom_distance_realPDB(self):
         distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m4")
         self.assertLess(distance, 4.)  #This should always hold!

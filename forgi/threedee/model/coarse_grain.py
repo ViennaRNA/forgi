@@ -86,8 +86,8 @@ def add_longrange_interactions(cg, lines):
     for line in ftum.iterate_over_interactions(lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
 
-        seq_id1 = cg.seq_ids.index(ftum.parse_resid(from_base)) + 1
-        seq_id2 = cg.seq_ids.index(ftum.parse_resid(to_base)) + 1
+        seq_id1 = cg.seq_ids.index((from_chain, ftum.parse_resid(from_base))) + 1
+        seq_id2 = cg.seq_ids.index((to_chain, ftum.parse_resid(to_base))) + 1
 
         node1 = cg.get_node_from_residue_num(seq_id1)
         node2 = cg.get_node_from_residue_num(seq_id2)
@@ -108,120 +108,105 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                                 for this coarsification.
     :param chain_id: The id of the chain to create the CG model from
     '''
-    if parser == None:
-        parser = bpdb.PDBParser()
 
     #chain = ftup.load_structure(pdb_filename)
-    if chain_id == None:
-        chain = ftup.get_biggest_chain(pdb_filename, parser=parser)
+    chains = []
+    if chain_id == "all":
+        chains = ftup.get_all_chains(pdb_filename, parser=parser)
+    elif chain_id is None:  
+        chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
     else:
-        chain = ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)
+        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+    new_chains = []
+    for chain in chains:
+        chain = ftup.rename_modified_ress(chain)
+        chain = ftup.rename_rosetta_atoms(chain)
+        chain = ftup.remove_hetatm(chain)
+        new_chains.append(chain)
 
-    chain = ftup.rename_modified_ress(chain)
-    chain = ftup.rename_rosetta_atoms(chain)
-    chain = ftup.remove_hetatm(chain)
-    log.info("Using chain {}".format(chain.id))
-    # output the biggest RNA chain
-    pdb_base = op.splitext(op.basename(pdb_filename))[0]
-    output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
-
-    if not op.exists(output_dir):
-        os.makedirs(output_dir)
-    pdb_chain_fn = op.join(output_dir, 'temp.pdb') 
-    with open(pdb_chain_fn, 'w') as f:
-        # TODO: the following should be changed to take the input parser
-        # and use that to output the chain
-        ftup.output_chain(chain, f.name)
-        f.flush()
-
-    pdb_base = op.splitext(op.basename(pdb_filename))[0]
-    pdb_base += "_" + chain.id
-
+    pdb_base = op.splitext(op.basename(pdb_filename))[0]        
+    
+    if len(new_chains)==1:
+        pdb_base += "_" + new_chains[-1].id
+    else:
+        pdb_base += "_allrna"
+            
     cg = CoarseGrainRNA()
     cg.name = pdb_base
-
-    if len(chain.get_list()) == 0:
+    if sum(len(chain.get_list()) for chain in new_chains) == 0:
         return cg
+        
+    if not secondary_structure:
+        # output a pdb with RNA only (for MCAnnotate):
 
-    # first we annotate the 3D structure
-    p = sp.Popen(['MC-Annotate', pdb_chain_fn], stdout=sp.PIPE)
-    out, err = p.communicate()
+        output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
 
-    #with open(op.join(output_dir, 'temp.mcannotate'), 'w') as f3:
-    #    f3.write(out)
+        if not op.exists(output_dir):
+            os.makedirs(output_dir)
+        rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
+        with open(rna_pdb_fn, 'w') as f:
+            #We need to output in pdb format for MC-Annotate
+            ftup.output_multiple_chains(new_chains, f.name) 
+            f.flush()
 
-    lines = out.strip().split('\n')
-    # convert the mcannotate output into bpseq format
-    
-    try:
-        (dotplot, residue_map) = ftum.get_dotplot(lines)
-    except Exception as e:
-        print (e, file=sys.stderr)
-        return cg
+        # first we annotate the 3D structure
+        p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
+        out, err = p.communicate()
 
-    # f2 will store the dotbracket notation
-    with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-        f2.write(dotplot)
-        f2.flush()
+        lines = out.strip().split('\n')
+        
+        # convert the mcannotate output into bpseq format
+        try:
+            (dotplot, residue_map) = ftum.get_dotplot(lines)
+        except Exception as e:
+            print (e, file=sys.stderr)
+            return cg
 
-    
-    # remove pseudoknots
-    if remove_pseudoknots:
-        out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
-                           #output_format = 'vienna',
-                           output_format = 'bpseq',
-                           method = cak.DEFAULT_METHOD,
-                           opt_method = cak.DEFAULT_OPT_METHOD,
-                           verbose = cak.DEFAULT_VERBOSE,
-                           removed= cak.DEFAULT_REMOVED)
+        # f2 will store the dotbracket notation
+        #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
+        #    f2.write(dotplot)
+        #    f2.flush()
 
-        out = out.replace(' Nested structure', pdb_base)
+        
+        # remove pseudoknots
+        if remove_pseudoknots:
+            out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
+                               #output_format = 'vienna',
+                               output_format = 'bpseq',
+                               method = cak.DEFAULT_METHOD,
+                               opt_method = cak.DEFAULT_OPT_METHOD,
+                               verbose = cak.DEFAULT_VERBOSE,
+                               removed= cak.DEFAULT_REMOVED)
+
+            out = out.replace(' Nested structure', pdb_base)
+        else:
+            out = dotplot
+        #(out, residue_map) = add_missing_nucleotides(out, residue_map)
+
+        cg.from_bpseq_str(out, dissolve_length_one_stems=False)        
+        cg.seqids_from_residue_map(residue_map)        
+        add_longrange_interactions(cg, lines)
+        
     else:
-        out = dotplot
-    #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-
-    """
-    if secondary_structure != '':
-        lines = out.split('\n')
-
-        if len(secondary_structure) != len(lines[1].strip()):
-            print >>sys.stderr, "The provided secondary structure \
-                    does not match the length of the 3D structure"
-            print >>sys.stderr, "Sequence:", lines[1]
-            print >>sys.stderr, "ss_struc:", secondary_structure
-            raise ValueError("The provided secondary structure "
-                    "does not match the length of the 3D structure.\n"
-                    "Sequence: {}\n"
-                    "ss_struc: {}".format(lines[1],secondary_structure))
-
-        lines[-1] = secondary_structure
-        out = "\n".join(lines)
-    """
-
+        warnings.warn("Not adding any longrange interactions because secondary structure is given.")
+        if remove_pesudoknots:
+            warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
+        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
+        
     # Add the 3D information about the starts and ends of the stems
     # and loops
-    
-    # BT: I think, we have chain already. No need to re-read!
-    #with warnings.catch_warnings():
-    #    warnings.simplefilter("ignore")
-    #    s = bpdb.PDBParser().get_structure('temp', pdb_chain_fn)
-    #    chains = list(s.get_chains())
-    #    if len(chains) < 1:
-    #        raise Exception("No chains in the PDB file")
-    #    chain = chains[0]
-
-    cg.from_bpseq_str(out, dissolve_length_one_stems=False)
-    cg.name = pdb_base
-    cg.seqids_from_residue_map(residue_map)
-    
-    ftug.add_stem_information_from_pdb_chain(cg, chain)
+    cg.chains = { chain.id : chain for chain in new_chains }
+    log.debug("seq-IDs of loaded structure are {}".format(cg.seq_ids))
+    #Stems can span 2 chains.    
+    ftug.add_stem_information_from_pdb_chains(cg)
     cg.add_bulge_coords_from_stems()
-    ftug.add_loop_information_from_pdb_chain(cg, chain)
+    
+    for chain in new_chains:
+        # Loops cannot span multiple chains.
+        ftug.add_loop_information_from_pdb_chain(cg, chain)
 
-    cg.chain = chain
 
-    add_longrange_interactions(cg, lines)
-
+    assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
     #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
     #    f3.write(cg.to_cg_string())
     #    f3.flush()
@@ -331,7 +316,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.project_from = None
 
         self.longrange = c.defaultdict( set )
-        self.chain = None #the PDB chain if loaded from a PDB file
+        self.chains = {} #the PDB chain if loaded from a PDB file
 
         if cg_file is not None:
             self.from_file(cg_file)
@@ -398,12 +383,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         for stem in self.stem_iterator():
             try:
                 ftug.add_virtual_residues(self, stem)
-            except KeyError:
-                if stem not in self.coords:
+            except (KeyError, ValueError):
+                if np.all(np.isnan(self.coords[stem])):
                     raise RnaMissing3dError("No 3D coordinates available for stem {}".format(stem))
-                elif stem not in self.twists:
+                elif np.all(np.isnan(self.twists[stem])):
                     raise RnaMissing3dError("No twists available for stem {}".format(stem))
-                else: 
+                else:
+                    log.warning("Reraising in add_all_virtual_residues")
                     raise
     def get_virtual_residue(self, pos, allow_single_stranded = False):
         """
@@ -989,6 +975,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         :return: A 2D numpy array containing all coordinates
         '''
         all_coords = []
+        assert len(self.coords) == len(self.defines), self.coords.keys()^self.defines.keys()
         for key in sorted(self.coords.keys()):
             for i in range(len(self.coords[key])):
                 all_coords.append(self.coords[key][i])
@@ -1135,7 +1122,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         """
         sorted_defines = sorted(self.defines.keys())
-        assert len(sorted_defines)==len(directions)
+        assert len(sorted_defines)==len(directions), "{} != {}".format(len(sorted_defines), len(directions))
         if self.build_order is None:
             self.traverse_graph()
         self.coords["s0"]=np.array([0,0,0]), directions[sorted_defines.index("s0")]
@@ -1184,7 +1171,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
              if key not in self._virtual_atom_cache:
                 try:
                     self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
-                except KeyError:
+                except KeyError as e:
+                    log.info("Key {} not present. Need to recreate all virtual residues".format(e))
                     self.add_all_virtual_residues()
                     self._virtual_atom_cache[key]=ftug.virtual_atoms(self)[key]
              return self._virtual_atom_cache[key]

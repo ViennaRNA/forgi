@@ -87,7 +87,7 @@ class TestStats(unittest.TestCase):
         cg.from_fasta(fa_text)
 
         conf_stats = ftms.get_conformation_stats()
-        stats = conf_stats.sample_stats(cg, 't1')
+        stats = conf_stats.sample_stats(cg, 't0')
 
         fud.pv('cg.to_cg_string()')
         fud.pv('stats')
