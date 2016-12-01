@@ -2,6 +2,7 @@
 
 import Bio.PDB as bp
 import Bio.PDB as bpdb
+import Bio.PDB.PDBExceptions
 import operator
 import itertools as it
 import collections as col
@@ -29,6 +30,8 @@ import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
 import forgi
+
+import uuid
 
 import scipy.optimize as so
 
@@ -668,7 +671,11 @@ def stem_from_chains(cg, chains, define):
     residue_ids = cg.get_resseqs(define, seq_ids=True)
     for strand in residue_ids:
         for res_id in strand:
-            stem_chain.add(chains[res_id.chain][res_id.resid])
+            try:
+                stem_chain.add(chains[res_id.chain][res_id.resid])
+            except Bio.PDB.PDBExceptions.PDBConstructionException:
+                ftup.change_residue_id(stem_chain[res_id.resid], uuid.uuid4())
+                stem_chain.add(chains[res_id.chain][res_id.resid])
 
     rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,
                           superimpose=True, apply_sup=False)[2]
@@ -1716,12 +1723,12 @@ def add_bulge_information_from_pdb_chain(bg, chain):
                   " Use cg.add_bulge_coords_from_stems instead!")
     bg.add_bulge_coords_from_stems()
 
-def add_loop_information_from_pdb_chain(bg, chain):
+def add_loop_information_from_pdb_chains(bg):
     seq_ids=True
-    #log.info("add_loop_information_from_pdb_chain called")
+    #log.info("add_loop_information_from_pdb_chains called")
     for d in it.chain(bg.hloop_iterator(), bg.floop_iterator(), bg.tloop_iterator()):
         if d not in bg.defines:
-            continue
+            assert False
 
         edges = list(bg.edges[d])
         
@@ -1729,7 +1736,13 @@ def add_loop_information_from_pdb_chain(bg, chain):
             # Odd case where there are no stems in the structure
             # We should find the furthest distance from the first
             # nucleotide
-            log.info("add_loop_information_from_pdb_chain: No stem in structure")
+            log.info("add_loop_information_from_pdb_chain: {} has no neighbor".format(d))
+            
+            chain_ids = set(x.chain for y in bg.get_resseqs(d) for x in y )
+            assert len(chain_ids)==1
+            c, = chain_ids
+            chain = bg.chains[c]
+            
             first_res = None
             for res in chain.get_residues():
                 if catom_name in res:
@@ -1742,6 +1755,11 @@ def add_loop_information_from_pdb_chain(bg, chain):
                                             d)
            
         else:
+            chain_ids = set(x.chain for y in bg.get_resseqs(d) for x in y )
+            assert len(chain_ids)==1
+            c, = chain_ids
+            chain = bg.chains[c]
+
             s1 = edges[0]
             s1d = bg.defines[s1]
             bd = bg.defines[d]

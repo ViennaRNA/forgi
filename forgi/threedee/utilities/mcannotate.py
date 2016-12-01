@@ -22,6 +22,7 @@ def format_resid(pdb_resid):
     Convert a PDB.Chain.Residue id to an MC-Annotate formatted
     residue identifier.
     '''
+    
     if pdb_resid[2] == ' ':
         return str(pdb_resid[1])
     else:

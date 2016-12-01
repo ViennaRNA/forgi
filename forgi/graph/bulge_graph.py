@@ -39,6 +39,28 @@ from pprint import pprint
 
 
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
+
+def resid_to_str(resid):
+    if resid.chain is not None:
+        out="{}:{}".format(resid.chain, resid.resid[1])
+    else:
+        out=str(resid.resid[1])
+    if resid.resid[2]!=" ":
+        out+=".{}".format(resid.resid[2])
+    return out
+
+def resid_from_str(resstr):
+    if ":" in resstr:
+        chain, resid = resstr.split(":")
+    else:
+        resid=resstr
+        chain=None
+    idparts=resid.split(".")
+    if len(idparts)==1:
+        idparts.append(" ")
+    return RESID(chain, (' ', idparts[0], idparts[1]))
+
+
 def add_bulge(bulges, bulge, context, message):
     """
     A wrapper for a simple dictionary addition
@@ -338,7 +360,8 @@ def find_bulges_and_stems(brackets):
 
 class Sequence(str):
     def __len__(self):
-      return super(Sequence, self).__len__()-self.count('&')
+        return super(Sequence, self).__len__()-self.count('&')
+
     def subseq_with_cutpoints(self,start, stop):
         if stop is None:
             stop=len(self)+1
@@ -351,17 +374,29 @@ class Sequence(str):
             stop+=prev_seq.count('&')
         
         i=start-1
-        log.debug("i={}, stop={},{}, {}".format(i, stop, seq, type(seq)))
+        #log.debug("i={}, stop={},{}, {}".format(i, stop, seq, type(seq)))
 
         while i<stop+out.count('&')-1:
             o=seq[i]
-            log.debug("subseq_with_cutpoints: i={}, appending {}".format(i, o))
+            #log.debug("subseq_with_cutpoints: i={}, appending {}".format(i, o))
             out+=o
             i+=1
         if out[0]=='&':
             out=out[1:]
         return out
-            
+    @property
+    def backbone_breaks_after(self):
+        i=0
+        seq=str(self)
+        out = []
+        while i+len(out)<len(seq):                
+            print("{}, {}: {}".format(i, len(out), seq[i+len(out)]))
+            if seq[i+len(out)]=='&':
+                out.append(i)
+            else:
+                i+=1
+        return out
+    
     def __getitem__(self, key):
         """
         Indexing with a 1-based index, ignoring cutpoints.
@@ -600,7 +635,7 @@ class BulgeGraph(object):
         seq_ids 1 2 2.A 17
         """
         out_str = "seq_ids "
-        out_str += " ".join(map(ftum.format_resid, self.seq_ids))
+        out_str += " ".join(map(resid_to_str, self.seq_ids))
         out_str += "\n"
 
         return out_str
@@ -1265,6 +1300,7 @@ class BulgeGraph(object):
         param old_name: The previous name of the node
         param new_name: The new name of the node
         """
+        #log.debug("Relabelling node {} to {}".format(old_name, new_name))
         # replace the define name
         define = self.defines[old_name]
 
@@ -1662,7 +1698,7 @@ class BulgeGraph(object):
         # when provided with just a sequence, we presume that the
         # residue ids are numbered from 1-up
         for i in range(len(self.seq)):
-            self.seq_ids += [(' ', i + 1, ' ')]
+            self.seq_ids.append(RESID(None,(' ', i + 1, ' ')))
 
     def remove_degenerate_nodes(self):
         """
@@ -1747,6 +1783,7 @@ class BulgeGraph(object):
             for db in dotbracket_str.split('&'):
                 l+=len(db)
                 self.backbone_breaks_after.append(l)
+            self.backbone_breaks_after = self.backbone_breaks_after[:-1]
         if len(dotbracket_str) == 0:
             return
 
@@ -1830,7 +1867,7 @@ class BulgeGraph(object):
 
         return (tuples, seq)
 
-    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False):
+    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False, breakpoints=[]):
         """
         Create the graph from a string listing the base pairs.
 
@@ -1847,7 +1884,7 @@ class BulgeGraph(object):
         :return: Nothing, but fill out this structure.
         """
         self.__init__()
-
+        self.backbone_breaks_after = breakpoints
         tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
 
         self.seq = seq
@@ -1936,6 +1973,17 @@ class BulgeGraph(object):
                     new_d = [d[2], d[3], d[0], d[1]]
                     self.defines[k] = new_d
 
+    def _next_available_element_name(self, element_type):
+        """
+        :param element_type: A single letter ("t", "f", "s"...)
+        """
+        i=0
+        while True:
+            name="{}{}".format(element_type, i)
+            if name not in self.defines:
+                return name
+            i+=1
+        
     def _split_at_cofold_cutpoint(self):
         """
         Multiple sequences should not be connected along the backbone.
@@ -1943,56 +1991,53 @@ class BulgeGraph(object):
         We have constructed the bulge graph, as if they were connected along the backbone, so
         now we have to split it.
         """
+        log.info("_split_at_cofold_cutpoint: breakpoints are {}".format(self.backbone_breaks_after))
         for splitpoint in self.backbone_breaks_after:
-            element_left = self.self.get_node_from_residue_num(splitpoint)
-            element_right = self.self.get_node_from_residue_num(splitpoint+1)
+            element_left = self.get_node_from_residue_num(splitpoint)
+            element_right = self.get_node_from_residue_num(splitpoint+1)
             if element_left[0] == "f" or element_right[0]=="t":
                 #No cofold structure. First sequence is disconnected from rest
-                log.warning("Cannot create BulgeGraph. Found two sequences not connected by any "
-                            " base-pair. Creating empty bulge-graph object instead.")
-                self.__init__() #Make self an empty bulge graph.
-                #TODO: Assert self is empty
+                raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
+                            " base-pair.")# Creating empty bulge-graph object instead.")
+                #self.__init__() #Make self an empty bulge graph.
                 return
             elif element_left[0] == "m" or  element_left[0] == "h":
+                log.debug("Splitpoint in m/h")
                 #We split this multiloop segment into a f and a t segment.
                 from_, to_ = self.defines[element_left]
-                next3 = "t{}".format(len(d for d in self.defines if d[0]=="t"))
+                next3 = self._next_available_element_name("t")
                 assert next3 not in self.defines
                 self.defines[next3]=[from_, splitpoint]
-                neighbor = self.get_node_from_residue_num(fom_-1)
-                assert element in self.edges[neighbor]
+                neighbor = self.get_node_from_residue_num(from_-1)
                 self.edges[next3].add(neighbor)
                 self.edges[neighbor].add(next3)
-                if element_right == element[left]:
+                if element_right == element_left:
                     assert splitpoint+1 <= to_
-                    next5 = "f{}".format(len(d for d in self.defines if d[0]=="f"))
-                    assert next5 not in self.defines
+                    next5 = self._next_available_element_name("f")
                     self.defines[next5]=[splitpoint+1, to_]
                     neighbor = self.get_node_from_residue_num(to_+1)
-                    assert element in self.edges[neighbor]
                     self.edges[next5].add(neighbor)
                     self.edges[neighbor].add(next5)
                 self.remove_vertex(element_left)
                 return
             elif element_right[0]=="m" or element_right[0]=="h": #element_left =  stem
-                next5 = "f{}".format(len(d for d in self.defines if d[0]=="f"))
+                log.debug("Splitpoint before m/h")
+                next5 = "f{}".format(len([d for d in self.defines if d[0]=="f"]))
                 self.edges[element_right].remove(element_left)
                 self.edges[element_left].remove(element_right)
                 self.relabel_node(element_right, next5)
                 return
             elif element_left[0]=="i":
+                log.debug("Splitpoint in i")
                 #We split the interior loop into a multiloop segment on one side and an f and t element on the other side
-                c = self.connections(bulge)
+                c = self.connections(element_left)
                 s1 = self.defines[c[0]]
                 s2 = self.defines[c[1]]
                 left = s1[1], s2[0]
                 right = s2[3], s1[2]                  
-                nextML = "m{}".format(len(d for d in self.defines if d[0]=="m"))                    
-                assert nextML not in self.defines                    
-                next3 = "t{}".format(len(d for d in self.defines if d[0]=="t"))
-                assert next3 not in self.defines                        
-                next5 = "f{}".format(len(d for d in self.defines if d[0]=="f")) #Will potentially not be used
-                assert next5 not in self.defines
+                nextML = self._next_available_element_name("m")
+                next3 = self._next_available_element_name("t")
+                next5 = self._next_available_element_name("f") 
                 if left[0] < splitpoint < left[1]: #Split at left
                     if right[0]+1==right[1]:
                         self.defines[nextML] = []
@@ -2026,15 +2071,14 @@ class BulgeGraph(object):
                 self.remove_vertex(element_left)
                 return
             elif element_right[0]=="i": #Element_left is a stem
-                c = self.connections(bulge)
+                log.debug("Splitpoint before i")
+                c = self.connections(element_right)
                 s1 = self.defines[c[0]]
                 s2 = self.defines[c[1]]
                 left = s1[1], s2[0]
                 right = s2[3], s1[2] 
-                nextML = "m{}".format(len(d for d in self.defines if d[0]=="m"))                    
-                assert nextML not in self.defines                    
-                next5 = "f{}".format(len(d for d in self.defines if d[0]=="f")) #Will potentially not be used
-                assert next5 not in self.defines  
+                nextML = self._next_available_element_name("m")                
+                next5 = self._next_available_element_name("f")
                 if splitpoint == left[0]:
                     if right[0]+1==right[1]:
                         self.defines[nextML] = []
@@ -2058,16 +2102,74 @@ class BulgeGraph(object):
                 self.edges[nextML].update(c)
                 self.remove_vertex(element_right)
             elif element_left != element_right:
+                log.debug("Splitpoint between stems")
                 assert element_left[0] == "s"
-                self.edges[element_left].remove(element_right)
-                self.edges[element_right].remove(element_left)
+                if element_right[0] == "s":
+                    #A zero-length ml or il
+                    try:
+                        connection, = self.edges[element_left] & self.edges[element_right]
+                    except:
+                        print(self.edges[element_left], self.edges[element_right], self.edges[element_left] & self.edges[element_right])
+                        raise
+                        
+                    if connection[0] == "m":
+                        ml = self.shortest_mlonly_multiloop(connection)
+                        if any( m[0] != "m" for m in ml):
+                            raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
+                                             " base-pair.")# Creating empty bulge-graph object instead.")
+                        #Just remove it without replacement
+                        self.remove_vertex(connection)
+                    else:
+                        assert connection[0]=="i"
+                        #Replace i by ml
+                        nextML = self._next_available_element_name("m")                 
+                        assert nextML not in self.defines
+                        #l1, l2, r1, r2 = self.flanking_nucleotides(connection)
+                        self.relabel_node(connection, nextML)
+
+                else:
+                    assert False
+                    #next5 = "f{}".format(len([d for d in self.defines if d[0]=="f"])) #Will potentially not be used
+                    #self.relabel_node(element_right, next5)
+
             else:
+                log.debug("Splitpoint inside s")
                 assert element_left[0]=="s"
                 if self.defines[element_left][1]==splitpoint:
-                        return #The two sequences form a double helix. Nothing needs to be done
+                    assert element_right[0]=="s"
+                    return #The two sequences form a double helix. Nothing needs to be done
                     
-                else:
-                    raise ValueError("Cofold cutpoint in the middle of a single stem. That should never happen!")
+                else:                    
+                    define1 = [self.defines[element_left][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element_left][3]]
+                    define2 = [ splitpoint+1, self.defines[element_left][1], self.defines[element_left][2], self.pairing_partner(splitpoint+1)]
+                    edges1=[]
+                    edges2=[]
+                    for edge in self.edges[element_left]:
+                        if max(self.flanking_nucleotides(edge))==define1[0] or min(self.flanking_nucleotides(edge))==define1[3]:
+                            edges1.append(edge)
+                        elif max(self.flanking_nucleotides(edge))==define2[2] or min(self.flanking_nucleotides(edge))==define2[1]:
+                            edges2.append(edge)
+                        else:
+                            assert False 
+                    self.remove_vertex(element_left)
+                    nextS1 = self._next_available_element_name("s")                    
+                    self.defines[nextS1]=define1
+                    nextM = self._next_available_element_name("m")                    
+                    self.defines[nextM]=[]
+                    nextS2 = self._next_available_element_name("s")
+                    self.defines[nextS2]=define2
+
+                    for e1 in edges1:
+                        self.edges[e1].add(nextS1)
+                    for e2 in edges2:
+                        self.edges[e2].add(nextS2)
+                    edges1.append(nextM)
+                    edges2.append(nextM)
+                    self.edges[nextS1]=set(edges1)
+                    self.edges[nextS2]=set(edges2)
+                    self.edges[nextM]=set([nextS1, nextS2])
+
+                    #raise NotImplementedError("Cofold cutpoints in the middle of a single stem are not yet implemented!")
                 
     def to_dotbracket_string(self):
         """
@@ -2138,8 +2240,10 @@ class BulgeGraph(object):
                     self.edges[p].add(parts[1])
             elif parts[0] == 'seq':
                 self.seq = parts[1]
+                log.info("from_bg_string: seq {}, breakpoints {}".format(self.seq, self.seq.backbone_breaks_after))
+                self.backbone_breaks_after = self.seq.backbone_breaks_after
             elif parts[0] == 'seq_ids':
-                self.seq_ids = list(map(ftum.parse_resid, parts[1:]))
+                self.seq_ids = list(map(resid_from_str, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
             elif parts[0] == 'info':
@@ -2740,7 +2844,7 @@ class BulgeGraph(object):
                     if base_num >= a[0] and base_num <= a[1]:
                         return key
 
-        raise LookupError("Base number %d not found in the defines." % (base_num))
+        raise LookupError("Base number {} not found in the defines {}.".format(base_num, self.defines))
 
     def get_length(self, vertex):
         """
@@ -2956,22 +3060,21 @@ class BulgeGraph(object):
 
         return resnames
 
+    def insert_cutpoints_into_seq(self):
+        for breakpoint in self.backbone_breaks_after:
+            log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
+            self.seq = self.seq.subseq_with_cutpoints(1,breakpoint+1)+"&"+self.seq.subseq_with_cutpoints(breakpoint+1, None)
+            log.info("seq now has {} cutpoints".format(self.seq.count('&')))
+
+
     def seqids_from_residue_map(self, residue_map):
         """
         Create the list of seq_ids from the list of MC-Annotate identifiers in the
         residue map.
         """
         self.seq_ids = []
-        old_chain = None
         for i, r in enumerate(residue_map):
             (from_chain, from_base) = ftum.parse_chain_base(r)
-            if old_chain is not None and from_chain != old_chain:
-                breakpoint = i
-                self.backbone_breaks_after.append(breakpoint)
-                log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
-                self.seq = self.seq.subseq_with_cutpoints(1,breakpoint+1)+"&"+self.seq.subseq_with_cutpoints(breakpoint+1, None)
-                log.warning("seq now has {} cutpoints".format(self.seq.count('&')))
-            old_chain = from_chain
             self.seq_ids += [RESID(from_chain, ftum.parse_resid(from_base))] 
 
     # This function seems to be dead code, but might be useful in the future.

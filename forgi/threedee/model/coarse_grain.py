@@ -85,9 +85,12 @@ def add_longrange_interactions(cg, lines):
     '''
     for line in ftum.iterate_over_interactions(lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
-
-        seq_id1 = cg.seq_ids.index((from_chain, ftum.parse_resid(from_base))) + 1
-        seq_id2 = cg.seq_ids.index((to_chain, ftum.parse_resid(to_base))) + 1
+        try:
+            seq_id1 = cg.seq_ids.index(fgb.RESID(from_chain, ftum.parse_resid(from_base))) + 1
+        except ValueError:
+            log.error("seq_ids are {}".format(cg.seq_ids))
+            raise
+        seq_id2 = cg.seq_ids.index(fgb.RESID(to_chain, ftum.parse_resid(to_base))) + 1
 
         node1 = cg.get_node_from_residue_num(seq_id1)
         node2 = cg.get_node_from_residue_num(seq_id2)
@@ -95,6 +98,20 @@ def add_longrange_interactions(cg, lines):
         if abs(seq_id2 - seq_id1) > 1 and node1 != node2 and not cg.has_connection(node1, node2):
             cg.longrange[node1].add(node2)
             cg.longrange[node2].add(node1)
+            
+def breakpoints_from_residuemap(residue_map):
+    """
+    Create the list of cofold cutpoints from the list of MC-Annotate identifiers in the
+    residue map.
+    """
+    breakpoints = []
+    old_chain = None
+    for i, r in enumerate(residue_map):
+        (from_chain, _) = ftum.parse_chain_base(r)
+        if old_chain is not None and from_chain != old_chain:
+            breakpoints.append(i)
+        old_chain = from_chain
+    return breakpoints
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
                             chain_id=None, remove_pseudoknots=True, parser=None):
@@ -132,7 +149,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         pdb_base += "_allrna"
             
     cg = CoarseGrainRNA()
-    cg.name = pdb_base
     if sum(len(chain.get_list()) for chain in new_chains) == 0:
         return cg
         
@@ -182,8 +198,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         else:
             out = dotplot
         #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-
-        cg.from_bpseq_str(out, dissolve_length_one_stems=False)        
+        
+        breakpoints = breakpoints_from_residuemap(residue_map)
+        log.debug("Breakpoints are {}".format(breakpoints))
+        cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints  
+        cg.insert_cutpoints_into_seq()
         cg.seqids_from_residue_map(residue_map)        
         add_longrange_interactions(cg, lines)
         
@@ -192,24 +211,26 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         if remove_pesudoknots:
             warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
         cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
-        
+
+    cg.name = pdb_base
     # Add the 3D information about the starts and ends of the stems
     # and loops
     cg.chains = { chain.id : chain for chain in new_chains }
-    log.debug("seq-IDs of loaded structure are {}".format(cg.seq_ids))
+    log.debug("First 10 seq-IDs of loaded structure are {}".format(cg.seq_ids[:10]))
+    log.debug("Elements {}".format(cg.defines.keys()))
     #Stems can span 2 chains.    
     ftug.add_stem_information_from_pdb_chains(cg)
     cg.add_bulge_coords_from_stems()
     
-    for chain in new_chains:
-        # Loops cannot span multiple chains.
-        ftug.add_loop_information_from_pdb_chain(cg, chain)
+    ftug.add_loop_information_from_pdb_chains(cg)
 
 
     assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
     #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
     #    f3.write(cg.to_cg_string())
     #    f3.flush()
+
+    log.debug("Sequence {}".format(cg.seq))
 
     return cg
 
@@ -880,8 +901,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def from_fasta(self, fasta):
         super(CoarseGrainRNA, self).from_fasta(fasta)
         self._init_coords()
-    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False):
-        super(CoarseGrainRNA, self).from_bpseq_str(bpseq_str, dissolve_length_one_stems)
+    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False, breakpoints = []):
+        super(CoarseGrainRNA, self).from_bpseq_str(bpseq_str, dissolve_length_one_stems, breakpoints)
         self._init_coords()
     def from_dotbracket(self,  dotbracket_str, dissolve_length_one_stems=False):
         super(CoarseGrainRNA, self).from_dotbracket(dotbracket_str, dissolve_length_one_stems)

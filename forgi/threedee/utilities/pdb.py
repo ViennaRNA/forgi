@@ -1,9 +1,14 @@
+from __future__ import print_function
+
 import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
+
+import logging
+log=logging.getLogger(__name__)
 
 backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"] 
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
@@ -450,6 +455,7 @@ def get_all_chains(in_filename, parser=None):
              chain in the structure stored in in_filename
     '''
     if parser is None:
+        #print("in_filename is {}".format(in_filename), file=sys.stderr)
         if in_filename.endswith(".pdb"):
             parser = bpdb.PDBParser()
         elif in_filename.endswith(".cif"):
@@ -461,9 +467,12 @@ def get_all_chains(in_filename, parser=None):
                 #page 10 of ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
                 # a HEADER entry is mandatory.
                 if line.startswith("HEADER"):
+                    #print("HEADER found", file=sys.stderr)
                     parser = bpdb.PDBParser()
                 else:
                     parser = bpdb.MMCIFParser()
+                    #print("HEADER NOT found", file=sys.stderr)
+
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

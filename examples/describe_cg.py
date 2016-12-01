@@ -38,7 +38,9 @@ if __name__=="__main__":
         descriptors = []
         for ml in multiloops:
             descriptors.append(cg.describe_multiloop(ml))
+        #print (descriptors)
         data["open_mls"].append(len([d for d in descriptors if "open" in d]))
+        #print(data["open_mls"][-1])
         data["pseudoknots"].append(len([d for d in descriptors if "pseudoknot" in d]))
         data["regular_mls"].append(len([d for d in descriptors if "regular_multiloop" in d]))
         data["total_mls"].append(len(multiloops))

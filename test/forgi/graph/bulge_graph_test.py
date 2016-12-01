@@ -48,6 +48,88 @@ class GraphVerification(unittest.TestCase):
         self.check_for_all_nucleotides(bg)
         self.check_for_overlapping_defines(bg)
 
+class BulgeGraphCofoldTest(GraphVerification):
+    
+    def test_cutpoint_in_stem(self):
+        db = "(((&(((...))))))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "h0", "m0"]))
+        self.assertEqual(cg.defines["s0"], [1,3,13,15])
+        self.assertEqual(cg.defines["s1"], [4,6,10,12])
+        self.assertEqual(cg.edges["s0"], set(["m0"]))
+        self.assertEqual(cg.edges["s1"], set(["m0", "h0"]))
+
+    def test_cutpoint_in_ml(self):
+        db = "(((.(((...)))..&..(((...))).)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "f0", "t0", "s2", "h1", "m1"]))
+
+    def test_cutpoint_in_il(self):
+        db = "(((..&..(((...))))))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "t0", "s1", "h0", "m0"]))
+
+    def test_cutpoint_in_h(self):
+        db = "(((..&..)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "t0"]))
+
+    def test_cutpoint_in_f(self):
+        db = "...&..."
+        with self.assertRaises(ValueError):
+            cg = fgb.BulgeGraph(dotbracket_str=db)
+
+    def test_cutpoint_in_t(self):
+        db = "(((...)))...&..."
+        with self.assertRaises(ValueError):
+            cg = fgb.BulgeGraph(dotbracket_str=db)
+
+    def test_cutpoint_between_i_s(self):
+        db = "(((...&(((...))))))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "t0", "s1", "h0", "m0"]))
+
+    def test_cutpoint_between_m_s(self):
+        db = "(((.(((...)))..&(((...))).)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m1", "t0", "h0", "h1"]))
+    
+    def test_cutpoint_between_s_i0_s(self):
+        db = "(((&(((...))).)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0"]))
+
+    def test_cutpoint_between_s_m0_s(self):
+        db = "(((.(((...)))&(((...))).)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "s2", "h1", "m1"]))
+    
+    def test_cutpoint_between_s_i(self):
+        db = "(((&...(((...))))))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "s1", "h0", "m0"]))
+    
+    def test_cutpoint_between_s_m(self):
+        db = "(((.(((...)))&..(((...))).)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m1", "f0", "h0", "h1"]))
+    
+    def test_cutpoint_between_s_h(self):
+        db = "(((&..)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0"]))
+    
+    def test_cutpoint_between_h_s(self):
+        db = "(((..&)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "t0"]))
+
+
+
+
+
 
 class BulgeGraphTest(GraphVerification):
     """
@@ -609,8 +691,12 @@ actgatagtttattagttttat
     def test_define_residue_num_iterator1(self):
         bg = fgb.BulgeGraph(dotbracket_str='(.(...).)')
         ress = list(bg.define_residue_num_iterator('i0', adjacent=True))
-
         self.assertEqual(ress, [1,2,3,7,8,9])
+        
+        bg = fgb.BulgeGraph(dotbracket_str='((.((...))))')
+        ress = list(bg.define_residue_num_iterator('i0', adjacent=True))
+        self.assertEqual(ress, [2,3,4,10,11])
+
 
     def test_define_residue_num_iterator(self):
         bg = fgb.BulgeGraph(dotbracket_str='((.).)')
@@ -646,7 +732,7 @@ AAAAAAAAAA
         self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True)),
                          [2,3,7,8,9])
 
-        self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True, seq_ids=True)),
+        self.assertEqual(list(x.resid for x in bg.define_residue_num_iterator('i0', adjacent=True, seq_ids=True)),
                          [(' ', 2, ' '), (' ', 3, ' '), (' ', 7, ' '), (' ', 8, ' '), (' ', 9, ' ')])
 
     def test_define_range_iterator(self):
@@ -661,7 +747,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
 
         r1 = list(bg.define_range_iterator('i0', seq_ids=True))[0]
         srange = list(bg.iterate_over_seqid_range(r1[0], r1[1]))
-        self.assertEqual(srange[0], (' ', 5, ' '))
+        self.assertEqual(srange[0].resid, (' ', 5, ' '))
 
         self.assertEqual(list(bg.define_range_iterator('f0')),
                          [[1,2]])
@@ -1957,3 +2043,14 @@ class SequenceTest(unittest.TestCase):
         seq = fgb.Sequence("12&3&4&56&789")
         self.assertEqual(seq.subseq_with_cutpoints(5,8), "56&7")
 
+    def test_backbone_breaks_after(self):
+        seq = fgb.Sequence("123&456&789")
+        self.assertEqual(seq.backbone_breaks_after, [3,6])
+        seq = fgb.Sequence("12&3&4&56&789")
+        self.assertEqual(seq.backbone_breaks_after, [2,3,4,6])
+    
+    def test_string_format(self):
+        seq_str = "123&456&789"
+        seq = fgb.Sequence(seq_str)
+        self.assertEqual("{}".format(seq), seq_str)
+ 

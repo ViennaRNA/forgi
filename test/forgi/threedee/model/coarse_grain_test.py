@@ -159,6 +159,10 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         #There might be stems spanning multiple chains.
         self.assertGreaterEqual(len([s for s in cg.defines if s[0]=="s"]), len([s for c in single_chain_cgs for s in c.defines if s[0]=="s"]))
         self.assertEqual(cg.seq, "&".join(x.seq for x in single_chain_cgs))
+      
+    def test_from_pdb_f_and_t_in_second_chain(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "t0"]))
         
     def test_from_pdb_multiple(self):
         cgE = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
@@ -180,7 +184,28 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',  chain_id='all')
         log.warning("cg now has {} cutpoints".format(cg.seq.count('&')))
         self.verify_multiple_chains(cg, [cgA, cgB, cgC, cgD])                 
-                           
+           
+    def test_multiple_chain_to_cg(self):
+        cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
+        log.debug("======= FIRST IS LOADED =========")
+        cg_str = cg.to_cg_string()    
+        log.debug("\n"+cg_str)
+        print(cg_str)
+        cg2 = ftmc.CoarseGrainRNA()
+        cg2.from_cg_string(cg_str)
+        self.assertEqual(cg.defines, cg2.defines)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
+        self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
+        
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='all')
+        cg_str = cg.to_cg_string()
+        cg2 = ftmc.CoarseGrainRNA()
+        cg2.from_cg_string(cg_str)
+        
+        self.assertEqual(cg.defines, cg2.defines)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
+        self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
+        
 class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.
