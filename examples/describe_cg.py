@@ -11,6 +11,8 @@ from collections import defaultdict
 import forgi.threedee.model.descriptors as ftmd
 import forgi.threedee.model.coarse_grain as ftmc
 import pandas as pd
+import logging
+log = logging.getLogger(__name__)
 def generateParser():
     parser=argparse.ArgumentParser( description="Collect data about a list of pdb files and store it as a csv.")
     parser.add_argument("files", type=str, nargs="+", help="One or more cg files.")
@@ -28,6 +30,7 @@ if __name__=="__main__":
     data = defaultdict(list)
     for i, filename in enumerate(args.files):
         cg = ftmc.CoarseGrainRNA(filename)
+        log.debug("File {} read".format(cg.name))
         data["pdb_name"].append(cg.name)
         data["path"].append(filename)
         data["nt_length"].append(cg.seq_length)

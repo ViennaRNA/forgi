@@ -48,7 +48,41 @@ class GraphVerification(unittest.TestCase):
         self.check_for_all_nucleotides(bg)
         self.check_for_overlapping_defines(bg)
 
-class BulgeGraphCofoldTest(GraphVerification):
+
+class BulgeGraphCofoldPrivateMemberTest(GraphVerification):
+    def test_split_interior_loop_at_side(self):
+        #Normal, forward strand
+        db = "(...(...)..)"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        cg._split_interior_loop_at_side(2, [2,4], [10,11], ["s0", "s1"])
+        self.assertEqual(cg.defines["t0"], [2,2])
+        self.assertEqual(cg.defines["f0"], [3,4])
+        self.assertEqual(cg.defines["m0"], [10,11])
+        #No nt at back, forward strand
+        db = "(...(...))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        cg._split_interior_loop_at_side( 2, [2,4], [10,9], ["s0", "s1"])
+        self.assertEqual(cg.defines["t0"], [2,2])
+        self.assertEqual(cg.defines["f0"], [3,4])
+        self.assertEqual(cg.defines["m0"], [])
+        #Normal, backwards strand
+        db = "(...(...)..)"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        cg._split_interior_loop_at_side( 10, [10,11], [2,4], ["s1", "s0"])
+        self.assertEqual(cg.defines["t0"], [10,10])
+        self.assertEqual(cg.defines["f0"], [11,11])
+        self.assertEqual(cg.defines["m0"], [2,4])
+    def test_is_connected(self):
+        db = "(...)(...)"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertTrue(cg._is_connected())
+        cg.remove_vertex("m0")
+        self.assertFalse(cg._is_connected())
+
+class BulgeGraphCofoldOverallTest(GraphVerification):
     
     def test_cutpoint_in_stem(self):
         db = "(((&(((...))))))"
@@ -125,6 +159,11 @@ class BulgeGraphCofoldTest(GraphVerification):
         db = "(((..&)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "t0"]))
+    
+    def test_cutpoint_instead_of_h(self):
+        db="(((&)))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0"]))
 
 
 
@@ -1798,6 +1837,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 class MultiloopFinding(unittest.TestCase):
     def setUp(self):
         pass
+    #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop(self):
         db = "(((..(((...)))(((...))).(((...)))...)))"
         """
@@ -1810,7 +1850,8 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m0")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+    #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_0_length(self):
         db = "((((((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph()
@@ -1818,7 +1859,8 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m0")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+    #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_longest(self):
         db = "(((......(((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph()
@@ -1826,7 +1868,8 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m0")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+    #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_0_length_different_start(self):
         db = "((((((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph()
@@ -1834,7 +1877,8 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m2")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+    #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_longest_different_start(self):
         db = "(((......(((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph()
@@ -1842,12 +1886,12 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m2")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ["m0", "m2", "m3", "m1"])
+        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
         
     def test_find_mlonly_multiloops_pseudoknotfree(self):
-        db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
-            #"fffsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt"
-            #"111000000111222222000222555333111333333111444444222444666555333555111000111"
+        db = "(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))"
+            #"sssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsss"
+            #"000000111222222000222555333111333333111444444222444666555333555111000"
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
@@ -1858,13 +1902,13 @@ class MultiloopFinding(unittest.TestCase):
         bg.from_dotbracket(db)
         #print("\n".join(map(str,sorted(bg.edges.items()))))
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([( "m1", "m2", "m4"),("m5", "m0", "m3", "m6" )]))
+        self.assertEqual(sorted(mls),sorted([("f0", "t0"),( "m1", "m2", "m4"),("m5", "m0", "m3", "m6" )]))
     def test_find_mlonly_multiloops_pseudoknot_free_someML0length(self):
         db = "...(((...((((((...)))...(((...)))...)))(((...)))...(((...))))))..."
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([("m0", "m4", "m6", "m1" ), ( "m2", "m5", "m3")]))
+        self.assertEqual(sorted(mls),sorted([("f0", "t0"), ("m0", "m4", "m6", "m1" ), ( "m2", "m5", "m3")]))
     def test_find_mlonly_multiloops_254_pk_witht1(self):
         db = "(((..[[[..)))..]]].."
              #sssmmsssmmsssmmssstt
@@ -1919,18 +1963,45 @@ class MultiloopFinding(unittest.TestCase):
                                  ("m7", "m12", "m8")]))
 
     def test_find_mlonly_multiloops_pk2455(self):
-        db = "...(((...(((...)))...(((...[[[...)))...(((...]]]...)))...)))..."
-            #"fffsssmmmssshhhsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssttt"
-            #"111000000111000111222222333333444222555444666333777444111000111"
+        db = "(((...(((...)))...(((...[[[...)))...(((...]]]...)))...)))..."
+            #"sssmmmssshhhsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssttt"
+            #"000000111000111222222444333333222555444666333777444111000000"
+
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         print(bg.to_element_string(True))
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls), 
-                         sorted([("m0", "m2", "m5", "m1"), ("m3", "m7", "m6", "m4")]))
+                         sorted([("t0",),("m0", "m2", "m5", "m1"), ("m4", "m7", "m6", "m3")]))
 
-
+    def test_find_mlonly_multiloops_cofold_1(self):
+        db = "(((((...&...)))))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls, [("t0", "f0")])
+        
+    def test_find_mlonly_multiloops_cofold_2(self):
+        db = "(((((...&(((...))))))))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls, [("t0", "m0")])
+        
+    def test_find_mlonly_multiloops_f_only(self):
+        db = "...(((...)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls, [("f0", )])
+    def test_find_mlonly_multiloops_cofold_f_only(self):
+        db = "...(((&)))"
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(mls, [("f0", )])
+        
 class WalkBackboneTests(unittest.TestCase):
     def setUp(self):
         pass

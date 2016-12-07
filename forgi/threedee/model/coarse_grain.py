@@ -113,6 +113,79 @@ def breakpoints_from_residuemap(residue_map):
         old_chain = from_chain
     return breakpoints
 
+def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
+    with fus.make_temp_directory() as output_dir:
+        chains = ftup.get_all_chains(pdb_filename)
+        new_chains = []
+        for chain in chains:
+            chain = ftup.rename_modified_ress(chain)
+            chain = ftup.rename_rosetta_atoms(chain)
+            chain = ftup.remove_hetatm(chain)
+            new_chains.append(chain)
+
+        rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
+        with open(rna_pdb_fn, 'w') as f:
+            #We need to output in pdb format for MC-Annotate
+            ftup.output_multiple_chains(new_chains, f.name) 
+            f.flush()
+
+        # first we annotate the 3D structure
+        p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
+        out, err = p.communicate()
+
+        lines = out.strip().split('\n')
+        
+        # convert the mcannotate output into bpseq format
+        try:
+            (dotplot, residue_map) = ftum.get_dotplot(lines)
+        except Exception as e:
+            print (e, file=sys.stderr)
+            return []
+
+        # f2 will store the dotbracket notation
+        #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
+        #    f2.write(dotplot)
+        #    f2.flush()
+
+        # remove pseudoknots
+        if remove_pseudoknots:
+            out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
+                               #output_format = 'vienna',
+                               output_format = 'bpseq',
+                               method = cak.DEFAULT_METHOD,
+                               opt_method = cak.DEFAULT_OPT_METHOD,
+                               verbose = cak.DEFAULT_VERBOSE,
+                               removed= cak.DEFAULT_REMOVED)
+        else:
+            out = dotplot
+        #(out, residue_map) = add_missing_nucleotides(out, residue_map)
+        
+        breakpoints = breakpoints_from_residuemap(residue_map)
+        
+        
+        import networkx as nx
+        chain_connections = nx.Graph()
+        cg = CoarseGrainRNA()
+        cg.seqids_from_residue_map(residue_map)        
+
+        for line in out.splitlines():        
+            try:
+                from_, res, to_ = line.split()
+            except:
+                continue
+            if int(to_) != 0:
+                from_chain = cg.seq_ids[int(from_)-1].chain
+                to_chain   = cg.seq_ids[int(to_)-1].chain
+                log.debug("Adding {} - {}".format(from_chain, to_chain))
+                chain_connections.add_edge(from_chain, to_chain)
+        log.debug("CONNECTIONS: {}, nodes {}".format(chain_connections, chain_connections.nodes()))
+        log.debug("Edges {}".format(chain_connections.edges()))
+        cgs = []
+        for component in nx.connected_components(chain_connections):
+            #print(component, type(component))
+            cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=True, chain_id = list(component)))
+        return cgs
+
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
                             chain_id=None, remove_pseudoknots=True, parser=None):
     '''
@@ -123,7 +196,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     :param output_dir: The name of the output directory
     :param secondary_structure: Specify a particular secondary structure
                                 for this coarsification.
-    :param chain_id: The id of the chain to create the CG model from
+    :param chain_id: The id of the chain to create the CG model from.
+                    This can be one of the following: 
+                    
+                    * The string "all" in lowercase, to extract all chains.
+                    * None, to extract the biggest chain
+                    * A (single-letter) string containing the chain id
+                    * A list of chain-ids. In that case only chains that match this id will be extracted.                    
     '''
 
     #chain = ftup.load_structure(pdb_filename)
@@ -132,6 +211,11 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:  
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
+    elif isinstance(chain_id, list):
+        chains = ftup.get_all_chains(pdb_filename, parser=parser)
+        chains = [ chain for chain in chains if chain.id in chain_id ]
+        if len(chain_id) != len(chains):
+            raise ValueError("Bad chain-id given. {} not present (or not an RNA)".format(set(chain_id)-set([chain.id for chain in chains])))
     else:
         chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
     new_chains = []
@@ -146,7 +230,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     if len(new_chains)==1:
         pdb_base += "_" + new_chains[-1].id
     else:
-        pdb_base += "_allrna"
+        pdb_base += "_" + "-".join(chain.id for chain in new_chains)
             
     cg = CoarseGrainRNA()
     if sum(len(chain.get_list()) for chain in new_chains) == 0:
@@ -155,7 +239,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     if not secondary_structure:
         # output a pdb with RNA only (for MCAnnotate):
 
-        output_dir = op.join(output_dir, pdb_base + "_" + chain.id)
+        output_dir = op.join(output_dir, pdb_base )
 
         if not op.exists(output_dir):
             os.makedirs(output_dir)
@@ -924,7 +1008,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # Reading the bulge_graph-part of the file
         self.from_bg_string(cg_string)
         self._init_coords()
-        
+        log.debug("BG read. Now reading 3D information")
         #Reading the part of the file responsible for 3D information
         lines = cg_string.split('\n')
         for line in lines:

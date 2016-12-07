@@ -6,6 +6,7 @@ import os.path as op
 import forgi.graph.bulge_graph as cgb
 import forgi.threedee.model.coarse_grain as cmc
 from optparse import OptionParser
+import logging
 
 def main():
     usage = """
@@ -24,6 +25,7 @@ def main():
                     help='PDB File to use as input.', type='str')
     parser.add_option('-f', '--fasta', dest='fasta', default='', 
                     help='Fasta file to use as input.', type='str')
+    parser.add_option('-v', '--verbose', dest='verbose', default=False, type='bool')
 
     (options, args) = parser.parse_args()
 
@@ -33,7 +35,8 @@ def main():
 
     bg = None
     filename = ''
-
+    if options.verbose:
+        logging.basicConfig(level=logging.DEBUG)
     if len(options.fasta) > 0:
         filename = options.fasta
         with open(options.fasta, 'r') as ffile:

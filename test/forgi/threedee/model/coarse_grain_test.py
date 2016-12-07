@@ -177,13 +177,12 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cg.seq[bp+1:], cgF.seq)
         self.verify_multiple_chains(cg, [cgE, cgF])
         
-        cgA = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='A')
-        cgB = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='B')
-        cgC = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='C')
-        cgD = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='D')
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',  chain_id='all')
+        cgA = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='A')
+        cgB = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='B')
+        cgC = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='C')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb',  chain_id='all')
         log.warning("cg now has {} cutpoints".format(cg.seq.count('&')))
-        self.verify_multiple_chains(cg, [cgA, cgB, cgC, cgD])                 
+        self.verify_multiple_chains(cg, [cgA, cgB, cgC])                 
            
     def test_multiple_chain_to_cg(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
@@ -197,7 +196,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
         
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb', chain_id='all')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='all')
         cg_str = cg.to_cg_string()
         cg2 = ftmc.CoarseGrainRNA()
         cg2.from_cg_string(cg_str)
@@ -206,6 +205,17 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
         
+    def test_connected_cgs_from_pdb(self):
+        cgs = ftmc.connected_cgs_from_pdb("test/forgi/threedee/data/1DUQ.pdb")
+        self.assertEqual(len(cgs), 4)
+        # This PDB file contains 4 similar RNA dimers
+        self.assertEqual(cgs[0].defines, cgs[2].defines)
+        self.assertEqual(cgs[1].defines, cgs[3].defines)
+        self.assertEqual(cgs[0].name, "1DUQ_A-B")
+        self.assertEqual(cgs[1].name, "1DUQ_C-D")
+        self.assertEqual(cgs[2].name, "1DUQ_E-F")
+        self.assertEqual(cgs[3].name, "1DUQ_G-H")
+
 class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.

@@ -390,7 +390,7 @@ class Sequence(str):
         seq=str(self)
         out = []
         while i+len(out)<len(seq):                
-            print("{}, {}: {}".format(i, len(out), seq[i+len(out)]))
+            #print("{}, {}: {}".format(i, len(out), seq[i+len(out)]))
             if seq[i+len(out)]=='&':
                 out.append(i)
             else:
@@ -1057,32 +1057,18 @@ class BulgeGraph(object):
     def _get_next_ml_segment(self, ml_segment):
         """
         """
+        log.debug("_get_next_ml_segment called for {}".format(ml_segment))
         if ml_segment.startswith("t"):
-            nuc = self.defines[ml_segment][1]
-            next_nuc = self._chain_start_from_end(nuc)
-            s = self.get_node_from_residue_num(next_nuc)
-            if s.startswith("f"):
-                return s
-            else:
-                side_stem = 3
-
+            return None
         else:
-            if ml_segment[0]=="f":
-                f, = self.flanking_nucleotides(ml_segment)
-            elif ml_segment[0]=="m":
-                f1, f2 = self.flanking_nucleotides(ml_segment)
-                if f1>f2:
-                    f=f1
-                else:
-                    f=f2     
+            if ml_segment[0] in "mf":
+                f = max(self.flanking_nucleotides(ml_segment))
             else:
                 raise ValueError("{} is not a multiloop".format(ml_segment))
 
             s = self.get_node_from_residue_num(f)
 
-            log.debug("_get_next_ml_segment:  f = {}, s = {}".format(f, s))
             side_stem, _ = self.get_sides_plus(s, ml_segment)
-            log.debug("side {}".format(side_stem))
             if side_stem == 0:
                 side_stem = 3
             elif side_stem == 3:
@@ -1094,14 +1080,11 @@ class BulgeGraph(object):
             else:
                 assert False
                 
+        log.debug("flanking_nuc_at_stem_side called for {}, side {} with defines {}.".format(s, side_stem, self.defines[s]))
         ml_nuc = self.flanking_nuc_at_stem_side(s, side_stem)
-        if ml_nuc>self.seq_length:
-            i = self._chain_start_from_end(ml_nuc-1)
-            s = self.get_node_from_residue_num(i)
-            if s[0]=="f":
-                return s
-            else:
-                ml_nuc = self.flanking_nuc_at_stem_side(s, 3)
+        log.debug("ml_nucleotide is {} (sequence length is {}).".format(ml_nuc, self.seq_length))
+        if ml_nuc>self.seq_length or ml_nuc-1 in self.backbone_breaks_after:
+            return None
         elem =  self.get_node_from_residue_num(ml_nuc)                    
         log.debug("side now {}, ml_nuc {}, ml {}".format(side_stem, ml_nuc, elem))
         if elem[0]=="s":
@@ -1112,36 +1095,17 @@ class BulgeGraph(object):
                     return elem
             assert False
         if elem[0] not in "mft":
+            self.print_debug()
+            log.error("{} is not a multiloop node".format(elem))
             return None
         return elem
 
     def shortest_mlonly_multiloop(self, ml_segment):
-        def compare_mls(b):
-          if b[0]=="f":
-            comp = [-1,-1] #f is first
-          elif b[0]=="t":
-            comp = [float("inf")]*2
-          else:
-            comp = self.compare_bulges(b, True)                      
-          log.debug("Comparison value for {} is {}".format(b, comp))
-          return comp
-        log.debug("Starting shortest_true_multiloop for {}".format(ml_segment))
-        loop_nodes = [ml_segment]
-        if ml_segment[0]!="m": return set()
-        while True:
-            ml_segment = self._get_next_ml_segment(ml_segment)
-            log.debug("Next segment is {}, loop_nodes: {}".format(ml_segment, loop_nodes))
-            if ml_segment is None:
-                return []
-            elif ml_segment in loop_nodes:
-                #compare = functools.partial(self.compare_bulges, flank_nucs = True)
-                first_node = min(set(loop_nodes), key=compare_mls)
-                log.info("First node of {} is {} ".format(loop_nodes, first_node))
-                i = loop_nodes.index(first_node)
-                return loop_nodes[i:]+loop_nodes[:i]
-            else:
-                loop_nodes.append(ml_segment)
-
+        loops = self.find_mlonly_multiloops()
+        for loop in loops:
+            if ml_segment in loop:
+                return loop
+            
     def flanking_nuc_at_stem_side(self, s, side):
         """
         Return the nucleotide number that is next to the stem at the given stem side.
@@ -1150,6 +1114,7 @@ class BulgeGraph(object):
         :returns: The nucleotide position. If the stem has no neighbor at that side,
                   0 or self.seq_length+1 is returned instead.
         """
+        assert s[0]=="s", "{} is not a stem".format(s)
         stem_nuc = self.defines[s][side]
         if side == 0 or side ==2:
             return stem_nuc - 1
@@ -1591,20 +1556,60 @@ class BulgeGraph(object):
                 ext_loop += [d]
 
         return ext_loop
-
+       
     def find_mlonly_multiloops(self):
+        import networkx as nx
+        ml_graph = nx.Graph()
+        for d in it.chain(self.mloop_iterator(), self.floop_iterator(),self.tloop_iterator()):
+            next_ml = self._get_next_ml_segment(d)
+            if next_ml is not None:
+                ml_graph.add_edge(d, next_ml)
+            else:
+                ml_graph.add_node(d)
+        loops = []
+        for comp in nx.connected_components(ml_graph):
+            #Order along the cycle, in arbitrary direction.
+            
+            #We need to start at a node with only 1 connection, if present
+            for x in comp:
+                if x[0]!="m":
+                    st_node=x
+                    break
+            else:
+                st_node=x #Just take any node
+            #Sort nodes along the cycle
+            loop = list(nx.dfs_preorder_nodes(ml_graph.subgraph(comp), st_node))
+            #See if we need to reverse the order
+            for i,l in enumerate(loop):
+                next_l = self._get_next_ml_segment(l)
+                if i+1<len(loop):
+                    if loop[i+1]==next_l:
+                        break
+                else:
+                    if loop[0]==next_l:
+                        break
+            else:
+                loop.reverse()
+            #Find first node
+            first = min(loop, key=lambda x: sorted(self.flanking_nucleotides(x)))
+            first_i = loop.index(first)
+            loop=loop[first_i:]+loop[:first_i]
+            loops.append(tuple(loop))
+        return loops
+    
         node_loops = []
-        for d in self.mloop_iterator():
+        for d in self.mloop_iterator():#, self.floop_iterator(),self.tloop_iterator()):
             if any(d in loop for loop in node_loops):
                 continue
-            log.debug("Find_mlonly_multiloop: searching for {}".format(d))
+            log.info("Find_mlonly_multiloop: searching for {}".format(d))
             nodes = tuple(self.shortest_mlonly_multiloop(d))
+            log.info("Find_mlonly_multiloop: Found multiloop: {}".format(nodes))
             if nodes not in node_loops:
-                log.debug("Find_mlonly_multiloop: Adding multiloop: {}".format(nodes))
+                log.info("Find_mlonly_multiloop: Adding multiloop: {}".format(nodes))
                 node_loops.append(nodes)
             else:
+                log.error("Find_mlonly_multiloop: {} already known".format(nodes))
                 assert False
-                log.debug("Find_mlonly_multiloop: {} already known".format(nodes))
 
         return node_loops
     
@@ -1983,7 +1988,158 @@ class BulgeGraph(object):
             if name not in self.defines:
                 return name
             i+=1
+    
+    def _remove_edge(self, from_element, to_element):
+        self.edges[from_element].remove(to_element)
+        self.edges[to_element].remove(from_element)
         
+    def _add_edge(self, from_element, to_element):
+        self.edges[from_element].add(to_element)
+        self.edges[to_element].add(from_element)
+
+    def _split_interior_loop_at_side(self, splitpoint, strand, other_strand, stems):
+        """
+        Called by self._split_at_cofold_cutpoints
+        """
+        nextML = self._next_available_element_name("m")
+        nextA = self._next_available_element_name("t")
+        nextB = self._next_available_element_name("f")
+
+        if other_strand[0]>other_strand[1]:
+            self.defines[nextML] = []
+        else:
+            self.defines[nextML] = other_strand
+        self._add_edge(nextML, stems[0])
+        self._add_edge(nextML, stems[1])
+            
+        if splitpoint >= strand[0]:
+            self.defines[nextA]=[strand[0], splitpoint]
+            self._add_edge(nextA,stems[0])
+        if splitpoint < strand[1]:
+            self.defines[nextB]=[splitpoint+1, strand[1]]
+            self._add_edge(nextB, stems[1])
+
+
+    def _split_interior_loop(self, splitpoint, element_left, element_right):
+        if element_left[0]=="i":
+            iloop = element_left
+        elif element_right[0]=="i":
+            iloop=element_right
+        else:
+            assert False
+        c = self.connections(iloop)
+        s1 = self.defines[c[0]]
+        s2 = self.defines[c[1]]
+        forward_strand = [ s1[1]+1, s2[0]-1 ]
+        back_strand = [ s2[3]+1, s1[2]-1 ]
+        if forward_strand[0]-1 <= splitpoint <= forward_strand[1]:
+            #Split forward strand, relabel backwards strand to multiloop.
+            self._split_interior_loop_at_side(splitpoint, forward_strand, back_strand, c)
+        elif back_strand[0] -1 <= splitpoint <= back_strand[1]:
+            self._split_interior_loop_at_side(splitpoint, back_strand, forward_strand, [c[1], c[0]])
+        else:
+            assert False
+        self.remove_vertex(iloop)
+        
+
+    def _split_between_elements(self, splitpoint, element_left, element_right):
+        if element_left[0] in "mh":
+            next3 = self._next_available_element_name("t")
+            self.relabel_node(element_left, next3)
+            if element_left[0]!="h":
+                self._remove_edge(next3, element_right)
+        elif element_right[0] in "mh":
+            next5 = self._next_available_element_name("f")
+            self.relabel_node(element_right, next5)
+            if element_right[0]!="h":
+                self._remove_edge(next5, element_left)
+        else:
+            assert element_left[0]=="s" and element_right[0]=="s"
+            #Zero-length i or m element!
+            try:
+                connection, = self.edges[element_left] & self.edges[element_right]
+            except:
+                print(self.edges[element_left], self.edges[element_right], self.edges[element_left] & self.edges[element_right])
+                raise
+
+            if connection[0] == "m":
+                ml = self.shortest_mlonly_multiloop(connection)
+                if any( m[0] != "m" for m in ml):
+                    raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
+                                     " base-pair.")
+                #Just remove it without replacement
+                self.remove_vertex(connection)
+            else:
+                assert connection[0]=="i"
+                #Replace i by ml (this is then located on the other strand than the splitpoint)
+                nextML = self._next_available_element_name("m")                 
+                assert nextML not in self.defines
+                self.relabel_node(connection, nextML)
+    
+    def _split_inside_loop(self, splitpoint, element):
+        if element[0] in "hm":
+            from_, to_ = self.defines[element]
+            stem_left = self.get_node_from_residue_num(from_-1)
+            stem_right = self.get_node_from_residue_num(to_+1)
+
+            next3 = self._next_available_element_name("t")
+            next5 = self._next_available_element_name("f")
+            self.defines[next3]=[from_, splitpoint]
+            self.defines[next5]=[splitpoint+1, to_]
+            self._add_edge(stem_left, next3)
+            self._add_edge(next5, stem_right)
+            self.remove_vertex(element)
+        else:
+            assert False
+
+    def _split_inside_stem(self, splitpoint, element):
+        assert element[0]=="s"
+        if splitpoint == self.defines[element][1]:
+            #Nothing needs to be done. 2 strands split at end
+            return
+        define1 = [self.defines[element][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element][3]]
+        define2 = [ splitpoint+1, self.defines[element][1], self.defines[element][2], self.pairing_partner(splitpoint+1)]
+        edges1=[]
+        edges2=[]
+        for edge in self.edges[element]:
+            if max(self.flanking_nucleotides(edge))==define1[0] or min(self.flanking_nucleotides(edge))==define1[3]:
+                edges1.append(edge)
+            elif max(self.flanking_nucleotides(edge))==define2[2] or min(self.flanking_nucleotides(edge))==define2[1]:
+                edges2.append(edge)
+            else:
+                print("Edge {}, with flanking nts {}, define1 {}, define2 {}".format(edge, self.flanking_nucleotides(edge), define1, define2))
+                assert False 
+        self.remove_vertex(element)
+        nextS1 = self._next_available_element_name("s")                    
+        self.defines[nextS1]=define1
+        nextM = self._next_available_element_name("m")                    
+        self.defines[nextM]=[]
+        nextS2 = self._next_available_element_name("s")
+        self.defines[nextS2]=define2
+
+        for e1 in edges1:
+            self.edges[e1].add(nextS1)
+        for e2 in edges2:
+            self.edges[e2].add(nextS2)
+        edges1.append(nextM)
+        edges2.append(nextM)
+        self.edges[nextS1]=set(edges1)
+        self.edges[nextS2]=set(edges2)
+        self.edges[nextM]=set([nextS1, nextS2])
+       
+    def _is_connected(self):
+        start_node = list(self.defines.keys())[0]        
+        known_nodes = set([start_node])
+        pending = list(self.edges[start_node])
+        while pending:
+            next_node = pending.pop()
+            if next_node in known_nodes:
+                continue
+            pending.extend(self.edges[next_node])
+            known_nodes.add(next_node)
+        log.info("Testing connectivity: {} =?= {}".format(known_nodes, set(self.defines.keys())))
+        return known_nodes == set(self.defines.keys())
+    
     def _split_at_cofold_cutpoint(self):
         """
         Multiple sequences should not be connected along the backbone.
@@ -1994,183 +2150,25 @@ class BulgeGraph(object):
         log.info("_split_at_cofold_cutpoint: breakpoints are {}".format(self.backbone_breaks_after))
         for splitpoint in self.backbone_breaks_after:
             element_left = self.get_node_from_residue_num(splitpoint)
-            element_right = self.get_node_from_residue_num(splitpoint+1)
-            if element_left[0] == "f" or element_right[0]=="t":
+            element_right = self.get_node_from_residue_num(splitpoint+1)            
+            if element_left[0] in "ft" or element_right[0] in "ft":
                 #No cofold structure. First sequence is disconnected from rest
                 raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
                             " base-pair.")# Creating empty bulge-graph object instead.")
                 #self.__init__() #Make self an empty bulge graph.
                 return
-            elif element_left[0] == "m" or  element_left[0] == "h":
-                log.debug("Splitpoint in m/h")
-                #We split this multiloop segment into a f and a t segment.
-                from_, to_ = self.defines[element_left]
-                next3 = self._next_available_element_name("t")
-                assert next3 not in self.defines
-                self.defines[next3]=[from_, splitpoint]
-                neighbor = self.get_node_from_residue_num(from_-1)
-                self.edges[next3].add(neighbor)
-                self.edges[neighbor].add(next3)
-                if element_right == element_left:
-                    assert splitpoint+1 <= to_
-                    next5 = self._next_available_element_name("f")
-                    self.defines[next5]=[splitpoint+1, to_]
-                    neighbor = self.get_node_from_residue_num(to_+1)
-                    self.edges[next5].add(neighbor)
-                    self.edges[neighbor].add(next5)
-                self.remove_vertex(element_left)
-                return
-            elif element_right[0]=="m" or element_right[0]=="h": #element_left =  stem
-                log.debug("Splitpoint before m/h")
-                next5 = "f{}".format(len([d for d in self.defines if d[0]=="f"]))
-                self.edges[element_right].remove(element_left)
-                self.edges[element_left].remove(element_right)
-                self.relabel_node(element_right, next5)
-                return
-            elif element_left[0]=="i":
-                log.debug("Splitpoint in i")
-                #We split the interior loop into a multiloop segment on one side and an f and t element on the other side
-                c = self.connections(element_left)
-                s1 = self.defines[c[0]]
-                s2 = self.defines[c[1]]
-                left = s1[1], s2[0]
-                right = s2[3], s1[2]                  
-                nextML = self._next_available_element_name("m")
-                next3 = self._next_available_element_name("t")
-                next5 = self._next_available_element_name("f") 
-                if left[0] < splitpoint < left[1]: #Split at left
-                    if right[0]+1==right[1]:
-                        self.defines[nextML] = []
-                    else:
-                        self.defines[nextML] = [right[0]+1, right[1]-1]
-                    self.defines[next3]=[left[0]+1, splitpoint]
-                    self.edges[next3].add(c[0])
-                    self.edges[c[0]].add(next3)
-                    if element_right == element_left:
-                        self.defines[next5]=[splitpoint+1, left[1]-1]
-                        assert splitpoint+1<=left[1]-1
-                        self.edges[next5].add(c[1])
-                        self.edges[c[1]].add(next5)  
-                else:
-                    assert right[0] < splitpoint < right[1]
-                    if left[0]+1==left[1]:
-                        self.defines[nextML] = []
-                    else:
-                        self.defines[nextML] = [left[0]+1, left[1]-1]
-                    self.defines[next3]=[right[0]+1, splitpoint]
-                    self.edges[next3].add(c[1])
-                    self.edges[c[1]].add(next3)
-                    if element_right == element_left:
-                        self.defines[next5]=[splitpoint+1, right[1]-1]
-                        assert splitpoint+1<=right[1]-1
-                        self.edges[next5].add(c[0])
-                        self.edges[c[0]].add(next5)  
-                self.edges[c[0]].add(nextML)
-                self.edges[c[1]].add(nextML)
-                self.edges[nextML].update(c)
-                self.remove_vertex(element_left)
-                return
-            elif element_right[0]=="i": #Element_left is a stem
-                log.debug("Splitpoint before i")
-                c = self.connections(element_right)
-                s1 = self.defines[c[0]]
-                s2 = self.defines[c[1]]
-                left = s1[1], s2[0]
-                right = s2[3], s1[2] 
-                nextML = self._next_available_element_name("m")                
-                next5 = self._next_available_element_name("f")
-                if splitpoint == left[0]:
-                    if right[0]+1==right[1]:
-                        self.defines[nextML] = []
-                    else:
-                        self.defines[nextML] = [right[0]+1, right[1]-1]
-                    self.defines[next5] = [left[0]+1, left[1]-1]
-                    self.edges[next5].add(c[1])
-                    self.edges[c[1]].add(next5)  
-                elif splitpoint==right[0]:
-                    if left[0]+1==left[1]:
-                        self.defines[nextML] = []
-                    else:
-                        self.defines[nextML] = [left[0]+1, left[1]-1]
-                    self.defines[next5] = [right[0]+1, right[1]-1]
-                    self.edges[next5].add(c[0])
-                    self.edges[c[0]].add(next5)  
-                else:
-                    assert False
-                self.edges[c[0]].add(nextML)
-                self.edges[c[1]].add(nextML)
-                self.edges[nextML].update(c)
-                self.remove_vertex(element_right)
+            elif element_left[0]=="i" or element_right[0]=="i":
+                self._split_interior_loop(splitpoint, element_left, element_right)
             elif element_left != element_right:
-                log.debug("Splitpoint between stems")
-                assert element_left[0] == "s"
-                if element_right[0] == "s":
-                    #A zero-length ml or il
-                    try:
-                        connection, = self.edges[element_left] & self.edges[element_right]
-                    except:
-                        print(self.edges[element_left], self.edges[element_right], self.edges[element_left] & self.edges[element_right])
-                        raise
-                        
-                    if connection[0] == "m":
-                        ml = self.shortest_mlonly_multiloop(connection)
-                        if any( m[0] != "m" for m in ml):
-                            raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
-                                             " base-pair.")# Creating empty bulge-graph object instead.")
-                        #Just remove it without replacement
-                        self.remove_vertex(connection)
-                    else:
-                        assert connection[0]=="i"
-                        #Replace i by ml
-                        nextML = self._next_available_element_name("m")                 
-                        assert nextML not in self.defines
-                        #l1, l2, r1, r2 = self.flanking_nucleotides(connection)
-                        self.relabel_node(connection, nextML)
-
-                else:
-                    assert False
-                    #next5 = "f{}".format(len([d for d in self.defines if d[0]=="f"])) #Will potentially not be used
-                    #self.relabel_node(element_right, next5)
-
+                self._split_between_elements(splitpoint, element_left, element_right)
+            elif element_left[0]=="s":
+                self._split_inside_stem(splitpoint, element_left)
             else:
-                log.debug("Splitpoint inside s")
-                assert element_left[0]=="s"
-                if self.defines[element_left][1]==splitpoint:
-                    assert element_right[0]=="s"
-                    return #The two sequences form a double helix. Nothing needs to be done
-                    
-                else:                    
-                    define1 = [self.defines[element_left][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element_left][3]]
-                    define2 = [ splitpoint+1, self.defines[element_left][1], self.defines[element_left][2], self.pairing_partner(splitpoint+1)]
-                    edges1=[]
-                    edges2=[]
-                    for edge in self.edges[element_left]:
-                        if max(self.flanking_nucleotides(edge))==define1[0] or min(self.flanking_nucleotides(edge))==define1[3]:
-                            edges1.append(edge)
-                        elif max(self.flanking_nucleotides(edge))==define2[2] or min(self.flanking_nucleotides(edge))==define2[1]:
-                            edges2.append(edge)
-                        else:
-                            assert False 
-                    self.remove_vertex(element_left)
-                    nextS1 = self._next_available_element_name("s")                    
-                    self.defines[nextS1]=define1
-                    nextM = self._next_available_element_name("m")                    
-                    self.defines[nextM]=[]
-                    nextS2 = self._next_available_element_name("s")
-                    self.defines[nextS2]=define2
-
-                    for e1 in edges1:
-                        self.edges[e1].add(nextS1)
-                    for e2 in edges2:
-                        self.edges[e2].add(nextS2)
-                    edges1.append(nextM)
-                    edges2.append(nextM)
-                    self.edges[nextS1]=set(edges1)
-                    self.edges[nextS2]=set(edges2)
-                    self.edges[nextM]=set([nextS1, nextS2])
-
-                    #raise NotImplementedError("Cofold cutpoints in the middle of a single stem are not yet implemented!")
-                
+                self._split_inside_loop(splitpoint, element_left)
+        
+        if not self._is_connected():
+            raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
+                             " base-pair.")
     def to_dotbracket_string(self):
         """
         Convert the BulgeGraph representation to a dot-bracket string
@@ -2182,6 +2180,7 @@ class BulgeGraph(object):
         return fus.pairtable_to_dotbracket(pt)
 
     def print_debug(self):
+        print(self.seq)
         print(self.to_dotbracket_string())
         print(self.to_element_string(True))
         print("DEFINES:", self.defines)

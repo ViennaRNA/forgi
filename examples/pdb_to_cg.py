@@ -33,8 +33,12 @@ def main():
                                         temporary and intermediate files.',
                       type = 'str')
     parser.add_option('-c', '--chain', dest='chain', 
-                      default=None, help='Specify the chain to coarse-grain',
+                      default=None, help='Specify the chain to coarse-grain.',
                       type = 'str')
+    parser.add_option('-f', '--to-files', dest='to_files', 
+                      default=None, help='Write all connected components to files in the current working directory.',
+                      action='store_true' )
+           
 
     (options, args) = parser.parse_args()
 
@@ -42,11 +46,18 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    pdb_id = op.basename(op.splitext(args[0])[0])
-    cg = ftmc.from_pdb(args[0], intermediate_file_dir=options.dump_all, 
+    if options.to_files:
+        if options.chain:
+            raise ValueError("Options --to-files and --chain are mutually exclusive!")
+        cgs = ftmc.connected_cgs_from_pdb(args[0], remove_pseudoknots=not options.pseudoknots )
+        for cg in cgs:
+            cg.to_file(cg.name+".cg")
+            print("File {}.cg written".format(cg.name))
+    else:
+        cg = ftmc.from_pdb(args[0], intermediate_file_dir=options.dump_all, 
                        remove_pseudoknots=not options.pseudoknots,
-                      chain_id = options.chain)
-    print cg.to_cg_string()
+                       chain_id = options.chain)
+        print cg.to_cg_string()
 
 if __name__ == '__main__':
     main()
