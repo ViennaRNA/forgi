@@ -401,10 +401,10 @@ class Sequence(str):
         """
         Indexing with a 1-based index, ignoring cutpoints.
         """
-        stack = ''.join(list(traceback.format_stack())[-3:-1])
-        if 'out += self[i]' not in stack:        
-            warnings.warn("The RNA sequence is now a forgi.graph.Sequence object, which uses 1-based indexing! (It was a string with 0-based indexing before)", stacklevel = 2)
-            log.warning(stack + "__getitem__ called ")
+        #stack = ''.join(list(traceback.format_stack())[-3:-1])
+        #if 'out += self[i]' not in stack:        
+            #warnings.warn("The RNA sequence is now a forgi.graph.Sequence object, which uses 1-based indexing! (It was a string with 0-based indexing before)", stacklevel = 2)
+            #log.warning(stack + "__getitem__ called ")
         if isinstance(key, slice):
             out = ""
             for i in range(*key.indices(len(self)+1)): #http://stackoverflow.com/questions/16652482/python-iterate-slice-object#16652549

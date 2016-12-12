@@ -304,6 +304,18 @@ def change_basis(coords, new_basis, old_basis):
 
     return new_coords
 
+def change_basis_vectorized(coords, new_basis, old_basis):
+    """
+    Change an array of vectors (coords) from old_basis to new_basis.
+    
+    :param coords: A array of coordinates to transform.
+    """
+    standard_coords = np.tensordot(old_basis.transpose(), coords, axes=([-1],[1])).T
+    standard_to_new = nl.inv(new_basis.transpose())
+    new_coords = np.tensordot(standard_to_new, standard_coords, axes=([-1],[1])).T
+    return new_coords
+
+
 """ # CODE USED FOR BENCHMARKING 
     # change_basis1 is slightly faster or the same (4.61 vs 4.67)
 def change_basis1(coords, new_basis, old_basis):

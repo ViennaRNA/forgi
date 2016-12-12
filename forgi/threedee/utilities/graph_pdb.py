@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from builtins import zip
 
 import Bio.PDB as bp
 import Bio.PDB as bpdb
@@ -1258,7 +1259,6 @@ def add_virtual_residues(bg, stem):
         bg.vinvs[stem][i] = vinv
 
 
-# TODO: This should probably use pos_to_spos to reduce code duplication.
 def stem_vres_reference_atoms(bg, chain, s, i):
     '''
     Calculate the position of each atom in the reference of the
@@ -1922,7 +1922,7 @@ class VirtualAtomsLookup(object):
         self.cg=cg  
         self.given_atom_names=given_atom_names
         self.sidechain=sidechain
-    @profile
+    #@profile
     def __getitem__(self, position):
         """
         :returns: A dictionary containing all atoms (as keys) and their 
@@ -1938,7 +1938,7 @@ class VirtualAtomsLookup(object):
             elif len(value)==4 and position>=value[2] and position<=value[3]:
                 return self._getitem_for_element(key, position)
         assert False, "No return for pos {}".format(position)
-    @profile
+    #@profile
     def keys(self):
         k=set()
         for value in self.cg.defines.values():
@@ -2006,7 +2006,6 @@ class VirtualAtomsLookup(object):
         except IndexError:
             log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
             raise
-        atoms = dict()
         if self.given_atom_names is None:
             if self.sidechain:
                 atom_names = (ftup.nonsidechain_atoms +  ftup.side_chain_atoms[residue])
@@ -2014,6 +2013,8 @@ class VirtualAtomsLookup(object):
                 atom_names = ftup.nonsidechain_atoms
         else:
             atom_names = self.given_atom_names
+        atom_keys = []
+        atom_coords = []
         for aname in atom_names:
             if aname[-1]=="*":
                 aname_dash=aname[:-1]+"'"
@@ -2021,13 +2022,20 @@ class VirtualAtomsLookup(object):
                 aname_dash=aname
             spos = ftus.avg_stem_vres_atom_coords[side][residue][aname_dash]
             #TODO: Maybe we can vectorize this and calculate pos from spos for all atoms of the residue at once.
-            atoms[aname] = spos
-        vres_basis = virtual_res_basis(self.cg, d, pos_in_stem)
-        vres_pos = virtual_res_3d_pos(self.cg, d, pos_in_stem)[0]
+            atom_keys.append(aname)
+            atom_coords.append(spos)
+        try:
+            vres_basis = self.cg.vbases[d][pos_in_stem] #virtual_res_basis(self.cg, d, pos_in_stem)
+            vres_pos = self.cg.vposs[d][pos_in_stem]    #virtual_res_3d_pos(self.cg, d, pos_in_stem)[0]
+        except KeyError:
+            self.cg.add_all_virtual_residues()
+            vres_basis = self.cg.vbases[d][pos_in_stem] #virtual_res_basis(self.cg, d, pos_in_stem)
+            vres_pos = self.cg.vposs[d][pos_in_stem]    #virtual_res_3d_pos(self.cg, d, pos_in_stem)[0]
 
-        atoms = vres_to_global_coordinates(vres_pos, vres_basis, atoms)
+        atom_coords = ftuv.change_basis_vectorized(np.array(atom_coords), ftuv.standard_basis, vres_basis)+vres_pos
 
-        return atoms
+        
+        return { aname:coord for aname, coord in zip(atom_keys, atom_coords)}
     
 def vres_to_global_coordinates(vres_pos, vres_basis, positions):
     newpos = {}

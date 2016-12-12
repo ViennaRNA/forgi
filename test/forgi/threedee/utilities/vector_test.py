@@ -161,3 +161,23 @@ class TestVector(unittest.TestCase):
     def test_change_basis(self):
         new_v = ftuv.change_basis(np.array([1.,2.,3.]), np.array([[0,1.,0],[1.,0,0],[0,0,1.]]), np.array([[1.,0,0],[0,1.,0],[0,0,1.]]))
         nptest.assert_allclose(new_v, np.array([2.,1.,3.]))
+                    
+    def test_change_basis_vectorized(self):
+        coords = np.array([[0., 1., 2.], [1., 2., 3.], [0., 0., 2.], [0.,1.,0.]])
+        basis1 = np.array([[0.,0.,1.],[0.,1.,0.],[1.,0.,1.]])
+        basis2 = np.array([[1.,0.,0.], [0.,1.,0.],[0.,1.,1.]])
+        new_coords = ftuv.change_basis_vectorized(coords, basis2, basis1)
+        for i in range(4):
+            nptest.assert_array_equal(new_coords[i], ftuv.change_basis(coords[i], basis2, basis1))
+        nptest.assert_array_equal(new_coords[2], np.array([2.,-2.,2.]))
+
+    def benchmark_change_basis(self):
+        import timeit
+        t1 = timeit.timeit("ftuv.change_basis_vectorized(coords, new_basis, old_basis)", 
+                          "import forgi.threedee.utilities.vector as ftuv; import numpy as np; coords = (np.random.rand(100,3)-0.5)*20;  "
+                          "new_basis=np.array([[1.,2.,0.],[0.,6.,7],[0.4,0,9.3]]);old_basis=np.array([[1.5,2.5,0],[1.5,0,7],[0,0.7,9.3]])", number = 1000000)
+        t2 = timeit.timeit("for coord in coords: ftuv.change_basis(coord, new_basis, old_basis)", 
+                          setup="import numpy as np; coords = (np.random.rand(100,3)-0.5)*20; import forgi.threedee.utilities.vector as ftuv; "
+                                "new_basis=np.array([[1.,2.,0.],[0.,6.,7],[0.4,0,9.3]]);old_basis=np.array([[1.5,2.5,0],[1.5,0,7],[0,0.7,9.3]])", number = 1000000)
+        self.assertLess(int(t1)+50,int(t2))
+        
