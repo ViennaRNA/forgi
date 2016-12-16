@@ -5,9 +5,18 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
 from future.utils import viewkeys
 import numpy as np
 from collections import Mapping
+import itertools
 import logging
+import forgi.threedee.utilities.vector as ftuv
+
 log=logging.getLogger(__name__)
 
+try:
+    profile
+except:
+    def profile(f): 
+        return f
+    
 class CoordinateStorage(Mapping):
     """
     Provides a dictionary-like interface for the access to coordinates of elements,
@@ -28,6 +37,7 @@ class CoordinateStorage(Mapping):
             
         #: on-change function is called whenever coordinates are modified.
         self.on_change = on_change
+    @profile
     def _indices_for(self, elem_name):
         try:
             i = self._elem_names[elem_name]
@@ -37,6 +47,7 @@ class CoordinateStorage(Mapping):
         for j in range(self._coords_per_key):
             ret.append(2*i+j)
         return ret
+    @profile
     def __getitem__(self, elem_name):
         """
         Get the coordinates for a certain coarse grained elements.
@@ -63,10 +74,6 @@ class CoordinateStorage(Mapping):
             except TypeError: #elem_name is not iterable
                 raise KeyError("Invalid index: Indices must be of type string or sequence of strings. Found {}".format(elem_name))
             return self._coordinates[indices] #Advanced numpy indexing yields a copy.
-    def get_direction(self, elem_name): #This assumes the stored coordinates are points not directions 
-        assert self._coords_per_key == 2 #Or else a direction does not make sense
-        indices = self._indices_for(elem_name)
-        return self._coordinates[indices[1]]-self._coordinates[indices[0]]
     
     def __setitem__ (self, key, value):
         if len(value)!=self._coords_per_key:
@@ -125,3 +132,108 @@ class CoordinateStorage(Mapping):
     
     def __ne__(self, other):
         return not self == other
+    
+class LineSegmentStorage(CoordinateStorage):
+    
+    def get_direction(self, elem_name): #This assumes the stored coordinates are points not directions 
+        assert self._coords_per_key == 2 #Or else a direction does not make sense
+        indices = self._indices_for(elem_name)
+        return self._coordinates[indices[1]]-self._coordinates[indices[0]]
+
+    def elements_closer_than(self, cutoff, ignore = []):
+        """
+        :param ignore: A set of tuples (element name-pairs) to ignore
+        """
+        #See http://stackoverflow.com/a/18994296/5069869 by Fnord
+        #Modified to make use of numpy vectorization.
+        i_to_elem = { i:elem for elem,i in self._elem_names.items()}
+
+        assert self._coords_per_key == 2
+        directions = self._coordinates[1::2]-self._coordinates[::2]
+        magnitudes = np.linalg.norm(directions, axis = 1, keepdims = True)
+        normed_directions = directions / magnitudes
+        hits=[]
+        for i, j in itertools.combinations(range(len(self._elem_names)), 2):
+            potential_interaction = tuple(sorted((i_to_elem[i], i_to_elem[j])))
+            node1, node2 = potential_interaction
+            if (node1,node2) in ignore or (node2,node1) in ignore:
+                continue
+            a0 = self._coordinates[2*i]
+            a1 = self._coordinates[2*i+1]
+            b0 = self._coordinates[2*j]
+            b1 = self._coordinates[2*j+1]
+            vec_a0b0 =b0-a0
+            len_a0b0 = ftuv.magnitude(vec_a0b0)
+            if len_a0b0<cutoff:
+                hits.append(potential_interaction)
+                continue
+            elif len_a0b0>cutoff+magnitudes[i]+magnitudes[j]:
+                continue #Cannot be closer than cutoff!
+            a_normed = normed_directions[i]
+            b_normed = normed_directions[j]
+            cross = np.cross(a_normed, b_normed)
+            denom = np.sum(cross**2) # =norm**2
+            SMALL_NUMBER = 0.000001
+            if denom<SMALL_NUMBER: #lines are parallel
+                d0 = np.dot(a_normed, vec_a0b0)
+                vec_a0b1 = b1-a0
+                d1 = np.dot(a_normed, vec_a0b1)
+                # Is segment B before A?
+                if d0 <= 0 >= d1:
+                    if np.absolute(d0) < np.absolute(d1):
+                        if ftuv.magnitude(b0-a0)<cutoff:
+                            hits.append(potential_interaction)
+                        continue
+                    if ftuv.magnitude(b1-a0)<cutoff:
+                        hits.append(potential_interaction)
+                    continue
+                # Is segment B after A?
+                elif d0 >= np.asscalar(magnitudes[i]) <= d1:
+                    if np.absolute(d0) < np.absolute(d1):
+                        if ftuv.magnitude(b0-a1)<cutoff:
+                            hits.append(potential_interaction)
+                        continue
+                    if ftuv.magnitude(b1,a1)<cutoff:
+                        hits.append(potential_interaction)
+                    continue
+                if ftuv.magnitude(((d0*a_normed)+a0)-b0)<cutoff:
+                    hits.append(potential_interaction)
+                continue
+            # Lines criss-cross: Calculate the dereminent and return points
+            det0 = np.linalg.det([vec_a0b0, b_normed, cross])
+            det1 = np.linalg.det([vec_a0b0, a_normed, cross])
+
+            t0 = det0/denom;
+            t1 = det1/denom;
+
+            pA = a0 + (a_normed * t0);
+            pB = b0 + (b_normed * t1);
+
+            # Clamp results to line segments if needed
+
+            if t0 < 0:
+                pA = a0
+            elif t0 > magnitudes[i]:
+                pA = a1
+
+            if t1 < 0:
+                pB = b0
+            elif t1 > magnitudes[j]:
+                pB = b1
+
+            d = ftuv.magnitude(pA-pB)
+
+            if d<cutoff:
+                hits.append(potential_interaction)
+        return hits
+
+
+    @profile
+    def _indices_for(self, elem_name):
+        #Avoiding a range is faster if we know that we have only two keys!
+        assert self._coords_per_key == 2 
+        try:
+            i = self._elem_names[elem_name]
+        except ValueError:
+            raise KeyError("Invalid index {}".format(elem_name))
+        return [2*i, 2*i+1]

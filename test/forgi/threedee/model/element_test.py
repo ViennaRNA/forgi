@@ -4,7 +4,7 @@ from __future__ import print_function
 import numpy as np
 import numpy.testing as nptest
 
-from forgi.threedee.model.Element import CoordinateStorage
+from forgi.threedee.model.Element import CoordinateStorage, LineSegmentStorage
 import unittest
 
 class CoordinateStorageTest(unittest.TestCase):
@@ -140,3 +140,72 @@ class CoordinateStorageEqualityTests(unittest.TestCase):
         cs2["s4"]=[0,1,0],[2,0,1]
         cs2["s5"]=[1,2,3],[3,4,1]
         self.assertNotEqual(cs1, cs2)
+        
+class LineSegmentStorageTests(unittest.TestCase):
+    def test_elements_closer_than_on_same_line(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,0.],[0,0,1.]
+        cs["s1"]=[0,0,2.],[0,0,3.]
+        self.assertEqual(cs.elements_closer_than(2),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.5),[])
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,0.],[1,0,0.]
+        cs["s1"]=[2,0,0.],[3,0,0.]
+        self.assertEqual(cs.elements_closer_than(2),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.5),[])
+
+    def test_elements_closer_than_overlapping(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,0.],[0,0,1.]
+        cs["s1"]=[0,0,0.5],[0,0,3.]
+        self.assertEqual(cs.elements_closer_than(2),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.5),[("s0","s1")])
+
+    def test_elements_closer_than_parallel_ol(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,0.],[0,0,1.]
+        cs["s1"]=[0,1,0.5],[0,1,3.]
+        self.assertEqual(cs.elements_closer_than(2),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.5),[])
+    def test_elements_closer_than_parallel_far(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,0.],[0,0,1.]
+        cs["s1"]=[0,1,2],[0,1,3.]
+        self.assertEqual(cs.elements_closer_than(1.5),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(1),[])
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s1"]=[0,0,0.],[0,0,1.]
+        cs["s0"]=[0,1,2],[0,1,3.]
+        self.assertEqual(cs.elements_closer_than(1.5),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(1),[])
+
+    def test_elements_closer_than_intersecting(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[-1,-1,-1.],[1,1,1.]
+        cs["s1"]=[-1,-1,1.],[1,1,-1.]
+        self.assertEqual(cs.elements_closer_than(1.5),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.001),[("s0","s1")])
+        
+    def test_elements_closer_than_in_plane(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,3.],[0,1,3.]
+        cs["s1"]=[1,0.5,3.],[2,0.5,-3.]
+        self.assertEqual(cs.elements_closer_than(1.1),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.9),[])
+
+    def test_elements_closer_than_windschief(self):
+        cs = LineSegmentStorage(["s0", "s1"])
+        cs["s0"]=[0,0,0.],[0,0,3.]
+        cs["s1"]=[1,1,3.],[1,-1,-3.]
+        self.assertEqual(cs.elements_closer_than(1.5),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.4),[])
+        
+    def test_elements_closer_than_ignore(self):
+        cs = LineSegmentStorage(["s0", "s1", "s2"])
+        cs["s0"]=[0,0,0.],[0,0,3.]
+        cs["s1"]=[1,1,3.],[1,-1,-3.]
+        cs["s2"]=[0.,0.,0.],[1,-1,-3.]
+
+        self.assertEqual(cs.elements_closer_than(1.5, ignore=set([("s0","s2"),("s2", "s1")])),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(0.4),[("s0","s2"),("s1", "s2")])
+        self.assertEqual(cs.elements_closer_than(0.4, ignore=set([("s0","s2"),("s2", "s1")])),[])

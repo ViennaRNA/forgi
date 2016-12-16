@@ -14,6 +14,13 @@ __all__ = ['AdjacencyCorrelation', 'cg_rmsd', 'rmsd', 'drmsd']
 This module contains functions for the comparison of two cg objects or two ordered point-clouds.
 """
 
+try:
+    profile
+except:
+    def profile(f): 
+        return f
+
+
 def ppv(tp, fp):
     '''
     Calculate the positive predictive value.
@@ -70,26 +77,21 @@ class AdjacencyCorrelation(object):
         self._bp_distance=bp_distance
         self._reference_interactions=self.get_interactions(reference_cg)
 
+    @profile
     def get_interactions(self, cg):
         """
         :return: A set of 2-tuples containing elements that pair.
         """
-        interactions=set()
-        nodes=set(cg.defines.keys())
+        ignore = set()
         for n1, n2 in it.combinations(nodes, r=2):
-            n1,n2=sorted((n1,n2)) #TODO: Read itertools documentation, if this is necessary.
             if cg.connected(n1, n2):
+                ignore.add((n1,n2))
                 continue
             bp_dist = cg.min_max_bp_distance(n1, n2)[0]
             if bp_dist < self._bp_distance:
-                continue
-            if ftuv.elements_closer_than(cg.coords[n1][0],
-                                       cg.coords[n1][1],
-                                       cg.coords[n2][0],
-                                       cg.coords[n2][1], self._distance):
-            #dist = cg.element_physical_distance(n1, n2)
-            #if dist < self._distance:
-                interactions.add((n1,n2))
+                ignore.add((n1,n2))
+
+        interactions=set(cg.coords.elements_closer_than(self._distance, ignore))
         return interactions
     
     def evaluate(self, cg):

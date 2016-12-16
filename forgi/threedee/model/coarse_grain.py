@@ -17,7 +17,7 @@ from ..utilities import vector as ftuv
 from ...utilities import debug as fud
 from ...utilities import stuff as fus
 from ...utilities.observedDict import observedDict
-from .Element import CoordinateStorage
+from .Element import CoordinateStorage, LineSegmentStorage
 import Bio.PDB as bpdb
 import collections as c
 import contextlib
@@ -980,7 +980,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     #def get_loop_from_residue(self, residue) ->  use BulgeGraph.get_node_from_residue_num()!
     def _init_coords(self):
-        self.coords = CoordinateStorage(self.defines.keys(), on_change = self.reset_vatom_cache)
+        self.coords = LineSegmentStorage(self.defines.keys(), on_change = self.reset_vatom_cache)
         self.twists = CoordinateStorage([x for x in self.defines if x[0] =="s"], on_change = self.reset_vatom_cache)
     def from_fasta(self, fasta):
         super(CoarseGrainRNA, self).from_fasta(fasta)

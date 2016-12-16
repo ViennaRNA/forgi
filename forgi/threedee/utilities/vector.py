@@ -12,6 +12,12 @@ import random as rand
 import warnings
 #import scipy as sp
 
+try:
+    profile
+except:
+    def profile(f): 
+        return f
+    
 null_array = np.array([0., 0., 0.])
 
 x_array = np.array([1., 0., 0.])
@@ -502,8 +508,8 @@ def magnitude(vec):
     :param vec: The vector in question.
     :return: The magnitude of the vector.
     '''
-    return ftuc.magnitude(vec)
-    #return math.sqrt(np.dot(vec, vec))
+    #return np.linalg.norm(vec) #A lot of overhead, if used for a single vector
+    return np.sqrt(np.dot(vec, vec))
 
 """
 def time_mag1():
@@ -674,6 +680,7 @@ def vec_distance(vec1, vec2):
     return ftuc.vec_distance(vec1, vec2)
     #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
+@profile
 def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     '''
     Code copied from line_segment_distance, but with optimizations for fast comparison to distance.
