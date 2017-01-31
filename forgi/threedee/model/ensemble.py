@@ -164,7 +164,8 @@ class Ensemble(object):
                 )
 
         plt.ylabel("RMSD to start")
-        
+        plt.savefig("cluster.png")
+        plt.savefig("cluster.svg")
         
         
         
