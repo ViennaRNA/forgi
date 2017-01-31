@@ -181,3 +181,19 @@ class TestVector(unittest.TestCase):
                                 "new_basis=np.array([[1.,2.,0.],[0.,6.,7],[0.4,0,9.3]]);old_basis=np.array([[1.5,2.5,0],[1.5,0,7],[0,0.7,9.3]])", number = 1000000)
         self.assertLess(int(t1)+50,int(t2))
         
+    def test_det3x3(self):
+        m1 = np.array([[1.,2,3],[4.,5,6],[7,8,9]])
+        m2 = np.array([[1,1,2],[3,3,4.],[6,6,8]])
+        m3= np.array([[2,-4,6],[-2,6.,9],[0,0,1]])
+        for m in [m1,m2,m3]:
+            self.assertEqual(ftuv.det3x3(m), np.linalg.det(m))
+            
+    def test_get_centroid(self):
+        coords = [[0.,1.,1.],[1,1,1],[-1,2,3],[3, 0, 0],[-3,1,0]]
+        nptest.assert_almost_equal(ftuv.get_vector_centroid(np.array(coords)), [0, 1, 1])
+        nptest.assert_almost_equal(ftuv.get_vector_centroid(coords), [0, 1, 1])
+    def test_center_on_centroid(self):
+        coords = [[0.,1.,1.],[1,1,1],[-1,2,3],[3, 0, 0],[-3,1,0]]
+        nptest.assert_almost_equal(ftuv.center_on_centroid(np.array(coords)), 
+                    [[0,0.,0],[1,0,0],[-1,1,2],[3,-1,-1],[-3,0,-1]])
+        nptest.assert_equal(ftuv.get_vector_centroid(ftuv.center_on_centroid(coords)), [0,0.,0])

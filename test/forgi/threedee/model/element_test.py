@@ -3,9 +3,18 @@ from __future__ import print_function
 
 import numpy as np
 import numpy.testing as nptest
+import random
 
 from forgi.threedee.model.Element import CoordinateStorage, LineSegmentStorage
 import unittest
+from math import sin, cos
+import copy
+
+RANDOM_REPETITIONS = 10
+
+def rand(m = 0, d = 10):
+    """A random number with a uniform distribution from m-d to m+d"""
+    return random.random()*2*d-d+m
 
 class CoordinateStorageTest(unittest.TestCase):
     def setUp(self):
@@ -209,3 +218,85 @@ class LineSegmentStorageTests(unittest.TestCase):
         self.assertEqual(cs.elements_closer_than(1.5, ignore=set([("s0","s2"),("s2", "s1")])),[("s0","s1")])
         self.assertEqual(cs.elements_closer_than(0.4),[("s0","s2"),("s1", "s2")])
         self.assertEqual(cs.elements_closer_than(0.4, ignore=set([("s0","s2"),("s2", "s1")])),[])
+
+    def test_rmsd_to_self(self):
+        cs1 = LineSegmentStorage(["s0", "s1", "s2"])
+        for r in range(RANDOM_REPETITIONS):        
+            cs1["s0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs1["s1"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs1["s2"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            self.assertAlmostEqual(cs1.rmsd_to(cs1), 0)
+            
+    def test_rmsd_to_is_a_symmetric_relation(self):
+        cs1 = LineSegmentStorage(["s0", "m3", "s1", "i0", "s2"])
+        cs2 = LineSegmentStorage(["s0", "s1", "s2", "i0", "m3"])
+
+        for r in range(RANDOM_REPETITIONS):        
+            cs1["s0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs1["s1"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs1["s2"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs1["i0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs1["m3"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs2["s0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs2["s1"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs2["s2"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs2["i0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            cs2["m3"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
+            self.assertAlmostEqual(cs1.rmsd_to(cs2), cs2.rmsd_to(cs1))
+            
+            
+    def test_rmsd_to_offset_ordered(self):
+        cs1 = LineSegmentStorage(["s0", "s1", "s2"])
+        cs2 = LineSegmentStorage(["s0", "s1", "s2"])
+        cs1["s0"]=[0,0,0.],[0,0,3.]
+        cs1["s1"]=[1,1,3.],[1,-1,-3.]
+        cs1["s2"]=[0.,0.,0.],[1,-1,-3.]
+        cs2["s0"]=[0,0,1.],[0,0,4.]
+        cs2["s1"]=[1,1,4.],[1,-1,-2.]
+        cs2["s2"]=[0.,0.,1.],[1,-1,-2.]
+        self.assertAlmostEqual(cs1.rmsd_to(cs2), 0)
+        self.assertAlmostEqual(cs2.rmsd_to(cs1), 0)
+
+    def test_rmsd_to_offset_unordered(self):
+        cs1 = LineSegmentStorage(["s0", "s1", "s2"])
+        cs2 = LineSegmentStorage(["s2", "s0", "s1"])
+        cs1["s0"]=[0,0,0.],[0,0,3.]
+        cs1["s1"]=[1,1,3.],[1,-1,-3.]
+        cs1["s2"]=[0.,0.,0.],[1,-1,-3.]
+        cs2["s0"]=[0,0,1.],[0,0,4.]
+        cs2["s1"]=[1,1,4.],[1,-1,-2.]
+        cs2["s2"]=[0.,0.,1.],[1,-1,-2.]
+        self.assertAlmostEqual(cs1.rmsd_to(cs2), 0)
+     
+    def test_rmsd_to_rotated_ordered_unordered(self):
+        cs1 = LineSegmentStorage(["s0", "s1", "s2"])
+        cs2 = LineSegmentStorage(["s2", "s0", "s1"])
+        cs1["s0"]=[0,0,0.],[0,0,3.]
+        cs1["s1"]=[1,1,3.],[1,-1,-3.]
+        cs1["s2"]=[0.,0.,0.],[1,-1,-3.]
+        cs_temp = copy.deepcopy(cs1)
+        cs_temp.rotate(np.array([[1,0,0],[0, cos(1.2), -sin(1.2)],[0, sin(1.2), cos(1.2)]]))
+        
+        self.assertAlmostEqual(cs1.rmsd_to(cs_temp), 0)
+
+        cs2["s0"] = cs_temp["s0"]
+        cs2["s1"] = cs_temp["s1"]
+        cs2["s2"] = cs_temp["s2"]
+
+        
+        self.assertAlmostEqual(cs1.rmsd_to(cs2), 0)
+         
+    def test_rmsd_to_deviating(self):
+        cs1 = LineSegmentStorage(["s0", "s1", "s2", "s3"])
+        cs2 = LineSegmentStorage(["s2", "s0", "s3", "s1"])
+        cs1["s0"]=[0,0,0.],[0,0,3.]
+        cs1["s1"]=[1,1,3.],[1,-1,-3.]
+        cs1["s2"]=[0.,0.,0.],[1,-1,-3.]
+        cs1["s3"]=[0.,10.,0.],[1,-1,-3.]
+
+        cs2["s0"]=[0,0,3.],[0,0,0.]
+        cs2["s1"]=[1,-1,-3.],[1,1,3.]
+        cs2["s2"]=[-1.,-1.,-3.],[0,0,0.]
+        cs2["s3"]=[0.,5.,0.],[1,-1,-3.]
+        self.assertGreater(cs1.rmsd_to(cs2), 1)        
+        self.assertLess(cs1.rmsd_to(cs2), 5)

@@ -1,6 +1,40 @@
 from distutils.core import setup
 
-setup(name='forgi',
+from distutils.command.build_py import build_py as _build_py
+import subprocess
+import os
+
+try: #If we are in a git-repo, get git-describe version.
+    path = os.path.abspath(os.path.dirname(__file__))
+    forgi_version = subprocess.check_output([os.path.join(path, "git"), "describe", "--always"]).strip()
+    try:
+        subprocess.check_call([os.path.join(path, 'git'), 'diff-index', '--quiet', 'HEAD', '--'])
+    except subprocess.CalledProcessError:
+        forgi_version+="+uncommited_changes"
+    #Use a subclass of build_py from distutils to costumize the build.
+    class build_py(_build_py):
+        def run(self):
+            """
+            During building, adds a variable with the complete version (from git describe)
+            to forgi/__init__.py.
+            """
+            outfile = self.get_module_outfile(self.build_lib, ["forgi"], "__init__")
+            try:
+                os.remove(outfile) #If we have an old version, delete it, so _build_py will copy the original version into the build directory.
+            except:
+                pass
+            # Superclass build
+            _build_py.run(self)
+            # Apped the version number to init.py
+            with open(outfile, "a") as of:
+                of.write('\n__complete_version__ = "{}"'.format(forgi_version))
+except OSError: #Outside of a git repo, do nothing.
+    build_py = _build_py
+
+
+setup(
+      cmdclass={'build_py': build_py},
+      name='forgi',
       version='0.40',
       description='RNA Graph Library',
       author='Peter Kerpedjiev, Bernhard Thiel',

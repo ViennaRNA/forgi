@@ -134,20 +134,23 @@ class CoordinateStorage(Mapping):
         return not self == other
     
 class LineSegmentStorage(CoordinateStorage):
-    
+    def __init__(self,*args, **kwargs):
+        super(LineSegmentStorage, self).__init__(*args, **kwargs)
+        self._i_to_elem = { i:elem for elem,i in self._elem_names.items()}
+
     def get_direction(self, elem_name): #This assumes the stored coordinates are points not directions 
         assert self._coords_per_key == 2 #Or else a direction does not make sense
         indices = self._indices_for(elem_name)
         return self._coordinates[indices[1]]-self._coordinates[indices[0]]
-
+    @profile
     def elements_closer_than(self, cutoff, ignore = []):
         """
         :param ignore: A set of tuples (element name-pairs) to ignore
         """
         #See http://stackoverflow.com/a/18994296/5069869 by Fnord
         #Modified to make use of numpy vectorization.
-        i_to_elem = { i:elem for elem,i in self._elem_names.items()}
-
+        i_to_elem = self._i_to_elem
+        
         assert self._coords_per_key == 2
         directions = self._coordinates[1::2]-self._coordinates[::2]
         magnitudes = np.linalg.norm(directions, axis = 1, keepdims = True)
@@ -199,9 +202,10 @@ class LineSegmentStorage(CoordinateStorage):
                 if ftuv.magnitude(((d0*a_normed)+a0)-b0)<cutoff:
                     hits.append(potential_interaction)
                 continue
-            # Lines criss-cross: Calculate the dereminent and return points
-            det0 = np.linalg.det([vec_a0b0, b_normed, cross])
-            det1 = np.linalg.det([vec_a0b0, a_normed, cross])
+            # Lines criss-cross: Calculate the dereminent
+            
+            det0 = ftuv.det3x3(np.array([vec_a0b0, b_normed, cross]))#np.linalg.det([vec_a0b0, b_normed, cross])
+            det1 = ftuv.det3x3(np.array([vec_a0b0, a_normed, cross]))#np.linalg.det([vec_a0b0, a_normed, cross])
 
             t0 = det0/denom;
             t1 = det1/denom;
@@ -227,6 +231,14 @@ class LineSegmentStorage(CoordinateStorage):
                 hits.append(potential_interaction)
         return hits
 
+    def rmsd_to(self, other):
+        import forgi.threedee.model.similarity as ftms #This import is here to avoid circular imports.
+        if self._elem_names == other._elem_names:
+            return ftms.rmsd(self.get_array(), other.get_array())
+        else:
+            rev_lookup = list(sorted(self._elem_names.keys(), key = self._elem_names.__getitem__))
+            other_array = np.array([ coord_line for d in rev_lookup for coord_line in [other[d][0], other[d][1]]])
+            return ftms.rmsd(self.get_array(), other_array)
 
     @profile
     def _indices_for(self, elem_name):

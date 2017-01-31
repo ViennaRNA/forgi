@@ -476,6 +476,11 @@ def get_vector_centroid(crds1):
 
     :return: The centroid of the rows of the matrix crds.
     '''
+    crds1 = np.asarray(crds1)
+    centroid = np.sum(crds1, axis=0)
+    centroid /= float(len(crds1))
+
+    return centroid
     if crds1.shape[1] == 3:
         centroid1 = np.array([0., 0., 0.])
     else:
@@ -494,12 +499,10 @@ def get_vector_centroid(crds1):
 
 def center_on_centroid(crds1):
     centroid1 = get_vector_centroid(crds1)
-    crds = []
+    
+    crds = np.asarray(crds1)
+    return crds - centroid1
 
-    for i in range(len(crds1)):
-        crds += [crds1[i] - centroid1]
-
-    return np.array(crds)
 
 def magnitude(vec):
     '''
@@ -511,6 +514,11 @@ def magnitude(vec):
     #return np.linalg.norm(vec) #A lot of overhead, if used for a single vector
     return np.sqrt(np.dot(vec, vec))
 
+def det3x3(matrix):
+    """return the determinant of a 3x3 matrix"""
+    positive = matrix[0,0]*matrix[1,1]*matrix[2,2]+matrix[0,1]*matrix[1,2]*matrix[2,0]+matrix[0,2]*matrix[1,0]*matrix[2,1]
+    minus = matrix[2,0]*matrix[1,1]*matrix[0,2]+matrix[2,1]*matrix[1,2]*matrix[0,0]+matrix[2,2]*matrix[1,0]*matrix[0,1]
+    return positive-minus
 """
 def time_mag1():
     vec1 = get_random_vector()

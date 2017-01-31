@@ -83,7 +83,7 @@ class AdjacencyCorrelation(object):
         :return: A set of 2-tuples containing elements that pair.
         """
         ignore = set()
-        for n1, n2 in it.combinations(nodes, r=2):
+        for n1, n2 in it.combinations(cg.defines.keys(), r=2):
             if cg.connected(n1, n2):
                 ignore.add((n1,n2))
                 continue
@@ -212,7 +212,10 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
 
 
 def optimal_superposition(crds1, crds2):
-    """Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2"""        
+    """
+    Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2
+    using the Kabsch algorithm
+    """        
     assert(crds1.shape == crds2.shape)
     if crds1.shape[1] == 3 or crds1.shape[1] == 2:
         correlation_matrix = np.dot(np.transpose(crds1), crds2)
