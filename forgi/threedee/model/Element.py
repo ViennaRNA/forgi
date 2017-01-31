@@ -137,6 +137,11 @@ class LineSegmentStorage(CoordinateStorage):
     def __init__(self,*args, **kwargs):
         super(LineSegmentStorage, self).__init__(*args, **kwargs)
         self._i_to_elem = { i:elem for elem,i in self._elem_names.items()}
+        self.is_centered = False
+        
+    def center(self):
+        self._coordinates = ftuv.center_on_centroid(self._coordinates)
+        self.is_centered = True
 
     def get_direction(self, elem_name): #This assumes the stored coordinates are points not directions 
         assert self._coords_per_key == 2 #Or else a direction does not make sense
@@ -234,11 +239,15 @@ class LineSegmentStorage(CoordinateStorage):
     def rmsd_to(self, other):
         import forgi.threedee.model.similarity as ftms #This import is here to avoid circular imports.
         if self._elem_names == other._elem_names:
-            return ftms.rmsd(self.get_array(), other.get_array())
+            return ftms.rmsd(self._coordinates, 
+                             other._coordinates, 
+                             self.is_centered & other.is_centered)
         else:
             rev_lookup = list(sorted(self._elem_names.keys(), key = self._elem_names.__getitem__))
             other_array = np.array([ coord_line for d in rev_lookup for coord_line in [other[d][0], other[d][1]]])
-            return ftms.rmsd(self.get_array(), other_array)
+            return ftms.rmsd(self._coordinates, 
+                             other_array, 
+                             self.is_centered & other.is_centered)
 
     @profile
     def _indices_for(self, elem_name):

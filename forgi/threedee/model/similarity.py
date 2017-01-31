@@ -242,13 +242,14 @@ def cg_rmsd(cg1, cg2):
 
     return rmsd(residues1, residues2)
 
-def rmsd(crds1, crds2):
+def rmsd_kabsch(crds1, crds2, is_centered=False):
     '''
     Center the coordinate vectors on their centroid
     and then calculate the rmsd.
     '''
-    crds1 = ftuv.center_on_centroid(crds1)
-    crds2 = ftuv.center_on_centroid(crds2)
+    if not is_centered:
+        crds1 = ftuv.center_on_centroid(crds1)
+        crds2 = ftuv.center_on_centroid(crds2)
 
     os = optimal_superposition(crds1, crds2)
     crds_aligned = np.dot(crds1, os)
@@ -277,4 +278,11 @@ def drmsd(coords1, coords2):
 
     return rmsd
 
+#The function rmsd points to the faster QC version if available, else to our kabsch implementation.
+#The name rmsd_kabsch is always available to refer to our kabsch implementation.
+try:
+    from py_qcprot import rmsd as rmsd_qc
+    rmsd = rmsd_qc
+except:
+    rmsd = rmsd_kabsch
 
