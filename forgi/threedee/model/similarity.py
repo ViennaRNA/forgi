@@ -122,6 +122,7 @@ class AdjacencyCorrelation(object):
         return d
 
 #NOTE: could be deprecated in the future. Use AdjacencyCorrelation.
+#NOTE: could be moved to tests as reference for Adjacency correlation.
 def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
     '''
     Calculate the true_positive, false_positive,

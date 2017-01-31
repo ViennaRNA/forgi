@@ -126,19 +126,27 @@ class CoordinateStorage(Mapping):
             return True
         for key in self:
             if not np.allclose(self[key], other[key]):
-                log.debug("Values for key {} different".format(key))
+                log.debug("Values for key {} different: {}!={}".format(key, self[key], other[key]))
                 return False
+        log.debug("Equal!")
         return True
-    
     def __ne__(self, other):
         return not self == other
-    
+
 class LineSegmentStorage(CoordinateStorage):
     def __init__(self,*args, **kwargs):
         super(LineSegmentStorage, self).__init__(*args, **kwargs)
         self._i_to_elem = { i:elem for elem,i in self._elem_names.items()}
         self.is_centered = False
-        
+        self.on_change = self._extended_on_change(self.on_change)
+    def _extended_on_change(self, f):
+        """
+        In addition to the user-supplied function, also reset is_centered.
+        """
+        def fu(key):
+            f(key)
+            self.is_centered = False
+        return fu
     def center(self):
         self._coordinates = ftuv.center_on_centroid(self._coordinates)
         self.is_centered = True

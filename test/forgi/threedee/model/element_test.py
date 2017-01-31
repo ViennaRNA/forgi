@@ -9,6 +9,7 @@ from forgi.threedee.model.Element import CoordinateStorage, LineSegmentStorage
 import unittest
 from math import sin, cos
 import copy
+import forgi.threedee.model.coarse_grain as ftmc
 
 RANDOM_REPETITIONS = 10
 
@@ -149,7 +150,19 @@ class CoordinateStorageEqualityTests(unittest.TestCase):
         cs2["s4"]=[0,1,0],[2,0,1]
         cs2["s5"]=[1,2,3],[3,4,1]
         self.assertNotEqual(cs1, cs2)
-        
+    def test_eq_for_cgs(self):
+        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg1_a = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg2_a = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg3 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1J1U.cg')
+        cg3_a = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1J1U.cg')
+        self.assertEqual(cg1.coords, cg1.coords)
+        self.assertEqual(cg1.coords, cg1_a.coords)
+        self.assertEqual(cg2.coords, cg2_a.coords)
+        self.assertEqual(cg3.coords, cg3_a.coords)
+        self.assertNotEqual(cg1.coords, cg2.coords)
+        self.assertNotEqual(cg1.coords, cg3.coords)
 class LineSegmentStorageTests(unittest.TestCase):
     def test_elements_closer_than_on_same_line(self):
         cs = LineSegmentStorage(["s0", "s1"])
