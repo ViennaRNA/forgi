@@ -40,6 +40,9 @@ from pprint import pprint
 
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
 
+def hallo_world():
+    print("Hallo World")
+
 def resid_to_str(resid):
     if resid.chain is not None:
         out="{}:{}".format(resid.chain, resid.resid[1])
