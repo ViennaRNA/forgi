@@ -279,11 +279,14 @@ def drmsd(coords1, coords2):
 
     return rmsd
 
-#The function rmsd points to the faster QC version if available, else to our kabsch implementation.
-#The name rmsd_kabsch is always available to refer to our kabsch implementation.
+def rmsd_qc_wrap(coords1, coords2, is_centered):
+    r = rmsd_qc(coords1, coords2, is_centered)
+    if np.isnan(r):
+        return rmsd_kabsch(coords1, coords2, is_centered)
+    return r
+
 try:
-    from py_qcprot import rmsd as rmsd_qc
-    rmsd = rmsd_qc
+    from py_qcprot import rmsd as rmsd_qc #Faster C version, if available
+    rmsd = rmsd_qc_wrap
 except:
     rmsd = rmsd_kabsch
-

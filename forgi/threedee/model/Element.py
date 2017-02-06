@@ -251,11 +251,20 @@ class LineSegmentStorage(CoordinateStorage):
                              other._coordinates, 
                              self.is_centered & other.is_centered)
         else:
-            rev_lookup = list(sorted(self._elem_names.keys(), key = self._elem_names.__getitem__))
-            other_array = np.array([ coord_line for d in rev_lookup for coord_line in [other[d][0], other[d][1]]])
-            return ftms.rmsd(self._coordinates, 
+            common_keys = set(self._elem_names.keys())&set(other._elem_names.keys())
+            if len(common_keys)==len(self._elem_names):
+                rev_lookup = list(x for x in sorted(self._elem_names.keys(), key = self._elem_names.__getitem__))
+                other_array = np.array([ coord_line for d in rev_lookup for coord_line in [other[d][0], other[d][1]]])
+                return ftms.rmsd(self._coordinates, 
                              other_array, 
                              self.is_centered & other.is_centered)
+            else:
+                common_keys = list(common_keys)
+                this_array = np.array([ coord_line for d in common_keys for coord_line in [self[d][0], self[d][1]]])
+                other_array = np.array([ coord_line for d in common_keys for coord_line in [other[d][0], other[d][1]]])
+                return ftms.rmsd(this_array,
+                             other_array, 
+                             False)
 
     @profile
     def _indices_for(self, elem_name):

@@ -502,7 +502,7 @@ class BulgeGraph(object):
         else:
             self._seq = Sequence(value)
         stack = ''.join(list(traceback.format_stack())[-3:-1])
-        log.info(stack + "Sequence set to {}".format(self._seq))
+        log.debug(stack + "Sequence set to {}".format(self._seq))
         
     # get an internal index for a named vertex
     # this applies to both stems and edges
@@ -2239,7 +2239,7 @@ class BulgeGraph(object):
                     self.edges[p].add(parts[1])
             elif parts[0] == 'seq':
                 self.seq = parts[1]
-                log.info("from_bg_string: seq {}, breakpoints {}".format(self.seq, self.seq.backbone_breaks_after))
+                log.debug("from_bg_string: seq {}, breakpoints {}".format(self.seq, self.seq.backbone_breaks_after))
                 self.backbone_breaks_after = self.seq.backbone_breaks_after
             elif parts[0] == 'seq_ids':
                 self.seq_ids = list(map(resid_from_str, parts[1:]))
