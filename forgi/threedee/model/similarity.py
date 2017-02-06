@@ -279,7 +279,7 @@ def drmsd(coords1, coords2):
 
     return rmsd
 
-def rmsd_qc_wrap(coords1, coords2, is_centered):
+def rmsd_qc_wrap(coords1, coords2, is_centered=False):
     r = rmsd_qc(coords1, coords2, is_centered)
     if np.isnan(r):
         return rmsd_kabsch(coords1, coords2, is_centered)
