@@ -6,9 +6,9 @@ import os
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
-    forgi_version = subprocess.check_output([os.path.join(path, "git"), "describe", "--always"]).strip()
+    forgi_version = subprocess.check_output(["git", "describe", "--always"]).strip()
     try:
-        subprocess.check_call([os.path.join(path, 'git'), 'diff-index', '--quiet', 'HEAD', '--'])
+        subprocess.check_call(['git', 'diff-index', '--quiet', 'HEAD', '--'])
     except subprocess.CalledProcessError:
         forgi_version+="+uncommited_changes"
     #Use a subclass of build_py from distutils to costumize the build.
@@ -28,7 +28,7 @@ try: #If we are in a git-repo, get git-describe version.
             # Apped the version number to init.py
             with open(outfile, "a") as of:
                 of.write('\n__complete_version__ = "{}"'.format(forgi_version))
-except OSError: #Outside of a git repo, do nothing.
+except OSError as e: #Outside of a git repo, do nothing.
     build_py = _build_py
 
 
