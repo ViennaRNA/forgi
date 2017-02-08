@@ -180,7 +180,10 @@ class Ensemble(Mapping):
         :param descriptor_name: The name of the descriptor to be calculated.
         """
         if descriptor_name == "rmsd_to_reference":
-            return [self._reference_cg]
+            if self._reference_cg:
+                return [self._reference_cg]
+            else:
+                return [self._cgs[0]]
         elif descriptor_name == "rmsd_to_last":
             return [self._cgs[-1]]
         else:
@@ -251,7 +254,7 @@ class Ensemble(Mapping):
        
 
 
-    def view_db_clustering(self, ref_ensemble = None, x = "rmsd_to_reference", y = "rmsd_to_last"):
+    def view_2d_projection(self, ref_ensemble = None, x = "rmsd_to_reference", y = "rmsd_to_last", cluster = False):
         """
         Plot a 2D projection of the ensemble to the given x and y axis, 
         and visualize the results of clustering with DBSCAN.
@@ -293,10 +296,11 @@ class Ensemble(Mapping):
             print("KS-Test for {} : {}".format(x, scipy.stats.ks_2samp(full_x, ref_x)))
             print("KS-Test for {} : {}".format(y, scipy.stats.ks_2samp(full_y, ref_y)))
 
-        #In the background, plot lines to show the sampling trajectory
-        plt.plot( data_x, data_y, '-', color="blue")
 
-        if True:
+        if cluster:        
+            #In the background, plot lines to show the sampling trajectory
+            plt.plot( data_x, data_y, '-', color="blue")
+
             # Then cluster all structures based on pairwise RMSD
             db = self._cluster_dbscan()
             labels = db.labels_
@@ -319,7 +323,10 @@ class Ensemble(Mapping):
                       data_y[class_member_mask & ~core_samples_mask],
                       'o', markerfacecolor=col, markeredgecolor=col, markersize=1
                     )
-                    
+        else:
+            #In the background, plot lines to show the sampling trajectory
+            plt.plot( data_x, data_y, '-o', color="blue")
+
         if self._reference_cg:
             plt.plot(calculate_descriptor_for(x, [self._reference_cg], *self._get_args_for(x)),
                      calculate_descriptor_for(y, [self._reference_cg], *self._get_args_for(y)), 
