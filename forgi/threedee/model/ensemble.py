@@ -16,6 +16,7 @@ import time
 import forgi.threedee.model.descriptors as ftmd
 import scipy.stats
 import matplotlib.pyplot as plt
+import warnings
 
 import logging
 log = logging.getLogger(__name__)
@@ -252,8 +253,108 @@ class Ensemble(Mapping):
         plt.clf()
         plt.close()
        
+    def color_by_energy(self, bins, ref_ensemble = None, ref_energies = None, 
+                        x = "rmsd_to_reference", y = "rmsd_to_last"):
+        """"""
+        plt.set_cmap('jet_r')
 
+        #Get the data for plotting of the ensemble
+        data_x = self._get_descriptor(x)
+        data_y = self._get_descriptor(y)
+        energies = self._get_descriptor("info_energy")
+        image = get_energy_image(data_x, data_y, energies, bins)        
+        # Label the plot
+        plt.xlabel(x)
+        plt.ylabel(y)       
+        plt.imshow(image.T, interpolation="nearest", origin='lower', 
+                   extent=[bins[0][0], bins[0][-1],bins[1][0], bins[1][-1]],
+                   aspect='auto' )
+        plt.xlim( [bins[0][0], bins[0][-1]] )
+        plt.ylim([bins[1][0], bins[1][-1]])
+        plt.colorbar()
+        figname = "minEnergy_{}_{}_{}.svg".format(self._cgs[0].name, x,y)
+        plt.savefig(figname)
+        log.info("Figure {} created".format(figname))
+        plt.clf()
+        plt.close()
+        
+        if ref_ensemble:
+            #Get the data for plotting of the ensemble
+            ref_x = calculate_descriptor_for(x, ref_ensemble, *self._get_args_for(x))
+            ref_y = calculate_descriptor_for(y, ref_ensemble, *self._get_args_for(y))
+            image = get_energy_image(ref_x, ref_y, ref_energies, bins)        
+            # Label the plot
+            plt.xlabel(x)
+            plt.ylabel(y)       
+            plt.imshow(image.T, interpolation="nearest", origin='lower', 
+                       extent=[bins[0][0], bins[0][-1],bins[1][0], bins[1][-1]],
+                       aspect='auto' )
+            plt.xlim( [bins[0][0], bins[0][-1]] )
+            plt.ylim([bins[1][0], bins[1][-1]])
+            plt.colorbar()
+            figname = "minEnergy_reference_{}_{}_{}.svg".format(self._cgs[0].name, x,y)
+            plt.savefig(figname)
+            log.info("Figure {} created".format(figname))
+            plt.clf()
+            plt.close()       
+            
+        plt.set_cmap('jet')
 
+    def view_2d_hist(self, ref_ensemble = None, x = "rmsd_to_reference", y = "rmsd_to_last", bins=None):
+        """
+        Plot a 2D histogram of the ensemble with respect to the given x and y axis, 
+        and visualize the results of clustering with DBSCAN.
+        
+        :param ref_ensemble: An ensemble or a list of cgs. Plotted as additional image.
+        :param x: A STRING. The descriptor name used as x axis.
+        :param y: A STRING. The descriptor name used as y axis.
+        :param bins: Passed to matplotlib.pyplot.hist2d
+        
+        :returns: The bins used
+        Saves the resulting plot as a svg in the current directory.
+        """        
+        
+        #Get the data for plotting of the ensemble
+        data_x = self._get_descriptor(x)
+        data_y = self._get_descriptor(y)
+
+        if ref_ensemble:
+            # Label the plot
+            plt.xlabel(x)
+            plt.ylabel(y)
+            #Get the data for plotting of the ensemble
+            ref_x = calculate_descriptor_for(x, ref_ensemble, *self._get_args_for(x))
+            ref_y = calculate_descriptor_for(y, ref_ensemble, *self._get_args_for(y))
+            if bins is None:
+                #Calculate the bins, using reference and ensemble
+                _, xedges, yedges = np.histogram2d(list(ref_x)+list(data_x), list(ref_y)+list(data_y), bins = 40, normed = True)
+                bins=[xedges, yedges]
+            #Plot the 2D histogram
+            plt.hist2d( ref_x, ref_y, bins = bins, normed = True)
+            plt.colorbar()
+            figname = "hist2d_reference_{}_{}_{}.svg".format(ref_ensemble[0].name, x,y)
+            plt.savefig(figname)
+            log.info("Figure {} created".format(figname))
+            plt.clf()
+            plt.close()
+        
+        if bins is None:
+            bins = 40
+        # Label the plot
+        plt.xlabel(x)
+        plt.ylabel(y)
+        #Plot the 2D histogram
+        _, xedges, yedges, _ = plt.hist2d( data_x, data_y, bins = bins, normed = True)
+        bins=[xedges, yedges]
+        plt.colorbar()
+        figname = "hist2d_{}_{}_{}.svg".format(self._cgs[0].name, x,y)
+        plt.savefig(figname)
+        log.info("Figure {} created".format(figname))
+        plt.clf()
+        plt.close()
+        print("BINS", bins)
+        return bins
+        
     def view_2d_projection(self, ref_ensemble = None, x = "rmsd_to_reference", y = "rmsd_to_last", cluster = False):
         """
         Plot a 2D projection of the ensemble to the given x and y axis, 
@@ -337,8 +438,27 @@ class Ensemble(Mapping):
         log.info("Figure {} created".format(figname))
         plt.clf()
         plt.close()
-        
-        
+
+def get_energy_image(data_x, data_y, energies, bins):
+    image = np_nans([len(bins[0])-1, len(bins[1])-1])
+    bins_x = np.digitize(data_x, bins[0])
+    bins_y = np.digitize(data_y, bins[1])
+    for i in range(len(data_x)):
+        bx = bins_x[i]-1
+        by = bins_y[i]-1
+        if bx<0:
+            bx=0
+        if by<0:
+            by=0
+        if bx>=len(image):
+            bx=len(image)-1
+        if by>=len(image[0]):
+            by = len(image[0])-1
+        if np.isnan(image[bx,by]):
+            image[bx,by] = energies[i]
+        else:
+            image[bx,by] = min(energies[i], image[bx,by])
+    return image
 class DescriptorCalc(object):
     """
     Helper class to calculate descriptors of Coarse grained RNAs for an ensemble (or a list) of cgs.
@@ -362,14 +482,22 @@ class DescriptorCalc(object):
         for i, cg in enumerate(cgs):
             ai[i] = ftmd.anisotropy(cg.get_ordered_stem_poss())
         return ai
-    
+    @staticmethod
+    def info_energy(cgs):
+        e = np_nans(len(cgs))
+        for i, cg in enumerate(cgs):
+            try:
+                e[i] = float(cg.infos["totalEnergy"][0].split()[0])
+            except:
+                e[i]=float("nan")
+        return e    
 valid_descriptors = {
     "rmsd_to_reference": DescriptorCalc.rmsd_to_stru,
     "rmsd_to_last": DescriptorCalc.rmsd_to_stru,
     "rog": DescriptorCalc.rog,
     "ROG": DescriptorCalc.rog,
-    "anisotropy": DescriptorCalc.anisotropy
-
+    "anisotropy": DescriptorCalc.anisotropy,
+    "info_energy": DescriptorCalc.info_energy
     }
 
     
