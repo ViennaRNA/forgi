@@ -7,22 +7,39 @@ from future.builtins.disabled import (apply, cmp, coerce, execfile,
                              file, long, raw_input, reduce, reload,
                              unicode, xrange, StandardError)
 
-from collections import Mapping, defaultdict
+from collections import Mapping, defaultdict, Sequence
 import itertools as it
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.manifold import MDS
+from sklearn.decomposition import PCA
 import time
 import forgi.threedee.model.descriptors as ftmd
+import forgi.threedee.utilities.vector as ftuv
 import scipy.stats
 import matplotlib.pyplot as plt
 import warnings
+from scipy.sparse import lil_matrix
 
 import logging
 log = logging.getLogger(__name__)
 
 np_nans = lambda *args, **kwargs: np.ones(*args, **kwargs) * np.nan
     
+class RMSDMatrix(Sequence):
+    def __init__(self, shape):
+        self._matrix = lil_matrix(shape, dtype=float)
+        self._len = shape[0]
+    def __setitem__(self, key, value):
+        try:
+            log.info("Setting {} to array with shape {}".format(key, value.shape))
+        except:
+            pass
+        self._matrix[key]=value+1
+    def __getitem__(self, key):
+        return self._matrix[key]-1
+    def __len__(self):
+        return self._len
 class Ensemble(Mapping):
     #################### INITIALIZATION
     def __init__(self, cgs, reference_cg = None, sort_key = None):
@@ -66,9 +83,9 @@ class Ensemble(Mapping):
         ############## Caching of some descriptors ############################
         
         #The rmsd matrix. nan means the value needs to be calculated and will then be stored here.
-        self._rmsd = np.ones((len(self._cgs), len(self._cgs)))*np.nan        
+        self._rmsd = RMSDMatrix((len(self._cgs), len(self._cgs)))
         for i in range(len(self._rmsd)):
-            self._rmsd[i,i]=0.
+            self._rmsd[i,i]=0.0
         # 1D descriptors
         self._descriptors = {}
 
@@ -77,9 +94,9 @@ class Ensemble(Mapping):
             self._descriptors[descr_name] = calculate_descriptor_for(descr_name, 
                                                                self._cgs, 
                                                                *self._get_args_for(descr_name))
-            if descr_name == "rmsd_to_last":
-                self._rmsd[-1,:]=self._descriptors[descr_name]
-                self._rmsd[:, -1]=self._descriptors[descr_name]
+            #if descr_name == "rmsd_to_last":
+            #    self._rmsd[-1,:]=self._descriptors[descr_name]
+            #    self._rmsd[:, -1]=self._descriptors[descr_name]
 
         return self._descriptors[descr_name]
     def _add_to_cg_list(self, cg, key):
@@ -131,6 +148,11 @@ class Ensemble(Mapping):
         :param timestep: The number of the frame (cg) in the trajectory that should be retrieved.
         :returns: A coarse-grained RNA.
         """
+        if hasattr(timestep, "__len__") and len(timestep)<=3:
+            seq = []
+            for i in range(*timestep):
+                seq.append(self._cgs[self._cg_sequence[i]])
+            return seq
         return self._cgs[self._cg_sequence[timestep]]
     ####################### RMSD and RMSD based calculations
     def rmsd_between(self, key1, key2, mode="key"):
@@ -150,18 +172,18 @@ class Ensemble(Mapping):
             j = self._cg_sequence[key2]
         else: 
             raise ValueError("Invalid mode {}".format(mode))
-        if np.isnan(self._rmsd[i,j]):
+        if self._rmsd[i,j]<0:
                 self._rmsd[i,j]=self._rmsd[j,i] = self._cgs[i].coords.rmsd_to(self._cgs[j].coords)
         return self._rmsd[i,j]
     def _calculate_complete_rmsd_matrix(self):
         """
         Fill out all empty fields in the rmsd matrix.
         """
-        if np.any(np.isnan(self._rmsd)):
+        if np.any(self._rmsd<0):
             #print(np.where(np.isnan(self._rmsd)))
             log.info("Starting complete rmsd calculation at {}".format(time.time()))
             for i,j in it.combinations(range(len(self)),2):
-                if np.isnan(self._rmsd[i,j]):
+                if self._rmsd[i,j]<0:
                     self._rmsd[i,j]=self._rmsd[j,i] = self._cgs[i].coords.rmsd_to(self._cgs[j].coords)
             log.info("Finished complete rmsd calculation at {}".format(time.time()))
         
@@ -438,6 +460,39 @@ class Ensemble(Mapping):
         log.info("Figure {} created".format(figname))
         plt.clf()
         plt.close()
+
+    def ensemble_pca(self, ref_ensemble=None, ref_first = True):
+        data = prepare_pca_input(self._cgs)
+        pca = PCA(n_components = 2)
+        if ref_ensemble:
+            ref_data = prepare_pca_input(ref_ensemble)
+            if ref_first:
+                pca.fit(ref_data)
+        if not ref_ensemble or not ref_first:
+            pca.fit(data)
+        reduced_data = pca.transform(data)
+        if ref_ensemble:
+            reduced_ref = pca.transform(ref_data)
+            plt.scatter(reduced_ref[:, 0], reduced_ref[:, 1], color = "green", label="background")
+        plt.scatter(reduced_data[:, 0], reduced_data[:, 1], color = "blue", label="sampling")
+        if self._reference_cg:
+            data_true = prepare_pca_input([self._reference_cg])        
+            reduced_true = pca.transform(data_true)
+            plt.scatter(reduced_true[:, 0], reduced_true[:, 1], color = "red", label="reference")
+
+        plt.xlabel("First principal component")
+        plt.ylabel("Second principal component")
+        figname = "pca_{}_rf{}.svg".format(self._cgs[0].name, ref_first)
+        plt.savefig(figname)
+        log.info("Figure {} created".format(figname))
+        plt.clf()
+        plt.close()
+
+def prepare_pca_input(cgs):
+    data = []
+    for cg in cgs:
+        data.append(ftuv.center_on_centroid(cg.get_ordered_stem_poss()).reshape(-1)) #reshape(-1) returns a flattened view
+    return np.array(data)
 
 def get_energy_image(data_x, data_y, energies, bins):
     image = np_nans([len(bins[0])-1, len(bins[1])-1])
