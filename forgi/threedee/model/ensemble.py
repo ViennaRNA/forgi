@@ -545,7 +545,34 @@ class DescriptorCalc(object):
                 e[i] = float(cg.infos["totalEnergy"][0].split()[0])
             except:
                 e[i]=float("nan")
-        return e    
+        return e
+    @staticmethod
+    def cg_distance(cgs, elem):
+        d = []
+        for cg in cgs:
+            start, end = cgs.coords[elem]
+            d.append(ftuv.vec_distance(start, end))
+        return d
+    @staticmethod
+    def cg_dist_difference(cgs, elem1, elem2):
+        d = []
+        for cg in cgs:
+            start, end = cgs.coords[elem1]
+            d1 = ftuv.vec_distance(start, end)
+            start, end = cgs.coords[elem2]
+            d2 = ftuv.vec_distance(start, end)
+            d.append(d1-d2)
+        return d
+        @staticmethod
+    def cg_dist_sum(cgs, elem1, elem2):
+        d = []
+        for cg in cgs:
+            start, end = cgs.coords[elem1]
+            d1 = ftuv.vec_distance(start, end)
+            start, end = cgs.coords[elem2]
+            d2 = ftuv.vec_distance(start, end)
+            d.append(d1+d2)
+        return d
 valid_descriptors = {
     "rmsd_to_reference": DescriptorCalc.rmsd_to_stru,
     "rmsd_to_last": DescriptorCalc.rmsd_to_stru,
@@ -558,7 +585,16 @@ valid_descriptors = {
     
 def calculate_descriptor_for(descriptor_name, cgs, *args):
     """Calculate a descriptor."""
-    if descriptor_name not in valid_descriptors:
+    if descriptor_name.startwith("cg_distance"):
+        elem = descriptor_name.split("_")[-1]
+        return DescriptorCalc.cg_distance(cgs, elem)
+    elif descriptor_name.startwith("cg_dist_sum"):
+        elem1, elem2 = descriptor_name.split("_")[-2:]
+        return DescriptorCalc.cg_dist_sum(cgs, elem1, elem2)
+    elif descriptor_name.startwith("cg_dist_difference"):
+        elem1, elem2 = descriptor_name.split("_")[-2:]
+        return DescriptorCalc.cg_dist_difference(cgs, elem1, elem2)
+    elif descriptor_name not in valid_descriptors:
         raise ValueError("Unknown descriptor {}".format(descriptor_name))
     else:
         return valid_descriptors[descriptor_name](cgs, *args)
