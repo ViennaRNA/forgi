@@ -494,11 +494,16 @@ class Ensemble(Mapping):
         """
         data = defaultdict(list)
         for i, cg in enumerate(self._cgs):
-            for elem in cg.get_mst():
+            build_order = cg.traverse_graph()
+            for elem in cg.mst:
                 if elem[0] not in "mi": continue
                 stat=ftms.AngleStat()    
                 line = cg.sampled[elem]
-                stat.parse_line(line)
+                #load angle_stats in direction of build order!
+                for bo in build_order:
+                    if bo[1]==d:
+                        stat=cg.get_bulge_angle_stats_core(d,(bo[0],bo[2]))
+                stat.pdb_name=line[0]
                 #Use correct multiplicity (self._cg has subsequent duplicates removed)
                 for j in range(self._cg_sequence.count(i)):
                     data["cg_name"].append(cg.name)
