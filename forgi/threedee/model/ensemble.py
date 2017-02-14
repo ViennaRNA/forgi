@@ -20,7 +20,7 @@ import scipy.stats
 import matplotlib.pyplot as plt
 import warnings
 from scipy.sparse import lil_matrix
-
+import forgi.threedee.model.similarity as ftms
 import logging
 log = logging.getLogger(__name__)
 
@@ -300,7 +300,7 @@ class Ensemble(Mapping):
         plt.clf()
         plt.close()
         
-        if ref_ensemble:
+        if ref_ensemble and ref_energies:
             #Get the data for plotting of the ensemble
             ref_x = calculate_descriptor_for(x, ref_ensemble, *self._get_args_for(x))
             ref_y = calculate_descriptor_for(y, ref_ensemble, *self._get_args_for(y))
@@ -523,7 +523,7 @@ class DescriptorCalc(object):
     def rmsd_to_stru(cgs, reference_cg):
         rmsd = np_nans(len(cgs))
         for i, cg in enumerate(cgs):
-            rmsd[i] = cg.coords.rmsd_to(reference_cg.coords)
+            rmsd[i] = ftms.cg_rmsd(cg, reference_cg)
         return rmsd
     @staticmethod
     def rog(cgs):
@@ -550,26 +550,26 @@ class DescriptorCalc(object):
     def cg_distance(cgs, elem):
         d = []
         for cg in cgs:
-            start, end = cgs.coords[elem]
+            start, end = cg.coords[elem]
             d.append(ftuv.vec_distance(start, end))
         return d
     @staticmethod
     def cg_dist_difference(cgs, elem1, elem2):
         d = []
         for cg in cgs:
-            start, end = cgs.coords[elem1]
+            start, end = cg.coords[elem1]
             d1 = ftuv.vec_distance(start, end)
-            start, end = cgs.coords[elem2]
+            start, end = cg.coords[elem2]
             d2 = ftuv.vec_distance(start, end)
             d.append(d1-d2)
         return d
-        @staticmethod
+    @staticmethod
     def cg_dist_sum(cgs, elem1, elem2):
         d = []
         for cg in cgs:
-            start, end = cgs.coords[elem1]
+            start, end = cg.coords[elem1]
             d1 = ftuv.vec_distance(start, end)
-            start, end = cgs.coords[elem2]
+            start, end = cg.coords[elem2]
             d2 = ftuv.vec_distance(start, end)
             d.append(d1+d2)
         return d
@@ -585,13 +585,13 @@ valid_descriptors = {
     
 def calculate_descriptor_for(descriptor_name, cgs, *args):
     """Calculate a descriptor."""
-    if descriptor_name.startwith("cg_distance"):
+    if descriptor_name.startswith("cg_distance"):
         elem = descriptor_name.split("_")[-1]
         return DescriptorCalc.cg_distance(cgs, elem)
-    elif descriptor_name.startwith("cg_dist_sum"):
+    elif descriptor_name.startswith("cg_dist_sum"):
         elem1, elem2 = descriptor_name.split("_")[-2:]
         return DescriptorCalc.cg_dist_sum(cgs, elem1, elem2)
-    elif descriptor_name.startwith("cg_dist_difference"):
+    elif descriptor_name.startswith("cg_dist_difference"):
         elem1, elem2 = descriptor_name.split("_")[-2:]
         return DescriptorCalc.cg_dist_difference(cgs, elem1, elem2)
     elif descriptor_name not in valid_descriptors:
