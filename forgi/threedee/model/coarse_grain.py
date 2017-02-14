@@ -710,14 +710,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         :param connections: The two stems that are connected by it.
         :return: ftms.AngleStat object
         '''
-        log.debug("Define {}, connections {}".format(define, connections))
+        log.debug("Define %s connections %s",define, connections)
         (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, define, connections)
-        log.debug("stem1 {}, twist1 {}, stem2 {}, twist2 {}, bulge {}".format(stem1, twist1, stem2, twist2, bulge))
+        log.debug("stem1 %s, twist1 %s, stem2 %s, twist2 %s, bulge %s", stem1, twist1, stem2, twist2, bulge)
 
         if round(np.dot(stem1, twist1),10)!=0 or round(np.dot(stem2, twist2),10)!=0:
-            log.error("Angle stem1-twist1 {} dot_product={}, Angle stem2-twist2 {} degrees dot_product={}".format(
+            log.error("Angle stem1-twist1 %s dot_product=%s, Angle stem2-twist2 %s degrees dot_product=%s",
                                         math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
-                                        math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),))
+                                        math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),)
             raise RuntimeError("The twists are inconsistent. "
                                "They should be orthogonal to the corresponding stem vectors."
                                "Inconsistency found for {},{}".format(define, connections)
@@ -734,7 +734,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
-        log.debug("u {}, v {}".format(u, v))
+        log.debug("u %s, v %s", u, v)
 
         angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, 
                                     u1, v1, ang_type, self.defines[define], 

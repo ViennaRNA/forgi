@@ -507,7 +507,7 @@ class Ensemble(Mapping):
                 #Use correct multiplicity (self._cg has subsequent duplicates removed)
                 for j in range(self._cg_sequence.count(i)):
                     data["cg_name"].append(cg.name)
-                    data["key"].append(self._rev_lookup(i)[j])
+                    data["key"].append(self._cg_rev_lookup(i)[j])
                     data["elem_name"].append(elem)
                     data["stat_name"].append(stat.pdb_name)
                     data["u"].append(stat.u)
