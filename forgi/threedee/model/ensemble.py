@@ -62,7 +62,7 @@ class Ensemble(Mapping):
         self._cg_lookup={}
         #The order of cgs, as specified by sort_key
         self._cg_sequence = []
-        self._cg_rev_lookup={}
+        self._cg_rev_lookup=defaultdict(list)
         if isinstance(cgs, Mapping):
             for key in sorted(cgs.keys(), key=sort_key):
                 self._add_to_cg_list(cgs[key], key)
@@ -122,7 +122,7 @@ class Ensemble(Mapping):
             log.debug("It is the same as the previous")
         #Else: only store lookup entry pointing to previous cg
         self._cg_lookup[key]=len(self._cgs)-1
-        self._cg_rev_lookup[len(self._cgs)-1]=key
+        self._cg_rev_lookup[len(self._cgs)-1].append(key)
         self._cg_sequence.append(len(self._cgs)-1)
         
     ######################## MEMBER LOOKUP    
@@ -487,6 +487,29 @@ class Ensemble(Mapping):
         log.info("Figure {} created".format(figname))
         plt.clf()
         plt.close()
+        
+    def create_element_csv(self, outname):
+        """
+        :param outname: The outfile name to be written
+        """
+        data = defaultdict(list)
+        for i, cg in enumerate(self._cgs):
+            for elem in cg.get_mst():
+                if elem[0] not in "mi": continue
+                stat=ftms.AngleStat()    
+                line = cg.sampled[elem]
+                stat.parse_line(line)
+                #Use correct multiplicity (self._cg has subsequent duplicates removed)
+                for j in range(self._cg_sequence.count(i)):
+                    data["cg_name"].append(cg.name)
+                    data["key"].append(self._rev_lookup(i)[j])
+                    data["elem_name"].append(elem)
+                    data["stat_name"].append(stat.pdb_name)
+                    data["u"].append(stat.u)
+                    data["v"].append(stat.v)
+                    data["angle"].append(stat.get_angle())
+        df = pd.DataFrame(data)
+        df.to_csv(outname)
 
 def prepare_pca_input(cgs):
     data = []
