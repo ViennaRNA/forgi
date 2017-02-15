@@ -23,7 +23,6 @@ from scipy.sparse import lil_matrix
 import forgi.threedee.model.similarity as ftms
 import logging
 log = logging.getLogger(__name__)
-import pandas as pd
 
 np_nans = lambda *args, **kwargs: np.ones(*args, **kwargs) * np.nan
     
@@ -498,21 +497,17 @@ class Ensemble(Mapping):
             build_order = cg.traverse_graph()
             for elem in cg.mst:
                 if elem[0] not in "mi": continue
-
+                stat=ftms.AngleStat()    
                 line = cg.sampled[elem]
                 #load angle_stats in direction of build order!
                 for bo in build_order:
-                    if bo[1]==elem:
-                        stat=cg.get_bulge_angle_stats_core(elem,(bo[0],bo[2]))
-                        break
-                else:
-                    raise RuntimeError("Stat for {} not found in bo {}, mst {}".format(repr(elem), build_order, cg.mst))
-                    assert False
+                    if bo[1]==d:
+                        stat=cg.get_bulge_angle_stats_core(d,(bo[0],bo[2]))
                 stat.pdb_name=line[0]
                 #Use correct multiplicity (self._cg has subsequent duplicates removed)
                 for j in range(self._cg_sequence.count(i)):
                     data["cg_name"].append(cg.name)
-                    data["key"].append(self._cg_rev_lookup[i][j])
+                    data["key"].append(self._cg_rev_lookup(i)[j])
                     data["elem_name"].append(elem)
                     data["stat_name"].append(stat.pdb_name)
                     data["u"].append(stat.u)
@@ -587,6 +582,13 @@ class DescriptorCalc(object):
             d.append(ftuv.vec_distance(start, end))
         return d
     @staticmethod
+    def stat_angle(cgs, elem):
+        d = []
+        for cg in cgs:
+            angle = cg.get_stats(elem).get_angle()
+            d.append(angle)
+        return d
+    @staticmethod
     def cg_dist_difference(cgs, elem1, elem2):
         d = []
         for cg in cgs:
@@ -618,7 +620,10 @@ valid_descriptors = {
     
 def calculate_descriptor_for(descriptor_name, cgs, *args):
     """Calculate a descriptor."""
-    if descriptor_name.startswith("cg_distance"):
+    if descriptor_name.startswith("stat_angle":
+        elem = descriptor_name.split("_")[-1]
+        return DescriptorCalc.stat_angle(cgs, elem)
+    elif descriptor_name.startswith("cg_distance"):
         elem = descriptor_name.split("_")[-1]
         return DescriptorCalc.cg_distance(cgs, elem)
     elif descriptor_name.startswith("cg_dist_sum"):
