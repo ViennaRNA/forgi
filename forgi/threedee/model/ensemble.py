@@ -239,42 +239,75 @@ class Ensemble(Mapping):
         plt.clf()
         plt.close()
 
-    def view_2d_embedding(self):
+    def view_2d_embedding(self, reference=None):
         #http://baoilleach.blogspot.co.at/2014/01/convert-distance-matrix-to-2d.html
-        # First cluster all structures based on pairwise RMSD
-        db = self._cluster_dbscan()
-        labels = db.labels_
-        core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-        core_samples_mask[db.core_sample_indices_] = True
-        unique_labels = set(labels)
+        
+        if reference is None:
+            # First cluster all structures based on pairwise RMSD
+            db = self._cluster_dbscan()
+            labels = db.labels_
+            core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+            core_samples_mask[db.core_sample_indices_] = True
+            unique_labels = set(labels)
 
-        #Then calculate the 2D coordinates for our embedding
-        mds = MDS(n_components=2, dissimilarity="precomputed", random_state=6)
-        results = mds.fit(self._rmsd)
-        coords = results.embedding_
+            #Then calculate the 2D coordinates for our embedding
+            mds = MDS(n_components=2, dissimilarity="precomputed", random_state=6)
+            results = mds.fit(self._rmsd)
+            coords = results.embedding_
 
-        #Now plot
-        plt.plot( coords[:,0], coords[:,1], '-', color="blue")
+            #Now plot
+            plt.plot( coords[:,0], coords[:,1], '-', color="blue")
 
-        colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
-        for k, col in zip(unique_labels, colors):
-            if k == -1:
-                # Black used for noise.
-                col = 'k'
-            class_member_mask = (labels == k)
+            colors = plt.cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+            for k, col in zip(unique_labels, colors):
+                if k == -1:
+                    # Black used for noise.
+                    col = 'k'
+                class_member_mask = (labels == k)
 
-            plt.plot( coords[:,0][class_member_mask & core_samples_mask],
-                      coords[:,1][class_member_mask & core_samples_mask],
-                    'o', markerfacecolor=col, markeredgecolor='k', markersize=6
-                  )
-            plt.plot( coords[:,0][class_member_mask & ~core_samples_mask],
-                      coords[:,1][class_member_mask & ~core_samples_mask],
-                      'o', markerfacecolor=col, markeredgecolor=col, markersize=1
-                )
-        plt.savefig("embedding_{}.svg".format(self._cgs[0].name))
-        plt.clf()
-        plt.close()
-       
+                plt.plot( coords[:,0][class_member_mask & core_samples_mask],
+                          coords[:,1][class_member_mask & core_samples_mask],
+                        'o', markerfacecolor=col, markeredgecolor='k', markersize=6
+                      )
+                plt.plot( coords[:,0][class_member_mask & ~core_samples_mask],
+                          coords[:,1][class_member_mask & ~core_samples_mask],
+                          'o', markerfacecolor=col, markeredgecolor=col, markersize=1
+                    )
+            plt.savefig("embedding_{}.svg".format(self._cgs[0].name))
+            plt.clf()
+            plt.close()
+        else:
+            #Create a huge distance matrix
+            alldists = np.zeros((len(self._cgs)+len(reference)+1), (len(self._cgs)+len(reference)+1))
+            for i,j in it.combinations(range(len(alldists)),2):
+                if i<len(self._cgs):
+                    cg1 = self._cgs[i]
+                elif i<len(self._cgs)+len(reference):
+                    cg1 = reference[i-len(self._cgs)]
+                else:
+                    assert i==len(self._cgs)+len(reference)
+                    cg1 = self._reference_cg
+                if j<len(self._cgs):
+                    cg2 = self._cgs[j]
+                elif j<len(self._cgs)+len(reference):
+                    cg2 = reference[i-len(self._cgs)]
+                else:
+                    assert j==len(self._cgs)+len(reference)
+                    cg2 = self._reference_cg  
+                alldists[i,j] = ftms.cg_rmsd(cg1, cg2)
+            #Then calculate the 2D coordinates for our embedding
+            mds = MDS(n_components=2, dissimilarity="precomputed", random_state=6)
+            results = mds.fit(self._rmsd)
+            coords = results.embedding_
+            #Now plot
+            plt.plot( coords[len(self._cgs):len(self._cgs)+len(self.reference),0], 
+                      coords[len(self._cgs):len(self._cgs)+len(self.reference),1], 's', color="green")
+            plt.plot( coords[:len(self._cgs),0], coords[:len(self._cgs),1], '-o', color="blue")
+            plt.plot( [coords[-1,0]], [coords[-1,1]], 's', color="red")
+            plt.savefig("embedding1_{}.svg".format(self._cgs[0].name))
+            plt.clf()
+            plt.close()
+            
     def color_by_energy(self, bins, ref_ensemble = None, ref_energies = None, 
                         x = "rmsd_to_reference", y = "rmsd_to_last"):
         """"""
