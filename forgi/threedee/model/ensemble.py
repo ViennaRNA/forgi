@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import warnings
 from scipy.sparse import lil_matrix
 import forgi.threedee.model.similarity as ftms
+import pandas as pd
 import logging
 log = logging.getLogger(__name__)
 
@@ -377,7 +378,7 @@ class Ensemble(Mapping):
         print("BINS", bins)
         return bins
         
-    def view_2d_projection(self, ref_ensemble = None, x = "rmsd_to_reference", y = "rmsd_to_last", cluster = False):
+    def view_2d_projection(self, ref_ensemble = None, x = "rmsd_to_reference", y = "rmsd_to_last", cluster = False, circular = False):
         """
         Plot a 2D projection of the ensemble to the given x and y axis, 
         and visualize the results of clustering with DBSCAN.
@@ -388,10 +389,14 @@ class Ensemble(Mapping):
         
         Saves the resulting plot as a svg in the current directory.
         """
-
+        if circular:
+            fig,ax = plt.subplots(1,subplot_kw=dict(projection='polar'))
+        else:
+            fig,ax = plt.subplots(1)
+        
         # Label the plot
-        plt.xlabel(x)
-        plt.ylabel(y)
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
 
         # First, plot the background (reference ensemble)
         if ref_ensemble is not None:
@@ -400,7 +405,7 @@ class Ensemble(Mapping):
             ref_y = calculate_descriptor_for(y, ref_ensemble, *self._get_args_for(y))
             
             log.info("Plotting reference")
-            plt.plot( ref_x, ref_y, 's', markerfacecolor="green", markeredgecolor='green', markersize=8 )
+            ax.plot( ref_x, ref_y, 's', markerfacecolor="green", markeredgecolor='green', markersize=8 )
         else:
             log.info("Reference ensemble missing")
             
@@ -422,7 +427,7 @@ class Ensemble(Mapping):
 
         if cluster:        
             #In the background, plot lines to show the sampling trajectory
-            plt.plot( data_x, data_y, '-', color="blue")
+            ax.plot( data_x, data_y, '-', color="blue")
 
             # Then cluster all structures based on pairwise RMSD
             db = self._cluster_dbscan()
@@ -438,24 +443,23 @@ class Ensemble(Mapping):
                     col = 'k'
                 class_member_mask = (labels == k)
 
-                plt.plot( data_x[class_member_mask & core_samples_mask],
+                ax.plot( data_x[class_member_mask & core_samples_mask],
                           data_y[class_member_mask & core_samples_mask],
                         'o', markerfacecolor=col, markeredgecolor='k', markersize=6
                       )
-                plt.plot( data_x[class_member_mask & ~core_samples_mask],
+                ax.plot( data_x[class_member_mask & ~core_samples_mask],
                       data_y[class_member_mask & ~core_samples_mask],
                       'o', markerfacecolor=col, markeredgecolor=col, markersize=1
                     )
         else:
             #In the background, plot lines to show the sampling trajectory
-            plt.plot( data_x, data_y, '-o', color="blue")
+            ax.plot( data_x, data_y, '-o', color="blue")
 
         if self._reference_cg:
-            plt.plot(calculate_descriptor_for(x, [self._reference_cg], *self._get_args_for(x)),
+            ax.plot(calculate_descriptor_for(x, [self._reference_cg], *self._get_args_for(x)),
                      calculate_descriptor_for(y, [self._reference_cg], *self._get_args_for(y)), 
                      "x", color="red", markersize = 12, label="reference" )
-
-        figname = "cluster_{}_{}_{}.svg".format(self._cgs[0].name, x,y)
+        figname = "cluster_{}_{}_{}{}.svg".format(self._cgs[0].name, x,y, "circ"*circular)
         plt.savefig(figname)
         log.info("Figure {} created".format(figname))
         plt.clf()
@@ -497,17 +501,16 @@ class Ensemble(Mapping):
             build_order = cg.traverse_graph()
             for elem in cg.mst:
                 if elem[0] not in "mi": continue
-                stat=ftms.AngleStat()    
                 line = cg.sampled[elem]
                 #load angle_stats in direction of build order!
                 for bo in build_order:
-                    if bo[1]==d:
-                        stat=cg.get_bulge_angle_stats_core(d,(bo[0],bo[2]))
+                    if bo[1]==elem:
+                        stat=cg.get_bulge_angle_stats_core(elem,(bo[0],bo[2]))
                 stat.pdb_name=line[0]
                 #Use correct multiplicity (self._cg has subsequent duplicates removed)
                 for j in range(self._cg_sequence.count(i)):
                     data["cg_name"].append(cg.name)
-                    data["key"].append(self._cg_rev_lookup(i)[j])
+                    data["key"].append(self._cg_rev_lookup[i][j])
                     data["elem_name"].append(elem)
                     data["stat_name"].append(stat.pdb_name)
                     data["u"].append(stat.u)
@@ -585,7 +588,7 @@ class DescriptorCalc(object):
     def stat_angle(cgs, elem):
         d = []
         for cg in cgs:
-            angle = cg.get_stats(elem).get_angle()
+            angle = cg.get_stats(elem)[0].get_angle()
             d.append(angle)
         return d
     @staticmethod
@@ -620,7 +623,7 @@ valid_descriptors = {
     
 def calculate_descriptor_for(descriptor_name, cgs, *args):
     """Calculate a descriptor."""
-    if descriptor_name.startswith("stat_angle":
+    if descriptor_name.startswith("stat_angle"):
         elem = descriptor_name.split("_")[-1]
         return DescriptorCalc.stat_angle(cgs, elem)
     elif descriptor_name.startswith("cg_distance"):
