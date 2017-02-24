@@ -279,7 +279,7 @@ class Ensemble(Mapping):
             plt.close()
         else:
             #Create a huge distance matrix
-            alldists = np.zeros((len(self._cgs)+len(reference)+1), (len(self._cgs)+len(reference)+1))
+            alldists = np.zeros(((len(self._cgs)+len(reference)+1), (len(self._cgs)+len(reference)+1)))
             for i,j in it.combinations(range(len(alldists)),2):
                 if i<len(self._cgs):
                     cg1 = self._cgs[i]
@@ -291,18 +291,18 @@ class Ensemble(Mapping):
                 if j<len(self._cgs):
                     cg2 = self._cgs[j]
                 elif j<len(self._cgs)+len(reference):
-                    cg2 = reference[i-len(self._cgs)]
+                    cg2 = reference[j-len(self._cgs)]
                 else:
                     assert j==len(self._cgs)+len(reference)
                     cg2 = self._reference_cg  
-                alldists[i,j] = ftms.cg_rmsd(cg1, cg2)
+                alldists[i,j] = alldists[j,i] = ftms.cg_rmsd(cg1, cg2)
             #Then calculate the 2D coordinates for our embedding
             mds = MDS(n_components=2, dissimilarity="precomputed", random_state=6)
-            results = mds.fit(self._rmsd)
+            results = mds.fit(alldists)
             coords = results.embedding_
             #Now plot
-            plt.plot( coords[len(self._cgs):len(self._cgs)+len(self.reference),0], 
-                      coords[len(self._cgs):len(self._cgs)+len(self.reference),1], 's', color="green")
+            plt.plot( coords[len(self._cgs):len(self._cgs)+len(reference),0], 
+                      coords[len(self._cgs):len(self._cgs)+len(reference),1], 's', color="green")
             plt.plot( coords[:len(self._cgs),0], coords[:len(self._cgs),1], '-o', color="blue")
             plt.plot( [coords[-1,0]], [coords[-1,1]], 's', color="red")
             plt.savefig("embedding1_{}.svg".format(self._cgs[0].name))

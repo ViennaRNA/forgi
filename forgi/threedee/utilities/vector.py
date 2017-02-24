@@ -63,8 +63,11 @@ def get_random_vector(mult=1.):
 def get_orthogonal_unit_vector(vec):
     '''
     Return a vector orthogonal to vec.
+    
+    .. note::
+    
+        To create a basis, use create_orthonormal_basis instead!
     '''
-    warnings.warn("This is deprecated. Use create_orthonormal_basis instead!", stacklevel=2)
     vec2 = get_non_colinear_unit_vector(vec)
     vec3 = np.cross(vec, vec2)
     return normalize(vec3)

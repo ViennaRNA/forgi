@@ -425,6 +425,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         if cg_file is not None:
             self.from_file(cg_file)
+            if not self.defines:
+                raise ValueError("Empty CoarseGrainRNA created. Was '{}' in *.cg/ *.coord file format?".format(cg_file))
 
 
     def get_coord_str(self):
