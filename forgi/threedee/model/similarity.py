@@ -121,68 +121,6 @@ class AdjacencyCorrelation(object):
         d["tn"]=len(allIA - (self._reference_interactions | interactions) )
         return d
 
-#NOTE: could be deprecated in the future. Use AdjacencyCorrelation.
-#NOTE: could be moved to tests as reference for Adjacency correlation.
-def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
-    '''
-    Calculate the true_positive, false_positive,
-    true_negative and false_negative rate for the tertiary
-    distances of the elements of two structures, cg1 and cg2.
-
-    :param cg1: The first coarse grain model
-    :param cg2: The second coarse grain model
-    :param distance: The distance to consider for interactions
-    :param bp_distance: Only consider elements separated by this many more pair
-                        and backbone bonds
-    :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
-    '''
-    nodes1 = set(cg1.defines.keys())
-    nodes2 = set(cg2.defines.keys())
-
-    tp = 0 #true positive
-    tn = 0 #true negative
-
-    fp = 0 #false positive
-    fn = 0 #false negative
-
-    #fud.pv('nodes1')
-    #fud.pv('nodes2')
-
-    assert(nodes1 == nodes2)
-
-    for n1, n2 in it.combinations(nodes1, r=2):
-        if cg1.connected(n1, n2):
-            continue
-
-        if cg2.connected(n1, n2):
-            raise Exception("{} {} connected in cg2 but not cg1".format(n1, n2))
-
-
-        bp_dist = cg2.min_max_bp_distance(n1, n2)[0]
-        if bp_dist < bp_distance:
-            continue
-
-        dist1 = cg1.element_physical_distance(n1, n2)
-        dist2 = cg2.element_physical_distance(n1, n2)
-
-        if dist1 < distance:
-            # positive
-            if dist2 < distance:
-                #true positive
-                tp += 1
-            else:
-                # false negative
-                fn += 1
-        else:
-            #negative
-            if dist2 < distance:
-                # false positive
-                fp += 1
-            else:
-                # true negative
-                tn += 1
-
-    return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
 
 # COVERAGE NOTE: Never used in forgi or ernwin.
 # This is left in the code as an example for the usage of confusiom_matrix,

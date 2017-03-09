@@ -7,6 +7,39 @@ import forgi.threedee.utilities.vector as ftuv
 
 REPEAT_TESTS_CONTAINING_RANDOM = 10
 
+class TestLineSegmentDistance(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_line_segment_distance_parallel(self):
+        a0 = np.array([0.,0.,1.])
+        a1 = np.array([0.,0., 10.])
+        b0 = np.array([0.,0.,11.])
+        b1 = np.array([0.,0., 20.])
+        self.assertAlmostEqual(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 1.)
+    def test_line_segment_distance_zero(self):
+        a0 = np.array([0.,0.,1.])
+        a1 = np.array([0.,0., 10.])
+        b0 = np.array([0.,-10.,5.])
+        b1 = np.array([0.,10., 5.])
+        self.assertAlmostEqual(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 0.)
+    def test_line_segment_distance_point_to_line(self):
+        a0 = np.array([0.,0.,1.])
+        a1 = np.array([0.,0., 10.])
+        b0 = np.array([0.,-10.,12.])
+        b1 = np.array([0.,10., 12.])
+        self.assertAlmostEqual(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 2.)
+    def test_line_segment_distance_windschief(self):
+        a0 = np.array([0.,0.,-10.])
+        a1 = np.array([0.,0., 10.])
+        b0 = np.array([5.2,-10.,5.])
+        b1 = np.array([5.2,10., 5.])
+        self.assertAlmostEqual(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 5.2)
+    def test_line_segment_distance_real_world(self):
+        a0 = np.array([0.,0.,1.])
+        a1 = np.array([-2.76245752, -6.86976093,  7.54094508])
+        b0 = np.array([-27.57744115,   6.96488989, -22.47619655])
+        b1 = np.array([-16.93424799,  -4.0631445 , -16.19822301])
+        self.assertLess(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 25)
 class TestVector(unittest.TestCase):
     """Tests for the threedee.utilities.vector module"""
     def setUp(self):

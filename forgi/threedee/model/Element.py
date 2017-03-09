@@ -175,7 +175,10 @@ class LineSegmentStorage(CoordinateStorage):
             potential_interaction = tuple(sorted((i_to_elem[i], i_to_elem[j])))
             node1, node2 = potential_interaction
             if (node1,node2) in ignore or (node2,node1) in ignore:
+                log.debug("Ignoring nodes {}".format(potential_interaction))
                 continue
+            else:
+                log.debug("Testing closeness of {}".format((node1, node2)))
             a0 = self._coordinates[2*i]
             a1 = self._coordinates[2*i+1]
             b0 = self._coordinates[2*j]
@@ -183,9 +186,11 @@ class LineSegmentStorage(CoordinateStorage):
             vec_a0b0 =b0-a0
             len_a0b0 = ftuv.magnitude(vec_a0b0)
             if len_a0b0<cutoff:
+                log.debug("a0b0 already confirms hit for {}".format(potential_interaction))
                 hits.append(potential_interaction)
                 continue
             elif len_a0b0>cutoff+magnitudes[i]+magnitudes[j]:
+                log.debug("a0b0 already rules out a hit for {}".format(potential_interaction))
                 continue #Cannot be closer than cutoff!
             a_normed = normed_directions[i]
             b_normed = normed_directions[j]
@@ -201,21 +206,36 @@ class LineSegmentStorage(CoordinateStorage):
                     if np.absolute(d0) < np.absolute(d1):
                         if ftuv.magnitude(b0-a0)<cutoff:
                             hits.append(potential_interaction)
+                            log.debug("Parallel lines (B first, d0 small) are close: {}".format(potential_interaction))
+                        else:
+                            log.debug("Parallel lines (B first, d0 small) are far: {}".format(potential_interaction))
                         continue
                     if ftuv.magnitude(b1-a0)<cutoff:
                         hits.append(potential_interaction)
+                        log.debug("Parallel lines (B first, d0 big) are close: {}".format(potential_interaction))
+                    else:
+                        log.debug("Parallel lines (B first, d0 big) are far: {}".format(potential_interaction))
                     continue
                 # Is segment B after A?
                 elif d0 >= np.asscalar(magnitudes[i]) <= d1:
                     if np.absolute(d0) < np.absolute(d1):
                         if ftuv.magnitude(b0-a1)<cutoff:
                             hits.append(potential_interaction)
+                            log.debug("Parallel lines (A first, d0 small) are close: {}".format(potential_interaction))
+                        else:
+                            log.debug("Parallel lines (A first, d0 small) are far: {}".format(potential_interaction))
                         continue
                     if ftuv.magnitude(b1,a1)<cutoff:
                         hits.append(potential_interaction)
+                        log.debug("Parallel lines (A first, d0 big) are close: {}".format(potential_interaction))
+                    else:
+                        log.debug("Parallel lines (A first, d0 big) are far: {}".format(potential_interaction))
                     continue
                 if ftuv.magnitude(((d0*a_normed)+a0)-b0)<cutoff:
                     hits.append(potential_interaction)
+                    log.debug("Parallel lines (ELSE) are close: {}".format(potential_interaction))
+                else:
+                    log.debug("Parallel lines (ELSE) are far: {}".format(potential_interaction))
                 continue
             # Lines criss-cross: Calculate the dereminent
             
@@ -229,20 +249,47 @@ class LineSegmentStorage(CoordinateStorage):
             pB = b0 + (b_normed * t1);
 
             # Clamp results to line segments if needed
+            pA_ = pA
+            pB_ = pB
 
             if t0 < 0:
-                pA = a0
+                pA_ = a0
             elif t0 > magnitudes[i]:
-                pA = a1
+                pA_ = a1
 
             if t1 < 0:
-                pB = b0
+                pB_ = b0
             elif t1 > magnitudes[j]:
-                pB = b1
+                pB_ = b1
+
+            dA = ftuv.magnitude(pA - pA_)
+            dB = ftuv.magnitude(pB - pB_)   
+            if dB > dA:
+                dot = np.dot(pB_-a0,a_normed)
+
+                if dot < 0:
+                    pA_ = a0
+                elif dot > magnitudes[i]:
+                    pA_ = a1
+                else:
+                    pA_ = a0 + a_normed * dot
+            elif dB < dA:
+                dot = np.dot(pA_-b0,b_normed)
+
+                if dot < 0:
+                    pB_ = b0
+                elif dot > magnitudes[j]:
+                    pB_ = b1
+                else:
+                    pB_ = b0 + b_normed * dot
+
+            pA = pA_
+            pB = pB_
 
             d = ftuv.magnitude(pA-pB)
-
+            log.debug("d {}, cutoff {} for {}".format(d, cutoff, potential_interaction))
             if d<cutoff:
+
                 hits.append(potential_interaction)
         return hits
 
