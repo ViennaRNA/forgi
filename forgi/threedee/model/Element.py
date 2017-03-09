@@ -235,7 +235,7 @@ class LineSegmentStorage(CoordinateStorage):
                     hits.append(potential_interaction)
                     log.debug("Parallel lines (ELSE) are close: %s",(potential_interaction))
                 else:
-                    log.debug("Parallel lines (ELSE) are far: %s",potential_interaction))
+                    log.debug("Parallel lines (ELSE) are far: %s",potential_interaction)
                 continue
             # Lines criss-cross: Calculate the dereminent
             
