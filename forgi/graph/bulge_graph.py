@@ -3107,7 +3107,8 @@ class BulgeGraph(object):
 
         mst = set(it.chain(self.stem_iterator(),
                            self.floop_iterator(),
-                           self.tloop_iterator()))
+                           self.tloop_iterator(),
+                           self.hloop_iterator()))
 
         # store all of the disconnected trees
         forest = [set([m]) for m in mst]

@@ -110,7 +110,9 @@ class CoordinateStorage(Mapping):
         for elem in self._elem_names:
             lines.append("{}: ".format(elem)+",  ".join(str(val) for val in self[elem]))
         return("\n".join(lines))
-    
+    def __repr__(self):
+        return "<{} object at {} with {}>".format(type(self).__name__, hex(id(self)), str(self).replace("\n", "; "))
+        
     def __eq__(self, other):
         log.debug("Testing equality")
         if type(self)!=type(other):
