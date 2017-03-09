@@ -204,7 +204,7 @@ class LineSegmentStorage(CoordinateStorage):
                 # Is segment B before A?
                 if d0 <= 0 >= d1:
                     if np.absolute(d0) < np.absolute(d1):
-                        if ftuv.magnitude(b0-a0)<cutoff:
+                        if len_a0b0<cutoff:
                             hits.append(potential_interaction)
                             log.debug("Parallel lines (B first, d0 small) are close: %s",(potential_interaction))
                         else:
