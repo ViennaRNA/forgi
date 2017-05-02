@@ -1224,6 +1224,7 @@ def junction_virtual_atom_distance(bg, bulge):
     return dist
 
 
+@profile
 def add_virtual_residues(bg, stem):
     '''
     Create all of the virtual residues and the associated

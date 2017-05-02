@@ -6,7 +6,7 @@ import os.path as op
 import forgi.threedee.model.coarse_grain as ftmc
 
 from optparse import OptionParser
-
+import logging
 def main():
     usage = """
     ./pdb_to_cg_fasta.py pdb_file
@@ -38,9 +38,15 @@ def main():
     parser.add_option('-f', '--to-files', dest='to_files', 
                       default=None, help='Write all connected components to files in the current working directory.',
                       action='store_true' )
-           
+    parser.add_option('-v', '--verbose', dest='verbose', default=False,
+                      help='Be verbose', 
+                      action='store_true')
 
     (options, args) = parser.parse_args()
+
+    if options.verbose:
+        logging.basicConfig()
+        logging.getLogger().setLevel(level=logging.INFO)
 
     if len(args) < 1:
         parser.print_help()

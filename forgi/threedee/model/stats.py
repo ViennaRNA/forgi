@@ -78,7 +78,7 @@ class LoopStat:
         self.v = 0.
 
         self.define=[]
-        
+        self.seqs=[]
         if len(line) > 0:
             try:
                 self.parse_line(line)
@@ -102,12 +102,12 @@ class LoopStat:
         self.r = float(parts[3])
         self.u = float(parts[4])
         self.v = float(parts[5])
-        self.define = map(int, parts[6:])
-
+        if len(parts)>6:
+            self.define = list(map(int, [parts[6], parts[7]]))
+            self.seqs = parts[8:]
+        
     def __str__(self):
-        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))
-        #return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, 
-        #                                        self.phys_length, " ".join(map(str, self.define)))
+        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))+" ".join(self.seqs)
 
     def __eq__(self, other):
         if type(self)==type(other):
@@ -135,7 +135,7 @@ class StemStat:
 
         self.twist_angle = 0.
         self.define = []
-
+        self.seqs=[]
         if len(line) > 0:
             self.parse_line(line)
 
@@ -155,9 +155,9 @@ class StemStat:
         self.twist_angle = float(parts[4])
         if len(parts)>5:
             self.define = [int(parts[5]), int(parts[6]), int(parts[7]), int(parts[8])]
-
+            self.seqs = [parts[9], parts[10]]
     def __str__(self):
-        return "stem {} {} {} {} {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, *self.define)
+        return "stem {pdb_name} {bp_length} {phys_length} {twist_angle}".format(**self.__dict__)+" ".join(map(str, self.define))+" ".join(self.seqs)
         #return "pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, " ".join(map(str, self.define)))
     
     def __eq__(self, other):
@@ -173,13 +173,14 @@ class AngleStat:
     Class for storing an individual statistic about inter-helical angles.
     '''
 
-    def __init__(self, pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
+    def __init__(self, stat_type="angle", pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
                  define=[], seqs=[]):
         #log.debug("Stat init called")
         self.pdb_name = pdb_name
         self.dim1 = dim1
         self.dim2 = dim2
-
+        self.stat_type = stat_type
+        
         self.u = u
         self.v = v
         self.t = t
@@ -229,6 +230,7 @@ class AngleStat:
     def parse_line(self, line):
         parts = line.strip().split(' ')
 
+        self.stat_type = parts[0]
         self.pdb_name = parts[1]
 
         self.dim1 = int(parts[2])
@@ -294,20 +296,8 @@ class AngleStat:
         return (self.r1, self.u1, self.v1)
         
     def __str__(self):
-        '''
-        out_str = "angle %s %d %d %f %f %f %f %f %f %d %s" % (self.pdb_name,
-                                                              self.dim1,
-                                                              self.dim2,
-                                                              self.u,
-                                                              self.v,
-                                                              self.t,
-                                                              self.r1,
-                                                              self.u1,
-                                                              self.v1,
-                                                              self.ang_type,
-                                                              " ".join(map(str, self.define)))
-        '''
-        out_str = "angle %s %d %d %f %f %f %f %f %f %d %s %s" % (self.pdb_name,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %d %s %s" % (self.stat_type,
+                                                              self.pdb_name,
                                                               self.dim1,
                                                               self.dim2,
                                                               self.u,

@@ -97,7 +97,7 @@ representation. To make it easier, another example script will generate a file
 readable by graphviz. The *neato* program can take that as input and create a
 nice visualization of the graph::
 
-    [pkerp@plastilin forgi]$ python examples/graph_to_neato.py examples/input/1y26_ss.dotbracket | neato -Tpng -o 1y26_neato.png
+    python examples/graph_to_neato.py -d examples/input/1y26_ss.dotbracket | neato -Tpng -o 1y26_neato.png
     
 The result is the following graph representation of the structure.
 
@@ -118,7 +118,7 @@ Getting a Condensed Representation of the Element Types
 Mapping nucleotide positions to secondary structure element types (stems,
 hairpins, multiloops) is easily done using an example script::
 
-    [pkerp@plastilin forgi]$ python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
+    python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
     (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
     sssssssssmmmsssssshhhhhhhhhssssssmmmmmmmmsssssshhhhhhhssssssmmsssssssss
 
@@ -149,7 +149,7 @@ Which looks like this:
 
 Can be transformed using the command:
 
-``python examples/graph_to_neato.py examples/input/1gid_ss.dotbracket | neato -Tpng -o 1gid_neato.png``
+``python examples/graph_to_neato.py -d examples/input/1gid_ss.dotbracket | neato -Tpng -o 1gid_neato.png``
 
 Into a graph that looks like this:
 

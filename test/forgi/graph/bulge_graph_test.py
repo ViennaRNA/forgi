@@ -164,9 +164,23 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         db="(((&)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
         self.assertEqual(set(cg.defines.keys()), set(["s0"]))
-
-
-
+        
+    def test_seq_id_to_pos(self):
+        fasta = """>1L2X
+                   GCGCG&CGUGC
+                   (((((&)))))"""
+        bg = fgb.BulgeGraph()
+        bg.from_fasta(fasta)
+        bg.seq_ids = [fgb.RESID("A", (" ", 1," ")),fgb.RESID("A", (" ", 2," ")),
+                      fgb.RESID("A", (" ", 3," ")),fgb.RESID("A", (" ", 4," ")),
+                      fgb.RESID("A", (" ", 5," ")),
+                      fgb.RESID("B", (" ", 1," ")),fgb.RESID("B", (" ", 2," ")),
+                      fgb.RESID("B", (" ", 3," ")),fgb.RESID("B", (" ", 4," ")),
+                      fgb.RESID("B", (" ", 5," "))]
+        print(bg.seq_ids)
+        self.assertEqual(bg.seq_id_to_pos(fgb.RESID("A", (" ", 1," "))), 1)
+        self.assertEqual(bg.seq_id_to_pos(fgb.RESID("B", (" ", 1," "))), 6)
+        self.assertEqual(bg.seq[bg.seq_id_to_pos(fgb.RESID("B", (" ", 3," ")))], "U")
 
 
 
@@ -1833,6 +1847,10 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(len(dom["rods"][0]), len(bg.defines))
         self.assertEqual(len(dom["pseudoknots"]), 0)
 
+
+
+
+ 
 
 class MultiloopFinding(unittest.TestCase):
     def setUp(self):

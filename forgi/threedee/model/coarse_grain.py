@@ -121,6 +121,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             chain = ftup.rename_modified_ress(chain)
             chain = ftup.rename_rosetta_atoms(chain)
             chain = ftup.remove_hetatm(chain)
+            chain = ftup.renumber_chain(chain)
             new_chains.append(chain)
 
         rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
@@ -130,6 +131,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             f.flush()
 
         # first we annotate the 3D structure
+        log.info("Starting MC-Annotate")
         p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
         out, err = p.communicate()
 
@@ -149,6 +151,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
 
         # remove pseudoknots
         if remove_pseudoknots:
+            log.info("Removing pseudoknots")
             out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
@@ -183,7 +186,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
         cgs = []
         for component in nx.connected_components(chain_connections):
             #print(component, type(component))
-            cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=True, chain_id = list(component)))
+            cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
         return cgs
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
@@ -223,6 +226,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chain = ftup.rename_modified_ress(chain)
         chain = ftup.rename_rosetta_atoms(chain)
         chain = ftup.remove_hetatm(chain)
+        chain = ftup.renumber_chain(chain)
         new_chains.append(chain)
 
     pdb_base = op.splitext(op.basename(pdb_filename))[0]        
@@ -568,7 +572,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 vress += [vres[0] + vres[2], vres[0] + vres[3]]
         return np.array(vress)
 
-    def get_poss_for_domain(self, elements, mode="fast"):
+    def get_poss_for_domain(self, elements, mode="vres"):
         """
         Get an array of coordinates only for the elements specified.
 
@@ -582,7 +586,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if mode=="fast":
             for e in sorted(elements):
                 points += list(self.coords[e])
-                return np.array(points)
+            return np.array(points)
         elif mode=="vres":
             if not self.v3dposs:
                 self.add_all_virtual_residues()
@@ -737,8 +741,27 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
         log.debug("u %s, v %s", u, v)
+        
+        if define[0]=="m":
+            mls = self.find_mlonly_multiloops()
+            for ml in mls:
+                if define in ml:
+                    descr = self.describe_multiloop([x for x in ml if x[0] !="s"])
+                    if "pseudoknot" in descr:
+                        stat_type = "pseudo"
+                    elif "open" in descr:
+                        stat_type = "open"
+                    else:
+                        stat_type = "angle" #ML
+                    break
+            else:
+                assert False
+        else:
+            stat_type="angle" #IL
 
-        angle_stat = ftms.AngleStat(self.name, dims[0], dims[1], u, v, t, r1, 
+
+        angle_stat = ftms.AngleStat(stat_type,
+                                    self.name, dims[0], dims[1], u, v, t, r1, 
                                     u1, v1, ang_type, self.defines[define], 
                                     seqs)
 
@@ -782,7 +805,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         loop_stat.bp_length = self.get_length(d)
         loop_stat.phys_length = ftuv.magnitude(self.coords[d][1] - self.coords[d][0])
-        
         stem1, = self.edges[d] # Make sure there is only one edge
         
         (s1b, s1e) = self.get_sides(stem1, d)
@@ -799,6 +821,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         (loop_stat.r, loop_stat.u, loop_stat.v) = (r, u, v)
         loop_stat.r = loop_stat.phys_length # Will this cause problems in other parts of the code base???
         loop_stat.define=self.defines[d]
+        loop_stat.seqs = self.get_define_seq_str(d, adjacent=True)
         if d[0]=="f":
             loop_stat.stat_type = "5prime"
         elif d[0]=="t":
@@ -977,7 +1000,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])
         ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])
         ss.define = self.defines[stem]
-
+        ss.seqs = self.get_define_seq_str(stem, adjacent=True)
         return ss
 
     #def get_loop_from_residue(self, residue) ->  use BulgeGraph.get_node_from_residue_num()!
@@ -1047,7 +1070,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             f.write(s)
 
-    def radius_of_gyration(self, method = "fast"):
+    def radius_of_gyration(self, method = "vres"):
         '''
         Calculate the radius of gyration of this structure.
 

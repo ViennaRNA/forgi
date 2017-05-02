@@ -792,10 +792,11 @@ class BulgeGraph(object):
         """
         Convert a pdb seq_id to a 1-based nucleotide position
 
-        :param seq_id: A triple or an integer.
+        :param seq_id: An instance of RESID
         """
-        if isinstance(seq_id, int):
-            seq_id=(" ", seq_id, " ")
+        assert isinstance(seq_id, RESID)
+        #if isinstance(seq_id, int):
+        #    seq_id=(" ", seq_id, " ")
         return self.seq_ids.index(seq_id)+1
 
     def create_bulge_graph(self, stems, bulges):
@@ -1247,16 +1248,6 @@ class BulgeGraph(object):
                         new_vertex = True
                         break
 
-    def interior_loop_iterator(self):
-        """
-        Iterate over all of the interior loops.
-
-        An interior loop can only have two connections: to the two stems which it links. 
-        """
-
-        for key in self.defines.keys():
-            if key[0] == 'i':
-                yield key
 
     def relabel_node(self, old_name, new_name):
         """
@@ -2188,11 +2179,12 @@ class BulgeGraph(object):
     def to_fasta_string(self):
         """
         Output the BulgeGraph representation as a fast string of the
-        format:
+        format::
 
             >id
             AACCCAA
             ((...))
+            
         """
         output_string = ''
 
@@ -2681,10 +2673,10 @@ class BulgeGraph(object):
 
     def get_define_seq_str(self, d, adjacent=False):
         """
-        Get an array containing the sequences for the given define.
+        Get a list containing the sequences for the given define.
 
         :param d: The element name for which to get the sequences
-        :param adjacent: Boolean. Include adjacent nucleotides (for single stranded RNA only)?
+        :param adjacent: Boolean. Include adjacent nucleotides (for single stranded RNA only)
         :return: A list containing the sequence(s) corresponding to the defines
         """
         define = self.defines[d]

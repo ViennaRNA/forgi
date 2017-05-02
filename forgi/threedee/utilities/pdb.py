@@ -482,8 +482,10 @@ def get_all_chains(in_filename, parser=None):
     return chains
     
 def change_residue_id(residue, new_id):
-    old_id = residue.id
     chain = residue.parent
+    if new_id in chain:
+        raise ValueError("Cannot change id")
+    old_id = residue.id
     chain.child_dict[new_id] = residue
     del chain.child_dict[old_id]
     residue.id = new_id
@@ -574,13 +576,24 @@ def load_structure(pdb_filename):
     residues will be renamed to regular residues, etc...
     '''
     chain = get_biggest_chain(pdb_filename) 
+    return clean_chain(chain)
+
+def clean_chain(chain):
+    """
+    Clean a pdb chain for further use with forgi.
+    
+    It will be modified so that all hetatms are removed, modified
+    residues will be renamed to regular residues, residue ids will be positive integers, ...
+    
+    :param chaion: A Bio.PDB.Chain object
+    :returns: A modified version of this chain
+    """
     chain = rename_modified_ress(chain)
     chain = rename_rosetta_atoms(chain)
     chain = remove_hetatm(chain)
     chain = renumber_chain(chain)
-     
     return chain
-
+    
 def interchain_contacts(struct):
     all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
 
