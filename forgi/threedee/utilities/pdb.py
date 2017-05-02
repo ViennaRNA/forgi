@@ -317,7 +317,6 @@ def renumber_chain(chain, resids=None):
     '''
 
     counter = 1
-    chain.id = ' '
 
     if resids is None:
         resids = [(' ', i+1, ' ') for i in range(len(chain))]
