@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys
 import copy
-
+import re
 import forgi.utilities.debug as fud
 import logging
 log = logging.getLogger(__name__)
@@ -64,11 +64,14 @@ def parse_base_pair_id(base_pair_id):
     @param base_pair_id: The identifier string for the interacting nucleotides (i.e. 'A33-B45')
     @return: 4-tuple containing of the form (chain1, res1, chain2, res2) i.e. ('A', 33, 'B', '45')
     """
-
-    parts = base_pair_id.split('-')
     
-    if len(parts) > 2:
-        raise Exception("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        
+    parts = re.findall(r'(\w[-0-9]\d*|\w\d+)', base_pair_id)
+    if len(parts) != 2:
+        raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+    if "-".join(parts) != base_pair_id:
+        raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+
     log.debug("Parts are '{}'".format(parts))
     (from_chain, from_base) = parse_chain_base(parts[0].strip())
     (to_chain, to_base) = parse_chain_base(parts[1].strip())

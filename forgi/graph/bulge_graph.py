@@ -797,7 +797,11 @@ class BulgeGraph(object):
         assert isinstance(seq_id, RESID)
         #if isinstance(seq_id, int):
         #    seq_id=(" ", seq_id, " ")
-        return self.seq_ids.index(seq_id)+1
+        try:
+            return self.seq_ids.index(seq_id)+1
+        except ValueError as e:
+            log.error("seq_id is {}, self.seq_ids is {}".format(seq_id, self.seq_ids))
+            raise
 
     def create_bulge_graph(self, stems, bulges):
         """

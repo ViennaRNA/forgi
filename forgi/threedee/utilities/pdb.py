@@ -590,7 +590,7 @@ def clean_chain(chain):
     chain = rename_modified_ress(chain)
     chain = rename_rosetta_atoms(chain)
     chain = remove_hetatm(chain)
-    chain = renumber_chain(chain)
+    # chain = renumber_chain(chain) #We cannot do this because we need to parse FR3D output!
     return chain
     
 def interchain_contacts(struct):
