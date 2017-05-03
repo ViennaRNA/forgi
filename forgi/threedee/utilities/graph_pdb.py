@@ -786,7 +786,14 @@ def get_mids_core(cg, chains, define,
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
     filename = forgi.threedee.data_file(op.join('data', template_filename))
-    ideal_chain = ftup.get_first_chain(filename)
+    try:
+        ideal_chain = ftup.get_first_chain(filename)
+    except IOError:
+        if stem_length>40:
+            raise ValueError("Cannot create coordinates. "
+                         "Helices with lengths greater than 40 are not supported in forgi.")
+        else:
+            raise
 
     # extract the coordinates of the stem from the input chain
     # and place them into a new chain

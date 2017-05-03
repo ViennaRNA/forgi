@@ -133,10 +133,10 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
         chains = ftup.get_all_chains(pdb_filename)
         new_chains = []
         for chain in chains:
+            log.debug("Loaded Chain %s", chain.id)
             chain = ftup.rename_modified_ress(chain)
             chain = ftup.rename_rosetta_atoms(chain)
             chain = ftup.remove_hetatm(chain)
-            chain = ftup.renumber_chain(chain)
             new_chains.append(chain)
 
         rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
@@ -244,7 +244,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chain = ftup.rename_modified_ress(chain)
         chain = ftup.rename_rosetta_atoms(chain)
         chain = ftup.remove_hetatm(chain)
-        chain = ftup.renumber_chain(chain)
         new_chains.append(chain)
 
     pdb_base = op.splitext(op.basename(pdb_filename))[0]        

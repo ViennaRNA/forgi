@@ -238,7 +238,7 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
 
     if len(c1_list) != len(c2_list):
         #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
-        raise Exception("Chains of different length.")
+        raise Exception("Chains of different length. (Maybe an RNA-DNA hybrid?)")
 
     #c1_list.sort(key=lambda x: x.id[1])
     #c2_list.sort(key=lambda x: x.id[1])
@@ -372,10 +372,9 @@ def output_multiple_chains(chains, filename):
                 return True          
     m = bpdb.Model.Model(' ') 
     s = bpdb.Structure.Structure(' ')
-   
     for chain in chains:
-       m.add(chain)
-   
+        m.add(chain)
+
     s.add(m)    
 
     io = bpdb.PDBIO()
