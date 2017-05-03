@@ -495,6 +495,8 @@ class BulgeGraph(object):
         #: 12 34
         #: A break is present after nucleotide 2
         self.backbone_breaks_after = []
+        #: Used during construction of the BG
+        self._backbone_will_break_after = []
         if dotbracket_str:
             self._from_dotbracket(dotbracket_str)
 
@@ -731,41 +733,41 @@ class BulgeGraph(object):
                          connect to this element as the range starts and ends.
         :return: A list of two-element lists
         """
-        a = iter(self.defines[node])
-        ranges = zip(a, a)
+        if adjacent:
+            define = self.define_a(node)
+        else:
+            define = self.defines[node]
 
-        if node[0] == 'i':
-            # interior loops have to be treated specially because
-            # they might have a bulge that has no unpaired nucleotides on one strand
-
-            if adjacent:
-                conns = self.connections(node)
-                s1 = self.defines[conns[0]]
-                s2 = self.defines[conns[1]]
-
-                # offset by one, which will be reversed in the yield step
-                # below
-                ranges = [[s1[1] + 1, s2[0] - 1], [s2[3] + 1, s1[2] - 1]]
-
-        if adjacent and self.defines[node] == []: #Zero-length multiloops.
-            ds1,ds2 =  self._zero_length_element_adj_position(node)
+        for i in range(0,len(define),2):
+            ds1 = define[i]
+            ds2 = define[i+1]
             if seq_ids:
+                # this will cause problems if the nucleotide has insertion codes
                 yield [self.seq_ids[ds1 - 1], self.seq_ids[ds2 - 1]]
             else:
-                yield [ds1,ds2]
-        else:
-            for (ds1, ds2) in ranges:
-                if adjacent:
-                    if ds1 > 1:
-                        ds1 -= 1
-                    if ds2 < self.seq_length:
-                        ds2 += 1
+                yield [ds1, ds2]
 
-                if seq_ids:
-                    # this will cause problems if the nucleotide has insertion codes
-                    yield [self.seq_ids[ds1 - 1], self.seq_ids[ds2 - 1]]
+    def define_a(self, elem):
+        """
+        Get a define including the adjacent nucleotides.
+        """
+        if elem[0]=="i":
+            conns = self.connections(elem)
+            s1 = self.defines[conns[0]]
+            s2 = self.defines[conns[1]]
+            return [s1[1] , s2[0], s2[3] , s1[2]]
+        elif self.defines[elem] == []:
+            return self._zero_length_element_adj_position(elem)
+        else:
+            define = self.defines[elem]
+            new_def = []
+            for i in range(0,len(define),2):
+                new_def.append(max(define[i]-1, 1))
+                if define[i+1] in self.backbone_breaks_after:
+                    new_def.append(define[i+1])
                 else:
-                    yield [ds1, ds2]
+                    new_def.append(min(define[i+1]+1, self.seq_length))
+            return new_def
 
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         """
@@ -861,7 +863,7 @@ class BulgeGraph(object):
                     continue
                 if abs(s1 - s2) == 1:
                     bn = 'b{}'.format(bulge_counter)                    
-                    log.debug("Adding bulge %s between %s and %s. k1 %s, k2 %s, l1 %s, l2 %s", bn, stems[i], stems[j], k1, k2, l1, l2)
+                    log.debug("Adding bulge %s between %s and %s. (%s is next to %s ) k1 %s, k2 %s, l1 %s, l2 %s", bn, stems[i], stems[j], s1, s2, k1, k2, l1, l2)
                     # self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
                     self.defines[bn] = []
                     self.weights[bn] = 1
@@ -1751,6 +1753,7 @@ class BulgeGraph(object):
         self.remove_degenerate_nodes()
         self.sort_defines()
         self._split_at_cofold_cutpoint()
+        self._insert_cutpoints_into_seq()
         
     def dissolve_length_one_stems(self):
         # dissolve all stems which have a length of one
@@ -1788,8 +1791,8 @@ class BulgeGraph(object):
             l = 0
             for db in dotbracket_str.split('&'):
                 l+=len(db)
-                self.backbone_breaks_after.append(l)
-            self.backbone_breaks_after = self.backbone_breaks_after[:-1]
+                self._backbone_will_break_after.append(l)
+            self._backbone_will_break_after = self._backbone_will_break_after[:-1]
         if len(dotbracket_str) == 0:
             return
 
@@ -1901,7 +1904,8 @@ class BulgeGraph(object):
         :return: Nothing, but fill out this structure.
         """
         self.__init__()
-        self.backbone_breaks_after = breakpoints
+        #: This stores backbone breaks before they have been implemented!
+        self._backbone_will_break_after = breakpoints
         tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
 
         self.seq = seq
@@ -2056,7 +2060,7 @@ class BulgeGraph(object):
         self.remove_vertex(iloop)
         
 
-    def _zero_length_element_adj_position(self, elem, _implemented_cutpoints=None):
+    def _zero_length_element_adj_position(self, elem):
         """
         Return the define with adjacent nucleotides for a zero-length element.
         
@@ -2064,8 +2068,6 @@ class BulgeGraph(object):
         zero-length element comes at the lowest nucleotide position etc.
         
         :param elem: An element, e.g. "m0"
-        :param _implemented_cutpoints: Used by self._split_at_cofold_cutpoint to 
-                                       override self.backbone_breaks_after.
         """
         if self.defines[elem]!=[]:
             raise ValueError("{} does not have zero length".format(elem))
@@ -2090,15 +2092,11 @@ class BulgeGraph(object):
             #We DEFINE the 0-length connections to be sorted alphabetically by position
             zero_length_connections.sort()
             zero_length_coordinates = set()
-            if _implemented_cutpoints is None:
-                breakpoints = self.backbone_breaks_after
-            else:
-                breakpoints = _implemented_cutpoints
             for k, l in it.product(range(4), repeat=2):
                 if abs(self.defines[stem1][k]-self.defines[stem2][l])==1:
                     d = [self.defines[stem1][k], self.defines[stem2][l]]
                     d.sort()
-                    if d[0] not in breakpoints:
+                    if d[0] not in self.backbone_breaks_after:
                         zero_length_coordinates.add(tuple(d))
             if len(zero_length_connections)!=len(zero_length_coordinates):
                 self.print_debug(level=logging.ERROR) 
@@ -2117,7 +2115,7 @@ class BulgeGraph(object):
             raise GraphIntegrityError("Very strange zero length bulge {} with more than 2 adjacent "
                                       "elements: {}.".format(elem, edges)) 
         
-    def _split_between_elements(self, splitpoint, element_left, element_right, implemented_splitpoints):
+    def _split_between_elements(self, splitpoint, element_left, element_right):
         if element_left[0] in "mh":
             next3 = self._next_available_element_name("t")
             self.relabel_node(element_left, next3)
@@ -2139,7 +2137,7 @@ class BulgeGraph(object):
                     if connection[0]=="i":
                         break
                     if not self.defines[connection]:
-                        ad_define = self._zero_length_element_adj_position(connection, implemented_splitpoints)
+                        ad_define = self._zero_length_element_adj_position(connection)
                         if ad_define[0]==splitpoint:
                             break
                 else:
@@ -2225,12 +2223,11 @@ class BulgeGraph(object):
         We have constructed the bulge graph, as if they were connected along the backbone, so
         now we have to split it.
         """
-        log.info("_split_at_cofold_cutpoint: breakpoints are {}".format(self.backbone_breaks_after))
-        if self.backbone_breaks_after:
+        log.info("_split_at_cofold_cutpoint: breakpoints are {}".format(self._backbone_will_break_after))
+        if self._backbone_will_break_after:
             self.print_debug(logging.DEBUG)
 
-        implemented_splitpoints=[]
-        for splitpoint in self.backbone_breaks_after:
+        for splitpoint in self._backbone_will_break_after:
             element_left = self.get_node_from_residue_num(splitpoint)
             element_right = self.get_node_from_residue_num(splitpoint+1)            
             if element_left[0] in "ft" or element_right[0] in "ft":
@@ -2242,17 +2239,17 @@ class BulgeGraph(object):
             elif element_left[0]=="i" or element_right[0]=="i":
                 self._split_interior_loop(splitpoint, element_left, element_right)
             elif element_left != element_right:
-                self._split_between_elements(splitpoint, element_left, element_right, implemented_splitpoints)
+                self._split_between_elements(splitpoint, element_left, element_right)
             elif element_left[0]=="s":
                 self._split_inside_stem(splitpoint, element_left)
             else:
                 self._split_inside_loop(splitpoint, element_left)
-            implemented_splitpoints.append(splitpoint) 
+            self.backbone_breaks_after.append(splitpoint) 
         if self.backbone_breaks_after:
             log.debug("After splitting (with adjacent):")
             for d in self.defines:
                 log.debug("%s: %s", d, list(self.define_residue_num_iterator(d, True)))
-                
+         
         if not self._is_connected():
             raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not connected by any "
                              " base-pair.")
@@ -2580,16 +2577,12 @@ class BulgeGraph(object):
         s1d = self.defines[s1]
         bd = self.defines[b]
 
-        # if the bulge is a length 0 multiloop then use the adjacent
-        # stem to determine its side
+        # Special case if the bulge is a length 0 multiloop
         if len(bd) == 0:
-            edges = self.edges[b]
-
-            for e in edges:
-                if e != s1:
-                    bd = self.defines[e]
-                    break
-
+            bd = self._zero_length_element_adj_position(b)
+            bd[0]+=1
+            bd[1]-=1
+            
         for i in range(4):
             for k in range(len(bd)):
                 if s1d[i] - bd[k] == 1:
@@ -2633,12 +2626,9 @@ class BulgeGraph(object):
         bd = self.defines[b]
 
         if len(bd) == 0:
-            edges = self.edges[b]
-            log.debug("get_sides_plus: Using edges of %s: %s", b, edges)
-            for e in edges:
-                if e != s1:
-                    bd = self.defines[e] #For bulges of length 0, use the next stem
-                    break
+            bd = self._zero_length_element_adj_position(b)
+            bd[0]+=1
+            bd[1]-=1
 
         for k in range(len(bd)):
             # before the stem on the 5' strand
@@ -2768,7 +2758,7 @@ class BulgeGraph(object):
 
         return connections
 
-    def get_define_seq_str(self, d, adjacent=False):
+    def get_define_seq_str(self, elem, adjacent=False):
         """
         Get a list containing the sequences for the given define.
 
@@ -2776,47 +2766,20 @@ class BulgeGraph(object):
         :param adjacent: Boolean. Include adjacent nucleotides (for single stranded RNA only)
         :return: A list containing the sequence(s) corresponding to the defines
         """
-        define = self.defines[d]
-        ranges = zip(*[iter(define)] * 2)
-        c = self.connections(d)
-
-        if d[0] == 'i':
-            s1 = self.defines[c[0]]
-            s2 = self.defines[c[1]]
-            if adjacent:
-                return [self.seq[s1[1]:s2[0]+1],
-                        self.seq[s2[3]:s1[2]+1]] # 1 based
-            else:
-                return [self.seq[s1[1]+1:s2[0]],
-                        self.seq[s2[3]+1:s1[2]]] # 1 based
-        if d[0] == 'm':
-            s1 = self.defines[c[0]]
-            s2 = self.defines[c[1]]
-
-            i1 = s1[self.get_sides_plus(c[0], d)[0]]
-            i2 = s2[self.get_sides_plus(c[1], d)[0]]
-
-            (i1, i2) = (min(i1, i2), max(i1, i2))
-
-            if adjacent:
-                return [self.seq[i1:i2+1]] # 1 based
-            else:
-                return [self.seq[i1+1:i2]] # 1 based
+        if adjacent:
+            define = self.define_a(elem)
         else:
-            seqs = []
-            for r in ranges:
-                if d[0] == 's':
-                    seqs += [self.seq[r[0]:r[1]+1]] # 1 based
+            define = self.defines[elem]
+        seqs=[]
+        for i in range(0,len(define), 2):
+            seqs.append(self.seq[define[i]:define[i+1]+1]) #seq is 1-based!
+            if elem[0]=="i" and not adjacent:
+                def_a = self.define_a(elem)
+                if define[0]<def_a[1]:
+                    seqs.append("")
                 else:
-                    if adjacent:
-                        if r[0] > 1:
-                            seqs += [self.seq[r[0] - 1:r[1] + 2]] # 1 based
-                        else:
-                            seqs += [self.seq[r[0]:r[1] + 2]] # 1 based
-                    else:
-                        seqs += [self.seq[r[0]:r[1]+1]] # 1 based
-
-            return seqs
+                    seqs.insert(0,"")
+        return seqs
 
     def get_stem_direction(self, s1, s2):
         """
@@ -3148,11 +3111,12 @@ class BulgeGraph(object):
 
         return resnames
 
-    def insert_cutpoints_into_seq(self):
-        for breakpoint in self.backbone_breaks_after:
-            log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
-            self.seq = self.seq.subseq_with_cutpoints(1,breakpoint+1)+"&"+self.seq.subseq_with_cutpoints(breakpoint+1, None)
-            log.info("seq now has {} cutpoints".format(self.seq.count('&')))
+    def _insert_cutpoints_into_seq(self):
+        if self.seq:
+            for breakpoint in self.backbone_breaks_after:
+                log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
+                self.seq = self.seq.subseq_with_cutpoints(1,breakpoint+1)+"&"+self.seq.subseq_with_cutpoints(breakpoint+1, None)
+                log.info("seq now has {} cutpoints".format(self.seq.count('&')))
 
 
     def seqids_from_residue_map(self, residue_map):
@@ -3708,12 +3672,12 @@ class BulgeGraph(object):
         Return the nucleotides directly flanking an element.
     
         :param d: the name of the element
-        :return: a set of nucleotides
+        :return: a list of nucleotides
         '''
         set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
         set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
 
-        return set_adjacent - set_not_adjacent
+        return list(sorted(set_adjacent - set_not_adjacent))
 
     def min_max_bp_distance(self, e1, e2):
         '''
@@ -3728,9 +3692,6 @@ class BulgeGraph(object):
         :return:   A tuple containing the minimum and maximum distance between
                    the two elements.
         '''
-
-        #flanking1 = self.flanking_nucleotides(e1)
-        #flanking2 = self.flanking_nucleotides(e2)
 
         if (e1,e2) in self._elem_bp_dists: #Shortcut if cached.
             return self._elem_bp_dists[(e1,e2)]

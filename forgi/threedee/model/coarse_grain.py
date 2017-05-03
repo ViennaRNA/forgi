@@ -307,7 +307,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         breakpoints = breakpoints_from_residuemap(residue_map)
         log.debug("Breakpoints are {}".format(breakpoints))
         cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints  
-        cg.insert_cutpoints_into_seq()
         cg.seqids_from_residue_map(residue_map)        
         add_longrange_interactions(cg, lines)
         

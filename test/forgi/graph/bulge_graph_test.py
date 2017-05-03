@@ -914,6 +914,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg.from_fasta(fa, dissolve_length_one_stems=False)
         self.assertEqual(list(bg.define_range_iterator('i0')),
                          [[5,6],[14,15]])
+        self.assertEqual(list(bg.define_range_iterator('i0', adjacent = True)),
+                         [[4,7],[13,16]])
 
         r1 = list(bg.define_range_iterator('i0', seq_ids=True))[0]
         srange = list(bg.iterate_over_seqid_range(r1[0], r1[1]))
@@ -1161,8 +1163,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 ((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))""")
         self.assertEqual(bg.get_define_seq_str("s0"), ['CGCUUCAUA', 'UAUGAAGUG'])
-        #adjacent=True is ignored for stems
-        self.assertEqual(bg.get_define_seq_str("s0", True), ['CGCUUCAUA', 'UAUGAAGUG'])
+        self.assertEqual(bg.get_define_seq_str("s0", True), ['CGCUUCAUAU', 'UUAUGAAGUG'])
         
         bg = fgb.BulgeGraph(dotbracket_str="(.(.))") 
         bg.seq = 'acgauu'
@@ -2261,3 +2262,35 @@ class SequenceTest(unittest.TestCase):
         seq = fgb.Sequence(seq_str)
         self.assertEqual("{}".format(seq), seq_str)
  
+ 
+class BulgeGraphElementNucleotideTests(GraphVerification):
+    def test_define_a_s(self):
+        bg = fgb.BulgeGraph(dotbracket_str=".((((...)))).")
+        self.assertEqual(bg.define_a("s0"), [1,6,8,13])
+        bg = fgb.BulgeGraph(dotbracket_str=".((((...))))")
+        self.assertEqual(bg.define_a("s0"), [1,6,8,12])
+        bg = fgb.BulgeGraph(dotbracket_str="((((...)))).")
+        self.assertEqual(bg.define_a("s0"), [1,5,7,12])
+    def test_define_a_i(self):
+        bg = fgb.BulgeGraph(dotbracket_str="(..(((...))).)")
+        self.assertEqual(bg.define_a("i0"), [1,4,12,14])
+        bg = fgb.BulgeGraph(dotbracket_str="((((...))).)")
+        self.assertEqual(bg.define_a("i0"), [1,2,10,12])
+        bg = fgb.BulgeGraph(dotbracket_str="(..(((...))))")
+        self.assertEqual(bg.define_a("i0"), [1,4,12,13])
+    def test_define_a_m(self):
+        bg = fgb.BulgeGraph(dotbracket_str="((...))((...))")
+        self.assertEqual(bg.define_a("m0"), [7,8])
+        bg = fgb.BulgeGraph(dotbracket_str="((...)).((...))")
+        self.assertEqual(bg.define_a("m0"), [7,9])
+    def test_define_a_m_pk(self):
+        bg = fgb.BulgeGraph(dotbracket_str="(([[[))]]]")
+        self.assertEqual(bg.define_a("m0"), [2,3])
+        self.assertEqual(bg.define_a("m1"), [5,6])        
+        self.assertEqual(bg.define_a("m2"), [7,8])
+    def test_define_a_ft(self):
+        bg = fgb.BulgeGraph(dotbracket_str="..((...))..")
+        self.assertEqual(bg.define_a("f0"), [1,3])
+        self.assertEqual(bg.define_a("t0"), [9,11])
+
+        
