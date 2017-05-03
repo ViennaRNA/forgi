@@ -10,6 +10,11 @@ import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 import forgi.utilities.stuff as fus
 from pprint import pprint
+import collections as col
+
+import logging
+log=logging.getLogger(__name__)
+
 
 class GraphVerification(unittest.TestCase):
     def check_for_overlapping_defines(self, bg):
@@ -80,6 +85,7 @@ class BulgeGraphCofoldPrivateMemberTest(GraphVerification):
         cg = fgb.BulgeGraph(dotbracket_str=db)
         self.assertTrue(cg._is_connected())
         cg.remove_vertex("m0")
+        log.error(cg.edges)
         self.assertFalse(cg._is_connected())
 
 class BulgeGraphCofoldOverallTest(GraphVerification):
@@ -140,6 +146,30 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         print(cg.defines)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "s2", "h1", "m1"]))
     
+    def test_cutpoint_between_s_pk(self):
+        db = "((([[[&)))]]]"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "m2"]))
+
+    def test_cutpoint_between_s_pk2(self):
+        db = "((([[[)))&]]]"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "m1"]))
+    def test_cutpoint_between_s_pk3(self):
+        db = "(((..[[[&)))]]]"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "m2"]))
+
+    def test_cutpoint_between_s_pk4(self):
+        db = "((([[[..)))&]]]"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        print(cg.defines)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "m1"]))
+
+
     def test_cutpoint_between_s_i(self):
         db = "(((&...(((...))))))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
@@ -183,7 +213,61 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         self.assertEqual(bg.seq[bg.seq_id_to_pos(fgb.RESID("B", (" ", 3," ")))], "U")
 
 
-
+class BulgeGraphZeroLengthTest(GraphVerification):
+    def test__zero_length_element_adj_position_single_ml(self):
+        db="(((...)))(((...)))"
+           #123456789012345678
+        bg=fgb.from_id_seq_struct("test1", "A"*len(db), db)
+        self.assertEqual(bg._zero_length_element_adj_position("m0"), [9,10])
+    def test__zero_length_element_adj_position_two_ml(self):
+        db="((([[[)))..]]]"
+           #12345678901234
+        bg=fgb.from_id_seq_struct("test1", "A"*len(db), db)
+        zl_elems=[]
+        c_l=0
+        for elem, d in bg.defines.items():
+            if elem[0]=="m":
+                if d:
+                    with self.assertRaises(ValueError):
+                        bg._zero_length_element_adj_position(elem)
+                    c_l+=1
+                else:
+                    zl_elems.append(elem)
+        zl_elems.sort()
+        self.assertEqual(c_l,1)
+        self.assertEqual(len(zl_elems),2)
+        self.assertEqual(bg._zero_length_element_adj_position(zl_elems[0]), [3,4])
+        self.assertEqual(bg._zero_length_element_adj_position(zl_elems[1]), [6,7])
+    def test__zero_length_element_adj_position_single_ml2(self):
+        db="(((..[[[)))..]]]"
+           #12345678901234
+        bg=fgb.from_id_seq_struct("test1", "A"*len(db), db)
+        zl_elems=[]
+        c_l=0
+        for elem, d in bg.defines.items():
+            if elem[0]=="m":
+                if d:
+                    with self.assertRaises(ValueError):
+                        bg._zero_length_element_adj_position(elem)
+                    c_l+=1
+                else:
+                    zl_elems.append(elem)
+        zl_elems.sort()
+        self.assertEqual(c_l,2)
+        self.assertEqual(len(zl_elems),1)
+        self.assertEqual(bg._zero_length_element_adj_position(zl_elems[0]), [8,9])
+    def test__zero_length_element_adj_position_three_ml(self):
+        db="((([[[)))]]]"
+           #12345678901234
+        bg=fgb.from_id_seq_struct("test1", "A"*len(db), db)
+        zl_elems=[]
+        for elem, d in bg.defines.items():
+            if elem[0]=="m":
+                self.assertEqual(d, [])
+        self.assertEqual(bg._zero_length_element_adj_position("m0"), [3,4])
+        self.assertEqual(bg._zero_length_element_adj_position("m1"), [6,7])
+        self.assertEqual(bg._zero_length_element_adj_position("m2"), [9,10])
+        
 class BulgeGraphTest(GraphVerification):
     """
     Simple tests for the BulgeGraph data structure.
@@ -496,6 +580,26 @@ actgatagtttattagttttat
         self.assertEqual(bg.seq, seq.replace("t", "u"))
         #print >>sys.stderr, "bg.defines:", bg.defines
 
+
+    def test_from_fasta_double_zero_length_ml(self):
+        a = """
+>test
+AAAGGGUUUCCC
+((([[[)))]]]
+"""
+        bg = fgb.from_fasta_text(a)
+        self.assertEqual(len(bg.defines), 5)
+        self.assertEqual(bg.defines["m0"], [])
+        self.assertEqual(bg.defines["m1"], [])
+        self.assertEqual(bg.defines["m2"], [])
+        self.assertIn("m0", bg.edges["s0"])
+        self.assertIn("m1", bg.edges["s0"])
+        self.assertIn("m2", bg.edges["s0"])
+        self.assertIn("m0", bg.edges["s1"])
+        self.assertIn("m1", bg.edges["s1"])
+        self.assertIn("m2", bg.edges["s1"])
+
+        
     def test_from_bpseq_file(self):
         with open('test/forgi/data/1gid.bpseq', 'r') as f:
             lines = f.readlines()
@@ -517,6 +621,22 @@ actgatagtttattagttttat
         node = bg.get_node_from_residue_num(25)
         self.assertFalse(node[0] == 'h')
 
+    def test_from_bpseq_error(self):
+        bpstr1 = """
+1 G 2
+2 G 0
+"""     
+        bpstr2 = """
+1 G 2
+2 G 1
+3 A 2
+"""     
+        bg = fgb.BulgeGraph()
+        with self.assertRaises(fgb.GraphConstructionError):
+            bg.from_bpseq_str(bpstr1)
+        with self.assertRaises(fgb.GraphConstructionError):
+            bg.from_bpseq_str(bpstr2)
+            
     def test_from_bpseq(self):
         bg = fgb.BulgeGraph()
 
@@ -669,7 +789,6 @@ actgatagtttattagttttat
 
         db='[[.((..]]...)).((..((..)).))'
         nm='1234567890123456789012345678'
-
         bpstr="""1 A 9
 2 A 8
 3 A 0
@@ -697,10 +816,8 @@ actgatagtttattagttttat
 25 A 20
 26 A 0
 27 A 17
-28 A 20
+28 A 16
 """
-        bg.from_bpseq_str(bpstr)
-
         bg.from_bpseq_str(bpstr)
 
         db='[[.((..]]..((..)).))'
@@ -1007,14 +1124,13 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 
         dotbracket = '(.(.).(.).(.))'
         bg = fgb.BulgeGraph(dotbracket_str=dotbracket)
-        bd = bg.get_bulge_dimensions('m0')
-        self.assertEquals(bd, (1,1000))
-        bd = bg.get_bulge_dimensions('m1')
-        self.assertEquals(bd, (0,1000))
-        bd = bg.get_bulge_dimensions('m2')
-        self.assertEquals(bd, (1,1000))
-        bd = bg.get_bulge_dimensions('m3')
-        self.assertEquals(bd, (1,1000))
+        found = col.Counter()
+        for loop in bg.defines:
+            if loop[0]!="m": continue
+            bd = bg.get_bulge_dimensions(loop)
+            found[bd]+=1
+        self.assertEqual(found[(0,1000)], 1)
+        self.assertEqual(found[(1,1000)], 3)
 
         bg = fgb.BulgeGraph(dotbracket_str='((..((..))....))..((..((..))...))')
 
@@ -1510,8 +1626,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
 
         bg.from_dotbracket(dotbracket)
 
-        loops, loop_elems = bg.find_multiloop_loops()
+        loops = bg.find_mlonly_multiloops()
         for loop in loops:
+            if bg.is_loop_pseudoknot(loop):
+                log.error("%s is PK", loop)
             self.assertFalse(bg.is_loop_pseudoknot(loop))
 
     def test_remove_pseudoknots(self):

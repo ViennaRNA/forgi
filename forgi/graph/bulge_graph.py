@@ -40,6 +40,18 @@ from pprint import pprint
 
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
 
+
+class GraphConstructionError(ValueError):
+    """
+    Exceptions raised if the BulgeGraph could be constructed from the given input.
+    """
+    pass
+class GraphIntegrityError(ValueError):
+    """
+    Exception raised if a BulgeGraph was found to be in an inconsistent or faulty state.
+    """
+    pass
+
 def resid_to_str(resid):
     if resid.chain is not None:
         out="{}:{}".format(resid.chain, resid.resid[1])
@@ -87,8 +99,7 @@ def from_id_seq_struct(id_str, seq, struct):
     :param struct: The dotplot secondary structure (i.e. '((..))')
     """
     if len(seq)!=len(struct):
-        warnings.warn("Sequence and structure length are not equal! Returning empty BulgeGraph for id {}".format(id_str) )
-        return bg
+        raise GraphConstructionError("Sequence and structure length are not equal for id {}".format(id_str))
     bg = BulgeGraph()
     bg.from_dotbracket(struct)
     bg.name = id_str
@@ -134,12 +145,12 @@ def from_fasta_text(fasta_text):
 
             # make sure we have
             if prev_seq is None:
-                raise Error("No sequence for id: {}", prev_id)
+                raise GraphConstructionError("No sequence for id: {}", prev_id)
             if prev_struct is None:
-                raise Exception("No sequence for id: {}", prev_id) 
+                raise GraphConstructionError("No sequence for id: {}", prev_id) 
                 #BT: This message not very helpful, if wrong character ("N"/..) in sequence
             if prev_id is None:
-                raise Exception("No previous id")
+                raise GraphConstructionError("No previous id")
 
             bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
 
@@ -156,9 +167,9 @@ def from_fasta_text(fasta_text):
                 prev_struct = line
 
     if prev_seq is None:
-        raise ValueError("Error during parsing of fasta file. No sequence found for id {} and structure {}".format(prev_id, prev_struct))
+        raise GraphConstructionError("Error during parsing of fasta file. No sequence found for id {} and structure {}".format(prev_id, prev_struct))
     if prev_struct is None:
-        raise ValueError("Error during parsing of fasta file. No structure found for id {} and sequence {}".format(prev_id, prev_seq))
+        raise GraphConstructionError("Error during parsing of fasta file. No structure found for id {} and sequence {}".format(prev_id, prev_seq))
 
     bgs += [from_id_seq_struct(curr_id, prev_seq, prev_struct)]
 
@@ -462,7 +473,7 @@ class BulgeGraph(object):
             seq_strs = seq.split('&')
             if not len(seq_strs)==len(db_strs) or any(len(db_strs[i])!=len(seq_strs[i]) 
                                                       for i in range(len(db_strs))):
-                raise ValueError("Sequence and dotbracket string are not consistent!")
+                raise GraphConstructionError("Sequence and dotbracket string are not consistent!")
         
         
         
@@ -736,28 +747,25 @@ class BulgeGraph(object):
                 # below
                 ranges = [[s1[1] + 1, s2[0] - 1], [s2[3] + 1, s1[2] - 1]]
 
-        if node[0] == 'm':
-            if adjacent:
-                conns = self.connections(node)
-                s1 = self.get_sides_plus(conns[0], node)[0]
-                s2 = self.get_sides_plus(conns[1], node)[0]
-
-                rnge = sorted([self.defines[conns[0]][s1],
-                               self.defines[conns[1]][s2]])
-                ranges = [[rnge[0] + 1, rnge[1] - 1]]
-
-        for (ds1, ds2) in ranges:
-            if adjacent:
-                if ds1 > 1:
-                    ds1 -= 1
-                if ds2 < self.seq_length:
-                    ds2 += 1
-
+        if adjacent and self.defines[node] == []: #Zero-length multiloops.
+            ds1,ds2 =  self._zero_length_element_adj_position(node)
             if seq_ids:
-                # this will cause problems if the nucleotide has insertion codes
                 yield [self.seq_ids[ds1 - 1], self.seq_ids[ds2 - 1]]
             else:
-                yield [ds1, ds2]
+                yield [ds1,ds2]
+        else:
+            for (ds1, ds2) in ranges:
+                if adjacent:
+                    if ds1 > 1:
+                        ds1 -= 1
+                    if ds2 < self.seq_length:
+                        ds2 += 1
+
+                if seq_ids:
+                    # this will cause problems if the nucleotide has insertion codes
+                    yield [self.seq_ids[ds1 - 1], self.seq_ids[ds2 - 1]]
+                else:
+                    yield [ds1, ds2]
 
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         """
@@ -803,7 +811,7 @@ class BulgeGraph(object):
             log.error("seq_id is {}, self.seq_ids is {}".format(seq_id, self.seq_ids))
             raise
 
-    def create_bulge_graph(self, stems, bulges):
+    def _create_bulge_graph(self, stems, bulges):
         """
         Find out which stems connect to which bulges
 
@@ -824,7 +832,7 @@ class BulgeGraph(object):
                     self.edges['y{}'.format(i)].add('b{}'.format(j))
                     self.edges['b{}'.format(j)].add('y{}'.format(i))
 
-    def create_stem_graph(self, stems, bulge_counter):
+    def _create_stem_graph(self, stems, bulge_counter):
         """
         Determine which stems are connected to each other. A stem can be connected to
         another stem when there is an interior loop with an unpaired nucleotide on
@@ -840,39 +848,33 @@ class BulgeGraph(object):
                       and s2 and e2 are the nucleotides at the other.
         :param bulge_counter: The number of bulges that have been encountered so far.
 
-        :returns: A dictionary indexed by the number of a stem, containing a set of the 
-                 other stems that the index is connected to.
+        :returns: None
         """
         # print "stems:", stems
-        stem_stems = dict()
-        for i in range(len(stems)):
-            for j in range(i + 1, len(stems)):
-                for k1 in range(2):
-                    # don't fear the for loop
-                    for k2 in range(2):
-                        for l1 in range(2):
-                            for l2 in range(2):
-                                s1 = stems[i][k1][l1]
-                                s2 = stems[j][k2][l2]
-                                if abs(s1 - s2) == 1:
-                                    stem_stems_set = stem_stems.get(i, set())
-                                    if j not in stem_stems_set:
-                                        bn = 'b{}'.format(bulge_counter)
-                                        # self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
-                                        self.defines[bn] = []
-                                        self.weights[bn] = 1
+        for i,j in it.combinations(range(len(stems)), 2):
+            for k1, k2, l1, l2 in it.product(range(2), repeat=4):
+                s1 = stems[i][k1][l1]
+                s2 = stems[j][k2][l2]
+                if k1==1 and stems[i][0][l1]==stems[i][1][l1]: 
+                    continue
+                if k2==1 and stems[j][0][l2]==stems[j][1][l2]: 
+                    continue
+                if abs(s1 - s2) == 1:
+                    bn = 'b{}'.format(bulge_counter)                    
+                    log.debug("Adding bulge %s between %s and %s. k1 %s, k2 %s, l1 %s, l2 %s", bn, stems[i], stems[j], k1, k2, l1, l2)
+                    # self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
+                    self.defines[bn] = []
+                    self.weights[bn] = 1
 
-                                        self.edges['y{}'.format(i)].add(bn)
-                                        self.edges[bn].add('y{}'.format(i))
+                    self.edges['y{}'.format(i)].add(bn)
+                    self.edges[bn].add('y{}'.format(i))
 
-                                        self.edges['y{}'.format(j)].add(bn)
-                                        self.edges[bn].add('y{}'.format(j))
+                    self.edges['y{}'.format(j)].add(bn)
+                    self.edges[bn].add('y{}'.format(j))
 
-                                        bulge_counter += 1
-                                        stem_stems_set.add(j)
-                                    stem_stems[i] = stem_stems_set
+                    bulge_counter += 1
 
-        for d in list(self.defines.keys()):
+        for d in list(self.defines.keys()): #0-nt Hairpins
             if d[0] != 'y':
                 continue
 
@@ -888,7 +890,7 @@ class BulgeGraph(object):
 
                 bulge_counter += 1
 
-        return stem_stems
+        return
 
     def remove_vertex(self, v):
         """
@@ -1227,7 +1229,7 @@ class BulgeGraph(object):
 
     def _collapse(self):
         """
-        If any vertices form a loop, then they are either a bulge region of 
+        If any vertices form a loop, then they are either a bulge region or 
         a fork region. The bulge (interior loop) regions will be condensed 
         into one node.
         """
@@ -1470,10 +1472,10 @@ class BulgeGraph(object):
             elif (s1c, s2c) == (1, 2):
                 return -5
             else:
-                raise Exception("Weird angle type: (s1c, s2c) = (%d, %d)" %
+                raise GraphIntegrityError("Weird angle type: (s1c, s2c) = (%d, %d)" %
                                 (s1c, s2c))
         else:
-            raise Exception("connection_type called on non-interior loop/multiloop")
+            raise ValueError("connection_type called on non-interior loop/multiloop")
 
     def connection_ends(self, connection_type):
         """
@@ -1497,7 +1499,7 @@ class BulgeGraph(object):
         elif abs(connection_type) == 5:
             ends = (1, 1)
         else:
-            raise Exception('Unknown connection type: %d' % (connection_type))
+            raise GraphIntegrityError('Unknown connection type: %d' % (connection_type))
 
         if connection_type < 0:
             return ends[::-1]
@@ -1737,9 +1739,13 @@ class BulgeGraph(object):
             bulge = bulges[i]
             self.defines['b%d' % (i)] = sorted([bulge[0] + 1, bulge[1] + 1])
             self.weights['b%d' % (i)] = 1
-
-        self.create_bulge_graph(stems, bulges)
-        self.create_stem_graph(stems, len(bulges))
+            
+            
+        log.debug("from_stems_and_bulges: %s; %s", self.defines, self.edges)
+        self._create_bulge_graph(stems, bulges)
+        log.debug("after _create_bulge_graph: %s; %s", self.defines, self.edges)
+        self._create_stem_graph(stems, len(bulges))
+        log.debug("after _create_stem_graph: %s; %s", self.defines, self.edges)
         self._collapse()
         self.relabel_nodes()
         self.remove_degenerate_nodes()
@@ -1853,6 +1859,7 @@ class BulgeGraph(object):
         lines = bpseq_str.split('\n')
         seq = []
         tuples = []
+        pairing_partner={}
         for line in lines:
             parts = line.split()
 
@@ -1860,6 +1867,16 @@ class BulgeGraph(object):
                 continue
 
             (t1, s, t2) = (int(parts[0]), parts[1], int(parts[2]))
+            if t2 in pairing_partner and t1!=pairing_partner[t2]:
+                raise GraphConstructionError("Faulty bpseq string. {} pairs with {}, "
+                                 "but {} pairs with {}".format(t2, pairing_partner[t2], t1, t2))
+            if t1 in pairing_partner and t2!=pairing_partner[t1]:
+                raise GraphConstructionError("Faulty bpseq string. {} pairs with {}, "
+                                 "but {} pairs with {}".format(pairing_partner[t1], t1,  t1, t2))
+
+            pairing_partner[t1]=t2
+            if t2!=0:
+                pairing_partner[t2]=t1
             tuples += [(t1, t2)]
             seq += [s]
 
@@ -1958,6 +1975,8 @@ class BulgeGraph(object):
         if prev_to == 0:
             new_bulge = ((last_paired - 1, prev_from - 1))
             bulges += [new_bulge]
+            
+        log.debug("from_tuples: stems %s, bulges %s", stems, bulges)
         self.from_stems_and_bulges(stems, bulges)
 
     def sort_defines(self):
@@ -2037,7 +2056,68 @@ class BulgeGraph(object):
         self.remove_vertex(iloop)
         
 
-    def _split_between_elements(self, splitpoint, element_left, element_right):
+    def _zero_length_element_adj_position(self, elem, _implemented_cutpoints=None):
+        """
+        Return the define with adjacent nucleotides for a zero-length element.
+        
+        Hereby we define that in cases of ambiuigity, the alphabetically first 
+        zero-length element comes at the lowest nucleotide position etc.
+        
+        :param elem: An element, e.g. "m0"
+        :param _implemented_cutpoints: Used by self._split_at_cofold_cutpoint to 
+                                       override self.backbone_breaks_after.
+        """
+        if self.defines[elem]!=[]:
+            raise ValueError("{} does not have zero length".format(elem))
+        edges = self.edges[elem]
+        if len(edges)==1: #Hairpin
+            stem, = edges
+            define = self.defines[stem]
+            if define[2]==define[1]+1:
+                return [define[1], define[2]]
+            else:
+                raise GraphIntegrityError("Very strange zero-length hairpin {} "
+                                          "(not?) connected to {}".format(elem, stem))
+        elif len(edges)==2:
+            stem1, stem2 = edges
+            #See if this is the only element connecting the two stems.
+            connections = self.edges[stem1] & self.edges[stem2]
+            zero_length_connections = []
+            for conn in connections:
+                if self.defines[conn]==[]:
+                    zero_length_connections.append(conn)
+            assert elem in zero_length_connections
+            #We DEFINE the 0-length connections to be sorted alphabetically by position
+            zero_length_connections.sort()
+            zero_length_coordinates = set()
+            if _implemented_cutpoints is None:
+                breakpoints = self.backbone_breaks_after
+            else:
+                breakpoints = _implemented_cutpoints
+            for k, l in it.product(range(4), repeat=2):
+                if abs(self.defines[stem1][k]-self.defines[stem2][l])==1:
+                    d = [self.defines[stem1][k], self.defines[stem2][l]]
+                    d.sort()
+                    if d[0] not in breakpoints:
+                        zero_length_coordinates.add(tuple(d))
+            if len(zero_length_connections)!=len(zero_length_coordinates):
+                self.print_debug(level=logging.ERROR) 
+                raise GraphIntegrityError("Expecting stems {} and {} to have {} zero-length "
+                                          "connections at nucleotide positions {}, however, "
+                                          "found {} elements: {}".format(stem1, stem2, 
+                                                            len(zero_length_coordinates),
+                                                            zero_length_coordinates,
+                                                            len(zero_length_connections),
+                                                            zero_length_connections))
+            zero_length_coordinates = list(zero_length_coordinates)
+            zero_length_coordinates.sort()
+            i = zero_length_connections.index(elem)
+            return list(zero_length_coordinates[i])
+        else:
+            raise GraphIntegrityError("Very strange zero length bulge {} with more than 2 adjacent "
+                                      "elements: {}.".format(elem, edges)) 
+        
+    def _split_between_elements(self, splitpoint, element_left, element_right, implemented_splitpoints):
         if element_left[0] in "mh":
             next3 = self._next_available_element_name("t")
             self.relabel_node(element_left, next3)
@@ -2051,17 +2131,20 @@ class BulgeGraph(object):
         else:
             assert element_left[0]=="s" and element_right[0]=="s"
             #Zero-length i or m element!
-            try:
-                connection, = self.edges[element_left] & self.edges[element_right]
-            except:
-                print(self.edges[element_left], self.edges[element_right], self.edges[element_left] & self.edges[element_right])
-                raise
-
+            connections = self.edges[element_left] & self.edges[element_right]
+            if len(connections)==0:
+                raise GraphConstructionError("Cannot split at cofold cutpoint. Missing connection between {} and {}.".format(element_left, element_right))
+            else:
+                for connection in connections:
+                    if connection[0]=="i":
+                        break
+                    if not self.defines[connection]:
+                        ad_define = self._zero_length_element_adj_position(connection, implemented_splitpoints)
+                        if ad_define[0]==splitpoint:
+                            break
+                else:
+                    raise GraphConstructionError("Cannot split at cofold cutpoint. No suitable connection between {} and {}.".format(element_left, element_right))
             if connection[0] == "m":
-                ml = self.shortest_mlonly_multiloop(connection)
-                if any( m[0] != "m" for m in ml):
-                    raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
-                                     " base-pair.")
                 #Just remove it without replacement
                 self.remove_vertex(connection)
             else:
@@ -2132,7 +2215,7 @@ class BulgeGraph(object):
                 continue
             pending.extend(self.edges[next_node])
             known_nodes.add(next_node)
-        log.info("Testing connectivity: {} =?= {}".format(known_nodes, set(self.defines.keys())))
+        log.info("Testing connectivity: connected component =?= all nodes:\n{} =?= {}".format(list(sorted(known_nodes)), list(sorted(set(self.defines.keys())))))
         return known_nodes == set(self.defines.keys())
     
     def _split_at_cofold_cutpoint(self):
@@ -2143,26 +2226,35 @@ class BulgeGraph(object):
         now we have to split it.
         """
         log.info("_split_at_cofold_cutpoint: breakpoints are {}".format(self.backbone_breaks_after))
+        if self.backbone_breaks_after:
+            self.print_debug(logging.DEBUG)
+
+        implemented_splitpoints=[]
         for splitpoint in self.backbone_breaks_after:
             element_left = self.get_node_from_residue_num(splitpoint)
             element_right = self.get_node_from_residue_num(splitpoint+1)            
             if element_left[0] in "ft" or element_right[0] in "ft":
                 #No cofold structure. First sequence is disconnected from rest
-                raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
-                            " base-pair.")# Creating empty bulge-graph object instead.")
+                raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not "
+                            "connected by any base-pair.")# Creating empty bulge-graph object instead.")
                 #self.__init__() #Make self an empty bulge graph.
                 return
             elif element_left[0]=="i" or element_right[0]=="i":
                 self._split_interior_loop(splitpoint, element_left, element_right)
             elif element_left != element_right:
-                self._split_between_elements(splitpoint, element_left, element_right)
+                self._split_between_elements(splitpoint, element_left, element_right, implemented_splitpoints)
             elif element_left[0]=="s":
                 self._split_inside_stem(splitpoint, element_left)
             else:
                 self._split_inside_loop(splitpoint, element_left)
-        
+            implemented_splitpoints.append(splitpoint) 
+        if self.backbone_breaks_after:
+            log.debug("After splitting (with adjacent):")
+            for d in self.defines:
+                log.debug("%s: %s", d, list(self.define_residue_num_iterator(d, True)))
+                
         if not self._is_connected():
-            raise ValueError("Cannot create BulgeGraph. Found two sequences not connected by any "
+            raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not connected by any "
                              " base-pair.")
     def to_dotbracket_string(self):
         """
@@ -2174,12 +2266,12 @@ class BulgeGraph(object):
         pt = self.to_pair_table()
         return fus.pairtable_to_dotbracket(pt)
 
-    def print_debug(self):
-        print(self.seq)
-        print(self.to_dotbracket_string())
-        print(self.to_element_string(True))
-        print("DEFINES:", self.defines)
-        pprint(self.edges)
+    def print_debug(self, level=logging.debug):
+        log.log(level, self.seq)
+        log.log(level, self.to_dotbracket_string())
+        log.log(level, self.to_element_string())
+        log.log(level, "DEFINES: %s", self.defines)
+
     def to_fasta_string(self):
         """
         Output the BulgeGraph representation as a fast string of the
@@ -2427,7 +2519,7 @@ class BulgeGraph(object):
         elif side == 1:
             return (self.defines[stem][1], self.defines[stem][2])
 
-        raise Exception("Invalid side (%d) for the stem (%s)." % (stem, side))
+        raise ValueError("Invalid side (%d) for the stem (%s)." % (stem, side))
 
     def get_stem_edge(self, stem, pos):
         """
@@ -2450,7 +2542,7 @@ class BulgeGraph(object):
         elif pos in tp_edge:
             return 1
         
-        raise Exception("Position (%d) not in stem (%s)." % (pos, stem))
+        raise ValueError("Position (%d) not in stem (%s)." % (pos, stem))
 
     # Seems to be unused. Consider deprecation
     def get_any_sides(self, e1, e2):
@@ -2534,12 +2626,15 @@ class BulgeGraph(object):
                  to the stem.
                  These sides are equivalent to the indices of the define.
         """
+        if b not in self.edges[s1]:
+            raise ValueError("get_sides_plus expects stem to be connected to bulge!")
+        
         s1d = self.defines[s1]
         bd = self.defines[b]
 
         if len(bd) == 0:
             edges = self.edges[b]
-
+            log.debug("get_sides_plus: Using edges of %s: %s", b, edges)
             for e in edges:
                 if e != s1:
                     bd = self.defines[e] #For bulges of length 0, use the next stem
@@ -2559,9 +2654,7 @@ class BulgeGraph(object):
             elif bd[k] - s1d[3] == 1:
                 return (3, k)
 
-        raise Exception("Faulty multiloop %s connecting %s"
-                        % (" ".join(map(str, bd)),
-                           " ".join(map(str, s1d))))
+        raise GraphIntegrityError("Faulty bulge {}:{} connected to {}:{}".format(b, bd, s1, s1d))
 
     def stem_resn_to_stem_vres_side(self, stem, res):
         d = self.defines[stem]
@@ -2909,7 +3002,7 @@ class BulgeGraph(object):
                 elif s == 3:
                     ends += [st[i][2]]
                 else:
-                    raise Exception("Weird multiloop sides: %s" %
+                    raise GraphIntegrityError("Weird multiloop sides: %s" %
                                     bulge_name)
 
             ends.sort()

@@ -39,6 +39,21 @@ import logging
 from pprint import pprint
 log = logging.getLogger(__name__)
 
+class CgConstructionError(fgb.GraphConstructionError):
+    """
+    Exceptions raised if the CoarseGrainRNA could be constructed from the given input.
+    
+    Raised for Errors related to the 3D information.
+    """
+    pass
+class CgIntegrityError(fgb.GraphIntegrityError):
+    """
+    Exception raised if a BulgeGraphCoarseGrainRNA was found to be in an inconsistent or faulty state,
+    related to the 3D Information
+    """
+    pass
+
+
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
 except:
@@ -186,6 +201,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
         cgs = []
         for component in nx.connected_components(chain_connections):
             #print(component, type(component))
+            log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
         return cgs
 
@@ -218,7 +234,9 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):
-            raise ValueError("Bad chain-id given. {} not present (or not an RNA)".format(set(chain_id)-set([chain.id for chain in chains])))
+            raise CgConstructionError("Bad chain-id given. "
+                                      "{} not present (or not an RNA)".format( set(chain_id) - 
+                                                                               set([chain.id for chain in chains])))
     else:
         chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
     new_chains = []
@@ -430,7 +448,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if cg_file is not None:
             self.from_file(cg_file)
             if not self.defines:
-                raise ValueError("Empty CoarseGrainRNA created. Was '{}' in *.cg/ *.coord file format?".format(cg_file))
+                raise CgConstructionError("Empty CoarseGrainRNA created. Was '{}' in *.cg/ *.coord file format?".format(cg_file))
 
 
     def get_coord_str(self):
@@ -724,7 +742,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             log.error("Angle stem1-twist1 %s dot_product=%s, Angle stem2-twist2 %s degrees dot_product=%s",
                                         math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
                                         math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),)
-            raise RuntimeError("The twists are inconsistent. "
+            raise CgIntegrityError("The twists are inconsistent. "
                                "They should be orthogonal to the corresponding stem vectors."
                                "Inconsistency found for {},{}".format(define, connections)
                                )

@@ -66,7 +66,7 @@ def parse_base_pair_id(base_pair_id):
     """
     
         
-    parts = re.findall(r'(\w[-0-9]\d*|\w\d+)', base_pair_id)
+    parts = re.findall(r"((?:'\d+'|\w)[-0-9]\d*|(?:'\d+'|\w)\d+)", base_pair_id)
     if len(parts) != 2:
         raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
     if "-".join(parts) != base_pair_id:
