@@ -24,7 +24,7 @@ import math
 from pprint import pprint
 import logging
 log = logging.getLogger(__name__)
-import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus 
+import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
@@ -43,7 +43,7 @@ REFERENCE_CATOM = "C1'"
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
 except:
-  def profile(x): 
+  def profile(x):
     return x
 else:
   import forgi.threedee.utilities.average_atom_positions as ftua #Takes forever if executed within a decorated method.
@@ -606,7 +606,7 @@ def basenormals_mids(chain, start1, start2, end1, end2):
 """
 
 """
-def get_mids_core_a(chain, start1, start2, end1, end2, 
+def get_mids_core_a(chain, start1, start2, end1, end2,
                     use_template=True):
     '''
     Estimate the stem cylinder using the old method and then refine it
@@ -667,7 +667,7 @@ def stem_from_chains(cg, chains, define):
                                                   stem_length * 2)
     filename = forgi.threedee.data_file(op.join('data', template_filename))
     ideal_chain = ftup.get_first_chain(filename)
-    
+
     stem_chain = bpdb.Chain.Chain(' ')
     residue_ids = cg.get_resseqs(define, seq_ids=True)
     for strand in residue_ids:
@@ -683,9 +683,9 @@ def stem_from_chains(cg, chains, define):
 
     # average length of a base-pair: 2.547
     mult=0.01
-    ideal_coords = np.array([[0., 0., mult], 
+    ideal_coords = np.array([[0., 0., mult],
                   np.array([0., 0., -mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
-                  
+
     coords = np.dot(ideal_coords, rotran[0]) + rotran[1]
     stem_direction = coords[1]-coords[0]
 
@@ -723,7 +723,7 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     :param coords: The coords of ONE stem
     """
     res1, res2 = residue_ids[0][0], residue_ids[1][-1]
-    res3, res4 = residue_ids[0][-1], residue_ids[1][0]    
+    res3, res4 = residue_ids[0][-1], residue_ids[1][0]
 
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
@@ -736,7 +736,7 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     ax.plot([chains[res1.chain][res1.resid]["C1'"].coord[0], chains[res2.chain][res2.resid]["C1'"].coord[0]],
             [chains[res1.chain][res1.resid]["C1'"].coord[1], chains[res2.chain][res2.resid]["C1'"].coord[1]],
             [chains[res1.chain][res1.resid]["C1'"].coord[2], chains[res2.chain][res2.resid]["C1'"].coord[2]], "--", label="bp")
-            
+
     ax.plot([chains[res3.chain][res3.resid]["C1'"].coord[0], chains[res4.chain][res4.resid]["C1'"].coord[0]],
             [chains[res3.chain][res3.resid]["C1'"].coord[1], chains[res4.chain][res4.resid]["C1'"].coord[1]],
             [chains[res3.chain][res3.resid]["C1'"].coord[2], chains[res4.chain][res4.resid]["C1'"].coord[2]], "--", label="bp")
@@ -771,7 +771,7 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     ax.legend()
     plt.show()
     #assert False
-        
+
 
 def get_mids_core(cg, chains, define,
                   use_template=True, seq_ids=True):
@@ -791,7 +791,7 @@ def get_mids_core(cg, chains, define,
     except IOError:
         if stem_length>40:
             raise ValueError("Cannot create coordinates. "
-                         "Helices with lengths greater than 40 are not supported in forgi.")
+                         "Helices with lengths greater than 40 are currently not supported in forgi.")
         else:
             raise
 
@@ -818,12 +818,12 @@ def get_mids_core(cg, chains, define,
 
     # average length of a base-pair: 2.547
     mult=0.1
-    ideal_mids = np.array([[0., 0., mult], 
+    ideal_mids = np.array([[0., 0., mult],
                   np.array([0., 0., -mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
 
     # apply the rotation and translation to get the mids of the
     # target chain
-    #chain_new_mids[0] = 
+    #chain_new_mids[0] =
 
     chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
     #chain_new_mids = [chain_new_mids[0] + mult * stem_vec, chain_new_mids[1] - mult * stem_vec]
@@ -840,14 +840,14 @@ def get_twists_core(cg, chains, define,
     defined by (mid2 - mid1).
     '''
     seq_ids = True
-    
+
     if mids is None:
         mids = get_mids(cg, chains, define,
-                        method=cc.Configuration.mids_method, 
+                        method=cc.Configuration.mids_method,
                         seq_ids=seq_ids)
 
     resnames_forw, resnames_backw = cg.get_resseqs(define, seq_ids) #Error if single_stranded
-    
+
 
     # the first nucleotide of the first strand
     # and the last nucleotide of the second strand
@@ -893,7 +893,7 @@ def get_mids(cg, chains, define, method=cc.Configuration.mids_method, seq_ids=Tr
         raise NotImplementedError("This does not work for multiple chains.")
         #return get_mids_fit_method(cg, chains, define, seq_ids=seq_ids)
     elif method == 'superimpose':
-        return get_mids_core(cg, chains, define, 
+        return get_mids_core(cg, chains, define,
                              use_template=False, seq_ids=seq_ids)
     else:
         print >>sys.stderr, "Unknown mids method:", method
@@ -1120,7 +1120,7 @@ def spos_to_pos(bg, stem, i, spos):
         add_virtual_residues(bg, stem)
         (s1_pos, s1_vec, s1_vec_l, s1_vec_r) = bg.v3dposs[stem][i]
 
-    #return pos + (s1_pos + s1_vec) #TODO BT: THIS SEEMS WRONG 
+    #return pos + (s1_pos + s1_vec) #TODO BT: THIS SEEMS WRONG
     return pos + s1_pos
 """
 
@@ -1202,7 +1202,7 @@ def junction_virtual_atom_distance(bg, bulge):
 
     :return: A single number corresponding to the distance above.
     '''
-    connecting_stems = bg.connections(bulge)    
+    connecting_stems = bg.connections(bulge)
     (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
     (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
     pos1=bg.defines[connecting_stems[0]][i1]
@@ -1238,7 +1238,7 @@ def add_virtual_residues(bg, stem):
     bases and inverses for the given stem.
 
     .. note::
-       This is a low-level function used if only the virtual residues of a single 
+       This is a low-level function used if only the virtual residues of a single
        stems should be added. To add the virtual residues for all stems, use
        `cg.add_all_virtual_residues`
 
@@ -1248,13 +1248,13 @@ def add_virtual_residues(bg, stem):
     stem_vec = bg.coords.get_direction(stem)
     twist_vec = bg.get_twists(stem)[0]
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):
-        stem_inv = bg.stem_invs[stem] 
+        stem_inv = bg.stem_invs[stem]
     else:
         stem_basis = cuv.create_orthonormal_basis(stem_vec, twist_vec)
         stem_inv = nl.inv(stem_basis.transpose())
         bg.bases[stem] = stem_basis
         bg.stem_invs[stem] = stem_inv
-        
+
     for i in range(bg.stem_length(stem)):
         vpos = virtual_res_3d_pos(bg, stem, i, stem_inv=stem_inv)
         vbasis = virtual_res_basis(bg, stem, i, vec=vpos[1])
@@ -1290,7 +1290,7 @@ def stem_vres_reference_atoms(bg, chain, s, i):
     twist = vvec
 
     basis = cuv.create_orthonormal_basis(stem_direction, twist)
-    
+
     residue_ids = bg.get_resseqs(s, seq_ids=True)
     for strand in [0, 1]:
         if strand == 0:
@@ -1302,7 +1302,7 @@ def stem_vres_reference_atoms(bg, chain, s, i):
             try:
                 c = res[atom].coord
             except KeyError:
-                continue   
+                continue
             else:
                 new_c = cuv.change_basis(c - vpos, basis, cuv.standard_basis)
                 coords[strand][atom] = new_c
@@ -1344,7 +1344,7 @@ def bounding_boxes(bg, chain, s, i):
 
 def virtual_residue_atoms(bg, s, i, strand=0):
     '''
-    Return the atoms for the virtual residue. 
+    Return the atoms for the virtual residue.
 
     :param bg: The BulgeGraph
     :param s: The stem
@@ -1710,7 +1710,7 @@ def add_stem_information_from_pdb_chains(cg):
             #mids = get_mids(cg, new_chains, d)
             #twists = get_twists(cg, new_chains, d)
             #cg.coords[d] = (mids[0].get_array(), mids[1].get_array())
-            
+
             stem_dir = cg.coords[d][1]-cg.coords[d][0]
             cg.twists[d] = twists
             assert abs(np.dot(stem_dir, twists[0]))<10**-10
@@ -1739,18 +1739,18 @@ def add_loop_information_from_pdb_chains(bg):
             assert False
 
         edges = list(bg.edges[d])
-        
+
         if len(edges) == 0:
             # Odd case where there are no stems in the structure
             # We should find the furthest distance from the first
             # nucleotide
             log.info("add_loop_information_from_pdb_chain: {} has no neighbor".format(d))
-            
+
             chain_ids = set(x.chain for y in bg.get_resseqs(d) for x in y )
             assert len(chain_ids)==1
             c, = chain_ids
             chain = bg.chains[c]
-            
+
             first_res = None
             for res in chain.get_residues():
                 if catom_name in res:
@@ -1758,10 +1758,10 @@ def add_loop_information_from_pdb_chains(bg):
                     break
 
             start_point = first_res[catom_name].get_vector().get_array() #Currently this can thows a TypeError (NoneType has no __getitem__
-            centroid = get_furthest_c_alpha(bg, chain, 
-                                            first_res[catom_name].get_vector().get_array(), 
+            centroid = get_furthest_c_alpha(bg, chain,
+                                            first_res[catom_name].get_vector().get_array(),
                                             d)
-           
+
         else:
             chain_ids = set(x.chain for y in bg.get_resseqs(d) for x in y )
             assert len(chain_ids)==1
@@ -1794,30 +1794,30 @@ def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
 
     '''
     points = [cg.coords[tv][0], cg.coords[tv][1]]
-    
+
     for s in cylinders_to_stems[c]:
         points += [cg.coords[s][0], cg.coords[s][1]]
-        
+
     data = np.array(points)
     datamean = data.mean(axis=0)
-    
+
     uu, dd, vv = np.linalg.svd(data - datamean)
-    
+
     n = vv[0]
     p = data
     a = datamean
-    
+
     dist_vec = (a - p) - (np.dot((a-p), n)[:,np.newaxis]) * n
     mags = [ftuv.magnitude(c) for c in dist_vec]
 
     '''
     linepts = vv[0] * np.mgrid[-7:7:2j][:, np.newaxis]
     linepts += datamean
-    
-    
+
+
     import matplotlib.pyplot as plt
     import mpl_toolkits.mplot3d as m3d
-    
+
     ax = m3d.Axes3D(plt.figure())
     ax.scatter3D(*data.T)
     ax.plot3D(*linepts.T)
@@ -1826,46 +1826,46 @@ def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
     if max(mags) > r:
         return False
     return True
-                   
+
 def get_encompassing_cylinders(cg, radius=6.):
     visited = set()
-    
+
     # the stems_in_cylinders dictionary will be indexed by stem name and contain
     # the number of the cylinder it contains
     #stems_to_cylinders = {'s0': 0}
     stems_to_cylinders = dict()
     cylinders_to_stems = col.defaultdict(list)
-    
+
     #cylinders_to_stems = {0: ['s0']}
-    
+
     # the first cylinder is equal to the first stem
     #cylinders = {0: cg.coords['s0']}
     to_visit = [random.choice(list(cg.defines.keys()))]
-    
+
     cylinder_counter = 0
-    
+
     while to_visit:
         tv = to_visit.pop(0)
-        
+
         if tv in visited:
             continue
-            
+
         visited.add(tv)
         for e in cg.edges[tv]:
             to_visit.append(e)
-        
+
         # not interested in non- stem, multiloop or interior loop elements
         if tv[0] != 's' and tv[0] != 'm' and tv[0] != 'i':
             continue
-            
+
         #cylinders_to_check = set(cylinders_to_stems.keys())
         cylinders_to_check = set()
-        
+
         # find which cylinders we need to check
         for e in cg.edges[tv]:
             if e in stems_to_cylinders:
-                cylinders_to_check.add(stems_to_cylinders[e])  
-            
+                cylinders_to_check.add(stems_to_cylinders[e])
+
         found = False
         for c in sorted(cylinders_to_check, key=lambda x: -sum([cg.stem_length(k) for k in cylinders_to_stems[x]])):
             # the new node will definitely be at the end of the cylinder
@@ -1874,16 +1874,16 @@ def get_encompassing_cylinders(cg, radius=6.):
                 cylinders_to_stems[c] += [tv]
                 stems_to_cylinders[tv] = c
                 found = True
-                
+
                 break
-        
+
         if not found:
             # no appropriately sized cylinder has been found so we
             # just create new one containing just this stem
             cylinder_counter += 1
             cylinders_to_stems[cylinder_counter] += [tv]
             stems_to_cylinders[tv] = cylinder_counter
-                
+
     return cylinders_to_stems
 
 def element_coord_system(cg, d):
@@ -1891,7 +1891,7 @@ def element_coord_system(cg, d):
     Get a coordinate system for a particular coarse grain element.
 
     If an element has an axis vector, a, twist vectors t1 and t2,
-    then the coordinate system will be a normalized version 
+    then the coordinate system will be a normalized version
     of the axis a, the second, v2,  will be equal to norm((t1 + t2) / 2.)
 
     And the third will be equal to a x v2.
@@ -1922,18 +1922,18 @@ class VirtualAtomsLookup(object):
     """
     def __init__(self, cg, given_atom_names=None, sidechain=True):
         """
-        :param cg: The coarse grain structure, for which the virtual atoms are generated. 
+        :param cg: The coarse grain structure, for which the virtual atoms are generated.
 
-        ..note :: 
+        ..note ::
             If cg is modified, new virtual atom positions are calculated.
         """
-        self.cg=cg  
+        self.cg=cg
         self.given_atom_names=given_atom_names
         self.sidechain=sidechain
     #@profile
     def __getitem__(self, position):
         """
-        :returns: A dictionary containing all atoms (as keys) and their 
+        :returns: A dictionary containing all atoms (as keys) and their
                   positions (as values) for the given residue.
         :param position: The position of the residue in the RNA (starting with 1)
         """
@@ -2008,9 +2008,9 @@ class VirtualAtomsLookup(object):
             return e_coords
     def _getitem_for_stem(self, d, pos):
         pos_in_stem, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
-        assert pos>=1  
+        assert pos>=1
         try:
-            residue = (self.cg.seq[pos]) 
+            residue = (self.cg.seq[pos])
         except IndexError:
             log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
             raise
@@ -2042,9 +2042,9 @@ class VirtualAtomsLookup(object):
 
         atom_coords = ftuv.change_basis_vectorized(np.array(atom_coords), ftuv.standard_basis, vres_basis)+vres_pos
 
-        
+
         return { aname:coord for aname, coord in zip(atom_keys, atom_coords)}
-    
+
 def vres_to_global_coordinates(vres_pos, vres_basis, positions):
     newpos = {}
     for key, v_pos in positions.items():
@@ -2061,14 +2061,14 @@ def vres_to_global_coordinates(vres_pos, vres_basis, positions):
         else:
             resnum = define[1] - i
         resname = seq[resnum-1]
-        
+
         vbasis = virtual_res_basis_core(coords, twists, i, stem_len)
         vpos = virtual_res_3d_pos_core(coords, twists, i, stem_len)
 
         for a in ftus.avg_stem_vres_atom_coords[side][resname].items():
             c = a[1]
             new_coords[resnum][a[0]] = np.dot(vbasis.transpose(), c) + vpos[0]
-    
+
     return new_coords
 
 def cg_atoms(cg):
@@ -2093,7 +2093,7 @@ def cg_atoms(cg):
 
         elif d[0] == 'f':
             new_coords = add_atoms(coords, twists, cg.defines[d], 0, cg.seq, new_coords)
-        
+
         elif d[0] == 't':
             new_coords = add_atoms(coords, twists, cg.defines[d], 1, cg.seq, new_coords)
 
@@ -2112,7 +2112,7 @@ def element_distance(cg, l1, l2):
 
 def get_basepair_center(cg, pos):
     """
-    The center of a basepair, as defined in doi: 10.1261/rna.305307 
+    The center of a basepair, as defined in doi: 10.1261/rna.305307
 
     :param pos: The number of one of the two pairing bases
     """
@@ -2132,8 +2132,8 @@ def get_basepair_center(cg, pos):
 
 def get_basepair_plane(cg, pos):
     """
-    The plane of the basepair, as defined in figure 13 of doi: 10.1261/rna.305307 
-  
+    The plane of the basepair, as defined in figure 13 of doi: 10.1261/rna.305307
+
     :param pos: The number of one of the two pairing bases
     """
     pos2 = cg.pairing_partner(pos)
@@ -2168,7 +2168,7 @@ def get_basepair_plane(cg, pos):
             right_1=va2[l1[1]]
             right_2=va2[l2[1]]
             add=np.cross(right_1-left_1, right_2-left_1)
-            if np.any(plane!=np.zeros(3)): 
+            if np.any(plane!=np.zeros(3)):
                 assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
                  " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
             plane+=add
@@ -2184,20 +2184,4 @@ def get_basepair_plane(cg, pos):
             assert ftuv.vec_angle(add, plane) < math.radians(15), ("{}-{}: {}, {}: {}"
                " degrees".format(seq1, seq2, plane, add, math.degrees(ftuv.vec_angle(add, plane))))
             plane+=add
-        return ftuv.normalize(plane)  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return ftuv.normalize(plane)

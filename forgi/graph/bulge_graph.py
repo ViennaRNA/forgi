@@ -70,7 +70,7 @@ def resid_from_str(resstr):
     idparts=resid.split(".")
     if len(idparts)==1:
         idparts.append(" ")
-    return RESID(chain, (' ', idparts[0], idparts[1]))
+    return RESID(chain, (' ', int(idparts[0]), idparts[1]))
 
 
 def add_bulge(bulges, bulge, context, message):
@@ -2328,6 +2328,10 @@ class BulgeGraph(object):
                 self.backbone_breaks_after = self.seq.backbone_breaks_after
             elif parts[0] == 'seq_ids':
                 self.seq_ids = list(map(resid_from_str, parts[1:]))
+                self.chain_ids = []
+                for res in self.seq_ids:
+                    if res.chain not in self.chain_ids:
+                        self.chain_ids.append(res.chain)
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
             elif parts[0] == 'info':

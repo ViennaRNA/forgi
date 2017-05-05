@@ -10,7 +10,7 @@ import forgi.threedee.utilities.vector as ftuv
 import logging
 log=logging.getLogger(__name__)
 
-backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"] 
+backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]
 backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
 backbone_atoms += ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]
 ring_atoms = ['C4*', 'C3*', 'C2*', 'C1*', 'O4*']
@@ -142,6 +142,35 @@ def extract_subchain_from_res_list(chain, res_list):
 
     return new_chain
 
+def extract_subchains_from_seq_ids(chains, seq_ids):
+    '''
+    Extract a portion of one or more pdb chains.
+    Creates a list of new chains which contain only
+    the specified residues copied from the original chain.
+
+    The chain ids are not modified.
+
+    :param chains: A list of chains.
+    :param seq_ids: An iterable of complete RESIDS.
+
+    :returns: A dictionary chain-id:Bio.PDB.Chain.Chain objects
+    '''
+    all_chains = {}
+    for chain in chains:
+        all_chains[chain.id]=chain
+    new_chains = {}
+    for r in seq_ids:
+        if r.chain in new_chains:
+            chain = new_chains[r.chain]
+        else:
+            chain = new_chains[r.chain] = bpdb.Chain.Chain(r.chain)
+        try:
+            chain.add(all_chains[r.chain][r.resid].copy())
+        except KeyError:
+            print (list(sorted(all_chains[r.chain].child_dict.keys())))
+            raise
+    return new_chains
+
 def is_covalent(contact):
     '''
     Determine if a particular contact is covalent.
@@ -242,7 +271,7 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
 
     #c1_list.sort(key=lambda x: x.id[1])
     #c2_list.sort(key=lambda x: x.id[1])
-    
+
     for r1,r2 in zip(c1_list, c2_list):
         if sidechains:
             anames = backbone_atoms + a_names[c1[i].resname.strip()]
@@ -311,7 +340,7 @@ def renumber_chain(chain, resids=None):
     '''
     Renumber all the residues in this chain so that they start at 1 and end at
     len(chain)
-    
+
     :param chain: A Bio.PDB.Chain object
     :return: The same chain, but with renamed nucleotides
     '''
@@ -335,52 +364,52 @@ def renumber_chain(chain, resids=None):
     return chain
 
 def output_chain(chain, filename, fr=None, to=None):
-    '''                                                                                                            
-    Dump a chain to an output file. Remove the hydrogen atoms.                                                     
-    
-    :param chain: The Bio.PDB.Chain to dump.
-    :param filename: The place to dump it.
-    '''                                                                                                            
-    class HSelect(bpdb.Select):
-        def accept_atom(self, atom):
-            if atom.name.find('H') >= 0:                                                                           
-                return False                                                                                       
-            else:
-                return True                                                                                        
-    m = bpdb.Model.Model(' ') 
-    s = bpdb.Structure.Structure(' ')
-
-    m.add(chain)
-    s.add(m)    
-
-    io = bpdb.PDBIO()
-    io.set_structure(s)
-    io.save(filename, HSelect()) 
-
-def output_multiple_chains(chains, filename):
-    '''                                                                                                            
+    '''
     Dump a chain to an output file. Remove the hydrogen atoms.
-    
+
     :param chain: The Bio.PDB.Chain to dump.
     :param filename: The place to dump it.
-    '''                                                                                                            
+    '''
     class HSelect(bpdb.Select):
         def accept_atom(self, atom):
             if atom.name.find('H') >= 0:
                 return False
             else:
-                return True          
-    m = bpdb.Model.Model(' ') 
+                return True
+    m = bpdb.Model.Model(' ')
+    s = bpdb.Structure.Structure(' ')
+
+    m.add(chain)
+    s.add(m)
+
+    io = bpdb.PDBIO()
+    io.set_structure(s)
+    io.save(filename, HSelect())
+
+def output_multiple_chains(chains, filename):
+    '''
+    Dump a chain to an output file. Remove the hydrogen atoms.
+
+    :param chain: The Bio.PDB.Chain to dump.
+    :param filename: The place to dump it.
+    '''
+    class HSelect(bpdb.Select):
+        def accept_atom(self, atom):
+            if atom.name.find('H') >= 0:
+                return False
+            else:
+                return True
+    m = bpdb.Model.Model(' ')
     s = bpdb.Structure.Structure(' ')
     for chain in chains:
         m.add(chain)
 
-    s.add(m)    
+    s.add(m)
 
     io = bpdb.PDBIO()
     io.set_structure(s)
-    io.save(filename, HSelect()) 
-    
+    io.save(filename, HSelect())
+
 def get_particular_chain(in_filename, chain_id, parser=None):
     '''
     Load a PDB file and return a particular chain.
@@ -442,15 +471,15 @@ def get_biggest_chain(in_filename, parser=None):
 
     orig_chain = chains[biggest]
     return orig_chain
-    
+
 def get_all_chains(in_filename, parser=None):
     '''
     Load the PDB file located at filename, select the longest
     chain and return it.
-    
+
     :param in_filename: The location of the original file.
-    :return: A Bio.PDB chain structure corresponding to the longest
-             chain in the structure stored in in_filename
+    :return: A list of Bio.PDB chain structures corresponding to all
+             RNA structures stored in in_filename
     '''
     if parser is None:
         #print("in_filename is {}".format(in_filename), file=sys.stderr)
@@ -461,7 +490,7 @@ def get_all_chains(in_filename, parser=None):
         else: #Cannot determine filetype by extention. Try to read first line.
             with open(in_filename) as pdbfile:
                 line = pdbfile.readline(20)
-                # According to 
+                # According to
                 #page 10 of ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
                 # a HEADER entry is mandatory.
                 if line.startswith("HEADER"):
@@ -478,7 +507,7 @@ def get_all_chains(in_filename, parser=None):
 
     chains = list(chain for chain in s.get_chains() if is_rna(chain))
     return chains
-    
+
 def change_residue_id(residue, new_id):
     chain = residue.parent
     if new_id in chain:
@@ -487,7 +516,7 @@ def change_residue_id(residue, new_id):
     chain.child_dict[new_id] = residue
     del chain.child_dict[old_id]
     residue.id = new_id
-    
+
 def rename_modified_ress(chain):
     '''
     Rename the modified residues so that they have the same
@@ -573,16 +602,16 @@ def load_structure(pdb_filename):
     This chain will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, etc...
     '''
-    chain = get_biggest_chain(pdb_filename) 
+    chain = get_biggest_chain(pdb_filename)
     return clean_chain(chain)
 
 def clean_chain(chain):
     """
     Clean a pdb chain for further use with forgi.
-    
+
     It will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, residue ids will be positive integers, ...
-    
+
     :param chaion: A Bio.PDB.Chain object
     :returns: A modified version of this chain
     """
@@ -591,7 +620,7 @@ def clean_chain(chain):
     chain = remove_hetatm(chain)
     # chain = renumber_chain(chain) #We cannot do this because we need to parse FR3D output!
     return chain
-    
+
 def interchain_contacts(struct):
     all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
 

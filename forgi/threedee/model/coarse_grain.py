@@ -42,7 +42,7 @@ log = logging.getLogger(__name__)
 class CgConstructionError(fgb.GraphConstructionError):
     """
     Exceptions raised if the CoarseGrainRNA could be constructed from the given input.
-    
+
     Raised for Errors related to the 3D information.
     """
     pass
@@ -57,7 +57,7 @@ class CgIntegrityError(fgb.GraphIntegrityError):
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
 except:
-  def profile(x): 
+  def profile(x):
     return x
 
 def remove_hetatm(lines):
@@ -83,7 +83,7 @@ def remove_hetatm(lines):
                 line = line.replace('H2U', '  G')
             else:
                 continue
-        
+
         line = line.replace('HETATM', 'ATOM  ')
         new_lines += [line]
 
@@ -113,7 +113,7 @@ def add_longrange_interactions(cg, lines):
         if abs(seq_id2 - seq_id1) > 1 and node1 != node2 and not cg.has_connection(node1, node2):
             cg.longrange[node1].add(node2)
             cg.longrange[node2].add(node1)
-            
+
 def breakpoints_from_residuemap(residue_map):
     """
     Create the list of cofold cutpoints from the list of MC-Annotate identifiers in the
@@ -139,10 +139,10 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             chain = ftup.remove_hetatm(chain)
             new_chains.append(chain)
 
-        rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
+        rna_pdb_fn = op.join(output_dir, 'temp.pdb')
         with open(rna_pdb_fn, 'w') as f:
             #We need to output in pdb format for MC-Annotate
-            ftup.output_multiple_chains(new_chains, f.name) 
+            ftup.output_multiple_chains(new_chains, f.name)
             f.flush()
 
         # first we annotate the 3D structure
@@ -151,7 +151,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
         out, err = p.communicate()
 
         lines = out.strip().split('\n')
-        
+
         # convert the mcannotate output into bpseq format
         try:
             (dotplot, residue_map) = ftum.get_dotplot(lines)
@@ -177,16 +177,16 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
         else:
             out = dotplot
         #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-        
+
         breakpoints = breakpoints_from_residuemap(residue_map)
-        
-        
+
+
         import networkx as nx
         chain_connections = nx.Graph()
         cg = CoarseGrainRNA()
-        cg.seqids_from_residue_map(residue_map)        
+        cg.seqids_from_residue_map(residue_map)
 
-        for line in out.splitlines():        
+        for line in out.splitlines():
             try:
                 from_, res, to_ = line.split()
             except:
@@ -205,7 +205,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
         return cgs
 
-def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='', 
+def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                             chain_id=None, remove_pseudoknots=True, parser=None):
     '''
     Create the coarse grain model from a pdb file and store all
@@ -216,26 +216,26 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     :param secondary_structure: Specify a particular secondary structure
                                 for this coarsification.
     :param chain_id: The id of the chain to create the CG model from.
-                    This can be one of the following: 
-                    
+                    This can be one of the following:
+
                     * The string "all" in lowercase, to extract all chains.
                     * None, to extract the biggest chain
                     * A (single-letter) string containing the chain id
-                    * A list of chain-ids. In that case only chains that match this id will be extracted.                    
+                    * A list of chain-ids. In that case only chains that match this id will be extracted.
     '''
 
     #chain = ftup.load_structure(pdb_filename)
     chains = []
     if chain_id == "all":
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
-    elif chain_id is None:  
+    elif chain_id is None:
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
     elif isinstance(chain_id, list):
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):
             raise CgConstructionError("Bad chain-id given. "
-                                      "{} not present (or not an RNA)".format( set(chain_id) - 
+                                      "{} not present (or not an RNA)".format( set(chain_id) -
                                                                                set([chain.id for chain in chains])))
     else:
         chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
@@ -246,17 +246,17 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chain = ftup.remove_hetatm(chain)
         new_chains.append(chain)
 
-    pdb_base = op.splitext(op.basename(pdb_filename))[0]        
-    
+    pdb_base = op.splitext(op.basename(pdb_filename))[0]
+
     if len(new_chains)==1:
         pdb_base += "_" + new_chains[-1].id
     else:
         pdb_base += "_" + "-".join(chain.id for chain in new_chains)
-            
+
     cg = CoarseGrainRNA()
     if sum(len(chain.get_list()) for chain in new_chains) == 0:
         return cg
-        
+
     if not secondary_structure:
         # output a pdb with RNA only (for MCAnnotate):
 
@@ -264,10 +264,10 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
         if not op.exists(output_dir):
             os.makedirs(output_dir)
-        rna_pdb_fn = op.join(output_dir, 'temp.pdb') 
+        rna_pdb_fn = op.join(output_dir, 'temp.pdb')
         with open(rna_pdb_fn, 'w') as f:
             #We need to output in pdb format for MC-Annotate
-            ftup.output_multiple_chains(new_chains, f.name) 
+            ftup.output_multiple_chains(new_chains, f.name)
             f.flush()
 
         # first we annotate the 3D structure
@@ -275,7 +275,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         out, err = p.communicate()
 
         lines = out.strip().split('\n')
-        
+
         # convert the mcannotate output into bpseq format
         try:
             (dotplot, residue_map) = ftum.get_dotplot(lines)
@@ -288,7 +288,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         #    f2.write(dotplot)
         #    f2.flush()
 
-        
+
         # remove pseudoknots
         if remove_pseudoknots:
             out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
@@ -303,13 +303,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         else:
             out = dotplot
         #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-        
+
         breakpoints = breakpoints_from_residuemap(residue_map)
         log.debug("Breakpoints are {}".format(breakpoints))
-        cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints  
-        cg.seqids_from_residue_map(residue_map)        
+        cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints
+        cg.seqids_from_residue_map(residue_map)
         add_longrange_interactions(cg, lines)
-        
+
     else:
         warnings.warn("Not adding any longrange interactions because secondary structure is given.")
         if remove_pesudoknots:
@@ -320,12 +320,14 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     # Add the 3D information about the starts and ends of the stems
     # and loops
     cg.chains = { chain.id : chain for chain in new_chains }
+    cg.chain_ids = [ chain.id for chain in new_chains ]
+    
     log.debug("First 10 seq-IDs of loaded structure are {}".format(cg.seq_ids[:10]))
     log.debug("Elements {}".format(cg.defines.keys()))
-    #Stems can span 2 chains.    
+    #Stems can span 2 chains.
     ftug.add_stem_information_from_pdb_chains(cg)
     cg.add_bulge_coords_from_stems()
-    
+
     ftug.add_loop_information_from_pdb_chains(cg)
 
 
@@ -338,7 +340,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     return cg
 
-def load_cg_from_pdb(pdb_filename, secondary_structure='', 
+def load_cg_from_pdb(pdb_filename, secondary_structure='',
                      intermediate_file_dir=None, chain_id=None,
                     remove_pseudoknots=True, parser=None):
     '''
@@ -353,12 +355,12 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
     if intermediate_file_dir is not None:
         output_dir = intermediate_file_dir
 
-        cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
+        cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
                                      secondary_structure, chain_id=chain_id,
                                     remove_pseudoknots=remove_pseudoknots, parser=parser)
     else:
         with fus.make_temp_directory() as output_dir:
-            cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir, 
+            cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
                                          secondary_structure, chain_id = chain_id,
                                         remove_pseudoknots=remove_pseudoknots, parser=parser)
 
@@ -379,10 +381,10 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
         cg.from_cg_string(lines)
 
         return cg"""
-    
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None, 
+
+def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
              chain_id=None, remove_pseudoknots=True, parser=None):
-    cg = load_cg_from_pdb(pdb_filename, secondary_structure, 
+    cg = load_cg_from_pdb(pdb_filename, secondary_structure,
                           intermediate_file_dir, chain_id=chain_id,
                          remove_pseudoknots=remove_pseudoknots, parser=parser)
 
@@ -408,24 +410,24 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
-        #: The first value of stem coordinates corresponds to the start of the stem 
+        #: The first value of stem coordinates corresponds to the start of the stem
         #: (the one with the lowest nucleotide number),
         #: The second value to the end of the stem.
-        #: If the coordinates for an element change, the virtual atom and virtual residue 
+        #: If the coordinates for an element change, the virtual atom and virtual residue
         #: coordinates are automatically invalidated.
         self.coords = None #We can only initialize this, when we know defines.keys()
         self.twists = None
         self.sampled = dict()
-        
+
         if self.defines:
             self._init_coords()
-        
+
         #:The following 5 defaultdicts are cleared when coords or twists change.
-        #: Global (carthesian) position of the virtual residue 
+        #: Global (carthesian) position of the virtual residue
         #: (=offset of the residue's coordinate-system)
         #: generated by self.add_all_virtual_residues()
-        self.vposs = c.defaultdict( dict )    
-        #: The coordinate system specific to each virtual residue 
+        self.vposs = c.defaultdict( dict )
+        #: The coordinate system specific to each virtual residue
         #: (3x3 matrix, carthesian coordiantes)
         #: generated by self.add_all_virtual_residues()
         self.vbases = c.defaultdict( dict )
@@ -436,7 +438,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         #: generated by self.add_all_virtual_residues()
         self.vinvs = c.defaultdict( dict )
 
-        #: A 3D vector. Used as hint, from what direction the Projection2D object 
+        #: A 3D vector. Used as hint, from what direction the Projection2D object
         #: should be generated in the default case.
         self.project_from = None
 
@@ -462,7 +464,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         :return: A string containing the coordinates for all of the stems.
         '''
-            
+
         out_str = ''
         for key in self.coords.keys():
             if key[0] in ["m", "i"]: continue #Bulge coordinates are redundant. They can be deduced from the stem coordinates.
@@ -479,7 +481,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         This is called during loading of the RNA structure from pdb and from cg files.
         '''
         for d in self.defines.keys():
-            if d[0] != 's':                    
+            if d[0] != 's':
                 edges = list(self.edges[d])
                 if len(edges) == 2:
                     (s1b, _) = self.get_sides(edges[0], d)
@@ -497,14 +499,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def add_all_virtual_residues(self):
         """
         Calls ftug.add_virtual_residues() for all stems of this RNA.
-    
+
         .. note::
            Don't forget to call this again if you changed the structure of the RNA,
            to avoid leaving it in an inconsistent state.
 
         .. warning::
            Virtual residues are only added to stems, not to loop regions.
-           The position of residues in loops is much more flexible, which is why virtual 
+           The position of residues in loops is much more flexible, which is why virtual
            residue positions for loops usually do not make sense.
         """
         for stem in self.stem_iterator():
@@ -562,7 +564,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 l = pos - self.defines[elem][0]
                 perc = l / self.element_length(elem)
             return self.coords[elem][0] + (self.coords[elem][1]-self.coords[elem][0]+1) * perc
-    
+
     def get_ordered_stem_poss(self):
         points = []
         for s in self.sorted_stem_iterator():
@@ -572,11 +574,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def get_ordered_virtual_residue_poss(self):
         """
         Get the coordinates of all stem's virtual residues in a consistent order.
-        
+
         This is used for RMSD calculation and is ment to replace ftug.bg_virtual_residues
-        If no virtual_residue_positions are known, self.add_all_virtual_residues() is called 
+        If no virtual_residue_positions are known, self.add_all_virtual_residues() is called
         automatically.
-    
+
         :returns: A numpy array.
         """
         if not self.v3dposs:
@@ -618,7 +620,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def steric_value(self, elements, method = "r**-2"):
         """
-        Estimate, how difficult a set of elements was to build, 
+        Estimate, how difficult a set of elements was to build,
         by counting the atom density around the center of these elements
         """
         try:
@@ -663,7 +665,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             return value
     def get_twist_str(self):
         '''
-        Place the twist vectors into a string. 
+        Place the twist vectors into a string.
 
         The format is:
 
@@ -744,10 +746,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                "They should be orthogonal to the corresponding stem vectors."
                                "Inconsistency found for {},{}".format(define, connections)
                                )
-            
+
         try:
             # Get the orientations for orienting these two stems
-            (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1, 
+            (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1,
                                                                 stem2, twist2)
             (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
         except ZeroDivisionError:
@@ -757,7 +759,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ang_type = self.connection_type(define, connections)
         seqs = self.get_define_seq_str(define, adjacent=True)
         log.debug("u %s, v %s", u, v)
-        
+
         if define[0]=="m":
             mls = self.find_mlonly_multiloops()
             for ml in mls:
@@ -777,8 +779,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
 
         angle_stat = ftms.AngleStat(stat_type,
-                                    self.name, dims[0], dims[1], u, v, t, r1, 
-                                    u1, v1, ang_type, self.defines[define], 
+                                    self.name, dims[0], dims[1], u, v, t, r1,
+                                    u1, v1, ang_type, self.defines[define],
                                     seqs)
 
         return angle_stat
@@ -786,7 +788,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def get_stats(self, d):
         '''
         Calls get_loop_stat/ get_bulge_angle_stats or get_stem_stats, depending on the element d.
-        
+
         :returns: A 1- or 2 tuple of stats (2 in case of bulges. One for each direction)
         '''
         if d[0]=="s":
@@ -806,7 +808,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             elif d[0] == "t":
                 stat.stat_type="3prime"
             return (stat,)
-        
+
     def get_loop_stat(self, d):
         '''
         Return the statistics for this loop.
@@ -822,17 +824,17 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         loop_stat.bp_length = self.get_length(d)
         loop_stat.phys_length = ftuv.magnitude(self.coords[d][1] - self.coords[d][0])
         stem1, = self.edges[d] # Make sure there is only one edge
-        
+
         (s1b, s1e) = self.get_sides(stem1, d)
 
         stem1_vec = self.coords[stem1][s1b] - self.coords[stem1][s1e]
         twist1_vec = self.twists[stem1][s1b]
-        bulge_vec = self.coords[d][1] - self.coords[d][0] 
-        
+        bulge_vec = self.coords[d][1] - self.coords[d][0]
+
         if ftuv.magnitude(bulge_vec)<10**-3: #To avoid loops with 0 physical length. (If disconnects in the structure are modelled as loop)
             bulge_vec += (10**-3) * (stem1_vec / ftuv.magnitude(stem1_vec))
 
-        (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec, 
+        (r,u,v) = ftug.get_stem_separation_parameters(stem1_vec, twist1_vec,
                                                       bulge_vec)
         (loop_stat.r, loop_stat.u, loop_stat.v) = (r, u, v)
         loop_stat.r = loop_stat.phys_length # Will this cause problems in other parts of the code base???
@@ -844,16 +846,16 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             loop_stat.stat_type = "3prime"
         return loop_stat
 
-    def get_bulge_angle_stats(self, bulge):               
+    def get_bulge_angle_stats(self, bulge):
         '''
-        Return the angle stats for a particular bulge. These stats describe 
+        Return the angle stats for a particular bulge. These stats describe
         the relative orientation of the two stems that it connects.
 
         :param bulge: The name of the bulge.
         :param connections: The two stems that are connected by it.
         :return: The angle statistics in one direction and angle statistics in
-                 the other direction                    
-        '''  
+                 the other direction
+        '''
         if bulge == 'start':
             return (ftms.AngleStat(), ftms.AngleStat())
 
@@ -890,14 +892,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     stack_bag1|=stack_bag2
                     del helices[j]
                     break
-            else: 
+            else:
                 break
         return helices
     def is_stacking(self, bulge, method="Tyagi", verbose=False):
         """
         Reports, whether the stems connected by the given bulge are coaxially stacking.
 
-        
+
 
         :param bulge: STRING. Name of a interior loop or multiloop (e.g. "m3")
         :param method": STRING. "Tyagi": Use cutoffs from doi:10.1261/rna.305307, PMCID: PMC1894924.
@@ -912,18 +914,18 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def _is_stacking_CG(self, bulge, verbose=False):
         """"""
         stem1, stem2 = self.connections(bulge)
-        angle = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0], 
+        angle = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0],
                                self.coords[stem2][1]-self.coords[stem2][0])
         if angle>math.pi/2:
-            angle=math.pi-angle 
+            angle=math.pi-angle
         if angle>math.radians(45):
             if verbose: print("Angle {}>45".format(math.degrees(angle)))
             return False
-        shear_angle1 = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0], 
+        shear_angle1 = ftuv.vec_angle(self.coords[stem1][1]-self.coords[stem1][0],
                                self.coords[bulge][1]-self.coords[bulge][0])
         if shear_angle1>math.pi/2:
-            shear_angle1=math.pi-shear_angle1 
-        shear_angle2 = ftuv.vec_angle(self.coords[stem2][1]-self.coords[stem2][0], 
+            shear_angle1=math.pi-shear_angle1
+        shear_angle2 = ftuv.vec_angle(self.coords[stem2][1]-self.coords[stem2][0],
                                self.coords[bulge][1]-self.coords[bulge][0])
         if shear_angle2>math.pi/2:
             shear_angle2=math.pi-shear_angle2
@@ -944,7 +946,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             focus of the paper, only the method for the detection of stacking in pdb files.
         """
         assert bulge[0] in "mi"
-        DISTANCE_CUTOFF = [ 14, 6 ]        
+        DISTANCE_CUTOFF = [ 14, 6 ]
         ANGLE_CUTOFF    = [  math.acos(0.75), math.acos(0.8) ]
         SHEAR_ANGLE_CUTOFF = math.radians(60) #Relaxed compared to 60 in the paper, because we use
                                               #virtual atom positions
@@ -974,28 +976,28 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if verbose: print ("Angle {} > {}".format(angle, ANGLE_CUTOFF[is_flush]))
             return False
         #Shear Angle
-        shear_angle1 = ftuv.vec_angle(normalvec1, bp_center2-bp_center1)        
+        shear_angle1 = ftuv.vec_angle(normalvec1, bp_center2-bp_center1)
         if shear_angle1>math.pi/2:
             shear_angle1=math.pi-shear_angle1
-        if shear_angle1>SHEAR_ANGLE_CUTOFF: 
+        if shear_angle1>SHEAR_ANGLE_CUTOFF:
             if verbose: print ("Shear angle 1 {} > {}".format(shear_angle1, SHEAR_ANGLE_CUTOFF))
             return False
         shear_angle2 = ftuv.vec_angle(normalvec2, bp_center1-bp_center2)
         if shear_angle2>math.pi/2:
             shear_angle2=math.pi-shear_angle2
-        if shear_angle2>SHEAR_ANGLE_CUTOFF: 
+        if shear_angle2>SHEAR_ANGLE_CUTOFF:
             if verbose: print ("Shear angle 2 {} > {}".format(shear_angle2, SHEAR_ANGLE_CUTOFF))
             return False
         #Shear Offset
-        #Formula for distance between a point and a line 
+        #Formula for distance between a point and a line
         #from http://onlinemschool.com/math/library/analytic_geometry/p_line/
         if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
-                            ftuv.magnitude(normalvec2))>SHEAR_OFFSET_CUTOFF: 
+                            ftuv.magnitude(normalvec2))>SHEAR_OFFSET_CUTOFF:
             if verbose: print ("Shear offset 1 wrong:", (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec2))/
                                                          ftuv.magnitude(normalvec2)), ">" , SHEAR_OFFSET_CUTOFF)
             return False
         if (ftuv.magnitude(np.cross((bp_center1-bp_center2), normalvec1))/
-                            ftuv.magnitude(normalvec1))>SHEAR_OFFSET_CUTOFF: 
+                            ftuv.magnitude(normalvec1))>SHEAR_OFFSET_CUTOFF:
             if verbose: print ("Shear offset 2 wrong")
             return False
         return True
@@ -1011,7 +1013,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         ss = ftms.StemStat()
         ss.pdb_name = self.name
-        #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])                                            
+        #ss.bp_length = abs(self.defines[stem][0] - self.defines[stem][1])
         ss.bp_length = self.stem_length(stem)
         ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])
         ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])
@@ -1073,7 +1075,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 self.project_from=np.array(parts[1:], dtype=float)
         self.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
 
-    
+
     def to_cg_file(self, filename):
         '''
         Save this structure as a string in a file.
@@ -1090,7 +1092,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         Calculate the radius of gyration of this structure.
 
-        :param method: A STRING. one of 
+        :param method: A STRING. one of
                        "fast" (use only coordinates of coarse grained stems) or
                        "vres" (use virtual residue coordinates of stems)
 
@@ -1141,41 +1143,41 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return self
 
     def get_twists(self, node):
-        ''' 
+        '''
         Get the array of twists for this node. If the node is a stem,
-        then the twists will simply those stored in the array. 
-        If the node is an interior loop or a junction segment, 
-        then the twists will be the ones that are adjacent to it. 
+        then the twists will simply those stored in the array.
+        If the node is an interior loop or a junction segment,
+        then the twists will be the ones that are adjacent to it.
         If the node is a hairpin loop or a free end, then the same twist
         will be duplicated and returned twice.
 
         :param node: The name of the node
-        '''                                                                                                           
+        '''
         if node[0] == 's':
-            return self.twists[node]                                                                                  
+            return self.twists[node]
 
         connections = list(self.edges[node])
         (s1b, s1e) = self.get_sides(connections[0], node)
 
         if len(connections) == 1:
-            vec = ftuv.normalize(ftuv.vector_rejection( 
+            vec = ftuv.normalize(ftuv.vector_rejection(
                                   self.twists[connections[0]][s1b],
-                                  self.coords[node][1] -  
+                                  self.coords[node][1] -
                                   self.coords[node][0]))
 
-            return (vec,vec)                                                  
+            return (vec,vec)
 
-        if len(connections) == 2: 
-            # interior loop or junction segment                                                                  
-            (s2b, s2e) = self.get_sides(connections[1], node) 
-            bulge_vec = (self.coords[connections[0]][s1b] - 
-                         self.coords[connections[1]][s2b])                                                            
-            return (ftuv.normalize(ftuv.vector_rejection( 
+        if len(connections) == 2:
+            # interior loop or junction segment
+            (s2b, s2e) = self.get_sides(connections[1], node)
+            bulge_vec = (self.coords[connections[0]][s1b] -
+                         self.coords[connections[1]][s2b])
+            return (ftuv.normalize(ftuv.vector_rejection(
                     self.twists[connections[0]][s1b], bulge_vec)),
-                    ftuv.normalize(ftuv.vector_rejection(self.twists[connections[1]][s2b], bulge_vec)))  
+                    ftuv.normalize(ftuv.vector_rejection(self.twists[connections[1]][s2b], bulge_vec)))
 
-        # uh oh, this shouldn't happen since every node                 
-        # should have either one or two edges 
+        # uh oh, this shouldn't happen since every node
+        # should have either one or two edges
         assert False
 
     def element_physical_distance(self, element1, element2):
@@ -1192,12 +1194,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                               self.coords[element2][1])
 
         return ftuv.vec_distance(i1, i2)
-    
+
 
     def longrange_iterator(self, filter_connected=False):
         '''
         Iterate over all long range interactions in this molecule.
-        
+
         :param filter_connected: Filter interactions that are between elements
                                  which are connected (mostly meaning multiloops
                                  which connect to the same end of the same stem)
@@ -1233,11 +1235,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         Keep track of all linked nodes. Used for the generation of the minimal spanning tree.
 
-        This overrides the function in bulge graph and adds an additional sorting criterion 
+        This overrides the function in bulge graph and adds an additional sorting criterion
         with lowest priority.
         Elements that have no entry in self.sampled should be preferedly broken.
-        This should ensure that the minimal spanning tree is the same after saving 
-        and loading an RNA to/from a file, if changes of the minimal spanning tree 
+        This should ensure that the minimal spanning tree is the same after saving
+        and loading an RNA to/from a file, if changes of the minimal spanning tree
         were performed by ernwin.
         """
         priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
@@ -1245,7 +1247,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                                 self.iloop_iterator()),
                        key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)),not x in self.sampled))
         return edges
-  
+
     def coords_to_directions(self):
         """
         The directions of each coarse grain element. One line per cg-element.
@@ -1274,7 +1276,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.coords["s0"]=np.array([0,0,0]), directions[sorted_defines.index("s0")]
 
         for stem1, link, stem2 in self.build_order: #Bulges and stems
-            conn = self.connection_ends(self.connection_type(link, [stem1,stem2]))            
+            conn = self.connection_ends(self.connection_type(link, [stem1,stem2]))
             link_dir = self.get_link_direction(stem1, stem2, link)
             if link_dir==1:
                 self.coords[link] = self.coords[stem1][conn[0]], self.coords[stem1][conn[0]]+directions[sorted_defines.index(link)]
@@ -1310,7 +1312,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         Get virtual atoms for a key.
 
-        :param key: An INTEGER: The number of the base in the RNA. 
+        :param key: An INTEGER: The number of the base in the RNA.
                     Returns a dict {"C8":np.array([x,y,z]), ...}
         """
         if isinstance(key, int):
@@ -1335,7 +1337,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if not self._virtual_atom_cache:
                 return
         except AttributeError: #Happens during deepcopy
-            return 
+            return
 
         define=self.defines[key]
 
@@ -1379,7 +1381,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             rotation_matrix[0,0]=1
             rotation_matrix[0,0]=rotation_matrix[2,2]=cosi
             rotation_matrix[0,2]=-s
-            rotation_matrix[2,0]=s        
+            rotation_matrix[2,0]=s
         elif axis=="z":
             rotation_matrix[2,2]=1
             rotation_matrix[0,0]=rotation_matrix[1,1]=cosi
@@ -1387,9 +1389,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             rotation_matrix[1,0]=s
         self.coords.rotate(rotation_matrix)
         self.twists.rotate(rotation_matrix)
-        
+
         #Caching for virtual residues
-        self.vposs = c.defaultdict( dict )    
+        self.vposs = c.defaultdict( dict )
         self.vbases = c.defaultdict( dict )
         self.vvecs = c.defaultdict( dict )
         self.v3dposs = c.defaultdict( dict )
@@ -1399,18 +1401,18 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.
-    
+
     ..warning::
 
         If the list of elements in sg is inconsistent (e.g. contains only parts of a multiloop)
-        this will currently proceed without an error but return an 
+        this will currently proceed without an error but return an
         inconsistent CoarseGrainRNA object!
-  
+
     :param cg: The original structure
     :param sg: The list of elements that are in the subgraph
     '''
     new_cg = CoarseGrainRNA()
-    
+
     for d in sg:
         new_cg.defines[d] = cg.defines[d]
         new_cg._init_coords()
@@ -1418,11 +1420,10 @@ def cg_from_sg(cg, sg):
         if d in cg.twists:
             new_cg.twists[d] = cg.twists[d]
         new_cg.longrange[d] = cg.longrange[d]
-        
+
         for x in cg.edges[d]:
             if x in new_cg.defines.keys():
                 new_cg.edges[d].add(x)
                 new_cg.edges[x].add(d)
-    
-    return new_cg"""
 
+    return new_cg"""
