@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from builtins import zip
+from builtins import zip, str
 
 import Bio.PDB as bp
 import Bio.PDB as bpdb
@@ -213,6 +213,10 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
     :param stem1_vec: The vector representing the axis of stem1
     :param twist1: The twist of stem1 closest to the bulge
     :param stem2_vec: The vector representing teh axis of stem2
+
+    :returns: (r,u,v,t) where r,u,v = the stem orientation in polar coordinates
+                        and t is the twist parameter.
+
     '''
 
     # Since we will denote the orientation of stem2 with respect to stem1
@@ -472,204 +476,24 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
 
     return furthest_pos
 
-
-def estimate_mids_core(chain, start1, start2, end1, end2):
-    '''
-    Get the start and end points of a helix.
-
-    Presume that start1, start2, end1 and end2 are
-    integers. This may not working with the resname mapping
-    where there are missing nucleotides and such.
-
-    Otherwise, it should only be called with the ideal stems
-    which are numbered in a very orderely manner.
-    '''
-    start1 = int(start1)
-    start2 = int(start2)
-
-    end1 = int(end1)
-    end2 = int(end2)
-    #assert(abs(end1 - start1) == abs(end2 - start2))
-
-    fragment_length = end1 - start1 + 1
-
-    if fragment_length < 2:
-        error_str = "Helix shorter than 1 nucleotide: "
-        error_str += "start1: %d start2: %d " % (start1, start2)
-        error_str += "end1: %d end2: %d " % (end1, end2)
-        error_str += "fragment_length: %d" % (fragment_length)
-        raise Exception(error_str)
-
-    # get the vector between the CA atoms of the two starting residues
-    # as well as for the two next residues
-    start_vec1 = (chain[start1][catom_name].get_vector() -
-                  chain[start2][catom_name].get_vector())
-    end_vec1 = (chain[end1][catom_name].get_vector() -
-                chain[end2][catom_name].get_vector())
-
-    # get the vector between the CA atoms of the two ending residues
-    # as  well as for the two previous residues
-    start_vec2 = (chain[start1 + 1][catom_name].get_vector() -
-                  chain[start2 - 1][catom_name].get_vector())
-    end_vec2 = (chain[end1 - 1][catom_name].get_vector() -
-                chain[end2 + 1][catom_name].get_vector())
-
-    # a vector kind of pointing in the direction of the helix
-    start_norm_vec = bp.Vector(np.cross(start_vec1.get_array(),
-                                        start_vec2.get_array()))
-    start_norm_vec.normalize()
-
-    # another vector kind of pointing in the directions of the helix
-    end_norm_vec = bp.Vector(np.cross(end_vec2.get_array(),
-                                      end_vec1.get_array()))
-    end_norm_vec.normalize()
-
-    start_vec1 = -start_vec1
-    end_vec1 = -end_vec1
-
-    # I guess we're converting them to Vector format in a weird sort of way...
-    # otherwise these steps don't really make sense
-    start_axis_vec = start_vec1 + bp.Vector([0., 0., 0.])
-    start_axis_vec.normalize()
-
-    end_axis_vec = end_vec1 + bp.Vector([0., 0., 0.])
-    end_axis_vec.normalize()
-
-    start_origin = chain[start1][catom_name].get_vector()
-    end_origin = chain[end1][catom_name].get_vector()
-
-    start_y_vec = bp.Vector(np.cross(start_norm_vec.get_array(),
-                                     start_axis_vec.get_array()))
-    start_y_vec.normalize()
-    start_c_vec = (start_axis_vec + start_y_vec) / 2
-    start_c_vec.normalize()
-    start_c_norm = start_origin + start_c_vec / (1 / 8.4)
-
-    end_y_vec = bp.Vector(np.cross(end_norm_vec.get_array(),
-                                   end_axis_vec.get_array()))
-    end_y_vec.normalize()
-    end_c_vec = (end_axis_vec + end_y_vec) / 2
-    end_c_vec.normalize()
-    end_c_norm = end_origin + end_c_vec / (1 / 8.4)
-
-    mid1 = start_c_norm
-    mid2 = end_c_norm
-
-    return (mid1, mid2)
-
-"""
-#The implementation of this is incomplete!
-def basenormals_mids(chain, start1, start2, end1, end2):
-    '''
-    Calculate a helix axis based on the base normal vectors.
-
-    See Laederach et al., RNA 2007.
-    '''
-
-    # calculate the scatter matrix using the base normal vectors
-    scatter = np.zeros((3, 3))
-    base_normals = np.array([0., 0., 0.])
-
-    residue_numbers = [i for i in range(start1, end1 + 1)]
-    residue_numbers += [i for i in range(end2, start2 + 1)]
-
-    for r in residue_numbers:
-        c2 = chain[r]['C2'].get_vector().get_array()
-        c4 = chain[r]['C4'].get_vector().get_array()
-        c6 = chain[r]['C6'].get_vector().get_array()
-
-        xi = cuv.normalize(np.cross(c2 - c4, c4 - c6))
-        base_normals += xi
-        scatter += np.dot(xi, xi.T)
-
-    scatter /= float(len(residue_numbers))
-    base_normals /= float(len(residue_numbers))
-
-    # compute the eigenvalues and eigenvectors
-    w, v = np.linalg.eig(scatter)
-    index, value = max(enumerate(w), key=operator.itemgetter(1))
-
-    # estimate the start and end position, which will be converted scaled
-    # to the position of the helix axis
-    ''''
-    start_pos = (chain[start1][catom_name].get_vector().get_array() +
-                 chain[start2][catom_name].get_vector().get_array()) / 2.
-
-
-    start1_catom = chain[start1 + real_stem_length][catom_name]
-    start2_catom = chain[start2 + real_stem_length][catom_name]
-    end_pos = (chain[start1 + start1_catom.get_vector().get_array() +
-                 chain[start2 - start2_catom.get_vector().get_array()) / 2.
-
-    print start_pos, end_pos
-    '''
-"""
-
-"""
-def get_mids_core_a(chain, start1, start2, end1, end2,
-                    use_template=True):
-    '''
-    Estimate the stem cylinder using the old method and then refine it
-    using fitted parameters.
-    '''
-    warnings.warn("This is deprecated and will be removed in the future!", stacklevel=2)
-    if use_template:
-        template_stem_length = 30
-    else:
-        template_stem_length = end1 - start1 + 1
-
-    real_stem_length = end1 - start1
-
-    tstart1 = 1
-    tstart2 = template_stem_length * 2
-    tend1 = template_stem_length
-    tend2 = template_stem_length + 1
-
-    template_filename = 'ideal_1_%d_%d_%d.pdb' % (tend1, tend2, tstart2)
-    filename = forgi.threedee.data_file(op.join('data',
-                       template_filename))
-    ideal_chain = ftup.get_first_chain(filename)
-
-    est_mids = estimate_mids_core(ideal_chain, tstart1, tstart2, tend1, tend2)
-    est_mids = [est_mids[0].get_array(), est_mids[1].get_array()]
-
-    start_pos = (chain[start1][catom_name].get_vector().get_array() +
-                 chain[start2][catom_name].get_vector().get_array()) / 2.
-
-    start1_catom = chain[start1 + real_stem_length][catom_name]
-    start2_catom = chain[start2 - real_stem_length][catom_name]
-
-    end_pos = (start1_catom.get_vector().get_array() +
-               start2_catom.get_vector().get_array()) / 2.
-
-    atom_poss = []
-    residue_numbers = [i for i in range(tstart1, tend1 + 1)]
-    residue_numbers += [i for i in range(tend2, tstart2 + 1)]
-
-    for rn in residue_numbers:
-        #atom_poss += [chain[rn]['C1*'].get_vector().get_array()]
-        pot_atoms = ['P', 'O3*', 'C3*', 'C4*', 'C5*', 'O5*', 'C1*']
-        for atom in pot_atoms:
-            try:
-                atom_poss += [ideal_chain[rn][atom].get_vector().get_array()]
-            except KeyError:
-                pass
-
-    mids = fit_circle(est_mids, np.array(atom_poss), start_pos, end_pos)
-    return mids
-"""
-
-def stem_from_chains(cg, chains, define):
+def stem_from_chains(cg, chains, elem_name):
     """
+    This function combines get_mids and get_twists into one more efficient routine.
     """
-    stem_length = cg.stem_length(define)
+    stem_length = cg.stem_length(elem_name)
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
     filename = forgi.threedee.data_file(op.join('data', template_filename))
-    ideal_chain = ftup.get_first_chain(filename)
-
+    try:
+        ideal_chain = ftup.get_first_chain(filename)
+    except IOError:
+        if stem_length>40:
+            raise ValueError("Cannot create coordinates. "
+                         "Helices with lengths greater than 40 are currently not supported in forgi.")
+        else:
+            raise
     stem_chain = bpdb.Chain.Chain(' ')
-    residue_ids = cg.get_resseqs(define, seq_ids=True)
+    residue_ids = cg.get_resseqs(elem_name, seq_ids=True)
     for strand in residue_ids:
         for res_id in strand:
             try:
@@ -714,7 +538,7 @@ def stem_from_chains(cg, chains, define):
 
     #Perform some verification
     if False:
-        verify_vatom_positions(residue_ids, chains, coords, twists, "stem_{}_from_chain".format(define))
+        verify_vatom_positions(residue_ids, chains, coords, twists, "stem_{}_from_chain".format(elem_name))
 
     return coords, twists
 
@@ -772,111 +596,8 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     plt.show()
     #assert False
 
-
-def get_mids_core(cg, chains, define,
-                  use_template=True, seq_ids=True):
-    """
-    :param chains: A dictionary chain_id:chain
-    """
-    log.debug("get_mids_core: chains {}, define {}, all defines {}, breakpoints {}".format(chains, define, cg.defines, cg.backbone_breaks_after))
-
-    stem_length = cg.stem_length(define)
-
-    #filename =
-    template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
-                                                  stem_length * 2)
-    filename = forgi.threedee.data_file(op.join('data', template_filename))
-    try:
-        ideal_chain = ftup.get_first_chain(filename)
-    except IOError:
-        if stem_length>40:
-            raise ValueError("Cannot create coordinates. "
-                         "Helices with lengths greater than 40 are currently not supported in forgi.")
-        else:
-            raise
-
-    # extract the coordinates of the stem from the input chain
-    # and place them into a new chain
-    stem_chain = bpdb.Chain.Chain(' ')
-    resnames = cg.get_resseqs(define, seq_ids=seq_ids)
-    for strand in resnames:
-        for resname in strand:
-            stem_chain.add(chains[resname[0]][resname[1]]) #seqids now contain chain
-
-
-    # get the rotation and translation to rotate the ideal chain onto
-    # the stem chain
-    rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,
-                          superimpose=True, apply_sup=False)[2]
-
-    # get the mids of the ideal chain using the fit method
-    '''
-    ideal_mids = get_mids_core_a(ideal_chain, 1, stem_length * 2,
-                                 stem_length, stem_length + 1,
-                                 use_template=use_template)
-    '''
-
-    # average length of a base-pair: 2.547
-    mult=0.1
-    ideal_mids = np.array([[0., 0., mult],
-                  np.array([0., 0., -mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
-
-    # apply the rotation and translation to get the mids of the
-    # target chain
-    #chain_new_mids[0] =
-
-    chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
-    #chain_new_mids = [chain_new_mids[0] + mult * stem_vec, chain_new_mids[1] - mult * stem_vec]
-
-    # return it as a Bio.PDB.Vector for some strange reason
-    return (bpdb.Vector(chain_new_mids[0]), bpdb.Vector(chain_new_mids[1]))
-
-
-def get_twists_core(cg, chains, define,
-                    mids=None, method=cc.Configuration.mids_method):
-    '''
-    Get the vectors indicating the twist of the cylinder. In actuality,
-    this will be the projection of the (ca_start1 - mid1) onto the plane
-    defined by (mid2 - mid1).
-    '''
-    seq_ids = True
-
-    if mids is None:
-        mids = get_mids(cg, chains, define,
-                        method=cc.Configuration.mids_method,
-                        seq_ids=seq_ids)
-
-    resnames_forw, resnames_backw = cg.get_resseqs(define, seq_ids) #Error if single_stranded
-
-
-    # the first nucleotide of the first strand
-    # and the last nucleotide of the second strand
-    start_vec1 = chains[resnames_forw[0][0]][resnames_forw[0][1]][catom_name].get_vector() - mids[0] #seq_id now contains chain
-    end_vec1 = chains[resnames_forw[-1][0]][resnames_forw[-1][1]][catom_name].get_vector() - mids[1] #seq_id now contains chain
-
-    # the last nucleotide of the first strand
-    # and the first nucleotide of the second strand
-    start_vec1a = chains[resnames_backw[-1][0]][resnames_backw[-1][1]][catom_name].get_vector() - mids[0] #seq_id now contains chain
-    end_vec1a = chains[resnames_backw[0][0]][resnames_backw[0][1]][catom_name].get_vector() - mids[1] #seq_id now contains chain
-
-    notch1 = cuv.vector_rejection(start_vec1.get_array(),
-                                  (mids[0] - mids[1]).get_array())
-    notch2 = cuv.vector_rejection(end_vec1.get_array(),
-                                  (mids[1] - mids[0]).get_array())
-
-    notch1a = cuv.vector_rejection(start_vec1a.get_array(),
-                                   (mids[0] - mids[1]).get_array())
-    notch2a = cuv.vector_rejection(end_vec1a.get_array(),
-                                   (mids[1] - mids[0]).get_array())
-
-    #print >>sys.stderr, "twist_angle_1:", cuv.vec_angle(notch1, notch1a)
-    #print >>sys.stderr, "twist_angle_2:", cuv.vec_angle(notch2, notch2a)
-
-    return (cuv.normalize(notch1 + notch1a), cuv.normalize(notch2 + notch2a))
-    #return (normalize(notch1), normalize(notch2))
-
-
-def get_mids(cg, chains, define, method=cc.Configuration.mids_method, seq_ids=True):
+#Should be deprecated in future
+def get_mids(cg, chains, elem_name, seq_ids=True):
     '''
     Get the mid points of the abstract cylinder which represents a helix.
 
@@ -886,29 +607,11 @@ def get_mids(cg, chains, define, method=cc.Configuration.mids_method, seq_ids=Tr
     :return: An array of two vectors representing the two endpoints of the
              helix.
     '''
+    coords, twists = stem_from_chains(cg, chains, elem_name)
+    return coords
 
-    if method == 'template':
-        return get_mids_core(cg, chains, define, seq_ids=seq_ids)
-    elif method == 'fit':
-        raise NotImplementedError("This does not work for multiple chains.")
-        #return get_mids_fit_method(cg, chains, define, seq_ids=seq_ids)
-    elif method == 'superimpose':
-        return get_mids_core(cg, chains, define,
-                             use_template=False, seq_ids=seq_ids)
-    else:
-        print >>sys.stderr, "Unknown mids method:", method
-        sys.exit(1)
-
-    '''
-    elif method == 'estimate':
-        return estimate_mids_core(cg, chain, define,
-                                  stem_length=stem_length)
-    elif method == 'basenormals':
-        return basenormals_mids(cg, chain, define,
-                                stem_length=stem_length)
-    '''
-
-def get_twists(cg, chain, define, mids=None, method=cc.Configuration.mids_method):
+#Should be deprecated in future
+def get_twists(cg, chain, elem_name, mids=None):
     '''
     Get the projection of the (ca - mids) vectors onto the helix axis. This,
     in a sense will define how much the helix twists.
@@ -918,16 +621,8 @@ def get_twists(cg, chain, define, mids=None, method=cc.Configuration.mids_method
     :param define: The name of the define
     :return: Two vectors which represent the twist of the helix.
     '''
-
-    return get_twists_core(cg, chain, define, mids, method)
-
-
-'''
-def get_helix_vector(chain, start1, start2, end1, end2):
-    (mid1, mid2) = get_mids(chain, start1, start2, end1, end2)
-    return mid2 - mid1
-'''
-
+    coords, twists = stem_from_chains(cg, chain, elem_name)
+    return twists
 
 def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     '''
@@ -1208,7 +903,7 @@ def junction_virtual_atom_distance(bg, bulge):
     pos1=bg.defines[connecting_stems[0]][i1]
     pos2=bg.defines[connecting_stems[1]][i2]
     if bulge[0]=="m":
-        assert set([pos1, pos2]) == bg.flanking_nucleotides(bulge)
+        assert list(sorted([pos1, pos2])) == bg.flanking_nucleotides(bulge)
     if i1==0 or i1==2:
         a1="P"
     else:
@@ -1473,195 +1168,6 @@ def extract_define_residues(define, chain):
         for x in range(r[0], r[1] + 1):
             c.add(chain[x])
     return c
-
-
-def fit_circle_old(mids, points, start_pos, end_pos, chain, stem_length,
-                   define):
-    '''
-    Calculate the projection of points on the plane normal to
-    vec and fit a circle to them.
-    '''
-    template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
-                                                  stem_length * 2)
-    filename = op.join(cc.Configuration.stem_fragment_dir,
-                       template_filename)
-    ideal_chain = ftup.get_first_chain(filename)
-
-    '''
-    rotran = ftup.pdb_rmsd(ideal_chain, chain, sidechains=False,
-            superimpose=True, apply_sup=False)[2]
-    '''
-    rotran = ftup.pdb_rmsd(chain, ideal_chain, sidechains=False,
-                          superimpose=True, apply_sup=False)[2]
-
-    ideal_mids = get_mids_core(ideal_chain, 1, stem_length * 2,
-                               stem_length, stem_length + 1)
-
-    ideal_mids = np.array([ideal_mids[0].get_array(),
-                           ideal_mids[1].get_array()])
-
-    chain_new_mids = np.dot(ideal_mids, rotran[0]) + rotran[1]
-
-    return chain_new_mids
-
-    vec = mids[1] - mids[0]
-    basis = cuv.create_orthonormal_basis(vec)
-    new_points = cuv.change_basis(points.T, basis, cuv.standard_basis).T
-    p = new_points[:, 1:]
-    f_3(mids[1] - mids[0], points, mids[0][1:])
-
-    v1, ier = so.leastsq(f_3, mids[1] - mids[0], args=(points, mids[0][1:]),
-                         maxfev=10000)
-    basis1 = cuv.create_orthonormal_basis(v1)
-
-    points1 = cuv.change_basis(points.T, basis1, cuv.standard_basis).T
-    start_pos1 = cuv.change_basis(start_pos, basis1, cuv.standard_basis)
-    end_pos1 = cuv.change_basis(end_pos, basis1, cuv.standard_basis)
-
-    center_5 = circle_fit(points1[:, 1:])
-    r5 = np.mean(calc_R(*center_5, p=points1[:, 1:]))
-    center_estimate = mids[0][1:]
-    center_2, ier = so.leastsq(f_2, center_estimate, args=(p))
-    center_4 = circle_fit(p)
-    r4 = np.mean(calc_R(*center_4, p=p))
-
-    center_x = center_4
-    rx = r4
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, adjustable='box', aspect=1)
-    ax.plot(new_points[:, 1], new_points[:, 2], "o")
-    ax.plot(points1[:, 1], points1[:, 2], "go")
-    ax.plot(center_x[0], center_x[1], 'ro')
-    ax.plot(center_5[0], center_5[1], 'co')
-
-    mids = cuv.change_basis(np.array(mids).T, basis, cuv.standard_basis).T
-    ax.plot(mids[0][1], mids[0][2], 'yo')
-
-    #ax.plot(mids[0][1], mids[0][2], 'go')
-    circle1 = plt.Circle(center_x, rx, color='r', alpha=0.5)
-    circle2 = plt.Circle(mids[0][1:], rx, color='y', alpha=0.5)
-    circle3 = plt.Circle(center_5, r5, color='g', alpha=0.5)
-
-    fig.gca().add_artist(circle1)
-    fig.gca().add_artist(circle2)
-    fig.gca().add_artist(circle3)
-
-    mids_stem_basis = [[start_pos1[0], center_5[0], center_5[1]],
-                       [end_pos1[0], center_5[0], center_5[1]]]
-    mids_standard_basis = cuv.change_basis(np.array(mids_stem_basis).T,
-                                           cuv.standard_basis,
-                                           basis1).T
-    '''
-    # works!
-    mids_stem_basis = [[nmids[0][0], center_4[0], center_4[1]],
-                       [nmids[1][0], center_4[0], center_4[1]]]
-    mids_standard_basis = cuv.change_basis(np.array(mids_stem_basis).T,
-                                           cuv.standard_basis,
-                                           basis).T
-    '''
-
-    plt.show()
-    return mids_standard_basis
-
-
-def get_mids_fit_method(cg, chain, define):
-    '''
-    Estimate the endpoints of the cylinder axis by fitting it and using
-    the rmsd of the best fit circle as the function to minimize.
-    '''
-    atom_poss = []
-    residue_numbers = list(it.chain(*cg.get_resseqs(define)))
-    ideal_chain = chain
-
-    for rn in residue_numbers:
-        #atom_poss += [chain[rn]['C1*'].get_vector().get_array()]
-        try:
-            '''
-            for atom in chain[rn].get_list():
-                atom_poss += [atom.get_vector().get_array()]
-            '''
-
-            atom_poss += [ideal_chain[rn]['P'].get_vector().get_array()]
-            atom_poss += [ideal_chain[rn]['O3*'].get_vector().get_array()]
-            atom_poss += [ideal_chain[rn]['C3*'].get_vector().get_array()]
-            atom_poss += [ideal_chain[rn]['C4*'].get_vector().get_array()]
-            atom_poss += [ideal_chain[rn]['C5*'].get_vector().get_array()]
-            atom_poss += [ideal_chain[rn]['O5*'].get_vector().get_array()]
-            atom_poss += [ideal_chain[rn]['C1*'].get_vector().get_array()]
-        except KeyError:
-            pass
-
-    points = np.array(atom_poss)
-    mids = estimate_mids_core(chain, start1, start2, end1, end2)
-    mids = np.array([mids[0].get_array(), mids[1].get_array()])
-    vec = mids[1] - mids[0]
-    v1, ier = so.leastsq(f_3, vec, args=(points, mids[0][1:]), maxfev=10000)
-
-    start_pos = (chain[start1]['C1*'].get_vector().get_array() +
-                 chain[start2]['C1*'].get_vector().get_array()) / 2.
-    end_pos = (chain[end1]['C1*'].get_vector().get_array() +
-               chain[end2]['C1*'].get_vector().get_array()) / 2.
-
-    basis1 = cuv.create_orthonormal_basis(v1)
-    points1 = cuv.change_basis(points.T, basis1, cuv.standard_basis).T
-    start_pos1 = cuv.change_basis(start_pos.T, basis1, cuv.standard_basis).T
-    end_pos1 = cuv.change_basis(end_pos.T, basis1, cuv.standard_basis).T
-
-    center = circle_fit(points1[:, 1:])
-    mids_stem_basis = [[start_pos1[0], center[0], center[1]],
-                       [end_pos1[0], center[0], center[1]]]
-    mids_standard_basis = cuv.change_basis(np.array(mids_stem_basis).T,
-                                           cuv.standard_basis,
-                                           basis1).T
-    return [bpdb.Vector(mids_standard_basis[0]),
-            bpdb.Vector(mids_standard_basis[1])]
-
-#Seems to be unused at least since version 0.3
-def stem_vec_from_circle_fit(bg, chain, stem_name='s0'):
-    '''
-    Attempt to find the stem direcion vector given a set of atom positions.
-
-    This will be done by solving for the stem_vector, then using that
-    to project the atoms onto a plane orthogonal to that vector. On that plane,
-    a circle will be fit to the positions of the atoms. The stem vector that
-    gives a circle with the least residuals will be considered the ideal
-    stem vector.
-
-    :return: stem_vector
-    '''
-    atom_poss = []
-    #stem_name = 's0'
-    for rn in bg.stem_res_numbers(stem_name):
-        #atom_poss += [chain[rn]['C1*'].get_vector().get_array()]
-        try:
-            atom_poss += [chain[rn]['P'].get_vector().get_array()]
-            atom_poss += [chain[rn]['O3*'].get_vector().get_array()]
-            atom_poss += [chain[rn]['C3*'].get_vector().get_array()]
-            atom_poss += [chain[rn]['C4*'].get_vector().get_array()]
-            atom_poss += [chain[rn]['C5*'].get_vector().get_array()]
-            atom_poss += [chain[rn]['O5*'].get_vector().get_array()]
-            atom_poss += [chain[rn]['C1*'].get_vector().get_array()]
-        except KeyError:
-            pass
-
-    define = bg.defines[stem_name]
-    start_pos = (chain[define[0]]['C1*'].get_vector().get_array() +
-                 chain[define[3]]['C1*'].get_vector().get_array()) / 2.
-    end_pos = (chain[define[1]]['C1*'].get_vector().get_array() +
-               chain[define[2]]['C1*'].get_vector().get_array()) / 2.
-
-    mids = get_mids(bg, chain, bg.defines[stem_name])
-    # use the original calculation to provide an estimate for the
-    # optimized stem position calculation
-    resnames = [bg.seq_ids[d-1] for d in bg.defines[stem_name]]
-    stem_chain = extract_define_residues(resnames, chain)
-
-    mids = (mids[0].get_array(), mids[1].get_array())
-    return fit_circle_old(mids, np.array(atom_poss),
-                          start_pos, end_pos, stem_chain,
-                          bg.stem_length(stem_name), bg.defines[stem_name])
 
 #Seems to be unused at least since version 0.3
 def receptor_angle(bg, l, s):

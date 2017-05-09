@@ -107,7 +107,7 @@ class LoopStat:
             self.seqs = parts[8:]
 
     def __str__(self):
-        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))+" ".join(self.seqs)
+        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))+" "+" ".join(self.seqs)
 
     def __eq__(self, other):
         if type(self)==type(other):
@@ -517,7 +517,7 @@ class ConstructionStats:
     conf_stats = None
 
 
-def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_angle_stats(filename, refresh=False):
     '''
     Load the statistics about inter the helix-helix orientations from a file.
 
@@ -615,7 +615,7 @@ def get_one_d_stat_dims(d, stats, min_entries=1):
     return available_stats
 
 
-def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_stem_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -647,7 +647,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     return ConstructionStats.stem_stats
 
 
-def get_fiveprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_fiveprime_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -673,7 +673,7 @@ def get_fiveprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     return ConstructionStats.fiveprime_stats
 
-def get_threeprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_threeprime_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -699,7 +699,7 @@ def get_threeprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     return ConstructionStats.threeprime_stats
 
-def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_loop_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -815,7 +815,7 @@ class ClusteredAngleStats(object):
         return available_stats
 
 class ConformationStats(object):
-    def __init__(self, stats_file=cbc.Configuration.stats_file, clustered_angle_stats_file=None):
+    def __init__(self, stats_file, clustered_angle_stats_file=None):
         if clustered_angle_stats_file is None:
             self.angle_stats = get_angle_stats(stats_file, refresh=True)
         else:
@@ -904,7 +904,7 @@ class ConformationStats(object):
         return all_stats
 
 class FilteredConformationStats(ConformationStats):
-    def __init__(self, stats_file=cbc.Configuration.stats_file, filter_filename=None, filter_prob=1):
+    def __init__(self, stats_file, filter_filename=None, filter_prob=1):
         """
         :param filter_prob: Return the filtered stats with this probability, else all stats.
                             Default=1 (100%)
@@ -967,7 +967,7 @@ class FilteredConformationStats(ConformationStats):
         # No filtered stats found. Return normal stats for this element.
         return super(FilteredConformationStats, self).sample_stats(bg, elem)
 
-def get_conformation_stats(stats_file=cbc.Configuration.stats_file, angle_stats_file=None):
+def get_conformation_stats(stats_file, angle_stats_file=None):
     if ConstructionStats.conf_stats is not None:
         return ConstructionStats.conf_stats
     else:

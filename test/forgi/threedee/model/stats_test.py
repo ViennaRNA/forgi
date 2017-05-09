@@ -21,6 +21,7 @@ class TestStats(unittest.TestCase):
     def testRandom(self):
         ftms.RandomAngleStats(self.angle_stats)
 
+    @unittest.skip("Sampling of stats moved to fess.builder.stat_storage")
     def test_filtered_stats(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3pdr_X.cg')
         cs = ftms.ConformationStats('test/forgi/threedee/data/real.stats')
@@ -77,21 +78,6 @@ class TestStats(unittest.TestCase):
         as2 = ftms.AngleStat(u=1.57, v=0., r1=1, u1=0, v1=0)
         fud.pv('as1.diff(as2)')
 
-    def test_sample_stats(self):
-        fa_text = """>1
-        AGAGGUUCUAGCUACACCCUCUAUAAAAAACUAAGG
-        (((((............)))))..............
-        """
-        
-        cg = ftmc.CoarseGrainRNA()
-        cg.from_fasta(fa_text)
-
-        conf_stats = ftms.get_conformation_stats()
-        stats = conf_stats.sample_stats(cg, 't0')
-
-        fud.pv('cg.to_cg_string()')
-        fud.pv('stats')
-
     def test_3gx5_stats(self):
         cs = ftms.ConformationStats('test/forgi/threedee/data/3gx5.stats')
 
@@ -101,7 +87,7 @@ class TestStats(unittest.TestCase):
     def test_angle_stat_get_angle(self):
         as1 = ftms.AngleStat(u=math.pi/2, v=0., r1=1, u1=1.57, v1=1.1)
         #self.assertAlmostEqual(as1.get_angle(), 0)
-        
+
         as1 = ftms.AngleStat(u=math.pi/2, v=math.pi/4, r1=4, u1=1.27, v1=1.5)
         self.assertAlmostEqual(as1.get_angle(), math.pi/4)
 
@@ -114,7 +100,7 @@ class TestStats(unittest.TestCase):
         cg = ftmc.CoarseGrainRNA()
         cg.from_fasta(fa_text)
 
-        cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])        
+        cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])
         cg.twists["s0"]=np.array([0.,-1.,0]), np.array([0.,1.,0.])
 
         cg.coords["s1"]=np.array([0.,0.,2.]), np.array([0.,1.,3.])
@@ -125,15 +111,15 @@ class TestStats(unittest.TestCase):
 
         print (cg.coords["i0"])
         print (cg.twists)
-        
+
         as1, as2 = cg.get_bulge_angle_stats("i0")
-        
-        self.assertAlmostEqual(as1.get_angle(), 
-                    ftuv.vec_angle(cg.coords["s0"][0]-cg.coords["s0"][1], 
+
+        self.assertAlmostEqual(as1.get_angle(),
+                    ftuv.vec_angle(cg.coords["s0"][0]-cg.coords["s0"][1],
                                    cg.coords["s1"][1]-cg.coords["s1"][0])
                               )
-        self.assertAlmostEqual(as2.get_angle(), 
-                    ftuv.vec_angle(cg.coords["s1"][1]-cg.coords["s1"][0], 
+        self.assertAlmostEqual(as2.get_angle(),
+                    ftuv.vec_angle(cg.coords["s1"][1]-cg.coords["s1"][0],
                                    cg.coords["s0"][0]-cg.coords["s0"][1])
                               )
         self.assertAlmostEqual(as1.get_angle(), math.radians(135))
@@ -147,7 +133,7 @@ class TestStats(unittest.TestCase):
         cg = ftmc.CoarseGrainRNA()
         cg.from_fasta(fa_text)
 
-        cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])        
+        cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])
         cg.twists["s0"]=np.array([0.,-1.,0]), np.array([0.,1.,0.])
 
         cg.coords["s1"]=np.array([0.,0.,2.]), np.array([0.,0.,3.])
@@ -158,9 +144,8 @@ class TestStats(unittest.TestCase):
 
         print (cg.coords["i0"])
         print (cg.twists)
-        
+
         as1, as2 = cg.get_bulge_angle_stats("i0")
-        
+
         self.assertAlmostEqual(as1.get_angle(), math.radians(180))
         self.assertAlmostEqual(as2.get_angle(), math.radians(180))
-
