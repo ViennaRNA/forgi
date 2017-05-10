@@ -450,7 +450,6 @@ def get_bulge_centroid(chain, define):
     #print >>sys.stderr, "res_nums:", res_nums
     return get_centroid(chain, res_nums)
 
-
 def get_furthest_c_alpha(cg, chain, stem_end, d):
     '''
     Get the position of the c-alpha atom furthest from the end of the stem.
@@ -1213,10 +1212,6 @@ def add_stem_information_from_pdb_chains(cg):
         if d[0] == 's':
             coords, twists = stem_from_chains(cg, new_chains, d)
             cg.coords[d] = coords
-            #mids = get_mids(cg, new_chains, d)
-            #twists = get_twists(cg, new_chains, d)
-            #cg.coords[d] = (mids[0].get_array(), mids[1].get_array())
-
             stem_dir = cg.coords[d][1]-cg.coords[d][0]
             cg.twists[d] = twists
             assert abs(np.dot(stem_dir, twists[0]))<10**-10
@@ -1557,53 +1552,6 @@ def vres_to_global_coordinates(vres_pos, vres_basis, positions):
         pos = ftuv.change_basis(v_pos, ftuv.standard_basis, vres_basis)
         newpos[key] = pos + vres_pos
     return newpos
-
-"""def add_atoms(coords, twists, define, side, seq, new_coords):
-    stem_len = define[1] - define[0] + 1
-
-    for i in range(stem_len):
-        if side == 0:
-            resnum = define[0] + i
-        else:
-            resnum = define[1] - i
-        resname = seq[resnum-1]
-
-        vbasis = virtual_res_basis_core(coords, twists, i, stem_len)
-        vpos = virtual_res_3d_pos_core(coords, twists, i, stem_len)
-
-        for a in ftus.avg_stem_vres_atom_coords[side][resname].items():
-            c = a[1]
-            new_coords[resnum][a[0]] = np.dot(vbasis.transpose(), c) + vpos[0]
-
-    return new_coords
-
-def cg_atoms(cg):
-    '''
-    Place atoms as if every segment was a helix.
-    '''
-    new_coords = col.defaultdict(dict)
-
-    for d in cg.defines:
-        coords = cg.coords[d]
-        twists = cg.get_twists(d)
-
-        if d[0] == 's' or d[0] == 'i':
-            for c in chunks(cg.defines[d], 2):
-                for side in range(2):
-                    new_coords = add_atoms(coords, twists, c, side, cg.seq, new_coords)
-        elif d[0] == 'm':
-            side = cg.get_strand(d)
-
-            if len(cg.defines[d]) > 0:
-                new_coords = add_atoms(coords, twists, cg.defines[d], side, cg.seq, new_coords)
-
-        elif d[0] == 'f':
-            new_coords = add_atoms(coords, twists, cg.defines[d], 0, cg.seq, new_coords)
-
-        elif d[0] == 't':
-            new_coords = add_atoms(coords, twists, cg.defines[d], 1, cg.seq, new_coords)
-
-    return new_coords"""
 
 def element_distance(cg, l1, l2):
     '''

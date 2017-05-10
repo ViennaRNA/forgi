@@ -312,7 +312,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     else:
         warnings.warn("Not adding any longrange interactions because secondary structure is given.")
-        if remove_pesudoknots:
+        if remove_pseudoknots:
             warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
         cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
 
@@ -321,7 +321,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     # and loops
     cg.chains = { chain.id : chain for chain in new_chains }
     cg.chain_ids = [ chain.id for chain in new_chains ]
-    
+
     log.debug("First 10 seq-IDs of loaded structure are {}".format(cg.seq_ids[:10]))
     log.debug("Elements {}".format(cg.defines.keys()))
     #Stems can span 2 chains.
@@ -1313,7 +1313,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Get virtual atoms for a key.
 
         :param key: An INTEGER: The number of the base in the RNA.
-                    Returns a dict {"C8":np.array([x,y,z]), ...}
+
+        :returns: A dict {atom:coords}, e.g. {"C8":np.array([x,y,z]), ...}
         """
         if isinstance(key, int):
              if key not in self._virtual_atom_cache:

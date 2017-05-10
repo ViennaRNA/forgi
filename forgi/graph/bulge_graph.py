@@ -66,7 +66,8 @@ def resid_from_str(resstr):
         chain, resid = resstr.split(":")
     else:
         resid=resstr
-        chain=None
+        log.debug("No chain given in string {!r}".format(resstr))
+        chain='A'
     idparts=resid.split(".")
     if len(idparts)==1:
         idparts.append(" ")
@@ -421,7 +422,7 @@ class Sequence(str):
             for i in range(*key.indices(len(self)+1)): #http://stackoverflow.com/questions/16652482/python-iterate-slice-object#16652549
                 if i==0: continue
                 out += self[i]
-                log.debug("i is {}, out is now {}".format(i, out))
+                #log.debug("i is {}, out is now {}".format(i, out))
             return out
         elif isinstance(key, int):
             key-=1 #From 1-based to 0 based indexing.
@@ -810,7 +811,7 @@ class BulgeGraph(object):
         try:
             return self.seq_ids.index(seq_id)+1
         except ValueError as e:
-            log.error("seq_id is {}, self.seq_ids is {}".format(seq_id, self.seq_ids))
+            log.debug("seq_id is {}, self.seq_ids is {}".format(seq_id, self.seq_ids))
             raise
 
     def _create_bulge_graph(self, stems, bulges):

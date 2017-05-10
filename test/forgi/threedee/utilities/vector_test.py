@@ -73,6 +73,18 @@ class TestVector(unittest.TestCase):
         self.assertTrue( ftuv.is_almost_colinear(vec2, np.dot(vec1, rotMat)) )
         self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2), vec1) )
 
+    def test_get_double_alignment_matrix(self):
+        vec1=np.array([0.5,0.7,0.9])
+        vec1b=np.array([9.,0,-5.])
+        vec2=np.array([0.345,3.5,0.55])
+        vec2b=np.array([0., 0.55, -3.5])
+        rotMat=ftuv.get_double_alignment_matrix((vec1, vec1b),(vec2, vec2b))
+        self.assertTrue( ftuv.is_almost_colinear(vec2, np.dot(vec1, rotMat)) )
+        self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2), vec1) )
+        self.assertTrue( ftuv.is_almost_colinear(vec2b, np.dot(vec1b, rotMat)) , msg="{} not colinear with {}".format(vec2b, np.dot(vec1b, rotMat)))
+        self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2b), vec1b) , msg="{} not colinear with {}".format(np.dot(rotMat, vec2b), vec1b))
+
+
     def test_get_orthogonal_unit_vector(self):
         vecs=[np.array([1., 0., 0.]), np.array([2.7, 5.6, 8.2]), np.array([11., -40., 0.]), np.array([-1., 0., 0.])]
         for vec in vecs:
@@ -83,7 +95,7 @@ class TestVector(unittest.TestCase):
         vec=np.array([0., 0., 0.])
         #ortVec=ftuv.get_orthogonal_unit_vector(vec)
         #Currently, ortVec==nan, so the assertion fails.
-        #self.assertAlmostEqual(np.dot(ortVec, vec), 0, places=10) 
+        #self.assertAlmostEqual(np.dot(ortVec, vec), 0, places=10)
         #self.assertAlmostEqual(np.linalg.norm(ortVec), 1, places=10)
     def test_seg_intersect(self):
         #normal case
@@ -138,15 +150,28 @@ class TestVector(unittest.TestCase):
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
     def test_is_almost_colinear(self):
+        #Zero-vector is colinear to everything
         self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0.,0.,0.])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0.4,0,0]),np.array([0.,0.,0.])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0,20,0])))
+
+        #10*-9 is treated as zero
+        self.assertTrue(ftuv.is_almost_colinear(np.array([0,1,1]),np.array([10**-10,2,2])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([1,0,1]),np.array([2, 10**-10,2])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([1,1,0]),np.array([2,2,10**-10])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([10**-10,2,2]), np.array([0,1,1])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([2, 10**-10,2]), np.array([1,0,1])))
+        self.assertTrue(ftuv.is_almost_colinear(np.array([2,2,10**-10]), np.array([1,1,0])))
+
+        #Colinear
         self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,2]),np.array([0.,0.,3.])))
         self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,7]),np.array([9.,18.,21.])))
         self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,0]),np.array([9.,18.,0.])))
         self.assertTrue(ftuv.is_almost_colinear(np.array([3,0,8]),np.array([9.,0.,24.])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0,20,0])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0.0004,0,0]),np.array([0.,0.,0.])))
 
-        self.assertFalse(ftuv.is_almost_colinear(np.array([0,0,3]),np.array([2.,0,0])))
+        #Not colinear
+        self.assertFalse(ftuv.is_almost_colinear(np.array([0,0,3.]),np.array([2.,0,0])))
+        self.assertFalse(ftuv.is_almost_colinear(np.array([0,3.,0]),np.array([0,0,3.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,4.,-6.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([3.,4.,6.])))
         self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,5.,6.])))
@@ -162,12 +187,12 @@ class TestVector(unittest.TestCase):
                                                       "is not {}".format(mp, np.array([1,1,-4])))
     def test_create_orthonormal_basis(self):
         #Note: If the input vectors are not orthogonal, the result are 3 vectors that might not form a basis.
-        basis1=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]))      
+        basis1=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]))
         self.assertTrue( ftuv.is_almost_colinear(basis1[0], np.array([0.,0.,2.])) )
-        basis2=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]))    
+        basis2=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]))
         self.assertTrue( ftuv.is_almost_colinear(basis2[0], np.array([0.,0.,2.])) )
         self.assertTrue( ftuv.is_almost_colinear(basis2[1], np.array([0.,3.6,0])) )
-        basis3=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]), np.array([1.,0,0]))    
+        basis3=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]), np.array([1.,0,0]))
         self.assertTrue( ftuv.is_almost_colinear(basis3[0], np.array([0.,0.,2.])) )
         self.assertTrue( ftuv.is_almost_colinear(basis3[1], np.array([0.,3.6,0])) )
         self.assertTrue( ftuv.is_almost_colinear(basis3[2], np.array([1.,0,0])) )
@@ -194,7 +219,7 @@ class TestVector(unittest.TestCase):
     def test_change_basis(self):
         new_v = ftuv.change_basis(np.array([1.,2.,3.]), np.array([[0,1.,0],[1.,0,0],[0,0,1.]]), np.array([[1.,0,0],[0,1.,0],[0,0,1.]]))
         nptest.assert_allclose(new_v, np.array([2.,1.,3.]))
-                    
+
     def test_change_basis_vectorized(self):
         coords = np.array([[0., 1., 2.], [1., 2., 3.], [0., 0., 2.], [0.,1.,0.]])
         basis1 = np.array([[0.,0.,1.],[0.,1.,0.],[1.,0.,1.]])
@@ -206,27 +231,27 @@ class TestVector(unittest.TestCase):
 
     def benchmark_change_basis(self):
         import timeit
-        t1 = timeit.timeit("ftuv.change_basis_vectorized(coords, new_basis, old_basis)", 
+        t1 = timeit.timeit("ftuv.change_basis_vectorized(coords, new_basis, old_basis)",
                           "import forgi.threedee.utilities.vector as ftuv; import numpy as np; coords = (np.random.rand(100,3)-0.5)*20;  "
                           "new_basis=np.array([[1.,2.,0.],[0.,6.,7],[0.4,0,9.3]]);old_basis=np.array([[1.5,2.5,0],[1.5,0,7],[0,0.7,9.3]])", number = 1000000)
-        t2 = timeit.timeit("for coord in coords: ftuv.change_basis(coord, new_basis, old_basis)", 
+        t2 = timeit.timeit("for coord in coords: ftuv.change_basis(coord, new_basis, old_basis)",
                           setup="import numpy as np; coords = (np.random.rand(100,3)-0.5)*20; import forgi.threedee.utilities.vector as ftuv; "
                                 "new_basis=np.array([[1.,2.,0.],[0.,6.,7],[0.4,0,9.3]]);old_basis=np.array([[1.5,2.5,0],[1.5,0,7],[0,0.7,9.3]])", number = 1000000)
         self.assertLess(int(t1)+50,int(t2))
-        
+
     def test_det3x3(self):
         m1 = np.array([[1.,2,3],[4.,5,6],[7,8,9]])
         m2 = np.array([[1,1,2],[3,3,4.],[6,6,8]])
         m3= np.array([[2,-4,6],[-2,6.,9],[0,0,1]])
         for m in [m1,m2,m3]:
             self.assertEqual(ftuv.det3x3(m), np.linalg.det(m))
-            
+
     def test_get_centroid(self):
         coords = [[0.,1.,1.],[1,1,1],[-1,2,3],[3, 0, 0],[-3,1,0]]
         nptest.assert_almost_equal(ftuv.get_vector_centroid(np.array(coords)), [0, 1, 1])
         nptest.assert_almost_equal(ftuv.get_vector_centroid(coords), [0, 1, 1])
     def test_center_on_centroid(self):
         coords = [[0.,1.,1.],[1,1,1],[-1,2,3],[3, 0, 0],[-3,1,0]]
-        nptest.assert_almost_equal(ftuv.center_on_centroid(np.array(coords)), 
+        nptest.assert_almost_equal(ftuv.center_on_centroid(np.array(coords)),
                     [[0,0.,0],[1,0,0],[-1,1,2],[3,-1,-1],[-3,0,-1]])
         nptest.assert_equal(ftuv.get_vector_centroid(ftuv.center_on_centroid(coords)), [0,0.,0])

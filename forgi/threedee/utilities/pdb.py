@@ -142,7 +142,7 @@ def extract_subchain_from_res_list(chain, res_list):
 
     return new_chain
 
-def extract_subchains_from_seq_ids(chains, seq_ids):
+def extract_subchains_from_seq_ids(all_chains, seq_ids):
     '''
     Extract a portion of one or more pdb chains.
     Creates a list of new chains which contain only
@@ -150,15 +150,13 @@ def extract_subchains_from_seq_ids(chains, seq_ids):
 
     The chain ids are not modified.
 
-    :param chains: A list of chains.
+    :param all_chains: A dictionary {chainid:chains}.
     :param seq_ids: An iterable of complete RESIDS.
 
     :returns: A dictionary chain-id:Bio.PDB.Chain.Chain objects
     '''
-    all_chains = {}
-    for chain in chains:
-        all_chains[chain.id]=chain
     new_chains = {}
+    assert isinstance(all_chains, dict)
     for r in seq_ids:
         if r.chain in new_chains:
             chain = new_chains[r.chain]
@@ -167,7 +165,7 @@ def extract_subchains_from_seq_ids(chains, seq_ids):
         try:
             chain.add(all_chains[r.chain][r.resid].copy())
         except KeyError:
-            print (list(sorted(all_chains[r.chain].child_dict.keys())))
+            log.info(list(sorted(all_chains[r.chain].child_dict.keys())))
             raise
     return new_chains
 
@@ -388,9 +386,9 @@ def output_chain(chain, filename, fr=None, to=None):
 
 def output_multiple_chains(chains, filename):
     '''
-    Dump a chain to an output file. Remove the hydrogen atoms.
+    Dump multiple chains to an output file. Remove the hydrogen atoms.
 
-    :param chain: The Bio.PDB.Chain to dump.
+    :param chains: An iterable of Bio.PDB.Chain to dump.
     :param filename: The place to dump it.
     '''
     class HSelect(bpdb.Select):
@@ -408,8 +406,14 @@ def output_multiple_chains(chains, filename):
 
     io = bpdb.PDBIO()
     io.set_structure(s)
-    io.save(filename, HSelect())
-
+    try:
+        io.save(filename, HSelect())
+    except:
+        log.error("Could not output PDB with residues:")
+        log.error(list(r.get_id() for r in bpdb.Selection.unfold_entities(m, 'R')))
+        log.error(" in chains:")
+        log.error(list(c.get_id() for c in bpdb.Selection.unfold_entities(m, 'C')))
+        raise
 def get_particular_chain(in_filename, chain_id, parser=None):
     '''
     Load a PDB file and return a particular chain.
@@ -492,8 +496,8 @@ def get_all_chains(in_filename, parser=None):
                 line = pdbfile.readline(20)
                 # According to
                 #page 10 of ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
-                # a HEADER entry is mandatory.
-                if line.startswith("HEADER"):
+                # a HEADER entry is mandatory. Biopython sometime starts directly with ATOM
+                if line.startswith("HEADER") or line.startswith("ATOM"):
                     #print("HEADER found", file=sys.stderr)
                     parser = bpdb.PDBParser()
                 else:
