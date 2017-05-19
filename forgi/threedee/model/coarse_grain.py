@@ -446,6 +446,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.chains = {} #the PDB chain if loaded from a PDB file
 
         self.incomplete_elements = [] # An estimated list of cg-elements with missing residues.
+
         if cg_file is not None:
             self.from_file(cg_file)
             if not self.defines:
@@ -1075,6 +1076,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if parts[0] == 'project':
                 self.project_from=np.array(parts[1:], dtype=float)
         self.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
+        self.incomplete_elements = ftug.get_incomplete_elements(self)
 
 
     def to_cg_file(self, filename):

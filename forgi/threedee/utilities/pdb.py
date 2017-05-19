@@ -38,6 +38,9 @@ for v in side_chain_atoms.values():
     all_rna_atoms += v
 all_rna_atoms = set(all_rna_atoms)
 
+RNA_RESIDUES = [ "A", "U", "G", "C", 'rA', 'rC', 'rG', 'rU', 'DU']
+RNA_HETERO = ['H_PSU', 'H_5MU', 'H_5MC','H_1MG','H_H2U']
+
 interactions = [('P', 'O5*'),
                 ('P', "O5'"),
                 ('P', 'OP1'),
@@ -517,9 +520,13 @@ def change_residue_id(residue, new_id):
     if new_id in chain:
         raise ValueError("Cannot change id")
     old_id = residue.id
-    chain.child_dict[new_id] = residue
-    del chain.child_dict[old_id]
     residue.id = new_id
+    try:
+        del chain.child_dict[old_id]
+    except KeyError:
+        pass # New version of biopython. Id is a property
+    else:
+        chain.child_dict[new_id] = residue
 
 def rename_modified_ress(chain):
     '''
@@ -645,12 +652,13 @@ def is_rna(chain):
     molecule.
 
     :param chain: A Bio.PDB.Chain molecule
-    :return: True if it is an RNA molecule, False otherwise
+    :return: True if it is an RNA molecule, False if at least one residue is not an RNA.
     '''
     for res in chain:
-        if res.resname.strip() in ['A', 'C', 'G', 'U']:
-            return True
-    return False
+        if res.resname.strip() not in RNA_RESIDUES and res.id[0] not in RNA_HETERO:
+            log.info("Chain %s is not RNA, because %s is not RNA", chain, res)
+            return False
+    return True
 
 def is_protein(chain):
     '''

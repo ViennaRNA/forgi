@@ -1240,10 +1240,10 @@ def get_incomplete_elements(cg):
     coordinates could be determined experimentally. This function gives
     an estimated list of cg-elements, which are affected by missing residues.
     """
-    incomplete = []
+    incomplete = set()
     for elem in cg.defines:
         if _is_incomplete_element(cg, elem):
-            incomplete.append(elem)
+            incomplete.add(elem)
     return incomplete
 
 def _is_incomplete_element(cg, elem):
@@ -1259,7 +1259,11 @@ def _is_incomplete_element(cg, elem):
     for side in cg.define_range_iterator(elem, adjacent = (not elem[0]=="s")):
         prev_seq_id = None
         for pos in range(side[0], side[1]+1):
-            seq_id = cg.seq_ids[pos-1]
+            try:
+                seq_id = cg.seq_ids[pos-1]
+            except IndexError:
+                log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
+                raise
             if prev_seq_id is not None:
                 if seq_id.resid[1]>prev_seq_id.resid[1]+1:
                     # We have a break.

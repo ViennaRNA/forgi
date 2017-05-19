@@ -374,6 +374,13 @@ class Sequence(str):
     def __len__(self):
         return super(Sequence, self).__len__()-self.count('&')
 
+    def is_valid(self):
+        wrong_chars = set(self)-set("AUGC&")
+        if wrong_chars:
+            log.info("Illegal characters are {}".format(wrong_chars))
+            return False
+        return True
+
     def subseq_with_cutpoints(self,start, stop):
         if stop is None:
             stop=len(self)+1
@@ -514,7 +521,10 @@ class BulgeGraph(object):
         if value is None:
             self._seq = None
         else:
-            self._seq = Sequence(value)
+            seq = Sequence(value)
+            if not seq.is_valid():
+                raise GraphConstructionError("Cannot set sequence. Illegal character in string '{}'".format(value))
+            self._seq = seq
         stack = ''.join(list(traceback.format_stack())[-3:-1])
         log.debug(stack + "Sequence set to {}".format(self._seq))
 
