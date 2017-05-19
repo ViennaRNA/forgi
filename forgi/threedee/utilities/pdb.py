@@ -512,7 +512,7 @@ def get_all_chains(in_filename, parser=None):
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
 
-    chains = list(chain for chain in s.get_chains() if is_rna(chain))
+    chains = list(chain for chain in s.get_chains() if contains_rna(chain))
     return chains
 
 def change_residue_id(residue, new_id):
@@ -546,9 +546,15 @@ def rename_modified_ress(chain):
             r.resname = '  G'
         elif r.resname == ' rU':
             r.resname = '  U'
+            
+            
+
 
         # rename modified residues
-        if r.id[0] == 'H_PSU':
+        if r.id[0] == 'H_1MA':
+            r.resname = '  A'
+            change_residue_id(r, (' ', r.id[1], r.id[2]))
+        elif r.id[0] == 'H_PSU':
             r.resname = '  U'
             change_residue_id(r, (' ', r.id[1], r.id[2]))
         elif r.id[0] == 'H_5MU':
@@ -607,6 +613,7 @@ def remove_hetatm(chain):
 
     return chain
 
+    
 def load_structure(pdb_filename):
     '''
     Load a Bio.PDB.Structure object and return the largest chain.
@@ -629,7 +636,6 @@ def clean_chain(chain):
     chain = rename_modified_ress(chain)
     chain = rename_rosetta_atoms(chain)
     chain = remove_hetatm(chain)
-    # chain = renumber_chain(chain) #We cannot do this because we need to parse FR3D output!
     return chain
 
 def interchain_contacts(struct):
@@ -646,7 +652,7 @@ def interchain_contacts(struct):
 
     return ic_pairs
 
-def is_rna(chain):
+def contains_rna(chain):
     '''
     Determine if a Bio.PDB.Chain structure corresponds to an RNA
     molecule.
@@ -655,10 +661,9 @@ def is_rna(chain):
     :return: True if it is an RNA molecule, False if at least one residue is not an RNA.
     '''
     for res in chain:
-        if res.resname.strip() not in RNA_RESIDUES and res.id[0] not in RNA_HETERO:
-            log.info("Chain %s is not RNA, because %s is not RNA", chain, res)
-            return False
-    return True
+        if res.resname.strip() not in RNA_RESIDUES:
+            return True
+    return False
 
 def is_protein(chain):
     '''
