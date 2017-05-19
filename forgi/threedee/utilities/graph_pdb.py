@@ -1232,6 +1232,18 @@ def add_bulge_information_from_pdb_chain(bg, chain):
                   " Use cg.add_bulge_coords_from_stems instead!")
     bg.add_bulge_coords_from_stems()
 
+def get_incomplete_elements(cg):
+    """
+    Get a list of cg-elements which have missing residues in the PDB.
+
+    One of many problems with PDB data are residues, for which no
+    coordinates could be determined experimentally. This function gives a
+    list of cg-elements, which are affected by missing residues.
+    """
+    raise NotImplementedError()
+
+
+
 def add_loop_information_from_pdb_chains(bg):
     seq_ids=True
     #log.info("add_loop_information_from_pdb_chains called")

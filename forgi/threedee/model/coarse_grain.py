@@ -20,6 +20,7 @@ from ...utilities.observedDict import observedDict
 from .Element import CoordinateStorage, LineSegmentStorage
 import Bio.PDB as bpdb
 import collections as c
+from collections import Container #in python3 Collection would be more appropriate
 import contextlib
 import numpy as np
 import scipy.spatial
@@ -230,7 +231,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
-    elif isinstance(chain_id, list):
+    elif isinstance(chain_id, Container):
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):

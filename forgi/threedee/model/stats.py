@@ -910,7 +910,6 @@ class FilteredConformationStats(ConformationStats):
                             Default=1 (100%)
         """
         super(FilteredConformationStats, self).__init__(stats_file)
-
         self.filtered = None
         self.filtered_stats = None
         self.filter_prob = filter_prob
