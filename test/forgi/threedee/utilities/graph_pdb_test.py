@@ -26,6 +26,36 @@ class TestGraphPDB(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_get_incomplete_elements(self):
+        db = "(((...(((...).)))))"
+        cg = ftmc.CoarseGrainRNA(dotbracket_str=db)
+        # Residue number 3 is missing. Probably bulged out from stem 0
+        seq_ids = map(str, [1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
+        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        self.assertEqual(ftug.get_incomplete_elements(cg), ["s0"])
+        # Residue number 4 is missing between s0 and i0
+        seq_ids = map(str, [1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
+        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        self.assertEqual(ftug.get_incomplete_elements(cg), ["i0"])
+        # Residue number 5 is missing inside i0
+        seq_ids = map(str, [1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
+        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        self.assertEqual(ftug.get_incomplete_elements(cg), ["i0"])
+        # Residue number 17 is missing between s0 and s1, ==> i0
+        seq_ids = map(str, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20])
+        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        self.assertEqual(ftug.get_incomplete_elements(cg), ["i0"])
+        # Residue number 10 is missing  ==> h0
+        seq_ids = map(str, [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19,20])
+        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        self.assertEqual(ftug.get_incomplete_elements(cg), ["h0"])
+        # Multiple residues are missing
+        seq_ids = map(str, [1,2,4,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22])
+        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        self.assertEqual(set(ftug.get_incomplete_elements(cg)), set(["h0", "s0", "i0"]))
+
+
+
     def test_add_loop_information_from_pdb_chain(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1A34.pdb')
 

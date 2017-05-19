@@ -328,9 +328,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     #Stems can span 2 chains.
     ftug.add_stem_information_from_pdb_chains(cg)
     cg.add_bulge_coords_from_stems()
-
     ftug.add_loop_information_from_pdb_chains(cg)
-
+    cg.incomplete_elements = ftug.get_incomplete_elements(cg)
 
     assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
     #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
@@ -446,6 +445,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.longrange = c.defaultdict( set )
         self.chains = {} #the PDB chain if loaded from a PDB file
 
+        self.incomplete_elements = [] # An estimated list of cg-elements with missing residues.
         if cg_file is not None:
             self.from_file(cg_file)
             if not self.defines:

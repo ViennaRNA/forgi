@@ -1234,14 +1234,38 @@ def add_bulge_information_from_pdb_chain(bg, chain):
 
 def get_incomplete_elements(cg):
     """
-    Get a list of cg-elements which have missing residues in the PDB.
+    Get an estimated list of cg-elements which have missing residues in the PDB.
 
     One of many problems with PDB data are residues, for which no
-    coordinates could be determined experimentally. This function gives a
-    list of cg-elements, which are affected by missing residues.
+    coordinates could be determined experimentally. This function gives
+    an estimated list of cg-elements, which are affected by missing residues.
     """
-    raise NotImplementedError()
+    incomplete = []
+    for elem in cg.defines:
+        if _is_incomplete_element(cg, elem):
+            incomplete.append(elem)
+    return incomplete
 
+def _is_incomplete_element(cg, elem):
+    """
+    Returns True, if there is a gap in the pdb's seq-ids between nucleotides in
+    this  element.
+
+    This is a strong indicator for missing residues, but should be compared to
+    the REMARK 465 header in the future. (TODO)
+    """
+    # Adjacent=True for loops, but false for stems:
+    # A break between a stem and a loop counts towards the loop.
+    for side in cg.define_range_iterator(elem, adjacent = (not elem[0]=="s")):
+        prev_seq_id = None
+        for pos in range(side[0], side[1]+1):
+            seq_id = cg.seq_ids[pos-1]
+            if prev_seq_id is not None:
+                if seq_id.resid[1]>prev_seq_id.resid[1]+1:
+                    # We have a break.
+                    return True
+            prev_seq_id = seq_id
+    return False
 
 
 def add_loop_information_from_pdb_chains(bg):
