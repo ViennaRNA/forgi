@@ -1,0 +1,1014 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.threedee.visual.pymol &mdash; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="top" title="forgi 0.4 documentation" href="../../../../index.html" />
+    <link rel="up" title="forgi.threedee" href="../../threedee.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.visual.pymol</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">math</span> <span class="kn">as</span> <span class="nn">m</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">collections</span> <span class="kn">as</span> <span class="nn">col</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="kn">as</span> <span class="nn">ftup</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="kn">as</span> <span class="nn">ftug</span>
+<span class="c1">#import forgi.threedee.utilities.average_stem_vres_atom_positions as cua</span>
+<span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="kn">as</span> <span class="nn">fud</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="kn">as</span> <span class="nn">cuv</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="kn">as</span> <span class="nn">ftuv</span>
+
+<span class="kn">import</span> <span class="nn">Bio.PDB.Model</span> <span class="kn">as</span> <span class="nn">bpm</span>
+<span class="kn">import</span> <span class="nn">Bio.PDB.Structure</span> <span class="kn">as</span> <span class="nn">bps</span>
+<span class="kn">import</span> <span class="nn">Bio.PDB</span> <span class="kn">as</span> <span class="nn">bp</span>
+
+
+<div class="viewcode-block" id="PymolPrinter"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter">[docs]</a><span class="k">class</span> <span class="nc">PymolPrinter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_virtual_residues</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rainbow</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">visualize_three_and_five_prime</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encompassing_stems</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stem_stem_orientations</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_cones</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cones</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spheres</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_spheres</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">virtual_atoms</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sidechain_atoms</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_specific_colors</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_text</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_function</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_twists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_longrange</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_loops</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chain</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_stem_distances</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_letters</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_axes</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_segments</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdb_file</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">movie</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_modifier</span><span class="o">=</span><span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_obj_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>     <span class="c1"># The name of the previously created</span>
+                                    <span class="c1"># object which needs to be hidden</span>
+                                    <span class="c1"># when creating a movie</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">only_elements</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="PymolPrinter.get_color_vec"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.get_color_vec">[docs]</a>    <span class="k">def</span> <span class="nf">get_color_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;green&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;forest&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;blue&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;red&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;orange&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mi">165</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;yellow&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;purple&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;white&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;cyan&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;magenta&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mi">249</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">132</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">229</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;light gray&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="o">.</span><span class="mi">8</span><span class="p">,</span> <span class="o">.</span><span class="mi">8</span><span class="p">,</span> <span class="o">.</span><span class="mi">8</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;dark gray&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s1">&#39;middle gray&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="o">.</span><span class="mi">6</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_sphere"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_sphere">[docs]</a>    <span class="k">def</span> <span class="nf">add_sphere</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                   <span class="n">color_rgb</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span>
+
+        <span class="k">if</span> <span class="n">color_rgb</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">color_rgb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_color_vec</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_spheres</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">color_rgb</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.transform_spheres"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.transform_spheres">[docs]</a>    <span class="k">def</span> <span class="nf">transform_spheres</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">translation</span><span class="p">,</span> <span class="n">rotation</span><span class="p">):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_spheres</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">-=</span> <span class="n">translation</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">spheres</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_spheres</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_segment"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_segment">[docs]</a>    <span class="k">def</span> <span class="nf">add_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+
+        <span class="c1"># exaggerate the length of the stem</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        new_p = p + 3 * cuv.normalize(p - n)</span>
+<span class="sd">        new_n = n + 3 * cuv.normalize(n - p)</span>
+
+<span class="sd">        p = new_p</span>
+<span class="sd">        n = new_n</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_modifier</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_color_vec</span><span class="p">(</span><span class="n">color</span><span class="p">)]</span>        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">color</span><span class="p">[:</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s2">&quot;color:&quot;</span><span class="p">,</span> <span class="n">color</span>
+        <span class="c1">#assert(not allclose(p, n))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_segments</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_cone"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_cone">[docs]</a>    <span class="k">def</span> <span class="nf">add_cone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_color</span>
+
+        <span class="n">cone_extension</span> <span class="o">=</span> <span class="mf">2.</span>
+        <span class="n">cyl_vec</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">cyl_len</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">new_width</span> <span class="o">=</span> <span class="n">width</span> <span class="o">*</span> <span class="p">(</span><span class="n">cyl_len</span> <span class="o">+</span> <span class="n">cone_extension</span><span class="p">)</span> <span class="o">/</span> <span class="n">cyl_len</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_cones</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">-</span> <span class="n">cone_extension</span> <span class="o">*</span> <span class="n">cyl_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_cones</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">cone_extension</span> <span class="o">*</span> <span class="n">cyl_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.transform_segments"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.transform_segments">[docs]</a>    <span class="k">def</span> <span class="nf">transform_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">translation</span><span class="p">,</span> <span class="n">rotation</span><span class="p">):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_segments</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">-=</span> <span class="n">translation</span>
+            <span class="n">n</span> <span class="o">-=</span> <span class="n">translation</span>
+            <span class="n">new_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+            <span class="n">new_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">new_p</span><span class="p">,</span> <span class="n">new_n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_segments</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_spheres_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_spheres_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_spheres_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spheres</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_spheres</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_spheres</span><span class="p">:</span>
+            <span class="n">color_vec</span> <span class="o">=</span> <span class="n">color</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;COLOR, </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;,  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">color_vec</span><span class="p">]))</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;SPHERE, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%f</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span> <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]),</span>
+                                          <span class="n">width</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;p is not iterable! It is {} (for &#39;{}&#39;). IGNORING. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_axis_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_axis_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_axis_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">0.12</span>  <span class="c1"># cylinder width</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="mf">10.0</span>  <span class="c1"># cylinder length</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="mf">3.0</span>  <span class="c1"># cone hight</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="mf">2.618</span>  <span class="c1"># cone base diameter</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;CYLINDER, 0.0, 0.0, 0.0,   </span><span class="si">%f</span><span class="s2">, 0.0, 0.0, </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot; 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;CYLINDER, 0.0, 0.0, 0.0, 0.0,   </span><span class="si">%f</span><span class="s2">, 0.0, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;0.0, 0.0, 1.0, 0.0, 0.0, 1.0,&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;CYLINDER, 0.0, 0.0, 0.0, 0.0, 0.0,   </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;1.0, 0.0, 0.0, 1.0, 0.0, 0.0,&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;CONE,   </span><span class="si">%f</span><span class="s2">, 0.0, 0.0, </span><span class="si">%f</span><span class="s2">, 0.0, 0.0, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">h</span> <span class="o">+</span> <span class="n">l</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0,&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;CONE, 0.0, </span><span class="si">%f</span><span class="s2">, 0.0, 0.0, </span><span class="si">%f</span><span class="s2">, 0.0, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">h</span> <span class="o">+</span> <span class="n">l</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;CONE, 0.0, 0.0, </span><span class="si">%f</span><span class="s2">, 0.0, 0.0, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">h</span> <span class="o">+</span> <span class="n">l</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,&quot;</span>
+
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_segments_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_segments_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_segments_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="mf">0.2</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_segments</span>
+
+        <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">=</span> <span class="n">seg</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">color_vec</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">color_modifier</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_color_vec</span><span class="p">(</span><span class="n">color</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">color_vec</span> <span class="o">=</span> <span class="n">color</span>
+
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot; CYLINDER, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                                          <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">color_vec</span><span class="p">),</span>
+                                  <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">color_vec</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"># {}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_cones_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_cones_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_cones_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;white&#39;</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="mf">0.2</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cones</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_cones</span>
+
+        <span class="k">for</span> <span class="n">cone</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cones</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="o">=</span> <span class="n">cone</span>
+            <span class="n">color_vec</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_color_vec</span><span class="p">(</span><span class="n">color</span><span class="p">)]</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot; CONE, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                                          <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">color_vec</span><span class="p">),</span>
+                                  <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">color_vec</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_text_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_text_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_text_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">pa_s</span> <span class="o">=</span> <span class="s1">&#39;cmd.set(&quot;label_size&quot;, 20)</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">uids</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># generate a unique identifier for every object so that other</span>
+            <span class="c1"># scripts can add others that don&#39;t clash</span>
+            <span class="n">uid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
+            <span class="n">uids</span> <span class="o">+=</span> <span class="p">[</span><span class="n">uid</span><span class="p">]</span>
+
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cgox_</span><span class="si">%s</span><span class="s2"> = []&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uid</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+          
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">n</span><span class="o">==</span><span class="n">p</span><span class="p">):</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">n</span>
+                <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">comp1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span>
+
+                <span class="n">ncl</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">get_non_colinear_unit_vector</span><span class="p">(</span><span class="n">comp1</span><span class="p">)</span>
+
+                <span class="n">comp2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">ncl</span><span class="p">,</span> <span class="n">comp1</span><span class="p">))</span>
+                <span class="n">comp3</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">ncl</span><span class="p">,</span> <span class="n">comp2</span><span class="p">))</span>
+
+                <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">comp2</span>
+
+                <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">comp1</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp2</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">comp3</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)]</span>
+
+            <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: </span><span class="si">%.1f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">cuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">p</span><span class="p">))</span>
+
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cyl_text(cgox_</span><span class="si">%s</span><span class="s2">, plain, </span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pos</span><span class="p">)))</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">, 0.20, axes=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">pa_s</span> <span class="o">+=</span> <span class="s2">&quot;pa_</span><span class="si">%s</span><span class="s2"> = cmd.pseudoatom(pos=</span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pos</span><span class="p">)))</span>
+            <span class="n">pa_s</span> <span class="o">+=</span> <span class="s2">&quot;b=1.0, label=</span><span class="se">\&quot;</span><span class="si">%s</span><span class="se">\&quot;</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        for (text, pos) in self.labels:</span>
+<span class="sd">            uid = str(uuid.uuid4()).replace(&#39;-&#39;, &#39;x&#39;)</span>
+<span class="sd">            uids += [uid]</span>
+
+<span class="sd">            pa_s += &quot;pa_%s = cmd.pseudoatom(pos=%s,&quot; % (uid, str(list(pos)))</span>
+<span class="sd">            pa_s += &quot;b=1.0, label=\&quot;%s\&quot;)\n&quot; % (text)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cmd.set(</span><span class="se">\&quot;</span><span class="s2">cgo_line_radius</span><span class="se">\&quot;</span><span class="s2">,0.03)&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">counter</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cmd.load_cgo(cgox_</span><span class="si">%s</span><span class="s2">, &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\&#39;</span><span class="s2">cgox</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cmd.zoom(</span><span class="se">\&quot;</span><span class="s2">all</span><span class="se">\&quot;</span><span class="s2">, 2.0)&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+        <span class="k">return</span> <span class="n">pa_s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Output the contents of this structure into a file that can be passed</span>
+<span class="sd">        in as a pymol script.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_intro_string</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw_segments</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_segments_string</span><span class="p">()</span>
+
+
+        <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_spheres_string</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw_axes</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_axis_string</span><span class="p">()</span>
+
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        if self.draw_cones:</span>
+<span class="sd">            s += self.pymol_cones_string()</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_outro_string</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">print_text</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_text_string</span><span class="p">()</span>
+
+        <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_box_string</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.dump_pdb"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.dump_pdb">[docs]</a>    <span class="k">def</span> <span class="nf">dump_pdb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        If the BulgeGraph has a chain created for it, dump that as well.</span>
+
+<span class="sd">        @param filename: The filename of the pdb file to which the chain</span>
+<span class="sd">                         coordinates will be written.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">chain</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">child_list</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="n">bpm</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">bps</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+        <span class="n">mod</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chain</span><span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mod</span><span class="p">)</span>
+
+        <span class="n">io</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">PDBIO</span><span class="p">()</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">set_structure</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.dump_pymol_file"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.dump_pymol_file">[docs]</a>    <span class="k">def</span> <span class="nf">dump_pymol_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Output the structure to file.</span>
+
+<span class="sd">        @param filename: The location of the output file.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Output the script for showing the coarse-grained elements</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.pym&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pymol_string</span><span class="p">())</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Output the pdb structure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dump_pdb</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.pdb&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Output the script file for loading the pdb and coarse grained</span>
+        <span class="c1"># structure</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.pml&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;run </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.pym&quot;</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.output_pymol_file"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.output_pymol_file">[docs]</a>    <span class="k">def</span> <span class="nf">output_pymol_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">pymol_string</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.reset"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_intro_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_intro_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_intro_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;from pymol.cgo import *&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;from pymol import cmd&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;from pymol.vfont import plain&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;obj</span><span class="si">%s</span><span class="s2"> = [&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_outro_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_outro_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_outro_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;]&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">movie</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cmd.load_cgo(obj</span><span class="si">%s</span><span class="s2">, &#39;ss</span><span class="si">%s</span><span class="s2">&#39;, </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_obj_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;cmd.load_cgo(obj</span><span class="si">%s</span><span class="s2">, &#39;ss</span><span class="si">%s</span><span class="s2">&#39;)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">cgo_uid</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+        <span class="k">return</span> <span class="n">s</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.pymol_box_string"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.pymol_box_string">[docs]</a>    <span class="k">def</span> <span class="nf">pymol_box_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Pring out the CGO text to describe the boxes.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">out_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="p">:</span>
+            <span class="n">uid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
+            <span class="n">color_vec</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_color_vec</span><span class="p">(</span><span class="n">color</span><span class="p">)]</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;obj</span><span class="si">%s</span><span class="s1"> = [</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uid</span><span class="p">)</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;LINEWIDTH, .8, </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;BEGIN, LINES, </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;COLOR, </span><span class="si">%s</span><span class="s2">,&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;,  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">color_vec</span><span class="p">]))</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="n">box</span><span class="p">:</span>
+                <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;VERTEX, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">, </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">corner</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                       <span class="n">corner</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                                       <span class="n">corner</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;END </span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;] </span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;cmd.load_cgo(obj</span><span class="si">%s</span><span class="s2">, &#39;ss</span><span class="si">%s</span><span class="s2">&#39;)</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">uid</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out_str</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_stem_like_core"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_stem_like_core">[docs]</a>    <span class="k">def</span> <span class="nf">add_stem_like_core</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">twists</span><span class="p">,</span> <span class="n">stem_len</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span>
+                           <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">2.4</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">=</span> <span class="n">coords</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_cone</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;light gray&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">2.0</span> <span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;dark gray&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">2.0</span> <span class="p">)</span> 
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_twists</span><span class="p">:</span>
+            <span class="n">mult</span> <span class="o">=</span> <span class="mf">8.</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="o">.</span><span class="mi">3</span>
+            <span class="c1">#twist1o = bg.get_twists(key)[0]</span>
+            <span class="c1">#twist2o = bg.get_twists(key)[1]</span>
+            <span class="p">(</span><span class="n">twist1o</span><span class="p">,</span> <span class="n">twist2o</span><span class="p">)</span> <span class="o">=</span> <span class="n">twists</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">twist1o</span><span class="p">,</span> <span class="s2">&quot;cyan&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">twist2o</span><span class="p">,</span> <span class="s2">&quot;magenta&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">            twist_rot_mat_l = cuv.rotation_matrix(n - p, -(1.45 / 2.))</span>
+<span class="sd">            twist_rot_mat_r = cuv.rotation_matrix(n - p, (1.45 / 2.))</span>
+
+<span class="sd">            twist1 = np.dot(twist_rot_mat_l, twist1o)</span>
+<span class="sd">            twist2 = np.dot(twist_rot_mat_l, twist2o)</span>
+
+<span class="sd">            twist3 = np.dot(twist_rot_mat_r, twist1o)</span>
+<span class="sd">            twist4 = np.dot(twist_rot_mat_r, twist2o)</span>
+
+
+
+<span class="sd">            self.add_segment(p, p + mult * twist1, &quot;white&quot;, width, &#39;&#39;, key)</span>
+<span class="sd">            self.add_segment(n, n + mult * twist2, &quot;white&quot;, width, &#39;&#39;, key)</span>
+
+<span class="sd">            self.add_segment(p, p + mult * twist3, &quot;red&quot;, width, &#39;&#39;, key)</span>
+<span class="sd">            self.add_segment(n, n + mult * twist4, &quot;red&quot;, width, &#39;&#39;, key)</span>
+<span class="sd">            &#39;&#39;&#39;</span>
+
+        <span class="c1">#stem_len = bg.stem_length(key)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">stem_len</span><span class="p">):</span>
+                <span class="c1">#(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">ftug</span><span class="o">.</span><span class="n">virtual_res_3d_pos_core</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">twists</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">stem_len</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">vec_c</span><span class="p">,</span> <span class="n">vec_l</span><span class="p">,</span> <span class="n">vec_r</span><span class="p">)</span> <span class="o">=</span> <span class="n">res</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">vec_c</span><span class="p">,</span> <span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_letters</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">+=</span> <span class="p">[(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">vec_l</span><span class="p">))]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">+=</span> <span class="p">[(</span><span class="s1">&#39;R&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">vec_r</span><span class="p">))]</span>
+
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                self.add_segment(pos, pos + mult * vec_l, &quot;yellow&quot;, width, &#39;&#39;, key)</span>
+<span class="sd">                self.add_segment(pos, pos + mult * vec_r, &quot;purple&quot;, width, &#39;&#39;, key)</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_virtual_residues</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">vec_l</span><span class="p">,</span> <span class="s2">&quot;cyan&quot;</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">vec_r</span><span class="p">,</span> <span class="s2">&quot;magenta&quot;</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
+
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        self.add_sphere(p + mult * twist1, &quot;white&quot;, width, key)</span>
+<span class="sd">        self.add_sphere(n + mult * twist2, &quot;white&quot;, width, key)</span>
+<span class="sd">        &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_stem_like"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_stem_like">[docs]</a>    <span class="k">def</span> <span class="nf">add_stem_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">2.4</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">twists</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_stem_like_core</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">cg</span><span class="o">.</span><span class="n">twists</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                                           <span class="n">cg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_stem_like_core</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="bp">None</span><span class="p">,</span>
+                                           <span class="n">cg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.draw_bounding_boxes"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.draw_bounding_boxes">[docs]</a>    <span class="k">def</span> <span class="nf">draw_bounding_boxes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Draw bounding boxes for all of the residues encompassed</span>
+<span class="sd">        by a stem. But only if there is a pdb file handy.</span>
+
+<span class="sd">        @param bg: The BulgeGraph</span>
+<span class="sd">        @param s: The name of the stem</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdb_file</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+            <span class="n">struct</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdb_file</span><span class="p">)</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">get_chains</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">s</span><span class="p">)):</span>
+            <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">bb</span><span class="p">)</span> <span class="o">=</span> <span class="n">ftug</span><span class="o">.</span><span class="n">bounding_boxes</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="n">bb</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+                <span class="n">corners</span> <span class="o">=</span> <span class="p">[</span>
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                          <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
+
+                <span class="n">new_corners</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="n">corners</span><span class="p">:</span>
+                    <span class="n">new_corners</span> <span class="o">+=</span> <span class="p">[</span><span class="n">origin</span> <span class="o">+</span> <span class="n">cuv</span><span class="o">.</span><span class="n">change_basis</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">corner</span><span class="p">),</span>
+                                    <span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">,</span> <span class="n">bases</span><span class="p">[</span><span class="n">k</span><span class="p">])]</span>
+                <span class="n">corners</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_corners</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">corners</span><span class="p">,</span> <span class="s1">&#39;yellow&#39;</span><span class="p">)]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                    <span class="p">[</span><span class="mi">238</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">221</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">130</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                    <span class="p">[</span><span class="mi">184</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">134</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">11</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                    <span class="p">[</span><span class="mi">238</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">130</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">238</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                                    <span class="p">[</span><span class="mi">208</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">32</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">144</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">corners</span><span class="p">,</span> <span class="s1">&#39;purple&#39;</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_encompassing_cylinders"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_encompassing_cylinders">[docs]</a>    <span class="k">def</span> <span class="nf">add_encompassing_cylinders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">7.</span><span class="p">):</span>
+        <span class="n">cylinders_to_stems</span> <span class="o">=</span> <span class="n">ftug</span><span class="o">.</span><span class="n">get_encompassing_cylinders</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">stems</span> <span class="ow">in</span> <span class="n">cylinders_to_stems</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">print</span> <span class="s2">&quot;stems:&quot;</span><span class="p">,</span> <span class="n">stems</span>
+
+            <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stems</span><span class="p">:</span>
+                <span class="n">points</span> <span class="o">+=</span> <span class="p">[</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+            
+            <span class="c1"># create the linear regression</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="n">datamean</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    
+            <span class="n">uu</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">vv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">data</span> <span class="o">-</span> <span class="n">datamean</span><span class="p">)</span>
+
+            <span class="n">furthest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="n">data</span> <span class="o">-</span> <span class="n">datamean</span><span class="p">)</span> <span class="p">])</span>
+
+            <span class="n">start_point</span> <span class="o">=</span> <span class="o">-</span><span class="n">furthest</span> <span class="o">*</span> <span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">datamean</span>
+            <span class="n">end_point</span> <span class="o">=</span> <span class="n">furthest</span> <span class="o">*</span> <span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">datamean</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">start_point</span><span class="p">,</span> <span class="n">end_point</span><span class="p">,</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+
+        <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s2">&quot;YOOOOOOOOOOOOOOOOOOOOOOO&quot;</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.get_element_color"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.get_element_color">[docs]</a>    <span class="k">def</span> <span class="nf">get_element_color</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem_name</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get the color for this element. The color is determined by the name</span>
+<span class="sd">        of the element.</span>
+
+<span class="sd">        @param elem_name: The name of the element.</span>
+<span class="sd">        @return: A string with a color name</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_specific_colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">elem_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_specific_colors</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_specific_colors</span><span class="p">[</span><span class="n">elem_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">elem_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;green&#39;</span>
+        <span class="k">elif</span> <span class="n">elem_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;yellow&#39;</span>
+        <span class="k">elif</span> <span class="n">elem_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;red&#39;</span>
+        <span class="k">elif</span> <span class="n">elem_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;blue&#39;</span>
+        <span class="k">elif</span> <span class="n">elem_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;magenta&#39;</span>
+        <span class="k">elif</span> <span class="n">elem_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;cyan&#39;</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.add_dashed"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.add_dashed">[docs]</a>    <span class="k">def</span> <span class="nf">add_dashed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point1</span><span class="p">,</span> <span class="n">point2</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Add a dashed line from point1 to point2.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">dash_length</span> <span class="o">=</span> <span class="mf">0.6</span>
+        <span class="n">gap_length</span> <span class="o">=</span> <span class="n">dash_length</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">point2</span> <span class="o">-</span> <span class="n">point1</span><span class="p">)</span>
+
+        <span class="n">num_dashes</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">point2</span> <span class="o">-</span> <span class="n">point1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">dash_length</span> <span class="o">+</span> <span class="n">gap_length</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_dashes</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">point1</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="p">(</span><span class="n">dash_length</span> <span class="o">+</span> <span class="n">gap_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">direction</span><span class="p">,</span> 
+                             <span class="n">point1</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="p">(</span><span class="n">dash_length</span> <span class="o">+</span> <span class="n">gap_length</span><span class="p">)</span> <span class="o">+</span> <span class="n">dash_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">direction</span><span class="p">,</span> <span class="s2">&quot;purple&quot;</span><span class="p">,</span>
+                             <span class="n">width</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PymolPrinter.coordinates_to_pymol"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.coordinates_to_pymol">[docs]</a>    <span class="k">def</span> <span class="nf">coordinates_to_pymol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">):</span>
+        <span class="n">loops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">hloop_iterator</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_elements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_elements</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+            <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_element_color</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_stem_like</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">draw_bounding_boxes</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1">#self.add_sphere(p+(n-p)*0.2, &#39;light gray&#39;, width=1.5 ) </span>
+                <span class="c1">#self.add_sphere(n+(p-n)*0.2, &#39;dark gray&#39;, width=1.5 )</span>
+
+                <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_loops</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">loops</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span>
+                                             <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">get_length</span><span class="p">(</span><span class="n">key</span><span class="p">)),</span>
+                                            <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+                    <span class="n">twists</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_twists</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+                    <span class="c1"># check if the multiloop is longer than one. If it&#39;s not, then</span>
+                    <span class="c1"># it has an empty define and we its length will be 1</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span>
+                                         <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; 1&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span>
+                                         <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                                         <span class="nb">str</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span>
+                                         <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">twists</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;light gray&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">twists</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;light gray&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+                    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">((</span><span class="n">twists</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">twists</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="s1">&#39;middle gray&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visualize_three_and_five_prime</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span>
+                                         <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                                         <span class="nb">str</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span>
+                                         <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visualize_three_and_five_prime</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span>
+                                         <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span>
+                                         <span class="nb">str</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span>
+                                         <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1">#self.add_stem_like(cg, key, &quot;yellow&quot;, 1.0)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_longrange</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key1</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">longrange</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">key2</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">longrange</span><span class="p">[</span><span class="n">key1</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_elements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">key1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_elements</span> <span class="ow">or</span> <span class="n">key2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">only_elements</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                    <span class="k">try</span><span class="p">:</span>
+
+                        <span class="n">p</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">line_segment_distance</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                      <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                                      <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                      <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key2</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_dashed</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                        self.add_segment(point1, point2, &quot;purple&quot;,</span>
+<span class="sd">                                         0.3, key1 + &quot; &quot; + key2, key=key)</span>
+<span class="sd">                        </span>
+<span class="sd">                        &#39;&#39;&#39;</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encompassing_stems</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_encompassing_cylinders</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="mf">7.</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_stem_distances</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">(),</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+                <span class="p">(</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">line_segment_distance</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                     <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                                     <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                     <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">cuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">i2</span> <span class="o">-</span> <span class="n">i1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_stem_distances</span><span class="p">:</span>
+                    <span class="c1">#self.add_segment(i1, i2, &#39;cyan&#39;, 0.3, s1 + &quot; &quot; + s2, key=key)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">virtual_atoms</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">sidechain_atoms</span><span class="p">:</span>
+            <span class="n">cg</span><span class="o">.</span><span class="n">add_all_virtual_residues</span><span class="p">()</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="n">ftug</span><span class="o">.</span><span class="n">virtual_atoms</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">sidechain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sidechain_atoms</span><span class="p">)</span>
+
+            <span class="n">atom_width</span> <span class="o">=</span> <span class="mf">0.5</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">va</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rainbow</span><span class="p">:</span>
+                        <span class="kn">import</span> <span class="nn">matplotlib</span>
+                        <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;Agg&#39;</span><span class="p">)</span>
+                        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+                        <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;gist_rainbow&#39;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">a</span><span class="p">],</span> 
+                                        <span class="n">color_rgb</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">i</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">va</span><span class="o">.</span><span class="n">keys</span><span class="p">()))),</span> 
+                                        <span class="n">width</span><span class="o">=</span><span class="n">atom_width</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">d</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_node_from_residue_num</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ftup</span><span class="o">.</span><span class="n">nonsidechain_atoms</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">a</span><span class="p">],</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">atom_width</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">a</span><span class="p">],</span> <span class="s1">&#39;forest&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">atom_width</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">a</span><span class="p">],</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">atom_width</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">a</span><span class="p">],</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">atom_width</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">va</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">a</span><span class="p">],</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">atom_width</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">origin</span><span class="p">,</span> <span class="n">basis</span> <span class="o">=</span> <span class="n">ftug</span><span class="o">.</span><span class="n">element_coord_system</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">origin</span> <span class="o">+</span> <span class="mf">7.</span> <span class="o">*</span> <span class="n">basis</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s2">&quot;energy_function:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_function</span>
+        <span class="c1"># print the contributions of the energy function, if one is specified</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s2">&quot;key&quot;</span>
+            <span class="n">sum_energy</span> <span class="o">=</span> <span class="mf">0.</span>
+
+            <span class="n">e_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_function</span>
+            <span class="n">e_func_iter</span> <span class="o">=</span> <span class="n">e_func</span><span class="o">.</span><span class="n">interaction_energy_iter</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">int_energies</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">e_func_iter</span><span class="p">)</span>
+            <span class="n">max_energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">int_energies</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s2">&quot;max_energy:&quot;</span><span class="p">,</span> <span class="n">max_energy</span>
+
+            <span class="k">for</span> <span class="p">(</span><span class="n">interaction</span><span class="p">,</span> <span class="n">energy</span><span class="p">)</span> <span class="ow">in</span> <span class="n">int_energies</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">get_point</span><span class="p">(</span><span class="n">interaction</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                          <span class="n">cg</span><span class="o">.</span><span class="n">get_point</span><span class="p">(</span><span class="n">interaction</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">scaled_energy</span> <span class="o">=</span> <span class="o">-</span> <span class="n">max_energy</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">energy</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">scaled_energy</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+                <span class="n">sum_energy</span> <span class="o">+=</span> <span class="n">energy</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stem_stem_orientations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">(),</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                if cg.are_adjacent_stems(s1, s2):</span>
+<span class="sd">                    continue</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+
+                <span class="k">if</span> <span class="n">s1</span> <span class="o">!=</span> <span class="s1">&#39;s65&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">s2</span> <span class="o">!=</span> <span class="s1">&#39;s65&#39;</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                <span class="n">s1_vec</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">s2_vec</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="p">(</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">)</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">line_segment_distance</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                     <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                                     <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                     <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">i_vec</span> <span class="o">=</span> <span class="n">i2</span> <span class="o">-</span> <span class="n">i1</span>
+
+                <span class="c1">#i_rej will be orthogonal to s1_vec in the direction</span>
+                <span class="c1">#of s2</span>
+                <span class="n">i_rej</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">vector_rejection</span><span class="p">(</span><span class="n">i_vec</span><span class="p">,</span> <span class="n">s1_vec</span><span class="p">)</span>
+
+                <span class="c1">#plane_vec will be orthogonal to s1_vec and to the direction</span>
+                <span class="c1"># of s2</span>
+                <span class="n">plane_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">i_rej</span><span class="p">,</span> <span class="n">s1_vec</span><span class="p">)</span>
+
+                <span class="c1"># s2_proj is in the intersection plane</span>
+                <span class="n">s2_proj_in</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">vector_rejection</span><span class="p">(</span><span class="n">s2_vec</span><span class="p">,</span> <span class="n">plane_vec</span><span class="p">)</span>
+                <span class="c1"># s2 proj_out is out of the intersection plane</span>
+                <span class="c1">#s2_proj_out = cuv.vector_rejection(s2_vec, i_rej)</span>
+
+                <span class="n">start_point</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">cg</span><span class="o">.</span><span class="n">twists</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ortho_offset</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">i_rej</span><span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">i_vec</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0001</span>
+
+                <span class="n">lateral_offset</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dist</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">ortho_offset</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">lateral_offset</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                #self.add_segment(start_point,</span>
+<span class="sd">                                  start_point + 10 * cuv.normalize(s2_vec),</span>
+<span class="sd">                                  &#39;white&#39;, 0.5)</span>
+<span class="sd">                #self.add_segment(start_point,</span>
+<span class="sd">                                  start_point + 5 * cuv.normalize(plane_vec),</span>
+<span class="sd">                                  &#39;magenta&#39;, 0.5)</span>
+<span class="sd">                #self.add_segment(start_point,</span>
+<span class="sd">                                  start_point + 5 * cuv.normalize(i_vec),</span>
+<span class="sd">                                  &#39;cyan&#39;, 0.5)</span>
+<span class="sd">                #self.add_segment(i1, i1 + i_rej,  &#39;cyan&#39;, 0.5)</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_segment</span><span class="p">(</span><span class="n">start_point</span><span class="p">,</span>
+                                 <span class="n">start_point</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">cuv</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">s2_proj_in</span><span class="p">),</span>
+                                 <span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                #self.add_segment(start_point,</span>
+<span class="sd">                                  start_point + 7 * cuv.normalize(s2_proj_out),</span>
+<span class="sd">                                  &#39;blue&#39;, 0.5)</span>
+<span class="sd">                &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.chain_to_pymol"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.chain_to_pymol">[docs]</a>    <span class="k">def</span> <span class="nf">chain_to_pymol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chain</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Add a Bio.PDB.Chain to the structure, so that it can later be printed.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chain</span> <span class="o">=</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.load_flex_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.load_flex_stats">[docs]</a>    <span class="k">def</span> <span class="nf">load_flex_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flex_file</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">flex_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">col</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+            <span class="n">d</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])][</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.flex_to_pymol"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.flex_to_pymol">[docs]</a>    <span class="k">def</span> <span class="nf">flex_to_pymol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">flex_file</span><span class="p">):</span>
+        <span class="n">flex_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_flex_stats</span><span class="p">(</span><span class="n">flex_file</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">coords</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span>
+
+                    <span class="n">bd</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="c1">#out_str += &quot;0 %d&quot; % (abs(bd[1] - bd[0]) + 1)</span>
+                        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">bd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bd</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">bd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">bd</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">bd</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bd</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="c1">#out_str += &quot;%d %d&quot; % ( min(dims), max(dims))</span>
+
+                    <span class="n">flex</span> <span class="o">=</span> <span class="n">flex_stats</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">dims</span><span class="p">)][</span><span class="nb">max</span><span class="p">(</span><span class="n">dims</span><span class="p">)]</span> <span class="o">*</span> <span class="mf">10.</span>
+
+                    <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">flex</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="n">flex</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PymolPrinter.centers_to_pymol"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.visual.pymol.html#forgi.threedee.visual.pymol.PymolPrinter.centers_to_pymol">[docs]</a>    <span class="k">def</span> <span class="nf">centers_to_pymol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span>
+
+                <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">add_sphere</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
+
+    <span class="sd">&quot;&quot;&quot;def stem_atoms(self, coords, twists, stem_len, side=0):</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        Add the locations of the virtual atoms as spheres.</span>
+
+<span class="sd">        @param coords: The start and end coordinates of the stem.</span>
+<span class="sd">        @param twists: The two twists of the stem.</span>
+<span class="sd">        @param stem_len: The length of the stem.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        prev_p = [None, None]</span>
+<span class="sd">        first_p = [None, None]</span>
+<span class="sd">        last_o3 = [None, None]</span>
+<span class="sd">        first_o3 = [None, None]</span>
+
+<span class="sd">        colors = [&#39;yellow&#39;, &#39;purple&#39;]</span>
+
+<span class="sd">        for i in range(stem_len):</span>
+<span class="sd">            vbasis = ftug.virtual_res_basis_core(coords, twists, i, stem_len)</span>
+<span class="sd">            vpos = ftug.virtual_res_3d_pos_core(coords, twists, i, stem_len)</span>
+
+<span class="sd">            # iterate once for each strand</span>
+<span class="sd">            j = side</span>
+<span class="sd">            # just use A for now</span>
+<span class="sd">            for a in cua.avg_stem_vres_atom_coords[j][&#39;A&#39;].items():</span>
+<span class="sd">                c = a[1]</span>
+<span class="sd">                new_coords = np.dot(vbasis.transpose(), c) + vpos[0]</span>
+<span class="sd">                #self.add_sphere(new_coords, colors[j], 0.3)</span>
+
+<span class="sd">                if a[0] == &#39;P&#39; and i == 0:</span>
+<span class="sd">                    first_p[j] = new_coords</span>
+<span class="sd">                if a[0] == &#39;P&#39;:</span>
+<span class="sd">                    if prev_p[j] is not None:</span>
+<span class="sd">                        self.add_segment(prev_p[j], new_coords,</span>
+<span class="sd">                                         colors[j], 0.7)</span>
+<span class="sd">                    prev_p[j] = new_coords</span>
+<span class="sd">                if a[0] == &#39;O3*&#39; and i == 0:</span>
+<span class="sd">                    first_o3[j] = new_coords</span>
+<span class="sd">                if a[0] == &#39;O3*&#39;:</span>
+<span class="sd">                    last_o3[j] = new_coords</span>
+
+<span class="sd">        #self.add_segment(prev_p[0], last_o3[0], colors[0], 0.7)</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Sep 05, 2016.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+    </div>
+  </body>
+</html>

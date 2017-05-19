@@ -1,0 +1,159 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.visual.fornac module &#8212; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
+    <link rel="up" title="forgi.visual package" href="forgi.visual.html" />
+    <link rel="next" title="forgi.visual.mplotlib module" href="forgi.visual.mplotlib.html" />
+    <link rel="prev" title="forgi.visual package" href="forgi.visual.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.visual.html">forgi.visual package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.visual.mplotlib.html">forgi.visual.mplotlib module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.visual.fornac">
+<span id="forgi-visual-fornac-module"></span><h1>forgi.visual.fornac module<a class="headerlink" href="#module-forgi.visual.fornac" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="forgi.visual.fornac.create_fornac_page_for_structure">
+<code class="descclassname">forgi.visual.fornac.</code><code class="descname">create_fornac_page_for_structure</code><span class="sig-paren">(</span><em>bg</em>, <em>color_string</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/fornac.html#create_fornac_page_for_structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.fornac.create_fornac_page_for_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a fornac page dispalying this structure. The dotbracket string
+and sequence will automatically be extracted from the BulgeGraph.</p>
+<p>Colors can be specified as a dictionary containing floating 
+point values. These will be uniformly scaled according to the color
+scale passed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>color_string</strong> &#8211; The color string to be passed to fornac.
+e.g. &#8220;11-12: red 14-17: rgb(14,15,120)&#8221;</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The html text of the resulting web page.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.visual.fornac.element_to_nucleotide_colors">
+<code class="descclassname">forgi.visual.fornac.</code><code class="descname">element_to_nucleotide_colors</code><span class="sig-paren">(</span><em>bg</em>, <em>element_colors</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/fornac.html#element_to_nucleotide_colors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.fornac.element_to_nucleotide_colors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a dictionary of per-element colors to a dictionary of per-nucleotide colors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>element_colors</strong> &#8211; A dictionary of element colors (e.g. {&#8216;i0&#8217;: (255,0,0), &#8216;m1&#8217;: {255,255,255)}</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary of nucleotide numbers: (e.g {1: (14,15,120), 2: (255,255,255)})</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.visual.fornac.nucleotide_colors_to_fornac_color_string">
+<code class="descclassname">forgi.visual.fornac.</code><code class="descname">nucleotide_colors_to_fornac_color_string</code><span class="sig-paren">(</span><em>nucleotide_colors</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/fornac.html#nucleotide_colors_to_fornac_color_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.fornac.nucleotide_colors_to_fornac_color_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a dictionary of per nucleotide colors to a fornac
+color string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nucleotide_colors</strong> &#8211; A dictionary with nucleotide numbers as keys and colors as values.
+(e.g. {1: (255,0,0), 2: (255,255,0)})</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A color string (e.g &#8220;1:rgb(255,0,0) 2:rgb(255,0,0)&#8221;)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.visual.fornac.scale_colors">
+<code class="descclassname">forgi.visual.fornac.</code><code class="descname">scale_colors</code><span class="sig-paren">(</span><em>colors_dict</em>, <em>cmap=None</em>, <em>reverse=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/fornac.html#scale_colors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.fornac.scale_colors" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary with values containing scalars which need to 
+be scaled according to some color map. The keys are irrelevant.</p>
+<p>The color map will be normalized to the range of values within 
+color_dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>colors_dict</strong> &#8211; The dictionary containing the values to be color scaled.</li>
+<li><strong>cmap</strong> &#8211; A color map to be used to scale the colors.</li>
+<li><strong>reverse</strong> &#8211; Reverse the color map</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Another dictionary containing rgb triples as values.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.visual.html">forgi.visual package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.visual.mplotlib.html">forgi.visual.mplotlib module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on May 19, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,340 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.threedee.model.similarity &mdash; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="top" title="forgi 0.4 documentation" href="../../../../index.html" />
+    <link rel="up" title="forgi.threedee" href="../../threedee.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.model.similarity</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="kn">as</span> <span class="nn">ftmc</span>
+<span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="kn">as</span> <span class="nn">fud</span>
+
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="kn">as</span> <span class="nn">ftuv</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="kn">as</span> <span class="nn">ftug</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span> 
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AdjacencyCorrelation&#39;</span><span class="p">,</span> <span class="s1">&#39;cg_rmsd&#39;</span><span class="p">,</span> <span class="s1">&#39;rmsd&#39;</span><span class="p">,</span> <span class="s1">&#39;drmsd&#39;</span><span class="p">]</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains functions for the comparison of two cg objects or two ordered point-clouds.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">ppv</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">fp</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the positive predictive value.</span>
+
+<span class="sd">    :param tp: The true positives</span>
+<span class="sd">    :param fp: The false positives</span>
+<span class="sd">    :return: The ppv</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">tp</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fp</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">sty</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the sensitivity.</span>
+
+<span class="sd">    :param tp: True positives</span>
+<span class="sd">    :param fn: False negatives</span>
+<span class="sd">    :return: The sensitivity</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">tp</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fn</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">mcc</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the Matthews correlation coefficient for</span>
+<span class="sd">    the given confusion matrix.</span>
+
+<span class="sd">    `MCC = sqrt(ppv * sty)`</span>
+
+<span class="sd">    :param confustion_matrix: A dictionary like this: `{&quot;tp&quot;: tp, &quot;tn&quot;: tn, &quot;fp&quot;: fp, &quot;fn&quot;: fn}`</span>
+<span class="sd">    :return: The MCC</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ppv</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">[</span><span class="s1">&#39;tp&#39;</span><span class="p">],</span>
+                         <span class="n">confusion_matrix</span><span class="p">[</span><span class="s1">&#39;fp&#39;</span><span class="p">])</span> <span class="o">*</span>
+                     <span class="n">sty</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">[</span><span class="s1">&#39;tp&#39;</span><span class="p">],</span>
+                         <span class="n">confusion_matrix</span><span class="p">[</span><span class="s1">&#39;fn&#39;</span><span class="p">]))</span>
+
+
+<div class="viewcode-block" id="AdjacencyCorrelation"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.similarity.html#forgi.threedee.model.similarity.AdjacencyCorrelation">[docs]</a><span class="k">class</span> <span class="nc">AdjacencyCorrelation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class used for calculating the ACC.</span>
+<span class="sd">    </span>
+<span class="sd">    The adjacency correlation coefficient is calculated as the Matthews correlation </span>
+<span class="sd">    coefficient of potential interactions, defined as nucleotides within 25 Angstrom</span>
+<span class="sd">    from each other. See chapter 9.3 of Peter&#39;s thesis.</span>
+
+<span class="sd">    This object is initialized with a reference structure and a distance for interactions.</span>
+<span class="sd">    The evaluate() method is used for calculating this correlation matrix.</span>
+
+<span class="sd">    This is significantly faster than the confusion_matrix function, if </span>
+<span class="sd">    many structures will be compared to the same reference structure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_cg</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">bp_distance</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_distance</span><span class="o">=</span><span class="n">distance</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bp_distance</span><span class="o">=</span><span class="n">bp_distance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference_interactions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_interactions</span><span class="p">(</span><span class="n">reference_cg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AdjacencyCorrelation.get_interactions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.similarity.html#forgi.threedee.model.similarity.AdjacencyCorrelation.get_interactions">[docs]</a>    <span class="k">def</span> <span class="nf">get_interactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: A set of 2-tuples containing elements that pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">interactions</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="o">=</span><span class="nb">sorted</span><span class="p">((</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">))</span> <span class="c1">#TODO: Read itertools documentation, if this is necessary.</span>
+            <span class="k">if</span> <span class="n">cg</span><span class="o">.</span><span class="n">connected</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">bp_dist</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">min_max_bp_distance</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">bp_dist</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bp_distance</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">elements_closer_than</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                       <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                       <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">n2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                       <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">n2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distance</span><span class="p">):</span>
+            <span class="c1">#dist = cg.element_physical_distance(n1, n2)</span>
+            <span class="c1">#if dist &lt; self._distance:</span>
+                <span class="n">interactions</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">interactions</span></div>
+    
+<div class="viewcode-block" id="AdjacencyCorrelation.evaluate"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.similarity.html#forgi.threedee.model.similarity.AdjacencyCorrelation.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate the true_positive, false_positive,</span>
+<span class="sd">        true_negative and false_negative rate for the tertiary</span>
+<span class="sd">        distances of the elements of cg and the reference structure stored in this class.</span>
+
+<span class="sd">        :param cg: The first coarse grain model</span>
+<span class="sd">        :return: A dictionary like this: `{&quot;tp&quot;: tp, &quot;tn&quot;: tn, &quot;fp&quot;: fp, &quot;fn&quot;: fn}`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">interactions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">allIA</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">cg</span><span class="o">.</span><span class="n">connected</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">bp_dist</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">min_max_bp_distance</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">bp_dist</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bp_distance</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">allIA</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">n1</span><span class="p">,</span><span class="n">n2</span><span class="p">))))</span>
+
+        <span class="n">d</span><span class="o">=</span><span class="p">{</span> <span class="s2">&quot;tp&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;tn&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;fp&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;fn&quot;</span><span class="p">:</span><span class="mi">0</span> <span class="p">}</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;tp&quot;</span><span class="p">]</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_interactions</span> <span class="o">&amp;</span> <span class="n">interactions</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;fp&quot;</span><span class="p">]</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">interactions</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference_interactions</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;fn&quot;</span><span class="p">]</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_interactions</span> <span class="o">-</span> <span class="n">interactions</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">[</span><span class="s2">&quot;tn&quot;</span><span class="p">]</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">allIA</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference_interactions</span> <span class="o">|</span> <span class="n">interactions</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span></div></div>
+
+<span class="c1">#NOTE: could be deprecated in the future. Use AdjacencyCorrelation.</span>
+<span class="k">def</span> <span class="nf">confusion_matrix</span><span class="p">(</span><span class="n">cg1</span><span class="p">,</span> <span class="n">cg2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">bp_distance</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the true_positive, false_positive,</span>
+<span class="sd">    true_negative and false_negative rate for the tertiary</span>
+<span class="sd">    distances of the elements of two structures, cg1 and cg2.</span>
+
+<span class="sd">    :param cg1: The first coarse grain model</span>
+<span class="sd">    :param cg2: The second coarse grain model</span>
+<span class="sd">    :param distance: The distance to consider for interactions</span>
+<span class="sd">    :param bp_distance: Only consider elements separated by this many more pair</span>
+<span class="sd">                        and backbone bonds</span>
+<span class="sd">    :return: A dictionary like this: `{&quot;tp&quot;: tp, &quot;tn&quot;: tn, &quot;fp&quot;: fp, &quot;fn&quot;: fn}`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">nodes1</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cg1</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">nodes2</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cg2</span><span class="o">.</span><span class="n">defines</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">tp</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#true positive</span>
+    <span class="n">tn</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#true negative</span>
+
+    <span class="n">fp</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#false positive</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1">#false negative</span>
+
+    <span class="c1">#fud.pv(&#39;nodes1&#39;)</span>
+    <span class="c1">#fud.pv(&#39;nodes2&#39;)</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="n">nodes1</span> <span class="o">==</span> <span class="n">nodes2</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">nodes1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cg1</span><span class="o">.</span><span class="n">connected</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">cg2</span><span class="o">.</span><span class="n">connected</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;{} {} connected in cg2 but not cg1&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">))</span>
+
+
+        <span class="n">bp_dist</span> <span class="o">=</span> <span class="n">cg2</span><span class="o">.</span><span class="n">min_max_bp_distance</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bp_dist</span> <span class="o">&lt;</span> <span class="n">bp_distance</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">dist1</span> <span class="o">=</span> <span class="n">cg1</span><span class="o">.</span><span class="n">element_physical_distance</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)</span>
+        <span class="n">dist2</span> <span class="o">=</span> <span class="n">cg2</span><span class="o">.</span><span class="n">element_physical_distance</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dist1</span> <span class="o">&lt;</span> <span class="n">distance</span><span class="p">:</span>
+            <span class="c1"># positive</span>
+            <span class="k">if</span> <span class="n">dist2</span> <span class="o">&lt;</span> <span class="n">distance</span><span class="p">:</span>
+                <span class="c1">#true positive</span>
+                <span class="n">tp</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># false negative</span>
+                <span class="n">fn</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#negative</span>
+            <span class="k">if</span> <span class="n">dist2</span> <span class="o">&lt;</span> <span class="n">distance</span><span class="p">:</span>
+                <span class="c1"># false positive</span>
+                <span class="n">fp</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># true negative</span>
+                <span class="n">tn</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;tp&quot;</span><span class="p">:</span> <span class="n">tp</span><span class="p">,</span> <span class="s2">&quot;tn&quot;</span><span class="p">:</span> <span class="n">tn</span><span class="p">,</span> <span class="s2">&quot;fp&quot;</span><span class="p">:</span> <span class="n">fp</span><span class="p">,</span> <span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">fn</span><span class="p">}</span>
+
+<span class="c1"># COVERAGE NOTE: Never used in forgi or ernwin.</span>
+<span class="c1"># This is left in the code as an example for the usage of confusiom_matrix,</span>
+<span class="c1"># but might be removed in the future.</span>
+<span class="k">def</span> <span class="nf">mcc_between_cgs</span><span class="p">(</span><span class="n">cg_query</span><span class="p">,</span> <span class="n">cg_native</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">bp_distance</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the MCC of the distance between two elements.</span>
+
+<span class="sd">    :param cg_query: The second cg structure</span>
+<span class="sd">    :param cg_native: The native cg structure</span>
+<span class="sd">    :param distance: The distance between which we consider interactions.</span>
+<span class="sd">    :param bp_distance: Only consider pairs of elements that are separated by </span>
+<span class="sd">                        MORE than this many base pairs</span>
+<span class="sd">    :return: The MCC for interactions within a certain distance</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">cg_query</span><span class="p">,</span> <span class="n">cg_native</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">bp_distance</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="c1">#cm[&#39;tp&#39;] += 1</span>
+    <span class="c1">#cm[&#39;fp&#39;] += 1</span>
+    <span class="c1">#cm[&#39;fn&#39;] += 1</span>
+    <span class="c1">#cm[&#39;tn&#39;] += 1</span>
+    <span class="k">if</span> <span class="n">cm</span><span class="p">[</span><span class="s1">&#39;tp&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cm</span><span class="p">[</span><span class="s1">&#39;fp&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">cm</span><span class="p">[</span><span class="s1">&#39;tp&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cm</span><span class="p">[</span><span class="s1">&#39;fn&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">my_mcc</span> <span class="o">=</span> <span class="n">mcc</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">my_mcc</span>
+
+
+<span class="k">def</span> <span class="nf">optimal_superposition</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">crds2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2&quot;&quot;&quot;</span>        
+    <span class="k">assert</span><span class="p">(</span><span class="n">crds1</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">crds2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">crds1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">crds1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">correlation_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">crds1</span><span class="p">),</span> <span class="n">crds2</span><span class="p">)</span>
+        <span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">w_tr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">correlation_matrix</span><span class="p">)</span>
+        <span class="n">is_reflection</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">w_tr</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">is_reflection</span><span class="p">:</span>
+            <span class="n">v</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w_tr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong dimension of crds1. Needs to be an array of &quot;</span>
+                         <span class="s2">&quot;Points in 2D or 3D space. Found {}D&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">crds1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<div class="viewcode-block" id="cg_rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.similarity.html#forgi.threedee.model.similarity.cg_rmsd">[docs]</a><span class="k">def</span> <span class="nf">cg_rmsd</span><span class="p">(</span><span class="n">cg1</span><span class="p">,</span> <span class="n">cg2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the RMSD between two Coarse Grain models using their</span>
+<span class="sd">    set of virtual residues.</span>
+
+<span class="sd">    :param cg1: The first coarse grain model.</span>
+<span class="sd">    :param cg2: The second coarse-grain model.</span>
+<span class="sd">    :return: The RMSD</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">residues1</span> <span class="o">=</span> <span class="n">cg1</span><span class="o">.</span><span class="n">get_ordered_virtual_residue_poss</span><span class="p">()</span>
+    <span class="n">residues2</span> <span class="o">=</span> <span class="n">cg2</span><span class="o">.</span><span class="n">get_ordered_virtual_residue_poss</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">rmsd</span><span class="p">(</span><span class="n">residues1</span><span class="p">,</span> <span class="n">residues2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.similarity.html#forgi.threedee.model.similarity.rmsd">[docs]</a><span class="k">def</span> <span class="nf">rmsd</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">crds2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Center the coordinate vectors on their centroid</span>
+<span class="sd">    and then calculate the rmsd.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">crds1</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">center_on_centroid</span><span class="p">(</span><span class="n">crds1</span><span class="p">)</span>
+    <span class="n">crds2</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">center_on_centroid</span><span class="p">(</span><span class="n">crds2</span><span class="p">)</span>
+
+    <span class="n">os</span> <span class="o">=</span> <span class="n">optimal_superposition</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">crds2</span><span class="p">)</span>
+    <span class="n">crds_aligned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">os</span><span class="p">)</span>
+
+    <span class="n">diff_vecs</span> <span class="o">=</span> <span class="p">(</span><span class="n">crds2</span> <span class="o">-</span> <span class="n">crds_aligned</span><span class="p">)</span>
+    <span class="n">vec_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diff_vecs</span> <span class="o">*</span> <span class="n">diff_vecs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">vec_lengths</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec_lengths</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="drmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.similarity.html#forgi.threedee.model.similarity.drmsd">[docs]</a><span class="k">def</span> <span class="nf">drmsd</span><span class="p">(</span><span class="n">coords1</span><span class="p">,</span> <span class="n">coords2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the dRMSD measure.</span>
+
+<span class="sd">    This should be the RMSD between all of the inter-atom distances</span>
+<span class="sd">    in two structures.</span>
+
+<span class="sd">    :param coords1: The vectors of the &#39;atoms&#39; in the first structure.</span>
+<span class="sd">    :param coords2: The vectors of the &#39;atoms&#39; in the second structure.</span>
+<span class="sd">    :return: The dRMSD measure.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ds1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="k">for</span> <span class="n">c1</span><span class="p">,</span><span class="n">c2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">coords1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">)])</span>
+    <span class="n">ds2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="k">for</span> <span class="n">c1</span><span class="p">,</span><span class="n">c2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">coords2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">)])</span>
+
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">ds1</span> <span class="o">-</span> <span class="n">ds2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">ds1</span> <span class="o">-</span> <span class="n">ds2</span><span class="p">)))</span>
+    <span class="c1">#rmsd = math.sqrt(np.mean(ftuv.vec_distance(ds1, ds2)))</span>
+
+    <span class="k">return</span> <span class="n">rmsd</span></div>
+
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Sep 05, 2016.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+    </div>
+  </body>
+</html>

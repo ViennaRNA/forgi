@@ -1,0 +1,14 @@
+**/*.pyc
+**/*.swp
+**/*.swo
+**/*.swx
+**/*.swn
+**/*~
+**/.DS_Store
+doc/_templates/**
+doc/latex_output/**
+build/**
+pages/**
+venv/
+tmp/
+builtdoc/

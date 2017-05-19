@@ -1,0 +1,209 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.threedee.utilities.rmsd &mdash; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="top" title="forgi 0.4 documentation" href="../../../../index.html" />
+    <link rel="up" title="forgi.threedee" href="../../threedee.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.utilities.rmsd</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">numpy</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span><span class="o">,</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="kn">as</span> <span class="nn">cud</span>
+<span class="c1">#from forgi.graph.bulge_graph import BulgeGraph</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="kn">as</span> <span class="nn">ftuv</span>
+
+<span class="c1"># Shamelessly stolen from:</span>
+<span class="c1"># http://boscoh.com/protein/rmsd-root-mean-square-deviation</span>
+
+<span class="c1">#def rmsd(crds1, crds2):</span>
+<span class="c1">#    &quot;&quot;&quot;Returns RMSD between 2 sets of [nx3] numpy array&quot;&quot;&quot;</span>
+<span class="c1">#    #assert(crds1.shape[1] == 3)</span>
+<span class="c1">#    assert(crds1.shape == crds2.shape)</span>
+<span class="c1">#    n_vec = numpy.shape(crds1)[0]</span>
+<span class="c1">#    correlation_matrix = numpy.dot(numpy.transpose(crds1), crds2)</span>
+<span class="c1">#    v, s, w_tr = numpy.linalg.svd(correlation_matrix)</span>
+<span class="c1">#    is_reflection = (numpy.linalg.det(v) * numpy.linalg.det(w_tr)) &lt; 0.0</span>
+<span class="c1">#    if is_reflection:</span>
+<span class="c1">#        s[-1] = - s[-1]</span>
+<span class="c1">#    E0 = sum(sum(crds1 * crds1)) + \</span>
+<span class="c1">#       sum(sum(crds2 * crds2))</span>
+<span class="c1">#</span>
+<span class="c1">#    rmsd_sq = (E0 - 2.0*sum(s)) / float(n_vec)</span>
+<span class="c1">#    rmsd_sq = max([rmsd_sq, 0.0])</span>
+<span class="c1">#    return numpy.sqrt(rmsd_sq)</span>
+
+<div class="viewcode-block" id="centered_rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.rmsd.html#forgi.threedee.utilities.rmsd.centered_rmsd">[docs]</a><span class="k">def</span> <span class="nf">centered_rmsd</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">):</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;forgi.threedee.utilities.rmsd.centered_rmsd is deprecated and will be &quot;</span>  
+                  <span class="s2">&quot;removed in the future. Use forgi.threedee.utilities.rmsd.rmsd instead.&quot;</span><span class="p">,</span>
+                  <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rmsd</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span><span class="n">c2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.rmsd.html#forgi.threedee.utilities.rmsd.rmsd">[docs]</a><span class="k">def</span> <span class="nf">rmsd</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">crds2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Center the coordinate vectors on their centroid</span>
+<span class="sd">    and then calculate the rmsd.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">crds1</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">center_on_centroid</span><span class="p">(</span><span class="n">crds1</span><span class="p">)</span>
+    <span class="n">crds2</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">center_on_centroid</span><span class="p">(</span><span class="n">crds2</span><span class="p">)</span>
+
+    <span class="n">os</span> <span class="o">=</span> <span class="n">optimal_superposition</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">crds2</span><span class="p">)</span>
+    <span class="n">crds_aligned</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">os</span><span class="p">)</span>
+
+    <span class="n">diff_vecs</span> <span class="o">=</span> <span class="p">(</span><span class="n">crds2</span> <span class="o">-</span> <span class="n">crds_aligned</span><span class="p">)</span>
+    <span class="n">vec_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diff_vecs</span> <span class="o">*</span> <span class="n">diff_vecs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">vec_lengths</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec_lengths</span><span class="p">))</span>   <span class="c1">#rmsd(crds1, crds2)</span></div>
+
+<span class="c1">#def centered_drmsd(crds1, crds2): -&gt; Replaced by drmsd(...)</span>
+
+<div class="viewcode-block" id="optimal_superposition"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.rmsd.html#forgi.threedee.utilities.rmsd.optimal_superposition">[docs]</a><span class="k">def</span> <span class="nf">optimal_superposition</span><span class="p">(</span><span class="n">crds1</span><span class="p">,</span> <span class="n">crds2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2&quot;&quot;&quot;</span>        
+    <span class="k">assert</span><span class="p">(</span><span class="n">crds1</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">crds2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">crds1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">crds1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">correlation_matrix</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">crds1</span><span class="p">),</span> <span class="n">crds2</span><span class="p">)</span>
+        <span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">w_tr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">correlation_matrix</span><span class="p">)</span>
+        <span class="n">is_reflection</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">w_tr</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">is_reflection</span><span class="p">:</span>
+            <span class="n">v</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w_tr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong dimension of crds1. Needs to be an array of &quot;</span>
+                         <span class="s2">&quot;Points in 2D or 3D space. Found {}D&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">crds1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+  
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">def main():</span>
+<span class="sd">    if len(sys.argv) &lt; 3:</span>
+<span class="sd">        print &quot;usage: ./rmsd.py coords1 coords2&quot;</span>
+<span class="sd">        sys.exit(1)</span>
+
+<span class="sd">    bg1 = BulgeGraph(sys.argv[1])</span>
+<span class="sd">    bg2 = BulgeGraph(sys.argv[2])</span>
+
+<span class="sd">    coords1 = bg1.get_centers()</span>
+<span class="sd">    coords2 = bg2.get_centers()</span>
+
+<span class="sd">    mat1 = numpy.array(coords1)</span>
+<span class="sd">    mat2 = numpy.array(coords2)</span>
+
+<span class="sd">    centroid1 = numpy.array([0., 0., 0.])</span>
+<span class="sd">    centroid2 = numpy.array([0., 0., 0.])</span>
+<span class="sd">    </span>
+<span class="sd">    for i in range(len(mat2)):</span>
+<span class="sd">        centroid1 += mat1[i]</span>
+<span class="sd">        centroid2 += mat2[i]</span>
+
+<span class="sd">    centroid1 /= float(len(mat2))</span>
+<span class="sd">    centroid2 /= float(len(mat2))</span>
+
+<span class="sd">    print &quot;centroid1:&quot;, centroid1</span>
+<span class="sd">    print &quot;centroid2:&quot;, centroid2</span>
+
+<span class="sd">    for i in range(len(mat2)):</span>
+<span class="sd">        mat1[i] -= centroid1</span>
+<span class="sd">        mat2[i] -= centroid2</span>
+
+<span class="sd">    print &quot;mat1:&quot;, mat1</span>
+<span class="sd">    print &quot;mat2:&quot;, mat2</span>
+
+<span class="sd">    print &quot;rmsd:&quot;, rmsd(mat1, mat2)</span>
+
+<span class="sd">if __name__ == &#39;__main__&#39;:</span>
+<span class="sd">    main()</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="radius_of_gyration"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.rmsd.html#forgi.threedee.utilities.rmsd.radius_of_gyration">[docs]</a><span class="k">def</span> <span class="nf">radius_of_gyration</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the radius of gyration, given a set of coordinates.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">centroid</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
+    <span class="n">diff_vecs</span> <span class="o">=</span> <span class="n">coords</span> <span class="o">-</span> <span class="n">centroid</span>
+    <span class="c1">#cud.pv(&#39;diff_vecs&#39;)</span>
+    <span class="n">sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diff_vecs</span> <span class="o">*</span> <span class="n">diff_vecs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1">#cud.pv(&#39;sums&#39;)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sums</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rmsd</span></div>
+
+<div class="viewcode-block" id="drmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.rmsd.html#forgi.threedee.utilities.rmsd.drmsd">[docs]</a><span class="k">def</span> <span class="nf">drmsd</span><span class="p">(</span><span class="n">coords1</span><span class="p">,</span> <span class="n">coords2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the dRMSD measure.</span>
+
+<span class="sd">    This should be the RMSD between all of the inter-atom distances</span>
+<span class="sd">    in two structures.</span>
+
+<span class="sd">    @param coords1: The vectors of the &#39;atoms&#39; in the first structure.</span>
+<span class="sd">    @param coords2: The vectors of the &#39;atoms&#39; in the second structure.</span>
+<span class="sd">    @return: The dRMSD measure.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ds1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="k">for</span> <span class="n">c1</span><span class="p">,</span><span class="n">c2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">coords1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">)])</span>
+    <span class="n">ds2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span> <span class="k">for</span> <span class="n">c1</span><span class="p">,</span><span class="n">c2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">coords2</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">)])</span>
+
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">ds1</span> <span class="o">-</span> <span class="n">ds2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">ds1</span> <span class="o">-</span> <span class="n">ds2</span><span class="p">)))</span>
+    <span class="c1">#rmsd = math.sqrt(np.mean(ftuv.vec_distance(ds1, ds2)))</span>
+
+    <span class="k">return</span> <span class="n">rmsd</span></div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Aug 30, 2016.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+    </div>
+  </body>
+</html>

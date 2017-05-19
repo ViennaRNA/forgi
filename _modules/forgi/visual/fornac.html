@@ -1,0 +1,177 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.visual.fornac &#8212; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="forgi 0.4 documentation" href="../../../index.html" />
+    <link rel="up" title="forgi" href="../../forgi.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../../../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.visual.fornac</h1><div class="highlight"><pre>
+<span></span><span class="n">fornac_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">&lt;!DOCTYPE html&gt;</span>
+<span class="s2">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+
+<span class="s2">This is an RNA container.</span>
+<span class="s2">&lt;div id=&#39;rna_ss&#39;&gt; &lt;/div&gt;</span>
+<span class="s2">This after the RNA container.</span>
+
+<span class="s2">    &lt;link rel=&#39;stylesheet&#39; type=&#39;text/css&#39; href=&#39;https://raw.githubusercontent.com/pkerpedjiev/fornac/master/css/fornac.css&#39; /&gt;</span>
+<span class="s2">    &lt;script type=&#39;text/javascript&#39; src=&#39;https://code.jquery.com/jquery-2.1.4.min.js&#39;&gt;&lt;/script&gt;</span>
+<span class="s2">    &lt;script type=&#39;text/javascript&#39; src=&#39;https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js&#39;&gt;&lt;/script&gt;</span>
+<span class="s2">    &lt;script type=&#39;text/javascript&#39; src=&#39;https://rawgit.com/pkerpedjiev/fornac/master/js/fornac.js&#39;&gt;&lt;/script&gt;</span>
+
+<span class="s2">    &lt;script type=&#39;text/javascript&#39;&gt;</span>
+<span class="s2">        var container = new fornac.FornaContainer(&quot;#rna_ss&quot;,</span>
+<span class="s2">            {{&#39;applyForce&#39;: true, &#39;allowPanningAndZooming&#39;: true, &quot;initialSize&quot;: [500,800], &#39;cssFileLocation&#39;: &quot;https://raw.githubusercontent.com/pkerpedjiev/fornac/master/css/fornac.css&quot;}});</span>
+
+<span class="s2">        var options = {{&#39;structure&#39;: &#39;</span><span class="si">{}</span><span class="s2">&#39;,</span>
+<span class="s2">                        &#39;sequence&#39;: &#39;</span><span class="si">{}</span><span class="s2">&#39;}};</span>
+
+<span class="s2">        colorStr = &quot;</span><span class="si">{}</span><span class="s2">&quot; </span>
+
+<span class="s2">        container.addRNA(options.structure, options);</span>
+<span class="s2">        cs = ColorScheme(colorStr);</span>
+
+<span class="s2">        container.addCustomColors(cs.colorsJson);</span>
+<span class="s2">        container.changeColorScheme(&#39;custom&#39;); </span>
+<span class="s2">    &lt;/script&gt;</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="create_fornac_page_for_structure"><a class="viewcode-back" href="../../../apidoc/forgi.visual.fornac.html#forgi.visual.fornac.create_fornac_page_for_structure">[docs]</a><span class="k">def</span> <span class="nf">create_fornac_page_for_structure</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">color_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a fornac page dispalying this structure. The dotbracket string</span>
+<span class="sd">    and sequence will automatically be extracted from the BulgeGraph.</span>
+<span class="sd">    </span>
+<span class="sd">    Colors can be specified as a dictionary containing floating </span>
+<span class="sd">    point values. These will be uniformly scaled according to the color</span>
+<span class="sd">    scale passed in.</span>
+
+<span class="sd">    :param color_string: The color string to be passed to fornac.</span>
+<span class="sd">                          e.g. &quot;11-12: red 14-17: rgb(14,15,120)&quot;</span>
+<span class="sd">    :return: The html text of the resulting web page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">fornac_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">(),</span>
+                                  <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="p">,</span> <span class="n">color_string</span><span class="p">)</span> </div>
+
+<div class="viewcode-block" id="scale_colors"><a class="viewcode-back" href="../../../apidoc/forgi.visual.fornac.html#forgi.visual.fornac.scale_colors">[docs]</a><span class="k">def</span> <span class="nf">scale_colors</span><span class="p">(</span><span class="n">colors_dict</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A dictionary with values containing scalars which need to </span>
+<span class="sd">    be scaled according to some color map. The keys are irrelevant.</span>
+
+<span class="sd">    The color map will be normalized to the range of values within </span>
+<span class="sd">    color_dict.</span>
+
+<span class="sd">    :param colors_dict: The dictionary containing the values to be color scaled.</span>
+<span class="sd">    :param cmap: A color map to be used to scale the colors.</span>
+<span class="sd">    :param reverse: Reverse the color map</span>
+<span class="sd">    :return: Another dictionary containing rgb triples as values.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
+
+
+    <span class="n">values</span> <span class="o">=</span> <span class="n">colors_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="n">min_value</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">max_value</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">new_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">colors_dict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">((</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_value</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">((</span><span class="n">colors_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_value</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">))</span>
+        <span class="n">new_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">color</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">color</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">new_dict</span></div>
+
+<div class="viewcode-block" id="element_to_nucleotide_colors"><a class="viewcode-back" href="../../../apidoc/forgi.visual.fornac.html#forgi.visual.fornac.element_to_nucleotide_colors">[docs]</a><span class="k">def</span> <span class="nf">element_to_nucleotide_colors</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">element_colors</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Convert a dictionary of per-element colors to a dictionary of per-nucleotide colors</span>
+
+<span class="sd">    :param element_colors: A dictionary of element colors (e.g. {&#39;i0&#39;: (255,0,0), &#39;m1&#39;: {255,255,255)}</span>
+<span class="sd">    :return: A dictionary of nucleotide numbers: (e.g {1: (14,15,120), 2: (255,255,255)})</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">new_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">element_colors</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">bg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="n">new_dict</span><span class="p">[</span><span class="n">res</span><span class="p">]</span> <span class="o">=</span> <span class="n">element_colors</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">new_dict</span></div>
+
+<div class="viewcode-block" id="nucleotide_colors_to_fornac_color_string"><a class="viewcode-back" href="../../../apidoc/forgi.visual.fornac.html#forgi.visual.fornac.nucleotide_colors_to_fornac_color_string">[docs]</a><span class="k">def</span> <span class="nf">nucleotide_colors_to_fornac_color_string</span><span class="p">(</span><span class="n">nucleotide_colors</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Convert a dictionary of per nucleotide colors to a fornac</span>
+<span class="sd">    color string.</span>
+
+<span class="sd">    :param nucleotide_colors: A dictionary with nucleotide numbers as keys and colors as values.</span>
+<span class="sd">                              (e.g. {1: (255,0,0), 2: (255,255,0)})</span>
+<span class="sd">    :return: A color string (e.g &quot;1:rgb(255,0,0) 2:rgb(255,0,0)&quot;)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">color_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">nucleotide_colors</span><span class="p">:</span>
+        <span class="n">color_string</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:rgb(</span><span class="si">{}</span><span class="s2">,</span><span class="si">{}</span><span class="s2">,</span><span class="si">{}</span><span class="s2">) &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">nucleotide_colors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                        <span class="n">nucleotide_colors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                                        <span class="n">nucleotide_colors</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">color_string</span></div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on May 19, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

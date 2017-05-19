@@ -1,0 +1,187 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Changelog &#8212; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="forgi 0.4 documentation" href="index.html" />
+    <link rel="next" title="Credits &amp; Citing" href="credit_link.html" />
+    <link rel="prev" title="Installation" href="download.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="download.html">Installation</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="credit_link.html">Credits &amp; Citing</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-0-4">
+<h2>Changes in Version 0.4<a class="headerlink" href="#changes-in-version-0-4" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">In <code class="code docutils literal"><span class="pre">forgi.graph.bulge_graph</span></code>:</p>
+<ul class="simple">
+<li>Speed improvement: Basepair distances between elements are cached.</li>
+<li>The Bulge-graph object and file format supports arbitrary key-value pairs in the <code class="code docutils literal"><span class="pre">info</span></code> dictionary.</li>
+<li><code class="code docutils literal"><span class="pre">BulgeGraph.get_connected_nucleotides</span></code> no longer sorts the
+output nucleotides. Now this function depends on the order of stem1 and stem2 and can thus be used
+to determine the direction of a bulge. This is used in the new member function <code class="code docutils literal"><span class="pre">get_link_direction</span></code>.</li>
+<li>Added function <code class="code docutils literal"><span class="pre">BulgeGraph.get_domains</span></code>, to return a lists of pseudoknots, multiloops and rods.
+The interface of this function might change in the future.</li>
+<li>Merged pull-request by tcarlile for <code class="code docutils literal"><span class="pre">forgi.graph.bulge_graph</span></code>:<ul>
+<li><code class="code docutils literal"><span class="pre">BulgeGraph.get_stem_edge(self,</span> <span class="pre">stem,</span> <span class="pre">pos)</span></code>: Returns 0 if pos on 5&#8217; edge of stem, returns 1 if pos on 3&#8217; edge of stem.</li>
+<li><code class="code docutils literal"><span class="pre">BulgeGraph.shortest_path(self,</span> <span class="pre">e1,</span> <span class="pre">e2)</span></code>:    Returns a list of the nodes along the shortest path between e1, and e2.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p class="first">Restructured forgi.threedee.model.comparison and forgi.threedee.utilities.rmsd into
+<code class="code docutils literal"><span class="pre">forgi.threedee.model.similarity</span></code> and <code class="code docutils literal"><span class="pre">forgi.threedee.model.descriptors</span></code>
+The <code class="code docutils literal"><span class="pre">similarity</span></code> module contains all functions for the comparison of two point
+clouds or two cg structures.
+The <code class="code docutils literal"><span class="pre">descriptors</span></code> module contains functions for describing a single point cloud,
+such as the radius of gyration or new functions for the gyration tensor.</p>
+</li>
+<li><p class="first"><code class="code docutils literal"><span class="pre">average_stem_vres_positions</span></code> are back with recalculated values</p>
+</li>
+<li><p class="first">Changes in <code class="code docutils literal"><span class="pre">forgi.threedee.model.coarse_grain</span></code> to the <code class="code docutils literal"><span class="pre">CoarseGrainRNA</span></code> object:</p>
+<ul>
+<li><p class="first">In the <code class="code docutils literal"><span class="pre">self.coords</span></code> dictionary, the start and end coordinate are now in a consistent order.</p>
+</li>
+<li><p class="first">Call new member function <code class="code docutils literal"><span class="pre">self.add_all_virtual_residues</span></code> instead of <code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb.add_virtual_residues</span></code></p>
+</li>
+<li><p class="first">Coordinates of interior loops and multiloop segmentsa are no longer stored in the cg-files,
+as they can be deduced from stem coordinates.</p>
+<ul class="simple">
+<li>New member function <code class="code docutils literal"><span class="pre">self.add_bulge_coords_from_stems</span></code> is provided instead
+of function <code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb.add_bulge_information_from_pdb_chain</span></code></li>
+</ul>
+</li>
+<li><p class="first">Member function <code class="code docutils literal"><span class="pre">self.get_virtual_residue(pos)</span></code> is provided for easier access than directly via <code class="code docutils literal"><span class="pre">self.v3dposs</span></code>.
+For single stranded regions, virtual residue positions along the direct line of the coarse
+grain element can be estimated optionally.
+Virtual residues are cached and the cache is automatically cleared when
+the coordinates or twists of the coarse grained RNA are changed.</p>
+</li>
+<li><p class="first">Functions for creating coordinate arrays for the structure</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="code docutils literal"><span class="pre">self.get_ordered_stem_poss</span></code> for the start and end coordinates of stems.</li>
+<li><code class="code docutils literal"><span class="pre">self.get_ordered_virtual_residue_poss</span></code> for all virtual residue coordinates of stems.
+Replaces <code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb.bg_virtual_residues</span></code></li>
+<li><code class="code docutils literal"><span class="pre">self.get_poss_for_domain</span></code> for coordinates only for certain coarse grained elements.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Removed the addition of a pseudo-vector to loop stats in <code class="code docutils literal"><span class="pre">get_loop_stats</span></code>, which was used to avoid zero-length bulges.
+Now 0-length bulges are possible. This makes saving and loading stats consistent.</p>
+</li>
+<li><p class="first"><code class="code docutils literal"><span class="pre">self.get_coordinates_array</span></code> now returns a 2D <code class="code docutils literal"><span class="pre">nx3</span> <span class="pre">numpy</span> <span class="pre">array</span></code> holding n coordinate entries.
+You can use numpy&#8217;s <code class="code docutils literal"><span class="pre">.flatten()</span></code> to generate a 1D array. If you want to load a 1D flat coordinate array <code class="code docutils literal"><span class="pre">a</span></code>, use
+<code class="code docutils literal"><span class="pre">self.load_coordinates_array(a.reshape((-1,3))</span></code></p>
+</li>
+<li><p class="first">Overrides the newly introduced method <code class="code docutils literal"><span class="pre">sorted_edges_for_mst</span></code> from BulgeGraph.
+Now elements that have no <code class="code docutils literal"><span class="pre">sampled</span></code> entry are broken preferedly.
+This should ensure that the minimal spanning tree is the same after saving and loading an
+RNA generated with the program Ernwin to/from a file.</p>
+</li>
+<li><p class="first"><code class="code docutils literal"><span class="pre">self.coords_to_directions</span></code> and <code class="code docutils literal"><span class="pre">coords_from_directions</span></code>:
+Export the coordinates as an array of directions (end-start).
+This array has only 1 entry per coarse grained element.</p>
+</li>
+</ul>
+</li>
+<li><p class="first">In <code class="code docutils literal"><span class="pre">forgi.threedee.model.stats</span></code>: Added class for clustered angle stats.</p>
+</li>
+<li><p class="first">Changes in <code class="code docutils literal"><span class="pre">forgi.projection.hausdorff</span></code>.</p>
+</li>
+<li><p class="first">Changes in <code class="code docutils literal"><span class="pre">forgi.projection.projection2d</span></code></p>
+<ul class="simple">
+<li>Faster rotation and rasterization.</li>
+<li>selected virtual residues can be included in the projection</li>
+</ul>
+</li>
+<li><p class="first">In <code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb</span></code>: Added functions <code class="code docutils literal"><span class="pre">get_basepair_center</span></code> and <code class="code docutils literal"><span class="pre">get_basepair_plane</span></code>.
+This will be used in the future for stacking detection.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="changes-in-version-0-3">
+<h2>Changes in Version 0.3<a class="headerlink" href="#changes-in-version-0-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>CoarseGrainRNA now has a member <code class="code docutils literal"><span class="pre">cg.virtual_atoms()</span></code> which is used for caching of virtual atom positions.
+<code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb.virtual_atoms()</span></code> now only calculates atom positions when they are needed.
+The two changes together lead to a great speed improvement.</li>
+<li>The subpackage <code class="code docutils literal"><span class="pre">forgi.visual</span></code> was started for easy visualization of RNA using fornac or matplotlib.
+This subpackage is in an early development stage and will be improved in future versions.</li>
+<li>The subpackage forgi.projection was added to work with projections of CoarseGrainedRNA objects onto a 2D plane.</li>
+<li>Now <code class="code docutils literal"><span class="pre">forgi.threedee.model.average_atom_positions</span></code> is used for all virtual atom calculations
+while <code class="code docutils literal"><span class="pre">average_stem_vres_positions</span></code> has been removed. This leads to more consistent virtual atom calculations.
+Further more the values in <code class="code docutils literal"><span class="pre">average_atom_positions</span></code> have been recalculated.</li>
+<li>In <code class="code docutils literal"><span class="pre">forgi.threedee.model.rmsd</span></code>, the functions <code class="code docutils literal"><span class="pre">centered_rmsd</span></code> and <code class="code docutils literal"><span class="pre">centered_drmsd</span></code> have been
+deprecated and deleted respectively. Use <code class="code docutils literal"><span class="pre">rmsd(cg1,cg2)</span></code> for a centered RMSD. This removes code duplication.</li>
+<li>In <code class="code docutils literal"><span class="pre">forgi.threedee.model.comparison</span></code> a ConfusionMatrix class was introduced for speedup with
+repeated comparisons to the same reference.</li>
+<li>Several smaller changes and improvements</li>
+</ul>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="download.html">Installation</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="credit_link.html">Credits &amp; Citing</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on May 19, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

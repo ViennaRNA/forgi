@@ -1,0 +1,618 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.threedee.utilities.pdb &mdash; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="top" title="forgi 0.4 documentation" href="../../../../index.html" />
+    <link rel="up" title="forgi.threedee" href="../../threedee.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.utilities.pdb</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">Bio.PDB</span> <span class="kn">as</span> <span class="nn">bpdb</span>
+
+<span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="kn">as</span> <span class="nn">fud</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="kn">as</span> <span class="nn">ftuv</span>
+
+<span class="n">backbone_atoms_real</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s2">&quot;O5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O3&#39;&quot;</span><span class="p">]</span> 
+<span class="n">backbone_atoms</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;O5*&#39;</span><span class="p">,</span> <span class="s1">&#39;C5*&#39;</span><span class="p">,</span> <span class="s1">&#39;C4*&#39;</span><span class="p">,</span> <span class="s1">&#39;C3*&#39;</span><span class="p">,</span> <span class="s1">&#39;O3*&#39;</span><span class="p">]</span>
+<span class="n">backbone_atoms</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s2">&quot;O5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O3&#39;&quot;</span><span class="p">]</span>
+<span class="n">ring_atoms</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;C4*&#39;</span><span class="p">,</span> <span class="s1">&#39;C3*&#39;</span><span class="p">,</span> <span class="s1">&#39;C2*&#39;</span><span class="p">,</span> <span class="s1">&#39;C1*&#39;</span><span class="p">,</span> <span class="s1">&#39;O4*&#39;</span><span class="p">]</span>
+<span class="n">ring_atoms_real</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C2&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C1&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O4&#39;&quot;</span><span class="p">]</span>
+
+<span class="n">nonsidechain_atoms</span> <span class="o">=</span> <span class="n">backbone_atoms_real</span> <span class="o">+</span> <span class="n">ring_atoms_real</span>
+
+<span class="n">chi_torsion_atoms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">chi_torsion_atoms</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;O4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C1&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;N9&quot;</span><span class="p">,</span> <span class="s2">&quot;C4&quot;</span><span class="p">]</span>
+<span class="n">chi_torsion_atoms</span><span class="p">[</span><span class="s1">&#39;G&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_torsion_atoms</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span>
+<span class="n">chi_torsion_atoms</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;O4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C1&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;N1&quot;</span><span class="p">,</span> <span class="s2">&quot;C2&quot;</span><span class="p">]</span>
+<span class="n">chi_torsion_atoms</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_torsion_atoms</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span>
+
+<span class="n">side_chain_atoms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;O4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">]</span>
+<span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;N4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">]</span>
+
+<span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;N6&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">]</span>
+<span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;G&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;O6&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">]</span>
+
+<span class="n">all_side_chains</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">side_chain_atoms</span><span class="p">[</span><span class="s1">&#39;G&#39;</span><span class="p">])</span>
+
+<span class="n">all_rna_atoms</span> <span class="o">=</span> <span class="n">backbone_atoms</span> <span class="o">+</span> <span class="n">ring_atoms</span>
+<span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">side_chain_atoms</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="n">all_rna_atoms</span> <span class="o">+=</span> <span class="n">v</span>
+<span class="n">all_rna_atoms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_rna_atoms</span><span class="p">)</span>
+
+<span class="n">interactions</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;O5*&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s2">&quot;O5&#39;&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;OP1&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;O1P&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;OP2&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;O2P&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;C2*&#39;</span><span class="p">,</span> <span class="s1">&#39;O2*&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;C2&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O2&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;O5*&#39;</span><span class="p">,</span> <span class="s1">&#39;C5*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;O5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C5&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C5*&#39;</span><span class="p">,</span> <span class="s1">&#39;C4*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C4&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C4*&#39;</span><span class="p">,</span> <span class="s1">&#39;O4*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O4&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C4*&#39;</span><span class="p">,</span> <span class="s1">&#39;C3*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C3&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;O4*&#39;</span><span class="p">,</span> <span class="s1">&#39;C1*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;O4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C1&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C3*&#39;</span><span class="p">,</span> <span class="s1">&#39;C2*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C2&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C3*&#39;</span><span class="p">,</span> <span class="s1">&#39;O3*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O3&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C2*&#39;</span><span class="p">,</span> <span class="s1">&#39;C1*&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C2&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C1&#39;&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C1*&#39;</span><span class="p">,</span> <span class="s1">&#39;N1&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C1&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;N1&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;O4&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;N4&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N2&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C1*&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s2">&quot;C1&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;N9&quot;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;N9&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;N9&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;O6&#39;</span><span class="p">),</span>
+                       <span class="p">(</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;N6&#39;</span><span class="p">)]</span>
+
+<span class="n">interactions_set</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">interactions</span><span class="p">]</span>
+
+<div class="viewcode-block" id="trim_chain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.trim_chain">[docs]</a><span class="k">def</span> <span class="nf">trim_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">start_res</span><span class="p">,</span> <span class="n">end_res</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Remove all residues that are not between start_res and end_res, inclusive.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">to_detach</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">start_res</span> <span class="ow">or</span> <span class="n">end_res</span> <span class="o">&lt;=</span> <span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">to_detach</span> <span class="o">+=</span> <span class="p">[</span><span class="n">res</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">to_detach</span><span class="p">:</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="trim_chain_between"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.trim_chain_between">[docs]</a><span class="k">def</span> <span class="nf">trim_chain_between</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">start_res</span><span class="p">,</span> <span class="n">end_res</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Remove all nucleotides between start_res and end_res, inclusive.</span>
+
+<span class="sd">    The chain is modified in place so there is no return value.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">to_detach</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start_res</span> <span class="o">&lt;=</span> <span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">end_res</span><span class="p">:</span>
+            <span class="n">to_detach</span> <span class="o">+=</span> <span class="p">[</span><span class="n">res</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">to_detach</span><span class="p">:</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="extract_subchain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.extract_subchain">[docs]</a><span class="k">def</span> <span class="nf">extract_subchain</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">start_res</span><span class="p">,</span> <span class="n">end_res</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extract a portion of a particular chain. The new chain</span>
+<span class="sd">    will contain residues copied from the original chain.</span>
+
+<span class="sd">    :param chain: The source chain.</span>
+<span class="sd">    :param start_res: The number of the first nucleotide to extract</span>
+<span class="sd">    :param last_res: The number of the last nucleotide to extract</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">new_chain</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Chain</span><span class="o">.</span><span class="n">Chain</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">start_res</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="o">&lt;=</span> <span class="n">end_res</span><span class="p">:</span>
+            <span class="n">new_chain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">new_chain</span></div>
+
+<div class="viewcode-block" id="extract_subchain_from_res_list"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.extract_subchain_from_res_list">[docs]</a><span class="k">def</span> <span class="nf">extract_subchain_from_res_list</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">res_list</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extract a portion of a particular chain. The new chain</span>
+<span class="sd">    will contain residues copied from the original chain.</span>
+
+<span class="sd">    :param chain: The source chain.</span>
+<span class="sd">    :param res_list: The list of residue identifiers of the nucleotides</span>
+<span class="sd">                     to extract</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">new_chain</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Chain</span><span class="o">.</span><span class="n">Chain</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res_list</span><span class="p">:</span>
+        <span class="n">new_chain</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">new_chain</span></div>
+
+<div class="viewcode-block" id="is_covalent"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.is_covalent">[docs]</a><span class="k">def</span> <span class="nf">is_covalent</span><span class="p">(</span><span class="n">contact</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Determine if a particular contact is covalent.</span>
+
+<span class="sd">    :param contact: A pair of two Atom objects</span>
+<span class="sd">    :return: `True` if they are covalently bonded</span>
+<span class="sd">             `False` otherwise</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">r1</span> <span class="o">=</span> <span class="n">contact</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">r2</span> <span class="o">=</span> <span class="n">contact</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="n">r1a</span> <span class="o">=</span> <span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">contact</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">r2a</span> <span class="o">=</span> <span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">contact</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">contact</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">contact</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="p">((</span><span class="n">r1</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span> <span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">c2</span><span class="p">))</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">r1a</span><span class="p">,</span> <span class="n">r2a</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">r1</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">r2</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">c1</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">c2</span><span class="o">.</span><span class="n">name</span><span class="p">)))</span> <span class="ow">in</span> <span class="n">interactions_set</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">if</span> <span class="n">r2</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">r1</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1">#neighboring residues</span>
+        <span class="k">if</span> <span class="n">c1</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;O3*&#39;</span> <span class="ow">and</span> <span class="n">c2</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;P&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="num_noncovalent_clashes"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.num_noncovalent_clashes">[docs]</a><span class="k">def</span> <span class="nf">num_noncovalent_clashes</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Check if a chain has non-covalent clashes. Non-covalent clashes are found</span>
+<span class="sd">    when two atoms that aren&#39;t covalently linked are within 1.8 A of each other.</span>
+
+<span class="sd">    :param chain: The chain to evaluate</span>
+<span class="sd">    :param return: The number of non-covalent clashes.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">all_atoms</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Selection</span><span class="o">.</span><span class="n">unfold_entities</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">)</span>
+    <span class="n">ns</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">NeighborSearch</span><span class="p">(</span><span class="n">all_atoms</span><span class="p">)</span>
+
+    <span class="n">contacts</span> <span class="o">=</span> <span class="n">ns</span><span class="o">.</span><span class="n">search_all</span><span class="p">(</span><span class="mf">1.9</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_covalent</span><span class="p">(</span><span class="n">c</span><span class="p">)])</span></div>
+
+<div class="viewcode-block" id="noncovalent_distances"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.noncovalent_distances">[docs]</a><span class="k">def</span> <span class="nf">noncovalent_distances</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Print out the distances between all non-covalently bonded atoms</span>
+<span class="sd">    which are closer than cutoff to each other.</span>
+
+<span class="sd">    :param chain: The Bio.PDB chain.</span>
+<span class="sd">    :param cutoff: The maximum distance</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">all_atoms</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Selection</span><span class="o">.</span><span class="n">unfold_entities</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">)</span>
+    <span class="n">ns</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">NeighborSearch</span><span class="p">(</span><span class="n">all_atoms</span><span class="p">)</span>
+
+    <span class="n">contacts</span> <span class="o">=</span> <span class="n">ns</span><span class="o">.</span><span class="n">search_all</span><span class="p">(</span><span class="n">cutoff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contacts</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_covalent</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="pdb_rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.pdb_rmsd">[docs]</a><span class="k">def</span> <span class="nf">pdb_rmsd</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">sidechains</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">superimpose</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">apply_sup</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the all-atom rmsd between two RNA chains.</span>
+
+<span class="sd">    :param c1: A Bio.PDB.Chain</span>
+<span class="sd">    :param c2: Another Bio.PDB.Chain</span>
+<span class="sd">    :return: The rmsd between the locations of all the atoms in the chains.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">a_5_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s1">&#39;O5*&#39;</span><span class="p">,</span> <span class="s1">&#39;C5*&#39;</span><span class="p">,</span> <span class="s1">&#39;C4*&#39;</span><span class="p">,</span> <span class="s1">&#39;O4*&#39;</span><span class="p">,</span> <span class="s1">&#39;O2*&#39;</span><span class="p">]</span>
+    <span class="n">a_5_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">,</span> <span class="s2">&quot;O5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C5&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O4&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O2&#39;&quot;</span><span class="p">]</span>
+    <span class="n">a_3_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;C1*&quot;</span><span class="p">,</span> <span class="s2">&quot;C2*&quot;</span><span class="p">,</span> <span class="s2">&quot;C3*&quot;</span><span class="p">,</span> <span class="s2">&quot;O3*&quot;</span><span class="p">]</span>
+    <span class="n">a_3_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;C1&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C2&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;C3&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;O3&#39;&quot;</span><span class="p">]</span>
+
+    <span class="n">a_names</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;O4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;N4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;N6&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;G&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;O6&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;U&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;O4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;O2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;N4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;N6&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+    <span class="n">a_names</span><span class="p">[</span><span class="s1">&#39;G&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_5_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;N1&#39;</span><span class="p">,</span> <span class="s1">&#39;C2&#39;</span><span class="p">,</span> <span class="s1">&#39;N2&#39;</span><span class="p">,</span> <span class="s1">&#39;N3&#39;</span><span class="p">,</span> <span class="s1">&#39;C4&#39;</span><span class="p">,</span> <span class="s1">&#39;C5&#39;</span><span class="p">,</span> <span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="s1">&#39;O6&#39;</span><span class="p">,</span> <span class="s1">&#39;N7&#39;</span><span class="p">,</span> <span class="s1">&#39;C8&#39;</span><span class="p">,</span> <span class="s1">&#39;N9&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a_3_names</span>
+
+    <span class="n">all_atoms1</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_atoms2</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">acceptable_residues</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;G&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">,</span><span class="s1">&#39;rA&#39;</span><span class="p">,</span><span class="s1">&#39;rC&#39;</span><span class="p">,</span><span class="s1">&#39;rG&#39;</span><span class="p">,</span><span class="s1">&#39;rU&#39;</span><span class="p">,</span><span class="s1">&#39;DG&#39;</span><span class="p">]</span>
+    <span class="n">c1_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">cr</span> <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">c1</span><span class="o">.</span><span class="n">get_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="n">acceptable_residues</span><span class="p">]</span>
+    <span class="n">c2_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">cr</span> <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">c2</span><span class="o">.</span><span class="n">get_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">cr</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="n">acceptable_residues</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c1_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">c2_list</span><span class="p">):</span>
+        <span class="c1">#print &gt;&gt;sys.stderr, &quot;Chains of different length&quot;, len(c1.get_list()), len(c2.get_list())</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Chains of different length.&quot;</span><span class="p">)</span>
+
+    <span class="c1">#c1_list.sort(key=lambda x: x.id[1])</span>
+    <span class="c1">#c2_list.sort(key=lambda x: x.id[1])</span>
+    
+    <span class="k">for</span> <span class="n">r1</span><span class="p">,</span><span class="n">r2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">c1_list</span><span class="p">,</span> <span class="n">c2_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sidechains</span><span class="p">:</span>
+            <span class="n">anames</span> <span class="o">=</span> <span class="n">backbone_atoms</span> <span class="o">+</span> <span class="n">a_names</span><span class="p">[</span><span class="n">c1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anames</span> <span class="o">=</span> <span class="n">backbone_atoms</span>
+        <span class="c1">#anames = a_5_names + a_3_names</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">anames</span><span class="p">:</span>
+	    <span class="k">try</span><span class="p">:</span>
+		<span class="n">at1</span> <span class="o">=</span> <span class="n">r1</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
+		<span class="n">at2</span> <span class="o">=</span> <span class="n">r2</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
+
+		<span class="n">all_atoms1</span> <span class="o">+=</span> <span class="p">[</span><span class="n">at1</span><span class="p">]</span>
+		<span class="n">all_atoms2</span> <span class="o">+=</span> <span class="p">[</span><span class="n">at2</span><span class="p">]</span>
+	    <span class="k">except</span><span class="p">:</span>
+	        <span class="k">continue</span>
+
+    <span class="c1">#print &quot;rmsd len:&quot;, len(all_atoms1), len(all_atoms2)</span>
+    <span class="k">if</span> <span class="n">superimpose</span><span class="p">:</span>
+        <span class="n">sup</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Superimposer</span><span class="p">()</span>
+        <span class="n">sup</span><span class="o">.</span><span class="n">set_atoms</span><span class="p">(</span><span class="n">all_atoms1</span><span class="p">,</span> <span class="n">all_atoms2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">apply_sup</span><span class="p">:</span>
+            <span class="n">sup</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">c2</span><span class="o">.</span><span class="n">get_atoms</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_atoms1</span><span class="p">),</span> <span class="n">sup</span><span class="o">.</span><span class="n">rms</span><span class="p">,</span> <span class="n">sup</span><span class="o">.</span><span class="n">rotran</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">crvs1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span><span class="o">.</span><span class="n">get_array</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">all_atoms1</span><span class="p">])</span>
+        <span class="n">crvs2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">get_vector</span><span class="p">()</span><span class="o">.</span><span class="n">get_array</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">all_atoms2</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">all_atoms1</span><span class="p">),</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vector_set_rmsd</span><span class="p">(</span><span class="n">crvs1</span><span class="p">,</span> <span class="n">crvs2</span><span class="p">),</span> <span class="bp">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_first_chain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.get_first_chain">[docs]</a><span class="k">def</span> <span class="nf">get_first_chain</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load a PDB file using the Bio.PDB module and return the first chain.</span>
+
+<span class="sd">    :param filename: The path to the pdb file</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_chains</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="pdb_file_rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.pdb_file_rmsd">[docs]</a><span class="k">def</span> <span class="nf">pdb_file_rmsd</span><span class="p">(</span><span class="n">fn1</span><span class="p">,</span> <span class="n">fn2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the RMSD of all the atoms in two pdb structures.</span>
+
+<span class="sd">    :param fn1: The first filename.</span>
+<span class="sd">    :param fn2: The second filename.</span>
+<span class="sd">    :return: The rmsd between the two structures.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+
+        <span class="n">s1</span><span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">fn1</span><span class="p">)</span>
+        <span class="n">s2</span><span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">fn2</span><span class="p">)</span>
+
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">get_biggest_chain</span><span class="p">(</span><span class="n">fn1</span><span class="p">)</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">get_biggest_chain</span><span class="p">(</span><span class="n">fn2</span><span class="p">)</span>
+
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">pdb_rmsd</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rmsd</span></div>
+
+<div class="viewcode-block" id="renumber_chain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.renumber_chain">[docs]</a><span class="k">def</span> <span class="nf">renumber_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">resids</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Renumber all the residues in this chain so that they start at 1 and end at</span>
+<span class="sd">    len(chain)</span>
+<span class="sd">    </span>
+<span class="sd">    :param chain: A Bio.PDB.Chain object</span>
+<span class="sd">    :return: The same chain, but with renamed nucleotides</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">chain</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+
+    <span class="k">if</span> <span class="n">resids</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">resids</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">))]</span>
+
+    <span class="n">new_child_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">new_child_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">res</span><span class="p">,</span> <span class="n">r_new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">resids</span><span class="p">):</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">r_new</span>
+        <span class="n">new_child_dict</span><span class="p">[</span><span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="n">new_child_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="n">chain</span><span class="o">.</span><span class="n">child_dict</span> <span class="o">=</span> <span class="n">new_child_dict</span>
+    <span class="n">chain</span><span class="o">.</span><span class="n">child_list</span> <span class="o">=</span> <span class="n">new_child_list</span>
+
+    <span class="k">return</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="output_chain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.output_chain">[docs]</a><span class="k">def</span> <span class="nf">output_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">fr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;                                                                                                            </span>
+<span class="sd">    Dump a chain to an output file. Remove the hydrogen atoms.                                                     </span>
+<span class="sd">    </span>
+<span class="sd">    :param chain: The Bio.PDB.Chain to dump.</span>
+<span class="sd">    :param filename: The place to dump it.</span>
+<span class="sd">    &#39;&#39;&#39;</span>                                                                                                            
+    <span class="k">class</span> <span class="nc">HSelect</span><span class="p">(</span><span class="n">bpdb</span><span class="o">.</span><span class="n">Select</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">accept_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>                                                                           
+                <span class="k">return</span> <span class="bp">False</span>                                                                                       
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>                                                                                        
+    <span class="n">m</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Model</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span> 
+    <span class="n">s</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Structure</span><span class="o">.</span><span class="n">Structure</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+    <span class="n">m</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>    
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">PDBIO</span><span class="p">()</span>
+    <span class="n">io</span><span class="o">.</span><span class="n">set_structure</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">io</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">HSelect</span><span class="p">())</span> </div>
+
+<div class="viewcode-block" id="get_particular_chain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.get_particular_chain">[docs]</a><span class="k">def</span> <span class="nf">get_particular_chain</span><span class="p">(</span><span class="n">in_filename</span><span class="p">,</span> <span class="n">chain_id</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load a PDB file and return a particular chain.</span>
+
+<span class="sd">    :param in_filename: The name of the pdb file.</span>
+<span class="sd">    :param chain_id: The id of the chain.</span>
+<span class="sd">    :return: A Bio.PDB.Chain object containing that particular chain.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">parser</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">in_filename</span><span class="p">)</span>
+
+    <span class="c1"># always take the first model</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">m</span><span class="p">[</span><span class="n">chain_id</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="get_biggest_chain"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.get_biggest_chain">[docs]</a><span class="k">def</span> <span class="nf">get_biggest_chain</span><span class="p">(</span><span class="n">in_filename</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load the PDB file located at filename, select the longest</span>
+<span class="sd">    chain and return it.</span>
+
+<span class="sd">    :param in_filename: The location of the original file.</span>
+<span class="sd">    :return: A Bio.PDB chain structure corresponding to the longest</span>
+<span class="sd">             chain in the structure stored in in_filename</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">parser</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="n">in_filename</span><span class="p">)</span>
+
+    <span class="n">chains</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_chains</span><span class="p">())</span>
+    <span class="n">biggest</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">biggest_len</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chains</span><span class="p">)):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1">#res_list = list(c.get_list())</span>
+        
+        <span class="c1">#print &gt;&gt; sys.stderr, res_list[0].resname</span>
+        <span class="n">rna</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="c1"># Only count RNA residues</span>
+        <span class="n">num_residues</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span> <span class="ow">or</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span> <span class="ow">or</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;G&#39;</span> <span class="ow">or</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;U&#39;</span><span class="p">):</span>
+                <span class="n">num_residues</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">num_residues</span> <span class="o">&gt;</span> <span class="n">biggest_len</span><span class="p">:</span>
+            <span class="n">biggest</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">biggest_len</span> <span class="o">=</span> <span class="n">num_residues</span>
+
+        <span class="c1">#print c, num_residues</span>
+    <span class="c1">#sys.exit(1)</span>
+
+    <span class="n">orig_chain</span> <span class="o">=</span> <span class="n">chains</span><span class="p">[</span><span class="n">biggest</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">orig_chain</span></div>
+
+<div class="viewcode-block" id="rename_modified_ress"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.rename_modified_ress">[docs]</a><span class="k">def</span> <span class="nf">rename_modified_ress</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Rename the modified residues so that they have the same</span>
+<span class="sd">    names as unmodified residues</span>
+
+<span class="sd">    :param chain: A Bio.PDB.Chain structure</span>
+<span class="sd">    :return: The same chain, but with modified residue names.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="c1"># rename rosetta-generated structures</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rA&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  A&#39;</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rC&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  C&#39;</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rG&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  G&#39;</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rU&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  U&#39;</span>
+
+        <span class="c1"># rename modified residues</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;H_PSU&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  U&#39;</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;H_5MU&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  U&#39;</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;H_5MC&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  C&#39;</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;H_1MG&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  G&#39;</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;H_H2U&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  U&#39;</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="c1"># treat deoxyuridine as uridine</span>
+        <span class="c1"># TODO: is this acceptable?</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; DU&#39;</span><span class="p">:</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  U&#39;</span>
+
+    <span class="k">return</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="rename_rosetta_atoms"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.rename_rosetta_atoms">[docs]</a><span class="k">def</span> <span class="nf">rename_rosetta_atoms</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Rosetta names all the backbone atoms with an asterisk rather than an</span>
+<span class="sd">    apostrophe. All that needs to be reversed.</span>
+
+<span class="sd">    :param chain. A Bio.PDB.Chain structure generated by Rosetta</span>
+<span class="sd">    :return: The same chain with renamed atoms</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Selection</span><span class="o">.</span><span class="n">unfold_entities</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">):</span>
+        <span class="n">oldid</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">fullname</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="n">a</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">child_dict</span><span class="p">[</span><span class="n">oldid</span><span class="p">]</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">child_dict</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+
+    <span class="k">return</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="remove_hetatm"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.remove_hetatm">[docs]</a><span class="k">def</span> <span class="nf">remove_hetatm</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Remove all the hetatms in the chain.</span>
+
+<span class="sd">    :param chain: A Bio.PDB.Chain</span>
+<span class="sd">    :return: The same chain, but missing all hetatms</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">to_detach</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">to_detach</span> <span class="o">+=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">to_detach</span><span class="p">:</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="load_structure"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.load_structure">[docs]</a><span class="k">def</span> <span class="nf">load_structure</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load a Bio.PDB.Structure object and return the largest chain.</span>
+<span class="sd">    This chain will be modified so that all hetatms are removed, modified</span>
+<span class="sd">    residues will be renamed to regular residues, etc...</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">get_biggest_chain</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">)</span> 
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">rename_modified_ress</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">rename_rosetta_atoms</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">remove_hetatm</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">renumber_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+     
+    <span class="k">return</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="interchain_contacts"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.interchain_contacts">[docs]</a><span class="k">def</span> <span class="nf">interchain_contacts</span><span class="p">(</span><span class="n">struct</span><span class="p">):</span>
+    <span class="n">all_atoms</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">Selection</span><span class="o">.</span><span class="n">unfold_entities</span><span class="p">(</span><span class="n">struct</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">)</span>
+
+    <span class="n">ns</span> <span class="o">=</span> <span class="n">bpdb</span><span class="o">.</span><span class="n">NeighborSearch</span><span class="p">(</span><span class="n">all_atoms</span><span class="p">)</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">ns</span><span class="o">.</span><span class="n">search_all</span><span class="p">(</span><span class="mf">2.8</span><span class="p">)</span>
+
+    <span class="n">ic_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+            <span class="n">ic_pairs</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">ic_pairs</span></div>
+
+<div class="viewcode-block" id="is_rna"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.is_rna">[docs]</a><span class="k">def</span> <span class="nf">is_rna</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Determine if a Bio.PDB.Chain structure corresponds to an RNA</span>
+<span class="sd">    molecule.</span>
+
+<span class="sd">    :param chain: A Bio.PDB.Chain molecule</span>
+<span class="sd">    :return: True if it is an RNA molecule, False otherwise</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="is_protein"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.pdb.html#forgi.threedee.utilities.pdb.is_protein">[docs]</a><span class="k">def</span> <span class="nf">is_protein</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Determine if a Bio.PDB.Chain structure corresponds to an protein</span>
+<span class="sd">    molecule.</span>
+
+<span class="sd">    :param chain: A Bio.PDB.Chain molecule</span>
+<span class="sd">    :return: True if it is a protein molecule, False otherwise</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">resname</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;ALA&#39;</span><span class="p">,</span> <span class="s1">&#39;ARG&#39;</span><span class="p">,</span> <span class="s1">&#39;ASN&#39;</span><span class="p">,</span> <span class="s1">&#39;ASP&#39;</span><span class="p">,</span> <span class="s1">&#39;CYS&#39;</span><span class="p">,</span> <span class="s1">&#39;GLN&#39;</span><span class="p">,</span> <span class="s1">&#39;GLU&#39;</span><span class="p">,</span> <span class="s1">&#39;HIS&#39;</span><span class="p">,</span> <span class="s1">&#39;ILE&#39;</span><span class="p">,</span> <span class="s1">&#39;LEU&#39;</span><span class="p">,</span> <span class="s1">&#39;LYS&#39;</span><span class="p">,</span> <span class="s1">&#39;MET&#39;</span><span class="p">,</span> <span class="s1">&#39;PHE&#39;</span><span class="p">,</span> <span class="s1">&#39;PRO&#39;</span><span class="p">,</span> <span class="s1">&#39;SER&#39;</span><span class="p">,</span> <span class="s1">&#39;THR&#39;</span><span class="p">,</span> <span class="s1">&#39;TRP&#39;</span><span class="p">,</span> <span class="s1">&#39;TYR&#39;</span><span class="p">,</span> <span class="s1">&#39;VAL&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Sep 05, 2016.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+    </div>
+  </body>
+</html>

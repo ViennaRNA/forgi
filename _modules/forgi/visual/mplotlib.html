@@ -1,0 +1,305 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>forgi.visual.mplotlib &mdash; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
+    <link rel="top" title="forgi 0.4 documentation" href="../../../index.html" />
+    <link rel="up" title="forgi" href="../../forgi.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="../../../index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.visual.mplotlib</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">Bio</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="kn">as</span> <span class="nn">ftmc</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="kn">as</span> <span class="nn">ftup</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">circles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a scatter of circles plot of x vs y, where x and y are sequence </span>
+<span class="sd">    like objects of the same lengths. The size of circles are in data scale.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x,y : scalar or array_like, shape (n, )</span>
+<span class="sd">        Input data</span>
+<span class="sd">    s : scalar or array_like, shape (n, ) </span>
+<span class="sd">        Radius of circle in data scale (ie. in data unit)</span>
+<span class="sd">    c : color or sequence of color, optional, default : &#39;b&#39;</span>
+<span class="sd">        `c` can be a single color format string, or a sequence of color</span>
+<span class="sd">        specifications of length `N`, or a sequence of `N` numbers to be</span>
+<span class="sd">        mapped to colors using the `cmap` and `norm` specified via kwargs.</span>
+<span class="sd">        Note that `c` should not be a single numeric RGB or</span>
+<span class="sd">        RGBA sequence because that is indistinguishable from an array of</span>
+<span class="sd">        values to be colormapped.  `c` can be a 2-D array in which the</span>
+<span class="sd">        rows are RGB or RGBA, however.</span>
+<span class="sd">    ax : Axes object, optional, default: None</span>
+<span class="sd">        Parent axes of the plot. It uses gca() if not specified.</span>
+<span class="sd">    vmin, vmax : scalar, optional, default: None</span>
+<span class="sd">        `vmin` and `vmax` are used in conjunction with `norm` to normalize</span>
+<span class="sd">        luminance data.  If either are `None`, the min and max of the</span>
+<span class="sd">        color array is used.  (Note if you pass a `norm` instance, your</span>
+<span class="sd">        settings for `vmin` and `vmax` will be ignored.)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    paths : `~matplotlib.collections.PathCollection`</span>
+
+<span class="sd">    Other parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    kwargs : `~matplotlib.collections.Collection` properties</span>
+<span class="sd">        eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    a = np.arange(11)</span>
+<span class="sd">    circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor=&#39;none&#39;)</span>
+
+<span class="sd">    License</span>
+<span class="sd">    --------</span>
+<span class="sd">    This code is under [The BSD 3-Clause License]</span>
+<span class="sd">    (http://opensource.org/licenses/BSD-3-Clause)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Circle</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">PatchCollection</span>
+    <span class="kn">import</span> <span class="nn">pylab</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="c1">#import matplotlib.colors as colors</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>    
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="nb">basestring</span><span class="p">):</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">c</span>     <span class="c1"># ie. use colors.colorConverter.to_rgba_array(c)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c1"># use cmap, norm after collection is created</span>
+    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">s</span><span class="p">),]</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">),</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span><span class="n">y_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">),</span> <span class="n">s_</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">,</span><span class="n">s_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">s</span><span class="p">)]</span>
+    <span class="n">collection</span> <span class="o">=</span> <span class="n">PatchCollection</span><span class="p">(</span><span class="n">patches</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">collection</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">vmin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">vmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">collection</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">collection</span>
+
+<div class="viewcode-block" id="plot_rna"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.plot_rna">[docs]</a><span class="k">def</span> <span class="nf">plot_rna</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plot an RNA structure given a set of nucleotide coordinates</span>
+<span class="sd">    </span>
+<span class="sd">    :param cg: A forgi.threedee.model.coarse_grain.CoarseGrainRNA structure</span>
+<span class="sd">    :param ax: A matplotlib plotting area</span>
+<span class="sd">    :param offset: Offset the plot by these coordinates. If a simple True is passed in, then</span>
+<span class="sd">                   offset by the current width of the plot</span>
+<span class="sd">    :return: (ax, coords) The axes and the coordinates for each nucleotide</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">print</span> <span class="s2">&quot;plotting RNA...&quot;</span>
+    <span class="kn">import</span> <span class="nn">RNA</span>
+
+    <span class="n">RNA</span><span class="o">.</span><span class="n">cvar</span><span class="o">.</span><span class="n">rna_plot_type</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1">#colors = []</span>
+    <span class="c1">#circles = []</span>
+
+    <span class="n">bp_string</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">()</span>
+    <span class="n">el_string</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_element_string</span><span class="p">()</span>    <span class="c1"># get the type of element of each nucleotide</span>
+                                          <span class="c1"># i.e. eeesssshhhhsssseeee</span>
+    <span class="n">el_to_color</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;h&#39;</span><span class="p">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">offset</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="n">vrna_coords</span> <span class="o">=</span> <span class="n">RNA</span><span class="o">.</span><span class="n">get_xy_coordinates</span><span class="p">(</span><span class="n">bp_string</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bp_string</span><span class="p">):</span>
+        <span class="n">coords</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> 
+                    <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">Y</span><span class="p">)]</span>
+        <span class="c1">#colors += [el_to_color[el_string[i-1]]]</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> 
+                             <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">Y</span><span class="p">),</span>
+                              <span class="n">color</span><span class="o">=</span><span class="n">el_to_color</span><span class="p">[</span><span class="n">el_string</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">datalim</span> <span class="o">=</span> <span class="p">((</span><span class="nb">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]),</span> 
+                <span class="nb">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]])),</span> 
+               <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]),</span> 
+                <span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])))</span>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    min_coord = min(datalim[0][0], datalim[0][1])</span>
+<span class="sd">    max_coord = max(datalim[1][0], datalim[1][1])</span>
+<span class="sd">    datalim = ((min_coord, min_coord), (max_coord, max_coord))</span>
+
+<span class="sd">    print &quot;min_coord:&quot;, min_coord</span>
+<span class="sd">    print &quot;max_coord:&quot;, max_coord</span>
+<span class="sd">    print &quot;datalime:&quot;, datalim</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">width</span> <span class="o">=</span> <span class="n">datalim</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">datalim</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">datalim</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">datalim</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1">#ax.set_aspect(width / height)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">,</span> <span class="s1">&#39;datalim&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">update_datalim</span><span class="p">(</span><span class="n">datalim</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">();</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="plot_pdb"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.plot_pdb">[docs]</a><span class="k">def</span> <span class="nf">plot_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot a pdb file.</span>
+
+<span class="sd">    :param structure: A Bio.PDB.Structure</span>
+<span class="sd">    :return: An Axes object (ax)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">structure</span> <span class="o">=</span> <span class="n">Bio</span><span class="o">.</span><span class="n">PDB</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;blah&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">structure</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">chain_coords</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">cgs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="kn">import</span> <span class="nn">collections</span> <span class="kn">as</span> <span class="nn">col</span>
+
+    <span class="c1"># store a list of RNA nucleotides that each protein interacts with</span>
+    <span class="n">protein_interactions</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+    <span class="n">protein_circles</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+        <span class="c1"># iterate over RNAs</span>
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="c1"># convert to cg and store so that we can convert pdb nucleotide ids to </span>
+            <span class="c1"># secondary structure indexes later</span>
+            <span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">chain_id</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">cgs</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">cg</span>
+
+            <span class="c1"># plot the structure and store the coordinates</span>
+            <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span> <span class="o">=</span> <span class="n">plot_rna</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="n">chain_coords</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">coords</span>
+            
+    <span class="k">for</span> <span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">ftup</span><span class="o">.</span><span class="n">interchain_contacts</span><span class="p">(</span><span class="n">structure</span><span class="p">):</span>
+        <span class="c1"># iterate over all the interactions in order to find out which</span>
+        <span class="c1"># nucleotides this protein interacts with</span>
+        <span class="n">chain1</span> <span class="o">=</span> <span class="n">a1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">chain2</span> <span class="o">=</span> <span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+        
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_protein</span><span class="p">(</span><span class="n">chain1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain2</span><span class="p">):</span>
+            <span class="c1"># collect all the RNA nucleotides that a protein interacts with</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">protein_interactions</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sid</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain2</span><span class="p">):</span>
+            <span class="n">sid1</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">sid2</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+            <span class="n">coord1</span> <span class="o">=</span> <span class="n">chain_coords</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">][</span><span class="n">sid1</span><span class="p">]</span>
+            <span class="n">coord2</span> <span class="o">=</span> <span class="n">chain_coords</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">][</span><span class="n">sid2</span><span class="p">]</span>
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">coord1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord2</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">coord1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">coord2</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+                    <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
+        <span class="c1"># draw each protein and the links that it has to other nucleotides</span>
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_protein</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="c1"># the protein will be positioned at the centroid of the nucleotides</span>
+            <span class="c1"># that it interacts with</span>
+            <span class="n">interacting_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chain_coords</span><span class="p">[</span><span class="n">chain_id</span><span class="p">][</span><span class="n">nuc_num</span><span class="p">])</span> 
+                                  <span class="k">for</span> <span class="p">(</span><span class="n">chain_id</span><span class="p">,</span> <span class="n">nuc_num</span><span class="p">)</span> <span class="ow">in</span> <span class="n">protein_interactions</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">]]</span>
+
+            <span class="n">centroid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">interacting_coords</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">interacting_coords</span><span class="p">)</span>
+
+            <span class="c1"># the size of the circle representing it will be proportional to its</span>
+            <span class="c1"># length (in nucleotides)</span>
+            <span class="n">radius</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">get_list</span><span class="p">()))</span>
+            <span class="n">protein_circles</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">radius</span><span class="p">]]</span>
+            
+            <span class="c1"># draw all of the interactions as lines</span>
+            <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">interacting_coords</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        
+    <span class="n">protein_circles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">circles</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">protein_circles</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">protein_circles</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="c1">#plt.axis(&#39;off&#39;)</span>
+
+    <span class="k">pass</span></div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Sep 05, 2016.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+    </div>
+  </body>
+</html>

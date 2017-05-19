@@ -1,0 +1,424 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>RNA 3D Structure Using forgi.threedee &#8212; forgi 0.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="forgi 0.4 documentation" href="index.html" />
+    <link rel="up" title="Forgi Tutorial" href="tutorial.html" />
+    <link rel="next" title="Forgi API documentation" href="apidoc/forgi.html" />
+    <link rel="prev" title="RNA Secondary Structure as a Graph Using the forgi Library" href="graph_tutorial.html" /> 
+  </head>
+  <body role="document">
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>forgi 0.4 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="graph_tutorial.html">RNA Secondary Structure as a Graph Using the forgi Library</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="apidoc/forgi.html">Forgi API documentation</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="rna-3d-structure-using-forgi-threedee">
+<span id="forgi-threedee-tutorial"></span><h1>RNA 3D Structure Using forgi.threedee<a class="headerlink" href="#rna-3d-structure-using-forgi-threedee" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">forgi.threedee</span></code> is an extension of <code class="docutils literal"><span class="pre">forgi</span></code> capable of handling 3D data
+about RNA structures. It provides methods for extracting secondary structure as
+well as creating a coarse grain representation of 3D RNA structures.</p>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.major.iric.ca/MajorLabEn/MC-Tools.html">MC_Annotate</a> is required for annotating the nucleotide interactions.</p>
+</div>
+<div class="section" id="extracting-2d-structure-from-a-3d-structure">
+<h2>Extracting 2D structure from a 3D structure<a class="headerlink" href="#extracting-2d-structure-from-a-3d-structure" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/3d_to_2d.png"><img alt="_images/3d_to_2d.png" class="align-center" src="_images/3d_to_2d.png" style="width: 500px;" /></a>
+<p>To extract the base-pair information from a 3D structure stored in a PDB file,
+use the <code class="code docutils literal"><span class="pre">pdb_to_ss_fasta.py</span></code> script. By default, this script operates on the
+largest RNA chain in the provided pdb file (although a specific chain can be
+specified using the <code class="code docutils literal"><span class="pre">-c</span></code> option).:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[pete@kat forgi]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb
+&gt;1y26
+CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
+(((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))
+</pre></div>
+</div>
+<p>This can also be done programmatically in python:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_fasta_string</span><span class="p">()</span>
+<span class="go">&gt;1y26_X</span>
+<span class="go">CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG</span>
+<span class="go">((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))</span>
+</pre></div>
+</div>
+<p>The reported 2D structure is extracted from the annotations of MC-Annotate [1].
+Pseudoknots are removed using the knotted2nested.py script which is included
+with the generous permition of Dr. Sandra Smit [2]. Users making use of the
+3D-to-2D facilities of the <code class="docutils literal"><span class="pre">forgi.threedee</span></code> package should cite the articles
+listed in the citations section at the bottom of this page.</p>
+</div>
+<div class="section" id="creating-a-coarse-grain-3d-representation-of-an-rna-molecule">
+<h2>Creating a Coarse Grain 3D Representation of an RNA Molecule<a class="headerlink" href="#creating-a-coarse-grain-3d-representation-of-an-rna-molecule" title="Permalink to this headline">¶</a></h2>
+<p>One can imagine an RNA molecule as a collection of helices and ... not helices
+(hairpins, interior loops, multiloops, etc..) as described in the
+<a class="reference internal" href="graph_tutorial.html#forgi-graph-tutorial"><span class="std std-ref">RNA Secondary Structure as a Graph Using the forgi Library</span></a>. By creating an abstraction for the canonical
+helixes and representing them as cylinders, we can create a coarse grain
+representaiton of the RNA molecule:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[pkerp@plastilin forgi]$ python examples/pdb_to_cg.py ~/projects/ernwin/fess/structures/2l94.pdb
+name 2l94
+length 45
+seq GGGAAGAUCUGGCCUUCCCACAAGGGAAGGCCAGGGAAUCUUCCC
+define f1 0 1
+define i0 34 38 8 9
+define s1 9 19 24 34
+define s0 1 8 38 45
+define t1 45 46
+define h0 19 24
+connect s1 i0 h0
+connect s0 f1 i0 t1
+coord i0 -3.16011516235 3.53600076719 3.59573158587 -10.6370223437 3.13588043498 -0.447155058784
+coord s1 -3.16011516235 3.53600076719 3.59573158587 21.5002000702 -2.08161219996 0.501285407577
+coord s0 -25.7014473529 -5.72949740183 -4.01197045617 -10.6370223437 3.13588043498 -0.447155058784
+coord h0 21.5002000702 -2.08161219996 0.501285407577 23.5599994659 6.76999998093 -5.87900018692
+twist s1 -0.00919853915562 0.451186349593 -0.892382353489 -0.153976361554 -0.136900113113 -0.978544653612
+twist s0 -0.532923452202 0.816983142634 0.220297840992 0.430691441325 -0.408188889295 -0.804914102887
+</pre></div>
+</div>
+<p>The lines beginning with <code class="code docutils literal"><span class="pre">coord</span></code> indicate the positions of the helices. They
+are calculated by fitting a cylinder to each helical region of the 3D
+structure.</p>
+</div>
+<div class="section" id="visualizing-the-coarse-grain-helical-representation">
+<h2>Visualizing the Coarse Grain Helical Representation<a class="headerlink" href="#visualizing-the-coarse-grain-helical-representation" title="Permalink to this headline">¶</a></h2>
+<p>The coarse grain representation shown in the prior example can be visualized
+using <a class="reference external" href="http://www.pymol.org/">Pymol</a> and the <code class="docutils literal"><span class="pre">visualize_pdb.py</span></code> script. The green cylinders below
+represent canonical helical regions, red represent multiloops and blue -
+hairpin loops:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">visualize_pdb</span><span class="o">.</span><span class="n">py</span> <span class="o">~/</span><span class="n">projects</span><span class="o">/</span><span class="n">ernwin</span><span class="o">/</span><span class="n">fess</span><span class="o">/</span><span class="n">structures</span><span class="o">/</span><span class="mi">1</span><span class="n">y26</span><span class="o">.</span><span class="n">pdb</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/1y26_visualized.png"><img alt="_images/1y26_visualized.png" class="align-center" src="_images/1y26_visualized.png" style="width: 270px;" /></a>
+<p>To visualize just the coarse-grain representation one can use <code class="docutils literal"><span class="pre">visualize_cg.py</span></code> script:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">visualize_cg</span><span class="o">.</span><span class="n">py</span> <span class="n">examples</span><span class="o">/</span><span class="mi">1</span><span class="n">y26</span><span class="o">.</span><span class="n">cg</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/1y26_coarse.png"><img alt="_images/1y26_coarse.png" class="align-center" src="_images/1y26_coarse.png" style="width: 270px;" /></a>
+</div>
+<div class="section" id="get-a-description-of-a-coarse-grain-stem">
+<h2>Get A Description of a Coarse-Grain Stem<a class="headerlink" href="#get-a-description-of-a-coarse-grain-stem" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">get_stem_stats</span></code> function returns a <code class="docutils literal"><span class="pre">forgi.threedee.model.StemStat</span></code>
+structure which contains information about a stem, such as how many base pairs
+it has, how long it is (in Å) and how much its helix twists from the
+start to the end. It also stores information about which nucleotides it is
+composed of (its <code class="code docutils literal"><span class="pre">define</span></code>).</p>
+<p>Using the structure 2MIS as an example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">,</span> <span class="n">intermediate_file_dir</span><span class="o">=</span><span class="s1">&#39;tmp&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_stem_stats</span><span class="p">(</span><span class="s1">&#39;s0&#39;</span><span class="p">)</span>
+<span class="go">pdb_name: 2mis_A bp_length: 6 phys_length: 14.735000 twist_angle: 2.822735 define: 1 6 21 26</span>
+</pre></div>
+</div>
+<p>The first stem in the structure (&#8216;s0&#8217;), is composed of nucleotides 1 - 6 and 21
+- 26, has a length of 14.735 Angstroms and a twist of 2.82 radians. It contains
+6 base pairs and comes from a structure named <code class="code docutils literal"><span class="pre">2mis_A</span></code>.</p>
+</div>
+<div class="section" id="get-a-description-of-an-angle-between-two-stems">
+<h2>Get A Description of an Angle Between Two Stems<a class="headerlink" href="#get-a-description-of-an-angle-between-two-stems" title="Permalink to this headline">¶</a></h2>
+<p>The orientation of one helix (<span class="math">\(s_1\)</span>) with respect to another (<span class="math">\(s_2\)</span>), <span class="math">\(O(s_1,
+s_2)\)</span>, can be represented by six parameters:</p>
+<ol class="arabic simple">
+<li><span class="math">\(r, \phi_d, \psi_d\)</span> which describe the location of the of the start of
+s2 relative to the end of s_1</li>
+<li><span class="math">\(\phi_o, \psi_o\)</span>, which describe the direction of the axis vector of s2</li>
+<li><span class="math">\(t\)</span>, which describes how much s2 is twisted relative to s_1</li>
+</ol>
+<p>Using these six parameters, one can reproduce the position of a second helix
+given the position of the first. The <code class="docutils literal"><span class="pre">get_bulge_angle_stats</span></code> function returns
+this set of parameters for any secondary structure element which connects two
+stems (hereafter referred to as a &#8216;joint&#8217; and &#8216;i0&#8217; in the example below):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">,</span> <span class="n">intermediate_file_dir</span><span class="o">=</span><span class="s1">&#39;tmp&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_bulge_angle_stats</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)</span>
+<span class="go">(&lt;forgi.threedee.model.stats.AngleStat instance at 0x226e098&gt;, &lt;forgi.threedee.model.stats.AngleStat instance at 0x226e200&gt;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_bulge_angle_stats</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">angle 2mis_A 3 1 1.422985 -0.124293 0.828886 6.720167 1.313748 -0.401573 7 9 20 20 GCAGC GAC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_bulge_angle_stats</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">angle 2mis_A 3 1 1.762096 0.024409 0.822014 6.720167 1.294799 0.098387 7 9 20 20 GCAGC GAC</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">get_bulge_angle_stats</span></code> function actually returns two sets of parameters,
+one for each orientation (<span class="math">\(O(s_1, s_2)\)</span> and <span class="math">\(O(s_2, s_1)\)</span>).</p>
+<p>The values stored by an <code class="docutils literal"><span class="pre">AngleStat</span></code> are the six parameters listed above as well
+as the name of the pdb file the coarse grain model represents, the size of the
+joint and the sequence of its two strands (including the nucleotides in the
+Watson-crick base pairs which flank it).</p>
+</div>
+<div class="section" id="iterate-over-long-range-interactions">
+<h2>Iterate over Long Range Interactions<a class="headerlink" href="#iterate-over-long-range-interactions" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1GID_A.cg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">longrange_iterator</span><span class="p">())</span>
+<span class="go">[(&#39;h0&#39;, &#39;s9&#39;), (&#39;i7&#39;, &#39;s9&#39;), (&#39;i0&#39;, &#39;t1&#39;), (&#39;h0&#39;, &#39;i7&#39;), (&#39;h0&#39;, &#39;i6&#39;), (&#39;h1&#39;, &#39;i4&#39;), (&#39;i4&#39;, &#39;s1&#39;), (&#39;i4&#39;, &#39;m3&#39;), (&#39;i6&#39;, &#39;i7&#39;), (&#39;s1&#39;, &#39;t1&#39;)]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calculate-the-distance-between-two-coarse-grain-elements">
+<h2>Calculate the Distance Between Two Coarse-Grain Elements<a class="headerlink" href="#calculate-the-distance-between-two-coarse-grain-elements" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.cg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">element_physical_distance</span><span class="p">(</span><span class="s1">&#39;h0&#39;</span><span class="p">,</span> <span class="s1">&#39;h1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">dist</span>
+<span class="go">7.87989954482</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="find-out-how-much-an-interior-loop-bends-a-stem">
+<h2>Find out How Much an Interior Loop Bends a Stem<a class="headerlink" href="#find-out-how-much-an-interior-loop-bends-a-stem" title="Permalink to this headline">¶</a></h2>
+<p>Interior loops often place kinks in long stem-like structures. This leads
+to a change in the base stacking pattern and can indicate functional
+relevance. To extract this information for a given PDB file, we need to
+iterate over each interior loop and calculate the angle between the two
+stems it connects:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="k">as</span> <span class="nn">ftuv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1GID_native.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">iloop</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">iloop_iterator</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">conn</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">connections</span><span class="p">(</span><span class="n">iloop</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="c1"># conn contains two values [&#39;s0&#39;, &#39;s1&#39;]</span>
+<span class="gp">... </span>    <span class="n">angle</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">],</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">1</span><span class="p">]][</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">... </span>    <span class="nb">print</span> <span class="n">iloop</span><span class="p">,</span> <span class="n">angle</span>
+<span class="gp">...</span>
+<span class="go">i3 0.307770762476</span>
+<span class="go">i2 2.74681004918</span>
+<span class="go">i1 0.1697963999</span>
+<span class="go">i0 0.491755788011</span>
+<span class="go">i5 0.456253974086</span>
+<span class="go">i4 0.261428615896</span>
+<span class="go">i7 0.15810445353</span>
+<span class="go">i6 0.510919193909</span>
+</pre></div>
+</div>
+<p><code class="code docutils literal"><span class="pre">conn[0]</span></code> and <code class="code docutils literal"><span class="pre">conn[1]</span></code> are the identifiers of the first and second connected stems,
+respectively, while <code class="code docutils literal"><span class="pre">cg.coords[conn[0]][0]</span></code> contains the coordinates of the front end
+of the first stem. Subtracting the coordinates of one end of the stem from the
+other gives us a vector which is used to calculate an angle.
+This example, using the Group-I intron,
+indicates the presence of a kink-turn at interior loop <code class="code docutils literal"><span class="pre">i2</span></code>.</p>
+</div>
+<div class="section" id="get-the-largest-rna-chain-from-a-pdb-file">
+<h2>Get the Largest RNA Chain from a PDB File<a class="headerlink" href="#get-the-largest-rna-chain-from-a-pdb-file" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">forgi</span></code> includes some utility functions for PDB files, one of which returns
+the largest chain in the pdb file which is an RNA molecule. This can be useful
+for rapidly visualizing a PDB file which contains both RNA and proteins without
+having to see which chain is the RNA molecule. Of course for any meaningful
+analysis, one should know which chains are present along with their
+identifiers. The return value for this function is a Bio.PDB.Chain.Chain
+populated from the pdb file passed as an argument.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="k">as</span> <span class="nn">ftup</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span> <span class="o">=</span> <span class="n">ftup</span><span class="o">.</span><span class="n">get_biggest_chain</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1X8W.pdb&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nb">print</span> <span class="n">c</span>
+<span class="o">&lt;</span><span class="n">Chain</span> <span class="nb">id</span><span class="o">=</span><span class="n">B</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="check-if-a-bio-pdb-chain-is-rna">
+<h2>Check if a Bio.PDB Chain is RNA<a class="headerlink" href="#check-if-a-bio-pdb-chain-is-rna" title="Permalink to this headline">¶</a></h2>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">Bio</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="k">as</span> <span class="nn">ftup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">op</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filename</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~/data/pdbs/1Y26.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">structure</span> <span class="o">=</span> <span class="n">Bio</span><span class="o">.</span><span class="n">PDB</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;blah&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">get_chains</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calculate-the-rmsd-between-two-pdb-chains">
+<h2>Calculate the RMSD Between two PDB Chains<a class="headerlink" href="#calculate-the-rmsd-between-two-pdb-chains" title="Permalink to this headline">¶</a></h2>
+<p>The root mean square deviation (RMSD) is a measure of how much two molecules
+differ in their atomic coordinates. The value, of course, depends on how the
+two molecules are superimposed, but in most cases (including here) a rotation
+is applied such that the RMSD is minimized. The RMSD value is often used to
+compare the models created by structure prediction software to the real
+structure, and can easily be calculated using the <code class="code docutils literal"><span class="pre">pdb_rmsd</span></code> method. It can
+take an optional <code class="code docutils literal"><span class="pre">sidechains</span></code> parameter (which defaults to False), to indicate
+that the sidechains (bases) should be included in the RMSD calculation. If it
+is False, then only the backbone atoms are used in the calculation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="k">as</span> <span class="nn">ftup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">Bio.PDB</span> <span class="k">as</span> <span class="nn">bpdb</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bpdb</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;temp&#39;</span><span class="p">,</span> <span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_chains</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ftup</span><span class="o">.</span><span class="n">pdb_rmsd</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+<span class="go">(180, 1.0314194769216807e-14, (array([[  1.00000000e+00,  -1.94289029e-16,   1.11022302e-16],</span>
+<span class="go">       [  8.32667268e-17,   1.00000000e+00,   6.93889390e-17],</span>
+<span class="go">              [ -5.55111512e-17,   6.93889390e-17,   1.00000000e+00]]), array([ -5.68434189e-14,   2.84217094e-14,  -1.73194792e-14])))</span>
+</pre></div>
+</div>
+<p>The return value is a tuple containing the number of atoms that were
+superimposed, the RMSD value and another tuple containing the optimal rotation
+matrix and translation vector.</p>
+<p>If loading the chains is too much work, there is a wrapper function which will
+calculate the rmsd between the first chains of the first models of two pdb
+files:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="k">as</span> <span class="nn">ftup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ftup</span><span class="o">.</span><span class="n">pdb_file_rmsd</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">,</span> <span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">)</span>
+<span class="go">(180, 1.0314194769216807e-14, (array([[  1.00000000e+00,  -1.94289029e-16,   1.11022302e-16],</span>
+<span class="go">       [  8.32667268e-17,   1.00000000e+00,   6.93889390e-17],</span>
+<span class="go">              [ -5.55111512e-17,   6.93889390e-17,   1.00000000e+00]]), array([ -5.68434189e-14,   2.84217094e-14,  -1.73194792e-14])))</span>
+</pre></div>
+</div>
+<p>Note that this function, unless provided with a chain identifier always takes the largest RNA chain in the file and omits any non-RNA residues.</p>
+</div>
+<div class="section" id="calculate-the-rmsd-between-two-coarse-grain-models">
+<h2>Calculate the RMSD Between two Coarse-Grain Models<a class="headerlink" href="#calculate-the-rmsd-between-two-coarse-grain-models" title="Permalink to this headline">¶</a></h2>
+<p>Like PDB chains, we can also compute an RMSD value for two coarse grain models.
+For this we need to use the virtual residues of the helices as the atoms and
+compute the RMSD value amongst them:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.similarity</span> <span class="k">as</span> <span class="nn">ftms</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg1</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.cg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg2</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.cg&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">ftms</span><span class="o">.</span><span class="n">cg_rmsd</span><span class="p">(</span><span class="n">cg1</span><span class="p">,</span><span class="n">cg2</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>If we like more control, we can export any list of coordinates from the coarse grain moidel that
+is in a defined order and calculate the rmsd between these two point clouds.
+Examples would include the start and end coordinates of every stem for a faster RMSD estimation
+that is less accurate but avoids the overhead of generating the virtual residues.</p>
+<p>Note that currently forgi.threedee.model.similarity.rmsd centers and optimallly rotates the
+two point clouds to minimize the RMSD. For an uncentered RMSD use
+forgi.threedee.utilities.vector.vector_set_rmsd</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="k">as</span> <span class="nn">ftug</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.similarity</span> <span class="k">as</span> <span class="nn">ftms</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg1</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.cg&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg2</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.cg&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords1</span> <span class="o">=</span> <span class="n">cg1</span><span class="o">.</span><span class="n">get_ordered_stem_poss</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords2</span> <span class="o">=</span> <span class="n">cg2</span><span class="o">.</span><span class="n">get_ordered_stem_poss</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">ftms</span><span class="o">.</span><span class="n">rmsd</span><span class="p">(</span><span class="n">coords1</span><span class="p">,</span> <span class="n">coords2</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="scalar-descriptors-of-rna-3d-structures">
+<h2>Scalar descriptors of RNA 3D structures<a class="headerlink" href="#scalar-descriptors-of-rna-3d-structures" title="Permalink to this headline">¶</a></h2>
+<p>To characterize an RNA 3D structures, a lot of descriptors could be potentially useful.
+The <code class="code docutils literal"><span class="pre">forgi.threedee.model.descriptors</span></code> library includes the following scalar descriptors.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>The Radius of gyration</li>
+<li>The anisotropy</li>
+<li>The asphericity</li>
+</ol>
+</div></blockquote>
+<p>Note that 1-3 are related, as they could all be derived from the gyration tensor.
+An overview over these properties can be found for example in the introduction of
+of reference [3] and the papers referenced therein.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.descriptors</span> <span class="k">as</span> <span class="nn">ftmd</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/1y26.cg&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Radius of Gyration&quot;</span><span class="p">,</span> <span class="n">cg</span><span class="o">.</span><span class="n">radius_of_gyration</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_ordered_stem_poss</span><span class="p">()</span> <span class="c1">#Use only coarse grained coordinates of stems</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_ordered_virtual_residue_poss</span><span class="p">()</span> <span class="c1">#Alternatively use coordinates of virtual residues</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Anisotropy&quot;</span><span class="p">,</span> <span class="n">ftmd</span><span class="o">.</span><span class="n">anisotropy</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Asphericity&quot;</span><span class="p">,</span> <span class="n">ftmd</span><span class="o">.</span><span class="n">asphericity</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="determine-if-two-atoms-are-covalently-bonded">
+<h2>Determine if two Atoms are Covalently Bonded<a class="headerlink" href="#determine-if-two-atoms-are-covalently-bonded" title="Permalink to this headline">¶</a></h2>
+<p>The difference between covalently bonded and unbonded atoms needs to be taken
+into account when calculating clash scores. Covalently bonded atoms can be
+closer to each other in a real structure than unbonded atoms. Based on the
+identity of the atoms and their parent nucleotides, the <code class="docutils literal"><span class="pre">is_covalent</span></code>
+function tries to determine the whether two atoms are covalently bonded.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="k">as</span> <span class="nn">ftup</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">ftup</span><span class="o">.</span><span class="n">get_biggest_chain</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ftup</span><span class="o">.</span><span class="n">is_covalent</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">][</span><span class="s2">&quot;C3&#39;&quot;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">][</span><span class="s2">&quot;C4&#39;&quot;</span><span class="p">]])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ftup</span><span class="o">.</span><span class="n">is_covalent</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">][</span><span class="s2">&quot;C3&#39;&quot;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="mi">10</span><span class="p">][</span><span class="s2">&quot;C5&#39;&quot;</span><span class="p">]])</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="citations">
+<h2>Citations<a class="headerlink" href="#citations" title="Permalink to this headline">¶</a></h2>
+<p>[1] <em>Gendron P, Lemieux S, Major F</em>. <strong>Quantitative analysis of nucleic acid three-dimensional structures.</strong> J Mol Biol (2001) 308:919–936.</p>
+<p>[2] <em>Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight</em>.
+<strong>From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.</strong>
+RNA (2008) 14(3):410-416.</p>
+<p>[3] <em>Handan Arkın and Wolfhard Janke</em>.
+<strong>Gyration tensor based analysis of the shapes of polymer chains in an attractive spherical cage</strong>
+The Journal of Chemical Physics (2013) 138:054904, <a class="reference external" href="http://dx.doi.org/10.1063/1.4788616">http://dx.doi.org/10.1063/1.4788616</a></p>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="graph_tutorial.html">RNA Secondary Structure as a Graph Using the forgi Library</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="apidoc/forgi.html">Forgi API documentation</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on May 19, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>
