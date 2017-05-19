@@ -10,6 +10,9 @@ import unittest
 from math import sin, cos
 import copy
 import forgi.threedee.model.coarse_grain as ftmc
+import itertools as it
+import logging
+log= logging.getLogger(__name__)
 
 RANDOM_REPETITIONS = 10
 
@@ -68,9 +71,7 @@ class CoordinateStorageTest(unittest.TestCase):
         rotMat=np.array([[1,0,0],[0,0,-1],[0,1,0]])
         self.cs.rotate(rotMat)
         nptest.assert_almost_equal(self.cs["s1"][1], [0,-10,0])
-    def test_get_direction(self):
-        self.cs["s1"]=[-1,-1,-2],[1,2,4]
-        nptest.assert_almost_equal(self.cs.get_direction("s1"), [2,3,6])
+
 class CoordinateStorageTest2(unittest.TestCase):
     def setUp(self):
         self.cs = CoordinateStorage(["s1","s2"])
@@ -169,6 +170,8 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs["s0"]=[0,0,0.],[0,0,1.]
         cs["s1"]=[0,0,2.],[0,0,3.]
         self.assertEqual(cs.elements_closer_than(2),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(1.01),[("s0","s1")])
+        self.assertEqual(cs.elements_closer_than(1.),[])
         self.assertEqual(cs.elements_closer_than(0.5),[])
         cs = LineSegmentStorage(["s0", "s1"])
         cs["s0"]=[0,0,0.],[1,0,0.]
@@ -231,6 +234,38 @@ class LineSegmentStorageTests(unittest.TestCase):
         self.assertEqual(cs.elements_closer_than(1.5, ignore=set([("s0","s2"),("s2", "s1")])),[("s0","s1")])
         self.assertEqual(cs.elements_closer_than(0.4),[("s0","s2"),("s1", "s2")])
         self.assertEqual(cs.elements_closer_than(0.4, ignore=set([("s0","s2"),("s2", "s1")])),[])
+        self.assertEqual(cs.elements_closer_than(0.4, ignore=[("s2","s0")]),[("s1", "s2")])
+
+    def test_elements_closer_real_world_example(self):
+        cs = LineSegmentStorage(["m0", "m1"])
+        cs["m0"] = [0.,0.,1.],[-2.76245752, -6.86976093,  7.54094508]
+        cs["m1"] = [-27.57744115,   6.96488989, -22.47619655], [-16.93424799,  -4.0631445 , -16.19822301]
+        self.assertEqual(cs.elements_closer_than(25),[("m0","m1")])
+
+
+    def test_elements_closer_than_like_old_confusion_matrix(self):
+        BP_DIST = 16
+        CUTOFF_DIST = 25.
+        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        ignore = set()
+        for n1, n2 in it.combinations(cg2.defines.keys(), r=2):
+            if cg2.connected(n1, n2):
+                ignore.add((n1,n2))
+                continue
+            bp_dist = cg2.min_max_bp_distance(n1, n2)[0]
+            if bp_dist < BP_DIST:
+                ignore.add((n1,n2))
+        old = interactions_old(cg2, CUTOFF_DIST, BP_DIST)
+        new = set(cg2.coords.elements_closer_than(CUTOFF_DIST, ignore = ignore))
+        print("m0-m1: {} A phys, dist, "
+              "{} bp dist".format(cg2.element_physical_distance("m0", "m1"), 
+                                  cg2.min_max_bp_distance("m0", "m1")[0]))
+        print("m0: {}".format(cg2.coords["m0"]))
+        print("m1: {}".format(cg2.coords["m1"]))
+        self.assertEqual(old, new,
+                        msg = "ONLY old: {}\n, ONLY new {},\n {} both".format(old-new, new-old, len(old&new)))
+
+  
 
     def test_rmsd_to_self(self):
         cs1 = LineSegmentStorage(["s0", "s1", "s2"])
@@ -313,3 +348,62 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs2["s3"]=[0.,5.,0.],[1,-1,-3.]
         self.assertGreater(cs1.rmsd_to(cs2), 1)        
         self.assertLess(cs1.rmsd_to(cs2), 5)
+
+    def test_get_direction(self):
+        cs1 = LineSegmentStorage(["s0", "s1", "s2", "s3"])
+        cs1["s1"]=[-1,-1,-2],[1,2,4]
+        nptest.assert_almost_equal(cs1.get_direction("s1"), [2,3,6])
+
+
+def interactions_old(cg, distance, bp_distance=16):
+    """Code from Peter's confusion matrix, for verification"""
+    '''
+    Calculate the true_positive, false_positive,
+    true_negative and false_negative rate for the tertiary
+    distances of the elements of two structures, cg1 and cg2.
+
+
+    :param cg: A coarse grain model
+    :param distance: The distance to consider for interactions
+    :param bp_distance: Only consider elements separated by this many more pair
+                        and backbone bonds
+    :return: A set of node-pairs.
+    '''
+
+    nodes2 = set(cg.defines.keys())
+
+    tp = 0 #true positive
+    tn = 0 #true negative
+
+    fp = 0 #false positive
+    fn = 0 #false negative
+
+    #fud.pv('nodes1')
+    #fud.pv('nodes2')
+
+    hits_cg2 = set()
+    for n1, n2 in it.combinations(nodes2, r=2):
+
+
+        if cg.connected(n1, n2):
+            continue
+
+
+        bp_dist = cg.min_max_bp_distance(n1, n2)[0]
+        if bp_dist < bp_distance:
+            continue
+
+
+        dist2 = cg.element_physical_distance(n1, n2)
+
+
+        if dist2 < distance:
+            if n1<n2:
+                hits_cg2.add((n1,n2))
+            else:
+                hits_cg2.add((n2,n1))
+
+            
+
+    return hits_cg2
+

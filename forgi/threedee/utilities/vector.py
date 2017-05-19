@@ -10,14 +10,16 @@ import numpy.linalg as nl
 import numpy.testing as nt
 import random as rand
 import warnings
+import logging
 #import scipy as sp
 
+log=logging.getLogger(__name__)
 try:
     profile
 except:
-    def profile(f): 
+    def profile(f):
         return f
-    
+
 null_array = np.array([0., 0., 0.])
 
 x_array = np.array([1., 0., 0.])
@@ -63,9 +65,9 @@ def get_random_vector(mult=1.):
 def get_orthogonal_unit_vector(vec):
     '''
     Return a vector orthogonal to vec.
-    
+
     .. note::
-    
+
         To create a basis, use create_orthonormal_basis instead!
     '''
     vec2 = get_non_colinear_unit_vector(vec)
@@ -123,7 +125,7 @@ def get_alignment_matrix(vec1, vec2):
     return rotation_matrix(comp, angle)
 
 
-def get_non_colinear_unit_vector(vec): 
+def get_non_colinear_unit_vector(vec):
     '''
     Get a unit vector that does not lie on the line defined by vec.
 
@@ -134,33 +136,39 @@ def get_non_colinear_unit_vector(vec):
     '''
     absvec = [abs(v) for v in vec]
     m = min(absvec)
-    ind = absvec.index(m) 
-    unit = [0., 0., 0.] 
-    unit[ind] = 1. 
+    ind = absvec.index(m)
+    unit = [0., 0., 0.]
+    unit[ind] = 1.
 
     return np.array(unit)
 
 def is_almost_colinear(vec1, vec2):
     """
     Returns true, if two vectors are almost colinear
-    
+
     Note that every vector is colinear to the zero vector.
     """
+    CUTOFF=10**-9
     for i in range(len(vec1)):
-        if vec2[i]!=0.:
+        if abs(vec2[i])>CUTOFF:
             factor=vec1[i]/vec2[i]
             break
     else:
-        return True
-    return all(vec1[i]==vec2[i]==0. or (vec2[i]!=0 and abs(vec1[i]/vec2[i]-factor)<0.000000001) for i in range(len(vec1)))
+        log.debug("vec2 is zero-vector")
+        return True # vec2 is Zero-vector
+    log.debug("Factor is %f", factor)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        log.debug("vec1/vec2 = %s", [abs(vec1[i]/vec2[i]) for i in range(len(vec1))])
+    return all((abs(vec1[i])<CUTOFF and abs(vec2[i])<CUTOFF) or (abs(vec2[i])>CUTOFF and abs(vec1[i]/vec2[i]-factor)<CUTOFF) for i in range(len(vec1)))
 
 def create_orthonormal_basis(vec1, vec2=None, vec3=None):
     '''
     Create an orthonormal basis using the provided vectors.
 
-    If more than one is provided, it must be orthogonal to 
+    If more than one is provided, it must be orthogonal to
     the others.
-    
+
     '''
     if vec2 is None:
         vec2 = get_non_colinear_unit_vector(vec1)
@@ -190,7 +198,7 @@ def create_orthonormal_basis1(vec1, vec2=None, vec3=None):
     '''
     Create an orthonormal basis using the provided vectors.
 
-    If more than one is provided, it must be orthogonal to 
+    If more than one is provided, it must be orthogonal to
     the others.
     '''
     if vec2 == None:
@@ -316,7 +324,7 @@ def change_basis(coords, new_basis, old_basis):
 def change_basis_vectorized(coords, new_basis, old_basis):
     """
     Change an array of vectors (coords) from old_basis to new_basis.
-    
+
     :param coords: A array of coordinates to transform.
     """
     standard_coords = np.tensordot(old_basis.transpose(), coords, axes=([-1],[1])).T
@@ -325,7 +333,7 @@ def change_basis_vectorized(coords, new_basis, old_basis):
     return new_coords
 
 
-""" # CODE USED FOR BENCHMARKING 
+""" # CODE USED FOR BENCHMARKING
     # change_basis1 is slightly faster or the same (4.61 vs 4.67)
 def change_basis1(coords, new_basis, old_basis):
     '''
@@ -389,17 +397,17 @@ def vector_rejection(a, b):
 def rotation_matrix_weave(axis, theta, mat = None):
     '''
     Calculate the rotation matrix for a rotation of theta degrees around axis.
-    
-    Implemented in C++ using the weave module. Runs approximately 6x faster than 
+
+    Implemented in C++ using the weave module. Runs approximately 6x faster than
     the numpy version below if no mat is passed in and around 20x faster if mat is
     passed in.
 
-    Thanks to unutbu on StackOverflow 
+    Thanks to unutbu on StackOverflow
 
     http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
 
     :param axis: The axis around which to rotate
-    :param theta: The angle of rotation
+    :param theta: The angle of rotation in radians!
     :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
@@ -454,7 +462,7 @@ def rotation_matrix(axis, theta):
     '''
     Calculate the rotation matrix for a rotation of theta degrees around axis.
 
-    Thanks to unutbu on StackOverflow 
+    Thanks to unutbu on StackOverflow
 
     http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
 
@@ -463,7 +471,7 @@ def rotation_matrix(axis, theta):
     :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
-    axis = axis/math.sqrt(np.dot(axis, axis))
+    axis = normalize(axis)
     a = math.cos(theta/2)
     b, c, d = -axis*math.sin(theta/2)
 
@@ -502,7 +510,7 @@ def get_vector_centroid(crds1):
 
 def center_on_centroid(crds1):
     centroid1 = get_vector_centroid(crds1)
-    
+
     crds = np.asarray(crds1)
     return crds - centroid1
 
@@ -587,10 +595,10 @@ def vec_dot(a, b):
     """
     Vector dot product for vectors of length 3.
 
-    For small vectors of length 3 that are represented as lists and not as np.arary, 
+    For small vectors of length 3 that are represented as lists and not as np.arary,
     this naive python implementation might be faster than the corresponding numpy implementation.
 
-    If a and b are already numpy arrays, the numpy implementation seems to be faster 
+    If a and b are already numpy arrays, the numpy implementation seems to be faster
     (depending an how numpy was compiled)
 
     """
@@ -684,7 +692,7 @@ def seg_intersect(line1, line2) :
             if t>=0 and t<=1:
                 return [c]
         return []
-    
+
 
 
 def vec_distance(vec1, vec2):
@@ -712,14 +720,14 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
     lenw=magnitude(w)
-    a = np.dot(u,u)        # always >= 0    
+    a = np.dot(u,u)        # always >= 0
     c = np.dot(v,v)        # always >= 0
-    
+
     if lenw <distance:
         return True
     if lenw > math.sqrt(a)+math.sqrt(c)+distance:
         return False
-    
+
 
     b = np.dot(u,v)
 
@@ -771,7 +779,7 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
         else:
             sN = (-d + b)
             sD = a
-            
+
     # finally do the division to get sc and tc
     sc = 0.0 if abs(sN) < SMALL_NUM else sN / sD
     tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
@@ -804,7 +812,7 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
-    
+
     a = np.dot(u,u)        # always >= 0
     b = np.dot(u,v)
     c = np.dot(v,v)        # always >= 0
@@ -856,7 +864,7 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
         else:
             sN = (-d + b)
             sD = a
-            
+
     # finally do the division to get sc and tc
     sc = 0.0 if abs(sN) < SMALL_NUM else sN / sD
     tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
@@ -894,7 +902,7 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     closest = proj_v + seg_a
     return closest
 
- 
+
 # COVERAGE: Not used in forgi and ernwin at least since forgi v0.3. Consider deprecation
 def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     '''
@@ -917,7 +925,7 @@ def cylinder_line_intersection(cyl, line, r):
     Get the points of intersection between a line and a cylinder.
 
     If they do not intersect, return an empty list. If the line
-    touches the cylinder, then return a 2 point list with two identical points. 
+    touches the cylinder, then return a 2 point list with two identical points.
     If the line crosses the cylinder, then return a list of 2 points.
     '''
 
@@ -938,7 +946,7 @@ def cylinder_line_intersection(cyl, line, r):
 
     # get the point on the line closest to the
     # center of the cylinder
-    p = closest_point_on_seg(line_t[0][1:], line_t[1][1:], 
+    p = closest_point_on_seg(line_t[0][1:], line_t[1][1:],
                              np.array(cyl_t[0][1:]))
 
     if line_vec_t[1] == 0:
@@ -946,7 +954,7 @@ def cylinder_line_intersection(cyl, line, r):
 
     # Figure out the x position by determining how far along
     # the y-coordinate of the segment the closest point is
-    x  = (line_t[0][0] + 
+    x  = (line_t[0][0] +
             (line_vec_t[0] *
             (p[0] - line_t[0][1]) / line_vec_t[1]))
     v = p - cyl_t[0][1:]
@@ -1007,7 +1015,7 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     If we create a cone that starts at one end of cylinder1, does it
     enclose cylinder2?
 
-    This function approximates an answer by projecting a circle on 
+    This function approximates an answer by projecting a circle on
     the plane normal to the axis of cylinder1.
 
     :param cyl1: The coordinates of cylinder1
@@ -1017,23 +1025,23 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     '''
     basis = create_orthonormal_basis(cyl1[1] - cyl1[0])
     cyl2 = np.array([cyl2[0] - cyl1[1], cyl2[1] - cyl1[1]])
-    
+
     cyl2_t = change_basis(cyl2.T, basis, standard_basis).T
     cone_width = cyl_width
     cyl1_len = magnitude(cyl1[1] - cyl1[0])
-    
+
     # the cone expands
     cone_width_cyl2_start = cyl_width * (cyl1_len + cyl2_t[0][0]) / cyl1_len
     cone_width_cyl2_end = cyl_width * (cyl1_len + cyl2_t[1][0]) / cyl1_len
-    
+
     cyl2_start_offset = math.sqrt(cyl2_t[0][1] ** 2 + cyl2_t[0][2] ** 2)
     cyl2_end_offset = math.sqrt(cyl2_t[1][1] ** 2 + cyl2_t[1][2] ** 2)
-    
+
     if cyl2_start_offset > cone_width_cyl2_start:
         return False
     if cyl2_end_offset > cone_width_cyl2_end:
         return False
-    
+
     return True
 
 #COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
@@ -1071,16 +1079,16 @@ def point_in_cylinder(pt1, pt2, r, testpt):
 
 def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
     """ each point you get will be of form 'x, y, z'; in cartesian coordinates
-        eg. the 'l2 distance' from the origion [0., 0., 0.] for each point will be 1.0 
+        eg. the 'l2 distance' from the origion [0., 0., 0.] for each point will be 1.0
         ------------
-        converted from:  http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere ) 
+        converted from:  http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere )
     """
-    dlong = math.pi*(3.0-math.sqrt(5.0))  # ~2.39996323 
+    dlong = math.pi*(3.0-math.sqrt(5.0))  # ~2.39996323
     dz   =  2.0/numberOfPoints
     long =  0.0
     z    =  1.0 - dz/2.0
     ptsOnSphere =[]
-    for k in range( 0, numberOfPoints): 
+    for k in range( 0, numberOfPoints):
         r    = math.sqrt(1.0-z*z)
         ptNew = (math.cos(long)*r, math.sin(long)*r, z)
         ptsOnSphere.append( ptNew )
@@ -1092,12 +1100,12 @@ def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
 def sortAlongLine(start, end, points):
     """
     Sort all points in points along the line from start to end.
-    
+
     :param start: A point
     :param end: A point
     :param points: A list of points
 
-    :returns: A list containing start, end and all elements of points, sorted by the distance from start 
+    :returns: A list containing start, end and all elements of points, sorted by the distance from start
     """
     #print start, end, points
     s_points=points+[start, end]
