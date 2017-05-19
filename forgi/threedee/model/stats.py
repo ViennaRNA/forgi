@@ -157,7 +157,11 @@ class StemStat:
             self.define = [int(parts[5]), int(parts[6]), int(parts[7]), int(parts[8])]
 
     def __str__(self):
-        return "stem {} {} {} {} {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, *self.define)
+        try:
+            return "stem {} {} {} {} {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, *self.define)
+        except IndexError:
+            warnings.warn("Could not print define '{}' for StemStat".format(self.define))
+            return "stem {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle)
         #return "pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, " ".join(map(str, self.define)))
     
     def __eq__(self, other):
