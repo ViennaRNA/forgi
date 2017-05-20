@@ -6,7 +6,7 @@ import Bio.PDB as bpdb
 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
-
+from  forgi.threedee.utilities.modified_res import rename_modified_ress
 import logging
 log=logging.getLogger(__name__)
 
@@ -528,54 +528,7 @@ def change_residue_id(residue, new_id):
     else:
         chain.child_dict[new_id] = residue
 
-def rename_modified_ress(chain):
-    '''
-    Rename the modified residues so that they have the same
-    names as unmodified residues
 
-    :param chain: A Bio.PDB.Chain structure
-    :return: The same chain, but with modified residue names.
-    '''
-    for r in chain:
-        # rename rosetta-generated structures
-        if r.resname == ' rA':
-            r.resname = '  A'
-        elif r.resname == ' rC':
-            r.resname = '  C'
-        elif r.resname == ' rG':
-            r.resname = '  G'
-        elif r.resname == ' rU':
-            r.resname = '  U'
-            
-            
-
-
-        # rename modified residues
-        if r.id[0] == 'H_1MA':
-            r.resname = '  A'
-            change_residue_id(r, (' ', r.id[1], r.id[2]))
-        elif r.id[0] == 'H_PSU':
-            r.resname = '  U'
-            change_residue_id(r, (' ', r.id[1], r.id[2]))
-        elif r.id[0] == 'H_5MU':
-            r.resname = '  U'
-            change_residue_id(r, (' ', r.id[1], r.id[2]))
-        elif r.id[0] == 'H_5MC':
-            r.resname = '  C'
-            change_residue_id(r, (' ', r.id[1], r.id[2]))
-        elif r.id[0] == 'H_1MG':
-            r.resname = '  G'
-            change_residue_id(r, (' ', r.id[1], r.id[2]))
-        elif r.id[0] == 'H_H2U':
-            r.resname = '  U'
-            change_residue_id(r, (' ', r.id[1], r.id[2]))
-
-        # treat deoxyuridine as uridine
-        # TODO: is this acceptable?
-        if r.resname == ' DU':
-            r.resname = '  U'
-
-    return chain
 
 def rename_rosetta_atoms(chain):
     '''
