@@ -111,19 +111,18 @@ def to_4_letter_alphabeth(chain):
         if r.resname.strip() == "I":
             # "I" has no standart parent (AUGC) to replace it with.
             # So we just completely remove it.
-            chain.detach_child(res.id)
+            chain.detach_child(r.id)
             warnings.warn("Inosinic acid not supported. Residue {} removed".format(r))
             continue #Continue with same i (now different residue)
         if r.resname.strip() not in "AUGC": 
             res_info = ModifiedResidueLookup()[r.resname]
-            log.info("%s, %s",res_info, type(res_info))
             if not res_info:
                 #Unknown code. Remove residue
-                chain.detach_child(res.id)
+                chain.detach_child(r.id)
                 continue #Continue with same i (now different residue)
             if res_info["Polymer type"] != "Ribonucleotide":
                 #DNA/ Amino Acid. Remove residue
-                chain.detach_child(res.id)
+                chain.detach_child(r.id)
                 continue #Continue with same i (now different residue)
             r.resname = res_info["Standard parent"]
         # rename modified residues
