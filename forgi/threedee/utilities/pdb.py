@@ -6,7 +6,7 @@ import Bio.PDB as bpdb
 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
-from  forgi.threedee.utilities.modified_res import rename_modified_ress
+from  forgi.threedee.utilities.modified_res import to_4_letter_alphabeth
 import logging
 log=logging.getLogger(__name__)
 
@@ -556,16 +556,7 @@ def remove_hetatm(chain):
     :param chain: A Bio.PDB.Chain
     :return: The same chain, but missing all hetatms
     '''
-    to_detach = []
-    for r in chain:
-        if len(r.id[0].strip()) > 0:
-            to_detach += [r.id]
-
-    for r in to_detach:
-        chain.detach_child(r)
-
-    return chain
-
+    raise NotImplementedError("Replaced by to_4_letter_alphabeth")
     
 def load_structure(pdb_filename):
     '''
@@ -586,9 +577,8 @@ def clean_chain(chain):
     :param chaion: A Bio.PDB.Chain object
     :returns: A modified version of this chain
     """
-    chain = rename_modified_ress(chain)
+    chain = to_4_letter_alphabeth(chain)
     chain = rename_rosetta_atoms(chain)
-    chain = remove_hetatm(chain)
     return chain
 
 def interchain_contacts(struct):
