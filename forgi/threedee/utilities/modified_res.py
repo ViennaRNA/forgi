@@ -25,7 +25,6 @@ log = logging.getLogger(__name__)
 
 def _parse_table_row(tr):
     tds = [ td for td in tr.contents if td.name =="td" ]
-    log.info("TR: TDS: %s", tds)
     if len(tds)==2:
         key = tds[0].h3.text.strip()
         value = tds[1].text.strip()
