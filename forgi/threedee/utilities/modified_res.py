@@ -162,4 +162,4 @@ if __name__ == "__main__":
     print("# Created by `python {}`".format(" ".join(sys.argv)))
     print("RESIDUE_DICT = ", end="")
     d = dict_from_pdbs(sys.argv[1:])
-    pprint(k:v for k,v in d.items() if v is not None)
+    pprint({k:v for k,v in d.items() if v is not None})
