@@ -515,18 +515,6 @@ def get_all_chains(in_filename, parser=None):
     chains = list(chain for chain in s.get_chains() if contains_rna(chain))
     return chains
 
-def change_residue_id(residue, new_id):
-    chain = residue.parent
-    if new_id in chain:
-        raise ValueError("Cannot change id")
-    old_id = residue.id
-    residue.id = new_id
-    try:
-        del chain.child_dict[old_id]
-    except KeyError:
-        pass # New version of biopython. Id is a property
-    else:
-        chain.child_dict[new_id] = residue
 
 
 

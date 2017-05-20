@@ -63,6 +63,19 @@ def query_PDBeChem(three_letter_code):
     html = urlopen("http://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/{}".format(three_letter_code))
     residue_info = _html_to_info_dict(html)
     return residue_info
+
+def change_residue_id(residue, new_id):
+    chain = residue.parent
+    if new_id in chain:
+        raise ValueError("Cannot change id {old} to {new}. {new} already exists".format(old=residue.id, new=new_id))
+    old_id = residue.id
+    residue.id = new_id
+    try:
+        del chain.child_dict[old_id]
+    except KeyError:
+        pass # New version of biopython. Id is a property
+    else:
+        chain.child_dict[new_id] = residue
     
 
 def to_4_letter_alphabeth(chain):
@@ -96,8 +109,15 @@ def to_4_letter_alphabeth(chain):
             r.resname = '  U'
             
         # Non-standard residues
+        if r.resname.strip() == "I":
+            # "I" has no standart parent (AUGC) to replace it with.
+            # So we just completely remove it.
+            chain.detach_child(res.id)
+            warnings.warn("Inosinic acid not supported. Residue {} removed".format(r))
+            continue #Continue with same i (now different residue)
         if r.resname.strip() not in "AUGC": 
             res_info = ModifiedResidueLookup()[r.resname]
+            log.info("%s, %s",res_info, type(res_info))
             if not res_info:
                 #Unknown code. Remove residue
                 chain.detach_child(res.id)
@@ -108,9 +128,10 @@ def to_4_letter_alphabeth(chain):
                 continue #Continue with same i (now different residue)
             r.resname = res_info["Standard parent"]
         # rename modified residues
-        if r.id[0]:
+        if r.id[0].strip():
             change_residue_id(r, (' ', r.id[1], r.id[2]))
 
+        i+=1 #Go to next residue.
     return chain
 
 class ModifiedResidueLookup(object):
@@ -149,9 +170,8 @@ def dict_from_pdbs(filenames):
                         code = code.strip()
                         if code not in out_dict and code not in ignore:
                             try:
-                                one_letter_c = query_PDBeChem(code)
-                                log.info("Found code for %r: %r", code, one_letter_c)
-                                out_dict[code] = str(one_letter_c)
+                                res_info = query_PDBeChem(code)
+                                out_dict[code] = res_info
                             except (ValueError, LookupError) as e:
                                 log.warning("3-letter code '%s' not found: %s", code, e)
                                 out_dict[code] = None
