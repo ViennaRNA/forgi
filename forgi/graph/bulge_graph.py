@@ -1059,7 +1059,7 @@ class BulgeGraph(object):
         path = fug.shortest_cycle(G, mid_res)
         return path
 
-    def _chain_start_from_end(self, pos):
+    def _chain_start_end(self, pos):
       if pos not in self.backbone_breaks_after:
         if pos == self.seq_length:
           if self.backbone_breaks_after:
@@ -1915,6 +1915,7 @@ class BulgeGraph(object):
         :return: Nothing, but fill out this structure.
         """
         self.__init__()
+        log.debug(bpseq_str)
         #: This stores backbone breaks before they have been implemented!
         self._backbone_will_break_after = breakpoints
         tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
@@ -2184,10 +2185,18 @@ class BulgeGraph(object):
         if splitpoint == self.defines[element][1]:
             #Nothing needs to be done. 2 strands split at end
             return
-        define1 = [self.defines[element][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element][3]]
-        define2 = [ splitpoint+1, self.defines[element][1], self.defines[element][2], self.pairing_partner(splitpoint+1)]
+        elif splitpoint<self.defines[element][1]:
+            # Splitpoint in forward strand:
+            define1 = [self.defines[element][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element][3]]
+            define2 = [ splitpoint+1, self.defines[element][1], self.defines[element][2], self.pairing_partner(splitpoint+1)]
+        else:
+            # Splitpoint in backwards strand:
+            define1 = [self.defines[element][0], self.pairing_partner(splitpoint+1), splitpoint+1, self.defines[element][3]]
+            define2 = [ self.pairing_partner(splitpoint), self.defines[element][1], self.defines[element][2], splitpoint]
         edges1=[]
         edges2=[]
+
+
         for edge in self.edges[element]:
             if max(self.flanking_nucleotides(edge))==define1[0] or min(self.flanking_nucleotides(edge))==define1[3]:
                 edges1.append(edge)

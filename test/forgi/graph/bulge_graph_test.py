@@ -90,8 +90,16 @@ class BulgeGraphCofoldPrivateMemberTest(GraphVerification):
 
 class BulgeGraphCofoldOverallTest(GraphVerification):
     
-    def test_cutpoint_in_stem(self):
+    def test_cutpoint_in_stem_f(self):
         db = "(((&(((...))))))"
+        cg = fgb.BulgeGraph(dotbracket_str=db)
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "h0", "m0"]))
+        self.assertEqual(cg.defines["s0"], [1,3,13,15])
+        self.assertEqual(cg.defines["s1"], [4,6,10,12])
+        self.assertEqual(cg.edges["s0"], set(["m0"]))
+        self.assertEqual(cg.edges["s1"], set(["m0", "h0"]))
+    def test_cutpoint_in_stem_b(self):
+        db = "((((((...)))&)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "h0", "m0"]))
         self.assertEqual(cg.defines["s0"], [1,3,13,15])

@@ -31,7 +31,7 @@ import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
 import forgi
-
+from forgi.threedee.utilities.modified_res import change_residue_id
 import uuid
 
 import scipy.optimize as so
@@ -498,7 +498,7 @@ def stem_from_chains(cg, chains, elem_name):
             try:
                 stem_chain.add(chains[res_id.chain][res_id.resid])
             except Bio.PDB.PDBExceptions.PDBConstructionException:
-                ftup.change_residue_id(stem_chain[res_id.resid], uuid.uuid4())
+                change_residue_id(stem_chain[res_id.resid], uuid.uuid4())
                 stem_chain.add(chains[res_id.chain][res_id.resid])
 
     rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,

@@ -592,7 +592,7 @@ def contains_rna(chain):
     :return: True if it is an RNA molecule, False if at least one residue is not an RNA.
     '''
     for res in chain:
-        if res.resname.strip() not in RNA_RESIDUES:
+        if res.resname.strip() in RNA_RESIDUES:
             return True
     return False
 

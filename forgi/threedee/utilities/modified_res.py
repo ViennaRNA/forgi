@@ -125,8 +125,18 @@ def to_4_letter_alphabeth(chain):
                 chain.detach_child(r.id)
                 continue #Continue with same i (now different residue)
             r.resname = res_info["Standard parent"]
+
         # rename modified residues
         if r.id[0].strip():
+            log.debug(r.id)
+            # The following was added because of 1NYI.pdb. It includes a single G-residue denoted as HETATOM in chain A.
+            # It forms a base-pair, but is probably not connected to the backbone.
+            # Instead of removing it, introducing cutpoint whereever the PDB Chain 
+            # contains gaps would be another option (TODO).
+            if r.id[0].strip() in ["H_A", "H_U", "H_G", "H_C", "H_  G", "H_  C", "H_  A", "H_  U"]: #A plain AUGC as a HETATOM means it is a ligand.
+                chain.detach_child(r.id)
+                continue #Continue with same i (now different residue)
+
             change_residue_id(r, (' ', r.id[1], r.id[2]))
 
         i+=1 #Go to next residue.
@@ -140,6 +150,7 @@ class ModifiedResidueLookup(object):
         from . import modified_res_lookup
         self._dict = modified_res_lookup.RESIDUE_DICT
     def __getitem__(self, key):
+        key = key.strip()
         if key not in self._dict:
             try:
                 self._dict[key]=query_PDBeChem(key)

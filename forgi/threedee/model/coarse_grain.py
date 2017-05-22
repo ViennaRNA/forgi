@@ -122,6 +122,7 @@ def breakpoints_from_residuemap(residue_map):
     """
     breakpoints = []
     old_chain = None
+    log.debug(residue_map)
     for i, r in enumerate(residue_map):
         (from_chain, _) = ftum.parse_chain_base(r)
         if old_chain is not None and from_chain != old_chain:
