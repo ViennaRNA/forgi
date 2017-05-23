@@ -3,3 +3,5 @@ scipy
 future
 nose2
 networkx
+biopython
+

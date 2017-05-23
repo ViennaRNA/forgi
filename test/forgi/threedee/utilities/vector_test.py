@@ -244,7 +244,7 @@ class TestVector(unittest.TestCase):
         m2 = np.array([[1,1,2],[3,3,4.],[6,6,8]])
         m3= np.array([[2,-4,6],[-2,6.,9],[0,0,1]])
         for m in [m1,m2,m3]:
-            self.assertEqual(ftuv.det3x3(m), np.linalg.det(m))
+            self.assertAlmostEqual(ftuv.det3x3(m), np.linalg.det(m))
 
     def test_get_centroid(self):
         coords = [[0.,1.,1.],[1,1,1],[-1,2,3],[3, 0, 0],[-3,1,0]]

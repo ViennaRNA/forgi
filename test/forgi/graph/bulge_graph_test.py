@@ -1275,13 +1275,13 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
                          'AACCGG')
 
         bg = fgb.BulgeGraph(dotbracket_str='((.((.)).(.).))')
-        bg.seq = '123456789012345'
+        bg.seq = 'AUGCaugcAUGCaug'
         self.assertEqual(bg.get_flanking_sequence('m0'),
-                         '12345')
+                         'AUGCa')
         self.assertEqual(bg.get_flanking_sequence('m2'),
-                         '7890')
+                         'gcAU')
         self.assertEqual(bg.get_flanking_sequence('m1'),
-                         '2345')
+                         'Caug')
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
         seq = fus.gen_random_sequence(len(dotbracket))

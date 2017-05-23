@@ -496,7 +496,7 @@ class BulgeGraph(object):
             self.seqs[VALID_CHAINIDS[i]]=seq_str #Index Error, if too many chains.
             self.chain_ids.append(VALID_CHAINIDS[i])
             for j, s in enumerate(seq):
-                self.seq_ids += [RESID(VALID_CHAINIDS[i], (' ', str(j + 1), ' '))]
+                self.seq_ids += [resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
 
         #: If more than one chain is present.
         #: ((&))
@@ -1713,7 +1713,7 @@ class BulgeGraph(object):
         # when provided with just a sequence, we presume that the
         # residue ids are numbered from 1-up
         for i in range(len(self.seq)):
-            self.seq_ids.append(RESID(None,(' ', i + 1, ' ')))
+            self.seq_ids.append(resid_from_str(str(i+1)))
 
     def remove_degenerate_nodes(self):
         """
