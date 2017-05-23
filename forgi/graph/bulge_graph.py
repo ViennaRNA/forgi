@@ -375,7 +375,7 @@ class Sequence(str):
         return super(Sequence, self).__len__()-self.count('&')
 
     def is_valid(self):
-        wrong_chars = set(self)-set("AUGC&")
+        wrong_chars = set(self)-set("AUGCaugc&")
         if wrong_chars:
             log.info("Illegal characters are {}".format(wrong_chars))
             return False

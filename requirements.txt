@@ -2,3 +2,4 @@ numpy
 scipy
 future
 nose2
+networkx
