@@ -1,18 +1,11 @@
 language: python
 
-
-before_script:
-  - wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - export PATH=/home/travis/miniconda/bin:$PATH
-  - conda install --yes numpy
-  - conda install --yes scipy
-
 python:
   - "2.7"
   - "3.6"
 
-install: "pip install -r requirements.txt"
+install: "pip install --only-binary=numpy,scipy numpy scipy; 
+          pip install -r requirements.txt"
 
 script: nose2 tests
 
