@@ -2356,6 +2356,8 @@ class BulgeGraph(object):
                 self.name = parts[1].strip()
             elif parts[0] == 'info':
                 self.infos[parts[1]].append(" ".join(parts[2:]))
+        if not self.seq_ids:
+            self.seq_ids_from_seq()
 
     def sorted_stem_iterator(self):
         """
