@@ -1370,6 +1370,13 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         nbg = fgb.bg_from_subgraph(bg, sg)
         self.assertTrue(set(nbg.defines.keys()) == set(sg))
 
+    def test_random_subgraph2(self):
+        bg = fgb.BulgeGraph(dotbracket_str = "...(((...)))...(((...)))...(((...(((...)))...)))",
+                                 seq="AAAGGGAAACCCAAAGGGAAACCCAAAGGGUUUGGGAAACCCUUUCCC")
+        for rep in range(10):
+            for l in range(3, 8):
+                sg = bg.random_subgraph(l)
+                self.assertGreaterEqual(len(sg), l)
     def test_has_connection(self):
         bg = fgb.BulgeGraph(dotbracket_str='(())..(())..(())..')
 
