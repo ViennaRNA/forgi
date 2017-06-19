@@ -492,7 +492,11 @@ def stem_from_chains(cg, chains, elem_name):
         else:
             raise
     stem_chain = bpdb.Chain.Chain(' ')
-    residue_ids = cg.get_resseqs(elem_name, seq_ids=True)
+    try:
+        residue_ids = cg.get_resseqs(elem_name, seq_ids=True)
+    except IndexError:
+        log.error("seq_ids were '%r'", cg.seq_ids)
+        raise
     for strand in residue_ids:
         for res_id in strand:
             try:
@@ -1216,7 +1220,7 @@ def add_stem_information_from_pdb_chains(cg):
             cg.twists[d] = twists
             assert abs(np.dot(stem_dir, twists[0]))<10**-10
             assert abs(np.dot(stem_dir, twists[1]))<10**-10
-            cg.sampled[d] = [cg.name] + cg.defines[d]
+            #cg.sampled[d] = [cg.name] + cg.defines[d]
 
 
 def add_bulge_information_from_pdb_chain(bg, chain):

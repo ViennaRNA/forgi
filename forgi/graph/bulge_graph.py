@@ -3126,7 +3126,11 @@ class BulgeGraph(object):
             strand_resnames = []
             for x in range(r[0], r[1] + 1):
                 if seq_ids:
-                    res_id = self.seq_ids[x - 1]
+                    try:
+                        res_id = self.seq_ids[x - 1]
+                    except IndexError:
+                        log.error("Index %s not in seq_ids.", (x-1))
+                        raise
                     if hasattr(self, "chain") and self.chain is not None:
                         assert res_id in self.chain
                     strand_resnames.append(res_id)
@@ -3273,11 +3277,13 @@ class BulgeGraph(object):
         for (s1, b, s2) in self.build_order:
             self.ang_types[b] = self.connection_type(b, [s1, s2])
 
-    def get_angle_type(self, bulge):
+    def get_angle_type(self, bulge, allow_broken = False):
         """
         Return what type of angle this bulge is, based on the way this
         would be built using a breadth-first traversal along the minimum
         spanning tree.
+
+        :param allow_broken: Return the angle type for broken ML segments. If this is False, return None instead.
         """
         if self.ang_types is None:
             self.set_angle_types()
@@ -3285,7 +3291,12 @@ class BulgeGraph(object):
         if bulge in self.ang_types:
             return self.ang_types[bulge]
         else:
-            return None
+            if allow_broken:
+                s1, s2 = sorted(self.edges[bulge]) #Alphbethically ordered
+                return self.connection_type(bulge, [s1, s2])
+            else:
+                return None
+
 
     def is_node_pseudoknot(self, d):
         """

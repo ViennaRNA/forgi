@@ -155,9 +155,13 @@ class StemStat:
         self.twist_angle = float(parts[4])
         if len(parts)>5:
             self.define = [int(parts[5]), int(parts[6]), int(parts[7]), int(parts[8])]
+        try:
             self.seqs = [parts[9], parts[10]]
+        except IndexError:
+            pass
+
     def __str__(self):
-	try:
+        try:
             return "stem {pdb_name} {bp_length} {phys_length} {twist_angle} ".format(**self.__dict__)+" ".join(map(str, self.define))+" "+" ".join(self.seqs)
         except (KeyError, IndexError):
             warnings.warn("Could not print define '{}' for StemStat".format(self.define))

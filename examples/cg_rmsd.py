@@ -39,8 +39,8 @@ def main(args):
 parser = argparse.ArgumentParser(description="Calculate the RMSD between two or more coarse grain models")
 parser.add_argument('reference', nargs=1, help="The reference *.cg/*.coord file holding the coarse grained model", type=str)
 parser.add_argument('compareTo', nargs='+',  help="Other coarse grained models which will be compared to the first one.", type=str)
-if __name__ == '__main__':    
+
+if __name__ == '__main__':
+
     args=parser.parse_args()
     main(args)
-
-

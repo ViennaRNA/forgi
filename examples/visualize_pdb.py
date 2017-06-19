@@ -4,6 +4,7 @@ import sys
 import os.path as op
 import subprocess as sp
 import tempfile as tf
+import logging
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as fud
@@ -12,7 +13,9 @@ import forgi.threedee.visual.pymol as ftvp
 
 from optparse import OptionParser
 
+
 def main():
+    logging.basicConfig()
     usage = """
     ./visualize_pdb.py pdb_file
 
@@ -21,10 +24,10 @@ def main():
     num_args= 0
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-s', '--secondary-structure', 
-                      dest='secondary_structure', default='', 
+    parser.add_option('-s', '--secondary-structure',
+                      dest='secondary_structure', default='',
                       help="Enter a dot-bracket string for the \
-                      secondary structure of this model", type=str)
+                      secondary structure of this model", type='str')
     parser.add_option('-x', '--text', dest='text', default=False, action='store_true', help="Add labels to the figure.")
     parser.add_option('-r', '--longrange', dest='longrange', default=False, action='store_true', help="Display long-range interactions")
     parser.add_option('-p', '--pseudoknots', dest='pseudoknots', default=False, action='store_true', help='Allow pseudoknots in the CG structure')
@@ -35,6 +38,8 @@ def main():
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
     parser.add_option('-l', '--loops', dest='loops', default=True, action='store_false', help="Don't display the coarse-grain hairpin loops")
+    parser.add_option( '', '--chain', dest='chain', type='str', help="DWhat chain you like to display.")
+
     parser.add_option('-d', '--distance', dest='distance', default=None, help="Draw the lines between specified virtual residues")
     parser.add_option('-o', '--output', dest='output', default=None, help="Create a picture of the scene and exit", type='str')
     parser.add_option('', '--only-elements', dest='only_elements', default=None, help='Display only these elements '
@@ -54,8 +59,12 @@ def main():
         sys.exit(1)
 
 
+    if options.chain:
+        chain_id=options.chain
+    else:
+        chain_id=None
     cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"),
-                      remove_pseudoknots=not options.pseudoknots)
+                      remove_pseudoknots=not options.pseudoknots, chain_id=chain_id)
     pp = ftvp.PymolPrinter()
     pp.display_virtual_residues = options.virtual_residues
     pp.virtual_atoms = options.virtual_atoms
@@ -85,7 +94,11 @@ def main():
             with tf.NamedTemporaryFile(suffix='.pdb') as f2:
                 # extract just the biggest chain and renumber it so
                 # the nucleotides start at 1
-                chain = ftup.get_biggest_chain(args[0])
+                if chain_id is None:
+                    chain = ftup.get_biggest_chain(args[0])
+                else:
+                    chains = ftup.get_all_chains(args[0])
+                    chain, = [ chain for chain in chains if chain.id == chain_id ]
                 #chain = ftup.renumber_chain(chain)
                 ftup.output_chain(chain, f2.name)
                 f2.flush()
@@ -99,11 +112,11 @@ def main():
                         to = int(to)
 
                         try:
-                            vec1 = chain[fr]["C1*"].get_vector().get_array() 
+                            vec1 = chain[fr]["C1*"].get_vector().get_array()
                             vec2 = chain[to]["C1*"].get_vector().get_array()
                         except KeyError:
                             # Rosetta produces atoms with non-standard names
-                            vec1 = chain[fr]["C1*"].get_vector().get_array() 
+                            vec1 = chain[fr]["C1*"].get_vector().get_array()
                             vec2 = chain[to]["C1*"].get_vector().get_array()
 
                         pp.add_dashed(vec1, vec2, width=1.2)
@@ -156,4 +169,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
