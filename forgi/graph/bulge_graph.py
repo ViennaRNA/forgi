@@ -37,6 +37,7 @@ import logging
 log = logging.getLogger(__name__)
 from pprint import pprint
 
+from logging_exceptions import log_to_exception
 
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
 
@@ -3128,8 +3129,9 @@ class BulgeGraph(object):
                 if seq_ids:
                     try:
                         res_id = self.seq_ids[x - 1]
-                    except IndexError:
-                        log.error("Index %s not in seq_ids.", (x-1))
+                    except IndexError as e:
+                        with log_to_exception(log, e):
+                            log.error("Index %s not in seq_ids.", (x-1))
                         raise
                     if hasattr(self, "chain") and self.chain is not None:
                         assert res_id in self.chain

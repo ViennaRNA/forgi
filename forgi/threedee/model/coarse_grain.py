@@ -38,6 +38,9 @@ import itertools as it
 import StringIO
 import logging
 from pprint import pprint
+
+from logging_exceptions import log_to_exception
+
 log = logging.getLogger(__name__)
 
 class CgConstructionError(fgb.GraphConstructionError):
@@ -103,8 +106,9 @@ def add_longrange_interactions(cg, lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
         try:
             seq_id1 = cg.seq_ids.index(fgb.RESID(from_chain, ftum.parse_resid(from_base))) + 1
-        except ValueError:
-            log.error("seq_ids are {}".format(cg.seq_ids))
+        except ValueError as e:
+            with log_to_exception(log, e):
+                log.error("seq_ids are {}".format(cg.seq_ids))
             raise
         seq_id2 = cg.seq_ids.index(fgb.RESID(to_chain, ftum.parse_resid(to_base))) + 1
 
@@ -744,13 +748,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         log.debug("stem1 %s, twist1 %s, stem2 %s, twist2 %s, bulge %s", stem1, twist1, stem2, twist2, bulge)
 
         if round(np.dot(stem1, twist1),10)!=0 or round(np.dot(stem2, twist2),10)!=0:
-            log.error("Angle stem1-twist1 %s dot_product=%s, Angle stem2-twist2 %s degrees dot_product=%s",
-                                        math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
-                                        math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),)
-            raise CgIntegrityError("The twists are inconsistent. "
+            err = CgIntegrityError("The twists are inconsistent. "
                                "They should be orthogonal to the corresponding stem vectors."
-                               "Inconsistency found for {},{}".format(define, connections)
-                               )
+                               "Inconsistency found for {},{}".format(define, connections))
+            with log_to_exception(log,err):
+                log.error("Angle stem1-twist1 %s dot_product=%s, Angle stem2-twist2 %s degrees dot_product=%s",
+                          math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
+                          math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),)
+            raise err
 
         try:
             # Get the orientations for orienting these two stems

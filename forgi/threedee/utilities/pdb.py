@@ -9,6 +9,8 @@ import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 from  forgi.threedee.utilities.modified_res import to_4_letter_alphabeth
 
+from logging_exceptions import log_to_exception
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -423,11 +425,12 @@ def output_multiple_chains(chains, filename):
     io.set_structure(s)
     try:
         io.save(filename, HSelect())
-    except:
-        log.error("Could not output PDB with residues:")
-        log.error(list(r.get_id() for r in bpdb.Selection.unfold_entities(m, 'R')))
-        log.error(" in chains:")
-        log.error(list(c.get_id() for c in bpdb.Selection.unfold_entities(m, 'C')))
+    except Exception as e:
+        with log_to_exception(log, e):
+            log.error("Could not output PDB with residues:")
+            log.error(list(r.get_id() for r in bpdb.Selection.unfold_entities(m, 'R')))
+            log.error(" in chains:")
+            log.error(list(c.get_id() for c in bpdb.Selection.unfold_entities(m, 'C')))
         raise
 def get_particular_chain(in_filename, chain_id, parser=None):
     '''

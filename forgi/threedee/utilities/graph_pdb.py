@@ -24,6 +24,9 @@ import math
 from pprint import pprint
 import logging
 log = logging.getLogger(__name__)
+
+from logging_exceptions import log_to_exception
+
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
@@ -494,8 +497,9 @@ def stem_from_chains(cg, chains, elem_name):
     stem_chain = bpdb.Chain.Chain(' ')
     try:
         residue_ids = cg.get_resseqs(elem_name, seq_ids=True)
-    except IndexError:
-        log.error("seq_ids were '%r'", cg.seq_ids)
+    except IndexError as e:
+        with log_to_exception(log, e):
+            log.error("seq_ids were '%r'", cg.seq_ids)
         raise
     for strand in residue_ids:
         for res_id in strand:
@@ -1265,8 +1269,9 @@ def _is_incomplete_element(cg, elem):
         for pos in range(side[0], side[1]+1):
             try:
                 seq_id = cg.seq_ids[pos-1]
-            except IndexError:
-                log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
+            except IndexError as e:
+                with log_to_exception(log, e):
+                    log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
                 raise
             if prev_seq_id is not None:
                 if seq_id.resid[1]>prev_seq_id.resid[1]+1:
@@ -1556,8 +1561,9 @@ class VirtualAtomsLookup(object):
         assert pos>=1
         try:
             residue = (self.cg.seq[pos])
-        except IndexError:
-            log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
+        except IndexError as e:
+            with log_to_exception(log, e):
+                log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
             raise
         if self.given_atom_names is None:
             if self.sidechain:
