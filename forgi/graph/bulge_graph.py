@@ -757,9 +757,10 @@ class BulgeGraph(object):
         else:
             define = self.defines[node]
 
-        yield [ define[0], define[1] ]
-        if len(define)>2:
-            yield [ define[2], define[3] ]
+        if define:
+            yield [ define[0], define[1] ]
+            if len(define)>2:
+                yield [ define[2], define[3] ]
 
 
     def define_a(self, elem):
