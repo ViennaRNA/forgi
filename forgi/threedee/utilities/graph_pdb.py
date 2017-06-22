@@ -24,6 +24,9 @@ import math
 from pprint import pprint
 import logging
 log = logging.getLogger(__name__)
+
+from logging_exceptions import log_to_exception
+
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
@@ -224,11 +227,11 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
 
     stem1_basis = cuv.create_orthonormal_basis(stem1_vec, twist1)
 
-    log.debug("Stem1 basis \n{}".format(stem1_basis))
+    log.debug("Stem1 basis \n%s", stem1_basis)
     # Transform the vector of stem2 to the new coordinate system
     stem2_new_basis = cuv.change_basis(stem2_vec, stem1_basis,
                                        cuv.standard_basis)
-    log.debug("Stem2 in basis of stem 1 {}".format(stem2_new_basis))
+    log.debug("Stem2 in basis of stem 1 %s", stem2_new_basis)
 
     twist2_new_basis = cuv.change_basis(twist2, stem1_basis,
                                         cuv.standard_basis)
@@ -236,7 +239,7 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
     # Convert the cartesian coordinates to polar coordinates
     (r, u, v) = cuv.spherical_cartesian_to_polar(stem2_new_basis)
     t = get_twist_parameter(twist1, twist2_new_basis, (u, v))
-    log.debug("r {}, u {}, v {}, t {}".format(r,u,v,t))
+    log.debug("r %s, u %s, v %s, t %s", r,u,v,t)
     return (r, u, v, t)
 
 
@@ -492,7 +495,12 @@ def stem_from_chains(cg, chains, elem_name):
         else:
             raise
     stem_chain = bpdb.Chain.Chain(' ')
-    residue_ids = cg.get_resseqs(elem_name, seq_ids=True)
+    try:
+        residue_ids = cg.get_resseqs(elem_name, seq_ids=True)
+    except IndexError as e:
+        with log_to_exception(log, e):
+            log.error("seq_ids were '%r'", cg.seq_ids)
+        raise
     for strand in residue_ids:
         for res_id in strand:
             try:
@@ -1216,7 +1224,7 @@ def add_stem_information_from_pdb_chains(cg):
             cg.twists[d] = twists
             assert abs(np.dot(stem_dir, twists[0]))<10**-10
             assert abs(np.dot(stem_dir, twists[1]))<10**-10
-            cg.sampled[d] = [cg.name] + cg.defines[d]
+            #cg.sampled[d] = [cg.name] + cg.defines[d]
 
 
 def add_bulge_information_from_pdb_chain(bg, chain):
@@ -1261,8 +1269,9 @@ def _is_incomplete_element(cg, elem):
         for pos in range(side[0], side[1]+1):
             try:
                 seq_id = cg.seq_ids[pos-1]
-            except IndexError:
-                log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
+            except IndexError as e:
+                with log_to_exception(log, e):
+                    log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
                 raise
             if prev_seq_id is not None:
                 if seq_id.resid[1]>prev_seq_id.resid[1]+1:
@@ -1552,8 +1561,9 @@ class VirtualAtomsLookup(object):
         assert pos>=1
         try:
             residue = (self.cg.seq[pos])
-        except IndexError:
-            log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
+        except IndexError as e:
+            with log_to_exception(log, e):
+                log.error("position {} not in sequence {}".format(pos-1, self.cg.seq))
             raise
         if self.given_atom_names is None:
             if self.sidechain:

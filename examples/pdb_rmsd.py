@@ -3,6 +3,7 @@
 import sys
 import forgi.threedee.utilities.pdb as cup
 from optparse import OptionParser
+import numpy as np
 
 def main():
     usage = """
@@ -28,8 +29,12 @@ def main():
     chain1 = cup.load_structure(args[0])
     chain2 = cup.load_structure(args[1])
 
-    print cup.pdb_rmsd(chain1, chain2)[:2]
+    num_atoms, rmsd, rotran, per_residue = cup.pdb_rmsd(chain1, chain2)
+    print("Contributions per residue (mean and rootmeansquared)")
+    for res in sorted(per_residue, key=lambda x: x.id):
+        devs = per_residue[res]
+        print(res, np.mean(devs), np.sqrt(np.mean(np.asarray(devs)**2)))
+    print("RMSD: {} ({} atoms)".format(rmsd, num_atoms))
 
 if __name__ == '__main__':
     main()
-

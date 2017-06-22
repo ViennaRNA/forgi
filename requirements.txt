@@ -4,4 +4,4 @@ future
 nose2
 networkx
 biopython
-
+logging_exceptions

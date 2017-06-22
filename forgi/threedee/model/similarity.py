@@ -4,9 +4,10 @@ import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
 
-import itertools as it 
+import itertools as it
 import math
 import numpy as np
+from collections import defaultdict
 
 __all__ = ['AdjacencyCorrelation', 'cg_rmsd', 'rmsd', 'drmsd']
 
@@ -17,7 +18,7 @@ This module contains functions for the comparison of two cg objects or two order
 try:
     profile
 except:
-    def profile(f): 
+    def profile(f):
         return f
 
 
@@ -61,19 +62,19 @@ def mcc(confusion_matrix):
 class AdjacencyCorrelation(object):
     """
     A class used for calculating the ACC.
-    
-    The adjacency correlation coefficient is calculated as the Matthews correlation 
+
+    The adjacency correlation coefficient is calculated as the Matthews correlation
     coefficient of potential interactions, defined as nucleotides within 25 Angstrom
     from each other. See chapter 9.3 of Peter's thesis.
 
     This object is initialized with a reference structure and a distance for interactions.
     The evaluate() method is used for calculating this correlation matrix.
 
-    This is significantly faster than the confusion_matrix function, if 
+    This is significantly faster than the confusion_matrix function, if
     many structures will be compared to the same reference structure.
     """
     def __init__(self, reference_cg, distance=25.0, bp_distance=16):
-        self._distance=distance        
+        self._distance=distance
         self._bp_distance=bp_distance
         self._reference_interactions=self.get_interactions(reference_cg)
 
@@ -93,7 +94,7 @@ class AdjacencyCorrelation(object):
 
         interactions=set(cg.coords.elements_closer_than(self._distance, ignore))
         return interactions
-    
+
     def evaluate(self, cg):
         '''
         Calculate the true_positive, false_positive,
@@ -132,7 +133,7 @@ def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
     :param cg_query: The second cg structure
     :param cg_native: The native cg structure
     :param distance: The distance between which we consider interactions.
-    :param bp_distance: Only consider pairs of elements that are separated by 
+    :param bp_distance: Only consider pairs of elements that are separated by
                         MORE than this many base pairs
     :return: The MCC for interactions within a certain distance
     '''
@@ -154,7 +155,7 @@ def optimal_superposition(crds1, crds2):
     """
     Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2
     using the Kabsch algorithm
-    """        
+    """
     assert(crds1.shape == crds2.shape)
     if crds1.shape[1] == 3 or crds1.shape[1] == 2:
         correlation_matrix = np.dot(np.transpose(crds1), crds2)
@@ -181,11 +182,21 @@ def cg_rmsd(cg1, cg2):
 
     return rmsd(residues1, residues2)
 
-def rmsd_kabsch(crds1, crds2, is_centered=False):
-    '''
-    Center the coordinate vectors on their centroid
-    and then calculate the rmsd.
-    '''
+def rmsd_contrib_per_element(cg1, cg2):
+    residues1, elems1 = cg1.get_ordered_virtual_residue_poss(return_elements = True)
+    residues2, elems2 = cg2.get_ordered_virtual_residue_poss(return_elements = True)
+    if elems1 != elems2:
+        raise ValueError("RNAs with different structure are not compareable by RMSD.")
+    diff_vecs = _pointwise_deviation(residues1, residues2)
+    elem_devs = defaultdict(list)
+    for i, elem in enumerate(elems1):
+        elem_devs[elem].append(diff_vecs[i])
+    return elem_devs
+    
+def _pointwise_deviation(crds1, crds2, is_centered=False):
+    """
+    Helper function for Kabsch RMSD
+    """
     if not is_centered:
         crds1 = ftuv.center_on_centroid(crds1)
         crds2 = ftuv.center_on_centroid(crds2)
@@ -194,8 +205,17 @@ def rmsd_kabsch(crds1, crds2, is_centered=False):
     crds_aligned = np.dot(crds1, os)
 
     diff_vecs = (crds2 - crds_aligned)
-    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
 
+    return diff_vecs
+
+def rmsd_kabsch(crds1, crds2, is_centered=False):
+    '''
+    Center the coordinate vectors on their centroid
+    and then calculate the rmsd.
+    '''
+    diff_vecs = _pointwise_deviation(crds1, crds2, is_centered)
+
+    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
     return math.sqrt(sum(vec_lengths) / len(vec_lengths))
 
 def drmsd(coords1, coords2):

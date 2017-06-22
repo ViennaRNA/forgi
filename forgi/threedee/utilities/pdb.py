@@ -3,10 +3,14 @@ from __future__ import print_function
 import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb
+from collections import defaultdict
 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 from  forgi.threedee.utilities.modified_res import to_4_letter_alphabeth
+
+from logging_exceptions import log_to_exception
+
 import logging
 log=logging.getLogger(__name__)
 
@@ -240,7 +244,7 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     :param c2: Another Bio.PDB.Chain
     :return: The rmsd between the locations of all the atoms in the chains.
     '''
-
+    import forgi.threedee.model.similarity as ftms
     a_5_names = ['P', 'O5*', 'C5*', 'C4*', 'O4*', 'O2*']
     a_5_names += ['P', "O5'", "C5'", "C4'", "O4'", "O2'"]
     a_3_names = ["C1*", "C2*", "C3*", "O3*"]
@@ -272,7 +276,9 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
 
     #c1_list.sort(key=lambda x: x.id[1])
     #c2_list.sort(key=lambda x: x.id[1])
-
+    to_residues=[]
+    crds1 = []
+    crds2 = []
     for r1,r2 in zip(c1_list, c2_list):
         if sidechains:
             anames = backbone_atoms + a_names[c1[i].resname.strip()]
@@ -281,14 +287,22 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         #anames = a_5_names + a_3_names
 
         for a in anames:
-	    try:
-		at1 = r1[a]
-		at2 = r2[a]
+    	    try:
+        		at1 = r1[a]
+        		at2 = r2[a]
+            except:
+                continue
+            else:
+                all_atoms1.append(at1)
+                all_atoms2.append(at2)
+                crds1.append(at1.coord)
+                crds2.append(at2.coord)
+                to_residues.append(r1)
 
-		all_atoms1 += [at1]
-		all_atoms2 += [at2]
-	    except:
-	        continue
+    diff_vecs = ftms._pointwise_deviation(crds1, crds2)
+    dev_per_res = defaultdict(list)
+    for i, res in enumerate(to_residues):
+        dev_per_res[res].append(diff_vecs[i])
 
     #print "rmsd len:", len(all_atoms1), len(all_atoms2)
     if superimpose:
@@ -298,12 +312,12 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         if apply_sup:
             sup.apply(c2.get_atoms())
 
-        return (len(all_atoms1), sup.rms, sup.rotran)
+        return (len(all_atoms1), sup.rms, sup.rotran, dev_per_res)
     else:
         crvs1 = np.array([a.get_vector().get_array() for a in all_atoms1])
         crvs2 = np.array([a.get_vector().get_array() for a in all_atoms2])
 
-        return (len(all_atoms1), ftuv.vector_set_rmsd(crvs1, crvs2), None)
+        return (len(all_atoms1), ftuv.vector_set_rmsd(crvs1, crvs2), None, dev_per_res)
 
 def get_first_chain(filename):
     '''
@@ -411,11 +425,12 @@ def output_multiple_chains(chains, filename):
     io.set_structure(s)
     try:
         io.save(filename, HSelect())
-    except:
-        log.error("Could not output PDB with residues:")
-        log.error(list(r.get_id() for r in bpdb.Selection.unfold_entities(m, 'R')))
-        log.error(" in chains:")
-        log.error(list(c.get_id() for c in bpdb.Selection.unfold_entities(m, 'C')))
+    except Exception as e:
+        with log_to_exception(log, e):
+            log.error("Could not output PDB with residues:")
+            log.error(list(r.get_id() for r in bpdb.Selection.unfold_entities(m, 'R')))
+            log.error(" in chains:")
+            log.error(list(c.get_id() for c in bpdb.Selection.unfold_entities(m, 'C')))
         raise
 def get_particular_chain(in_filename, chain_id, parser=None):
     '''
@@ -545,7 +560,7 @@ def remove_hetatm(chain):
     :return: The same chain, but missing all hetatms
     '''
     raise NotImplementedError("Replaced by to_4_letter_alphabeth")
-    
+
 def load_structure(pdb_filename):
     '''
     Load a Bio.PDB.Structure object and return the largest chain.

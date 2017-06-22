@@ -450,6 +450,7 @@ def vector_set_rmsd(set1, set2):
 
     :return: The rmsd between the rows of the matrix.
     '''
+    warnings.warn("DEPRECATED! Use ftms.rmsd!!!")
     rmsd = 0
     count = 0
     for i in range(len(set1)):

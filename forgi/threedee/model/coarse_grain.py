@@ -38,6 +38,9 @@ import itertools as it
 import StringIO
 import logging
 from pprint import pprint
+
+from logging_exceptions import log_to_exception
+
 log = logging.getLogger(__name__)
 
 class CgConstructionError(fgb.GraphConstructionError):
@@ -103,8 +106,9 @@ def add_longrange_interactions(cg, lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
         try:
             seq_id1 = cg.seq_ids.index(fgb.RESID(from_chain, ftum.parse_resid(from_base))) + 1
-        except ValueError:
-            log.error("seq_ids are {}".format(cg.seq_ids))
+        except ValueError as e:
+            with log_to_exception(log, e):
+                log.error("seq_ids are {}".format(cg.seq_ids))
             raise
         seq_id2 = cg.seq_ids.index(fgb.RESID(to_chain, ftum.parse_resid(to_base))) + 1
 
@@ -255,39 +259,45 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     if sum(len(chain.get_list()) for chain in new_chains) == 0:
         return cg
 
-    if not secondary_structure:
-        # output a pdb with RNA only (for MCAnnotate):
+    # output a pdb with RNA only (for MCAnnotate):
+    output_dir = op.join(output_dir, pdb_base )
 
-        output_dir = op.join(output_dir, pdb_base )
+    if not op.exists(output_dir):
+        os.makedirs(output_dir)
+    rna_pdb_fn = op.join(output_dir, 'temp.pdb')
+    with open(rna_pdb_fn, 'w') as f:
+        #We need to output in pdb format for MC-Annotate
+        ftup.output_multiple_chains(new_chains, f.name)
+        f.flush()
 
-        if not op.exists(output_dir):
-            os.makedirs(output_dir)
-        rna_pdb_fn = op.join(output_dir, 'temp.pdb')
-        with open(rna_pdb_fn, 'w') as f:
-            #We need to output in pdb format for MC-Annotate
-            ftup.output_multiple_chains(new_chains, f.name)
-            f.flush()
+    # first we annotate the 3D structure
+    p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
+    out, err = p.communicate()
 
-        # first we annotate the 3D structure
-        p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
-        out, err = p.communicate()
+    lines = out.strip().split('\n')
 
-        lines = out.strip().split('\n')
+    # convert the mcannotate output into bpseq format
+    try:
+        (dotplot, residue_map) = ftum.get_dotplot(lines)
+    except Exception as e:
+        print (e, file=sys.stderr)
+        return cg
 
-        # convert the mcannotate output into bpseq format
-        try:
-            (dotplot, residue_map) = ftum.get_dotplot(lines)
-        except Exception as e:
-            print (e, file=sys.stderr)
-            return cg
-
-        # f2 will store the dotbracket notation
-        #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-        #    f2.write(dotplot)
-        #    f2.flush()
+    # f2 will store the dotbracket notation
+    #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
+    #    f2.write(dotplot)
+    #    f2.flush()
 
 
-        # remove pseudoknots
+    if secondary_structure:
+        warnings.warn("Not adding any longrange interactions because secondary structure is given.")
+        if remove_pseudoknots:
+            warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
+        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
+        breakpoints = breakpoints_from_residuemap(residue_map)
+        cg.seqids_from_residue_map(residue_map)
+
+    else:
         if remove_pseudoknots:
             out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
                                #output_format = 'vienna',
@@ -300,19 +310,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             out = out.replace(' Nested structure', pdb_base)
         else:
             out = dotplot
-        #(out, residue_map) = add_missing_nucleotides(out, residue_map)
-
         breakpoints = breakpoints_from_residuemap(residue_map)
         log.debug("Breakpoints are {}".format(breakpoints))
         cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints
         cg.seqids_from_residue_map(residue_map)
         add_longrange_interactions(cg, lines)
 
-    else:
-        warnings.warn("Not adding any longrange interactions because secondary structure is given.")
-        if remove_pseudoknots:
-            warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
-        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
 
     cg.name = pdb_base
     # Add the 3D information about the starts and ends of the stems
@@ -570,7 +573,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             points += list(self.coords[s])
         return np.array(points)
 
-    def get_ordered_virtual_residue_poss(self):
+    def get_ordered_virtual_residue_poss(self, return_elements = False):
         """
         Get the coordinates of all stem's virtual residues in a consistent order.
 
@@ -578,15 +581,22 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         If no virtual_residue_positions are known, self.add_all_virtual_residues() is called
         automatically.
 
+        :param return_elements: In addition to the positions, return a list with
+                                the cg-elements these coordinates belong to
         :returns: A numpy array.
         """
         if not self.v3dposs:
             self.add_all_virtual_residues()
         vress = []
+        elems = []
         for s in self.sorted_stem_iterator():
             for i in range(self.stem_length(s)):
                 vres=self.v3dposs[s][i]
-                vress += [vres[0] + vres[2], vres[0] + vres[3]]
+                vress.append(vres[0] + vres[2])
+                vress.append(vres[0] + vres[3])
+                elems.extend([s]*2)
+        if return_elements:
+            return np.array(vress), elems
         return np.array(vress)
 
     def get_poss_for_domain(self, elements, mode="vres"):
@@ -738,13 +748,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         log.debug("stem1 %s, twist1 %s, stem2 %s, twist2 %s, bulge %s", stem1, twist1, stem2, twist2, bulge)
 
         if round(np.dot(stem1, twist1),10)!=0 or round(np.dot(stem2, twist2),10)!=0:
-            log.error("Angle stem1-twist1 %s dot_product=%s, Angle stem2-twist2 %s degrees dot_product=%s",
-                                        math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
-                                        math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),)
-            raise CgIntegrityError("The twists are inconsistent. "
+            err = CgIntegrityError("The twists are inconsistent. "
                                "They should be orthogonal to the corresponding stem vectors."
-                               "Inconsistency found for {},{}".format(define, connections)
-                               )
+                               "Inconsistency found for {},{}".format(define, connections))
+            with log_to_exception(log,err):
+                log.error("Angle stem1-twist1 %s dot_product=%s, Angle stem2-twist2 %s degrees dot_product=%s",
+                          math.degrees(ftuv.vec_angle(stem1, twist1)), np.dot(stem1, twist1),
+                          math.degrees(ftuv.vec_angle(stem2, twist2)), np.dot(stem2, twist2),)
+            raise err
 
         try:
             # Get the orientations for orienting these two stems
