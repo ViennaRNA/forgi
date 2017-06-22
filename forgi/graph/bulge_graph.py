@@ -39,6 +39,13 @@ from pprint import pprint
 
 from logging_exceptions import log_to_exception
 
+try:
+  profile  #The @profile decorator from line_profiler (kernprof)
+except:
+  def profile(x):
+    return x
+
+
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
 
 
@@ -734,7 +741,7 @@ class BulgeGraph(object):
         else:
             return "".join(output_str).strip()
 
-    def define_range_iterator(self, node, adjacent=False, seq_ids=False):
+    def define_range_iterator(self, node, adjacent=False):
         """
         Return the ranges of the nucleotides in the define.
 
@@ -750,14 +757,10 @@ class BulgeGraph(object):
         else:
             define = self.defines[node]
 
-        for i in range(0,len(define),2):
-            ds1 = define[i]
-            ds2 = define[i+1]
-            if seq_ids:
-                # this will cause problems if the nucleotide has insertion codes
-                yield [self.seq_ids[ds1 - 1], self.seq_ids[ds2 - 1]]
-            else:
-                yield [ds1, ds2]
+        yield [ define[0], define[1] ]
+        if len(define)>2:
+            yield [ define[2], define[3] ]
+
 
     def define_a(self, elem):
         """
@@ -789,7 +792,7 @@ class BulgeGraph(object):
         """
         visited=set()
 
-        for r in self.define_range_iterator(node, adjacent, seq_ids=False):
+        for r in self.define_range_iterator(node, adjacent):
             for i in range(r[0], r[1] + 1):
                 if seq_ids:
                     if self.seq_ids[i-1] not in visited:
@@ -1075,6 +1078,7 @@ class BulgeGraph(object):
           return 1
         else:
           return self.backbone_breaks_after[i-1]+1
+    @profile
     def _get_next_ml_segment(self, ml_segment):
         """
         """
@@ -1083,7 +1087,7 @@ class BulgeGraph(object):
             return None
         else:
             if ml_segment[0] in "mf":
-                f = max(self.flanking_nucleotides(ml_segment))
+                f = max(self.define_a(ml_segment))
             else:
                 raise ValueError("{} is not a multiloop".format(ml_segment))
 
@@ -1101,13 +1105,13 @@ class BulgeGraph(object):
             else:
                 assert False
 
-        log.debug("flanking_nuc_at_stem_side called for {}, side {} with defines {}.".format(s, side_stem, self.defines[s]))
+        log.debug("flanking_nuc_at_stem_side called for %s, side %s with defines %s.", s, side_stem, self.defines[s])
         ml_nuc = self.flanking_nuc_at_stem_side(s, side_stem)
-        log.debug("ml_nucleotide is {} (sequence length is {}).".format(ml_nuc, self.seq_length))
+        log.debug("ml_nucleotide is %s (sequence length is %s).", ml_nuc, self.seq_length)
         if ml_nuc>self.seq_length or ml_nuc-1 in self.backbone_breaks_after:
             return None
         elem =  self.get_node_from_residue_num(ml_nuc)
-        log.debug("side now {}, ml_nuc {}, ml {}".format(side_stem, ml_nuc, elem))
+        log.debug("side now %s, ml_nuc %s, ml %s", side_stem, ml_nuc, elem)
         if elem[0]=="s":
             #0-length multiloop
             elems=self.edges[elem]&self.edges[s]
@@ -1117,7 +1121,7 @@ class BulgeGraph(object):
             assert False
         if elem[0] not in "mft":
             self.print_debug()
-            log.error("{} is not a multiloop node".format(elem))
+            log.error("%s is not a multiloop node", elem)
             return None
         return elem
 
@@ -1568,6 +1572,7 @@ class BulgeGraph(object):
 
         return ext_loop
 
+    @profile
     def find_mlonly_multiloops(self):
         import networkx as nx
         ml_graph = nx.Graph()
@@ -2902,25 +2907,16 @@ class BulgeGraph(object):
 
         return dims
 
+    @profile
     def get_node_from_residue_num(self, base_num):
         """
         Iterate over the defines and see which one encompasses this base.
         """
         seq_id=False
         for key in self.defines.keys():
-            define = self.defines[key]
-
-            for i in range(0, len(define), 2):
-                a = [int(define[i]), int(define[i + 1])]
-                a.sort()
-
-                if seq_id:
-                    for i in range(a[0], a[1] + 1):
-                        if self.seq_ids[i - 1][1] == base_num:
-                            return key
-                else:
-                    if base_num >= a[0] and base_num <= a[1]:
-                        return key
+            for r in self.define_range_iterator(key):
+                if base_num >= r[0] and base_num <= r[1]:
+                    return key
 
         raise LookupError("Base number {} not found in the defines {}.".format(base_num, self.defines))
 

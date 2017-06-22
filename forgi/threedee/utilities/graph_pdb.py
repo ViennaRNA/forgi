@@ -227,11 +227,11 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
 
     stem1_basis = cuv.create_orthonormal_basis(stem1_vec, twist1)
 
-    log.debug("Stem1 basis \n{}".format(stem1_basis))
+    log.debug("Stem1 basis \n%s", stem1_basis)
     # Transform the vector of stem2 to the new coordinate system
     stem2_new_basis = cuv.change_basis(stem2_vec, stem1_basis,
                                        cuv.standard_basis)
-    log.debug("Stem2 in basis of stem 1 {}".format(stem2_new_basis))
+    log.debug("Stem2 in basis of stem 1 %s", stem2_new_basis)
 
     twist2_new_basis = cuv.change_basis(twist2, stem1_basis,
                                         cuv.standard_basis)
@@ -239,7 +239,7 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
     # Convert the cartesian coordinates to polar coordinates
     (r, u, v) = cuv.spherical_cartesian_to_polar(stem2_new_basis)
     t = get_twist_parameter(twist1, twist2_new_basis, (u, v))
-    log.debug("r {}, u {}, v {}, t {}".format(r,u,v,t))
+    log.debug("r %s, u %s, v %s, t %s", r,u,v,t)
     return (r, u, v, t)
 
 
