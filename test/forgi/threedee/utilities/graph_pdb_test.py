@@ -201,6 +201,20 @@ class TestOrientation(unittest.TestCase):
         self.assertEqual(u, math.pi/2)
         self.assertEqual(v, math.pi/4)
 
+    def test_stem2_orient_from_stem1(self):
+        stem1_vec = np.array([0., 0., 1.])
+        twist1    = np.array([0., 1., 0.])
+        r = 1
+        u = math.pi/2
+        v = 0
+        nptest.assert_allclose(ftug.stem2_orient_from_stem1(stem1_vec, twist1, (r,u,v)), np.array([0.,0,1]), atol=10**-15)
+        v = math.pi/2
+        nptest.assert_allclose(ftug.stem2_orient_from_stem1(stem1_vec, twist1, (r,u,v)), np.array([0.,1,0]), atol=10**-15)
+        r = math.sqrt(2)
+        v = math.pi/4
+        nptest.assert_allclose(ftug.stem2_orient_from_stem1(stem1_vec, twist1, (r,u,v)), np.array([0.,1,1]), atol=10**-15)
+
+
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
         self.rs_random_281=ftmc.from_pdb('test/forgi/threedee/data/RS_random_281_S_0.pdb')

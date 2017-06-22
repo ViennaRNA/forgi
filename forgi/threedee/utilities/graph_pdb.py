@@ -215,7 +215,7 @@ def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
 
     :param stem1_vec: The vector representing the axis of stem1
     :param twist1: The twist of stem1 closest to the bulge
-    :param stem2_vec: The vector representing teh axis of stem2
+    :param stem2_vec: The vector representing the axis of stem2
 
     :returns: (r,u,v,t) where r,u,v = the stem orientation in polar coordinates
                         and t is the twist parameter.
@@ -291,6 +291,10 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
     (s2b, s2e) = bg.get_sides(s2, bulge)
 
     # Create directional vectors for the stems
+    #  For ML:           For IL: -> -> ->
+    #    |    A
+    #    V    |
+    #    * -> *  
     stem1_vec = mids1[s1b] - mids1[s1e]
     bulge_vec = mids2[s2b] - mids1[s1b]
     stem2_vec = mids2[s2e] - mids2[s2b]
@@ -388,7 +392,6 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
 
     return twist2_new_basis
 
-#Seems to be unused!
 def stem2_orient_from_stem1(stem1, twist1, r_u_v):
     '''
     Calculate the orientation of the second stem, given its parameterization
@@ -398,12 +401,8 @@ def stem2_orient_from_stem1(stem1, twist1, r_u_v):
     :param twist1: The twist factor of stem1.
     :param r_u_v: The orientation of stem2 wrt stem1, a triple `(r, u, v)`
     '''
-    r,u,v = r_u_v
-    stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
     stem1_basis = cuv.create_orthonormal_basis(stem1, twist1)
-    stem2 = cuv.change_basis(stem2, cuv.standard_basis, stem1_basis)
-
-    return stem2
+    return stem2_orient_from_stem1_1(stem1_basis.transpose(), r_u_v)
 
 
 def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
@@ -416,12 +415,13 @@ def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
     :param r_u_v: The orientation of stem2 wrt stem1, a triple `(r, u, v)`
     '''
     r,u,v = r_u_v
-    stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
+    stem2_in_basis1 = cuv.spherical_polar_to_cartesian((r, u, v))
     #stem1_basis = cuv.create_orthonormal_basis(stem1, twist1)
     #stem2 = cuv.change_basis(stem2, cuv.standard_basis, stem1_basis)
-    stem2 = np.dot(stem1_basis, stem2)
+    stem2 = np.dot(stem1_basis, stem2_in_basis1)
 
     return stem2
+
 
 
 def get_centroid(chain, residue_num):
