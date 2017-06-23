@@ -20,6 +20,9 @@ except:
     def profile(f):
         return f
 
+# Set this module-level variable to False to disable all asserts in this module
+USE_ASSERTS = __debug__
+
 null_array = np.array([0., 0., 0.])
 
 x_array = np.array([1., 0., 0.])
@@ -88,7 +91,8 @@ def get_double_alignment_matrix(vp1, vp2):
     angle1 = vec_angle(vp1[0], vp1[1])
     angle2 = vec_angle(vp2[0], vp2[1])
 
-    nt.assert_allclose(angle1, angle2, rtol=1e-7, atol=1e-7)
+    if USE_ASSERTS:
+        nt.assert_allclose(angle1, angle2, rtol=1e-7, atol=1e-7)
 
     # Align the first two segments
     mat1 = get_alignment_matrix(vp1[0], vp2[0])
@@ -251,13 +255,15 @@ def spherical_cartesian_to_polar(vec):
     Where u is the polar angle and v is the azimuth angle.
 
     :param vec: A vector of 3 cartesian coordinates.
+    :param fast: Do not assert correctnes of result.
     :return: (r, u, v)
     '''
     r = magnitude(vec)
     u = math.acos(vec[2] / r)
     v = math.atan2(vec[1], vec[0])
 
-    nt.assert_allclose(vec[0], r * math.sin(u) * math.cos(v), rtol=1e-7, atol=1e-7)
+    if USE_ASSERTS:
+        nt.assert_allclose(vec[0], r * math.sin(u) * math.cos(v), rtol=1e-7, atol=1e-7)
     return np.array((r, u, v))
 
 def spherical_polar_to_cartesian(vec):

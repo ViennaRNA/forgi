@@ -214,6 +214,80 @@ class TestOrientation(unittest.TestCase):
         v = math.pi/4
         nptest.assert_allclose(ftug.stem2_orient_from_stem1(stem1_vec, twist1, (r,u,v)), np.array([0.,1,1]), atol=10**-15)
 
+class TestVirtualStats(unittest.TestCase):
+    def setUp(self):
+        self.cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+    def verify_virtual_stat(self, cg, ml1, ml2):
+        virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
+
+        stems1 = cg.edges[ml1]
+        stems2 = cg.edges[ml2]
+        middle_stem = stems1 & stems2
+        # The involved stems:
+        stem1, = stems1 - middle_stem
+        stem2, = stems2 - middle_stem
+        middle_stem, = middle_stem
+        # Now we modify the cg
+        both_defines = np.array(cg.define_a(ml1) + cg.define_a(ml2))
+        mask = np.array([ (d not in cg.defines[middle_stem]) for d in both_defines ], dtype = bool)
+        log.error("Both_defines %s, middle_stem %s, mask %s", both_defines, cg.defines[middle_stem], mask)
+        both_defines = both_defines + [+1, -1, +1, -1]
+        both_defines = both_defines[mask]
+        log.error("Masked: %s", both_defines)
+        both_defines = list(sorted(both_defines))
+        assert len(both_defines) ==2
+        cg.defines[ml1] = both_defines
+        cg.remove_vertex(middle_stem)
+        cg.remove_vertex(ml2)
+        cg._add_edge(ml1, stem2)
+        new_stat1, _ = cg.get_stats(ml1)
+        nptest.assert_allclose(virtual_stat.position_params(), new_stat1.position_params())
+        nptest.assert_allclose(virtual_stat.twist_params(), new_stat1.twist_params())
+        nptest.assert_allclose(virtual_stat.orientation_params(), new_stat1.orientation_params())
+
+    def test_get_virtual_stat(self):
+        cg = self.cg
+        mst = cg.get_mst()
+        ml1, ml2 = [ m for m in mst if m[0]=="m" ]
+        if cg._get_next_ml_segment(ml2)==ml1:
+            ml1, ml2 = ml2, ml1
+        self.verify_virtual_stat(cg, ml1, ml2)
+    def test_get_virtual_stat_reverse(self):
+        cg = self.cg
+        mst = cg.get_mst()
+        ml1, ml2 = [ m for m in mst if m[0]=="m" ]
+        if cg._get_next_ml_segment(ml2)==ml1:
+            ml1, ml2 = ml2, ml1
+        self.verify_virtual_stat(cg, ml2, ml1)
+
+    def test_get_virtual_stat_different_mst_1(self):
+        cg = self.cg
+        mst = cg.get_mst()
+        ml1, ml2 = [ m for m in mst if m[0]=="m" ]
+        broken_m, = [m for m in cg.defines if m not in mst ]
+        if cg._get_next_ml_segment(ml2)==ml1:
+            ml1, ml2 = ml2, ml1
+        mst.add(broken_m)
+        mst.remove(ml1)
+        cg.mst = mst
+        cg.traverse_graph()
+        #We have to patch the cg object (which is now inconsistent) so stat-exception will not break.
+        cg.find_mlonly_multiloops = lambda *args: [ml2, broken_m]
+        cg.describe_multiloop = lambda *args: set()
+
+        self.verify_virtual_stat(cg, ml2, broken_m)
+    def test_get_virtual_stat_different_mst_2(self):
+        cg = self.cg
+        mst = cg.get_mst()
+        ml1, ml2 = [ m for m in mst if m[0]=="m" ]
+        broken_m, = [m for m in cg.defines if m not in mst ]
+        if cg._get_next_ml_segment(ml2)==ml1:
+            ml1, ml2 = ml2, ml1
+        mst.add(broken_m)
+        mst.remove(ml2)
+        cg.mst = mst
+        cg.traverse_graph()
+        self.verify_virtual_stat(cg, ml1, broken_m)
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):

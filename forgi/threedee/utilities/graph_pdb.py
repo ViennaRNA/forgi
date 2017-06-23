@@ -33,6 +33,7 @@ import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
+
 import forgi
 from forgi.threedee.utilities.modified_res import change_residue_id
 import uuid
@@ -294,7 +295,7 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
     #  For ML:           For IL: -> -> ->
     #    |    A
     #    V    |
-    #    * -> *  
+    #    * -> *
     stem1_vec = mids1[s1b] - mids1[s1e]
     bulge_vec = mids2[s2b] - mids1[s1b]
     stem2_vec = mids2[s2e] - mids2[s2b]
@@ -422,6 +423,55 @@ def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
 
     return stem2
 
+def get_virtual_stat(cg, ml1, ml2):
+    """
+    For two adjacent multi loop elements ml1 and ml2, generate the fictitious
+    stat if the two multi loop segments were replaced by a single segment.
+
+    This fictitious stat also has the direction the first stat returned by cg.get_stats
+    would have if the two ml segments were replaced by one.
+
+    :param cg: The CoarseGrainRNA
+    :param ml1, ml2: Two element names of adjacent multiloop elements, in arbitrary order.
+    """
+    import forgi.threedee.model.stats as ftms
+    if cg.define_a(ml2)[0]<cg.define_a(ml1)[0]:
+        ml1, ml2 = ml2, ml1
+
+    stem1a, stem1b = cg.connections(ml1)
+    stem2a, stem2b = cg.connections(ml2)
+    if stem1a== stem2a:
+        middle_stem = stem1a
+        stem1 = stem1b
+        stem2 = stem2b
+    elif stem1b ==stem2b:
+        ml1, ml2 = ml2, ml1 # Reverse
+        middle_stem = stem1b
+        stem2 = stem1a
+        stem1 = stem2a
+    elif stem1a==stem2b:
+        middle_stem = stem1a
+        stem1 = stem1b
+        stem2 = stem2a
+    else:
+        middle_stem = stem1b
+        stem1 = stem1a
+        stem2 = stem2b
+
+    stem1_vec, twist1, msv,mst,bulge1 = get_stem_twist_and_bulge_vecs(cg, ml1,
+                                                [stem1, middle_stem])
+    msv1,mst1,stem2_vec, twist2, bulge2 = get_stem_twist_and_bulge_vecs(cg, ml2,
+                                                [middle_stem, stem2])
+    log.debug("Middle stem one: %s, two: %s, twist one %s two %s", msv, msv1, mst, mst1)
+    virtual_bulge = bulge1+bulge2
+    r, u, v, t = get_stem_orientation_parameters(stem1_vec, twist1,
+                                                          stem2_vec, twist2)
+    r1, u1, v1 = get_stem_separation_parameters(stem1_vec, twist1, virtual_bulge)
+    log.debug("%s %s", r, r1)
+
+    dims = cg.get_bulge_dimensions(ml1)[0]+cg.get_bulge_dimensions(ml2)[0]
+    return ftms.AngleStat("virtual", cg.name, dims, 1000, u, v, t, r1,
+                                        u1, v1, 0, [], "")
 
 
 def get_centroid(chain, residue_num):

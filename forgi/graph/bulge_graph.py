@@ -2616,6 +2616,7 @@ class BulgeGraph(object):
             bd[0]+=1
             bd[1]-=1
 
+        s1b = None
         for i in range(4):
             for k in range(len(bd)):
                 if s1d[i] - bd[k] == 1:
@@ -2632,6 +2633,9 @@ class BulgeGraph(object):
                     if i == 3:
                         s1b = 0
                         break
+
+        if s1b is None:
+            raise ValueError("Stem {} {} is not adjacent to bulge {} {}".format(s1, s1d, b, bd))
         if s1b == 0:
             s1e = 1
         else:
