@@ -3266,7 +3266,8 @@ class BulgeGraph(object):
                 # If pseudoknots exist, the direction is not always 0!
                 # assert self.get_stem_direction(prev, build_order[-1][2])==0 does not hold!
         self.build_order = build_order
-
+        self.ang_type = None
+        
         return build_order
 
     def set_angle_types(self):
@@ -3295,7 +3296,7 @@ class BulgeGraph(object):
             return self.ang_types[bulge]
         else:
             if allow_broken:
-                s1, s2 = sorted(self.edges[bulge]) #Alphbethically ordered
+                s1, s2 = sorted(self.connections(bulge)) #Ordered by nucleotide number
                 return self.connection_type(bulge, [s1, s2])
             else:
                 return None

@@ -374,6 +374,15 @@ class AngleStat:
         #print(stem2_basis, spos_1, spos2_in_basis_1)
         return ftuv.vec_distance(spos_1, spos2_in_std_basis)
 
+    def  is_similar_to(self, stat2):
+        CUTOFF_ANGLE = math.radians(6)
+        CUTOFF_DIST = 4
+        if abs(self.r1-stat2.r1)>CUTOFF_DIST:
+            return False
+        for attr in ["u", "v", "u1", "v1", "t"]:
+            if abs(getattr(self, attr) - getattr(stat, attr))>CUTOFF_ANGLE:
+                return False
+        return True
 
 class RandomAngleStats():
     '''

@@ -428,8 +428,8 @@ def get_virtual_stat(cg, ml1, ml2):
     For two adjacent multi loop elements ml1 and ml2, generate the fictitious
     stat if the two multi loop segments were replaced by a single segment.
 
-    This fictitious stat also has the direction the first stat returned by cg.get_stats
-    would have if the two ml segments were replaced by one.
+    This fictitious stat also has the direction from the first to the second stem
+    that would be returned by cg.connections if the two ml segments were replaced by one.
 
     :param cg: The CoarseGrainRNA
     :param ml1, ml2: Two element names of adjacent multiloop elements, in arbitrary order.
@@ -472,6 +472,51 @@ def get_virtual_stat(cg, ml1, ml2):
     dims = cg.get_bulge_dimensions(ml1)[0]+cg.get_bulge_dimensions(ml2)[0]
     return ftms.AngleStat("virtual", cg.name, dims, 1000, u, v, t, r1,
                                         u1, v1, 0, [], "")
+
+def _virtual_stem_from_bulge(prev_stem_basis,  stat):
+    transposed_stem1_basis = prev_stem_basis.transpose()
+    start_location = stem2_pos_from_stem1_1(transposed_stem1_basis, stat.position_params())
+    stem_orientation = stem2_orient_from_stem1_1(transposed_stem1_basis,
+                                                      [1] + list(stat.orientation_params()))
+    twist1 = twist2_orient_from_stem1_1(transposed_stem1_basis, stat.twist_params())
+    return start_location, stem_orientation, twist1
+
+def sum_of_stats(stat1, stat2, inverse1 = False, inverse2 = False, inverse_result = False):
+    import forgi.threedee.model.stats as ftms
+    vec_asserts = ftuv.USE_ASSERTS
+    ftuv.USE_ASSERTS = False # to speed-up the calculations
+    st_basis = ftuv.standard_basis
+    bulge1, stem1, twist1 = _virtual_stem_from_bulge(ftuv.standard_basis, stat1)
+    middle_basis = ftuv.create_orthonormal_basis(-stem1, twist1)
+    bulge2, stem2, twist2 = _virtual_stem_from_bulge(middle_basis, stat2)
+
+    overall_seperation = bulge1 + bulge2
+    # overall stat
+    r, u, v, t = get_stem_orientation_parameters(st_basis[0], st_basis[1],
+                                                          stem2, twist2)
+    r1, u1, v1 = get_stem_separation_parameters(st_basis[0], st_basis[1], overall_seperation)
+    dims = stat1.dim1+stat2.dim1
+    ftuv.USE_ASSERTS = vec_asserts
+    return ftms.AngleStat("virtual", stat1.pdb_name+"+"+stat2.pdb_name, dims, 1000, u, v, t, r1,
+                          u1, v1, 0, [], "")
+
+def invert_angle_stat(stat):
+    """
+    Get the angle stat in the inverse direction.
+    """
+    import forgi.threedee.model.stats as ftms
+    # Note: This is a slow implementation that relies of well-tested methods.
+    # A faster implementation would be certainly possibly by taking advantage of
+    # the fact that stem1basis can be arbitrarely choosen.
+    stem1basis = ftuv.standard_basis
+    # Get Stem 2 from Stem 1
+    bulge2, stem2, twist2 = _virtual_stem_from_bulge(stem1basis, stat)
+    # Now get the stat in reverse direction
+    r, u, v, t = get_stem_orientation_parameters(stem2, twist2, stem1basis[0], stem1basis[1])
+    r1, u1, v1 = get_stem_separation_parameters(stem2, twist2, -bulge2)
+    return ftms.AngleStat("inverted", stat.pdb_name, stat.dim1, stat.dim2, u, v, t, r1,
+                          u1, v1, -stat.ang_type, stat.define, stat.seqs)
+
 
 
 def get_centroid(chain, residue_num):

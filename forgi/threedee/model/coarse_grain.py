@@ -1028,7 +1028,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ss.phys_length = ftuv.magnitude(self.coords[stem][0] - self.coords[stem][1])
         ss.twist_angle = ftug.get_twist_angle(self.coords[stem], self.twists[stem])
         ss.define = self.defines[stem]
-        ss.seqs = self.get_define_seq_str(stem, adjacent=True)
+        # Stems may or may not have adjacent nucleotides, so we do not include the adj nucleotides
+        ss.seqs = self.get_define_seq_str(stem, adjacent=False)
         return ss
 
     #def get_loop_from_residue(self, residue) ->  use BulgeGraph.get_node_from_residue_num()!
