@@ -223,6 +223,24 @@ class TestVirtualStats(unittest.TestCase):
         nptest.assert_allclose(stat1.twist_params(), stat2.twist_params())
         nptest.assert_allclose(stat1.orientation_params(), stat2.orientation_params())
 
+    def assert_all_angles_different(self, stat1, stat2):
+        # Every angle has to change, but the length of the seperation does not change.
+        if not np.all( np.logical_not( np.isclose(stat1.position_params()[1:], stat2.position_params()[1:]))):
+            assert False, "Not all position parameters changed: {}, {}".format(stat1.position_params(), stat2.position_params())
+        if not np.all( np.logical_not( np.isclose(stat1.twist_params(), stat2.twist_params()))):
+            log.info("Stat1: Position (carthesian))")
+            log.info(ftug.stem2_pos_from_stem1_1(ftuv.standard_basis,stat1.position_params()))
+            log.info("Stat1: Orientation (carthesian)")
+            log.info(ftug.stem2_orient_from_stem1_1(ftuv.standard_basis, [1]+list(stat1.orientation_params())))
+            log.info("Stat2: Position (carthesian))")
+            log.info(ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, stat2.position_params()))
+            log.info("Stat2: Orientation (carthesian)")
+            log.info(ftug.stem2_orient_from_stem1_1(ftuv.standard_basis, [1]+list(stat2.orientation_params())))
+            assert False, "Not all twist parameters changed: {}, {}".format(stat1.twist_params(), stat2.twist_params())
+        if not np.all( np.logical_not( np.isclose(stat1.orientation_params(), stat2.orientation_params()))):
+            assert False, "Not all orientation parameters changed: {}, {}".format(stat1.orientation_params(), stat2.orientation_params())
+
+
     def verify_virtual_stat(self, cg, ml1, ml2):
         virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
 
@@ -313,73 +331,106 @@ class TestVirtualStats(unittest.TestCase):
         cg.find_mlonly_multiloops = lambda *args: [ml1, ml2]
         self.verify_virtual_stat(cg, ml2, broken_m)
 
-    def test_sum_of_stats(self):
-        cg = self.cg
-        mst = cg.get_mst()
-        ml1, ml2 = [ m for m in mst if m[0]=="m" ]
-        # Make sure that ml2 follows after ml1 according to nt numbers
-        if ml2 == cg._get_next_ml_segment(ml1):
-            ml1, ml2 = ml2, ml1
-
-        # Get the stat according to the angle type
-        stat1, = [ stat for stat in cg.get_stats(ml1) if stat.ang_type == cg.get_angle_type(ml1) ]
-        stat2, = [ stat for stat in cg.get_stats(ml2) if stat.ang_type == cg.get_angle_type(ml2) ]
-        log.error(cg.mst)
-        for m in cg.mst:
-            if m[0]=="m":
-                log.error("%s: %s", m, cg.get_angle_type(m))
-
-        sum_stat = ftug.sum_of_stats(stat1, stat2)
-
-        virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
-
-        self.assert_stats_equal(sum_stat, virtual_stat)
-
     def test_twice_invert_angle_stat_gives_original_stat(self):
         cg = self.cg
         for ml in [ m for m in cg.get_mst() if m[0]=="m" ]:
             stat, = [ stat for stat in cg.get_stats(ml) if stat.ang_type == cg.get_angle_type(ml) ]
 
             inverse_stat = ftug.invert_angle_stat(stat)
-            #Make sure the inversion changes the stat
-            with self.assertRaises(AssertionError):
-                self.assert_stats_equal(stat, inverse_stat)
+            # Make sure the inversion changes the stat
+            self.assert_all_angles_different(stat, inverse_stat)
             # The second inversion changes it back to the original stat
             self.assert_stats_equal(stat, ftug.invert_angle_stat(inverse_stat))
+
+    def visualize_invert_stat(self):
+        import matplotlib.pyplot as plt
+        cg = self.cg
+        for ml in [ m for m in cg.get_mst() if m[0]=="m" ]:
+            stat1, stat2 = cg.get_stats(ml)
+            inverse1 = ftug.invert_angle_stat(stat1)
+            inverse2 = ftug.invert_angle_stat(stat2)
+            sep1 = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, stat1.position_params())
+            sep1i = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, inverse1.position_params())
+            sep2 = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, stat2.position_params())
+            sep2i = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, inverse2.position_params())
+            fig, ax = plt.subplots()
+            vecs = np.array([sep1, sep1i, sep2, sep2i])
+            labels = ["stat1", "inverse1", "stat2", "inverse2"]
+            sizes = [10,10,5,5]
+            for i in range(4):
+                ax.plot(vecs[i,0], vecs[i,1], "o", label=labels[i], markersize = sizes[i])
+            ax.plot([0], [0], "s", label="origin")
+            ax.legend()
+            plt.show()
 
     def test_invert_angle_stat2(self):
         cg = self.cg
         for ml in [ m for m in cg.get_mst() if m[0]=="m" ]:
             stat1, stat2 = cg.get_stats(ml)
+            self.assert_all_angles_different(stat1, stat2)
             self.assert_stats_equal(stat2, ftug.invert_angle_stat(stat1))
             self.assert_stats_equal(stat1, ftug.invert_angle_stat(stat2))
 
+    def test_invert_angle_stat3(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
 
-    def test_get_virtual_stat_different_mst_1(self):
-        cg = self.cg
-        mst = cg.get_mst()
-        ml1, ml2 = [ m for m in mst if m[0]=="m" ]
-        broken_m, = [m for m in cg.defines if m not in mst ]
-        if cg._get_next_ml_segment(ml2)==ml1:
-            ml1, ml2 = ml2, ml1
-        mst.add(broken_m)
-        mst.remove(ml1)
-        cg.mst = mst
-        cg.traverse_graph()
-        #We have to patch the cg object (which is now inconsistent) so stat-exception will not break.
-        #cg.find_mlonly_multiloops = lambda *args: [ml2, broken_m]
-        #cg.describe_multiloop = lambda *args: set()
+        for loop in it.chain(cg.mloop_iterator(), cg.iloop_iterator()):
+            log.info("Checking loop %s", loop)
+            stat1, stat2 = cg.get_stats(loop)
+            inverse1 = ftug.invert_angle_stat(stat1)
+            inverse2 = ftug.invert_angle_stat(stat2)
 
-        # Get the stat according to the angle type
-        stat1, = [ stat for stat in cg.get_stats(ml2) if stat.ang_type == cg.get_angle_type(ml2) ]
-        stat2, = [ stat for stat in cg.get_stats(broken_m) if stat.ang_type == cg.get_angle_type(broken_m) ]
-        log.error(cg.mst)
-        for m in cg.mst:
-            if m[0]=="m":
-                log.error("%s: %s", m, cg.get_angle_type(m))
-        sum_stat = ftug.sum_of_stats(stat1, stat2)
-        virtual_stat = ftug.get_virtual_stat(cg, ml2, broken_m)
-        self.assert_stats_equal(sum_stat, virtual_stat)
+            #self.assert_all_angles_different(stat1, stat2)
+            self.assert_stats_equal(stat2, inverse1)
+            self.assert_stats_equal(stat1, inverse2)
+            self.assert_stats_equal(stat1, ftug.invert_angle_stat(inverse1))
+            self.assert_stats_equal(stat2, ftug.invert_angle_stat(inverse2))
+
+    def test_sum_of_stats2(self):
+        for ml1 in ["m0", "m1", "m2"]:
+            cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+
+            ml2 = cg._get_next_ml_segment(ml1)
+
+            # Get the stat according to the angle type
+            at1 = cg.get_angle_type(ml1, allow_broken=True)
+            at2 = cg.get_angle_type(ml2, allow_broken=True)
+            stat1, = [ stat for stat in cg.get_stats(ml1) if stat.ang_type == at1]
+            stat2, = [ stat for stat in cg.get_stats(ml2) if stat.ang_type == at2 ]
+            log.error(cg.mst)
+            log.error("ml1: %s, %s %s", ml1, cg.get_angle_type(ml1), cg.get_angle_type(ml1, allow_broken=True))
+            log.error("ml2: %s, %s %s", ml2, cg.get_angle_type(ml2), cg.get_angle_type(ml2, allow_broken=True))
+
+
+
+            if cg.get_angle_type(ml2, allow_broken=True)==4:
+                if cg.get_angle_type(ml1, allow_broken=True)<0:
+                    sum_stat = ftug.sum_of_stats(stat2, stat1)
+                else:
+                    sum_stat = ftug.sum_of_stats(stat2, ftug.invert_angle_stat(stat1))
+            elif cg.get_angle_stat(ml2, allow_broken=True)==-4:
+                if cg.get_angle_type(ml1, allow_broken=True)<0:
+                     sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), stat1 )
+                else:
+                     sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), ftug.invert(stat1))
+            elif cg.get_angle_stat(ml1, allow_broken=True)==4:
+                if cg.get_angle_type(ml2, allow_broken=True)>0:
+                    sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), stat1)
+                else:
+                    sum_stat = ftug.sum_of_stats(stat2, stat1)
+            elif cg.get_angle_stat(ml1, allow_broken=True)==-4:
+                if cg.get_angle_type(ml2, allow_broken=True)>0:
+                    sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), ftug.invert_angle_stat(stat1))
+                else:
+                    sum_stat = ftug.sum_of_stats(stat2, ftug.invert_angle_stat(stat1))
+
+            else:
+                raise NotImplementedError("TODO")
+                sum_stat = ftug.sum_of_stats(stat1, stat2)
+
+            virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
+
+            self.assert_stats_equal(sum_stat, virtual_stat)
 
 
 class TestDistanceCalculation(unittest.TestCase):

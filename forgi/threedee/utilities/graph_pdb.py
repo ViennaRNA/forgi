@@ -312,7 +312,7 @@ def stem2_pos_from_stem1(stem1, twist1, params):
 
     :param stem1: The vector representing the axis of stem1's cylinder
     :param twist1: The twist parameter of stem1
-    :param params: The parameters describing the orientaiton of stem2 wrt stem1
+    :param params: The parameters describing the position of stem2 wrt stem1
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
@@ -330,7 +330,7 @@ def stem2_pos_from_stem1_1(transposed_stem1_basis, params):
 
     :param stem1: The vector representing the axis of stem1's cylinder
     :param twist1: The twist parameter of stem1
-    :param params: The parameters describing the orientaiton of stem2 wrt stem1
+    :param params: The parameters describing the position of stem2 wrt stem1
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
@@ -512,8 +512,8 @@ def invert_angle_stat(stat):
     # Get Stem 2 from Stem 1
     bulge2, stem2, twist2 = _virtual_stem_from_bulge(stem1basis, stat)
     # Now get the stat in reverse direction
-    r, u, v, t = get_stem_orientation_parameters(stem2, twist2, stem1basis[0], stem1basis[1])
-    r1, u1, v1 = get_stem_separation_parameters(stem2, twist2, -bulge2)
+    r, u, v, t = get_stem_orientation_parameters(-stem2, twist2, -stem1basis[0], stem1basis[1])
+    r1, u1, v1 = get_stem_separation_parameters(-stem2, twist2, -bulge2)
     return ftms.AngleStat("inverted", stat.pdb_name, stat.dim1, stat.dim2, u, v, t, r1,
                           u1, v1, -stat.ang_type, stat.define, stat.seqs)
 
@@ -608,7 +608,7 @@ def stem_from_chains(cg, chains, elem_name):
                           superimpose=True, apply_sup=False)[2]
 
     # average length of a base-pair: 2.547
-    mult=0.01
+    mult=0.01 #Stems with 1 bp have a tiny length
     ideal_coords = np.array([[0., 0., mult],
                   np.array([0., 0., -mult]) + (stem_length - 1) * np.array([0., 0., -2.547])])
 
