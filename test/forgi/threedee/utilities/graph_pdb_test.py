@@ -398,38 +398,25 @@ class TestVirtualStats(unittest.TestCase):
             stat1, = [ stat for stat in cg.get_stats(ml1) if stat.ang_type == at1]
             stat2, = [ stat for stat in cg.get_stats(ml2) if stat.ang_type == at2 ]
             log.error(cg.mst)
-            log.error("ml1: %s, %s %s", ml1, cg.get_angle_type(ml1), cg.get_angle_type(ml1, allow_broken=True))
-            log.error("ml2: %s, %s %s", ml2, cg.get_angle_type(ml2), cg.get_angle_type(ml2, allow_broken=True))
+            log.error("ml1: %s, %s %s", ml1, cg.get_angle_type(ml1), at1)
+            log.error("ml2: %s, %s %s", ml2, cg.get_angle_type(ml2), at2)
 
-
-
-            if cg.get_angle_type(ml2, allow_broken=True)==4:
-                if cg.get_angle_type(ml1, allow_broken=True)<0:
-                    sum_stat = ftug.sum_of_stats(stat2, stat1)
-                else:
-                    sum_stat = ftug.sum_of_stats(stat2, ftug.invert_angle_stat(stat1))
-            elif cg.get_angle_stat(ml2, allow_broken=True)==-4:
-                if cg.get_angle_type(ml1, allow_broken=True)<0:
-                     sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), stat1 )
-                else:
-                     sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), ftug.invert(stat1))
-            elif cg.get_angle_stat(ml1, allow_broken=True)==4:
-                if cg.get_angle_type(ml2, allow_broken=True)>0:
-                    sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), stat1)
-                else:
-                    sum_stat = ftug.sum_of_stats(stat2, stat1)
-            elif cg.get_angle_stat(ml1, allow_broken=True)==-4:
-                if cg.get_angle_type(ml2, allow_broken=True)>0:
-                    sum_stat = ftug.sum_of_stats(ftug.invert_angle_stat(stat2), ftug.invert_angle_stat(stat1))
-                else:
-                    sum_stat = ftug.sum_of_stats(stat2, ftug.invert_angle_stat(stat1))
-
+            # Special case for angle type 4: a positive sign means it points
+            # in the direction OPPOSITE to get_next_ml_segment
+            if abs(at1)==4 or abs(at2)==4:
+                if at1==-4 or (at1>0 and at1!=4):
+                    stat1 = ftug.invert_angle_stat(stat1)
+                if at2==-4 or (at2>0 and at2!=4):
+                    stat2 = ftug.invert_angle_stat(stat2)
+                sum_stat = ftug.sum_of_stats(stat2, stat1)
             else:
-                raise NotImplementedError("TODO")
+                if at1<0:
+                    stat1 = ftug.invert_angle_stat(stat1)
+                if at2<0:
+                    stat2 = ftug.invert_angle_stat(stat2)
                 sum_stat = ftug.sum_of_stats(stat1, stat2)
 
             virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
-
             self.assert_stats_equal(sum_stat, virtual_stat)
 
 
