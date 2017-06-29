@@ -252,6 +252,7 @@ def get_stem_separation_parameters(stem, twist, bulge):
     :param bulge: the bulge vector.
     '''
 
+
     stem_basis = cuv.create_orthonormal_basis(stem, twist)
     bulge_new_basis = cuv.change_basis(bulge, stem_basis, cuv.standard_basis)
 
@@ -273,7 +274,6 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
     :param connections: The two stems that are connected to this bulge.
     :return: (stem1, twist1, stem2, twist2, bulge)
     '''
-
     s1 = connections[0]
     s2 = connections[1]
 
@@ -289,7 +289,9 @@ def get_stem_twist_and_bulge_vecs(bg, bulge, connections):
     # find out which sides of the stems are closest to the bulge
     # the results will be indexes into the mids array
     (s1b, s1e) = bg.get_sides(s1, bulge)
+    log.debug("Side of 1st stem %s attached to %s is %s ", s1, bulge, s1b)
     (s2b, s2e) = bg.get_sides(s2, bulge)
+    log.debug("Side of 2nd stem %s attached to %s is %s ", s2, bulge, s2b)
 
     # Create directional vectors for the stems
     #  For ML:           For IL: -> -> ->
@@ -328,8 +330,10 @@ def stem2_pos_from_stem1_1(transposed_stem1_basis, params):
     Get the starting point of a second stem, given the parameters
     about where it's located with respect to stem1
 
-    :param stem1: The vector representing the axis of stem1's cylinder
-    :param twist1: The twist parameter of stem1
+    The params of the stat describe the change in the coordinate system of stem1.
+    This function converts that to a carthesian vector the standard coordinate system
+
+    :param transposed_stem1_basis: The vtransposed basis of the first stem.
     :param params: The parameters describing the position of stem2 wrt stem1
     '''
     (r, u, v) = params
@@ -440,29 +444,46 @@ def get_virtual_stat(cg, ml1, ml2):
 
     stem1a, stem1b = cg.connections(ml1)
     stem2a, stem2b = cg.connections(ml2)
-    if stem1a== stem2a:
-        middle_stem = stem1a
-        stem1 = stem1b
-        stem2 = stem2b
-    elif stem1b ==stem2b:
-        ml1, ml2 = ml2, ml1 # Reverse
-        middle_stem = stem1b
-        stem2 = stem1a
-        stem1 = stem2a
-    elif stem1a==stem2b:
-        middle_stem = stem1a
-        stem1 = stem1b
-        stem2 = stem2a
+
+    if len({stem1a, stem1b, stem2a, stem2b})==2:
+        log.warning("Getting virtual stat for a pseudoknot.")
+        # A special case of pseudoknot.
+        def1 = cg.define_a(ml1)
+        def2 = cg.define_a(ml2)
+        if cg.pairing_partner(def1[0])==def2[1]:
+            ml1, ml2 = ml2, ml1 # Reverse
+            middle_stem = cg.get_node_from_residue_num(def1[0])
+            stem1, = stem2, = [ x for x in stem1a, stem1b if x != middle_stem ]
+        else:
+            assert cg.pairing_partner(def1[1])==def2[0]
+            middle_stem = cg.get_node_from_residue_num(def1[1])
+            stem1, = stem2, = [ x for x in stem1a, stem1b if x != middle_stem ]
     else:
-        middle_stem = stem1b
-        stem1 = stem1a
-        stem2 = stem2b
+        if stem1a == stem2a:
+            middle_stem = stem1a
+            stem1 = stem1b
+            stem2 = stem2b
+        elif stem1b == stem2b:
+            ml1, ml2 = ml2, ml1 # Reverse
+            middle_stem = stem1b
+            stem2 = stem1a
+            stem1 = stem2a
+        elif stem1a == stem2b:
+            middle_stem = stem1a
+            stem1 = stem1b
+            stem2 = stem2a
+        else:
+            middle_stem = stem1b
+            stem1 = stem1a
+            stem2 = stem2b
 
     stem1_vec, twist1, msv,mst,bulge1 = get_stem_twist_and_bulge_vecs(cg, ml1,
                                                 [stem1, middle_stem])
     msv1,mst1,stem2_vec, twist2, bulge2 = get_stem_twist_and_bulge_vecs(cg, ml2,
                                                 [middle_stem, stem2])
     log.debug("Middle stem one: %s, two: %s, twist one %s two %s", msv, msv1, mst, mst1)
+    assert np.allclose(mst, mst1)
+
     virtual_bulge = bulge1+bulge2
     r, u, v, t = get_stem_orientation_parameters(stem1_vec, twist1,
                                                           stem2_vec, twist2)
@@ -481,7 +502,7 @@ def _virtual_stem_from_bulge(prev_stem_basis,  stat):
     twist1 = twist2_orient_from_stem1_1(transposed_stem1_basis, stat.twist_params())
     return start_location, stem_orientation, twist1
 
-def sum_of_stats(stat1, stat2, inverse1 = False, inverse2 = False, inverse_result = False):
+def sum_of_stats(stat1, stat2):
     import forgi.threedee.model.stats as ftms
     vec_asserts = ftuv.USE_ASSERTS
     ftuv.USE_ASSERTS = False # to speed-up the calculations
@@ -500,9 +521,71 @@ def sum_of_stats(stat1, stat2, inverse1 = False, inverse2 = False, inverse_resul
     return ftms.AngleStat("virtual", stat1.pdb_name+"+"+stat2.pdb_name, dims, 1000, u, v, t, r1,
                           u1, v1, 0, [], "")
 
+def sum_of_stat_in_standard_direction(stat1, stat2):
+    """
+    :param stat1, stat2: Two angle stat objects with stat2 directly following after
+                         stat1 in the multiloop when going from 5' to 3'.
+
+    For a 3-way junction, we have the following angle types (in direction of the arrow) ::
+
+        5' HHHHH-2-->-2->-2->-HHHHH
+        3' HHHHH\            AHHHHH
+                 V          3
+                  4        A
+                   V      3
+                    4    A
+                     V  3
+                      HH
+                      HH
+                      HH
+                      HH
+
+    In the case of angle type 4, it points from 5' to 3', not from 3' to 5'.
+    For this reason we treat it seperately.
+
+    The sum of 2 stats in a 3way junction has the same direction as the third stat.
+    """
+
+    # Special case for angle type 4: a positive sign means it points
+    # against the backbone
+    at1 = stat1.ang_type
+    at2 = stat2.ang_type
+    if at1==4 or at2==4:
+        log.debug("Special treatment of angle type 4")
+        if at1>0 and at1!=4:
+            stat1 = -stat1
+        if at2>0 and at2!=4:
+            stat2 = -stat2
+        return sum_of_stats(stat2, stat1)
+    elif abs(at1)==abs(at2)==5:
+        if at1==at2==5:
+            # We need to revert one stat, buit we cannot say, which one.
+            # The stat does not have enough information.
+            raise ValueError("Standard direction cannot be deduced from two "
+                             "pseudoknot stats with angle type 5. Please"
+                             "use sum_of_stats with the appropriate order "
+                             "of stats.")
+        else:
+            #Very weird pseudoknot
+            raise NotImplementedError("Please mail the RNA that triggered this "
+                                  "Error to the maintainer of forgi. We need"
+                                  " a test-case, before we implement this.")
+    else:
+        if -4<at1<0 or at1==5:
+            log.debug("Inverting stat1")
+            stat1 = -stat1
+        if -4<at2<0 or at2==5:
+            log.debug("Inverting stat2")
+            stat2 = -stat2
+        log.debug("Calculating sum of stats %r + %r", stat1.pdb_name, stat2.pdb_name)
+        return sum_of_stats(stat1, stat2)
+
+
 def invert_angle_stat(stat):
     """
     Get the angle stat in the inverse direction.
+
+    Todo: Move the code from here to stat.__neg__
     """
     import forgi.threedee.model.stats as ftms
     # Note: This is a slow implementation that relies of well-tested methods.
@@ -514,8 +597,12 @@ def invert_angle_stat(stat):
     # Now get the stat in reverse direction
     r, u, v, t = get_stem_orientation_parameters(-stem2, twist2, -stem1basis[0], stem1basis[1])
     r1, u1, v1 = get_stem_separation_parameters(-stem2, twist2, -bulge2)
-    return ftms.AngleStat("inverted", stat.pdb_name, stat.dim1, stat.dim2, u, v, t, r1,
+    return ftms.AngleStat(stat.stat_type, "-"+stat.pdb_name, stat.dim1, stat.dim2, u, v, t, r1,
                           u1, v1, -stat.ang_type, stat.define, stat.seqs)
+
+
+def invert_angle_stat_quick(stat):
+    import forgi.threedee.model.stats as ftms
 
 
 

@@ -374,7 +374,7 @@ class AngleStat:
         #print(stem2_basis, spos_1, spos2_in_basis_1)
         return ftuv.vec_distance(spos_1, spos2_in_std_basis)
 
-    def  is_similar_to(self, stat2):
+    def is_similar_to(self, stat2):
         CUTOFF_ANGLE = math.radians(6)
         CUTOFF_DIST = 4
         if abs(self.r1-stat2.r1)>CUTOFF_DIST:
@@ -383,6 +383,16 @@ class AngleStat:
             if abs(getattr(self, attr) - getattr(stat, attr))>CUTOFF_ANGLE:
                 return False
         return True
+
+    def __neg__(self):
+        """
+        The stat in the opposite direction.
+
+        I choose to use -stat instead of ~stat, because a stat is similar to a
+        vector and using minus to change a carthesian vector's direction is intuitive.
+        """
+        log.info("Unary minus called for Angle stat")
+        return ftug.invert_angle_stat(self)
 
 class RandomAngleStats():
     '''

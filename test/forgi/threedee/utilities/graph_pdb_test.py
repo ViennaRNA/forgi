@@ -219,9 +219,12 @@ class TestVirtualStats(unittest.TestCase):
         self.cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
 
     def assert_stats_equal(self, stat1, stat2):
-        nptest.assert_allclose(stat1.position_params(), stat2.position_params())
-        nptest.assert_allclose(stat1.twist_params(), stat2.twist_params())
-        nptest.assert_allclose(stat1.orientation_params(), stat2.orientation_params())
+
+        nptest.assert_allclose(stat1.position_params()[1], stat2.position_params()[1], atol=10**-12)
+        nptest.assert_allclose(stat1.position_params()[2]%(2*math.pi), stat2.position_params()[2]%(2*math.pi), atol=10**-12)
+
+        nptest.assert_allclose(stat1.twist_params(), stat2.twist_params(), atol=10**-12)
+        nptest.assert_allclose(stat1.orientation_params(), stat2.orientation_params(), atol=10**-12)
 
     def assert_all_angles_different(self, stat1, stat2):
         # Every angle has to change, but the length of the seperation does not change.
@@ -267,18 +270,19 @@ class TestVirtualStats(unittest.TestCase):
         cg._add_edge(ml1, stem2)
         new_stat1, _ = cg.get_stats(ml1)
         self.assert_stats_equal(virtual_stat, new_stat1)
+
     def test_get_virtual_stat(self):
         cg = self.cg
         mst = cg.get_mst()
         ml1, ml2 = [ m for m in mst if m[0]=="m" ]
-        if cg._get_next_ml_segment(ml2)==ml1:
+        if cg.get_next_ml_segment(ml2)==ml1:
             ml1, ml2 = ml2, ml1
         self.verify_virtual_stat(cg, ml1, ml2)
     def test_get_virtual_stat_reverse(self):
         cg = self.cg
         mst = cg.get_mst()
         ml1, ml2 = [ m for m in mst if m[0]=="m" ]
-        if cg._get_next_ml_segment(ml2)==ml1:
+        if cg.get_next_ml_segment(ml2)==ml1:
             ml1, ml2 = ml2, ml1
         self.verify_virtual_stat(cg, ml2, ml1)
 
@@ -287,7 +291,7 @@ class TestVirtualStats(unittest.TestCase):
         mst = cg.get_mst()
         ml1, ml2 = [ m for m in mst if m[0]=="m" ]
         broken_m, = [m for m in cg.defines if m not in mst ]
-        if cg._get_next_ml_segment(ml2)==ml1:
+        if cg.get_next_ml_segment(ml2)==ml1:
             ml1, ml2 = ml2, ml1
         mst.add(broken_m)
         mst.remove(ml1)
@@ -303,7 +307,7 @@ class TestVirtualStats(unittest.TestCase):
         mst = cg.get_mst()
         ml1, ml2 = [ m for m in mst if m[0]=="m" ]
         broken_m, = [m for m in cg.defines if m not in mst ]
-        if cg._get_next_ml_segment(ml2)==ml1:
+        if cg.get_next_ml_segment(ml2)==ml1:
             ml1, ml2 = ml2, ml1
         mst.add(broken_m)
         mst.remove(ml2)
@@ -386,11 +390,11 @@ class TestVirtualStats(unittest.TestCase):
             self.assert_stats_equal(stat1, ftug.invert_angle_stat(inverse1))
             self.assert_stats_equal(stat2, ftug.invert_angle_stat(inverse2))
 
-    def test_sum_of_stats2(self):
+    def test_sum_of_stats(self):
         for ml1 in ["m0", "m1", "m2"]:
             cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
 
-            ml2 = cg._get_next_ml_segment(ml1)
+            ml2 = cg.get_next_ml_segment(ml1)
 
             # Get the stat according to the angle type
             at1 = cg.get_angle_type(ml1, allow_broken=True)
@@ -418,6 +422,86 @@ class TestVirtualStats(unittest.TestCase):
 
             virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
             self.assert_stats_equal(sum_stat, virtual_stat)
+            self.assert_stats_equal(sum_stat, virtual_stat)
+
+    def test_sum_of_stats_standard_direction(self):
+        for ml1 in ["m0", "m1", "m2"]:
+            cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+
+            ml2 = cg.get_next_ml_segment(ml1)
+            ml3 = cg.get_next_ml_segment(ml2)
+
+
+
+            # Get the stat according to the angle type
+            at1 = cg.get_angle_type(ml1, allow_broken=True)
+            at2 = cg.get_angle_type(ml2, allow_broken=True)
+
+            log.error(cg.mst)
+            log.error("ml1: %s, %s %s", ml1, cg.get_angle_type(ml1), at1)
+            log.error("ml2: %s, %s %s", ml2, cg.get_angle_type(ml2), at2)
+
+
+            stat1, = [ stat for stat in cg.get_stats(ml1) if stat.ang_type == at1]
+            stat2, = [ stat for stat in cg.get_stats(ml2) if stat.ang_type == at2 ]
+
+            sum_stat = ftug.sum_of_stat_in_standard_direction(stat1, stat2)
+
+            virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
+            self.assert_stats_equal(sum_stat, virtual_stat)
+            # The sum of the two stats in standard direction is independent of the build order
+            stat3, = [ stat for stat in cg.get_stats(ml3) if stat.ang_type >0 ]
+
+            self.assert_stats_equal(sum_stat, stat3)
+
+    def test_sum_of_stats_true_RNA(self):
+        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg.print_debug(logging.INFO)
+        for ml1 in cg.mloop_iterator():
+            ml2 = cg.get_next_ml_segment(ml1)
+            stat1 = cg.get_stats(ml1)[0]
+            stat2 = cg.get_stats(ml2)[0]
+            virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
+            try:
+                sum_stat = ftug.sum_of_stat_in_standard_direction(stat1, stat2)
+            except ValueError:
+                # Very weird pseudoknot.
+                sum_stat1 = ftug.sum_of_stats(stat1, stat2)
+                sum_stat2 = ftug.sum_of_stats(stat2, stat1)
+                warnings.warn("Need to add a test that verifies the virtual stat in this strange case.")
+                try:
+                    self.assert_stats_equal(sum_stat1, virtual_stat)
+                except AssertionError:
+                    self.assert_stats_equal(sum_stat2, virtual_stat)
+
+                continue
+            log.info("Stats for %s and %s with angle types %s and %s", ml1, ml2, stat1.ang_type, stat2.ang_type)
+            self.assert_stats_equal(sum_stat, virtual_stat)
+
+    def visualize_sum_of_stats(self):
+        cg = self.cg
+        import matplotlib.pyplot as plt
+        stat0 = cg.get_stats("m0")[0]
+        stat1 = cg.get_stats("m2")[0]
+        stat2 = cg.get_stats("m1")[0]
+
+
+        sep0 = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, stat0.position_params())
+        stemvec1 = ftug.stem2_orient_from_stem1_1(ftuv.standard_basis, [1]+list(stat0.orientation_params()))
+        twist1 = ftug.twist2_orient_from_stem1_1(ftuv.standard_basis, stat0.twist_params())
+        sep1 = ftug.stem2_pos_from_stem1(-stemvec1, twist1, stat1.position_params())
+        sep2 = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis, stat2.position_params())
+        sepSum = ftug.stem2_pos_from_stem1_1(ftuv.standard_basis,
+                                             ftug.sum_of_stat_in_standard_direction(stat0, stat1).position_params())
+
+        fig, ax = plt.subplots()
+        ax.plot([0,sep0[0]], [0,sep0[1]], "-o", label="m0")
+        ax.plot([sep0[0], sep0[0]+sep1[0]], [sep0[1], sep0[1]+sep1[1]], "-o", label="m2")
+        ax.plot([0,sep2[0]], [0,sep2[1]], "-o", label="m1")
+        ax.plot([0,sepSum[0]], [0,sepSum[1]], "--", label="m0+m2")
+
+        ax.legend()
+        plt.show()
 
 
 class TestDistanceCalculation(unittest.TestCase):

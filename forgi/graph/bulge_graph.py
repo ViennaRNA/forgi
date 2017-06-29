@@ -1080,21 +1080,27 @@ class BulgeGraph(object):
         else:
           return self.backbone_breaks_after[i-1]+1
     @profile
-    def _get_next_ml_segment(self, ml_segment):
+    def get_next_ml_segment(self, ml_segment):
         """
+        Get the adjacent multiloop-segment (or 3' loop) next to the 3' side of ml_segment.
+
+        If there is no other single stranded RNA after the stem, the backbone must end there.
+        In that case return None.
         """
-        log.debug("_get_next_ml_segment called for {}".format(ml_segment))
+        log.debug("get_next_ml_segment called for {}".format(ml_segment))
         if ml_segment.startswith("t"):
             return None
         else:
             if ml_segment[0] in "mf":
-                f = max(self.define_a(ml_segment))
+                f = self.define_a(ml_segment)[-1]
             else:
                 raise ValueError("{} is not a multiloop".format(ml_segment))
 
+            # The stem following the ml-segment
             s = self.get_node_from_residue_num(f)
 
             side_stem, _ = self.get_sides_plus(s, ml_segment)
+            # Get the stem-side where we expect to find the next ML-segment
             if side_stem == 0:
                 side_stem = 3
             elif side_stem == 3:
@@ -1109,6 +1115,7 @@ class BulgeGraph(object):
         log.debug("flanking_nuc_at_stem_side called for %s, side %s with defines %s.", s, side_stem, self.defines[s])
         ml_nuc = self.flanking_nuc_at_stem_side(s, side_stem)
         log.debug("ml_nucleotide is %s (sequence length is %s).", ml_nuc, self.seq_length)
+        # End of the backbone
         if ml_nuc>self.seq_length or ml_nuc-1 in self.backbone_breaks_after:
             return None
         elem =  self.get_node_from_residue_num(ml_nuc)
@@ -1168,7 +1175,7 @@ class BulgeGraph(object):
         """
         nucs = set()
         for elem in elements:
-            for def_range in self.define_range_iterator(elem, False):
+            for def_range in self.define_range_iterator(elem, adjacent = False):
                 for nuc in range(def_range[0], def_range[1]+1):
                     nucs.add(nuc)
         return sorted(nucs)
@@ -1578,7 +1585,7 @@ class BulgeGraph(object):
         import networkx as nx
         ml_graph = nx.Graph()
         for d in it.chain(self.mloop_iterator(), self.floop_iterator(),self.tloop_iterator()):
-            next_ml = self._get_next_ml_segment(d)
+            next_ml = self.get_next_ml_segment(d)
             if next_ml is not None:
                 ml_graph.add_edge(d, next_ml)
             else:
@@ -1598,7 +1605,7 @@ class BulgeGraph(object):
             loop = list(nx.dfs_preorder_nodes(ml_graph.subgraph(comp), st_node))
             #See if we need to reverse the order
             for i,l in enumerate(loop):
-                next_l = self._get_next_ml_segment(l)
+                next_l = self.get_next_ml_segment(l)
                 if i+1<len(loop):
                     if loop[i+1]==next_l:
                         break
@@ -2293,7 +2300,9 @@ class BulgeGraph(object):
     def print_debug(self, level=logging.DEBUG):
         log.log(level, self.seq)
         log.log(level, self.to_dotbracket_string())
-        log.log(level, self.to_element_string())
+        es = self.to_element_string(with_numbers=True).split("\n")
+        log.log(level, es[0])
+        log.log(level, es[1])
         log.log(level, "DEFINES: %s", self.defines)
 
     def to_fasta_string(self):
@@ -3267,7 +3276,7 @@ class BulgeGraph(object):
                 # assert self.get_stem_direction(prev, build_order[-1][2])==0 does not hold!
         self.build_order = build_order
         self.ang_type = None
-        
+
         return build_order
 
     def set_angle_types(self):
@@ -3296,7 +3305,7 @@ class BulgeGraph(object):
             return self.ang_types[bulge]
         else:
             if allow_broken:
-                s1, s2 = sorted(self.connections(bulge)) #Ordered by nucleotide number
+                s1, s2 = self.connections(bulge) #Ordered by nucleotide number
                 return self.connection_type(bulge, [s1, s2])
             else:
                 return None
@@ -3318,16 +3327,9 @@ class BulgeGraph(object):
 
         :param loop: A list of elements that are part of the loop.
 
-                        .. warning::
-
-                            The return value is undefined, if loop does not contain
-                            all multiloop segments. Multiloop segments that form
-                            together with `f1` and `t1` not a real loop would be
-                            counted as pseudoknots.
-
         :return: Either True or false
         """
-        allowed_ang_types = [2, 3, 4]
+        allowed_ang_types = [2, 3, -3, 4]
         found_ang_types = col.defaultdict(int)
 
         for l in loop:
@@ -3336,23 +3338,23 @@ class BulgeGraph(object):
             if l[0] != 'm':
                 continue
 
-            conn = self.connections(l)
-            ctype = abs(self.connection_type(l, conn))
 
-            at = self.get_angle_type(l)
-            if at is not None: #Not in mst
-                assert ctype == abs(at)
+            at = self.get_angle_type(l, allow_broken=True)
 
-            if ctype not in allowed_ang_types:
+            if at not in allowed_ang_types:
+                log.info("Loop %s is a pseudoknot, because %s has angle"
+                         " type %s", loop, l, at)
                 return True
 
-            found_ang_types[ctype]+=1
+            found_ang_types[at]+=1
 
         if (found_ang_types[2]==1 and
             found_ang_types[4]==1 and
-            found_ang_types[3]>=1):
+            found_ang_types[3]+found_ang_types[-3]>=1):
             return False
-
+        elif any(l[0] in "ft" for l in loop):
+            return False
+        log.info("Loop %s is pseudoknot, because it has the following angle types: %s", loop, found_ang_types)
         return True
 
     def iter_elements_along_backbone(self, startpos = 1):
