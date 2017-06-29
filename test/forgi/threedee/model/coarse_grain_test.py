@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 def cg_from_sg(cg, sg):
     '''
     Create a coarse-grain structure from a subgraph.
-    
+
     @param cg: The original structure
     @param sg: The list of elements that are in the subgraph
     '''
@@ -98,13 +98,13 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/1Y26.cif', parser=bpdb.MMCIFParser())
         cg2 = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
-        
+
         self.assertEqual(cg.defines, cg2.defines)
         self.assertGreater(len(cg.defines), 3)
         for d in cg.defines:
             nptest.assert_almost_equal(cg.coords[d], cg2.coords[d])
-          
-        
+
+
     def test_from_pdb(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
 
@@ -150,20 +150,20 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
             for r in cg.define_residue_num_iterator(d):
                 # make sure all the seq_ids are there
                 print (cg.seq_ids[r - 1])
-             
+
     def verify_multiple_chains(self, cg, single_chain_cgs):
         print(cg.backbone_breaks_after)
         self.assertEqual(len(cg.backbone_breaks_after), len(single_chain_cgs)-1)
-      
+
         self.assertEqual(cg.seq_length, sum(x.seq_length for x in single_chain_cgs))
         #There might be stems spanning multiple chains.
         self.assertGreaterEqual(len([s for s in cg.defines if s[0]=="s"]), len([s for c in single_chain_cgs for s in c.defines if s[0]=="s"]))
         self.assertEqual(cg.seq, "&".join(x.seq for x in single_chain_cgs))
-      
-    def test_from_pdb_f_and_t_in_second_chain(self):
+
+    def test_from_pdb_f_in_second_chain(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "t0"]))
-        
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0"]))
+
     def test_from_pdb_multiple(self):
         cgE = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
         cgF = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='F')
@@ -171,23 +171,23 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(set(cg.chains.keys()), set(["E", "F"]))
         self.assertEqual(len(cg.backbone_breaks_after), 1)
         bp = cg.backbone_breaks_after[0]
-        self.assertEqual(bp, 3)
+        self.assertEqual(bp, 4)
         self.assertEqual(cg.seq[:bp+1], cgE.seq)
         self.assertEqual(cg.seq[1:bp+1], cgE.seq)
         self.assertEqual(cg.seq[bp+1:], cgF.seq)
         self.verify_multiple_chains(cg, [cgE, cgF])
-        
+
         cgA = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='A')
         cgB = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='B')
         cgC = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='C')
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb',  chain_id='all')
         log.warning("cg now has {} cutpoints".format(cg.seq.count('&')))
-        self.verify_multiple_chains(cg, [cgA, cgB, cgC])                 
-           
+        self.verify_multiple_chains(cg, [cgA, cgB, cgC])
+
     def test_multiple_chain_to_cg(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
         log.debug("======= FIRST IS LOADED =========")
-        cg_str = cg.to_cg_string()    
+        cg_str = cg.to_cg_string()
         log.debug("\n"+cg_str)
         print(cg_str)
         cg2 = ftmc.CoarseGrainRNA()
@@ -195,16 +195,16 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cg.defines, cg2.defines)
         self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
-        
+
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='all')
         cg_str = cg.to_cg_string()
         cg2 = ftmc.CoarseGrainRNA()
         cg2.from_cg_string(cg_str)
-        
+
         self.assertEqual(cg.defines, cg2.defines)
         self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
-        
+
     def test_connected_cgs_from_pdb(self):
         cgs = ftmc.connected_cgs_from_pdb("test/forgi/threedee/data/1DUQ.pdb")
         self.assertEqual(len(cgs), 4)
@@ -227,7 +227,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     def setUp(self):
         self.longMessage = True
-        
+
     def check_cg_integrity(self, cg):
         for s in cg.stem_iterator():
             edges = list(cg.edges[s])
@@ -250,7 +250,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
                                          cg.coords[edges[1]][0]))
             self.assertFalse(np.allclose(cg.coords[edges[0]][1],
                                          cg.coords[edges[1]][1]))
-                                         
+
     def compare_bg_to_cg(self, bg, cg):
         for d in bg.defines.keys():
             self.assertTrue(d in cg.defines.keys())
@@ -269,7 +269,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.check_cg_integrity(cg)
         elem_name = cg.get_node_from_residue_num(10)
         self.assertEqual(elem_name, "f0")
-        
+
 
 
 
@@ -288,7 +288,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         stri=cg1.to_cg_string()
         cg2=ftmc.CoarseGrainRNA()
         cg2.from_cg_string(stri)
-        
+
         for key in set(cg1.defines):
             self.assertTrue(key in cg2.defines)
             self.assertTrue(key in cg2.coords)
@@ -377,13 +377,6 @@ class CoarseGrainTest(tfgb.GraphVerification):
                 if len(c) != 2:
                     self.assertEqual(len(c), 2)
     '''
-    def test_define_residue_num_iterator(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
-        self.check_graph_integrity(cg)
-        self.check_cg_integrity(cg)
-
-        self.assertEqual(list(cg.define_range_iterator('i0', adjacent=True, seq_ids=True)),
-                         [[("A", (' ', 6, ' ')), ("A", (' ', 10, ' '))], [("A",(' ', 19, ' ')), ("A",(' ', 21, ' '))]])
 
     def test_get_stem_stats(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2mis.pdb', intermediate_file_dir='tmp')
@@ -400,7 +393,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         for d in cg.defines:
             if d[0] in "mi":
                 cg.get_bulge_angle_stats(d)
-        
+
         cg = ftmc.from_pdb('test/forgi/threedee/data/2QBZ.pdb')
         for d in cg.defines:
             if d[0] in "mi":
@@ -460,10 +453,10 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         self.assertEqual(len(interactions), 4)
         self.assertTrue(('i0', 's0') in interactions)
-    
+
     def test_longrange_distance(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
-        
+
         dist = cg.element_physical_distance('h0', 'h1')
 
         self.assertTrue(dist < 10)
@@ -477,16 +470,16 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg.from_dotbracket('..((..((...))..))..((..))..')
         self.assertEqual(cg.total_length(), cg.seq_length)
         self.assertEqual(cg.total_length(),27)
-        
+
     def test_get_load_coordinates(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         coords = cg.get_coordinates_array()
         new_cg = copy.deepcopy(cg)
-        for key in new_cg.coords: 
+        for key in new_cg.coords:
             new_cg.coords[key] = [0,0,0],[0,0,0]
 
         new_cg.load_coordinates_array(coords)
-        for key in new_cg.coords: 
+        for key in new_cg.coords:
             for i in range(len(new_cg.coords[key])):
                 nptest.assert_allclose(new_cg.coords[key][i],
                                             cg.coords[key][i])
@@ -515,7 +508,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         offset = (coords - new_coords)
         print(offset)
         assert np.allclose(offset,offset[0]) #I use allclose, because it uses broadcasting
-   
+
     def test_coords_from_direction_with_pseudoknot(self):
         #This tests the case where the link is inserted from reverse direction.
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
@@ -536,7 +529,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
     @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
     def test_cg_from_sg_invalid_subgraph_breaking_m(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
-        """ 
+        """
              /s3 --h1
            m1  |
           /    |
@@ -552,7 +545,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
     @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
     def test_cg_from_sg_breaking_after_i(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
-        """ 
+        """
              /s3 --h1
            m1  |
           /    |
@@ -569,7 +562,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
     @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
     def test_cg_from_sg_breaking_after_s(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
-        """ 
+        """
              /s3 --h1
            m1  |
           /    |
@@ -591,20 +584,20 @@ class TestVirtualAtoms(unittest.TestCase):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         va = cg.virtual_atoms(1)
         self.assertIn("C1'", va )# C1' should be always present
-    
+
     def test_virtual_atoms_stem_distance_to_pairing_partner(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         va1 = cg.virtual_atoms(1)
-        va2 = cg.virtual_atoms(cg.pairing_partner(1))  
-        self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 25, msg = "Virtual atoms too far apart") 
-        self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 8, msg = "Virtual atoms too close") 
+        va2 = cg.virtual_atoms(cg.pairing_partner(1))
+        self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 25, msg = "Virtual atoms too far apart")
+        self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 8, msg = "Virtual atoms too close")
 
     def test_virtual_atoms_stem_distance_to_stacked_base(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         va1 = cg.virtual_atoms(1)
-        va2 = cg.virtual_atoms(2)  
-        self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 10, msg = "Virtual atoms too far apart") 
-        self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 2, msg = "Virtual atoms too close") 
+        va2 = cg.virtual_atoms(2)
+        self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 10, msg = "Virtual atoms too far apart")
+        self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 2, msg = "Virtual atoms too close")
 
     def test_virtuel_atom_caching_is_reset(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -612,7 +605,7 @@ class TestVirtualAtoms(unittest.TestCase):
         cg.coords["s0"] = cg.coords["s0"][0] + (cg.coords["s0"][1]-cg.coords["s0"][0])*0.5, cg.coords["s0"][1] #Stay orthogonal to twists
         va_new = cg.virtual_atoms(1)["C1'"]
         self.assertTrue(np.any(np.not_equal(va_old, va_new)), msg="A stale virtual atom position was used.")
-        
+
 class RotationTranslationTest(unittest.TestCase):
     def setUp(self):
         self.cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
@@ -642,7 +635,7 @@ class StericValueTest(unittest.TestCase):
         from mayavi import mlab
         s = np.zeros_like(x)
         for i,j,k in np.ndindex(x.shape):
-            s[i,j,k] = self.cg1.steric_value(np.array([x[i,j,k], y[i,j,k],z[i,j,k]]), "r**-3")           
+            s[i,j,k] = self.cg1.steric_value(np.array([x[i,j,k], y[i,j,k],z[i,j,k]]), "r**-3")
         #mlab.contour3d(x,y,z,s, contours= [0.5, 1, 2, 5], opacity=0.3)
         src = mlab.pipeline.scalar_field(x,y,z,s)
         mlab.pipeline.volume(src)
@@ -658,7 +651,3 @@ class StericValueTest(unittest.TestCase):
             mlab.plot3d(x,y,z, tube_radius = 2, color = colors[d[0]])
         mlab.show()
         assert False
-
-
-
-    
