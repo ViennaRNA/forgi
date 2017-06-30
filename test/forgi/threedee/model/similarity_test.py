@@ -1,3 +1,4 @@
+from __future__ import division
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.similarity as ftme
 import forgi.utilities.debug as fud

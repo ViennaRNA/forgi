@@ -1,4 +1,7 @@
+from __future__ import division
 
+from builtins import map
+from builtins import range
 import Bio.PDB as bpdb
 import unittest, os
 import warnings
@@ -533,7 +536,7 @@ class TestAtomPosition_VirtualAtoms(unittest.TestCase):
 
     def test_virtual_atoms_intranucleotide_distances_stem_nosidechain(self):
         """ distance between two atoms of same nucleotide IN STEM """
-        for i in it.chain(range(1,10)+range(63,72)):
+        for i in it.chain(range(1,10),range(63,72)):
             for k1, a1 in self.va1[i].items():
                 for k2, a2 in self.va1[i].items():
                     if k1==k2: continue
@@ -544,7 +547,7 @@ class TestAtomPosition_VirtualAtoms(unittest.TestCase):
                                                   "{} and {} is {}".format(i, k1, k2, dist) )
     def test_virtual_atoms_intranucleotide_distances_stem_withsidechain(self):
         """ distance between two atoms of same nucleotide IN STEM """
-        for i in it.chain(range(1,10)+range(63,72)):
+        for i in it.chain(range(1,10),range(63,72)):
             for k1, a1 in self.va2[i].items():
                 for k2, a2 in self.va2[i].items():
                     if k1==k2: continue

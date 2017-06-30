@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
-                      str, super, zip)
+                      str, super, zip, object)
 import unittest, sys
 import forgi.threedee.model.coarse_grain as ftmc
 import warnings
