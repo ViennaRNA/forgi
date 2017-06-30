@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import csv
 import itertools as it
 import sys, warnings
@@ -83,7 +84,7 @@ class LoopStat:
             try:
                 self.parse_line(line)
             except:
-                print >>sys.stderr, "Error parsing line:", line
+                print("Error parsing line:", line, file=sys.stderr)
                 raise
 
     def parse_line(self, line):
@@ -443,7 +444,7 @@ class RandomAngleStats():
             try:
                 self.cont_stats[dims] = self.create_random_function(np.array(data))
             except np.linalg.LinAlgError as lae:
-                print >>sys.stderr, "Singular matrix, dimensions:", dims
+                print("Singular matrix, dimensions:", dims, file=sys.stderr)
 
     def sample_stats(self, dims):
         '''
@@ -509,7 +510,7 @@ class ContinuousAngleStats():
             try:
                 self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
             except np.linalg.LinAlgError as lae:
-                print >>sys.stderr, "Singular matrix, dimensions:", dims
+                print("Singular matrix, dimensions:", dims, file=sys.stderr)
 
     def sample_stats(self, dims):
         '''
@@ -897,8 +898,8 @@ class ConformationStats(object):
                     dims = get_angle_stat_dims(dims[0], dims[1],
                                                ang_type, min_entries=min_entries)
             except IndexError:
-                print >>sys.stderr, "Error in sample_stats:"
-                print >>sys.stderr, "elem:", elem, "dims:", dims, "ang_type:", ang_type
+                print("Error in sample_stats:", file=sys.stderr)
+                print("elem:", elem, "dims:", dims, "ang_type:", ang_type, file=sys.stderr)
                 raise
         elif elem[0] == 'h':
             dims = dims[0]

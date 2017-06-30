@@ -28,7 +28,8 @@ import multiprocessing
 from functools import partial
 
 
-def async_calculation((ref_img, ref_box), numFiles, filenames):
+def async_calculation(im_and_box, numFiles, filenames):
+    (ref_img, ref_box) = im_and_box
     try:
         distances=[]
         for j in range(numFiles):
@@ -40,7 +41,8 @@ def async_calculation((ref_img, ref_box), numFiles, filenames):
         print("In worker {}: Keyboard Interrupt".format(id(ref_img)))
         return 
 
-def parallel_localOpt((ref_img, ref_box), numFiles, filenames):
+def parallel_localOpt(im_and_box, numFiles, filenames):
+    (ref_img, ref_box) = im_and_box
     try:
         distances=[]
         for j in range(numFiles):

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys, math
 import forgi.graph.bulge_graph as cgb
 
@@ -13,9 +14,9 @@ def print_neato(bg):
     connection_lines = ''
     fontsize=20
 
-    print "graph G {"
-    print "\tgraph [overlap=false,splines=true];"
-    print "\tnode [shape=box];"
+    print("graph G {")
+    print("\tgraph [overlap=false,splines=true];")
+    print("\tnode [shape=box];")
 
     for key2 in bg.defines.keys():
         # Create the nodes with a different color for each type of element
@@ -64,9 +65,9 @@ def print_neato(bg):
         for key2 in bg.longrange[key1]:
             connection_lines += "\t%s -- %s [style=dashed]" % (key1, key2)
 
-    print node_lines
-    print connection_lines
-    print "}"
+    print(node_lines)
+    print(connection_lines)
+    print("}")
 
 
     #print bg.get_named_define

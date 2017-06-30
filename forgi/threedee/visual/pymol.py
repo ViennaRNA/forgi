@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 
 import itertools as it
@@ -132,7 +133,7 @@ class PymolPrinter:
         else:
             color = [str(c) for c in color[:3]]
 
-        print >>sys.stderr, "color:", color
+        print("color:", color, file=sys.stderr)
         #assert(not allclose(p, n))
         self.new_segments += [(np.array(p), np.array(n), color, width, text, key)]
 
@@ -375,7 +376,7 @@ class PymolPrinter:
         f.close()
 
     def output_pymol_file(self):
-        print self.pymol_string()
+        print(self.pymol_string())
 
     def reset(self):
         self.segments = []
@@ -581,7 +582,7 @@ class PymolPrinter:
         cylinders_to_stems = ftug.get_encompassing_cylinders(cg, radius)
 
         for stems in cylinders_to_stems.values():
-            print "stems:", stems
+            print("stems:", stems)
 
             points = []
             for s in stems:
@@ -602,7 +603,7 @@ class PymolPrinter:
             self.add_segment(start_point, end_point, 'white', width=4, text='', key='')
 
 
-        print >>sys.stderr, "YOOOOOOOOOOOOOOOOOOOOOOO"
+        print("YOOOOOOOOOOOOOOOOOOOOOOO", file=sys.stderr)
 
     def get_element_color(self, elem_name):
         '''
@@ -777,17 +778,17 @@ class PymolPrinter:
 
                 self.add_segment(origin, origin + 7. * basis[1], 'purple', 2., key=key)
 
-        print >>sys.stderr, "energy_function:", self.energy_function
+        print("energy_function:", self.energy_function, file=sys.stderr)
         # print the contributions of the energy function, if one is specified
         if self.energy_function is not None:
-            print >>sys.stderr, "key"
+            print("key", file=sys.stderr)
             sum_energy = 0.
 
             e_func = self.energy_function
             e_func_iter = e_func.interaction_energy_iter(cg, background=False)
             int_energies = list(e_func_iter)
             max_energy = max(int_energies, key=lambda x: x[1])
-            print >>sys.stderr, "max_energy:", max_energy
+            print("max_energy:", max_energy, file=sys.stderr)
 
             for (interaction, energy) in int_energies:
                 (p, n) = (cg.get_point(interaction[0]),

@@ -49,13 +49,15 @@ Revision History:
     Slightly restructured by B. Thiel on 19 Sep 2016: main now takes filehandle
 """
 from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 from sys import exit
-from rna2d import Pairs
+from .rna2d import Pairs
 from optparse import OptionParser
-from bpseq import BpseqParser, BpseqParseError
-from ct_simple import MinimalCtParser, CtError
-from output import ct_output, bpseq_output, vienna_output
-from knots import conflict_elimination, ec, eg,\
+from .bpseq import BpseqParser, BpseqParseError
+from .ct_simple import MinimalCtParser, CtError
+from .output import ct_output, bpseq_output, vienna_output
+from .knots import conflict_elimination, ec, eg,\
     inc_order, inc_length, inc_range,\
     opt_all, opt_single_random, opt_single_property,\
     num_bps, hydrogen_bonds, nussinov_restricted
@@ -218,7 +220,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
             for header, seq, pairs in input_parser(input_filehandle):
                 input_data.append(KnottedStructure(Knotted=pairs, Seq=seq,\
                     Header=header))
-    except (BpseqParseError, CtError, ValueError), e:
+    except (BpseqParseError, CtError, ValueError) as e:
         message_lines = ["Cannot read input file.",
             "Make sure the input file is in the specified format.",
             "Internal error message:","%s."%(str(e))]
@@ -333,4 +335,4 @@ if __name__ == "__main__":
         result = k2n_main(input_filehandle, input_format=opts.input_format,\
         output_format=opts.output_format, method=opts.method,\
         opt_method=opts.opt_method, verbose=opts.verbose, removed=opts.removed)
-    print result
+    print(result)

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 import random
 import os.path as op
@@ -54,9 +55,9 @@ def main():
         sys.exit(1)
 
     pdb_id = op.basename(op.splitext(filename)[0])
-    print ">%s" % (pdb_id)
-    print bg.seq
-    print bg.to_dotbracket_string()
+    print(">%s" % (pdb_id))
+    print(bg.seq)
+    print(bg.to_dotbracket_string())
 
     multiloops, _ = bg.find_multiloop_loops()
     for multi in multiloops:
@@ -84,7 +85,7 @@ def main():
 
                 db[to_change[0] - 1] = '.'
                 db[to_change[1] - 1] = '.'
-                print "".join(db)
+                print("".join(db))
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 
@@ -68,12 +69,12 @@ def main():
         prev = node
         seen.add(node)
 
-    print out_str
-    print ",".join(elements_traversed)
+    print(out_str)
+    print(",".join(elements_traversed))
 
     for t,e in zip(out_str, elements_traversed):
         # print the sequences of each element in the reduced representation
-        print t, e, bg.get_define_seq_str(e)
+        print(t, e, bg.get_define_seq_str(e))
 
 if __name__ == '__main__':
     main()

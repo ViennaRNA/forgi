@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import forgi.graph.bulge_graph as fgb
 
 import sys
@@ -30,7 +31,7 @@ def main():
           text=text[i+1:]
         bg = fgb.BulgeGraph()
         bg.from_bpseq_str(text)
-        print bg.to_bg_string()
+        print(bg.to_bg_string())
 
 if __name__ == '__main__':
     main()

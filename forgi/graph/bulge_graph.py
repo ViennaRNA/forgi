@@ -1337,7 +1337,7 @@ class BulgeGraph(object):
     def compare_hairpins(self, b):
         connections = self.connections(b)
 
-        return (self.defines[connections[0]][1], sys.maxint)
+        return (self.defines[connections[0]][1], sys.maxsize)
 
     def relabel_nodes(self):
         """
@@ -3739,7 +3739,7 @@ class BulgeGraph(object):
         if (e1,e2) in self._elem_bp_dists: #Shortcut if cached.
             return self._elem_bp_dists[(e1,e2)]
 
-        min_bp = sys.maxint
+        min_bp = sys.maxsize
         max_bp = 0
 
         if self.nx_graph is None:

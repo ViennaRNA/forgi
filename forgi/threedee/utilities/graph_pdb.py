@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 from builtins import zip, str
 
 import Bio.PDB as bp
@@ -454,11 +455,11 @@ def get_virtual_stat(cg, ml1, ml2):
         if cg.pairing_partner(def1[0])==def2[1]:
             ml1, ml2 = ml2, ml1 # Reverse
             middle_stem = cg.get_node_from_residue_num(def1[0])
-            stem1, = stem2, = [ x for x in stem1a, stem1b if x != middle_stem ]
+            stem1, = stem2, = [ x for x in [stem1a, stem1b] if x != middle_stem ]
         else:
             assert cg.pairing_partner(def1[1])==def2[0]
             middle_stem = cg.get_node_from_residue_num(def1[1])
-            stem1, = stem2, = [ x for x in stem1a, stem1b if x != middle_stem ]
+            stem1, = stem2, = [ x for x in [stem1a, stem1b] if x != middle_stem ]
     else:
         if stem1a == stem2a:
             middle_stem = stem1a
@@ -668,7 +669,7 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
         try:
             c_apos = chain[i][catom_name].get_vector().get_array()
         except KeyError as ke:
-            print >>sys.stderr, "Nucleotide %s missing in element %s" % (str(i),d )
+            print("Nucleotide %s missing in element %s" % (str(i),d ), file=sys.stderr)
             continue
 
         dist = cuv.magnitude(stem_end - c_apos)
@@ -1532,7 +1533,7 @@ def add_loop_information_from_pdb_chains(bg):
             centroid = get_furthest_c_alpha(bg, chain, mids[s1b], d)
 
             if centroid is None:
-                print >>sys.stderr, "No end found for loop %s... using the end of stem %s" % (d, s1)
+                print("No end found for loop %s... using the end of stem %s" % (d, s1), file=sys.stderr)
                 centroid = mids[s1b]
 
         assert start_point is not None
@@ -1727,7 +1728,7 @@ class VirtualAtomsLookup(object):
                 return e_coords
             else: raise
 
-            print (e, "for position {} in element {} with define {}".format(pos, d, self.cg.defines[d]))
+            print(e, "for position {} in element {} with define {}".format(pos, d, self.cg.defines[d]))
             raise
         if d[0] == 'i' or d[0] == 'm':
             conn = self.cg.connections(d)

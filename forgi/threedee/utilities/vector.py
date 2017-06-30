@@ -924,7 +924,7 @@ def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
     if m > circ_rad:
         return vec(0, 0)
     if mag(dist_v) <= 0:
-        raise ValueError, "Circle's center is exactly on segment"
+        raise ValueError("Circle's center is exactly on segment")
     offset = dist_v / mag(dist_v) * (circ_rad - mag(dist_v))
     return offset
 

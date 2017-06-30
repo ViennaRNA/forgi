@@ -169,7 +169,7 @@ def pairtable_to_tuples(pt):
 
     # get rid of the first element which contains the length
     # of the sequence. We'll figure it out after the traversal
-    pt.next()
+    next(pt)
 
     tuples = []
     for i, p in enumerate(pt):

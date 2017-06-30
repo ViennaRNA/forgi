@@ -9,7 +9,9 @@ File created on 21 Sept 2007.
 
 """
 from __future__ import division
-from rna2d import Pairs
+from __future__ import print_function
+from __future__ import absolute_import
+from .rna2d import Pairs
 
 class CtError(Exception):
     pass
@@ -128,7 +130,7 @@ def MinimalCtParser(lines, strict=True, header_parser=ct_parse_header,\
             header_info = header_parser(head)
             seq, pairs = content_parser(body)
             yield [header_info], seq, pairs
-        except CtError, e:
+        except CtError as e:
             if strict:
                 raise CtError(str(e))
             else:
@@ -144,7 +146,7 @@ def CtParser(lines, strict=True, header_parser=ct_parse_header,\
             sequence, pairs = supported[program]['INTEGRATION']\
                 (header_info, content_info)
             yield sequence, pairs
-        except CtError, e:
+        except CtError as e:
             if strict:
                 raise CtError(str(e))
             else:

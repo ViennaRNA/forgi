@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import collections as c
 import itertools as it
 
@@ -37,12 +38,12 @@ def main():
         cg = ftmc.from_pdb(arg, remove_pseudoknots=not options.pseudoknots)
 
         if len(list(cg.stem_iterator())) == 0:
-            print >>sys.stderr, "skipping {}: no stems".format(arg)
+            print("skipping {}: no stems".format(arg), file=sys.stderr)
             continue
 
         for d in cg.defines.keys():
             if np.allclose(cg.coords[d][0], cg.coords[d][1]):
-                print >>sys.stderr, "File {}: Degenerate coordinates for element: {}".format(i, d)
+                print("File {}: Degenerate coordinates for element: {}".format(i, d), file=sys.stderr)
                 continue
 
             origin, basis = ftug.element_coord_system(cg, d)
@@ -61,7 +62,7 @@ def main():
                 resname = cg.chain[cg.seq_ids[r-1]].resname.strip()
 
                 if resname not in ftup.chi_torsion_atoms.keys():
-                    print >>sys.stderr, "Unknown nucleotide name:", resname
+                    print("Unknown nucleotide name:", resname, file=sys.stderr)
                     continue
 
                 atoms = ftup.nonsidechain_atoms + ftup.chi_torsion_atoms[resname][-2:]
@@ -91,7 +92,7 @@ def main():
                     poss[identifier] += [atom_pos]
                     sources[identifier] += [d]
 
-                    print "{}:{}".format(identifier, ",".join(map(str, atom_pos)))
+                    print("{}:{}".format(identifier, ",".join(map(str, atom_pos))))
 
 if __name__ == '__main__':
     main()

@@ -75,10 +75,11 @@ remove overlapping base pairs before trying to obtain a nested structure.
 """
 
 from __future__ import division
+from __future__ import absolute_import
 from random import choice
 from numpy import sum, average, zeros
-from rna2d import Pairs
-from dict2d import Dict2D
+from .rna2d import Pairs
+from .dict2d import Dict2D
 
 __author__ = "Sandra Smit"
 __copyright__ = "Copyright 2007, The Cogent Project"

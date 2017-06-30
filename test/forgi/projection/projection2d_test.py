@@ -4,7 +4,7 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       str, super, zip)
 from future.builtins.disabled import (apply, cmp, coerce, execfile,
                              file, long, raw_input, reduce, reload,
-                             unicode, xrange, Exception)
+                             unicode, xrange, StandardError)
 
 import unittest, sys
 import numpy as np

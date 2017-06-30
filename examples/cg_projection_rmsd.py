@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 import argparse
 
@@ -35,7 +36,7 @@ def main(parser):
     vrs1 = np.array([x for p in sorted(proj1._coords.keys()) for x in proj1._coords[p]])
     vrs2 = np.array([x for p in sorted(proj2._coords.keys()) for x in proj2._coords[p]])
 
-    print ftms.rmsd(vrs1, vrs2)
+    print(ftms.rmsd(vrs1, vrs2))
     if args.plot:
         import matplotlib.pyplot as plt
         fig,ax=plt.subplots()

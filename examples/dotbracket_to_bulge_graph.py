@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import sys
 from optparse import OptionParser
 
@@ -70,7 +71,7 @@ def main():
     if len(args) == 2:
         bg.name = args[1]
 
-    print bg.to_bg_string()
+    print(bg.to_bg_string())
 
 if __name__ == "__main__":
     main()

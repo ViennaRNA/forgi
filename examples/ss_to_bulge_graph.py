@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 from optparse import OptionParser
 
@@ -47,7 +48,7 @@ def main():
     bg.name = lines[0].strip().strip('>')
     bg.seq = lines[-2].strip()
 
-    print bg.to_bg_string()
+    print(bg.to_bg_string())
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 import os.path as op
 import subprocess as sp
@@ -55,7 +56,7 @@ def main():
         sys.exit(1)
 
     if not op.exists(args[0]):
-        print >>sys.stderr, "File doesn't exist: %s" % (args[0])
+        print("File doesn't exist: %s" % (args[0]), file=sys.stderr)
         sys.exit(1)
 
 
@@ -82,7 +83,7 @@ def main():
     #sys.exit(1)
     pp.coordinates_to_pymol(cg)
     pp.print_text = options.text
-    print >>sys.stderr, "virtual_residues:", options.virtual_residues
+    print("virtual_residues:", options.virtual_residues, file=sys.stderr)
     #pp.print_text = False
     #pp.output_pymol_file()
 

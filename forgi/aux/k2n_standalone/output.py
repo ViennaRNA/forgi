@@ -9,7 +9,8 @@ File created on 25 Sep 2007.
 
 """
 from __future__ import division
-from rna2d import Pairs
+from __future__ import absolute_import
+from .rna2d import Pairs
 
 def ct_output(seq, pairs, header_lines=None, removed=None):
     """Return sequence and structure information in ct format

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import Bio
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.pdb as ftup
@@ -92,7 +93,7 @@ def plot_rna(cg, ax=None, offset=(0,0)):
                    offset by the current width of the plot
     :return: (ax, coords) The axes and the coordinates for each nucleotide
     '''
-    print "plotting RNA..."
+    print("plotting RNA...")
     import RNA
 
     RNA.cvar.rna_plot_type = 1

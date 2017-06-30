@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import forgi.threedee.model.coarse_grain as ftmc
 import sys
 from optparse import OptionParser
@@ -73,9 +74,9 @@ def main():
                                                        int(255 * chosen_color[1]),
                                                        int(255 * chosen_color[2]))
 
-    print template.format(cg.to_dotbracket_string(),
+    print(template.format(cg.to_dotbracket_string(),
                           cg.seq,
-                          out_str)
+                          out_str))
 
 
 

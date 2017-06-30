@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import collections as c
 import itertools as it
 
@@ -50,12 +51,12 @@ def main():
         pos = map(float,parts[1].split(','))
         poss[identifier] += [pos]
 
-    print "import collections as co"
+    print("import collections as co")
 
-    print "avg_atom_poss = dict()"
+    print("avg_atom_poss = dict()")
     for key in poss.keys():
         pos = np.mean(poss[key], axis=0)
-        print 'avg_atom_poss["%s"] = [%s] #%d' % (key, ",".join(map(str, pos)), len(poss[key]))
+        print('avg_atom_poss["%s"] = [%s] #%d' % (key, ",".join(map(str, pos)), len(poss[key])))
 
     '''
     print "sources = dict()"

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 import argparse
 
@@ -80,8 +81,8 @@ def main(args):
             cg_rmsds[diff]=cgrmsd/count
         if pcount:
             p_rmsds[diff]=prmsd/pcount
-    print "projection RMSDs:", p_rmsds
-    print "3D-RMSDs:", cg_rmsds
+    print("projection RMSDs:", p_rmsds)
+    print("3D-RMSDs:", cg_rmsds)
     import matplotlib.pyplot as plt
     if args.target_structure and args.hausdorff_reference:
         fig,(ax,axT, axH)=plt.subplots(3)

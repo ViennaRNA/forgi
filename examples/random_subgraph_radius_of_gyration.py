@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 import forgi.utilities.debug as cud
 import forgi.threedee.model.coarse_grain as ftmc
@@ -39,7 +40,7 @@ def main():
         rmsd = ftmd.radius_of_gyration(coords)
         total_length = sum([len(list(cg.define_residue_num_iterator(d))) for d in sg])
 
-        print total_length, rmsd
+        print(total_length, rmsd)
 
 if __name__ == '__main__':
     main()

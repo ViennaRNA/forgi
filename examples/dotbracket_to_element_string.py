@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 from optparse import OptionParser
 
@@ -39,21 +40,21 @@ def main():
 
 
     if len(brackets.strip()) == 0:
-        print >>sys.stderr, "Invalid input"
+        print("Invalid input", file=sys.stderr)
         sys.exit(1)
 
     bg.from_dotbracket(brackets)
 
     if options.sec_struct:
-        print bg.dotbracket_str
+        print(bg.dotbracket_str)
 
-    print bg.to_element_string(options.element_numbers)
+    print(bg.to_element_string(options.element_numbers))
 
     out_strs = []
         
     if options.numbers:
         if options.element_numbers:
-            print '-'*bg.seq_length
+            print('-'*bg.seq_length)
         l = bg.seq_length
         mult = 1
 
@@ -64,7 +65,7 @@ def main():
             out_strs += [out_str]
             mult *= 10
 
-        print "\n".join(out_strs)
+        print("\n".join(out_strs))
             
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import sys
 
 """Code for handling RNA secondary structure.
@@ -72,7 +73,7 @@ class Partners(list):
     def __setitem__(self, index, item):
         """Sets self[index] to item, enforcing integrity constraints."""
         if index == item:
-            raise ValueError, "Cannot set base %s to pair with itself." % item
+            raise ValueError("Cannot set base %s to pair with itself." % item)
         #if item already paired, raise Error or make partner unpaired
         if item and self[item]:
             self[self[item]] = None
@@ -132,8 +133,8 @@ class Pairs(list):
             
             if result[upstream] or result[downstream]:
                 if strict:
-                    raise ValueError, "Pairs contain conflicting partners: %s"\
-                        % self
+                    raise ValueError("Pairs contain conflicting partners: %s"\
+                        % self)
             result[upstream] = downstream
         return result
             
@@ -148,7 +149,7 @@ class Pairs(list):
         strict specifies whether collisions cause fatal errors.
         """
         if self.hasPseudoknots():
-            raise Exception, "Pairs contains pseudoknots %s"%(self)
+            raise Exception("Pairs contains pseudoknots %s"%(self))
         
         try:
             length = int(length)
@@ -166,8 +167,8 @@ class Pairs(list):
 
             if strict:
                 if (result[upstream] != '.') or (result[downstream] != '.'):
-                    raise ValueError, "Pairs contain conflicting partners: %s"\
-                        % self
+                    raise ValueError("Pairs contain conflicting partners: %s"\
+                        % self)
             result[upstream] = '('
             result[downstream] = ')'
         return ViennaStructure(''.join(result))
@@ -278,14 +279,14 @@ class Pairs(list):
             else:   #first and second were both non-empty: check partners
                 if first in partners:
                     if partners[first] != second:
-                        print >>sys.stderr, "here2"
-                        print >>sys.stderr, "first:", first, "second:", second, "partners[first]", partners[first]
-                        print "partners:", partners
+                        print("here2", file=sys.stderr)
+                        print("first:", first, "second:", second, "partners[first]", partners[first], file=sys.stderr)
+                        print("partners:", partners)
                         return True
                 if second in partners:
                     if partners[second] != first:
-                        print >>sys.stderr, "here3"
-                        print >>sys.stderr, "first:", first, "second:", second, "partners[second]:", partners[second]
+                        print("here3", file=sys.stderr)
+                        print("first:", first, "second:", second, "partners[second]:", partners[second], file=sys.stderr)
                         return True
                 #add current pair to the list of constraints
                 partners[first] = second
@@ -333,8 +334,7 @@ class StructureString(str):
         if a:
             for i in Structure:
                 if i not in a:
-                    raise ValueError,\
-                    "Tried to include unknown symbol '%s'" % i
+                    raise ValueError("Tried to include unknown symbol '%s'" % i)
         
         return str.__new__(cls,Structure)
 
@@ -381,8 +381,7 @@ class StructureString(str):
                
         #test whether there are any open pairs left unaccounted for        
         if stack:
-           raise IndexError, \
-           "Too many open pairs in structure:\n%s" % self
+           raise IndexError("Too many open pairs in structure:\n%s" % self)
         return Partners(result)
 
     def toPairs(self):
@@ -404,8 +403,7 @@ class StructureString(str):
                result[stack.pop()] = i
         #test whether there are any open pairs left unaccounted for        
         if stack:
-           raise IndexError, \
-           "Too many open pairs in structure:\n%s" % self
+           raise IndexError("Too many open pairs in structure:\n%s" % self)
         return Pairs([(key,result[key]) for key in result])
 
 

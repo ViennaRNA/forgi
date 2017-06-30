@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys
 import os.path as op
 import forgi.threedee.model.coarse_grain as ftmc
@@ -36,7 +37,7 @@ def main():
     #pdb_id = op.basename(op.splitext(args[0])[0])
     cg = ftmc.from_pdb(args[0], chain_id=options.chain, remove_pseudoknots = not options.pseudoknots)
 
-    print cg.to_fasta_string()
+    print(cg.to_fasta_string())
 
 if __name__ == '__main__':
     main()

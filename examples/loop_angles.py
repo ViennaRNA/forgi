@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.vector as ftuv
 import itertools as it
@@ -39,7 +40,7 @@ def main():
             angles += [(rn, angle)]
 
     for rn, angle in sorted(angles):
-        print "{}:{}".format(rn, angle)
+        print("{}:{}".format(rn, angle))
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import Bio.PDB as bpdb
 import Bio.KDTree as bkd
 
@@ -79,7 +80,7 @@ def main():
                                     all_directions, radius=options.radius,
                                    step_size = options.step_size)
 
-        print "{}:{}".format(i+1, distance)
+        print("{}:{}".format(i+1, distance))
         pass
 
 

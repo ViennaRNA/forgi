@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import sys, math
 import forgi.graph.bulge_graph as cgb
 
@@ -14,7 +15,7 @@ def print_rosetta_constraints(bg):
     '''
     for s in bg.stem_iterator():
         for i in range(bg.stem_length(s)):
-            print "STEM PAIR %d %d" % (bg.defines[s][0] + i, bg.defines[s][3] - i)
+            print("STEM PAIR %d %d" % (bg.defines[s][0] + i, bg.defines[s][3] - i))
 
 def main():
     usage = """

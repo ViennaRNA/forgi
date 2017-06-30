@@ -34,8 +34,10 @@ residue partner. The residue partner is 0 if the base is unpaired.
 Numbering is 1-based!
 """
 from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 from string import strip
-from rna2d import Vienna, Pairs
+from .rna2d import Vienna, Pairs
 import sys
 
 class BpseqParseError(Exception):

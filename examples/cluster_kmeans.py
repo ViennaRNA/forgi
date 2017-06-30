@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import copy
 import forgi.threedee.model.coarse_grain as ftmc
 import operator as oper
@@ -39,7 +40,7 @@ def main():
         points.append(cg.get_coordinates_array().flatten())
     new_cgs = map(copy.deepcopy, [cgs[i] for i in range(options.number_of_clusters)])
 
-    print >>sys.stderr, "len(points)", len(points)
+    print("len(points)", len(points), file=sys.stderr)
 
     clusters = scv.kmeans(points, options.number_of_clusters)
     for i,cluster in enumerate(clusters[0]):
