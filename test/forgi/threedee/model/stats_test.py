@@ -1,4 +1,5 @@
 from __future__ import division
+from __future__ import print_function
 import unittest
 
 import forgi.threedee.model.coarse_grain as ftmc

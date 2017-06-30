@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest, os
 import forgi.utilities.stuff as fus
 import sys
@@ -91,7 +92,7 @@ class StuffTest(unittest.TestCase):
         db = "((((....))..))"
         #     12345678901234
         pt = fus.dotbracket_to_pairtable(db)
-        print >>sys.stderr, "pt:", pt
+        print("pt:", pt, file=sys.stderr)
         elements = fus.pairtable_to_elements(pt, 0, 1, len(db))
 
         self.assertTrue(['s',2,[1,2,13,14]] in elements)
@@ -100,14 +101,14 @@ class StuffTest(unittest.TestCase):
         self.assertTrue(['i',3,[2,3,10,11,12,13,]])
         self.assertTrue(['h',5,[4,5,6,7,8,9]])
 
-        print >>sys.stderr, "pairtable_to_elements:", elements
+        print("pairtable_to_elements:", elements, file=sys.stderr)
 
 
     def test_pairtable_to_elements1(self):
         db = "(.[.).]"
         #     12345678901234
         pt = fus.dotbracket_to_pairtable(db)
-        print >>sys.stderr, "pt:", pt
+        print("pt:", pt, file=sys.stderr)
         #elements = fus.pairtable_to_elements(pt, 0, 1, len(db))
 
         #print >>sys.stderr, "pairtable_to_elements:", elements
