@@ -1,4 +1,4 @@
-numpy
+numpy>=1.10.0
 scipy
 future
 nose2
@@ -6,3 +6,5 @@ networkx
 biopython
 logging_exceptions
 bs4
+matplotlib
+ddt

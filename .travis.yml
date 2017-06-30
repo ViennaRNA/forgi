@@ -12,7 +12,7 @@ git:
 
 install:
   - "pip install --upgrade pip wheel" 
-  - "pip install --only-binary=numpy,scipy numpy scipy"
+  - "pip install --only-binary=numpy,scipy numpy>1.10.0 scipy"
   - "pip install -r requirements.txt"
   - "mkdir mctools"
   - "wget http://major.iric.ca/MajorLabEn/MC-Tools_files/libmccore.dylib.1.6.2"

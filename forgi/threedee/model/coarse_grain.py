@@ -323,8 +323,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     cg.chains = { chain.id : chain for chain in new_chains }
     cg.chain_ids = [ chain.id for chain in new_chains ]
 
-    log.debug("First 10 seq-IDs of loaded structure are {}".format(cg.seq_ids[:10]))
-    log.debug("Elements {}".format(cg.defines.keys()))
+    log.debug("First 10 seq-IDs of loaded structure are %s", cg.seq_ids[:10])
+    log.debug("Elements %s", cg.defines.keys())
     #Stems can span 2 chains.
     ftug.add_stem_information_from_pdb_chains(cg)
     cg.add_bulge_coords_from_stems()
