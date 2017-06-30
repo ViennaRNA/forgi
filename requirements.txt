@@ -5,3 +5,4 @@ nose2
 networkx
 biopython
 logging_exceptions
+bs4

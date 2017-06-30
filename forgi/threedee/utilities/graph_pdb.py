@@ -446,7 +446,8 @@ def get_virtual_stat(cg, ml1, ml2):
     stem2a, stem2b = cg.connections(ml2)
 
     if len({stem1a, stem1b, stem2a, stem2b})==2:
-        log.warning("Getting virtual stat for a pseudoknot.")
+        log.warning("Getting virtual stat for a pseudoknot, where the stats "
+                    "involve only 2 stems.")
         # A special case of pseudoknot.
         def1 = cg.define_a(ml1)
         def2 = cg.define_a(ml2)
@@ -523,6 +524,9 @@ def sum_of_stats(stat1, stat2):
 
 def sum_of_stat_in_standard_direction(stat1, stat2):
     """
+    Return the sum of stats in the direction from the stem with the lowest
+    nucleotide to the stem with the highest.
+
     :param stat1, stat2: Two angle stat objects with stat2 directly following after
                          stat1 in the multiloop when going from 5' to 3'.
 
@@ -559,12 +563,27 @@ def sum_of_stat_in_standard_direction(stat1, stat2):
         return sum_of_stats(stat2, stat1)
     elif abs(at1)==abs(at2)==5:
         if at1==at2==5:
-            # We need to revert one stat, buit we cannot say, which one.
-            # The stat does not have enough information.
-            raise ValueError("Standard direction cannot be deduced from two "
-                             "pseudoknot stats with angle type 5. Please"
-                             "use sum_of_stats with the appropriate order "
-                             "of stats.")
+            # The following illustrates the case of two subsequent
+            # angles of type 5
+            #
+            #                        3'->5'
+            #   3'      +--------------------------+       5'
+            #   |       |                          |       |
+            #   0 ----- 3                          0 ----- 3
+            #   (-------)   +------+       +---+   (-------)
+            #   (- s0 - )   |      |       |   |   (- s2 - )
+            #   (-------)   |      0 ----- 3   |   (-------)
+            #   1 ----- 2   |      (-------)   |   1 ----- 2
+            #   |       |   |      (- s1  -)   |   |       |
+            #   +-------+---+      (-------)   +---+-------+
+            #           |          1 ----- 2       |
+            #           |  stat2   |       | stat1 |
+            #           +-->>5>>---+       +->>5>>-+
+            #           $   3'<-5'          3'<-5' $
+            #           $                          $
+            #           $~~~~~~~ >>sum>> ~~~~~~~~~~$
+            #
+            return sum_of_stats(stat2, stat1)
         else:
             #Very weird pseudoknot
             raise NotImplementedError("Please mail the RNA that triggered this "

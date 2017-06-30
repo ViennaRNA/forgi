@@ -462,19 +462,7 @@ class TestVirtualStats(unittest.TestCase):
             stat1 = cg.get_stats(ml1)[0]
             stat2 = cg.get_stats(ml2)[0]
             virtual_stat = ftug.get_virtual_stat(cg, ml1, ml2)
-            try:
-                sum_stat = ftug.sum_of_stat_in_standard_direction(stat1, stat2)
-            except ValueError:
-                # Very weird pseudoknot.
-                sum_stat1 = ftug.sum_of_stats(stat1, stat2)
-                sum_stat2 = ftug.sum_of_stats(stat2, stat1)
-                warnings.warn("Need to add a test that verifies the virtual stat in this strange case.")
-                try:
-                    self.assert_stats_equal(sum_stat1, virtual_stat)
-                except AssertionError:
-                    self.assert_stats_equal(sum_stat2, virtual_stat)
-
-                continue
+            sum_stat = ftug.sum_of_stat_in_standard_direction(stat1, stat2)
             log.info("Stats for %s and %s with angle types %s and %s", ml1, ml2, stat1.ang_type, stat2.ang_type)
             self.assert_stats_equal(sum_stat, virtual_stat)
 
