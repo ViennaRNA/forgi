@@ -114,7 +114,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
     def test_cutpoint_in_ml(self):
         db = "(((.(((...)))..&..(((...))).)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "f0", "t0", "s2", "h1", "m1"]))
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "f0", "t0", "s2", "h1", "m2"]))
 
     def test_cutpoint_in_il(self):
         db = "(((..&..(((...))))))"
@@ -144,7 +144,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
     def test_cutpoint_between_m_s(self):
         db = "(((.(((...)))..&(((...))).)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m1", "t0", "h0", "h1"]))
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m2", "t0", "h0", "h1"]))
 
     def test_cutpoint_between_s_i0_s(self):
         db = "(((&(((...))).)))"
@@ -156,7 +156,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         db = "(((.(((...)))&(((...))).)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
         print(cg.defines)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "s2", "h1", "m1"]))
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "s2", "h1", "m2"]))
 
     def test_cutpoint_between_s_pk(self):
         db = "((([[[&)))]]]"
@@ -172,7 +172,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
     def test_cutpoint_between_s_pk3(self):
         db = "(((..[[[&)))]]]"
         cg = fgb.BulgeGraph(dotbracket_str=db)
-        print(cg.defines)
+        log.error(cg.defines)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "m2"]))
 
     def test_cutpoint_between_s_pk4(self):
@@ -190,7 +190,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
     def test_cutpoint_between_s_m(self):
         db = "(((.(((...)))&..(((...))).)))"
         cg = fgb.BulgeGraph(dotbracket_str=db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m1", "f0", "h0", "h1"]))
+        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m2", "f0", "h0", "h1"]))
 
     def test_cutpoint_between_s_h(self):
         db = "(((&..)))"
@@ -1037,10 +1037,10 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         s = bg.get_multiloop_side('m0')
         self.assertEqual(s, (1, 0))
 
-        s = bg.get_multiloop_side('m2')
+        s = bg.get_multiloop_side('m1')
         self.assertEquals(s, (3, 0))
 
-        s = bg.get_multiloop_side('m1')
+        s = bg.get_multiloop_side('m2')
         self.assertEquals(s, (2, 3))
 
     def test_get_any_sides(self):
@@ -1050,9 +1050,9 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         self.assertEqual(bg.get_any_sides('i0', 's0'), (0,1))
 
         bg = fgb.BulgeGraph(dotbracket_str='((..((..))((..))))')
-
-        self.assertEqual(bg.get_any_sides('s1', 'm1'), (0, 1))
-        self.assertEqual(bg.get_any_sides('m1', 's1'), (1, 0))
+        bg.print_debug(logging.INFO)
+        self.assertEqual(bg.get_any_sides('s1', 'm0'), (0, 1))
+        self.assertEqual(bg.get_any_sides('m0', 's1'), (1, 0))
 
     def test_get_sides(self):
         with open('test/forgi/data/1ymo.bpseq', 'r') as f:
@@ -1068,7 +1068,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         p1 = bg.get_sides_plus('s0', 'm0')
         self.assertEquals(p1[0], 1)
 
-        p1 = bg.get_sides_plus('s0', 'm1')
+        p1 = bg.get_sides_plus('s0', 'm2')
         self.assertEquals(p1[0], 2)
 
         p1 = bg.get_sides_plus('s1', 'm0')
@@ -1190,11 +1190,11 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEquals(bg.get_define_seq_str('m0'), ['c'])
         self.assertEquals(bg.get_define_seq_str('m0', True), ['acg'])
 
-        self.assertEquals(bg.get_define_seq_str('m1'), ['g'])
-        self.assertEquals(bg.get_define_seq_str('m1', True), ['ggu'])
+        self.assertEquals(bg.get_define_seq_str('m1'), ['a'])
+        self.assertEquals(bg.get_define_seq_str('m1', True), ['aac'])
 
-        self.assertEquals(bg.get_define_seq_str('m2'), ['a'])
-        self.assertEquals(bg.get_define_seq_str('m2', True), ['aac'])
+        self.assertEquals(bg.get_define_seq_str('m2'), ['g'])
+        self.assertEquals(bg.get_define_seq_str('m2', True), ['ggu'])
 
         bg = fgb.BulgeGraph(dotbracket_str=".(.).")
         bg.seq = 'acgau'
@@ -1238,11 +1238,11 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEqual(m1, 1)
         self.assertEqual(m2, 5)
 
-        (m1, m2) = bg.get_flanking_region('m2')
+        (m1, m2) = bg.get_flanking_region('m1')
         self.assertEqual(m1, 7)
         self.assertEqual(m2, 10)
 
-        (m1, m2) = bg.get_flanking_region('m1')
+        (m1, m2) = bg.get_flanking_region('m2')
         self.assertEqual(m1, 12)
         self.assertEqual(m2, 15)
 
@@ -1278,9 +1278,9 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg.seq = 'AUGCaugcAUGCaug'
         self.assertEqual(bg.get_flanking_sequence('m0'),
                          'AUGCa')
-        self.assertEqual(bg.get_flanking_sequence('m2'),
-                         'gcAU')
         self.assertEqual(bg.get_flanking_sequence('m1'),
+                         'gcAU')
+        self.assertEqual(bg.get_flanking_sequence('m2'),
                          'Caug')
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
@@ -1299,9 +1299,9 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         self.assertEqual(bg.get_flanking_handles('m0'),
                          (2,4,1,3))
-        self.assertEqual(bg.get_flanking_handles('m2'),
-                         (8,10,1,3))
         self.assertEqual(bg.get_flanking_handles('m1'),
+                         (8,10,1,3))
+        self.assertEqual(bg.get_flanking_handles('m2'),
                          (12,14,0,2))
 
         bg = fgb.BulgeGraph(dotbracket_str='(.(.).).(.(.))')
@@ -1402,7 +1402,7 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         mst = bg.get_mst()
 
         self.assertTrue('m0' in mst)
-        self.assertTrue('m2' in mst)
+        self.assertTrue('m1' in mst)
 
         build_order = bg.traverse_graph()
 
@@ -1689,7 +1689,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 
         bg.from_dotbracket('..(((.))((.)))..(..)')
         eloops = bg.find_external_loops()
-        self.assertEqual(eloops, ['f0', 'm2'])
+        self.assertEqual(eloops, ['f0', 'm3'])
 
     def test_stem_bp_iterator(self):
         fasta = """>1L2X_A
@@ -1810,30 +1810,35 @@ GCGCGGCACCGUCCGCGGAACAAACGG
     def test_connected(self):
         db = '((..((..))..((..))..((..))..))'
         # clockwise from the bottom
-        # s0 m0 s1 m2 s2 m3 s3 m4
+        # s0 m0 s1 m1 s2 m2 s3 m3
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
 
         self.assertTrue(bg.connected('s0', 'm0'))
-        self.assertTrue(bg.connected('m0', 'm2'))
+        self.assertTrue(bg.connected('m0', 'm1'))
 
         db = '((..((..)).((..((..))..((..))..))..((..))..))'
         #     123456789012345678901234567890123456789012345
-        #clockwise from bottom:
-        # s0 m0 s1 m2 s2 m3 s3 m4
+        #     ssmmsshhssmssmmsshhssmmsshhssmmssmmsshhssmmss
+        #     000011001112222331133334422444422555533556600
+
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
+        bg.print_debug(logging.INFO)
 
         # clockwise from the bottom
-        # s0 m0 s1 m2 s2 m3 s3 m6 s4 m4 s2 m5 s5 m1 s0
+        # s0 m0 s1 m1 s2 m2 s3 m3 s4 m4 s2 m5 s5 m6 s0
 
         self.assertTrue(bg.connected('s0', 'm0'))
-        self.assertTrue(bg.connected('m0', 'm2'))
-        self.assertTrue(bg.connected('m3', 'm4'))
-        self.assertFalse(bg.connected('m2', 'm3'))
+        self.assertTrue(bg.connected('m0', 'm1'))
+        self.assertTrue(bg.connected('m1', 'm5'))
+        self.assertTrue(bg.connected('m5', 'm6'))
+        self.assertTrue(bg.connected('m6', 'm0'))
+        self.assertTrue(bg.connected('m2', 'm3'))
+        self.assertTrue(bg.connected('m2', 'm4'))
+        self.assertFalse(bg.connected('m1', 'm2'))
         self.assertFalse(bg.connected('m4', 'm5'))
-
-        self.assertFalse(bg.connected('m0', 'm4'))
+        self.assertFalse(bg.connected('m1', 'm6'))
 
     def test_cg_min_max_bp_distance(self):
         db = '((..((..))..((..))..((..))..))'
@@ -1946,16 +1951,17 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         db =  '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
         #      1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
         #      ffsssiisssmmsssiisssssshhhsssiisssiisssssshhhsssmsssiiissssssssshhhsssmssshhhsssmmmsssisssisssmmmmsssssstt
-        #node# 1100000111002222233344400044411333222225551115552666333777888999222999500033300044488847773666111111100011
         #                                                                             111   111
+        #      0000000111002222233344400044411333222225551115552666333777888999222999400033300055588847773666666611100000
+
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         dom = bg.get_domains()
-
+        bg.print_debug(logging.INFO)
         log.info("m4: %s %s %s", bg.connections("m4"), bg.get_angle_type("m4"), bg.get_angle_type("m4", allow_broken=True))
         mls = sorted([
-                    sorted(['m0', 'm6', 'm2', 'm1', 's1', 's2', 's5', 's6']),
-                    sorted(['m3', 'm5', 'm4', 's8', 's9', 's10'])
+                    sorted(['m0', 'm1', 'm2', 'm6', 's1', 's2', 's5', 's6']),
+                    sorted(['m3', 'm4', 'm5', 's8', 's9', 's10'])
                     ])
         rods = sorted([
                         sorted(['s0', 'i0', 's1']),
@@ -1999,9 +2005,9 @@ class MultiloopFinding(unittest.TestCase):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         self.assertEqual(bg.get_next_ml_segment("f0"),"t0")
-        self.assertEqual(bg.get_next_ml_segment("m0"),"m2")
-        self.assertEqual(bg.get_next_ml_segment("m2"),"m1")
-        self.assertEqual(bg.get_next_ml_segment("m1"),"m0")
+        self.assertEqual(bg.get_next_ml_segment("m0"),"m1")
+        self.assertEqual(bg.get_next_ml_segment("m1"),"m2")
+        self.assertEqual(bg.get_next_ml_segment("m2"),"m0")
         self.assertEqual(bg.get_next_ml_segment("t0"),None)
     def test_get_next_ml_segment_pk(self):
         db = "..(((..[[[..)))..]]].."
@@ -2038,7 +2044,7 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m0")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+        self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_0_length(self):
         db = "((((((...))).(((...))).(((...)))...)))"
@@ -2047,7 +2053,7 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m0")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+        self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_longest(self):
         db = "(((......(((...))).(((...))).(((...)))...)))"
@@ -2056,7 +2062,7 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m0")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+        self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_0_length_different_start(self):
         db = "((((((...))).(((...))).(((...)))...)))"
@@ -2065,7 +2071,7 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m2")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+        self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
     def test_shortest_mlonly_multiloop_first_longest_different_start(self):
         db = "(((......(((...))).(((...))).(((...)))...)))"
@@ -2074,29 +2080,31 @@ class MultiloopFinding(unittest.TestCase):
         ml = bg.shortest_mlonly_multiloop("m2")
         print(bg.to_dotbracket_string())
         print(bg.to_element_string(True))
-        self.assertEqual(ml, ("m0", "m2", "m3", "m1"))
+        self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
 
     def test_find_mlonly_multiloops_pseudoknotfree(self):
         db = "(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))"
             #"sssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsss"
-            #"000000111222222000222555333111333333111444444222444666555333555111000"
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([( "m2", "m5", "m3"),("m0", "m4", "m6", "m1" )]))
+        self.assertEqual(sorted(mls),sorted([( "m1", "m2", "m3"),("m0", "m4", "m5", "m6" )]))
     def test_find_mlonly_multiloops_pseudoknotfree_0lengthML(self):
         db = "...(((((((((...)))(((...))))))(((...)))(((...))))))..."
+             #fffssssssssshhhsssssshhhssssssssshhhsssssshhhssssssttt
+             #000000111222000222333111333111444222444555333555000000
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
+        bg.print_debug(logging.INFO)
         #print("\n".join(map(str,sorted(bg.edges.items()))))
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([("f0", "t0"),( "m1", "m2", "m4"),("m5", "m0", "m3", "m6" )]))
+        self.assertEqual(sorted(mls),sorted([("f0", "t0"),( "m0", "m4", "m5", "m6"),("m1", "m2", "m3" )]))
     def test_find_mlonly_multiloops_pseudoknot_free_someML0length(self):
         db = "...(((...((((((...)))...(((...)))...)))(((...)))...(((...))))))..."
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([("f0", "t0"), ("m0", "m4", "m6", "m1" ), ( "m2", "m5", "m3")]))
+        self.assertEqual(sorted(mls),sorted([("f0", "t0"), ("m0", "m4", "m5", "m6" ), ( "m1", "m2", "m3")]))
     def test_find_mlonly_multiloops_254_pk_witht1(self):
         db = "(((..[[[..)))..]]].."
              #sssmmsssmmsssmmssstt
@@ -2127,16 +2135,17 @@ class MultiloopFinding(unittest.TestCase):
     def test_find_mlonly_multiloops_combined(self):
         db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..]]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
              #fffsssmmsssmmsssssshhhsssmmsssmmmsssmmmsssmmmsssmsssmmsssmmsssmmsssmmmsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt
-             #1110000011111000222000222331114443335554447775550666337774466655777111555222888111888888444999999222999666000333000666333111
+             #0000000011111000222000222331114443335554446665557666887779966600777111555222888111888333444444999222999555000333000666333000
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
+        bg.print_debug(logging.INFO)
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls),
                          sorted([("f0", "m2", "m3", "m1", "m0", "m4", "t0"),
-                                 ("m10", "m15", "m14", "m13", "m11"),
-                                 ("m5", "m9", "m16", "m6"),
-                                 ("m7", "m12", "m8")]))
+                                 ("m7", "m10", "m9", "m8", "m11"),
+                                 ("m5", "m14", "m15", "m16"),
+                                 ("m6", "m12", "m13")]))
 
     def test_find_mlonly_multiloops_combined_with_il(self):
         db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..].]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
@@ -2146,22 +2155,21 @@ class MultiloopFinding(unittest.TestCase):
         pprint(mls)
         self.assertEqual(sorted(mls),
                          sorted([("f0", "m2", "m3", "m1", "m0", "m4", "t0"),
-                                 ("m10", "m15", "m14", "m13", "m11"),
-                                 ("m5", "m9", "m16", "m6"),
-                                 ("m7", "m12", "m8")]))
+                                 ("m7", "m10", "m9", "m8", "m11"),
+                                 ("m5", "m14", "m15", "m16"),
+                                 ("m6", "m12", "m13")]))
 
     def test_find_mlonly_multiloops_pk2455(self):
         db = "(((...(((...)))...(((...[[[...)))...(((...]]]...)))...)))..."
             #"sssmmmssshhhsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssttt"
-            #"000000111000111222222444333333222555444666333777444111000000"
-
+            #000000111000111111222222333333222444444555333666444777000000
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
-        print(bg.to_element_string(True))
+        bg.print_debug(logging.INFO)
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls),
-                         sorted([("t0",),("m0", "m2", "m5", "m1"), ("m4", "m7", "m6", "m3")]))
+                         sorted([("t0",),("m0", "m1", "m4", "m7"), ("m2", "m6", "m5", "m3")]))
 
     def test_find_mlonly_multiloops_cofold_1(self):
         db = "(((((...&...)))))"
@@ -2198,8 +2206,8 @@ class WalkBackboneTests(unittest.TestCase):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
-        self.assertEqual(l, ["f0", "s0", "m0", "s1", "m2", "s2", "h0", "s2", "m5", "s3", "h1", "s3",
-                            "m3", "s1", "m4", "s4", "h2", "s4", "m6", "s5", "h3", "s5", "m1", "s0",
+        self.assertEqual(l, ["f0", "s0", "m0", "s1", "m1", "s2", "h0", "s2", "m2", "s3", "h1", "s3",
+                            "m3", "s1", "m4", "s4", "h2", "s4", "m5", "s5", "h3", "s5", "m6", "s0",
                             "t0"])
     def test_iter_elements_along_backbones_no_t1(self):
         db = "(((...)))"

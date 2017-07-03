@@ -35,7 +35,7 @@ VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
 import logging
 log = logging.getLogger(__name__)
-from pprint import pprint
+from pprint import pprint, pformat
 
 from logging_exceptions import log_to_exception
 
@@ -641,7 +641,7 @@ class BulgeGraph(object):
             if name[0] == 's':
                 out_str = "connect {}".format(name)
 
-                for dest in self.edges[key]:
+                for dest in self.connections(key):
                     out_str += " {}".format(dest)
 
                 whole_str += out_str
@@ -1319,27 +1319,19 @@ class BulgeGraph(object):
 
     def compare_bulges(self, b, flank_nucs = False):
         """
-        :param flank_nucs: If True: sort according to the flanking nucleotides
-                           Else: Sort according to lowest nuc number of flanking stems.
-        """
-        if flank_nucs:
-            try:
-                f1, f2 = self.flanking_nucleotides(b)
-            except ValueError as e: #Too few values to unpack
-                raise ValueError("{} is not a bulge".format(b)) #from e
-            return sorted([f1, f2])
-        else: #Old version. Used to keep naming of cg elements consistent
-            connections = self.connections(b)
+        A function that can be passed in as the key to a sort.
 
-            return (self.defines[connections[0]][0],
-                    self.defines[connections[1]][0])
+        Compares based on the nucleotide number
+        (using define_a to allow for sorting 0-length MLs)
+        """
+        return self.define_a(b)
 
     def compare_hairpins(self, b):
         connections = self.connections(b)
 
         return (self.defines[connections[0]][1], sys.maxsize)
 
-    def relabel_nodes(self):
+    def _relabel_nodes(self):
         """
         Change the labels of the nodes to be more indicative of their nature.
 
@@ -1360,8 +1352,6 @@ class BulgeGraph(object):
         for d in self.defines.keys():
             if d[0] == 'y' or d[0] == 's':
                 stems += [d]
-
-                stems.sort(key=self.compare_stems)
                 continue
 
             if len(self.defines[d]) == 0 and len(self.edges[d]) == 1:
@@ -1384,8 +1374,6 @@ class BulgeGraph(object):
                         self.defines[d][0] != 1 and
                         self.defines[d][1] != self.seq_length):
                 hairpins += [d]
-
-                hairpins.sort(key=self.compare_hairpins)
                 continue
 
             if d[0] == 'm' or (d[0] != 'i' and len(self.edges[d]) == 2 and
@@ -1393,19 +1381,22 @@ class BulgeGraph(object):
                                        self.defines[d][0] != 1 and
                                        self.defines[d][1] != self.seq_length):
                 multiloops += [d]
-
-                multiloops.sort(key=self.compare_bulges)
                 continue
 
             if d[0] == 'i' or self.weights[d] == 2:
                 interior_loops += [d]
-                interior_loops.sort(key=self.compare_stems)
 
-        for d in fiveprimes:
+        stems.sort(key=self.compare_stems)
+        hairpins.sort(key=self.compare_hairpins)
+        multiloops.sort(key=self.compare_bulges)
+        interior_loops.sort(key=self.compare_stems)
+
+        if fiveprimes:
+            d, = fiveprimes
             self.relabel_node(d, 'f0')
-        for d in threeprimes:
+        if threeprimes:
+            d, = threeprimes
             self.relabel_node(d, 't0')
-
         for i, d in enumerate(stems):
             self.relabel_node(d, 's%d' % (i))
         for i, d in enumerate(interior_loops):
@@ -1770,13 +1761,16 @@ class BulgeGraph(object):
 
         log.debug("from_stems_and_bulges: %s; %s", self.defines, self.edges)
         self._create_bulge_graph(stems, bulges)
-        log.debug("after _create_bulge_graph: %s; %s", self.defines, self.edges)
+        log.debug("after _create_bulge_graph: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
         self._create_stem_graph(stems, len(bulges))
         log.debug("after _create_stem_graph: %s; %s", self.defines, self.edges)
         self._collapse()
-        self.relabel_nodes()
+        log.debug("after _collapse: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
+        self._relabel_nodes()
+        log.debug("after _relabel_nodes: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
         self.remove_degenerate_nodes()
         self.sort_defines()
+        log.debug("after sort_defines: %s; %s", self.defines, self.edges)
         self._split_at_cofold_cutpoint()
         self._insert_cutpoints_into_seq()
 
@@ -2695,11 +2689,11 @@ class BulgeGraph(object):
     def stem_resn_to_stem_vres_side(self, stem, res):
         d = self.defines[stem]
         if res<=d[1]:
-            assert d>= d[0]
+            assert res>= d[0]
             pos=res-d[0]
             side = 0
         elif res<=d[3]:
-            assert d>=d[2]
+            assert res>=d[2]
             pos=d[3]-res
             side = 1
         else:

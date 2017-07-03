@@ -513,7 +513,7 @@ class TestDistanceCalculation(unittest.TestCase):
         distance2=ftug.junction_virtual_atom_distance(self.minimal_multiloop, "m1")
         self.assertLess(distance2, 4., msg="{} is not < {} for {}".format(distance2, 4., "m1"))
     def test_junction_virtual_atom_distance_realPDB(self):
-        distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m4")
+        distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m3")
         self.assertLess(distance, 4.)  #This should always hold!
         self.assertAlmostEqual(distance, 3.4294889373610675) #This value might change, if we change the virtual atom calculation
 
