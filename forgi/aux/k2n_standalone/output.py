@@ -10,6 +10,9 @@ File created on 25 Sep 2007.
 """
 from __future__ import division
 from __future__ import absolute_import
+from builtins import zip
+from builtins import str
+from builtins import map
 from .rna2d import Pairs
 
 def ct_output(seq, pairs, header_lines=None, removed=None):

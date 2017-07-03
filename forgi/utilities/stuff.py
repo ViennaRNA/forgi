@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import range
 import itertools as it
 import contextlib
 import random

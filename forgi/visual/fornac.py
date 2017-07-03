@@ -1,3 +1,5 @@
+from __future__ import division
+
 fornac_template = """
 <!DOCTYPE html>
 <meta charset="utf-8">

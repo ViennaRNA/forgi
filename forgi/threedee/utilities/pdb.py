@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from builtins import zip
+from builtins import range
 import sys, warnings
 import numpy as np
 import Bio.PDB as bpdb

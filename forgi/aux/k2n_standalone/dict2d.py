@@ -7,6 +7,12 @@ array, so only use when the convenience outweighs the performance penalty.
 It is especially useful for storing distance matrices between arbitrarily 
 labeled objects.
 """
+from __future__ import division
+
+from builtins import str
+from builtins import map
+from builtins import zip
+from builtins import range
 
 __author__ = "Rob Knight"
 __copyright__ = "Copyright 2007, The Cogent Project"
@@ -268,8 +274,8 @@ class Dict2D(dict):
         #then, purge unwanted cols
         if self.ColOrder:
             wanted_keys = dict.fromkeys(self.ColOrder)
-            for row in self.values():
-                for key in row.keys():
+            for row in list(self.values()):
+                for key in list(row.keys()):
                     if not key in wanted_keys:
                         del row[key]
 
@@ -294,7 +300,7 @@ class Dict2D(dict):
             return []
         result = rows[0]
         for row in rows:
-            for key in result.keys():
+            for key in list(result.keys()):
                 if key not in row:
                     del result[key]
         return list(result)
@@ -363,7 +369,7 @@ class Dict2D(dict):
             else:           #if there's no ColOrder, just return what's there
                 for r in row_order:
                     curr_row = self[r]
-                    yield curr_row.values()
+                    yield list(curr_row.values())
                 
     Rows = property(_get_rows)
 

@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as fud
 

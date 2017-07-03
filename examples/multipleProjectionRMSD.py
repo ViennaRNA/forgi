@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import map
+from builtins import range
 import sys
 import argparse
 
@@ -152,8 +155,8 @@ def main(args):
         leg.get_frame().set_linewidth(0.0)
         plt.subplots_adjust(hspace=0.4)
 
-    p_rmsds=np.array(p_rmsds.items())
-    cg_rmsds=np.array(cg_rmsds.items())
+    p_rmsds=np.array(list(p_rmsds.items()))
+    cg_rmsds=np.array(list(cg_rmsds.items()))
     ax.plot(p_rmsds[:,0]*args.step_size, p_rmsds[:,1], label="Projection",color="green", marker="o")
     ax.plot(cg_rmsds[:,0]*args.step_size, cg_rmsds[:,1], label="3D", color="blue", marker="o")
     ax.set_title("Average RMSD between structures X steps apart.")

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import zip
+from builtins import range
 import sys, math, os
 import forgi.graph.bulge_graph as cgb
 import forgi.utilities.debug as cud
@@ -49,9 +51,9 @@ def main():
         param_str = ""
 
         # group the defines into pairs of intervals
-        pairs_s1 = zip(*[iter(bg.defines[s1])]*2)
-        pairs_s2 = zip(*[iter(bg.defines[s2])]*2)
-        pairs_e1 = zip(*[iter(bg.defines[e1])]*2)
+        pairs_s1 = list(zip(*[iter(bg.defines[s1])]*2))
+        pairs_s2 = list(zip(*[iter(bg.defines[s2])]*2))
+        pairs_e1 = list(zip(*[iter(bg.defines[e1])]*2))
         
         # find the longest contiguous stretches of nucleotides
         intervals = pairs_s1 + pairs_e1 + pairs_s2

@@ -1,5 +1,7 @@
 #!/usr/bin/python
 from __future__ import division
+from builtins import map
+from builtins import range
 import timeit, sys
 
 import forgi.threedee.utilities.cytvec as ftuc

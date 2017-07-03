@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
 import sys
 from optparse import OptionParser
 
@@ -58,10 +61,10 @@ def main():
         l = bg.seq_length
         mult = 1
 
-        while l / mult > 0:
+        while int(l/mult) > 0:
             out_str = ''
             for i in range(bg.seq_length):
-                out_str += str((i / mult) % 10)
+                out_str += str((int(i/mult)) % 10)
             out_strs += [out_str]
             mult *= 10
 

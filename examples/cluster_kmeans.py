@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import map
+from builtins import range
 import copy
 import forgi.threedee.model.coarse_grain as ftmc
 import operator as oper
@@ -34,11 +36,11 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    cgs = map(ftmc.CoarseGrainRNA, args)
+    cgs = list(map(ftmc.CoarseGrainRNA, args))
     points = []
     for cg in cgs:
         points.append(cg.get_coordinates_array().flatten())
-    new_cgs = map(copy.deepcopy, [cgs[i] for i in range(options.number_of_clusters)])
+    new_cgs = list(map(copy.deepcopy, [cgs[i] for i in range(options.number_of_clusters)]))
 
     print("len(points)", len(points), file=sys.stderr)
 

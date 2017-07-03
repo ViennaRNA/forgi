@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from builtins import map
+from builtins import str
+from builtins import filter
+from builtins import object
 import sys
 
 """Code for handling RNA secondary structure.
@@ -180,7 +184,7 @@ class Pairs(list):
         different types, e.g. lists and tuples, will sort according to type
         rather than to position).
         """
-        self[:] = map(tuple, self)
+        self[:] = list(map(tuple, self))
 
     def unique(self):
         """Returns copy of self omitting duplicate pairs, preserving order.
@@ -208,7 +212,7 @@ class Pairs(list):
             if up > down:
                 up, down = down, up
             seen[(up, down)] = True
-        result = seen.keys()
+        result = list(seen.keys())
         return Pairs(result)
 
     def symmetric(self):
@@ -223,7 +227,7 @@ class Pairs(list):
      
     def paired(self):
         """Returns copy of self omitting items where a 'partner' is None."""
-        return Pairs(filter(not_none, self))
+        return Pairs(list(filter(not_none, self)))
         
     def hasPseudoknots(self):
         """Returns True if the pair list contains pseudoknots.

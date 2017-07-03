@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+
 import numpy as np
 import math, warnings, sys
 import forgi.threedee.utilities.vector as ftuv
@@ -72,4 +75,4 @@ def asphericity(coords):
     See for example doi:10.1063/1.4788616
     """
     g_tensor = gyration_tensor(coords)
-    return g_tensor[0,0]-(g_tensor[1,1]+g_tensor[2,2])/2
+    return g_tensor[0,0]-(g_tensor[1,1]+g_tensor[2,2])/2.

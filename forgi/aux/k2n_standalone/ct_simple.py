@@ -11,6 +11,7 @@ File created on 21 Sept 2007.
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
 from .rna2d import Pairs
 
 class CtError(Exception):

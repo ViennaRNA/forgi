@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import zip
+from builtins import map
+from builtins import object
+
 import csv
 import itertools as it
 import sys, warnings
@@ -62,7 +68,7 @@ avg_twist_rotation_per_bp = 360 / 11.
 #
 #    return rand.uniform(loop_lengths[loop_length][0], loop_lengths[loop_length][1])
 
-class LoopStat:
+class LoopStat(object):
     '''
     Class for storing the individual statistics about loops.
 
@@ -118,7 +124,7 @@ class LoopStat:
     def __ne__(self, other):
         return not self == other
 
-class StemStat:
+class StemStat(object):
     '''
     Class for storing the individual statistics about helices.
 
@@ -177,7 +183,7 @@ class StemStat:
     def __ne__(self, other):
         return not self == other
 
-class AngleStat:
+class AngleStat(object):
     '''
     Class for storing an individual statistic about inter-helical angles.
     '''
@@ -273,7 +279,7 @@ class AngleStat:
             # have an unpaired base
             assert(def_len > 0)
 
-        self.define = map(int,parts[11:11 + def_len])
+        self.define = list(map(int,parts[11:11 + def_len]))
         self.seqs = parts[11+def_len:]
 
     def orientation_params(self):
@@ -395,7 +401,7 @@ class AngleStat:
         log.info("Unary minus called for Angle stat")
         return ftug.invert_angle_stat(self)
 
-class RandomAngleStats():
+class RandomAngleStats(object):
     '''
     Store all of the angle stats.
     '''
@@ -470,7 +476,7 @@ class RandomAngleStats():
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
 
-class ContinuousAngleStats():
+class ContinuousAngleStats(object):
     '''
     Store all of the angle stats.
     '''
@@ -536,7 +542,7 @@ class ContinuousAngleStats():
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
 
-class ConstructionStats:
+class ConstructionStats(object):
     angle_stats = None
     stem_stats = None
     loop_stats = None

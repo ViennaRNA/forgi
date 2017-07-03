@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import range
 import sys, math
 import forgi.graph.bulge_graph as cgb
 

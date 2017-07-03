@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import range
 import sys
 import forgi.utilities.debug as cud
 import forgi.threedee.model.coarse_grain as ftmc

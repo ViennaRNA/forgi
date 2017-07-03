@@ -1,7 +1,9 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, open, pow, range, round,
-                      str, super, zip) 
+                      str, super, zip, object) 
+from past.builtins import basestring
+
 # int is not imported from builtins here for performance reasons. 
 # See: https://github.com/PythonCharmers/python-future/issues/136
 from future.builtins.disabled import (apply, cmp, coerce, execfile,

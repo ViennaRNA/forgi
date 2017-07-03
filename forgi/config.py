@@ -1,7 +1,8 @@
+from builtins import object
 import os
 import forgi
 
-class Configuration:
+class Configuration(object):
     mids_method="template"
     #mids_method="basenormals"
     base_dir = os.path.expanduser('.')

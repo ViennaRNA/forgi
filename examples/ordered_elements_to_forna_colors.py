@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
 import forgi.threedee.model.coarse_grain as ftmc
 import sys
 from optparse import OptionParser

@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import division
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
-                      str, super, zip)
+                      str, super, zip, object)
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import map
 import collections as c
 import itertools as it
 
@@ -49,7 +50,7 @@ def main():
 
         identifier = parts[0]
         pos = map(float,parts[1].split(','))
-        poss[identifier] += [pos]
+        poss[identifier].extend(pos)
 
     print("import collections as co")
 

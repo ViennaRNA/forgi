@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.similarity as ftme
 import forgi.utilities.debug as fud
@@ -135,7 +138,7 @@ def get_residue_num_list(cg, d):
         return list(cg.define_residue_num_iterator(d, adjacent=True))
 
     stem_length = cg.stem_length(d)
-    start_res = cg.defines[d][0] + stem_length / 2
+    start_res = cg.defines[d][0] + int(stem_length/2)
 
 
     pt = fus.dotbracket_to_pairtable(cg.to_dotbracket_string())

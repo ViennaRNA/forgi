@@ -1,5 +1,9 @@
 #!/usr/bin/python
 from __future__ import print_function
+from __future__ import division
+from builtins import map
+from builtins import range
+from builtins import object
 from builtins import zip, str
 
 import Bio.PDB as bp
@@ -141,9 +145,9 @@ def base_normals(pdb_filename):
         v2 = cuv.normalize(np.cross(c6 - n3, c5 - n3))
 
         # take the average of the two, for accuracy or something
-        v_norm = (v1 + v2) / 2
+        v_norm = (v1 + v2) / 2.
 
-        origin = (c2 + c5 + c6 + n3) / 4
+        origin = (c2 + c5 + c6 + n3) / 4.
         origin_norms += [(origin, v_norm)]
 
     return origin_norms
@@ -198,7 +202,7 @@ def get_twist_parameter(twist1, twist2, u_v):
 
     u,v = u_v
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
 
     twist2_new = np.dot(rot_mat1, twist2)
     twist2_new = np.dot(rot_mat2, twist2_new)
@@ -358,7 +362,7 @@ def twist2_orient_from_stem1(stem1, twist1, u_v_t):
     twist2_new = np.array([0., m.cos(t), m.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
@@ -389,7 +393,7 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
     twist2_new = np.array([0., m.cos(t), m.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     twist2_new = np.dot(nl.inv(rot_mat), twist2_new)

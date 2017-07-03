@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+from builtins import object
 from future.builtins.disabled import *
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
@@ -127,7 +128,7 @@ class DSSRAnnotation(object):
         for mc in most_common:
             if mc[0][0]=="s":
                 return mc[0]
-        raise RuntimeError("No stem matching dssr_stem {}, only single stranded region: {}.".format(dssr_stem, cg_stems.keys()))
+        raise RuntimeError("No stem matching dssr_stem {}, only single stranded region: {}.".format(dssr_stem, list(cg_stems.keys())))
     
     def compare_coaxial_stack_annotation(self, forgi_method="Tyagi", allow_single_bp=False):
         """

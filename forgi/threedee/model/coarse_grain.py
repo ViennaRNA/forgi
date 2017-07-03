@@ -1,6 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 from __future__ import print_function
 from __future__ import division
+
+from builtins import str
+from builtins import map
+from builtins import range
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
@@ -35,7 +39,10 @@ import time
 import math
 import warnings
 import itertools as it
-import StringIO
+try:
+    import io
+except ImportError: #Python 2
+    import StringIO as io
 import logging
 from pprint import pprint
 
@@ -171,7 +178,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
         # remove pseudoknots
         if remove_pseudoknots:
             log.info("Removing pseudoknots")
-            out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
+            out = cak.k2n_main(io.StringIO(dotplot), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
                                method = cak.DEFAULT_METHOD,
@@ -299,7 +306,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
     else:
         if remove_pseudoknots:
-            out = cak.k2n_main(StringIO.StringIO(dotplot), input_format='bpseq',
+            out = cak.k2n_main(io.StringIO(dotplot), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
                                method = cak.DEFAULT_METHOD,

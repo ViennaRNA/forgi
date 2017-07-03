@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import zip
+from builtins import range
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
 

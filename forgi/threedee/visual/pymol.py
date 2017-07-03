@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from builtins import object
+
 import sys
 
 import itertools as it
@@ -22,7 +27,7 @@ import Bio.PDB.Structure as bps
 import Bio.PDB as bp
 
 
-class PymolPrinter:
+class PymolPrinter(object):
     def __init__(self):
         self.display_virtual_residues = False
         self.rainbow = False

@@ -51,6 +51,8 @@ Revision History:
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from builtins import object
 from sys import exit
 from .rna2d import Pairs
 from optparse import OptionParser

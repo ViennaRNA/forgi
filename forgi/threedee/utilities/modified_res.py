@@ -6,6 +6,8 @@ unmodified residue.
 """
 from __future__ import print_function
 
+from builtins import str
+from builtins import object
 try:
     from urllib.request import urlopen #python3
 except ImportError:
