@@ -23,6 +23,6 @@ install:
   - "unzip MC-Annotate.zip"
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
-  - "python ${TRAVIS_BUILD_DIR}/.travis.import_all.py"
+
 script: nose2 test
 

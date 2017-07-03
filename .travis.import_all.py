@@ -6,7 +6,6 @@ import forgi.threedee.model.coarse_grain
 import forgi.threedee.model.descriptors
 import forgi.threedee.model.similarity 
 import forgi.threedee.model.stats 
-import forgi.threedee.utilities.average_atom_positions
 import forgi.threedee.utilities.dssr 
 import forgi.threedee.utilities.graph_pdb 
 import forgi.threedee.utilities.pdb 
