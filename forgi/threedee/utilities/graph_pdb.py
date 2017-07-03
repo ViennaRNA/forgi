@@ -25,6 +25,7 @@ import numpy.testing as nptest
 import random
 import sys
 import math
+import json
 
 from pprint import pprint
 import logging
@@ -54,8 +55,6 @@ try:
 except:
   def profile(x):
     return x
-else:
-  import forgi.threedee.utilities.average_atom_positions as ftua #Takes forever if executed within a decorated method.
 
 def stem_stem_orientation(cg, s1, s2):
     '''
@@ -1722,7 +1721,9 @@ class VirtualAtomsLookup(object):
         """
         if d[0]=="s":
             return self._getitem_for_stem(d, pos) #Use virtual residues for stems.
-        import forgi.threedee.utilities.average_atom_positions as ftua
+        import pkgutil
+        data = pkgutil.get_data('forgi', 'threedee/data/average_atom_positions.json')
+        avg_atom_poss = json.loads(data)
         e_coords=dict()
         try:
             origin, basis = element_coord_system(self.cg, d)
@@ -1757,7 +1758,7 @@ class VirtualAtomsLookup(object):
                 if "." in aname:
                     _,_,aname=aname.partition(".")
                 try:
-                    e_coords[aname] = origin + ftuv.change_basis(np.array(ftua.avg_atom_poss[identifier]), ftuv.standard_basis, basis )
+                    e_coords[aname] = origin + ftuv.change_basis(np.array(avg_atom_poss[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
                     #warnings.warn("KeyError in virtual_atoms. No coordinates found for: {}".format(ke))
                     pass

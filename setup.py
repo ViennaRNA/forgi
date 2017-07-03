@@ -46,7 +46,7 @@ setup(
                 'forgi.threedee.utilities', 'forgi.aux', 
                 'forgi.aux.k2n_standalone', 'forgi.threedee.visual', 
                 'forgi.visual', 'forgi.projection'],
-      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats']},
+      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json']},
       scripts=['examples/visualize_cg.py', 
                'examples/visualize_pdb.py', 
                'examples/pdb_rmsd.py',
