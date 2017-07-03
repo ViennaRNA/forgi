@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
-from future.builtins.disabled import (apply, cmp, coerce, execfile,
+from future.builtins.disabled import (cmp, coerce, execfile,
                              file, long, raw_input, reduce, reload,
                              unicode, xrange, StandardError)
 
@@ -23,14 +23,14 @@ class Projection2DBasicTest(unittest.TestCase):
     def test_init_projection(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         proj=fpp.Projection2D(cg, [1.,1.,1.])
-        self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])), 
+        self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])),
                         msg="The projection direction was not stored correctly. Should be coliniar"
                             " with {}, got {}".format(np.array([1.,1.,1.]),proj.proj_direction))
     def test_init_projection2(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         cg.project_from = [1.,1.,1.]
         proj=fpp.Projection2D(cg)
-        self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])), 
+        self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])),
                         msg="The projection direction was not stored correctly. Should be coliniar"
                             " with {}, got {}".format(np.array([1.,1.,1.]),proj.proj_direction))
 
@@ -61,7 +61,7 @@ class Projection2DBasicTest(unittest.TestCase):
         projRot=fpp.Projection2D(cg, [1.,1.,1.], rotation = 90, project_virtual_residues=[1,30])
 
         self.assertAlmostEqual(np.dot(proj.get_vres_by_position(1) - proj.get_vres_by_position(30),
-                                      projRot.get_vres_by_position(1) - projRot.get_vres_by_position(30)), 
+                                      projRot.get_vres_by_position(1) - projRot.get_vres_by_position(30)),
                                0., msg = "Rotating the projection by 90 degrees does not make "
                                           "corresponding virtual residue vectors orthogonal!")
 
@@ -73,7 +73,7 @@ class Projection2DBasicTest(unittest.TestCase):
     def test_projection_with_virtual_atoms(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         proj=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_atoms=True)
-        all_vas = sum(len(cg.virtual_atoms(i).keys()) for d in cg.defines.keys() 
+        all_vas = sum(len(cg.virtual_atoms(i).keys()) for d in cg.defines.keys()
                                                       for i in cg.define_residue_num_iterator(d))
         self.assertEqual(all_vas, proj._virtual_atoms.shape[0])
         self.assertGreater(proj._virtual_atoms.shape[0], 5)
@@ -82,7 +82,7 @@ class Projection2DBasicTest(unittest.TestCase):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         proj=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_atoms="selected")
         proj_all=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_atoms=True)
-        all_vas = sum(len(cg.virtual_atoms(i).keys()) for d in cg.defines.keys() 
+        all_vas = sum(len(cg.virtual_atoms(i).keys()) for d in cg.defines.keys()
                                                       for i in cg.define_residue_num_iterator(d))
         self.assertLess(proj._virtual_atoms.shape[0], all_vas)
         self.assertLess(proj._virtual_atoms.shape[0], proj_all._virtual_atoms.shape[0])
@@ -94,13 +94,13 @@ class Projection2DBasicTest(unittest.TestCase):
         proj=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_residues=[1,len(cg.seq)//2])
         elem1 = cg.get_node_from_residue_num(1)
         elem2 = cg.get_node_from_residue_num(len(cg.seq)//2)
-        self.assertLess(ftuv.vec_distance(proj._coords[elem1][0], proj.get_vres_by_position(1)), 
+        self.assertLess(ftuv.vec_distance(proj._coords[elem1][0], proj.get_vres_by_position(1)),
                         ftuv.vec_distance(proj._coords[elem2][0], proj.get_vres_by_position(1)),
                         msg =  "Projected virtual residue is closer to projection of a cg-element "
                                "far away  than to the projection of corresponding cg element.")
-        self.assertLess(ftuv.vec_distance(proj._coords[elem2][0], 
-                                          proj.get_vres_by_position(len(cg.seq)//2)), 
-                        ftuv.vec_distance(proj._coords[elem1][0], 
+        self.assertLess(ftuv.vec_distance(proj._coords[elem2][0],
+                                          proj.get_vres_by_position(len(cg.seq)//2)),
+                        ftuv.vec_distance(proj._coords[elem1][0],
                                           proj.get_vres_by_position(len(cg.seq)//2)),
                         msg =  "Projected virtual residue is closer to projection of a cg-element "
                                "far away than to the corresponding cg element.")
@@ -185,7 +185,7 @@ class Projection2DTestWithData(unittest.TestCase):
         #self.proj2.plot(show=True)
         self.assertEqual(self.proj2.get_cyclebasis_len(), 2)
         self.assertAlmostEqual(self.proj2.get_longest_arm_length()[0], 20.393064351368327)
- 
+
 class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def setUp(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
@@ -287,4 +287,3 @@ class Projection2DHelperfunctionsTests(unittest.TestCase):
     a_rast = fpp.rasterized_2d_coordinates(a, 10, np.array([-0.5, -25]), rotate = -90)
     print(a_rast)
     nptest.assert_array_equal(a_rast, np.array([[0,12],[0,13], [0,13], [-10,2], [-11,2], [-11,2]]))
-

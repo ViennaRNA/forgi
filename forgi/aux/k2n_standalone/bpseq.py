@@ -39,7 +39,6 @@ from __future__ import absolute_import
 from builtins import map
 from builtins import str
 from builtins import range
-from string import strip
 from .rna2d import Vienna, Pairs
 import sys
 
@@ -64,7 +63,7 @@ def parse_header(header_lines):
             info['Citation'] = line.split()[-1].strip()
         elif ':' in line:
             try:
-                field, value = map(strip,line.split(':',1))
+                field, value = map(str.strip,line.split(':',1))
                 info[field] = value
             except ValueError:
                 #no interesting header line
