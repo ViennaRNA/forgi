@@ -289,9 +289,9 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         #anames = a_5_names + a_3_names
 
         for a in anames:
-    	    try:
-        		at1 = r1[a]
-        		at2 = r2[a]
+            try:
+                at1 = r1[a]
+                at2 = r2[a]
             except:
                 continue
             else:
