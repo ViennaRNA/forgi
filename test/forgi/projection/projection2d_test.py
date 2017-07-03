@@ -2,9 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
-from future.builtins.disabled import (cmp, coerce, execfile,
-                             file, long, raw_input, reduce, reload,
-                             unicode, xrange, StandardError)
 
 import unittest, sys
 import numpy as np
