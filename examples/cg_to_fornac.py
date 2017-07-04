@@ -3,7 +3,7 @@
 from __future__ import print_function
 from __future__ import division
 from builtins import range
-from past.utils import old_div
+
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.similarity as ftme
 import forgi.utilities.debug as fud

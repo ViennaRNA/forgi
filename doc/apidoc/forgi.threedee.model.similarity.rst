@@ -1,5 +1,5 @@
-forgi.threedee.model.similarity module
-======================================
+forgi\.threedee\.model\.similarity module
+=========================================
 
 .. automodule:: forgi.threedee.model.similarity
     :members:

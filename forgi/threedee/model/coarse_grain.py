@@ -1,10 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from __future__ import print_function
 from __future__ import division
-
-from builtins import str
-from builtins import map
-from builtins import range
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
@@ -21,10 +17,13 @@ from ..utilities import vector as ftuv
 from ...utilities import debug as fud
 from ...utilities import stuff as fus
 from ...utilities.observedDict import observedDict
-from .Element import CoordinateStorage, LineSegmentStorage
+from .linecloud import CoordinateStorage, LineSegmentStorage
 import Bio.PDB as bpdb
 import collections as c
-from collections import Container #in python3 Collection would be more appropriate
+try:
+    from collections import Collection
+except ImportError: #python 2
+    from collections import Container as Collection
 import contextlib
 import numpy as np
 import scipy.spatial
@@ -240,7 +239,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
-    elif isinstance(chain_id, Container):
+    elif isinstance(chain_id, Collection):
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):
@@ -371,22 +370,6 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
                                         remove_pseudoknots=remove_pseudoknots, parser=parser)
 
     return cg
-
-# Deprecated. Use constructor instead
-"""def from_file(cg_filename):
-    '''
-    Read a coarse-grain structure file.
-
-    :param cg_filename: The filename.
-    :return: A CoarseGrainRNA from a file.
-    '''
-    with open(cg_filename, 'r') as f:
-        lines = "".join(f.readlines())
-
-        cg = CoarseGrainRNA()
-        cg.from_cg_string(lines)
-
-        return cg"""
 
 def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
              chain_id=None, remove_pseudoknots=True, parser=None):
@@ -1415,34 +1398,3 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.vvecs = c.defaultdict( dict )
         self.v3dposs = c.defaultdict( dict )
         self.vinvs = c.defaultdict( dict )
-
-"""
-def cg_from_sg(cg, sg):
-    '''
-    Create a coarse-grain structure from a subgraph.
-
-    ..warning::
-
-        If the list of elements in sg is inconsistent (e.g. contains only parts of a multiloop)
-        this will currently proceed without an error but return an
-        inconsistent CoarseGrainRNA object!
-
-    :param cg: The original structure
-    :param sg: The list of elements that are in the subgraph
-    '''
-    new_cg = CoarseGrainRNA()
-
-    for d in sg:
-        new_cg.defines[d] = cg.defines[d]
-        new_cg._init_coords()
-        new_cg.coords[d] = cg.coords[d]
-        if d in cg.twists:
-            new_cg.twists[d] = cg.twists[d]
-        new_cg.longrange[d] = cg.longrange[d]
-
-        for x in cg.edges[d]:
-            if x in new_cg.defines.keys():
-                new_cg.edges[d].add(x)
-                new_cg.edges[x].add(d)
-
-    return new_cg"""

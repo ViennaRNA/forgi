@@ -1,5 +1,5 @@
-forgi.threedee.model.stats module
-=================================
+forgi\.threedee\.model\.stats module
+====================================
 
 .. automodule:: forgi.threedee.model.stats
     :members:

@@ -1,5 +1,5 @@
-forgi.projection.projection2d module
-====================================
+forgi\.projection\.projection2d module
+======================================
 
 .. automodule:: forgi.projection.projection2d
     :members:

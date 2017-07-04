@@ -1,5 +1,5 @@
-forgi.utilities.observedDict module
-===================================
+forgi\.utilities\.observedDict module
+=====================================
 
 .. automodule:: forgi.utilities.observedDict
     :members:

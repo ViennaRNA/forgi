@@ -28,7 +28,7 @@ Use :code:`visualize_cg.py --virtual-atoms 1y26.cg` to show virtual atoms for th
 Use :code:`visualize_cg.py --sidechain-atoms 1y26.cg` to show all virtual atoms.
 
 File format conversions
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 To convert files between the file formats "fasta with secondary structure", "dotbracket string",
 "coarse-grain file", "bpseq" and "pdb", use the corresponding scripts.

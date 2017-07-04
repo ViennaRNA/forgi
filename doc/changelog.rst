@@ -1,6 +1,81 @@
 Changelog
 =========
 
+Changes in Version 1.0
+----------------------
+
+With version 1.0, we introduce support for **cofold** and multifold structures.
+Further more, we are finally compatible with **Python 3** and **Python 2**
+
+
+In the following list of the biggest changes, the most important
+changes are highlighted in bold.
+
+*  **Python 3 compatibility:** forgi is now compatible with python 2 and 3.
+   In paticular, we have automatic tests for python 3.5, 3.6 and 2.7
+*  Logging support. We now use the `logging` module instead of print statements.
+*  In `forgi.graph.bulge_graph`:
+
+    *  **Cofold Structures** A BulgeGraph can now hold multiple RNA chains,
+        if they are all connected by basepairs.
+    *  bg.seq_ids now holds named tuples (chain, resid)
+    *  New Errors (`GraphConstructionError` and `GraphIntegrityError`) as
+       specializations of ValueError are introduced and sometimes raised
+       by BulgeGraph instances.
+    *  Fasta sequences containing 'T' characters are now allowed (and converted to 'U')
+    *  **Sequence class:** Introduced `Sequence` class, a string subclass with 1-based indexing and support for '&' (cofold structures)
+    *  `define_range_iterator` no longer accepts the `seq_ids` keyword.
+    *  The Bulge-graph now has a new method `define_a`. It returns the define with
+       adjacent nucleotides (if present) and also works for 0-nucleotide multiloops.
+    *  **Consistent element numbering:**
+
+        *  During graph creation, multiloops are now numbered from m0, m1, ... according
+           to their position along the backbone.
+        *  The numbering of elements during bulge-graph construction is now
+           consistent independent of the order of dictionaries
+           (which was randomized in python 3 and is ordered in python 3.6)
+    *  **Looking at multiloops as a whole:**
+        Multiloops continue to consist of independent multiloop segments.
+        However, we additionally introduced methods to look at multiloops as a whole.
+
+        *  `find_mlonly_multiloops` finds out, which multiloop segment belong
+            together in a junction
+        *  `describe_multiloop`: reports whether the junctions found with the
+            previous method belong to a pseudoknot, a multiloop or an exterior loop.
+    *  `get_angle_type` now supports the `allow_broken` keyword to return an
+       angle type instread of None in case of Multiloop segments that are not
+       part of the Minimum Spanning Tree
+    *  `bg.iter_elements_along_backbone` introduced.
+*  `forgi.threedee.utilities.average_atom_positions` was converted to a JSON
+    data file, which is read by `forgi.threedee.utilities.graph_pdb`. This saves
+    time upon import. In the future, average_atom_positions might be entirely removed.
+*  New module `forgi.threedee.model.linecloud` to store the coordinate and twist vectors.
+   This module's classes implement a Mapping interface but internally use a numpy array,
+   which allows for speedup of many operations.
+*  In `forgi.graph.bulge_graph`:
+
+    *  Exceptions `CgConstructionErrorCgConstructionError` and `CgIntegrityError` as
+       subclasses of the new bulge graph exceptions
+    *  **Load all chains from a PDB file**: The module level function
+       `connected_cgs_from_pdb` loads all RNA chains from a PDB file
+       and greates a cg object for each connected component.
+    *  Bugfix: Supplying the secondary structure during loading of PDBs
+       now works again.
+    *  Convenience function `cg.get_stats` as a wrapper around `get_bulge_abgle_stats`,
+       `get_loop_stats` and `get_stem_stats` respectively.
+    *  Code for steric value and stacking detection is EXPERIMENTAL!
+*  Modules `ftm.ensemble`, `ftm.ensemble2` and `ftu.dssr` are EXPERIMENTAL
+*  Faster RMSD by using QCOrot algorithm with Cython instead of Kabsch algorithm
+*  AngleStat class now supports unary minus operator.
+*  Recalculated `average_stem_vres_positions` from the NR-list.
+*  In `forgi.threedee.utilities.graph_pdb`: virtual stats and sum of angle stats
+    to describe orientation of non-adjacent stems in multiloops.
+*  **Modified Residues**: Better treatement of modified residues.
+   We try to query PDBeChem to replace the modified residue with the unmodified parent.
+
+
+
+
 Changes in Version 0.4
 ----------------------
 
@@ -8,10 +83,10 @@ Changes in Version 0.4
 
    *  Speed improvement: Basepair distances between elements are cached.
    *  The Bulge-graph object and file format supports arbitrary key-value pairs in the `info` dictionary.
-   *  `BulgeGraph.get_connected_nucleotides` no longer sorts the 
-      output nucleotides. Now this function depends on the order of stem1 and stem2 and can thus be used 
+   *  `BulgeGraph.get_connected_nucleotides` no longer sorts the
+      output nucleotides. Now this function depends on the order of stem1 and stem2 and can thus be used
       to determine the direction of a bulge. This is used in the new member function `get_link_direction`.
-   *  Added function `BulgeGraph.get_domains`, to return a lists of pseudoknots, multiloops and rods. 
+   *  Added function `BulgeGraph.get_domains`, to return a lists of pseudoknots, multiloops and rods.
       The interface of this function might change in the future.
    *  Merged pull-request by tcarlile for `forgi.graph.bulge_graph`:
 
@@ -20,25 +95,25 @@ Changes in Version 0.4
 
 *  Restructured forgi.threedee.model.comparison and forgi.threedee.utilities.rmsd into
    `forgi.threedee.model.similarity` and `forgi.threedee.model.descriptors`
-   The `similarity` module contains all functions for the comparison of two point 
+   The `similarity` module contains all functions for the comparison of two point
    clouds or two cg structures.
-   The `descriptors` module contains functions for describing a single point cloud, 
+   The `descriptors` module contains functions for describing a single point cloud,
    such as the radius of gyration or new functions for the gyration tensor.
 *  `average_stem_vres_positions` are back with recalculated values
 *  Changes in `forgi.threedee.model.coarse_grain` to the `CoarseGrainRNA` object:
 
    *  In the `self.coords` dictionary, the start and end coordinate are now in a consistent order.
    *  Call new member function `self.add_all_virtual_residues` instead of `forgi.threedee.utilities.graph_pdb.add_virtual_residues`
-   *  Coordinates of interior loops and multiloop segmentsa are no longer stored in the cg-files, 
+   *  Coordinates of interior loops and multiloop segmentsa are no longer stored in the cg-files,
       as they can be deduced from stem coordinates.
 
-      * New member function `self.add_bulge_coords_from_stems` is provided instead 
+      * New member function `self.add_bulge_coords_from_stems` is provided instead
         of function `forgi.threedee.utilities.graph_pdb.add_bulge_information_from_pdb_chain`
 
    *  Member function `self.get_virtual_residue(pos)` is provided for easier access than directly via `self.v3dposs`.
-      For single stranded regions, virtual residue positions along the direct line of the coarse 
+      For single stranded regions, virtual residue positions along the direct line of the coarse
       grain element can be estimated optionally.
-      Virtual residues are cached and the cache is automatically cleared when 
+      Virtual residues are cached and the cache is automatically cleared when
       the coordinates or twists of the coarse grained RNA are changed.
    * Functions for creating coordinate arrays for the structure
 
@@ -52,12 +127,12 @@ Changes in Version 0.4
    *  `self.get_coordinates_array` now returns a 2D `nx3 numpy array` holding n coordinate entries.
       You can use numpy's `.flatten()` to generate a 1D array. If you want to load a 1D flat coordinate array `a`, use
       `self.load_coordinates_array(a.reshape((-1,3))`
-   *  Overrides the newly introduced method `sorted_edges_for_mst` from BulgeGraph. 
+   *  Overrides the newly introduced method `sorted_edges_for_mst` from BulgeGraph.
       Now elements that have no `sampled` entry are broken preferedly.
-      This should ensure that the minimal spanning tree is the same after saving and loading an 
+      This should ensure that the minimal spanning tree is the same after saving and loading an
       RNA generated with the program Ernwin to/from a file.
    *  `self.coords_to_directions` and `coords_from_directions`:
-      Export the coordinates as an array of directions (end-start). 
+      Export the coordinates as an array of directions (end-start).
       This array has only 1 entry per coarse grained element.
 
 *  In `forgi.threedee.model.stats`: Added class for clustered angle stats.
@@ -79,11 +154,11 @@ Changes in Version 0.3
 *  The subpackage `forgi.visual` was started for easy visualization of RNA using fornac or matplotlib.
    This subpackage is in an early development stage and will be improved in future versions.
 *  The subpackage forgi.projection was added to work with projections of CoarseGrainedRNA objects onto a 2D plane.
-*  Now `forgi.threedee.model.average_atom_positions` is used for all virtual atom calculations 
+*  Now `forgi.threedee.model.average_atom_positions` is used for all virtual atom calculations
    while `average_stem_vres_positions` has been removed. This leads to more consistent virtual atom calculations.
    Further more the values in `average_atom_positions` have been recalculated.
-*  In `forgi.threedee.model.rmsd`, the functions `centered_rmsd` and `centered_drmsd` have been 
+*  In `forgi.threedee.model.rmsd`, the functions `centered_rmsd` and `centered_drmsd` have been
    deprecated and deleted respectively. Use `rmsd(cg1,cg2)` for a centered RMSD. This removes code duplication.
-*  In `forgi.threedee.model.comparison` a ConfusionMatrix class was introduced for speedup with 
+*  In `forgi.threedee.model.comparison` a ConfusionMatrix class was introduced for speedup with
    repeated comparisons to the same reference.
 *  Several smaller changes and improvements

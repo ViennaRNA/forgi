@@ -35,7 +35,7 @@ except OSError as e: #Outside of a git repo, do nothing.
 setup(
       cmdclass={'build_py': build_py},
       name='forgi',
-      version='0.40',
+      version='1.0',
       description='RNA Graph Library',
       author='Peter Kerpedjiev, Bernhard Thiel',
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',

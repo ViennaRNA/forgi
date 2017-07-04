@@ -1,7 +1,7 @@
-forgi.visual.mplotlib module
-============================
+forgi\.visual\.mplotlib module
+==============================
 
 .. automodule:: forgi.visual.mplotlib
-    :members: plot_rna, plot_pdb
+    :members:
     :undoc-members:
     :show-inheritance:

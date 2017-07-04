@@ -1,5 +1,5 @@
-forgi.utilities.stuff module
-============================
+forgi\.utilities\.stuff module
+==============================
 
 .. automodule:: forgi.utilities.stuff
     :members:

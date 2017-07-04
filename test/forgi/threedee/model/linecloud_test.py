@@ -6,7 +6,7 @@ import numpy as np
 import numpy.testing as nptest
 import random
 
-from forgi.threedee.model.Element import CoordinateStorage, LineSegmentStorage
+from forgi.threedee.model.linecloud import CoordinateStorage, LineSegmentStorage
 import unittest
 from math import sin, cos
 import copy
@@ -66,7 +66,7 @@ class CoordinateStorageTest(unittest.TestCase):
         self.assertEqual(self.cs2._indices_for("m0"), [14,15])
         self.assertEqual(self.cs2._indices_for("m0"), [14,15])
         self.assertEqual(self.cs2._indices_for("m2"), [0,1])
-    
+
     def test_rotate1(self):
         self.cs["s1"]=[0,0,0],[0,0,10]
         rotMat=np.array([[1,0,0],[0,0,-1],[0,1,0]])
@@ -211,7 +211,7 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs["s1"]=[-1,-1,1.],[1,1,-1.]
         self.assertEqual(cs.elements_closer_than(1.5),[("s0","s1")])
         self.assertEqual(cs.elements_closer_than(0.001),[("s0","s1")])
-        
+
     def test_elements_closer_than_in_plane(self):
         cs = LineSegmentStorage(["s0", "s1"])
         cs["s0"]=[0,0,3.],[0,1,3.]
@@ -225,7 +225,7 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs["s1"]=[1,1,3.],[1,-1,-3.]
         self.assertEqual(cs.elements_closer_than(1.5),[("s0","s1")])
         self.assertEqual(cs.elements_closer_than(0.4),[])
-        
+
     def test_elements_closer_than_ignore(self):
         cs = LineSegmentStorage(["s0", "s1", "s2"])
         cs["s0"]=[0,0,0.],[0,0,3.]
@@ -259,28 +259,28 @@ class LineSegmentStorageTests(unittest.TestCase):
         old = interactions_old(cg2, CUTOFF_DIST, BP_DIST)
         new = set(cg2.coords.elements_closer_than(CUTOFF_DIST, ignore = ignore))
         print("m0-m1: {} A phys, dist, "
-              "{} bp dist".format(cg2.element_physical_distance("m0", "m1"), 
+              "{} bp dist".format(cg2.element_physical_distance("m0", "m1"),
                                   cg2.min_max_bp_distance("m0", "m1")[0]))
         print("m0: {}".format(cg2.coords["m0"]))
         print("m1: {}".format(cg2.coords["m1"]))
         self.assertEqual(old, new,
                         msg = "ONLY old: {}\n, ONLY new {},\n {} both".format(old-new, new-old, len(old&new)))
 
-  
+
 
     def test_rmsd_to_self(self):
         cs1 = LineSegmentStorage(["s0", "s1", "s2"])
-        for r in range(RANDOM_REPETITIONS):        
+        for r in range(RANDOM_REPETITIONS):
             cs1["s0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             cs1["s1"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             cs1["s2"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             self.assertAlmostEqual(cs1.rmsd_to(cs1), 0)
-            
+
     def test_rmsd_to_is_a_symmetric_relation(self):
         cs1 = LineSegmentStorage(["s0", "m3", "s1", "i0", "s2"])
         cs2 = LineSegmentStorage(["s0", "s1", "s2", "i0", "m3"])
 
-        for r in range(RANDOM_REPETITIONS):        
+        for r in range(RANDOM_REPETITIONS):
             cs1["s0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             cs1["s1"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             cs1["s2"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
@@ -292,8 +292,8 @@ class LineSegmentStorageTests(unittest.TestCase):
             cs2["i0"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             cs2["m3"]=[rand(),rand(),rand()],[rand(),rand(),rand()]
             self.assertAlmostEqual(cs1.rmsd_to(cs2), cs2.rmsd_to(cs1))
-            
-            
+
+
     def test_rmsd_to_offset_ordered(self):
         cs1 = LineSegmentStorage(["s0", "s1", "s2"])
         cs2 = LineSegmentStorage(["s0", "s1", "s2"])
@@ -316,7 +316,7 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs2["s1"]=[1,1,4.],[1,-1,-2.]
         cs2["s2"]=[0.,0.,1.],[1,-1,-2.]
         self.assertAlmostEqual(cs1.rmsd_to(cs2), 0)
-     
+
     def test_rmsd_to_rotated_ordered_unordered(self):
         cs1 = LineSegmentStorage(["s0", "s1", "s2"])
         cs2 = LineSegmentStorage(["s2", "s0", "s1"])
@@ -325,16 +325,16 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs1["s2"]=[0.,0.,0.],[1,-1,-3.]
         cs_temp = copy.deepcopy(cs1)
         cs_temp.rotate(np.array([[1,0,0],[0, cos(1.2), -sin(1.2)],[0, sin(1.2), cos(1.2)]]))
-        
+
         self.assertAlmostEqual(cs1.rmsd_to(cs_temp), 0)
 
         cs2["s0"] = cs_temp["s0"]
         cs2["s1"] = cs_temp["s1"]
         cs2["s2"] = cs_temp["s2"]
 
-        
+
         self.assertAlmostEqual(cs1.rmsd_to(cs2), 0)
-         
+
     def test_rmsd_to_deviating(self):
         cs1 = LineSegmentStorage(["s0", "s1", "s2", "s3"])
         cs2 = LineSegmentStorage(["s2", "s0", "s3", "s1"])
@@ -347,7 +347,7 @@ class LineSegmentStorageTests(unittest.TestCase):
         cs2["s1"]=[1,-1,-3.],[1,1,3.]
         cs2["s2"]=[-1.,-1.,-3.],[0,0,0.]
         cs2["s3"]=[0.,5.,0.],[1,-1,-3.]
-        self.assertGreater(cs1.rmsd_to(cs2), 1)        
+        self.assertGreater(cs1.rmsd_to(cs2), 1)
         self.assertLess(cs1.rmsd_to(cs2), 5)
 
     def test_get_direction(self):
@@ -404,7 +404,6 @@ def interactions_old(cg, distance, bp_distance=16):
             else:
                 hits_cg2.add((n2,n1))
 
-            
+
 
     return hits_cg2
-

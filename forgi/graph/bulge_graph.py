@@ -9,12 +9,6 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
 
-__author__ = "Peter Kerpedjiev, Bernhard Thiel"
-__copyright__ = "Copyright 2012 - 2016"
-__license__ = "GNU Affero GPL v 3.0"
-__version__ = "0.4"
-__maintainer__ = "Peter Kerpedjiev, Bernhard Thiel"
-__email__ = "pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at"
 
 import sys
 import collections as col

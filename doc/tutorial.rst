@@ -2,7 +2,7 @@ Forgi Tutorial
 ==============
 
 To use all scripts and commands from this tutorial, you have to install all
- (optional) dependencies (see :ref:`_installation`).
+ (optional) dependencies (see :ref:`Installation`).
 
 .. toctree::
    :maxdepth: 1

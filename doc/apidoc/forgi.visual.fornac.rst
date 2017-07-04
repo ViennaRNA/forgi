@@ -1,5 +1,5 @@
-forgi.visual.fornac module
-==========================
+forgi\.visual\.fornac module
+============================
 
 .. automodule:: forgi.visual.fornac
     :members:
