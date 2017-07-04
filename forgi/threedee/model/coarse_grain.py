@@ -158,9 +158,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
 
         # first we annotate the 3D structure
         log.info("Starting MC-Annotate")
-        p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
-        out, err = p.communicate()
-
+        out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True)
         lines = out.strip().split('\n')
 
         # convert the mcannotate output into bpseq format
@@ -278,8 +276,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         f.flush()
 
     # first we annotate the 3D structure
-    p = sp.Popen(['MC-Annotate', rna_pdb_fn], stdout=sp.PIPE)
-    out, err = p.communicate()
+    log.info("Starting MC-Annotate")
+    out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True)
 
     lines = out.strip().split('\n')
 
