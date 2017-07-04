@@ -1763,14 +1763,14 @@ class BulgeGraph(object):
         self._create_bulge_graph(stems, bulges)
         log.debug("after _create_bulge_graph: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
         self._create_stem_graph(stems, len(bulges))
-        log.debug("after _create_stem_graph: %s; %s", self.defines, self.edges)
+        log.debug("after _create_stem_graph: DEFINES \n%s;\nEDGES \n%s", pformat(self.defines), pformat(self.edges))
         self._collapse()
         log.debug("after _collapse: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
+        self._sort_defines()
+        log.debug("after _sort_defines: DEFINES:\n%s;\n EDGES:\n%s", pformat(self.defines), pformat(self.edges))
         self._relabel_nodes()
         log.debug("after _relabel_nodes: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
         self.remove_degenerate_nodes()
-        self.sort_defines()
-        log.debug("after sort_defines: %s; %s", self.defines, self.edges)
         self._split_at_cofold_cutpoint()
         self._insert_cutpoints_into_seq()
 
@@ -2003,7 +2003,7 @@ class BulgeGraph(object):
         log.debug("from_tuples: stems %s, bulges %s", stems, bulges)
         self.from_stems_and_bulges(stems, bulges)
 
-    def sort_defines(self):
+    def _sort_defines(self):
         """
         Sort the defines of interior loops and stems so that the 5' region
         is always first.
