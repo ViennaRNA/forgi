@@ -1596,22 +1596,23 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
         bg.from_fasta(fasta)
 
         sbl = bg.shortest_bg_loop('m0')
-        self.assertTrue(3 in sbl)
-        self.assertTrue(18 in sbl)
-        self.assertFalse(14 in sbl)
-        self.assertFalse(23 in sbl)
+        self.assertIn(3, sbl)
+        self.assertIn(4, sbl)
+        self.assertIn(18, sbl)
+        self.assertNotIn(13, sbl)
+        self.assertEqual(len(sbl), 11)
 
         sbl = bg.shortest_bg_loop('m2')
-        self.assertTrue(13 in sbl)
-        self.assertFalse(4 in sbl)
-        self.assertTrue(23 in sbl)
+        self.assertEqual(len(sbl), 14)
+        self.assertIn(13, sbl)
+        self.assertIn(14, sbl)
+        self.assertNotIn(1, sbl)
 
         sbl = bg.shortest_bg_loop('m4')
-        self.assertTrue(8 in sbl)
-        self.assertTrue(23 in sbl)
-        self.assertTrue(25 in sbl)
-        self.assertFalse(14 in sbl)
-        self.assertFalse(4 in sbl)
+        self.assertIn(23, sbl)
+        self.assertIn(9, sbl)
+        self.assertNotIn(3, sbl)
+        self.assertEqual(len(sbl), 12)
 
     def test_loop_contains_pseudoknot(self):
         fasta = """>1L2X_A

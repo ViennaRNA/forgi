@@ -1034,7 +1034,7 @@ class BulgeGraph(object):
 
     def shortest_bg_loop(self, vertex):
         """
-        Find the shortest loop containing this node. The vertex should
+        Find a shortest loop containing this node. The vertex should
         be a multiloop.
 
         :param vertex: The name of the vertex to find the loop.
@@ -1042,11 +1042,12 @@ class BulgeGraph(object):
         """
         log.debug("Starting shortest BG loop for {}".format(vertex))
         G = self.to_networkx()
+        log.debug("nx graph  %r with edges %r ", G, G.edge)
 
         # use the nucleotide in the middle of this element as the starting point
         residues = sorted(list(self.define_residue_num_iterator(vertex, adjacent=True)))
         mid_res = residues[len(residues) // 2]
-
+        log.debug("mid_residue %s", mid_res)
         if len(residues) == 2:
             # no-residue multiloop
             # find the neighbor which isn't part of the multiloop
@@ -1062,6 +1063,7 @@ class BulgeGraph(object):
         import forgi.utilities.graph as fug
 
         path = fug.shortest_cycle(G, mid_res)
+        log.debug("Shortest cycle is %s", path)
         return path
 
     def _chain_start_end(self, pos):
