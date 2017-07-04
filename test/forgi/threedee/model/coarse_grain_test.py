@@ -212,12 +212,12 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cgs = ftmc.connected_cgs_from_pdb("test/forgi/threedee/data/1DUQ.pdb")
         self.assertEqual(len(cgs), 4)
         # This PDB file contains 4 similar RNA dimers
-        self.assertEqual(cgs[0].defines, cgs[2].defines)
-        self.assertEqual(cgs[1].defines, cgs[3].defines)
         self.assertEqual(cgs[0].name, "1DUQ_A-B")
         self.assertEqual(cgs[1].name, "1DUQ_C-D")
         self.assertEqual(cgs[2].name, "1DUQ_E-F")
         self.assertEqual(cgs[3].name, "1DUQ_G-H")
+        self.assertEqual(cgs[0].defines, cgs[2].defines)
+        self.assertEqual(cgs[1].defines, cgs[3].defines)
 
 class CoarseGrainTest(tfgb.GraphVerification):
     '''

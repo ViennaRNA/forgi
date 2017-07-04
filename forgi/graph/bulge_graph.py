@@ -1587,7 +1587,7 @@ class BulgeGraph(object):
 
             #We need to start at a node with only 1 connection, if present
             for x in comp:
-                if x[0]!="m":
+                if len(ml_graph.edges(x))==1:
                     st_node=x
                     break
             else:
@@ -1611,22 +1611,6 @@ class BulgeGraph(object):
             loop=loop[first_i:]+loop[:first_i]
             loops.append(tuple(loop))
         return loops
-
-        node_loops = []
-        for d in self.mloop_iterator():#, self.floop_iterator(),self.tloop_iterator()):
-            if any(d in loop for loop in node_loops):
-                continue
-            log.info("Find_mlonly_multiloop: searching for {}".format(d))
-            nodes = tuple(self.shortest_mlonly_multiloop(d))
-            log.info("Find_mlonly_multiloop: Found multiloop: {}".format(nodes))
-            if nodes not in node_loops:
-                log.info("Find_mlonly_multiloop: Adding multiloop: {}".format(nodes))
-                node_loops.append(nodes)
-            else:
-                log.error("Find_mlonly_multiloop: {} already known".format(nodes))
-                assert False
-
-        return node_loops
 
     def describe_multiloop(self, multiloop):
         """

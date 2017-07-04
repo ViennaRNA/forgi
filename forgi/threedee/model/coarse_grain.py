@@ -212,6 +212,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             #print(component, type(component))
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+        cgs.sort(key=lambda x: x.name)
         return cgs
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',

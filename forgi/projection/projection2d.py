@@ -1013,10 +1013,10 @@ class Projection2D(object):
                 if ftuv.vec_distance(node1, node2)<cutoff:
                     newnode=ftuv.middlepoint(node1, node2)
                     #self.proj_graph.add_node(newnode)
-                    for neighbor in self.proj_graph.edge[node1].keys():
+                    for neighbor in list(self.proj_graph.edge[node1].keys()):
                         self.proj_graph.add_edge(newnode, neighbor,
                                                 attr_dict=self.proj_graph.edge[node1][neighbor])
-                    for neighbor in self.proj_graph.edge[node2].keys():
+                    for neighbor in list(self.proj_graph.edge[node2].keys()):
                         self.proj_graph.add_edge(newnode, neighbor,
                                                  attr_dict=self.proj_graph.edge[node2][neighbor])
                     if newnode!=node1: #Equality can happen because of floating point inaccuracy

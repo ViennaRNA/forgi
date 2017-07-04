@@ -1723,7 +1723,7 @@ class VirtualAtomsLookup(object):
             return self._getitem_for_stem(d, pos) #Use virtual residues for stems.
         import pkgutil
         data = pkgutil.get_data('forgi', 'threedee/data/average_atom_positions.json')
-        avg_atom_poss = json.loads(data)
+        avg_atom_poss = json.loads(data.decode("ascii"))
         e_coords=dict()
         try:
             origin, basis = element_coord_system(self.cg, d)
@@ -1740,8 +1740,7 @@ class VirtualAtomsLookup(object):
             conn_type = self.cg.connection_type(d, conn)
         else:
             conn_type = 0
-        for i,r in it.izip(it.count(),
-                           self.cg.define_residue_num_iterator(d)):
+        for i,r in zip(it.count(), self.cg.define_residue_num_iterator(d)):
             if r!=pos: continue
             if self.given_atom_names is None:
                 if self.sidechain:

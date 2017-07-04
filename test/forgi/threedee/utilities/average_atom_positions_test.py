@@ -11,6 +11,6 @@ class AverageAtomPositionsTest(unittest.TestCase):
     def test_key1(self):
         key = "h 9 -1 0 7 C4'"
         data = pkgutil.get_data('forgi', 'threedee/data/average_atom_positions.json')
-        avg_atom_poss = json.loads(data)
+        avg_atom_poss = json.loads(data.decode('ascii'))
 
         self.assertTrue(key in avg_atom_poss.keys())
