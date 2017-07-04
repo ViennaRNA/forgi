@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ViennaRNA/forgi.svg?branch=develop)](https://travis-ci.org/ViennaRNA/forgi)
 
-Full documentation: [http://www.tbi.univie.ac.at/~thiel/forgi/](http://www.tbi.univie.ac.at/~thiel/forgi/)
+Full documentation: [https://viennarna.github.io/forgi/](https://viennarna.github.io/forgi/)
 
 ##### Build the documentation #####
 
