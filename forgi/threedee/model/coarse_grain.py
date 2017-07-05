@@ -382,11 +382,13 @@ def from_bulge_graph(bulge_graph):
     """
     Create a CoarseGrainRNA from a BulgeGraph
     """
-    bg_str = bulge_graph.to_bg_string
+    if not bulge_graph.seq:
+        raise CgConstructionError("Sequence missing in BulgeGraph. Cannot create CoarseGrainRNA.")
+    bg_str = bulge_graph.to_bg_string()
     cg = CoarseGrainRNA()
     cg.from_cg_string(bg_str)
     return  cg
-    
+
 class RnaMissing3dError(LookupError):
     pass
 

@@ -109,7 +109,7 @@ def from_id_seq_struct(id_str, seq, struct):
         bg.name = id_str
     if seq is not None:
         bg.seq = seq
-        bg.seq_ids_from_seq()
+    bg.seq_ids_from_seq()
 
     return bg
 
@@ -198,11 +198,11 @@ def from_fasta_text(fasta_text, dissolve_length_one_stems=False):
     else:
         return bgs
 
-def from_fasta(filename, dissolve_length_one_stems):
+def from_fasta(filename, dissolve_length_one_stems=False):
     with open(filename) as f:
         fasta_text = f.read()
     return from_fasta_text(fasta_text, dissolve_length_one_stems)
-    
+
 def any_difference_of_one(stem, bulge):
     """
     See if there's any difference of one between the two
@@ -520,7 +520,6 @@ class BulgeGraph(object):
 
     @property
     def seq(self):
-
         return self._seq
 
     @seq.setter
@@ -1686,7 +1685,7 @@ class BulgeGraph(object):
 
         # when provided with just a sequence, we presume that the
         # residue ids are numbered from 1-up
-        for i in range(len(self.seq)):
+        for i in range(self.seq_length):
             self.seq_ids.append(resid_from_str(str(i+1)))
 
     def remove_degenerate_nodes(self):

@@ -3,6 +3,8 @@ from __future__ import print_function
 import unittest
 
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.graph.bulge_graph as fgb
+
 import forgi.threedee.model.stats as ftms
 import forgi.threedee.utilities.vector as ftuv
 
@@ -98,8 +100,8 @@ class TestStats(unittest.TestCase):
         (((..(((...)))..)))
         """
 
-        cg = ftmc.CoarseGrainRNA()
-        cg.from_fasta(fa_text)
+        bg = fgb.from_fasta_text(fa_text)
+        cg = ftmc.from_bulge_graph(bg)
 
         cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])
         cg.twists["s0"]=np.array([0.,-1.,0]), np.array([0.,1.,0.])
@@ -131,8 +133,8 @@ class TestStats(unittest.TestCase):
         (((..(((...)))..)))
         """
 
-        cg = ftmc.CoarseGrainRNA()
-        cg.from_fasta(fa_text)
+        bg = fgb.from_fasta_text(fa_text)
+        cg = ftmc.from_bulge_graph(bg)
 
         cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])
         cg.twists["s0"]=np.array([0.,-1.,0]), np.array([0.,1.,0.])
