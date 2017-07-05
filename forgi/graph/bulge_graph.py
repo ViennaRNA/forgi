@@ -109,11 +109,12 @@ def from_id_seq_struct(id_str, seq, struct):
         bg.name = id_str
     if seq is not None:
         bg.seq = seq
+        bg.seq_ids_from_seq()
 
     return bg
 
 
-def from_fasta_text(fasta_text):
+def from_fasta_text(fasta_text, dissolve_length_one_stems=False):
     """
     Create a bulge graph or multiple bulge
     graphs from some fasta text.
@@ -155,7 +156,14 @@ def from_fasta_text(fasta_text):
             if prev_struct is None:
                 raise GraphConstructionError("No structure for id: {}", prev_id)
 
-            bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
+            bg = from_id_seq_struct(prev_id, prev_seq, prev_struct)
+            if dissolve_length_one_stems:
+                bg.dissolve_length_one_stems()
+            bgs.append(bg)
+
+            prev_seq = None
+            prev_struct = None
+            prev_id=None
 
         if seq_match is not None:
             curr_seq = seq_match.group(1)
@@ -180,14 +188,21 @@ def from_fasta_text(fasta_text):
     if prev_struct is None:
         raise GraphConstructionError("Error during parsing of fasta file. No structure found for id {} and sequence {}".format(prev_id, prev_seq))
 
-    bgs += [from_id_seq_struct(curr_id, prev_seq, prev_struct)]
+    bg = from_id_seq_struct(curr_id, prev_seq, prev_struct)
+    if dissolve_length_one_stems:
+        bg.dissolve_length_one_stems()
+    bgs.append(bg)
 
     if len(bgs) == 1:
         return bgs[0]
     else:
         return bgs
 
-
+def from_fasta(filename, dissolve_length_one_stems):
+    with open(filename) as f:
+        fasta_text = f.read()
+    return from_fasta_text(fasta_text, dissolve_length_one_stems)
+    
 def any_difference_of_one(stem, bulge):
     """
     See if there's any difference of one between the two
@@ -1888,7 +1903,7 @@ class BulgeGraph(object):
 
         if dissolve_length_one_stems:
             self.dissolve_length_one_stems()
-            
+
         self.seq_ids_from_seq()
 
 
