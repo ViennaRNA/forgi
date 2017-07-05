@@ -13,6 +13,8 @@
 * Find dead code with `venv/bin/vulture forgi/ examples/ test/ ../ernwin/fess/ | less`, but manually check the results (vulture reports false positives)
 * Verify that the travis build passes
 * Write a change log to document API changes
+* Rebuild the documentation
 * Run nosetests again.
 * Merge into master and develop
 * Tag inside master
+* Publish documentation to gh-pages

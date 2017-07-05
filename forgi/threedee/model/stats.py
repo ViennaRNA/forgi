@@ -387,7 +387,7 @@ class AngleStat(object):
         if abs(self.r1-stat2.r1)>CUTOFF_DIST:
             return False
         for attr in ["u", "v", "u1", "v1", "t"]:
-            if abs(getattr(self, attr) - getattr(stat, attr))>CUTOFF_ANGLE:
+            if abs(getattr(self, attr) - getattr(stat2, attr))>CUTOFF_ANGLE:
                 return False
         return True
 
@@ -398,7 +398,7 @@ class AngleStat(object):
         I choose to use -stat instead of ~stat, because a stat is similar to a
         vector and using minus to change a carthesian vector's direction is intuitive.
         """
-        log.info("Unary minus called for Angle stat")
+        log.debug("Unary minus called for Angle stat")
         return ftug.invert_angle_stat(self)
 
 class RandomAngleStats(object):
