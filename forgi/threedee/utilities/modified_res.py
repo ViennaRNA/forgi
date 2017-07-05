@@ -1,7 +1,7 @@
 """
 A module for dealing with modified residues.
 
-For now the only functionality is to find out the corresponding 
+For now the only functionality is to find out the corresponding
 unmodified residue.
 """
 from __future__ import print_function
@@ -33,7 +33,7 @@ def _parse_table_row(tr):
         return key, value
     else:
         return None
-    
+
 def _html_to_info_dict(html):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore") #We don't care what xml parser beautiful soup uses
@@ -49,11 +49,11 @@ def _html_to_info_dict(html):
                     info[data[0]]=data[1]
             return info
     return {}
-    
+
 def query_PDBeChem(three_letter_code):
     """
     Query the PDBeChem and return a dictionary with key-value pairs.
-    
+
     Unfortunately, this information does not seem to be provided in any
     machine-readable format. We have to parse the html.
     """
@@ -77,21 +77,21 @@ def change_residue_id(residue, new_id):
         pass # New version of biopython. Id is a property
     else:
         chain.child_dict[new_id] = residue
-    
+
 
 def to_4_letter_alphabeth(chain):
     '''
     Rename the modified residues so that they have the same
     names as unmodified residues.
-    
+
     If a residue's name is unknown, query PDBeChem.
 
     If the residue is not a ribonucleotide, remove it from the chain.
-    
+
     If it is a modified ribonucleotde, replace it by the unmodified "standard parent"
-    
+
     TODO: What to do with I (INOSINIC ACID)
-    
+
     :param chain: A Bio.PDB.Chain structure
     :return: The same chain, but with only AUGC residues.
     '''
@@ -108,7 +108,7 @@ def to_4_letter_alphabeth(chain):
             r.resname = '  G'
         elif r.resname == ' rU':
             r.resname = '  U'
-            
+
         # Non-standard residues
         if r.resname.strip() == "I":
             # "I" has no standart parent (AUGC) to replace it with.
@@ -116,7 +116,7 @@ def to_4_letter_alphabeth(chain):
             chain.detach_child(r.id)
             warnings.warn("Inosinic acid not supported. Residue {} removed".format(r))
             continue #Continue with same i (now different residue)
-        if r.resname.strip() not in "AUGC": 
+        if r.resname.strip() not in "AUGC":
             res_info = ModifiedResidueLookup()[r.resname]
             if not res_info:
                 #Unknown code. Remove residue
@@ -133,7 +133,7 @@ def to_4_letter_alphabeth(chain):
             log.debug(r.id)
             # The following was added because of 1NYI.pdb. It includes a single G-residue denoted as HETATOM in chain A.
             # It forms a base-pair, but is probably not connected to the backbone.
-            # Instead of removing it, introducing cutpoint whereever the PDB Chain 
+            # Instead of removing it, introducing cutpoint whereever the PDB Chain
             # contains gaps would be another option (TODO).
             if r.id[0].strip() in ["H_A", "H_U", "H_G", "H_C", "H_  G", "H_  C", "H_  A", "H_  U"]: #A plain AUGC as a HETATOM means it is a ligand.
                 chain.detach_child(r.id)
@@ -165,8 +165,8 @@ class ModifiedResidueLookup(object):
             if v is None:
                 del self._dict[k]
     def __str__(self):
-        return str(self._dict)          
-                
+        return str(self._dict)
+
 def dict_from_pdbs(filenames):
     #Just look at the SEQRES headers.
     ignore = set("AUGC")
@@ -187,10 +187,13 @@ def dict_from_pdbs(filenames):
                                 log.warning("3-letter code '%s' not found: %s", code, e)
                                 out_dict[code] = None
     return {k:v for k,v in out_dict.items()}
-                    
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     print("# Created by `python {}`".format(" ".join(sys.argv)))
     print("RESIDUE_DICT = ", end="")
     d = dict_from_pdbs(sys.argv[1:])
+    for ion in ["MG", "NA", "K", "CL"]:
+        if ion not in d:
+            d[ion]=None
     pprint({k:v for k,v in d.items() if v is not None})

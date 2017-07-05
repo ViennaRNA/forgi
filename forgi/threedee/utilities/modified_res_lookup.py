@@ -1578,4 +1578,9 @@ RESIDUE_DICT = {'02I': {u'Atom count': u'34 (22 without Hydrogen)',
          u'Standard parent': u'Not Assigned',
          u'Status': u'Released',
          u'Type code': u'ATOMN',
-         u'Type description': u'RNA LINKING'}}
+         u'Type description': u'RNA LINKING'},
+  'MG': None,
+  'K' : None,
+  'NA': None,
+  'CL': None
+  }

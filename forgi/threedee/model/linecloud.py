@@ -14,9 +14,9 @@ log=logging.getLogger(__name__)
 try:
     profile
 except:
-    def profile(f): 
+    def profile(f):
         return f
-    
+
 class CoordinateStorage(Mapping):
     """
     Provides a dictionary-like interface for the access to coordinates of elements,
@@ -31,10 +31,10 @@ class CoordinateStorage(Mapping):
         """
         #Initialize coordinate array to NANs
         self._dimensions = 3
-        self._coords_per_key = 2 
+        self._coords_per_key = 2
         self._coordinates = np.ones((self._coords_per_key*len(element_names),self._dimensions))*np.nan
         self._elem_names = { elem: position for position, elem in enumerate(element_names)}
-            
+
         #: on-change function is called whenever coordinates are modified.
         self.on_change = on_change
     @profile
@@ -74,7 +74,7 @@ class CoordinateStorage(Mapping):
             except TypeError: #elem_name is not iterable
                 raise KeyError("Invalid index: Indices must be of type string or sequence of strings. Found {}".format(elem_name))
             return self._coordinates[indices] #Advanced numpy indexing yields a copy.
-    
+
     def __setitem__ (self, key, value):
         if len(value)!=self._coords_per_key:
             raise ValueError("Value must be a {}-tuple of coordinates".format(self._coords_per_key))
@@ -97,13 +97,23 @@ class CoordinateStorage(Mapping):
         Rotate all coordinates using the given rotation matrix.
         """
         rotation_matrix = np.asarray(rotation_matrix)
-        if rotation_matrix.shape != (3,3):            
+        if rotation_matrix.shape != (3,3):
             raise ValueError("Rotation matrix does not have the correct shape!")
         self._coordinates = np.dot(self._coordinates, rotation_matrix.T)
         for key in self._elem_names:
             self.on_change(key)
     def get_array(self):
+        """
+        Return a copy of the underlying numpy array.
+        """
         return np.copy(self._coordinates)
+
+    @property
+    def is_filled(self):
+        """
+        Returns True if all coordinates are set to somethiong different than nan.
+        """
+        return not np.isnan(self._coordinates).any()
 
     def __str__(self):
         lines=[]
@@ -112,15 +122,15 @@ class CoordinateStorage(Mapping):
         return("\n".join(lines))
     def __repr__(self):
         return "<{} object at {} with {}>".format(type(self).__name__, hex(id(self)), str(self).replace("\n", "; "))
-        
+
     def __eq__(self, other):
         log.debug("Testing equality")
         if type(self)!=type(other):
             log.debug("Typecheck failed")
-            return NotImplemented                   
+            return NotImplemented
         if viewkeys(self._elem_names) != viewkeys(other._elem_names):
             log.debug("Keys different: self only: {}, other only: {}".format(
-                                        viewkeys(self._elem_names)-viewkeys(other._elem_names), 
+                                        viewkeys(self._elem_names)-viewkeys(other._elem_names),
                                         viewkeys(other._elem_names) - viewkeys(self._elem_names)))
             return False
         if np.all(np.isnan(self._coordinates)) and np.all(np.isnan(other._coordinates)):
@@ -153,7 +163,7 @@ class LineSegmentStorage(CoordinateStorage):
         self._coordinates = ftuv.center_on_centroid(self._coordinates)
         self.is_centered = True
 
-    def get_direction(self, elem_name): #This assumes the stored coordinates are points not directions 
+    def get_direction(self, elem_name): #This assumes the stored coordinates are points not directions
         assert self._coords_per_key == 2 #Or else a direction does not make sense
         indices = self._indices_for(elem_name)
         return self._coordinates[indices[1]]-self._coordinates[indices[0]]
@@ -165,7 +175,7 @@ class LineSegmentStorage(CoordinateStorage):
         #See http://stackoverflow.com/a/18994296/5069869 by Fnord
         #Modified to make use of numpy vectorization.
         i_to_elem = self._i_to_elem
-        
+
         assert self._coords_per_key == 2
         directions = self._coordinates[1::2]-self._coordinates[::2]
         magnitudes = np.linalg.norm(directions, axis = 1, keepdims = True)
@@ -238,7 +248,7 @@ class LineSegmentStorage(CoordinateStorage):
                     log.debug("Parallel lines (ELSE) are far: %s",potential_interaction)
                 continue
             # Lines criss-cross: Calculate the dereminent
-            
+
             det0 = ftuv.det3x3(np.array([vec_a0b0, b_normed, cross]))#np.linalg.det([vec_a0b0, b_normed, cross])
             det1 = ftuv.det3x3(np.array([vec_a0b0, a_normed, cross]))#np.linalg.det([vec_a0b0, a_normed, cross])
 
@@ -263,7 +273,7 @@ class LineSegmentStorage(CoordinateStorage):
                 pB_ = b1
 
             dA = ftuv.magnitude(pA - pA_)
-            dB = ftuv.magnitude(pB - pB_)   
+            dB = ftuv.magnitude(pB - pB_)
             if dB > dA:
                 dot = np.dot(pB_-a0,a_normed)
 
@@ -296,29 +306,29 @@ class LineSegmentStorage(CoordinateStorage):
     def rmsd_to(self, other):
         import forgi.threedee.model.similarity as ftms #This import is here to avoid circular imports.
         if self._elem_names == other._elem_names:
-            return ftms.rmsd(self._coordinates, 
-                             other._coordinates, 
+            return ftms.rmsd(self._coordinates,
+                             other._coordinates,
                              self.is_centered & other.is_centered)
         else:
             common_keys = set(self._elem_names.keys())&set(other._elem_names.keys())
             if len(common_keys)==len(self._elem_names):
                 rev_lookup = list(x for x in sorted(self._elem_names.keys(), key = self._elem_names.__getitem__))
                 other_array = np.array([ coord_line for d in rev_lookup for coord_line in [other[d][0], other[d][1]]])
-                return ftms.rmsd(self._coordinates, 
-                             other_array, 
+                return ftms.rmsd(self._coordinates,
+                             other_array,
                              self.is_centered & other.is_centered)
             else:
                 common_keys = list(common_keys)
                 this_array = np.array([ coord_line for d in common_keys for coord_line in [self[d][0], self[d][1]]])
                 other_array = np.array([ coord_line for d in common_keys for coord_line in [other[d][0], other[d][1]]])
                 return ftms.rmsd(this_array,
-                             other_array, 
+                             other_array,
                              False)
 
     @profile
     def _indices_for(self, elem_name):
         #Avoiding a range is faster if we know that we have only two keys!
-        assert self._coords_per_key == 2 
+        assert self._coords_per_key == 2
         try:
             i = self._elem_names[elem_name]
         except ValueError:

@@ -101,12 +101,14 @@ def from_id_seq_struct(id_str, seq, struct):
     :param seq: the sequence (i.e. 'ACCGGG')
     :param struct: The dotplot secondary structure (i.e. '((..))')
     """
-    if len(seq)!=len(struct):
+    if seq is not None and len(seq)!=len(struct):
         raise GraphConstructionError("Sequence and structure length are not equal for id {}".format(id_str))
     bg = BulgeGraph()
     bg.from_dotbracket(struct)
-    bg.name = id_str
-    bg.seq = seq
+    if id_str is not None:
+        bg.name = id_str
+    if seq is not None:
+        bg.seq = seq
 
     return bg
 
@@ -119,7 +121,8 @@ def from_fasta_text(fasta_text):
     # compile searches for the fasta id, sequence and
     # secondary structure respectively
     id_search = re.compile('>(.+)')
-    seq_search = re.compile('^([acgutACGUT]+)$')
+    seq_search = re.compile('^([acgutACGUT&]+)$')
+    stru_search = re.compile('^([(){}<>.A-Za-z&\[\]]+)$')
 
     prev_id = None
     prev_seq = None
@@ -128,49 +131,52 @@ def from_fasta_text(fasta_text):
 
     bgs = []
 
-    for line in fasta_text.split('\n'):
+    for i, line in enumerate(fasta_text.split('\n')):
         # newlines suck
         line = line.strip()
-
+        # We allow comments
+        if line.startswith("#"):
+            continue
         # find out what this line contains
         id_match = id_search.match(line)
         seq_match = seq_search.match(line)
+        stru_match = stru_search.match(line)
 
         if id_match is not None:
             prev_id=curr_id
             # we found an id, check if there's a previous
             # sequence and structure, and create a BG
-            curr_id = id_match.group(0).strip('>')
+            curr_id = id_match.group(1)
 
             if prev_seq is None and prev_struct is None:
                 # must be the first sequence/structure
                 continue
 
-            # make sure we have
-            if prev_seq is None:
-                raise GraphConstructionError("No sequence for id: {}", prev_id)
             if prev_struct is None:
-                raise GraphConstructionError("No sequence for id: {}", prev_id)
-                #BT: This message not very helpful, if wrong character ("N"/..) in sequence
-            if prev_id is None:
-                raise GraphConstructionError("No previous id")
+                raise GraphConstructionError("No structure for id: {}", prev_id)
 
             bgs += [from_id_seq_struct(prev_id, prev_seq, prev_struct)]
 
         if seq_match is not None:
-            prev_seq = seq_match.group(0)
-            if "t" in prev_seq or "T" in prev_seq:
+            curr_seq = seq_match.group(1)
+            if "t" in curr_seq or "T" in curr_seq:
                 warnings.warn("Original sequence contained T. All occurrences of T/t were replaced by U/u respectively!")
-                prev_seq=prev_seq.replace("T", "U")
-                prev_seq=prev_seq.replace("t", "u")
+                curr_seq=curr_seq.replace("T", "U")
+                curr_seq=curr_seq.replace("t", "u")
+            if prev_seq:
+                prev_seq+=curr_seq
+            else:
+                prev_seq=curr_seq
 
         if id_match is None and seq_match is None:
-            log.debug("Treating '{}'... as structure".format(line[:20]))
-            if len(line) > 0:
-                prev_struct = line
+            if stru_match:
+                if prev_struct:
+                    prev_struct += line
+                else:
+                    prev_struct = line
+            elif line:
+                raise GraphConstructionError("Cannot parse line {}: '{}' is neither sequence, nor structure, nor name (starting with '>'), nor comment (starting with '#').".format(i, line))
 
-    if prev_seq is None:
-        raise GraphConstructionError("Error during parsing of fasta file. No sequence found for id {} and structure {}".format(prev_id, prev_struct))
     if prev_struct is None:
         raise GraphConstructionError("Error during parsing of fasta file. No structure found for id {} and sequence {}".format(prev_id, prev_seq))
 
@@ -180,22 +186,6 @@ def from_fasta_text(fasta_text):
         return bgs[0]
     else:
         return bgs
-
-
-def from_fasta(filename):
-    """
-    Load a bulge graph from a fasta file. The format of the fasta
-    file is roughly:
-
-        >1
-        AACCCAA
-        ((...))
-    """
-    with open(filename, 'r') as f:
-        text = f.read()
-        bg = BulgeGraph()
-        bg.from_fasta(text)
-        return bg
 
 
 def any_difference_of_one(stem, bulge):
@@ -1673,22 +1663,6 @@ class BulgeGraph(object):
 
         return loop_elems, loops
 
-    def from_fasta(self, fasta_str, dissolve_length_one_stems=False):
-        """
-        Create a bulge graph from a fasta-type file containing the following
-        format:
-
-            > id
-            ACCGGGG
-            ((...))
-        """
-        lines = fasta_str.split('\n')
-        self.from_dotbracket(lines[2].strip(), dissolve_length_one_stems)
-        self.name = lines[0].strip('>')
-        self.seq = lines[1].strip()
-
-        self.seq_ids_from_seq()
-
     def seq_ids_from_seq(self):
         """
         Get the sequence ids of the string.
@@ -1914,6 +1888,9 @@ class BulgeGraph(object):
 
         if dissolve_length_one_stems:
             self.dissolve_length_one_stems()
+            
+        self.seq_ids_from_seq()
+
 
     def from_tuples(self, tuples):
         """
