@@ -435,13 +435,6 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg.traverse_graph()
         self.assertEqual(cg.get_angle_type("i3"), 1)
 
-    def test_from_fasta(self):
-        cg = ftmc.CoarseGrainRNA()
-        with open('test/forgi/threedee/data/1.fa', 'r') as f:
-            text = f.read()
-        cg.from_fasta(text)
-        #TODO: assert something
-
     def test_small_molecule(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         log.info(cg.to_dotbracket_string())

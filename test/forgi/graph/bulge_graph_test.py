@@ -211,8 +211,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         fasta = """>1L2X
                    GCGCG&CGUGC
                    (((((&)))))"""
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
         bg.seq_ids = [fgb.RESID("A", (" ", 1," ")),fgb.RESID("A", (" ", 2," ")),
                       fgb.RESID("A", (" ", 3," ")),fgb.RESID("A", (" ", 4," ")),
                       fgb.RESID("A", (" ", 5," ")),
@@ -361,8 +360,7 @@ connect s0 f0 m1 m0 t0
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
 """
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
+        bg = fgb.from_fasta_text(self.fasta, dissolve_length_one_stems=True)
         stri = bg.to_bg_string()
         bg2 = fgb.BulgeGraph()
         bg2.from_bg_string(stri)
@@ -376,8 +374,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
 """
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(self.fasta, dissolve_length_one_stems=True)
+        bg = fgb.from_fasta_text(self.fasta, dissolve_length_one_stems=True)
         bg.add_info("test", "This is a test info")
         stri1 = bg.to_bg_string()
         bg2 = fgb.BulgeGraph()
@@ -385,11 +382,10 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEqual(bg2.infos["test"], ["This is a test info"])
 
     def test_from_fasta(self):
-        bg = fgb.BulgeGraph()
 
         with open('test/forgi/threedee/data/3V2F.fa', 'r') as f:
             text = f.read()
-            bg.from_fasta(text, dissolve_length_one_stems=False)
+            bg = fgb.from_fasta_text(text, dissolve_length_one_stems=False)
 
         for s in bg.stem_iterator():
             bg.stem_length(s)
@@ -582,14 +578,20 @@ atacaaaaaatttgtggagaagatacgcagtgtaagcgctggtcgtgcactgtacatccc
 tccgtatgatttgcttttgcatgagtggtatgaaaaattttaaagatatagaaatagtaa
 actgatagtttattagttttat
 """
-        seq = seq.replace('\n', '')
-
         fasta = ">hrv\n{}\n{}".format(seq, struct)
+        bg1 = fgb.from_fasta_text(fasta)
 
-        bg = fgb.from_fasta_text(fasta)
-        self.assertEqual(bg.defines['s56'], [713,717,731,735])
-        self.assertEqual(len(bg.defines), 1167)
-        self.assertEqual(bg.seq, seq.replace("t", "u"))
+        seq = seq.replace('\n', '')
+        fasta = ">hrv\n{}\n{}".format(seq, struct)
+        bg2 = fgb.from_fasta_text(fasta)
+
+        self.assertEqual(bg1.defines['s56'], [713,717,731,735])
+        self.assertEqual(len(bg1.defines), 1167)
+        self.assertEqual(bg1.seq, seq.replace("t", "u"))
+
+        self.assertEqual(bg1.defines, bg2.defines)
+        self.assertEqual(bg1.seq, bg2.seq)
+
         #print >>sys.stderr, "bg.defines:", bg.defines
 
 
@@ -894,8 +896,7 @@ AAAGGGUUUCCC
 
         bg.define_residue_num_iterator('m1', adjacent=True)
 
-        bg = fgb.BulgeGraph()
-        bg.from_dotbracket('..((..((...))..))..((..))..')
+        bg = fgb.from_fasta_text('..((..((...))..))..((..))..')
 
         self.assertEqual(list(bg.define_residue_num_iterator('f0')),
                          [1,2])
@@ -910,7 +911,7 @@ AAAGGGUUUCCC
 AAAAAAAAAA
 ((((.)).))
 """
-        bg.from_fasta(fa, dissolve_length_one_stems=True)
+        bg = fgb.from_fasta_text(fa, dissolve_length_one_stems=True)
         self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True)),
                          [2,3,7,8,9])
 
@@ -918,12 +919,11 @@ AAAAAAAAAA
                          [(' ', 2, ' '), (' ', 3, ' '), (' ', 7, ' '), (' ', 8, ' '), (' ', 9, ' ')])
 
     def test_define_range_iterator(self):
-        bg = fgb.BulgeGraph()
         fa = """>blah
 AAAAAAAAAAAAAAAAAAAAAAAAAAA
 ..((..((...))..))..((..))..
 """
-        bg.from_fasta(fa, dissolve_length_one_stems=False)
+        bg = fgb.from_fasta_text(fa, dissolve_length_one_stems=False)
         self.assertEqual(list(bg.define_range_iterator('i0')),
                          [[5,6],[14,15]])
         self.assertEqual(list(bg.define_range_iterator('i0', adjacent = True)),
@@ -940,8 +940,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         """
         Test to make sure length one stems can be dissolved.
         """
-        bg = fgb.BulgeGraph()
-        bg.from_dotbracket('((.(..((..))..).))', dissolve_length_one_stems = True)
+        bg = fgb.from_fasta_text('((.(..((..))..).))', dissolve_length_one_stems = True)
         self.assertEquals(bg.to_dotbracket_string(), '((....((..))....))')
         self.check_graph_integrity(bg)
 
@@ -1025,7 +1024,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         filename = 'test/forgi/data/2hoj.fa'
         with open(filename, 'r') as f:
             instr = f.read()
-            bg = fgb.from_fasta(filename)
+            bg = fgb.from_fasta_text(instr)
             outstr = bg.to_fasta_string()
 
             self.assertEqual(instr.strip(), outstr.strip())
@@ -1113,8 +1112,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
 GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
     def test_big_structure(self):
         bg = fgb.BulgeGraph()
@@ -1505,8 +1503,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
 #2345678
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         # needs networkx, and for what?
         #bg.to_networkx()
@@ -1517,8 +1514,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
 #2345678
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         loops,loop_nts = bg.find_multiloop_loops()
         self.assertEqual(len(loops), 2)
@@ -1563,7 +1559,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         .((.[[[[[[..{{{{{{{{{{{...(((.......)))..(((((...{{{{{{{...))))){.{{{...{{{..((((.((((((....))))))))))...)]..}}}...}}}.}.(((((((((((.(.....)...(((((.....([[[..[.[..[[[[[[[..[[[[.)......]]]]...]]]].}}}}}}}...]]]..].]..]]]...))))))))))...))))))...}}}}}}}}}}}...)]]]]](...((((....))))...).......(((.(....(((........)))...))))....(((((..(((.(..).)))...))))).(((((((((((((....)))..))))))))))....
 """
         bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         loops, loop_nts = bg.find_multiloop_loops()
         for loop, loop_nt in zip(loops, loop_nts):
@@ -1576,7 +1572,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 """
 #2345678
         bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         loops, loop_nts = bg.find_multiloop_loops()
 
@@ -1592,8 +1588,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
 ((...[[...{{...))..]]...}}
 """
 
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         sbl = bg.shortest_bg_loop('m0')
         self.assertIn(3, sbl)
@@ -1620,8 +1615,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
 ((...[[...{{...))..]]...}}
 """
 
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         loops, loop_elems = bg.find_multiloop_loops()
         for loop in loops:
@@ -1655,8 +1649,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
 #23456789012345678901234567
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         pairs = bg.remove_pseudoknots()
         self.assertTrue((9,27) in pairs)
@@ -1698,8 +1691,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
 #23456789012345678901234567
-        bg = fgb.BulgeGraph()
-        bg.from_fasta(fasta)
+        bg = fgb.from_fasta_text(fasta)
 
         self.assertEqual(list(bg.stem_bp_iterator("s1")), [(9, 27), (10, 26), (11, 25)])
 

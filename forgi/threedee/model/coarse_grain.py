@@ -376,9 +376,17 @@ def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
     cg = load_cg_from_pdb(pdb_filename, secondary_structure,
                           intermediate_file_dir, chain_id=chain_id,
                          remove_pseudoknots=remove_pseudoknots, parser=parser)
-
     return cg
 
+def from_bulge_graph(bulge_graph):
+    """
+    Create a CoarseGrainRNA from a BulgeGraph
+    """
+    bg_str = bulge_graph.to_bg_string
+    cg = CoarseGrainRNA()
+    cg.from_cg_string(bg_str)
+    return  cg
+    
 class RnaMissing3dError(LookupError):
     pass
 
@@ -1025,9 +1033,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def _init_coords(self):
         self.coords = LineSegmentStorage(self.defines.keys(), on_change = self.reset_vatom_cache)
         self.twists = CoordinateStorage([x for x in self.defines if x[0] =="s"], on_change = self.reset_vatom_cache)
-    def from_fasta(self, fasta):
-        super(CoarseGrainRNA, self).from_fasta(fasta)
-        self._init_coords()
     def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False, breakpoints = []):
         super(CoarseGrainRNA, self).from_bpseq_str(bpseq_str, dissolve_length_one_stems, breakpoints)
         self._init_coords()
