@@ -613,7 +613,6 @@ AAAGGGUUUCCC
         self.assertIn("m1", bg.edges["s1"])
         self.assertIn("m2", bg.edges["s1"])
 
-
     def test_from_bpseq_file(self):
         with open('test/forgi/data/1gid.bpseq', 'r') as f:
             lines = f.readlines()

@@ -4,7 +4,7 @@ from __future__ import division
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
-
+from past.types import basestring
 from ...graph import bulge_graph as fgb
 from ..utilities import graph_pdb as ftug
 from ..model import stats as ftms
@@ -20,10 +20,6 @@ from ...utilities.observedDict import observedDict
 from .linecloud import CoordinateStorage, LineSegmentStorage
 import Bio.PDB as bpdb
 import collections as c
-try:
-    from collections import Collection
-except ImportError: #python 2
-    from collections import Container as Collection
 import contextlib
 import numpy as np
 import scipy.spatial
@@ -239,15 +235,16 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
-    elif isinstance(chain_id, Collection):
+    elif isinstance(chain_id, basestring):
+        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+    else:
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):
             raise CgConstructionError("Bad chain-id given. "
                                       "{} not present (or not an RNA)".format( set(chain_id) -
-                                                                               set([chain.id for chain in chains])))
-    else:
-        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+                                                                                       set([chain.id for chain in chains])))
+
     new_chains = []
     for chain in chains:
         chain = ftup.clean_chain(chain)

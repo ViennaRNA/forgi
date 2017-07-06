@@ -3,6 +3,7 @@ import argparse
 import logging
 import os.path
 import contextlib
+import warnings
 
 import numpy as np
 
@@ -16,7 +17,7 @@ import forgi.threedee.model.coarse_grain as ftmc
 log = logging.getLogger(__name__)
 
 def get_parser_any_cgs(helptext, nargs = 1, rna_type = "any", enable_logging=True, parser_kwargs={}):
-    parser = argparse.ArgumentParser(helptext, **parser_kwargs)
+    parser = argparse.ArgumentParser(description=helptext, **parser_kwargs)
     if nargs==1:
         helptext = "One file containing an RNA.\n"
     elif isinstance(nargs, int) and nargs>1:
@@ -32,14 +33,18 @@ def get_parser_any_cgs(helptext, nargs = 1, rna_type = "any", enable_logging=Tru
         helptext+=("Alternatively you can supply a dotbracket-string\n "
                    "(containing only the characters '.()[]{}&') from the commandline.\n")
     parser.add_argument("rna", nargs = nargs, type=str, help=helptext)
-    parser.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure from PDB files.")
-    parser.add_argument("--chain", type=str,
+    pdb_input_group = parser.add_argument_group("Options for loading of PDB files",
+                                    description="These options only take effect, "
+                                                 "if the input RNA is in pdb file format.")
+    pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure from PDB files.")
+    pdb_input_group.add_argument("--chain", type=str,
                         help="When reading pdb-files: Only extract the given chain.")
-    parser.add_argument("--pdb-secondary-structure", type=str, default="",
+    pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
                         help="When reading a single chain from a pdb-files: \nEnforce the given secondary structure (as dotbracket string).\n (This only works, if --chain is given!)")
 
     if enable_logging:
-        logging_exceptions.update_parser(parser)
+        verbosity_group = parser.add_argument_group("Control verbosity of logging output")
+        logging_exceptions.update_parser(verbosity_group)
     return parser
 
 def sniff_filetype(file):
@@ -59,18 +64,22 @@ def sniff_filetype(file):
     elif line[0].isdigit():
         return "bpseq"
     else:
-        while True:
-            line = next(file).strip()
-            if line.startswith("#"):
-                continue
-            if line[0].isdigit():
-                try:
-                    d1, nt, d2 = line.split()
-                    if d1.isdigit() and nt in "AUGCTIaugcti" and d2.isdigit():
-                        return "bpseq"
-                except (TypeError, ValueError):
-                    pass
-                break
+        # Is it a bp-seq file with header?
+        try:
+            while True:
+                line = next(file).strip()
+                if line.startswith("#"):
+                    continue
+                if line[0].isdigit():
+                    try:
+                        d1, nt, d2 = line.split()
+                        if d1.isdigit() and nt in "AUGCTIaugcti" and d2.isdigit():
+                            return "bpseq"
+                    except (TypeError, ValueError):
+                        pass
+                    break
+        except StopIteration:
+            pass
         return "other"
 
 def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remove_pk=True, pdb_dotbracket=""):
@@ -84,6 +93,19 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
     :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.
     :param odb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
     """
+    # Is filename a dotbracket string and not a filename?
+    if all( c in ".()[]{}&" for c in filename):
+        # A dotbracket-string was provided via the commandline
+        log.info("Assuming RNA %s is a dotbracketstring and not a file.", filename)
+        bg = fgb.from_fasta_text(filename)
+        if not rna_type=="any":
+            warnings.warn("Cannot treat '{}' as dotbracket string, since we need a sequence. "
+                          "Trying to treat it as a filename instead...".format(filename))
+        else:
+            if allow_many:
+                return [bg]
+            else:
+                return bg
     with open(filename) as rnafile:
         filetype = sniff_filetype(rnafile)
     if filetype=="forgi":
@@ -100,7 +122,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
                                                  remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
                                                  secondary_structure=pdb_dotbracket)]
         else:
-            cgs = ftmc.connected_cgs_from_pdb(filename, remove_pseudoknots = not args.pseudoknots)
+            cgs = ftmc.connected_cgs_from_pdb(filename, remove_pseudoknots = pbd_remove_pk)
         if allow_many:
             return cgs
         else:
@@ -124,9 +146,9 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
         if rna_type=="cg":
             bg = ftmc.from_bulge_graph(bg)
         if allow_many:
-            return [cg]
+            return [bg]
         else:
-            return cg
+            return bg
     elif filetype =="fasta" or filetype=="other":
         if rna_type=="3d":
             raise ValueError("Fasta(like) file {} is not supported. We need 3D coordinates!".format(filename))
@@ -174,17 +196,12 @@ def parse_any_cgs(args, nargs = 1, rna_type="cg", enable_logging=True):
 
     cg_rnas = []
     for rna in args.rna:
-        if rna_type=="any" and all( c in ".()[]{}&" for c in rna):
-            # A dotbracket-string was provided via the commandline
-            log.info("Assuming RNA %s is a dotbracketstring and not a file.", rna)
-            bg = fgb.from_fasta_text(rna)
-            cg_rnas.append(bg)
-        elif isinstance(nargs, int):
+        if isinstance(nargs, int):
             cg_rnas.append(load_rna(rna, rna_type=rna_type, allow_many=False, pdb_chain=args.chain,
                                     pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure))
         else:
             cg_rnas.extend(load_rna(rna, rna_type=rna_type, allow_many=True, pdb_chain=args.chain,
-                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=pdb-secondary-structure))
+                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure))
     return cg_rnas
 
 

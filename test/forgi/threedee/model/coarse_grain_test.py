@@ -219,6 +219,10 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cgs[0].defines, cgs[2].defines)
         self.assertEqual(cgs[1].defines, cgs[3].defines)
 
+    def test_multiple_models_in_file(self):
+        cgs = ftmc.connected_cgs_from_pdb('test/forgi/threedee/data/1byj.pdb')
+        self.assertEqual(len(cgs), 1) #Only look at first model!
+
 class CoarseGrainTest(tfgb.GraphVerification):
     '''
     Simple tests for the BulgeGraph data structure.

@@ -19,11 +19,13 @@ from ..aux.k2n_standalone import knotted2nested as fak
 from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..threedee.utilities import mcannotate as ftum
-import os, warnings
+import os
+import warnings
 import operator as oper
 import numpy as np
 import functools
 import traceback
+import math
 from string import ascii_lowercase, ascii_uppercase
 VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
@@ -738,6 +740,67 @@ class BulgeGraph(object):
             return "".join(output_str).strip()+"\n"+"".join(output_nr).strip()
         else:
             return "".join(output_str).strip()
+    def to_neato_string(bg):
+        # The different nodes for different types of bulges
+        node_lines = dict()
+
+        fontsize=20
+        out = []
+        out.append("graph G {")
+        out.append("\tgraph [overlap=false,splines=true];")
+        out.append("\tnode [shape=box];")
+
+        for key2 in bg.defines.keys():
+            # Create the nodes with a different color for each type of element
+            if key2[0] == 's':
+                out.append( '\t{node [style=filled,fillcolor="#B3E2CD",fontsize=%d,label=\"%s\\n(%d)\"] %s};' % (fontsize,key2, bg.stem_length(key2), key2) )
+                continue
+            elif key2[0] == 'i':
+                out.append(  '\t{node [style=filled,shape=circle,fillcolor="#FFF2AE",fontsize=%d' % (fontsize) )
+            elif key2[0] == 'm':
+                out.append(  '\t{node [style=filled,shape=circle,fillcolor="#F4CAE4",fontsize=%d' % (fontsize) )
+            elif key2[0] == 'f':
+                out.append(  '\t{node [style=filled,shape=circle,fillcolor="#FDCDAC",fontsize=%d' % (fontsize) )
+            elif key2[0] == 't':
+                out.append(  '\t{node [style=filled,shape=circle,fillcolor="#E6F5C9",fontsize=%d' % (fontsize) )
+            else:
+                out.append(  '\t{node [style=filled,shape=circle,fillcolor="#CBD5E8",fontsize=%d' % (fontsize) )
+
+            out[-1] += ',label=\"%s \\n' % (key2)
+
+            # figure out the size of the node and use that as a lbel
+            node_dims = bg.get_node_dimensions(key2)
+            total_bulge = sum(node_dims)
+
+            if node_dims[0] == -1 or node_dims[0] == 1000:
+                node_dims = (node_dims[1])
+            elif node_dims[1] == -1 or node_dims[1] == 1000:
+                node_dims = (node_dims[0])
+
+            node_lines += str(node_dims)
+
+            # make bigger interior loops visually bigger
+            width = math.sqrt(1.5 * total_bulge / 10.0)
+            height = width
+
+            if key2[0] == 'i':
+                out[-1] += "\",width=%f,heigh=%f] %s};" % (width, height, key2)
+            else:
+                out[-1] += "\"] %s};" % (key2)
+
+        for key1 in bg.edges:
+            if key1[0] == 's':
+                for key2 in bg.edges[key1]:
+                    out.append(  "\t%s -- %s;" % (key1, key2) )
+
+        for key1 in bg.longrange.keys():
+            for key2 in bg.longrange[key1]:
+                out.append( "\t%s -- %s [style=dashed]" % (key1, key2))
+
+        out.append("}")
+        return "\n".join(out)
+
+
 
     def define_range_iterator(self, node, adjacent=False):
         """
