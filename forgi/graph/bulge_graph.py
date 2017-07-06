@@ -3678,6 +3678,15 @@ class BulgeGraph(object):
         return shortest_path
 
     def get_position_in_element(self, resnum):
+        """
+        Return the position of the residue in the cg-element and the length of the element.
+
+        :param resnum: An integer. The 1-based position in the total sequence.
+        :returns: A tuple (p,l) where p is the position of the residue in the cg-element
+                  (0-based for stems, 1-based for loops) and p/l gives a measure for the position
+                  of the residue along the cg-element's axis (0 means at cg.coords[elem][0],
+                  1 at cg.coords[elem][1] and 0.5 exactely in the middle of these two. )
+        """
         node = self.get_node_from_residue_num(resnum)
 
         if node[0] == 's':
