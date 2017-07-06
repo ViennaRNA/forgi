@@ -54,7 +54,6 @@ setup(
                'examples/cg_rog.py',
                'examples/cg_to_fornac.py',
                'examples/average_atom_positions.py',
-               'examples/dotbracket_to_element_string.py', 
                'examples/compare_projections.py',
                'examples/investigate_projection.py',
                'examples/multipleProjectionRMSD.py',
