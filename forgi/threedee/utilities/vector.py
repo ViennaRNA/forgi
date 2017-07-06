@@ -4,7 +4,6 @@ from builtins import map
 from builtins import range
 import timeit, sys
 
-import forgi.threedee.utilities.cytvec as ftuc
 import forgi.utilities.debug as fud
 import numpy as np
 import math
@@ -706,8 +705,7 @@ def seg_intersect(line1, line2) :
 
 
 def vec_distance(vec1, vec2):
-    return ftuc.vec_distance(vec1, vec2)
-    #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
+    return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
 
 @profile
 def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):

@@ -56,7 +56,6 @@ setup(
                'examples/average_atom_positions.py',
                'examples/dotbracket_to_element_string.py', 
                'examples/compare_projections.py',
-               'examples/graph_to_neato.py',
                'examples/investigate_projection.py',
                'examples/multipleProjectionRMSD.py',
                'examples/plot_projection.py'],
