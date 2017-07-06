@@ -705,7 +705,10 @@ def seg_intersect(line1, line2) :
 
 
 def vec_distance(vec1, vec2):
-    return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
+    vec1 = np.asarray(vec1)
+    vec2 = np.asarray(vec2)
+    direction = vec2-vec1
+    return math.sqrt(np.dot(direction, direction))
 
 @profile
 def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
