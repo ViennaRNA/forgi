@@ -407,6 +407,17 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEqual(bg.defines['s0'], [1, 1, 5, 5])
         self.assertEqual(bg.defines['s1'], [3, 3, 7, 7])
 
+    def test_from_fasta_text_with_whitespace(self):
+        a = (">a \n"
+             "ACGCCA \n"
+             "((..)) \n")
+
+        x = fgb.from_fasta_text(a)
+        self.assertEqual(x.seq, 'ACGCCA')
+        self.assertEqual(x.name, 'a')
+        self.assertEqual(x.to_dotbracket_string(), '((..))')
+
+
     def test_from_fasta1(self):
         a = (">a\n"
              "ACGCCA\n"
