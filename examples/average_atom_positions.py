@@ -4,6 +4,7 @@ from __future__ import print_function
 from builtins import map
 import collections as c
 import itertools as it
+import json
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.graph_pdb as ftug
@@ -34,8 +35,6 @@ def main():
     poss = c.defaultdict(list)
     sources = c.defaultdict(list)
 
-    poss = c.defaultdict(list)
-
     lines = []
 
     if args[0] == '-':
@@ -49,22 +48,15 @@ def main():
         parts = line.strip().split(':')
 
         identifier = parts[0]
-        pos = map(float,parts[1].split(','))
-        poss[identifier].extend(pos)
+        pos = list(map(float,parts[1].split(',')))
+        poss[identifier].append(pos)
 
-    print("import collections as co")
-
-    print("avg_atom_poss = dict()")
+    avg_atom_poss = {}
     for key in poss.keys():
-        pos = np.mean(poss[key], axis=0)
-        print('avg_atom_poss["%s"] = [%s] #%d' % (key, ",".join(map(str, pos)), len(poss[key])))
+        pos = list(np.mean(poss[key], axis=0))
+        avg_atom_poss[key] = pos
 
-    '''
-    print "sources = dict()"
-    for key in sources.keys():
-        print 'sources["%s"] = [%s]' % (key, ",".join(sources[key]))
-    '''
+    print(json.dumps(avg_atom_poss, sort_keys=True, indent=4))
 
 if __name__ == '__main__':
     main()
-
