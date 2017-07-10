@@ -110,9 +110,23 @@ The result is the following graph representation of the structure.
     :height: 200
     :align: center
 
+Here square nodes represent stems and round nodes represent other elements.
+The connections in this representation do not contain any nucleotides,
+but simply illustrate which coarse grained elements are connected to each other.
+
+The label of the nodes are the element names (as described above), so "s0" means stem number 0.
+The numbers in parenthesis below the element names represent the number of nucleotides in the element.
+In case of interior loops (not shown in this example), there can be two numbers, if the RNA has
+unpaired nucleotides on both sides of the bulge.
+
 Notice the similarity to the original base paired image? The top stem can be
-identified as *s0*. The two hairpin loops are *b0* and *b1*. The regions in the
+identified as *s0*. The two hairpin loops are *h0* and *h1*. The regions in the
 multiloop are given their own names.
+
+This graph visualization is useful to get an idea of the coarse grained representation
+of the RNA introduced by forgi. However, some information is lost in this picture:
+This graph only shows, which stem is connected to which bulge, but it does not show which
+side of the stem and bulge is involved in the connection.
 
 Getting a Condensed Representation of the Element Types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

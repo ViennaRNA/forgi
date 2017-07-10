@@ -741,6 +741,7 @@ class BulgeGraph(object):
         else:
             return "".join(output_str).strip()
     def to_neato_string(bg):
+
         # The different nodes for different types of bulges
         node_lines = dict()
 
@@ -773,9 +774,9 @@ class BulgeGraph(object):
             total_bulge = sum(node_dims)
 
             if node_dims[0] == -1 or node_dims[0] == 1000:
-                node_dims = (node_dims[1])
+                node_dims = "({})".format(node_dims[1])
             elif node_dims[1] == -1 or node_dims[1] == 1000:
-                node_dims = (node_dims[0])
+                node_dims = "({})".format(node_dims[0])
             log.info("Dims of node %s are %r", key2, node_dims)
             out[-1] += str(node_dims)
 
@@ -788,9 +789,11 @@ class BulgeGraph(object):
             else:
                 out[-1] += "\"] %s};" % (key2)
 
+
         for key1 in bg.edges:
             if key1[0] == 's':
                 for key2 in bg.edges[key1]:
+                    i+=1
                     out.append(  "\t%s -- %s;" % (key1, key2) )
 
         for key1 in bg.longrange.keys():
