@@ -2,13 +2,16 @@ from __future__ import print_function
 
 import logging
 import os.path
-
+import sys
 import numpy as np
 
-import forgi.utilities.commandline_utils as fuc
-import forgi.graph.bulge_graph as fgb
-
 log = logging.getLogger(__name__)
+
+log.error("CWD: %s, file: %s,\n path: %s ", os.getcwd(), __file__, sys.path)
+
+import forgi.graph.bulge_graph as fgb
+import forgi.utilities.commandline_utils as fuc
+
 
 def to_bg_or_cg_string(cg):
     if not hasattr(cg, "coords") or not cg.coords.is_filled:
