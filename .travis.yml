@@ -25,5 +25,5 @@ install:
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
 
-script: nose2 test
+script: nose2 test.forgi.test_examples
 

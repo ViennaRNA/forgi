@@ -24,6 +24,7 @@ can be used to refer to it and to determine its identity:
                      Always start with 'i' ('i0', 'i1', 'i2',...)
 * **multiloop segment:** Single-stranded unpaired regions. Always start with 'm'. ('m0', 'm1', 'm2'...)
                       In the current version of forgi, pseudo-knots and exterior loops segments between stems are treated as multiloop segments.
+* **hairpin loop:** Always start with 'h'.
 
 A Simple Example
 ----------------
