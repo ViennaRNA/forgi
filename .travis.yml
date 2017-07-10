@@ -25,5 +25,8 @@ install:
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
 
+before_script:
+  - "python setup.py install --user"
+
 script: nose2 test.forgi.test_examples
 

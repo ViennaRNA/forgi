@@ -768,7 +768,7 @@ class BulgeGraph(object):
 
             out[-1] += ',label=\"%s \\n' % (key2)
 
-            # figure out the size of the node and use that as a lbel
+            # figure out the size of the node and use that as a label
             node_dims = bg.get_node_dimensions(key2)
             total_bulge = sum(node_dims)
 
@@ -776,8 +776,8 @@ class BulgeGraph(object):
                 node_dims = (node_dims[1])
             elif node_dims[1] == -1 or node_dims[1] == 1000:
                 node_dims = (node_dims[0])
-
-            node_lines += str(node_dims)
+            log.info("Dims of node %s are %r", key2, node_dims)
+            out[-1] += str(node_dims)
 
             # make bigger interior loops visually bigger
             width = math.sqrt(1.5 * total_bulge / 10.0)

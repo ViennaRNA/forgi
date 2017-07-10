@@ -5,6 +5,8 @@ import os.path
 import sys
 import numpy as np
 
+logging.basicConfig()
+
 log = logging.getLogger(__name__)
 
 log.error("CWD: %s, file: %s,\n path: %s ", os.getcwd(), __file__, sys.path)
