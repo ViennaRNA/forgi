@@ -686,6 +686,9 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
 def stem_from_chains(cg, chains, elem_name):
     """
     This function combines get_mids and get_twists into one more efficient routine.
+
+    :param chains: A dictionary {chain_id: Biopython_PDB_chain}
+    :param elem_name: e.g. "s0"
     """
     stem_length = cg.stem_length(elem_name)
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,

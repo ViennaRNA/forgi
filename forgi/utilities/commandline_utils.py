@@ -56,6 +56,22 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
         logging_exceptions.update_parser(verbosity_group)
     return parser
 
+def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True):
+    if enable_logging:
+        logging.basicConfig()
+        logging_exceptions.config_from_args(args)
+
+    cg_rnas = []
+    for rna in args.rna:
+        if isinstance(nargs, int):
+            cg_rnas.append(load_rna(rna, rna_type=rna_type, allow_many=False, pdb_chain=args.chain,
+                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure))
+        else:
+            cg_rnas.extend(load_rna(rna, rna_type=rna_type, allow_many=True, pdb_chain=args.chain,
+                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure))
+    return cg_rnas
+
+
 def sniff_filetype(file):
     line = next(file)
     if line.startswith("ATOM") or line.startswith("HEADER"):
@@ -200,21 +216,6 @@ def open_for_out(filename=None, force=False):
         if fh is not sys.stdout:
             fh.close()
 
-
-def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True):
-    if enable_logging:
-        logging.basicConfig()
-        logging_exceptions.config_from_args(args)
-
-    cg_rnas = []
-    for rna in args.rna:
-        if isinstance(nargs, int):
-            cg_rnas.append(load_rna(rna, rna_type=rna_type, allow_many=False, pdb_chain=args.chain,
-                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure))
-        else:
-            cg_rnas.extend(load_rna(rna, rna_type=rna_type, allow_many=True, pdb_chain=args.chain,
-                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure))
-    return cg_rnas
 
 
 @contextlib.contextmanager
