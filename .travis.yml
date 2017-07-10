@@ -13,6 +13,10 @@ python:
 git:
   depth: 3
 
+before_install:
+  - "sudo apt-get -qq update"
+  - "sudo apt-get install -y graphviz"
+
 install:
   - "pip install --upgrade pip wheel" 
   - "pip install --only-binary=numpy,scipy numpy>1.10.0 scipy"
@@ -24,7 +28,6 @@ install:
   - "unzip MC-Annotate.zip"
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
-
 
 script: nose2 test.forgi.test_examples
 
