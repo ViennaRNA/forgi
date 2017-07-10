@@ -16,7 +16,8 @@ import forgi.threedee.model.coarse_grain as ftmc
 
 log = logging.getLogger(__name__)
 
-def get_parser_any_cgs(helptext, nargs = 1, rna_type = "any", enable_logging=True, parser_kwargs={}):
+
+def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=True, parser_kwargs={}):
     parser = argparse.ArgumentParser(description=helptext, **parser_kwargs)
     if nargs==1:
         helptext = "One file containing an RNA.\n"
@@ -26,9 +27,17 @@ def get_parser_any_cgs(helptext, nargs = 1, rna_type = "any", enable_logging=Tru
         helptext="One or more files containing one or more RNAs each.\n"
     else:
         raise ValueError("get_parser_any_cgsg does not support nargs={}".format(nargs) )
-    helptext+=" Supported file-formats are: \n  pdb files, forgi cg files,\n"
-    if rna_type!="3d":
-        helptext+=" forgi bg files, fasta and dotbracket files.\n "
+
+    fileformats = ["pdb files"]
+    if rna_type!="pdb":
+        fileformats.append("forgi cg files")
+        if rna_type!="3d":
+            fileformats.append("forgi bg files")
+            fileformats.append("fasta files")
+    if rna_type=="any":
+        fileformats.append("dotbracketfiles")
+    n = len(fileformats)
+    helptext+=("Supported Filetypes are:" +'{}, '*(n-2) + '{} and '*(n>1) + '{}\n').format(*fileformats)
     if rna_type=="any":
         helptext+=("Alternatively you can supply a dotbracket-string\n "
                    "(containing only the characters '.()[]{}&') from the commandline.\n")
@@ -84,10 +93,11 @@ def sniff_filetype(file):
 
 def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remove_pk=True, pdb_dotbracket=""):
     """
-    :param rna_type: One of "any", "cg" and "3d"
+    :param rna_type: One of "any", "cg" and "3d" and "pdb"
                      "any": Return either BulgeGraph or CoarseGrainRNA objekte, depending on the input format
-                     "cg": Always convert to CoarseGrainRNA objects, even if they have no 3D information
-                     "3d": Return CoarseGrainRNA objects, if the file contains 3D information, raise an error otherwise
+                     "cg":  Always convert to CoarseGrainRNA objects, even if they have no 3D information
+                     "3d":  Return CoarseGrainRNA objects, if the file contains 3D information, raise an error otherwise
+                     "pdb": only accept pdb files
     :param allow_many: If True, return a list. If False raise an error, if more than one RNA is present.
     :param pdb_chain: Extract the given chain from the file. Only applicable if filename corresponds to a pdb file
     :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.
@@ -108,6 +118,8 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
                 return bg
     with open(filename) as rnafile:
         filetype = sniff_filetype(rnafile)
+    if rna_type=="pdb" and filetype!="pdb":
+        raise ValueError("Only PDB files are accepted, but file {} has type {}.".format(filename, filetype))
     if filetype=="forgi":
         cg = ftmc.CoarseGrainRNA(filename)
         if rna_type=="3d" and np.isnan(cg.coords).any():
@@ -189,7 +201,7 @@ def open_for_out(filename=None, force=False):
             fh.close()
 
 
-def parse_any_cgs(args, nargs = 1, rna_type="cg", enable_logging=True):
+def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True):
     if enable_logging:
         logging.basicConfig()
         logging_exceptions.config_from_args(args)

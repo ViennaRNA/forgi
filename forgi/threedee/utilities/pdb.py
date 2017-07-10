@@ -24,6 +24,12 @@ ring_atoms_real = ["C4'", "C3'", "C2'", "C1'", "O4'"]
 
 nonsidechain_atoms = backbone_atoms_real + ring_atoms_real
 
+chi_torsion_atoms = dict()
+chi_torsion_atoms['A'] = ["O4'", "C1'", "N9", "C4"]
+chi_torsion_atoms['G'] = chi_torsion_atoms['A']
+chi_torsion_atoms['C'] = ["O4'", "C1'", "N1", "C2"]
+chi_torsion_atoms['U'] = chi_torsion_atoms['C']
+
 side_chain_atoms = dict()
 side_chain_atoms['U'] = ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6']
 side_chain_atoms['C'] = ['N1', 'C2', 'O2', 'N3', 'C4', 'N4', 'C5', 'C6']

@@ -39,7 +39,7 @@ FILETYPES = {
     "element_string":OutFiletype(bg_to_elem_string, lambda x: ".element_string", "any"),
 }
 
-parser = fuc.get_parser_any_cgs("Convert RNA files between different file formats.", "+")
+parser = fuc.get_rna_input_parser("Convert RNA files between different file formats.", "+")
 parser.add_argument("-T", "--target-type", default="forgi", choices=FILETYPES.keys(), type=str, help="The target file-type to convert into.")
 parser.add_argument("--to-file", action="store_true",
                     help="Store the converted RNA in files instead of printing them to stdout. "
@@ -58,7 +58,7 @@ parser.add_argument("-f", "--force", action="store_true",
 
 if __name__=="__main__":
     args = parser.parse_args()
-    cgs = fuc.parse_any_cgs(args, "+", rna_type=FILETYPES[args.target_type].rna_type)
+    cgs = fuc.cgs_from_args(args, "+", rna_type=FILETYPES[args.target_type].rna_type)
     if args.filename:
         args.to_file = True
         if os.path.isdir(args.filename):
