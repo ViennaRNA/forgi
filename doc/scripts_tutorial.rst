@@ -77,3 +77,23 @@ Run the following command, which requires neato, to generate a png image
 of the graph represenation of the RNA::
 
     rnaConvert.py 1y26.cg -T neato8 | neato -Tpng -o /tmp/test.png
+
+
+Update cg-files created with earlier versions of forgi
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you use CoarseGrainRNA files (*.cg/*.coord files) that were created before release of version 1.0,
+you might get an :code:`AssertionError` saying that the twists are inconsistent. Due to a bug in
+earlier versions of forgi, some twist vectors could sometimes deviate by a few degrees from
+being orthogonal to the stem vector. To use such broken *.cg files with newer versions of forgi,
+you can use the example script: :code:`fix_twists.py`::
+
+A list of all scripts
+=====================
+
+*  :code:`all_atom_positions.py` and :code:`average_atom_positions.py` were used to generate the file
+`forgi/threedee/data/average_atom_positions.json`, which comes with forgi.
+
+*  `burial.py`: Characterize a pdb file.
+
+* `compare_RNA.py`: Calculate RMSD and ACC between 2 3D structures.

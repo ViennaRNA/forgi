@@ -793,7 +793,6 @@ class BulgeGraph(object):
         for key1 in bg.edges:
             if key1[0] == 's':
                 for key2 in bg.edges[key1]:
-                    i+=1
                     out.append(  "\t%s -- %s;" % (key1, key2) )
 
         for key1 in bg.longrange.keys():

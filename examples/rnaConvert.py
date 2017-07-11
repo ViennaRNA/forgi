@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 
 import logging
@@ -5,11 +6,10 @@ import os.path
 import sys
 import numpy as np
 
-
-log = logging.getLogger(__name__)
-
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.commandline_utils as fuc
+
+log = logging.getLogger(__name__)
 
 
 def to_bg_or_cg_string(cg):
