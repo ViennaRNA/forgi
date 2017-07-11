@@ -24,6 +24,14 @@ except:
     def profile(f):
         return f
 
+class Incompareable(ValueError):
+    """
+    Raised if two objects are compared, which are incompareable.
+
+    E.g. Coordinate sets of different length are incompareable with respect to the RMSD.
+    """
+
+
 
 def ppv(tp, fp):
     '''
@@ -79,10 +87,10 @@ class AdjacencyCorrelation(object):
     def __init__(self, reference_cg, distance=25.0, bp_distance=16):
         self._distance=distance
         self._bp_distance=bp_distance
-        self._reference_interactions=self.get_interactions(reference_cg)
+        self._reference_interactions=self._get_interactions(reference_cg)
 
     @profile
-    def get_interactions(self, cg):
+    def _get_interactions(self, cg):
         """
         :return: A set of 2-tuples containing elements that pair.
         """
@@ -104,10 +112,12 @@ class AdjacencyCorrelation(object):
         true_negative and false_negative rate for the tertiary
         distances of the elements of cg and the reference structure stored in this class.
 
-        :param cg: The first coarse grain model
+        :param cg: The coarse grain model with which self.reference_cg should be compared.
+                   Note: The result is only meaningful, if both coarse grained models
+                   correspond to the same RNA.
         :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
         '''
-        interactions=self.get_interactions(cg)
+        interactions=self._get_interactions(cg)
         nodes=set(cg.defines.keys())
         allIA=set()
         for n1, n2 in it.combinations(nodes, r=2):
@@ -125,41 +135,13 @@ class AdjacencyCorrelation(object):
         d["tn"]=len(allIA - (self._reference_interactions | interactions) )
         return d
 
-
-# COVERAGE NOTE: Never used in forgi or ernwin.
-# This is left in the code as an example for the usage of confusiom_matrix,
-# but might be removed in the future.
-def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
-    '''
-    Calculate the MCC of the distance between two elements.
-
-    :param cg_query: The second cg structure
-    :param cg_native: The native cg structure
-    :param distance: The distance between which we consider interactions.
-    :param bp_distance: Only consider pairs of elements that are separated by
-                        MORE than this many base pairs
-    :return: The MCC for interactions within a certain distance
-    '''
-    cm = confusion_matrix(cg_query, cg_native, distance, bp_distance=16)
-    #cm['tp'] += 1
-    #cm['fp'] += 1
-    #cm['fn'] += 1
-    #cm['tn'] += 1
-    if cm['tp'] + cm['fp'] == 0:
-        return None
-    if cm['tp'] + cm['fn'] == 0:
-        return None
-
-    my_mcc = mcc(cm)
-    return my_mcc
-
-
 def optimal_superposition(crds1, crds2):
     """
     Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2
     using the Kabsch algorithm
     """
-    assert(crds1.shape == crds2.shape)
+    if crds1.shape != crds2.shape:
+        raise Incompareable("Cannot superimpose coordinate lists of different length.")
     if crds1.shape[1] == 3 or crds1.shape[1] == 2:
         correlation_matrix = np.dot(np.transpose(crds1), crds2)
         v, s, w_tr = np.linalg.svd(correlation_matrix)
@@ -182,8 +164,12 @@ def cg_rmsd(cg1, cg2):
 
     residues1 = cg1.get_ordered_virtual_residue_poss()
     residues2 = cg2.get_ordered_virtual_residue_poss()
-
-    return rmsd(residues1, residues2)
+    try:
+        return rmsd(residues1, residues2)
+    except Incompareable:
+        raise Incompareable("Cgs {} and {} cannot be compared according to the RMSD, "
+                            "because they do not have the same number of "
+                            "virtual residues.".format(cg1.name, cg2.name))
 
 def rmsd_contrib_per_element(cg1, cg2):
     residues1, elems1 = cg1.get_ordered_virtual_residue_poss(return_elements = True)
@@ -195,7 +181,7 @@ def rmsd_contrib_per_element(cg1, cg2):
     for i, elem in enumerate(elems1):
         elem_devs[elem].append(diff_vecs[i])
     return elem_devs
-    
+
 def _pointwise_deviation(crds1, crds2, is_centered=False):
     """
     Helper function for Kabsch RMSD

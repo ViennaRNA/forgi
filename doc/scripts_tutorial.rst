@@ -97,3 +97,7 @@ A list of all scripts
 *  `burial.py`: Characterize a pdb file.
 
 * `compare_RNA.py`: Calculate RMSD and ACC between 2 3D structures.
+
+* `projection_rmsd`: Calculate the 2D RMSD between two 2D projections of Coarse Grained RNA objects.
+
+* `coaxial_stacking.py`: Experimental.

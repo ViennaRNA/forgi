@@ -60,7 +60,9 @@ parser.add_argument("-f", "--force", action="store_true",
 
 if __name__=="__main__":
     args = parser.parse_args()
-    cgs = fuc.cgs_from_args(args, "+", rna_type=FILETYPES[args.target_type].rna_type)
+    with fuc.hide_traceback():
+        cgs = fuc.cgs_from_args(args, "+", rna_type=FILETYPES[args.target_type].rna_type)
+        
     if args.filename:
         args.to_file = True
         if os.path.isdir(args.filename):

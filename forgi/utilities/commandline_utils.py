@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import argparse
 import logging
@@ -16,6 +18,10 @@ import forgi.threedee.model.coarse_grain as ftmc
 
 log = logging.getLogger(__name__)
 
+class WrongFileFormat(ValueError):
+    """
+    Error raised if the input file has the wrong file format or the file format could not be detected.
+    """
 
 def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=True, parser_kwargs={}):
     parser = argparse.ArgumentParser(description=helptext, **parser_kwargs)
@@ -135,11 +141,11 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
     with open(filename) as rnafile:
         filetype = sniff_filetype(rnafile)
     if rna_type=="pdb" and filetype!="pdb":
-        raise ValueError("Only PDB files are accepted, but file {} has type {}.".format(filename, filetype))
+        raise WrongFileFormat("Only PDB files are accepted, but file {} has type {}.".format(filename, filetype))
     if filetype=="forgi":
         cg = ftmc.CoarseGrainRNA(filename)
-        if rna_type=="3d" and np.isnan(cg.coords).any():
-            raise ValueError("File {} does not contain all 3D coordinates!".format(filename))
+        if rna_type=="3d" and not cg.coords.is_filled:
+            raise WrongFileFormat("File {} does not contain all 3D coordinates!".format(filename))
         if allow_many:
             return [cg]
         else:
@@ -155,13 +161,13 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
             return cgs
         else:
             if len(cgs)>1:
-                raise ValueError("More than one connected RNA component in pdb file {}.".format(filename))
+                raise WrongFileFormat("More than one connected RNA component in pdb file {}.".format(filename))
             return cgs[0]
     elif filetype=="mmcif":
-        raise ValueError("MMCIF files are not yet supported.")
+        raise WrongFileFormat("MMCIF files are not yet supported.")
     elif filetype=="bpseq":
         if rna_type=="3d":
-            raise ValueError("bpseq file {} is not supported. We need 3D coordinates!".format(filename))
+            raise WrongFileFormat("bpseq file {} is not supported. We need 3D coordinates!".format(filename))
         bg = fgb.BulgeGraph()
         with open(filename, 'r') as f:
             text = f.read()
@@ -179,7 +185,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
             return bg
     elif filetype =="fasta" or filetype=="other":
         if rna_type=="3d":
-            raise ValueError("Fasta(like) file {} is not supported. We need 3D coordinates!".format(filename))
+            raise WrongFileFormat("Fasta(like) file {} is not supported. We need 3D coordinates!".format(filename))
         try:
             bgs = fgb.from_fasta(filename)
         except Exception as e:
@@ -196,7 +202,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
             return bgs
         else:
             if len(bgs)>1:
-                raise ValueError("More than one RNA found in fasta/ dotbracket file {}.".format(filename))
+                raise WrongFileFormat("More than one RNA found in fasta/ dotbracket file {}.".format(filename))
             return bgs[0]
 
 
@@ -216,19 +222,19 @@ def open_for_out(filename=None, force=False):
         if fh is not sys.stdout:
             fh.close()
 
-
-
 @contextlib.contextmanager
-def open_for_out(filename=None, force=False):
-    "From http://stackoverflow.com/a/17603000/5069869"
-    if filename and filename != '-':
-        if not force and os.path.isfile(filename):
-            raise IOError("Cannot create file {}. File exists.".format(filename))
-        fh = open(filename, 'w')
-    else:
-        fh = sys.stdout
+def hide_traceback(error_class=WrongFileFormat):
+    """
+    A context manager that catches errors of the specified class and outputs
+    only the error message before calling sys.exit(1).
+    """
     try:
-        yield fh
-    finally:
-        if fh is not sys.stdout:
-            fh.close()
+        yield
+    except error_class as e:
+        # Integration with logging_exceptions
+        if hasattr(e, "log"):
+            for record in exception.log:
+                logging.getLogger(record.name).handle(record)
+        print("Error of type {} occurred. Aborting.".format(type(e).__name__))
+        print(e, file=sys.stderr)
+        sys.exit(1)

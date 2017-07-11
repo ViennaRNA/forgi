@@ -25,18 +25,31 @@ def get_parser():
     return parser
 
 def main(parser):
-    cg1, cg2 = fuc.cgs_from_args(args, 2, rna_type="3d", enable_logging=True)
+    with fuc.hide_traceback():
+        cg1, cg2 = fuc.cgs_from_args(args, 2, rna_type="3d", enable_logging=True)
 
-    if not ( args.acc or args.rmsd or args.pdb_rmsd):
-        showall=True
-    if showall or args.acc:
-        adj = ftms.AdjacencyCorrelation(cg1)
-        print("ACC:\t{:.3f}".format(ftms.mcc(adj.evaluate(cg2))))
-    if showall or args.rmsd:
-        print("RMSD:\t{:.3f}".format(ftms.cg_rmsd(cg1, cg2)))
-    if showall or args.pdb_rmsd:
-        for chain in cg1.chains:
-            print("PDB-RMSD (chain {}):\t{:.3f}".format(chain, ftup.pdb_rmsd(cg1.chains[chain], cg2.chains[chain])[1]))
+        if cg1.defines != cg2.defines:
+            print("Cannot compare two 3d structures that do not correspond to the same RNA.")
+            sys.exit(1)
+        if not ( args.acc or args.rmsd or args.pdb_rmsd):
+            showall = True
+        else:
+            showall = False
+        if showall or args.acc:
+            adj = ftms.AdjacencyCorrelation(cg1)
+            print("ACC:\t{:.3f}".format(ftms.mcc(adj.evaluate(cg2))))
+        if showall or args.rmsd:
+            print("RMSD:\t{:.3f}".format(ftms.cg_rmsd(cg1, cg2)))
+        if showall or args.pdb_rmsd:
+            if cg1.chains.keys() == cg2.chains.keys() and cg1.chains!={}:
+                for chain in cg1.chains:
+                    print("PDB-RMSD (chain {}):\t{:.3f}".format(chain, ftup.pdb_rmsd(cg1.chains[chain], cg2.chains[chain])[1]))
+            else:
+                # If --pdb-rmsd was not given, just don't print it.
+                # If it was given, we exit with non-zero exit status.
+                if args.pdb_rmsd:
+                    print("Cannot calculate PDB-RMSD: The two files do not contain the same chains.")
+                    sys.exit(1)
 
 parser = get_parser()
 if __name__=="__main__":

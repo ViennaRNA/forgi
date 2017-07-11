@@ -94,3 +94,41 @@ class TestRnaConvert(unittest.TestCase):
                                 env = subprocess_env)
         svg, err = p.communicate(neato)
         self.assertIn("<title>i1</title>", svg)
+
+class TestCompareRNA(unittest.TestCase):
+    def test_compare_identity(self):
+        cg_out = sp.check_output([sys.executable, "examples/compare_RNA.py",
+                                  "test/forgi/threedee/data/1y26.pdb",
+                                  "test/forgi/threedee/data/1y26.pdb"],
+                                 universal_newlines=True, env = subprocess_env)
+        lines = cg_out.split("\n")
+        self.assertEqual(lines[0], "ACC:\t1.000")
+        self.assertEqual(lines[1], "RMSD:\t0.000")
+        self.assertEqual(lines[2], "PDB-RMSD (chain X):\t0.000")
+    def test_compare_different(self):
+        with self.assertRaises(sp.CalledProcessError):
+            sp.check_call([sys.executable, "examples/compare_RNA.py",
+                          "test/forgi/threedee/data/1y26.pdb",
+                          "test/forgi/threedee/data/1gid.cg"],
+                          universal_newlines=True, env = subprocess_env)
+
+class TestOtherScripts(unittest.TestCase):
+    def test_burial(self):
+        """Just test that burial.py does not crash."""
+        sp.check_call([sys.executable, "examples/burial.py",
+                       "test/forgi/threedee/data/1y26.pdb"],
+                      universal_newlines=True, env = subprocess_env)
+    def test_projection_rmsd(self):
+        rmsd1 = sp.check_output([sys.executable, "examples/projection_rmsd.py",
+                               "test/forgi/threedee/data/1y26.cg",
+                               "test/forgi/threedee/data/1y26.cg", "--directions",
+                               "1.0,1.0,0","1.0, 1.5, 0"],
+                               universal_newlines=True, env = subprocess_env)
+        rmsd2 = sp.check_output([sys.executable, "examples/projection_rmsd.py",
+                             "test/forgi/threedee/data/1y26.cg",
+                             "test/forgi/threedee/data/1y26.cg", "--directions",
+                             "1.0,1.0,0","1.0, 1.1, 0"],
+                             universal_newlines=True, env = subprocess_env)
+        self.assertGreater(float(rmsd1), float(rmsd2))
+        self.assertLess(float(rmsd2), 1.)
+    
