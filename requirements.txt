@@ -8,3 +8,4 @@ logging_exceptions
 beautifulsoup4
 matplotlib
 ddt
+pandas
