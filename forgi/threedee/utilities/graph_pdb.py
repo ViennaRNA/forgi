@@ -839,6 +839,29 @@ def get_twists(cg, chain, elem_name, mids=None):
     coords, twists = stem_from_chains(cg, chain, elem_name)
     return twists
 
+def total_helix_rotation(coords, twists, stem_len):
+    """
+    Calculate the total rotation of the helix in radians from the twists.
+
+    When we calculate the angle between the two twists, we only know
+    the true rotation modulo 2*pi (i.e. a rotation of 45 degrees could
+    mean 45 degrees or 405 degrees). Depending on the number of nucleotides and
+    knowledge of the ideal helix (which turns roughly 30 degrees per base-pair),
+    this function outputs the correct result.
+    """
+    stem_vec = coords[1] - coords[0]
+
+    # the angle of the second twist with respect to the first
+    stem_basis = cuv.create_orthonormal_basis(stem_vec, twists[0])
+    t2 = cuv.change_basis(twists[1], stem_basis, cuv.standard_basis)
+    twist_angle = ftum.atan3(t2[2], t2[1])
+
+    # calculated from an ideal length 30 helix
+    average_ang_per_nt = 0.636738030735
+    expected_total_ang = (stem_len - 1) * average_ang_per_nt
+    expected_twist_ang = expected_total_ang % (2*math.pi)
+
+
 def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     '''
     Calculate the virtual position of the i'th nucleotide in the stem.
@@ -875,7 +898,7 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     expected_dev = expected_ang
     while (expected_dev - (2 * m.pi) > 0):
         expected_dev -= 2 * m.pi
-
+    #expected_dev uis now between 0 and 360 degrees
     if ang < expected_dev:
         forward = 2 * m.pi + ang - expected_dev
         backward = expected_dev - ang
