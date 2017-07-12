@@ -49,7 +49,6 @@ setup(
       package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json']},
       scripts=['examples/visualize_cg.py', 
                'examples/visualize_pdb.py', 
-               'examples/pdb_rmsd.py',
                'examples/cg_to_fornac.py',
                'examples/average_atom_positions.py',
                'examples/compare_projections.py',
