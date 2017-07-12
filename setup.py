@@ -50,8 +50,6 @@ setup(
       scripts=['examples/visualize_cg.py', 
                'examples/visualize_pdb.py', 
                'examples/pdb_rmsd.py',
-               'examples/cg_rmsd.py',
-               'examples/cg_rog.py',
                'examples/cg_to_fornac.py',
                'examples/average_atom_positions.py',
                'examples/compare_projections.py',
