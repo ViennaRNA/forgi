@@ -38,8 +38,18 @@ if __name__=="__main__":
             data["num_"+letter].append(len([x for x in cg.defines if x[0] ==letter]))
         multiloops = cg.find_mlonly_multiloops()
         descriptors = []
+        junct3 = 0
+        junct4 = 0
         for ml in multiloops:
             descriptors.append(cg.describe_multiloop(ml))
+            if "regular_multiloop" in descriptors[-1]:
+                if len(ml)==3:
+                    junct3+=1
+                elif len(ml)==4:
+                    junct4+=1
+        data["3-way-junctions"].append(junct3)
+        data["4-way-junctions"].append(junct4)
+
         #print (descriptors)
         data["open_mls"].append(len([d for d in descriptors if "open" in d]))
         #print(data["open_mls"][-1])
@@ -52,7 +62,7 @@ if __name__=="__main__":
             data["longest_ml"].append(0)
         try:
             data["rog_fast"].append(cg.radius_of_gyration("fast"))
-        except:
+        except (ftmc.RnaMissing3dError, AttributeError):
             data["rog_fast"].append(float("nan"))
             data["rog_vres"].append(float("nan"))
             data["anisotropy_fast"].append(float("nan"))
@@ -74,4 +84,7 @@ if __name__=="__main__":
     if args.csv:
         df.to_csv(args.csv, mode='a')
     else:
+        pd.set_option('max_columns', 99)
+        pd.set_option('max_rows', 200)
+
         print(df)

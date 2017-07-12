@@ -8,11 +8,13 @@ import tempfile
 import os
 import shutil
 import glob
+import math
 try:
     import io
 except ImportError:
     import StringIO as io
 
+import pandas as pd
 
 FORGI_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 assert FORGI_DIR.endswith("forgi")
@@ -118,6 +120,7 @@ class TestOtherScripts(unittest.TestCase):
         sp.check_call([sys.executable, "examples/burial.py",
                        "test/forgi/threedee/data/1y26.pdb"],
                       universal_newlines=True, env = subprocess_env)
+
     def test_projection_rmsd(self):
         rmsd1 = sp.check_output([sys.executable, "examples/projection_rmsd.py",
                                "test/forgi/threedee/data/1y26.cg",
@@ -131,4 +134,28 @@ class TestOtherScripts(unittest.TestCase):
                              universal_newlines=True, env = subprocess_env)
         self.assertGreater(float(rmsd1), float(rmsd2))
         self.assertLess(float(rmsd2), 1.)
-    
+
+    def test_describe_cg(self):
+        df_out = sp.check_output([sys.executable, "examples/describe_cg.py",
+                               "test/forgi/threedee/data/1y26.cg",
+                               "test/forgi/data/2hoj.fa"],
+                               universal_newlines=True, env = subprocess_env)
+        self.assertIn("num_f", df_out)
+        self.assertNotIn("...", df_out) #pandas should not truncate the tabel
+
+    def test_describe_cg_to_file(self):
+        out_dir = tempfile.mkdtemp()
+        filename = os.path.join(out_dir, "test.csv")
+        sp.check_call([sys.executable, "examples/describe_cg.py",
+                                   "test/forgi/threedee/data/1y26.cg",
+                                   "test/forgi/data/2hoj.fa",
+                                    "--csv", filename],
+                                   universal_newlines=True, env = subprocess_env)
+        df = pd.read_csv(filename)
+        jun3, = df[df["name"]=="1Y26"]["3-way-junctions"]
+        self.assertEqual(jun3, 1)
+        rog, = df[df["name"]=="2HOJ"]["rog_vres"]
+        assert math.isnan(rog)
+        rog, = df[df["name"]=="1Y26"]["rog_vres"]
+        self.assertGreater(rog, 15.)
+        shutil.rmtree(out_dir)
