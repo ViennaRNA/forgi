@@ -16,6 +16,8 @@ except ImportError:
 
 import pandas as pd
 
+import forgi.threedee.model.coarse_grain as ftmc
+
 FORGI_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 assert FORGI_DIR.endswith("forgi")
 
@@ -159,3 +161,19 @@ class TestOtherScripts(unittest.TestCase):
         rog, = df[df["name"]=="1Y26"]["rog_vres"]
         self.assertGreater(rog, 15.)
         shutil.rmtree(out_dir)
+
+    def test_fix_twists(self):
+        cg1 = ftmc.CoarseGrainRNA("test/forgi/threedee/data/unfixed_twists.cg")
+        try:
+            cg1.add_all_virtual_residues()
+        except AssertionError:
+            pass
+        else:
+            raise ValueError("This Test assumes that the input file has wrong twists which "
+                             "will cause ftuv to raise an assertion error.")
+        fixed_cg_str = sp.check_output([sys.executable, "examples/fix_twists.py",
+                                   "test/forgi/threedee/data/unfixed_twists.cg"],
+                                   universal_newlines=True, env = subprocess_env)
+        cg2 = ftmc.CoarseGrainRNA()
+        cg2.from_cg_string(fixed_cg_str)
+        cg2.add_all_virtual_residues() #Raises AssertionError, if twists were not fixed

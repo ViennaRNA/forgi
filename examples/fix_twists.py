@@ -21,26 +21,24 @@ parser.add_argument('rna', help="The *.cg/*.coord file holding the coarse graine
 
 def main(args):
     cg = ftmc.CoarseGrainRNA(args.rna)
-    for stem in cg.stem_iterator():            
+    for stem in cg.stem_iterator():
         stem_vec = cg.coords.get_direction(stem)
         twist_vec = cg.twists[stem][0]
         try:
             ftuv.create_orthonormal_basis(stem_vec, twist_vec)
-        except ValueError:
+        except AssertionError:
             cg.twists[stem] = ftuv.vector_rejection(twist_vec, stem_vec), cg.twists[stem][1]
         twist_vec = cg.twists[stem][1]
         try:
             ftuv.create_orthonormal_basis(stem_vec, twist_vec)
-        except ValueError:
+        except AssertionError:
             cg.twists[stem] = cg.twists[stem][0], ftuv.vector_rejection(twist_vec, stem_vec)
     try:
         cg.add_all_virtual_residues()
     except:
         assert False
     print(cg.to_cg_string())
-    
-if __name__ == '__main__':    
+
+if __name__ == '__main__':
     args=parser.parse_args()
     main(args)
-
-
