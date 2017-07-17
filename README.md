@@ -1,6 +1,6 @@
 #### forgi Library for RNA Secondary Structure Analysis ####
 
-[![Build Status](https://travis-ci.org/ViennaRNA/forgi.svg?branch=develop)](https://travis-ci.org/ViennaRNA/forgi)
+[![Build Status](https://travis-ci.org/ViennaRNA/forgi.svg?branch=master)](https://travis-ci.org/ViennaRNA/forgi)
 
 Full documentation: [https://viennarna.github.io/forgi/](https://viennarna.github.io/forgi/)
 
