@@ -499,6 +499,8 @@ def get_virtual_stat(cg, ml1, ml2):
     return ftms.AngleStat("virtual", cg.name, dims, 1000, u, v, t, r1,
                                         u1, v1, 0, [], "")
 
+
+
 def _virtual_stem_from_bulge(prev_stem_basis,  stat):
     transposed_stem1_basis = prev_stem_basis.transpose()
     start_location = stem2_pos_from_stem1_1(transposed_stem1_basis, stat.position_params())

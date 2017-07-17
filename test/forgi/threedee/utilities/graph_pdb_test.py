@@ -493,7 +493,36 @@ class TestVirtualStats(unittest.TestCase):
 
         ax.legend()
         plt.show()
+    def test_identity_stat(self):
+        for ml1 in ["m0", "m1", "m2"]:
+            cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+            ml2 = cg.get_next_ml_segment(ml1)
+            ml3 = cg.get_next_ml_segment(ml2)
 
+            # Get the stat according to the angle type
+            at1 = cg.get_angle_type(ml1, allow_broken=True)
+            at2 = cg.get_angle_type(ml2, allow_broken=True)
+            at3 = cg.get_angle_type(ml3, allow_broken=True)
+            log.warning("ML1 %s ML2 %s M:L3 %s", list(map(str,cg.get_stats(ml1))),
+                        list(map(str,cg.get_stats(ml2))), list(map(str,cg.get_stats(ml3))))
+            log.warning("at1 %s, at2 %s, at3 %s", at1, at2, at3)
+            stat1, = [ stat for stat in cg.get_stats(ml1) if stat.ang_type == at1]
+            stat2, = [ stat for stat in cg.get_stats(ml2) if stat.ang_type == at2 ]
+            stat3, = [ stat for stat in cg.get_stats(ml3) if stat.ang_type == at3 ]
+
+            # Special case for angle type 4: a positive sign means it points
+            # in the direction OPPOSITE to get_next_ml_segment
+            if at1==4 or (at1<0 and at1!=-4):
+                stat1 = ftug.invert_angle_stat(stat1)
+            if at2==4 or (at2<0 and at2!=-4):
+                stat2 = ftug.invert_angle_stat(stat2)
+            if at3==4 or (at3<0 and at3!=-4):
+                stat3 = ftug.invert_angle_stat(stat1)
+
+            final_stat = ftug.sum_of_stats(stat1, stat2)
+            final_stat = ftug.sum_of_stats(final_stat, stat3)
+            log.error("u %s v %s t %s r1 %s", final_stat.u, final_stat.v, final_stat.t, final_stat.r1)
+            assert False
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
