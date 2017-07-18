@@ -503,7 +503,7 @@ class TestVirtualStats(unittest.TestCase):
             at1 = cg.get_angle_type(ml1, allow_broken=True)
             at2 = cg.get_angle_type(ml2, allow_broken=True)
             at3 = cg.get_angle_type(ml3, allow_broken=True)
-            log.warning("ML1 %s ML2 %s M:L3 %s", list(map(str,cg.get_stats(ml1))),
+            log.warning("ML1 %s ML2 %s ML3 %s", list(map(str,cg.get_stats(ml1))),
                         list(map(str,cg.get_stats(ml2))), list(map(str,cg.get_stats(ml3))))
             log.warning("at1 %s, at2 %s, at3 %s", at1, at2, at3)
             stat1, = [ stat for stat in cg.get_stats(ml1) if stat.ang_type == at1]
@@ -517,12 +517,15 @@ class TestVirtualStats(unittest.TestCase):
             if at2==4 or (at2<0 and at2!=-4):
                 stat2 = ftug.invert_angle_stat(stat2)
             if at3==4 or (at3<0 and at3!=-4):
-                stat3 = ftug.invert_angle_stat(stat1)
+                stat3 = ftug.invert_angle_stat(stat3)
 
             final_stat = ftug.sum_of_stats(stat1, stat2)
             final_stat = ftug.sum_of_stats(final_stat, stat3)
-            log.error("u %s v %s t %s r1 %s", final_stat.u, final_stat.v, final_stat.t, final_stat.r1)
-            assert False
+            self.assertAlmostEqual(abs(final_stat.u),math.pi/2.)
+            self.assertAlmostEqual(abs(final_stat.v),math.pi)
+            self.assertAlmostEqual(abs(final_stat.t),math.pi)
+            self.assertLess(final_stat.r1, 10**-10)
+
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
