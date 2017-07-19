@@ -1291,32 +1291,21 @@ class BulgeGraph(object):
         that they now include the nucleotides that were formerly
         in this stem.
         """
-        st = list(self.stem_bp_iterator(key))
+        conn = self.connections[key]
+        if conn[0].startswith("i"):
+            if conn[1].startswith("h"):
+                old_def = self.define_a(conn[0])
+                del self.defines[conn[1]]
+                del self.edges[conn[1]]
+                del self.defines[key]
+                del self.edges[key]
+                self.relabel_node(conn[0], conn[1])
+                self.define[conn[1]] = [old_def[0]+1, old_def[1]-1]
+                self.edges[conn[1]] = [ e for e in self.edges[conn[1]] if e!=key]
+            elif conn[1].startswith("i"):
+                """TODO"""
+        raise NotImplementedError("TODO")
 
-        self.remove_base_pairs(st)
-
-    def remove_base_pairs(self, to_remove):
-        """
-        Remove all of the base pairs which are in pair_list.
-
-        :param to_remove: A list of tuples containing the names of the base pairs.
-        :return: nothing
-        """
-        pt = self.to_pair_tuples()
-
-        nt = []
-        for p in pt:
-            to_add = p
-            for s in to_remove:
-                if sorted(p) == sorted(s):
-                    to_add = (p[0], 0)
-                    break
-            nt += [to_add]
-
-        self.defines = dict()
-        # self.edges = dict()
-
-        self.from_tuples(nt)
 
     def _collapse(self):
         """
@@ -1775,6 +1764,8 @@ class BulgeGraph(object):
                        of the bulge regions.
         :return: Nothing, just make the bulgegraph
         """
+        self.defines = []
+        self.edges = []
         for i in range(len(stems)):
             # one is added to each coordinate to make up for the fact that residues are 1-based
             ss1 = stems[i][0][0] + 1
@@ -2287,9 +2278,11 @@ class BulgeGraph(object):
         We have constructed the bulge graph, as if they were connected along the backbone, so
         now we have to split it.
         """
-        log.info("_split_at_cofold_cutpoint: breakpoints are {}".format(self._backbone_will_break_after))
-        if self._backbone_will_break_after:
-            self.print_debug(logging.DEBUG)
+        log.info("_split_at_cofold_cutpoint: future breakpoints are {}".format(self._backbone_will_break_after))
+        if not self._backbone_will_break_after:
+            self._backbone_will_break_after = self.backbone_breaks_after
+
+        self.backbone_breaks_after = []
 
         for splitpoint in self._backbone_will_break_after:
             element_left = self.get_node_from_residue_num(splitpoint)
@@ -2334,6 +2327,7 @@ class BulgeGraph(object):
         log.log(level, es[0])
         log.log(level, es[1])
         log.log(level, "DEFINES: %s", self.defines)
+        log.log(level, "EDGES: %s", self.edges)
 
     def to_fasta_string(self):
         """

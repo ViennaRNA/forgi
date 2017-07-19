@@ -155,7 +155,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
                 print (cg.seq_ids[r - 1])
 
     def verify_multiple_chains(self, cg, single_chain_cgs):
-        print(cg.backbone_breaks_after)
+        log.warning("Backbone in %s breaks after %s", cg.name, cg.backbone_breaks_after)
         self.assertEqual(len(cg.backbone_breaks_after), len(single_chain_cgs)-1)
 
         self.assertEqual(cg.seq_length, sum(x.seq_length for x in single_chain_cgs))
@@ -184,7 +184,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cgB = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='B')
         cgC = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='C')
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb',  chain_id='all')
-        log.warning("cg now has {} cutpoints".format(cg.seq.count('&')))
+        log.warning("cg now has %s cutpoints: %s",cg.seq.count('&'),cg.backbone_breaks_after )
         self.verify_multiple_chains(cg, [cgA, cgB, cgC])
 
     def test_multiple_chain_to_cg(self):
@@ -200,6 +200,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='all')
+        cg.print_debug(logging.WARNING)
         cg_str = cg.to_cg_string()
         cg2 = ftmc.CoarseGrainRNA()
         cg2.from_cg_string(cg_str)

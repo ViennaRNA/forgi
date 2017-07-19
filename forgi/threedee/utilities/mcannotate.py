@@ -5,8 +5,13 @@ from builtins import range
 import sys
 import copy
 import re
-import forgi.utilities.debug as fud
 import logging
+from collections import defaultdict
+
+
+import forgi.utilities.debug as fud
+
+
 log = logging.getLogger(__name__)
 
 def parse_resid(mcann_resid):
@@ -25,7 +30,7 @@ def format_resid(pdb_resid):
     Convert a PDB.Chain.Residue id to an MC-Annotate formatted
     residue identifier.
     '''
-    
+
     if pdb_resid[2] == ' ':
         return str(pdb_resid[1])
     else:
@@ -67,8 +72,8 @@ def parse_base_pair_id(base_pair_id):
     @param base_pair_id: The identifier string for the interacting nucleotides (i.e. 'A33-B45')
     @return: 4-tuple containing of the form (chain1, res1, chain2, res2) i.e. ('A', 33, 'B', '45')
     """
-    
-        
+
+
     parts = re.findall(r"((?:'\d+'|\w)[-0-9]\d*|(?:'\d+'|\w)\d+)", base_pair_id)
     if len(parts) != 2:
         raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
@@ -122,7 +127,7 @@ def iterate_over_interactions(mcannotate_lines):
     for line in mcannotate_lines:
         if line.find("Base-pairs ---") == 0:
             base_pair_line = True
-            continue 
+            continue
         if line.find("Residue conformations") == 0:
             base_pair_line = False
             continue
@@ -137,30 +142,12 @@ def iterate_over_interactions(mcannotate_lines):
 
             yield line.strip()
 
-# From:
-# http://code.activestate.com/recipes/389639/
-class DefaultDict(dict):
-    """Dictionary with a default value for unknown keys."""
-    def __init__(self, default):
-        self.default = default
-
-    def __getitem__(self, key):
-        if key in self: 
-            return self.get(key)
-        else:
-            ## Need copy in case self.default is something like []
-            return self.setdefault(key, copy.deepcopy(self.default))
-
-    def __copy__(self):
-        copy = DefaultDict(self.default)
-        copy.update(self)
-        return copy
 
 def get_dotplot(lines):
     """docstring for get_dotplot"""
     residues = []
     residue_types = []
-    bps = DefaultDict(-1)
+    bps = defaultdict(lambda:-1)
     output_str = ""
 
     for line in iterate_over_residue_list(lines):

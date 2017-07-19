@@ -136,7 +136,28 @@ def breakpoints_from_residuemap(residue_map):
         old_chain = from_chain
     return breakpoints
 
-def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
+def _are_adjacent_basepairs(cg, edge1, edge2):
+    """
+    Helper function used by connected_cgs_from_pdb.
+
+    :param cg: A (potentially) inconsistent cg. Only seq_ids are needed.
+    :param edge1, edge2: A dictionary with the key "basepair" mapping to a two-tuple of RESIDS
+    """
+    fromA, toA = edge1["basepair"]
+    fromB, toB = edge2["basepair"]
+    if fromA.chain != fromB.chain:
+        if fromA.chain==toB.chain:
+            fromB, toB = toB, fromB
+            assert toA==toB
+        else:
+            assert False
+    if (abs(cg.seq_ids.index(fromA)-cg.seq_ids.index(fromB))==1 and
+        abs(cg.seq_ids.index(toA)-cg.seq_ids.index(toB))==1):
+        return True
+    return False
+
+
+def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_length_one_stems = True):
     with fus.make_temp_directory() as output_dir:
         chains = ftup.get_all_chains(pdb_filename)
         new_chains = []
@@ -186,7 +207,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
 
 
         import networkx as nx
-        chain_connections = nx.Graph()
+        chain_connections = nx.MultiGraph()
         cg = CoarseGrainRNA()
         cg.seqids_from_residue_map(residue_map)
 
@@ -196,10 +217,24 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             except:
                 continue
             if int(to_) != 0:
-                from_chain = cg.seq_ids[int(from_)-1].chain
-                to_chain   = cg.seq_ids[int(to_)-1].chain
+                from_seqid = cg.seq_ids[int(from_)-1]
+                to_seqid = cg.seq_ids[int(to_)-1]
+                from_chain = from_seqid.chain
+                to_chain   = to_seqid.chain
                 log.debug("Adding {} - {}".format(from_chain, to_chain))
-                chain_connections.add_edge(from_chain, to_chain)
+                chain_connections.add_edge(from_chain, to_chain, basepair=(from_seqid, to_seqid))
+        if dissolve_length_one_stems:
+            for chain1, chain2 in it.combinations(chain_connections.nodes(), 2):
+                if chain2 in chain_connections.edge[chain1]:
+                    for edge1, edge2 in it.combinations(chain_connections.edge[chain1][chain2].values(), 2):
+                        if _are_adjacent_basepairs(cg, edge1, edge2):
+                            break
+                    else: #break NOT encountered.
+                        chain_connections.remove_edge(chain1, chain2) #Removes ALL edges in MultiGraph
+
+        # Now remove multiple edges. We don't care what nx does with the edge attributes.
+        chain_connections = nx.Graph(chain_connections)
+
         log.debug("CONNECTIONS: {}, nodes {}".format(chain_connections, chain_connections.nodes()))
         log.debug("Edges {}".format(chain_connections.edges()))
         cgs = []
@@ -208,10 +243,14 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
         cgs.sort(key=lambda x: x.name)
+        if dissolve_length_one_stems:
+            for cg in cgs:
+                cg.dissolve_length_one_stems()
         return cgs
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
-                            chain_id=None, remove_pseudoknots=True, parser=None):
+                            chain_id=None, remove_pseudoknots=True, parser=None,
+                            dissolve_length_one_stems=True):
     '''
     Create the coarse grain model from a pdb file and store all
     of the intermediate files in the given directory.
@@ -282,8 +321,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     try:
         (dotplot, residue_map) = ftum.get_dotplot(lines)
     except Exception as e:
-        print (e, file=sys.stderr)
-        return cg
+        log.exception("Could not convert MC-Annotate output to dotplot")
+        raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
 
     # f2 will store the dotbracket notation
     #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
@@ -295,12 +334,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         warnings.warn("Not adding any longrange interactions because secondary structure is given.")
         if remove_pseudoknots:
             warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
-        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
+        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=dissolve_length_one_stems)
         breakpoints = breakpoints_from_residuemap(residue_map)
         cg.seqids_from_residue_map(residue_map)
 
     else:
         if remove_pseudoknots:
+            log.info("Removing pseudoknots")
             out = cak.k2n_main(io.StringIO(dotplot), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
@@ -313,8 +353,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         else:
             out = dotplot
         breakpoints = breakpoints_from_residuemap(residue_map)
-        log.debug("Breakpoints are {}".format(breakpoints))
-        cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints
+        log.info("Breakpoints in %s are %s",pdb_base, breakpoints)
+        cg.from_bpseq_str(out, breakpoints = breakpoints, dissolve_length_one_stems=dissolve_length_one_stems) #Sets the seq without cutpoints
         cg.seqids_from_residue_map(residue_map)
         add_longrange_interactions(cg, lines)
 
@@ -447,7 +487,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             self.from_file(cg_file)
             if not self.defines:
                 raise CgConstructionError("Empty CoarseGrainRNA created. Was '{}' in *.cg/ *.coord file format?".format(cg_file))
-
 
     def get_coord_str(self):
         '''
