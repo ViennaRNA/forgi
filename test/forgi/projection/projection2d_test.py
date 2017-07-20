@@ -143,7 +143,7 @@ class Projection2DBasicTest(unittest.TestCase):
         self.assertAlmostEqual(proj.longest_axis, 0)
 class Projection2DTestWithData(unittest.TestCase):
     def setUp(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb', dissolve_length_one_stems=False)
         self.proj=fpp.Projection2D(cg, [1.,1.,1.])
         self.proj2=fpp.Projection2D(cg, [0.,0.,1.])
     def test_get_bounding_square(self):
