@@ -384,7 +384,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='',
                      intermediate_file_dir=None, chain_id=None,
-                    remove_pseudoknots=True, parser=None):
+                    remove_pseudoknots=True, parser=None,
+                    dissolve_length_one_stems=True):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -399,20 +400,23 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
 
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
                                      secondary_structure, chain_id=chain_id,
-                                    remove_pseudoknots=remove_pseudoknots, parser=parser)
+                                    remove_pseudoknots=remove_pseudoknots, parser=parser,
+                                    dissolve_length_one_stems=dissolve_length_one_stems)
     else:
         with fus.make_temp_directory() as output_dir:
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
                                          secondary_structure, chain_id = chain_id,
-                                        remove_pseudoknots=remove_pseudoknots, parser=parser)
+                                        remove_pseudoknots=remove_pseudoknots, parser=parser,
+                                        dissolve_length_one_stems=dissolve_length_one_stems)
 
     return cg
 
 def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
-             chain_id=None, remove_pseudoknots=True, parser=None):
+             chain_id=None, remove_pseudoknots=True, parser=None, dissolve_length_one_stems=True):
     cg = load_cg_from_pdb(pdb_filename, secondary_structure,
                           intermediate_file_dir, chain_id=chain_id,
-                         remove_pseudoknots=remove_pseudoknots, parser=parser)
+                         remove_pseudoknots=remove_pseudoknots, parser=parser,
+                         dissolve_length_one_stems=dissolve_length_one_stems)
     return cg
 
 def from_bulge_graph(bulge_graph):

@@ -98,7 +98,7 @@ class TestGraphPDB(unittest.TestCase):
         nptest.assert_array_equal(basis, ftuv.create_orthonormal_basis(cg.coords["s0"][1]-cg.coords["s0"][0], cg.twists["s0"][0]))
 
     def test_angle_between_twists(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb', dissolve_length_one_stems=False)
 
         self.verify_virtual_twist_angles(cg, 's0')
         self.verify_virtual_twist_angles(cg, 's1')

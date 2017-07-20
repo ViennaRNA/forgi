@@ -185,7 +185,7 @@ class Projection2DTestWithData(unittest.TestCase):
 
 class Projection2DTestOnCondensedProjection(unittest.TestCase):
     def setUp(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')
+        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb', dissolve_length_one_stems=False)
         self.proj=fpp.Projection2D(cg, [1.,1.,1.])
         self.proj.condense_points(1)
     @unittest.skip("This is a Manual Test")
