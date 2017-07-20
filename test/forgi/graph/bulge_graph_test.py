@@ -223,6 +223,28 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         self.assertEqual(bg.seq_id_to_pos(fgb.RESID("B", (" ", 1," "))), 6)
         self.assertEqual(bg.seq[bg.seq_id_to_pos(fgb.RESID("B", (" ", 3," ")))], "U")
 
+    def test_dissolve_length_one_stem_cofold(self):
+        db = "(((.(&...).)))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db, dissolve_length_one_stems=True)
+        self.assertEqual(len(bg.defines), 4)
+        self.assertIn("s0", bg.defines)
+        self.assertIn("t0", bg.defines)
+        self.assertIn("f0", bg.defines)
+        self.assertIn("t1", bg.defines)
+    def test_dissolve_length_one_stem_cofold_2(self):
+        db = "(((.(...).(.&..).)))..."
+        bg = fgb.BulgeGraph()
+        bg.from_dotbracket(db, dissolve_length_one_stems=True)
+        self.assertEqual(len(bg.defines), 4)
+        self.assertIn("s0", bg.defines)
+        self.assertIn("t0", bg.defines)
+        self.assertIn("f0", bg.defines)
+        self.assertIn("t1", bg.defines)
+        self.assertEqual(bg.edges["s0"], {"f0", "t0", "t1"})
+        self.assertEqual(bg.edges["f0"], {"s0"})
+
+
 
 class BulgeGraphZeroLengthTest(GraphVerification):
     def test__zero_length_element_adj_position_single_ml(self):

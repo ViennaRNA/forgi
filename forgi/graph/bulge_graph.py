@@ -1333,76 +1333,32 @@ class BulgeGraph(object):
         that they now include the nucleotides that were formerly
         in this stem.
         """
-        conn = self.connections[key]
-        if conn[0].startswith("i"):
-            # Remove the interior loop on the 5' side of the stem.
-            old_def = self.define_a(conn[0])
-            left_stem, key2 = self.connections[conn[0]]
-            assert key2 == key
-            self._remove_node(conn[0])
-            self._remove_node(key)
-            if len(conn[1:])<=1:
-                # len(conn[1:])==0 means
-                #           ((..(&)..))
-                #           First create a hairpin. Split it later.
-                # len(conn[1:])==1 can mean
-                #           ((..(..&)..)) or ((..(...)...))
-                # It does not matter. We replace everything by a hairpin, which we later split.
-                new_h = self._next_available_element_name("h")
-                self.defines[new_h] = [ old_def[0]+1, old_def[:-1]-1 ]
-                self.add_edge(new_h, left_stem)
-                for right_elem in conn[1:]:
-                    self._remove_node(right_elem)
-            elif len(conn[1:])==2:
-                # Two ML-segments
-                # ((..(.....(((...)))..(((...)))....)..))
-                self.add_edge(conn[1], left_stem)
-                self.add_edge(conn[2], left_stem)
-                self.define[conn[1]] = [ old_def[0]+1, self.define[conn[1]][1]]
-                self.define[conn[2]] = [ self.define[conn[1]][2], self.old_def[-1]-1 ]
-            else:
-                assert False
-            self._split_at_cofold_cutpoint()
-            return
-        elif conn[0][0] in "mf":
-            # Sort the connected single stranded elements by stem side
-            # 0 is the side of the 3' and 5' end,
-            # 1 is the side enclosed by the stem
-            conn_side1 = []
-            conn_side0 = []
-            for c in conn[1:]:
-                if self.get_sides(key, c)[1]==1:
-                    conn_side1.append(c)
-                else:
-                    conn_side0.append(c)
-            if conn_side0:
-                assert len(conn_side0)==1
-                assert conn_side0[0][0] in "tm"
+        st = list(self.stem_bp_iterator(key))
 
+        self.remove_base_pairs(st)
 
+    def remove_base_pairs(self, to_remove):
+        """
+        Remove all of the base pairs which are in pair_list.
 
+        :param to_remove: A list of tuples containing the names of the base pairs.
+        :return: nothing
+        """
+        pt = self.to_pair_tuples()
 
-            for right_elem in conn[1:]:
-                self.edges[left_stem].add(right_elem)
-                self.edges[right_elem].remove(key)
-                self.edges[right_elem].add(left_stem)
+        nt = []
+        for p in pt:
+            to_add = p
+            for s in to_remove:
+                if sorted(p) == sorted(s):
+                    to_add = (p[0], 0)
+                    break
+            nt += [to_add]
 
+        self.defines = dict()
+        # self.edges = dict()
 
-
-
-
-            if conn[1].startswith("h"):
-                del self.defines[conn[1]]
-                del self.edges[conn[1]]
-                del self.defines[key]
-                del self.edges[key]
-                self.relabel_node(conn[0], conn[1])
-                self.define[conn[1]] = [old_def[0]+1, old_def[1]-1]
-                self.edges[conn[1]] = [ e for e in self.edges[conn[1]] if e!=key]
-            elif conn[1].startswith("i"):
-                """TODO"""
-        raise NotImplementedError("TODO")
-
+        self.from_tuples(nt)
 
     def _collapse(self):
         """
@@ -2386,11 +2342,6 @@ class BulgeGraph(object):
         for splitpoint in self._backbone_will_break_after:
             element_left = self.get_node_from_residue_num(splitpoint)
             element_right = self.get_node_from_residue_num(splitpoint+1)
-            if element_right!=element_left and element_right not in self.edges[element_left]:
-                # This splitpoint has already been implemented!
-                # (if we call _split_at_cofold_cutpoint twice)
-                continue
-
             if element_left[0] in "ft" or element_right[0] in "ft":
                 #No cofold structure. First sequence is disconnected from rest
                 raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not "
