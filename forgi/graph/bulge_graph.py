@@ -1218,6 +1218,34 @@ class BulgeGraph(object):
             return stem_nuc - 1
         else:
             return stem_nuc + 1
+
+    def all_connections(self, elem):
+        """
+        Return the connected elements in order along the backbone.
+
+        The difference to self.connections is that the returned list
+        always contains as many elements, as the define of elem has numbers.
+        If there is no connected element at this side,the returned list contains None.
+        If elem is a stem connected to a hairpin or interior loop,
+        this loop ill be contained twice in the resulting output list.
+        """
+        connections = []
+        # To correctly account for 0-length elements, we have to treat stems seperately.
+        if elem[0]!="s":
+            for nt in self.define_a(elem):
+                neighbor = self.get_node_from_residue_num(nt)
+                if neighbor == elem:
+                    connections.append(None)
+                else:
+                    connections.append(neighbor)
+        else:
+            connections = [ None, None, None, None ]
+            for neighbor in self.edges[elem]:
+                for side in [0,1,2,3]:
+                    if any(x==self.defines[elem][side] for x in self.define_a(neighbor)):
+                        connections[side]=neighbor
+        return connections
+
     def nucleotides_to_elements(self, nucleotides):
         """
         Convert a list of nucleotides (nucleotide numbers) to element names.
@@ -1283,6 +1311,20 @@ class BulgeGraph(object):
 
         for edge in self.edges[name]:
             self.edges[edge].add(name)
+    def _remove_node(self, name):
+        """
+        Remove a node and all its (in- and out-) edges.
+
+        .. warning::
+
+            This does NOT update the defines/ cponnections of other nodes, and
+            may result in the graph falling apart into several connected components.
+
+        """
+        for edge in list(self.edges[node]):
+            self.remove_edge(*edge)
+        del self.edges[node]
+        del self.defines[node]
 
     def dissolve_stem(self, key):
         """
@@ -1293,8 +1335,63 @@ class BulgeGraph(object):
         """
         conn = self.connections[key]
         if conn[0].startswith("i"):
+            # Remove the interior loop on the 5' side of the stem.
+            old_def = self.define_a(conn[0])
+            left_stem, key2 = self.connections[conn[0]]
+            assert key2 == key
+            self._remove_node(conn[0])
+            self._remove_node(key)
+            if len(conn[1:])<=1:
+                # len(conn[1:])==0 means
+                #           ((..(&)..))
+                #           First create a hairpin. Split it later.
+                # len(conn[1:])==1 can mean
+                #           ((..(..&)..)) or ((..(...)...))
+                # It does not matter. We replace everything by a hairpin, which we later split.
+                new_h = self._next_available_element_name("h")
+                self.defines[new_h] = [ old_def[0]+1, old_def[:-1]-1 ]
+                self.add_edge(new_h, left_stem)
+                for right_elem in conn[1:]:
+                    self._remove_node(right_elem)
+            elif len(conn[1:])==2:
+                # Two ML-segments
+                # ((..(.....(((...)))..(((...)))....)..))
+                self.add_edge(conn[1], left_stem)
+                self.add_edge(conn[2], left_stem)
+                self.define[conn[1]] = [ old_def[0]+1, self.define[conn[1]][1]]
+                self.define[conn[2]] = [ self.define[conn[1]][2], self.old_def[-1]-1 ]
+            else:
+                assert False
+            self._split_at_cofold_cutpoint()
+            return
+        elif conn[0][0] in "mf":
+            # Sort the connected single stranded elements by stem side
+            # 0 is the side of the 3' and 5' end,
+            # 1 is the side enclosed by the stem
+            conn_side1 = []
+            conn_side0 = []
+            for c in conn[1:]:
+                if self.get_sides(key, c)[1]==1:
+                    conn_side1.append(c)
+                else:
+                    conn_side0.append(c)
+            if conn_side0:
+                assert len(conn_side0)==1
+                assert conn_side0[0][0] in "tm"
+
+
+
+
+            for right_elem in conn[1:]:
+                self.edges[left_stem].add(right_elem)
+                self.edges[right_elem].remove(key)
+                self.edges[right_elem].add(left_stem)
+
+
+
+
+
             if conn[1].startswith("h"):
-                old_def = self.define_a(conn[0])
                 del self.defines[conn[1]]
                 del self.edges[conn[1]]
                 del self.defines[key]
@@ -1764,14 +1861,16 @@ class BulgeGraph(object):
                        of the bulge regions.
         :return: Nothing, just make the bulgegraph
         """
-        self.defines = []
-        self.edges = []
+        self.defines = {}
+        self.edges = col.defaultdict(set)
         for i in range(len(stems)):
             # one is added to each coordinate to make up for the fact that residues are 1-based
             ss1 = stems[i][0][0] + 1
             ss2 = stems[i][0][1] + 1
             se1 = stems[i][1][0] + 1
             se2 = stems[i][1][1] + 1
+            log.debug("stem define not sorted: %s %s %s %s", ss1, ss2, se1, se2)
+            log.debug("self.defines %s", self.defines)
 
             self.defines['y%d' % (i)] = [min(ss1, se1), max(ss1, se1),
                                          min(ss2, se2), max(ss2, se2)]
@@ -2287,11 +2386,15 @@ class BulgeGraph(object):
         for splitpoint in self._backbone_will_break_after:
             element_left = self.get_node_from_residue_num(splitpoint)
             element_right = self.get_node_from_residue_num(splitpoint+1)
+            if element_right!=element_left and element_right not in self.edges[element_left]:
+                # This splitpoint has already been implemented!
+                # (if we call _split_at_cofold_cutpoint twice)
+                continue
+
             if element_left[0] in "ft" or element_right[0] in "ft":
                 #No cofold structure. First sequence is disconnected from rest
                 raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not "
-                            "connected by any base-pair.")# Creating empty bulge-graph object instead.")
-                #self.__init__() #Make self an empty bulge graph.
+                            "connected by any base-pair.")
                 return
             elif element_left[0]=="i" or element_right[0]=="i":
                 self._split_interior_loop(splitpoint, element_left, element_right)
