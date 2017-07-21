@@ -381,13 +381,39 @@ class AngleStat(object):
         #print(stem2_basis, spos_1, spos2_in_basis_1)
         return ftuv.vec_distance(spos_1, spos2_in_std_basis)
 
-    def is_similar_to(self, stat2):
-        CUTOFF_ANGLE = math.radians(6)
-        CUTOFF_DIST = 4
-        if abs(self.r1-stat2.r1)>CUTOFF_DIST:
+    def deviation_from(self, stat2):
+        """
+        How much does the other stat differ from this stat?
+
+        :param stat2: Another AngleStat
+        :returns: A 4-tuple: The positional deviation in Angstrom, and 3 absolute angular deviations in radians.
+                  The  angular deviations are u, v and t
+        """
+        ret = []
+        pos1 = ftuv.spherical_polar_to_cartesian(self.position_params())
+        pos2 = ftuv.spherical_polar_to_cartesian(stat2.position_params())
+        ret.append(ftuv.magnitude(pos1-pos2))
+        for attr in ["u", "v", "t"]:
+            raw_diff = getattr(self, attr) - getattr(stat2, attr)
+            #Map the difference to a value between 0 and pi
+            raw_diff_on_circle = abs((raw_diff+math.pi/2)%(math.pi)-math.pi/2)
+            log.debug("Angular difference for %s is %f, mapped to %f", attr, raw_diff, raw_diff_on_circle)
+            ret.append(raw_diff_on_circle)
+        return tuple(ret)
+    def is_similar_to(self, stat2, position_cutoff=4, angular_cutoff=None):
+        """
+        :param position_cutoff: in angstrom
+        :param angular_cutoff: in radians. If not given, uses the position cutoff as a value in degrees
+        """
+        if angular_cutoff is None:
+            angular_cutoff = math.radians(position_cutoff)
+        deviation = self.deviation_from(stat2)
+        if deviation[0]>position_cutoff:
+            log.debug("Dissimilar, because of position deviation = %f", deviation[0])
             return False
-        for attr in ["u", "v", "u1", "v1", "t"]:
-            if abs(getattr(self, attr) - getattr(stat2, attr))>CUTOFF_ANGLE:
+        for dev in deviation[1:]:
+            if dev>angular_cutoff:
+                log.debug("Dissimilar, because of angular deviation %s (%s)", dev, deviation[1:])
                 return False
         return True
 
@@ -400,6 +426,8 @@ class AngleStat(object):
         """
         log.debug("Unary minus called for Angle stat")
         return ftug.invert_angle_stat(self)
+
+IDENTITY_STAT = AngleStat(stat_type="angle", pdb_name='identity', dim1=0, dim2=0, u=math.pi/2, v=math.pi, t=math.pi, r1=0, u1=0, v1=0, ang_type='x', define=[], seqs=[])
 
 class RandomAngleStats(object):
     '''
