@@ -67,7 +67,7 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
 
 def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True):
     if enable_logging:
-        logging.basicConfig()
+        logging.basicConfig(format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
         logging_exceptions.config_from_args(args)
 
     cg_rnas = []

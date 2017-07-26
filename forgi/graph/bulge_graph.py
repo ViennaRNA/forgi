@@ -1334,7 +1334,7 @@ class BulgeGraph(object):
         in this stem.
         """
         st = list(self.stem_bp_iterator(key))
-
+        log.info("Dissolving stem %s", key)
         self.remove_base_pairs(st)
 
     def remove_base_pairs(self, to_remove):
@@ -1858,13 +1858,17 @@ class BulgeGraph(object):
     def dissolve_length_one_stems(self):
         # dissolve all stems which have a length of one
         repeat = True
+        has_dissolved = False
         while repeat:
             repeat = False
             for k in self.defines:
                 if k[0] == 's' and self.stem_length(k) == 1:
                     self.dissolve_stem(k)
+                    has_dissolved = True
                     repeat = True
                     break
+        if has_dissolved and len(list(self.stem_iterator()))==0:
+            log.warning("All stems of the structure had length 1 and were dissolved!")
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems=False):
         """
@@ -2345,9 +2349,17 @@ class BulgeGraph(object):
             element_left = self.get_node_from_residue_num(splitpoint)
             element_right = self.get_node_from_residue_num(splitpoint+1)
             if element_left[0] in "ft" or element_right[0] in "ft":
-                #No cofold structure. First sequence is disconnected from rest
-                raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not "
+                if element_left[0]=="t" and element_left[0]!="t":
+                    continue # Splitpoint already implemented
+                elif element_right[0]=="f" and element_left[0]!="f":
+                    continue # Splitpoint already implemented
+                else:
+                    #No cofold structure. First sequence is disconnected from rest
+                    e = GraphConstructionError("Cannot create BulgeGraph. Found two sequences not "
                             "connected by any base-pair.")
+                    with log_to_exception(log, e):
+                        log.error("Trying to split between %s and %s", element_left, element_right)
+                    raise e
                 return
             elif element_left[0]=="i" or element_right[0]=="i":
                 self._split_interior_loop(splitpoint, element_left, element_right)

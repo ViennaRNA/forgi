@@ -8,6 +8,7 @@ import re
 import logging
 from collections import defaultdict
 
+from logging_exceptions import log_to_exception, log_exception
 
 import forgi.utilities.debug as fud
 
@@ -76,7 +77,10 @@ def parse_base_pair_id(base_pair_id):
 
     parts = re.findall(r"((?:'\d+'|\w)[-0-9]\d*|(?:'\d+'|\w)\d+)", base_pair_id)
     if len(parts) != 2:
-        raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        e = ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        with log_to_exception(log, e):
+            log.error("Regex matched the following parts: %s", parts)
+        raise e
     if "-".join(parts) != base_pair_id:
         raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
 
@@ -136,8 +140,7 @@ def iterate_over_interactions(mcannotate_lines):
             try:
                 (from_chain, from_base, to_chain, to_base) =  get_interacting_base_pairs(line)
             except ValueError as ve:
-                print("ValueError:", ve, file=sys.stderr)
-                print("line:", line, file=sys.stderr)
+                log_exception(ve, logging.WARNING, with_stacktrace=False)
                 continue
 
             yield line.strip()
