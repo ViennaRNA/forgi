@@ -795,9 +795,9 @@ class BulgeGraph(object):
                 for key2 in bg.edges[key1]:
                     out.append(  "\t%s -- %s;" % (key1, key2) )
 
-        for key1 in bg.longrange.keys():
-            for key2 in bg.longrange[key1]:
-                out.append( "\t%s -- %s [style=dashed]" % (key1, key2))
+        #for key1 in bg.longrange.keys():
+    #        for key2 in bg.longrange[key1]:
+#                out.append( "\t{%s -- %s [style=dashed]};" % (key1, key2))
 
         out.append("}")
         return "\n".join(out)
@@ -1747,6 +1747,8 @@ class BulgeGraph(object):
             assert sum(v % 2 for v in all_stems.values())==0
         if angle_types[2]==1 and angle_types[4]==1 and "pseudoknot" not in descriptors:
             descriptors.add("regular_multiloop")
+        else if angle_types[2]>1 or angle_types[4]>1:
+            descriptors.add("pseudoknot")
         return descriptors
 
     def find_multiloop_loops(self):
