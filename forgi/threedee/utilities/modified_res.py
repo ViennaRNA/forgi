@@ -157,7 +157,7 @@ class ModifiedResidueLookup(object):
             try:
                 self._dict[key]=query_PDBeChem(key)
             except:
-                log.error("Could not look-up modified residue key %s", key)
+                log.warning("Could not look-up modified residue key %s", key)
                 self._dict[key]=None
         return self._dict[key]
     def clean_failed():
