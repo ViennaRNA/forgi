@@ -148,7 +148,7 @@ def _are_adjacent_basepairs(cg, edge1, edge2):
     if fromA.chain != fromB.chain:
         if fromA.chain==toB.chain:
             fromB, toB = toB, fromB
-            assert toA==toB
+            assert toA.chain==toB.chain
         else:
             assert False
     if (abs(cg.seq_ids.index(fromA)-cg.seq_ids.index(fromB))==1 and

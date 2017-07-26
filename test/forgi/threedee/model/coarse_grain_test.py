@@ -57,6 +57,7 @@ def cg_from_sg(cg, sg):
 class CoarseGrainIoTest(tfgb.GraphVerification):
 
     def check_cg_integrity(self, cg):
+        self.assertGreater(len(list(cg.stem_iterator())), 0)
         for s in cg.stem_iterator():
             edges = list(cg.edges[s])
             if len(edges) < 2:
@@ -80,22 +81,6 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
                                          cg.coords[edges[1]][1]))
 
 
-    @unittest.skip("Test not yet implemented")
-    def test_from_cg_str(self):
-        pass
-
-        '''
-        bg = cgb.BulgeGraph()
-        cg = ftmc.CoarseGrainRNA()
-        bg.from_bg_string(self.text)
-        cg.from_cg_string(self.text)
-
-        self.compare_bg_to_cg(bg, cg)
-        '''
-    @unittest.skip("Test not yet implemented")
-    def test_from_file(self):
-        pass
-
     def test_from_mmcif(self):
         import Bio.PDB as bpdb
 
@@ -114,14 +99,6 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
         self.check_cg_integrity(cg)
 
-        #cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb',
-        #                   intermediate_file_dir='tmp',
-        #                   remove_pseudoknots=False)
-        #self.check_cg_integrity(cg)
-
-        #node = cg.get_node_from_residue_num(25)
-        #self.assertFalse(node[0] == 'h')
-
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
         self.check_cg_integrity(cg)
 
@@ -136,8 +113,9 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb',
                            intermediate_file_dir='tmp', chain_id='Y')
-        self.check_cg_integrity(cg)
-
+        self.assertEqual(len(cg.defines), 1)
+        self.assertIn("f0", cg.defines)
+        self.assertEqual(cg.seq, "U")
         cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',
                            intermediate_file_dir='tmp', chain_id='A')
         self.check_cg_integrity(cg)
@@ -153,6 +131,12 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
             for r in cg.define_residue_num_iterator(d):
                 # make sure all the seq_ids are there
                 print (cg.seq_ids[r - 1])
+
+    def test_from_pdb_cofold(self):
+        # 1FUF triggers the if fromA.chain != fromB.chain clause in _are_adjacent_basepairs
+        cg, = ftmc.connected_cgs_from_pdb('test/forgi/threedee/data/1FUF.pdb',
+                                   dissolve_length_one_stems=True)
+        self.check_cg_integrity(cg)
 
     def verify_multiple_chains(self, cg, single_chain_cgs):
         log.warning("Backbone in %s breaks after %s", cg.name, cg.backbone_breaks_after)
