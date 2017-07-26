@@ -1747,7 +1747,7 @@ class BulgeGraph(object):
             assert sum(v % 2 for v in all_stems.values())==0
         if angle_types[2]==1 and angle_types[4]==1 and "pseudoknot" not in descriptors:
             descriptors.add("regular_multiloop")
-        else if angle_types[2]>1 or angle_types[4]>1:
+        elif angle_types[2]>1 or angle_types[4]>1:
             descriptors.add("pseudoknot")
         return descriptors
 
