@@ -218,7 +218,11 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
                 from_, res, to_ = line.split()
             except:
                 continue
+            from_seqid = cg.seq_ids[int(from_)-1]
+            from_chain = from_seqid.chain
+            chain_connections_multigraph.add_node(from_chain)
             if int(to_) != 0 and int(to_)>int(from_):
+                to_seqid = cg.seq_ids[int(to_)-1]
                 from_seqid = cg.seq_ids[int(from_)-1]
                 to_seqid = cg.seq_ids[int(to_)-1]
                 from_chain = from_seqid.chain
