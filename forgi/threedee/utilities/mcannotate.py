@@ -73,9 +73,11 @@ def parse_base_pair_id(base_pair_id):
     @param base_pair_id: The identifier string for the interacting nucleotides (i.e. 'A33-B45')
     @return: 4-tuple containing of the form (chain1, res1, chain2, res2) i.e. ('A', 33, 'B', '45')
     """
+    # A number in single quotes or a letter, followed by a (potentially negative) number and
+    # potentiallly by an insertion code.
+    residue_pattern = r"(?:'\d'|[A-Za-z])-?\d+(?:\.[A-Za-z])?"
 
-
-    parts = re.findall(r"((?:'\d+'|\w)[-0-9]\d*|(?:'\d+'|\w)\d+)", base_pair_id)
+    parts = re.findall(residue_pattern, base_pair_id)
     if len(parts) != 2:
         e = ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
         with log_to_exception(log, e):
@@ -174,7 +176,7 @@ def get_dotplot(lines):
             #print line
 
             if parts1[0] in paired or parts1[1] in paired:
-                print("paired:", parts1[0], parts1[1], file=sys.stderr)
+                log.warning("Base-triple encountered: Ignoring basepair %s - %s", parts1[0], parts1[1])
                 continue
 
             paired.add(parts1[0])
