@@ -1326,16 +1326,16 @@ class BulgeGraph(object):
         del self.edges[node]
         del self.defines[node]
 
-    def dissolve_stem(self, key):
-        """
-        Remove a stem. This means that we need
-        to reconfigure all of the adjacent elements in such a manner
-        that they now include the nucleotides that were formerly
-        in this stem.
-        """
-        st = list(self.stem_bp_iterator(key))
-        log.info("Dissolving stem %s", key)
-        self.remove_base_pairs(st)
+    def dissolve_length_one_stems(self):
+        # dissolve all stems which have a length of one
+        stems_to_dissolve = [ s for s in self.stem_iterator() if self.stem_length(s)==1 ]
+        log.info("Dissolving stem %s", stems_to_dissolve)
+        bps_to_dissolve = []
+        for s in stems_to_dissolve:
+            bps_to_dissolve.extend(self.stem_bp_iterator(s))
+        self.remove_base_pairs(bps_to_dissolve)
+        if stems_to_dissolve and len(list(self.stem_iterator()))==0:
+            log.warning("All stems of the structure had length 1 and were dissolved!")
 
     def remove_base_pairs(self, to_remove):
         """
@@ -1854,21 +1854,6 @@ class BulgeGraph(object):
         self.remove_degenerate_nodes()
         self._split_at_cofold_cutpoint()
         self._insert_cutpoints_into_seq()
-
-    def dissolve_length_one_stems(self):
-        # dissolve all stems which have a length of one
-        repeat = True
-        has_dissolved = False
-        while repeat:
-            repeat = False
-            for k in self.defines:
-                if k[0] == 's' and self.stem_length(k) == 1:
-                    self.dissolve_stem(k)
-                    has_dissolved = True
-                    repeat = True
-                    break
-        if has_dissolved and len(list(self.stem_iterator()))==0:
-            log.warning("All stems of the structure had length 1 and were dissolved!")
 
     def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems=False):
         """
