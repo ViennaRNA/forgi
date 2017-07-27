@@ -153,7 +153,9 @@ def _are_adjacent_basepairs(cg, edge1, edge2):
             assert False
     if (abs(cg.seq_ids.index(fromA)-cg.seq_ids.index(fromB))==1 and
         abs(cg.seq_ids.index(toA)-cg.seq_ids.index(toB))==1):
+        log.debug("Basepairs %s and %s are adjacent. No length 1 stem", edge1, edge2)
         return True
+    log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
 
@@ -207,7 +209,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
 
 
         import networkx as nx
-        chain_connections = nx.MultiGraph()
+        chain_connections_multigraph = nx.MultiGraph()
         cg = CoarseGrainRNA()
         cg.seqids_from_residue_map(residue_map)
 
@@ -216,24 +218,26 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
                 from_, res, to_ = line.split()
             except:
                 continue
-            if int(to_) != 0:
+            if int(to_) != 0 and int(to_)>int(from_):
                 from_seqid = cg.seq_ids[int(from_)-1]
                 to_seqid = cg.seq_ids[int(to_)-1]
                 from_chain = from_seqid.chain
                 to_chain   = to_seqid.chain
-                log.debug("Adding {} - {}".format(from_chain, to_chain))
-                chain_connections.add_edge(from_chain, to_chain, basepair=(from_seqid, to_seqid))
+                if from_chain != to_chain:
+                    log.debug("Adding {} - {}".format(from_chain, to_chain))
+                    chain_connections_multigraph.add_edge(from_chain, to_chain, basepair=(from_seqid, to_seqid))
+        chain_connections = nx.Graph(chain_connections_multigraph)
         if dissolve_length_one_stems:
-            for chain1, chain2 in it.combinations(chain_connections.nodes(), 2):
-                if chain2 in chain_connections.edge[chain1]:
-                    for edge1, edge2 in it.combinations(chain_connections.edge[chain1][chain2].values(), 2):
+            for chain1, chain2 in it.combinations(chain_connections_multigraph.nodes(), 2):
+                if chain2 in chain_connections_multigraph.edge[chain1]:
+                    for edge1, edge2 in it.combinations(chain_connections_multigraph.edge[chain1][chain2].values(), 2):
                         if _are_adjacent_basepairs(cg, edge1, edge2):
                             break
                     else: #break NOT encountered.
-                        chain_connections.remove_edge(chain1, chain2) #Removes ALL edges in MultiGraph
+                        log.debug("No connection remaining between chains %s and %s", chain1, chain2)
+                        chain_connections.remove_edge(chain1, chain2)
 
         # Now remove multiple edges. We don't care what nx does with the edge attributes.
-        chain_connections = nx.Graph(chain_connections)
 
         log.debug("CONNECTIONS: {}, nodes {}".format(chain_connections, chain_connections.nodes()))
         log.debug("Edges {}".format(chain_connections.edges()))
@@ -241,7 +245,10 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
         for component in nx.connected_components(chain_connections):
             #print(component, type(component))
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
-            cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+            try:
+                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+            except fgb.GraphConstructionError as e:
+                log.error("Could not load chains %s: %s", list(component), e)
         cgs.sort(key=lambda x: x.name)
         if dissolve_length_one_stems:
             for cg in cgs:
