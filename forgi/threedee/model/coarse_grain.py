@@ -323,7 +323,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     # first we annotate the 3D structure
     log.info("Starting MC-Annotate for chain(s) %s", chain_id)
     if hasattr(sp, "DEVNULL"): #python>=3.3
-        kwargs = {stderr:sp.DEVNULL}
+        kwargs = {"stderr":sp.DEVNULL}
     else:
         kwargs = {}
     out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True, **kwargs)
