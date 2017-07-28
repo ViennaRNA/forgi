@@ -320,7 +320,7 @@ class BulgeGraphZeroLengthTest(GraphVerification):
         db = "((([[[.(..)..)))&]]]"
         bg = fgb.from_fasta_text(db, dissolve_length_one_stems=True)
         self.assertEqual(len(bg.defines), 4)
-
+        self.assertEqual(bg.to_dotbracket_string(), "((([[[.......)))&]]]")
 class BulgeGraphTest(GraphVerification):
     """
     Simple tests for the BulgeGraph data structure.
