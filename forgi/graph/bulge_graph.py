@@ -3390,52 +3390,15 @@ class BulgeGraph(object):
             else:
                 return None
 
-
-    def is_node_pseudoknot(self, d):
-        """
-        Is a particular multiloop part of a pseudoknot?
-        """
-        conn = self.connections(d)
-        ct = self.connection_type(d, conn)
-        if abs(ct) == 5:
-            return True
-        return False
-
     def is_loop_pseudoknot(self, loop):
         """
         Is a particular loop a pseudoknot?
 
-        :param loop: A list of elements that are part of the loop.
+        :param loop: A list of elements that are part of the loop (only m,f and t elements).
 
         :return: Either True or false
         """
-        allowed_ang_types = [2, 3, -3, 4]
-        found_ang_types = col.defaultdict(int)
-
-        for l in loop:
-            if l[0] == 'i':
-                return True
-            if l[0] != 'm':
-                continue
-
-
-            at = self.get_angle_type(l, allow_broken=True)
-
-            if at not in allowed_ang_types:
-                log.info("Loop %s is a pseudoknot, because %s has angle"
-                         " type %s", loop, l, at)
-                return True
-
-            found_ang_types[at]+=1
-
-        if (found_ang_types[2]==1 and
-            found_ang_types[4]==1 and
-            found_ang_types[3]+found_ang_types[-3]>=1):
-            return False
-        elif any(l[0] in "ft" for l in loop):
-            return False
-        log.info("Loop %s is pseudoknot, because it has the following angle types: %s", loop, found_ang_types)
-        return True
+        return "pseudoknot" in self.describe_multiloop(loop)
 
     def iter_elements_along_backbone(self, startpos = 1):
         """
@@ -3504,70 +3467,7 @@ class BulgeGraph(object):
                         nuc=f2
                 log.debug("Next nuc is {} ({})".format(nuc, repr(nuc)))
                 node =  self.get_node_from_residue_num(nuc)
-    '''
-    def walk_backbone(self):
-        half_stems = []
-        open_multiloops = col.defaultdict(set)
-        multiloops = []
-        label = {}
-        pseudo_multiloop = [] #The "multiloop" formed together with 5', 3'
-        for node in self.iter_elements_along_backbone():
-            log.debug("node {}".format(node))
-            if node[0]=="s":
-                if node in half_stems:
-                    if node != half_stems[-1]:
-                        open_multiloops[half_stems[-1]]|=open_multiloops[node]
-                        for n in open_multiloops[half_stems[-1]]:
-                            label[n] = "pk"
-                        del open_multiloops[node]
-                    else:
-                        multiloops.append(open_multiloops[node])
-                        for n in open_multiloops[node]:
-                            if label.get(n, "") =="pk":
-                                for i in range(-2, -len(half_stems)-1, -1): #The innermost stem that has open multiloop segments is the context.
-                                    for m in open_multiloops[half_stems[i]]:
-                                        if m not in label:
-                                            label[m] ="context"
-                                    if open_multiloops[half_stems[i]]:
-                                        break
-                        del open_multiloops[node]
-                    half_stems.remove(node)
-                else:
-                    half_stems.append(node)
-            elif node[0]=="m":
-                if half_stems:
-                    open_multiloops[half_stems[-1]].add(node)
-                else:
-                    pseudo_multiloop.append(node)
-        log.debug("multiloops {}".format(multiloops))
-        self.multiloops = {"pseudoknots":[], "multiloops":[], "pseudo_multiloop":[], "pk_context":[]}
-        compare = functools.partial(self.compare_bulges, flank_nucs = True)
-        for multiloop in multiloops:
-            if multiloop:
-                multiloop = sorted(multiloop,key=compare)
-                c=None
-                for b in multiloop:
-                    if label.get(b) == "pk":
-                        c="pk"
-                        break
-                    elif label.get(b)== "context":
-                        c="context"
-                if c=="pk":
-                    self.multiloops["pseudoknots"].append(multiloop)
-                    assert self.is_loop_pseudoknot(multiloop)
-                elif c=="context":
-                    self.multiloops["pk_context"].append(multiloop)
-                else:
-                    self.multiloops["multiloops"].append(multiloop)
-                    if self.is_loop_pseudoknot(multiloop):
-                        print(self.to_dotbracket_string())
-                        print(self.to_element_string(True))
-                        print(multiloop)
-                        print(self.multiloops)
-                        assert False
-        if pseudo_multiloop:
-            pseudo_multiloop.sort(key=compare)
-            self.multiloops["pseudo_multiloop"].append(pseudo_multiloop)'''
+
 
 
     def to_networkx(self):

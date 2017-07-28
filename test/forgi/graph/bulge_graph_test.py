@@ -2218,6 +2218,20 @@ class MultiloopFinding(unittest.TestCase):
         mls = bg.find_mlonly_multiloops()
         self.assertEqual(mls, [("f0", )])
 
+    def test_describe_multiloop_pseudoknot_no_angle_type_5(self):
+        # A real world example
+        db = "...(((..(((...(((...)))...[[[...(((...)))...)))...(((...)))...]]]...)))..."
+        bg = fgb.from_fasta_text(db)
+        mls = bg.find_mlonly_multiloops()
+        self.assertEqual(len(mls), 2)
+        mls.sort(key=lambda x: len(x))
+        self.assertEqual(bg.describe_multiloop(mls[0]), set(["open"]))
+        self.assertEqual(bg.describe_multiloop(mls[1]), set(["pseudoknot"]))
+        # This "strange" pseudoknot has no angle type 5
+        for m in bg.mloop_iterator():
+            self.assertNotEqual(abs(bg.get_angle_type(m, allow_broken=True)), 5)
+
+
 class WalkBackboneTests(unittest.TestCase):
     def setUp(self):
         pass
