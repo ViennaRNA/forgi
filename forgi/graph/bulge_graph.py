@@ -33,7 +33,7 @@ import logging
 log = logging.getLogger(__name__)
 from pprint import pprint, pformat
 
-from logging_exceptions import log_to_exception
+from logging_exceptions import log_to_exception, log_at_caller
 
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
@@ -1193,7 +1193,7 @@ class BulgeGraph(object):
                     return elem
             assert False
         if elem[0] not in "mft":
-            self.print_debug()
+            self.log()
             log.error("%s is not a multiloop node", elem)
             return None
         return elem
@@ -2192,7 +2192,7 @@ class BulgeGraph(object):
                     if d[0] not in self.backbone_breaks_after:
                         zero_length_coordinates.add(tuple(d))
             if len(zero_length_connections)!=len(zero_length_coordinates):
-                self.print_debug(level=logging.ERROR)
+                self.log(level=logging.ERROR)
                 raise GraphIntegrityError("Expecting stems {} and {} to have {} zero-length "
                                           "connections at nucleotide positions {}, however, "
                                           "found {} elements: {}".format(stem1, stem2,
@@ -2373,14 +2373,15 @@ class BulgeGraph(object):
         pt = self.to_pair_table()
         return fus.pairtable_to_dotbracket(pt)
 
-    def print_debug(self, level=logging.DEBUG):
-        log.log(level, self.seq)
-        log.log(level, self.to_dotbracket_string())
-        es = self.to_element_string(with_numbers=True).split("\n")
-        log.log(level, es[0])
-        log.log(level, es[1])
-        log.log(level, "DEFINES: %s", self.defines)
-        log.log(level, "EDGES: %s", self.edges)
+    def log(self, level=logging.DEBUG):
+        with log_at_caller(log):
+            log.log(level, self.seq)
+            log.log(level, self.to_dotbracket_string())
+            es = self.to_element_string(with_numbers=True).split("\n")
+            log.log(level, es[0])
+            log.log(level, es[1])
+            log.log(level, "DEFINES: %s", self.defines)
+            log.log(level, "EDGES: %s", self.edges)
 
     def to_fasta_string(self):
         """
@@ -2505,7 +2506,7 @@ class BulgeGraph(object):
         :return: A pair containing its dimensions
         """
         if node not in self.defines:
-            self.print_debug()
+            self.log()
         if node[0] == 's':
             return (self.stem_length(node), self.stem_length(node))
             """

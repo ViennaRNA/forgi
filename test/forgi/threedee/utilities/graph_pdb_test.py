@@ -459,7 +459,7 @@ class TestVirtualStats(unittest.TestCase):
 
     def test_sum_of_stats_true_RNA(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
-        cg.print_debug(logging.INFO)
+        cg.log(logging.INFO)
         for ml1 in cg.mloop_iterator():
             ml2 = cg.get_next_ml_segment(ml1)
             stat1 = cg.get_stats(ml1)[0]

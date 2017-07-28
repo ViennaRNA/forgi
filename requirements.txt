@@ -4,7 +4,7 @@ future
 nose2
 networkx
 biopython
-logging_exceptions>=0.1.5
+logging_exceptions>=0.1.6
 beautifulsoup4
 matplotlib
 ddt

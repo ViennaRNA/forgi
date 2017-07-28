@@ -184,7 +184,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='all')
-        cg.print_debug(logging.WARNING)
+        cg.log(logging.WARNING)
         cg_str = cg.to_cg_string()
         cg2 = ftmc.CoarseGrainRNA()
         cg2.from_cg_string(cg_str)
