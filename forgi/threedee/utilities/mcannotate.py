@@ -176,7 +176,12 @@ def get_dotplot(lines):
             #print line
 
             if parts1[0] in paired or parts1[1] in paired:
-                log.warning("Base-triple encountered: Ignoring basepair %s - %s", parts1[0], parts1[1])
+                if log.isEnabledFor(logging.WARNING):
+                    if parts1[0] in bps:
+                        existing = "{} - {}".format(parts1[0], residues[bps[parts1[0]]])
+                    else:
+                        existing = "{} - {}".format(parts1[1], residues[bps[parts1[1]]])
+                    log.warning("Base-triple encountered: Ignoring basepair %s - %s, because basepair %s exists", parts1[0], parts1[1], existing)
                 continue
 
             paired.add(parts1[0])

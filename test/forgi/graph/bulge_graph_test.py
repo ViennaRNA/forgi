@@ -4,19 +4,20 @@ from __future__ import print_function
 from builtins import zip
 from builtins import next
 from builtins import range
+
 import unittest
 import itertools as it
-
+from pprint import pprint
+import collections as col
 import sys
 import os
+import logging
 
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.debug as fud
+from forgi.utilities.exceptions import GraphConstructionError
 import forgi.utilities.stuff as fus
-from pprint import pprint
-import collections as col
 
-import logging
 log=logging.getLogger(__name__)
 
 
@@ -309,11 +310,13 @@ class BulgeGraphZeroLengthTest(GraphVerification):
         self.assertEqual(bg._zero_length_element_adj_position("m0"), [3,4])
         self.assertEqual(bg._zero_length_element_adj_position("m1"), [6,7])
         self.assertEqual(bg._zero_length_element_adj_position("m2"), [9,10])
+
     def test_breakpoint_at_zero_length_element_graph_construction(self):
         # Test needed because of a subtile bug with cofold structures and
         # dissolve_length_one_stems and 0-length elements.
         # It appeared during loading of PDB 1U6B.pdb when keeping pseudoknots
         # and dissolving length 1 stems.
+        # and cuased a GraphConstructionError to be raised.
         db = "((([[[.(..)..)))&]]]"
         bg = fgb.from_fasta_text(db, dissolve_length_one_stems=True)
         self.assertEqual(len(bg.defines), 4)
@@ -694,9 +697,9 @@ AAAGGGUUUCCC
 3 A 2
 """
         bg = fgb.BulgeGraph()
-        with self.assertRaises(fgb.GraphConstructionError):
+        with self.assertRaises(GraphConstructionError):
             bg.from_bpseq_str(bpstr1)
-        with self.assertRaises(fgb.GraphConstructionError):
+        with self.assertRaises(GraphConstructionError):
             bg.from_bpseq_str(bpstr2)
 
     def test_from_bpseq(self):

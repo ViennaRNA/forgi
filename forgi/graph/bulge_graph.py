@@ -18,6 +18,7 @@ import itertools as it
 from ..aux.k2n_standalone import knotted2nested as fak
 from ..utilities import debug as fud
 from ..utilities import stuff as fus
+from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ..threedee.utilities import mcannotate as ftum
 import os
 import warnings
@@ -43,18 +44,6 @@ except:
 
 
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
-
-
-class GraphConstructionError(ValueError):
-    """
-    Exceptions raised if the BulgeGraph could be constructed from the given input.
-    """
-    pass
-class GraphIntegrityError(ValueError):
-    """
-    Exception raised if a BulgeGraph was found to be in an inconsistent or faulty state.
-    """
-    pass
 
 def resid_to_str(resid):
     if resid.chain is not None:

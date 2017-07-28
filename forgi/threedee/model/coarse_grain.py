@@ -5,25 +5,9 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
 from past.types import basestring
-from ...graph import bulge_graph as fgb
-from ..utilities import graph_pdb as ftug
-from ..model import stats as ftms
 
-from ...aux.k2n_standalone import knotted2nested as cak
-from ..utilities import mcannotate as ftum
-from ..utilities import pdb as ftup
-from . import descriptors as ftud
-from ..utilities import vector as ftuv
-from ...utilities import debug as fud
-from ...utilities import stuff as fus
-from ...utilities.observedDict import observedDict
-from .linecloud import CoordinateStorage, LineSegmentStorage
-import Bio.PDB as bpdb
 import collections as c
 import contextlib
-import numpy as np
-import scipy.spatial
-import scipy.stats
 import os
 import os.path as op
 import shutil
@@ -41,23 +25,36 @@ except ImportError: #Python 2
 import logging
 from pprint import pprint
 
-from logging_exceptions import log_to_exception
+
+import numpy as np
+import scipy.spatial
+import scipy.stats
+
+import Bio.PDB as bpdb
+
+from logging_exceptions import log_to_exception, log_exception
+
+
+from ...graph import bulge_graph as fgb
+from ..utilities import graph_pdb as ftug
+from ..model import stats as ftms
+
+from ...aux.k2n_standalone import knotted2nested as cak
+from ..utilities import mcannotate as ftum
+from ..utilities import pdb as ftup
+from . import descriptors as ftud
+from ..utilities import vector as ftuv
+from ...utilities import debug as fud
+from ...utilities import stuff as fus
+from ...utilities.observedDict import observedDict
+from ...utilities.exceptions import CgConstructionError, CgIntegrityError, GraphConstructionError
+from .linecloud import CoordinateStorage, LineSegmentStorage
+
+
+
 
 log = logging.getLogger(__name__)
 
-class CgConstructionError(fgb.GraphConstructionError):
-    """
-    Exceptions raised if the CoarseGrainRNA could be constructed from the given input.
-
-    Raised for Errors related to the 3D information.
-    """
-    pass
-class CgIntegrityError(fgb.GraphIntegrityError):
-    """
-    Exception raised if a BulgeGraphCoarseGrainRNA was found to be in an inconsistent or faulty state,
-    related to the 3D Information
-    """
-    pass
 
 
 try:
@@ -251,8 +248,9 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             try:
                 cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
-            except fgb.GraphConstructionError as e:
-                log.error("Could not load chains %s: %s", list(component), e)
+            except GraphConstructionError as e:
+                log_exception(e, logging.ERROR, with_stacktrace=False)
+                log.error("Could not load chains %s, due to the above mentioned error.", list(component))
         cgs.sort(key=lambda x: x.name)
         if dissolve_length_one_stems:
             for cg in cgs:

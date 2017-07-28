@@ -6,45 +6,43 @@ from builtins import range
 from builtins import object
 from builtins import zip, str
 
-import Bio.PDB as bp
-import Bio.PDB as bpdb
-import Bio.PDB.PDBExceptions
-import operator
 import itertools as it
 import collections as col
-
 import os.path as op
-import forgi.config as cc
 import warnings
-
-import math as m
-
-import numpy as np
-import numpy.linalg as nl
-import numpy.testing as nptest
 import random
 import sys
 import math
 import json
-
+import operator
 from pprint import pprint
 import logging
-log = logging.getLogger(__name__)
+import uuid
+
+
+import numpy as np
+import numpy.linalg as nl
+import numpy.testing as nptest
+import scipy.optimize as so
+import Bio.PDB as bp
+import Bio.PDB as bpdb
+import Bio.PDB.PDBExceptions
 
 from logging_exceptions import log_to_exception
 
+
+import forgi.config as cc
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
-
 import forgi
 from forgi.threedee.utilities.modified_res import change_residue_id
-import uuid
+from forgi.utilities.exceptions import CgConstructionError
 
-import scipy.optimize as so
+log = logging.getLogger(__name__)
 
 catom_name = "C1'"
 REFERENCE_CATOM = "C1'"
@@ -110,7 +108,7 @@ def stem_stem_orientation(cg, s1, s2):
     dist = cuv.magnitude(i_vec) + 0.0001
 
     ortho_offset = cuv.magnitude(i_rej)
-    lateral_offset = m.sqrt(dist * dist - ortho_offset * ortho_offset)
+    lateral_offset = math.sqrt(dist * dist - ortho_offset * ortho_offset)
 
     return (cuv.magnitude(i_vec), ang1,
             ang2, cuv.vec_angle(s1_vec, s2_vec), lateral_offset, ortho_offset)
@@ -167,7 +165,7 @@ def get_twist_angle(coords, twists):
     twist2 = cuv.change_basis(twists[1], basis, cuv.standard_basis)
     #assert_allclose(twist2[0], 0., rtol=1e-7, atol=1e-7)
 
-    angle = m.atan2(twist2[2], twist2[1])
+    angle = math.atan2(twist2[2], twist2[1])
     return angle
 
 
@@ -182,7 +180,7 @@ def twist2_from_twist1(stem_vec, twist1, angle):
     '''
     basis = cuv.create_orthonormal_basis(stem_vec, twist1)
 
-    twist2_new = np.array([0., m.cos(angle), m.sin(angle)])
+    twist2_new = np.array([0., math.cos(angle), math.sin(angle)])
     twist2 = np.dot(basis.transpose(), twist2_new)
     #twist2 = cuv.change_basis(twist2_new, cuv.standard_basis, basis)
 
@@ -201,14 +199,14 @@ def get_twist_parameter(twist1, twist2, u_v):
 
     u,v = u_v
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     twist2_new = np.dot(rot_mat1, twist2)
     twist2_new = np.dot(rot_mat2, twist2_new)
 
     #print "get_twist_parameter twist2:", twist2_new
 
-    return m.atan2(twist2_new[2], twist2_new[1])
+    return math.atan2(twist2_new[2], twist2_new[1])
 
 
 def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
@@ -358,10 +356,10 @@ def twist2_orient_from_stem1(stem1, twist1, u_v_t):
                       oriented with respect to stem1. A triple `(u, v, t)`
     '''
     u, v, t = u_v_t
-    twist2_new = np.array([0., m.cos(t), m.sin(t)])
+    twist2_new = np.array([0., math.cos(t), math.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
@@ -389,10 +387,10 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
                       oriented with respect to stem1. A triple `(u, v, t)`
     '''
     u, v, t = u_v_t
-    twist2_new = np.array([0., m.cos(t), m.sin(t)])
+    twist2_new = np.array([0., math.cos(t), math.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
@@ -698,7 +696,7 @@ def stem_from_chains(cg, chains, elem_name):
         ideal_chain = ftup.get_first_chain(filename)
     except IOError:
         if stem_length>40:
-            raise ValueError("Cannot create coordinates. "
+            raise CgConstructionError("Cannot create coordinates. "
                          "Helices with lengths greater than 40 are currently not supported in forgi.")
         else:
             raise
@@ -896,15 +894,15 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     average_ang_per_nt = 0.636738030735
     expected_ang = (stem_len - 1) * average_ang_per_nt
     expected_dev = expected_ang
-    while (expected_dev - (2 * m.pi) > 0):
-        expected_dev -= 2 * m.pi
+    while (expected_dev - (2 * math.pi) > 0):
+        expected_dev -= 2 * math.pi
     #expected_dev uis now between 0 and 360 degrees
     if ang < expected_dev:
-        forward = 2 * m.pi + ang - expected_dev
+        forward = 2 * math.pi + ang - expected_dev
         backward = expected_dev - ang
     else:
         forward = ang - expected_dev
-        backward = 2 * m.pi + expected_dev - ang
+        backward = 2 * math.pi + expected_dev - ang
 
     if forward < backward:
         ang = expected_ang + forward
@@ -925,9 +923,9 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     ang_offset = 0.9
     # equation for a circle in 3-space
     return (vres_stem_pos,
-            u * m.cos(ang) + v * m.sin(ang),
-            u * m.cos(ang + ang_offset) + v * m.sin(ang + ang_offset),
-            u * m.cos(ang - ang_offset) + v * m.sin(ang - ang_offset))
+            u * math.cos(ang) + v * math.sin(ang),
+            u * math.cos(ang + ang_offset) + v * math.sin(ang + ang_offset),
+            u * math.cos(ang - ang_offset) + v * math.sin(ang - ang_offset))
 
 
 def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
@@ -1537,8 +1535,16 @@ def add_loop_information_from_pdb_chains(bg):
                 if catom_name in res:
                     first_res = res
                     break
-
-            start_point = first_res[catom_name].get_vector().get_array() #Currently this can thows a TypeError (NoneType has no __getitem__
+            try:
+                start_point = first_res[catom_name].get_vector().get_array()
+            except TypeError:
+                if first_res is not None:
+                    raise
+                else:
+                    e = CgConstructionError("The PDB chain does not contain any C1' atom (despite containing {} residues).".format(len(list(chain.get_residues()))))
+                    with log_to_exception(log, e):
+                        log.error("The chain's last residue only has the following atoms: %s", res.child_list)
+                        raise e
             centroid = get_furthest_c_alpha(bg, chain,
                                             first_res[catom_name].get_vector().get_array(),
                                             d)
