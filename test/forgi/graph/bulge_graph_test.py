@@ -244,7 +244,16 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         self.assertEqual(bg.edges["s0"], {"f0", "t0", "t1"})
         self.assertEqual(bg.edges["f0"], {"s0"})
 
-
+    def test_to_dotbracket_string_with_cutpoints(self):
+        db = "(((.(.&..).(.&..).))&)..."
+        bg = fgb.from_fasta_text(db)
+        self.assertEqual(bg.to_dotbracket_string(), db)
+        db = "(((.&..)))"
+        bg = fgb.from_fasta_text(db)
+        self.assertEqual(bg.to_dotbracket_string(), db)
+        db = "((([[[..)))&]]]"
+        bg = fgb.from_fasta_text(db)
+        self.assertEqual(bg.to_dotbracket_string(), db)
 
 class BulgeGraphZeroLengthTest(GraphVerification):
     def test__zero_length_element_adj_position_single_ml(self):
@@ -300,6 +309,14 @@ class BulgeGraphZeroLengthTest(GraphVerification):
         self.assertEqual(bg._zero_length_element_adj_position("m0"), [3,4])
         self.assertEqual(bg._zero_length_element_adj_position("m1"), [6,7])
         self.assertEqual(bg._zero_length_element_adj_position("m2"), [9,10])
+    def test_breakpoint_at_zero_length_element_graph_construction(self):
+        # Test needed because of a subtile bug with cofold structures and
+        # dissolve_length_one_stems and 0-length elements.
+        # It appeared during loading of PDB 1U6B.pdb when keeping pseudoknots
+        # and dissolving length 1 stems.
+        db = "((([[[.(..)..)))&]]]"
+        bg = fgb.from_fasta_text(db, dissolve_length_one_stems=True)
+        self.assertEqual(len(bg.defines), 4)
 
 class BulgeGraphTest(GraphVerification):
     """

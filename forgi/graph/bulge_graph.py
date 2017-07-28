@@ -533,8 +533,8 @@ class BulgeGraph(object):
             if not seq.is_valid():
                 raise GraphConstructionError("Cannot set sequence. Illegal character in string '{}'".format(value))
             self._seq = seq
-        stack = ''.join(list(traceback.format_stack())[-3:-1])
-        log.debug(stack + "Sequence set to {}".format(self._seq))
+        stack = traceback.extract_stack()[-2]
+        log.debug("Sequence set to %r by `%s` on line %s in function %s of file %s", self._seq, stack[3], stack[1], stack[2], stack[0].split("/")[-1])
 
     # get an internal index for a named vertex
     # this applies to both stems and edges
@@ -1227,7 +1227,7 @@ class BulgeGraph(object):
         always contains as many elements, as the define of elem has numbers.
         If there is no connected element at this side,the returned list contains None.
         If elem is a stem connected to a hairpin or interior loop,
-        this loop ill be contained twice in the resulting output list.
+        this loop will be contained twice in the resulting output list.
         """
         connections = []
         # To correctly account for 0-length elements, we have to treat stems seperately.
@@ -1344,6 +1344,9 @@ class BulgeGraph(object):
         :param to_remove: A list of tuples containing the names of the base pairs.
         :return: nothing
         """
+        self._backbone_will_break_after = self.backbone_breaks_after
+        self.backbone_breaks_after = []
+
         pt = self.to_pair_tuples()
 
         nt = []
@@ -1383,6 +1386,7 @@ class BulgeGraph(object):
 
                     if all_connections == [[1, 2], [0, 3]]:
                         # interior loop
+                        log.debug("Collapsing %s and %s", b1, b2)
                         self._merge_vertices([b1, b2])
                         new_vertex = True
                         break
@@ -2002,6 +2006,7 @@ class BulgeGraph(object):
         self.seq_length = len(seq)
         self.from_tuples(tuples)
 
+        log.info("From bpseq_str: Secondary structure: %s", self.to_dotbracket_string())
         if dissolve_length_one_stems:
             self.dissolve_length_one_stems()
 
@@ -2177,6 +2182,8 @@ class BulgeGraph(object):
             stem1, stem2 = edges
             #See if this is the only element connecting the two stems.
             connections = self.edges[stem1] & self.edges[stem2]
+            log.debug("Stems %s and %s, connected by %s have the following common edges: %s with defines %s",
+                      stem1, stem2, elem, connections, list(map(lambda x: self.defines[x], connections)))
             zero_length_connections = []
             for conn in connections:
                 if self.defines[conn]==[]:
@@ -2186,11 +2193,17 @@ class BulgeGraph(object):
             zero_length_connections.sort()
             zero_length_coordinates = set()
             for k, l in it.product(range(4), repeat=2):
+                #log.debug("Is there a zero-length element between defines[%s][%d]==%d, and defines[%s][%d]==%d?",
+                #          stem1, k, self.defines[stem1][k],
+                #          stem2, l, self.defines[stem2][l] )
                 if abs(self.defines[stem1][k]-self.defines[stem2][l])==1:
                     d = [self.defines[stem1][k], self.defines[stem2][l]]
                     d.sort()
+                    log.debug("Zero-length element found: %s", d)
                     if d[0] not in self.backbone_breaks_after:
                         zero_length_coordinates.add(tuple(d))
+                    else:
+                        log.debug("But backbone-break encountered!")
             if len(zero_length_connections)!=len(zero_length_coordinates):
                 self.log(level=logging.ERROR)
                 raise GraphIntegrityError("Expecting stems {} and {} to have {} zero-length "
@@ -2325,10 +2338,7 @@ class BulgeGraph(object):
         now we have to split it.
         """
         log.info("_split_at_cofold_cutpoint: future breakpoints are {}".format(self._backbone_will_break_after))
-        if not self._backbone_will_break_after:
-            self._backbone_will_break_after = self.backbone_breaks_after
-
-        self.backbone_breaks_after = []
+        assert self.backbone_breaks_after == []
 
         for splitpoint in self._backbone_will_break_after:
             element_left = self.get_node_from_residue_num(splitpoint)
@@ -2371,7 +2381,10 @@ class BulgeGraph(object):
         :return: A dot-bracket representation of this BulgeGraph
         """
         pt = self.to_pair_table()
-        return fus.pairtable_to_dotbracket(pt)
+        db_string = fus.pairtable_to_dotbracket(pt)
+        for breakpoint in reversed(sorted(self.backbone_breaks_after)):
+            db_string = db_string[:breakpoint]+"&"+db_string[breakpoint:]
+        return db_string
 
     def log(self, level=logging.DEBUG):
         with log_at_caller(log):
@@ -2380,8 +2393,8 @@ class BulgeGraph(object):
             es = self.to_element_string(with_numbers=True).split("\n")
             log.log(level, es[0])
             log.log(level, es[1])
-            log.log(level, "DEFINES: %s", self.defines)
-            log.log(level, "EDGES: %s", self.edges)
+            log.log(level, "DEFINES: %s", pformat(self.defines))
+            log.log(level, "EDGES: %s", pformat(self.edges))
 
     def to_fasta_string(self):
         """
