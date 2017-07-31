@@ -1130,21 +1130,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         self.assertEquals(bg.pairing_partner(2), 5)
         self.assertEquals(bg.pairing_partner(5), 2)
 
-    def test_find_multiloop_loops(self):
-        bg = fgb.BulgeGraph()
-        bg.from_dotbracket('((..((..))..((..))..))')
-
-        bg.find_multiloop_loops()
-        bg.from_dotbracket('((..((..((..))..((..))..))..((..))..))')
-        bg.from_dotbracket('(.(.(.(.).(.).).(.).))')
-
-    def test_find_multiloop_loops2(self):
-        fasta = """>1L2X_A
-GCGCGGCACCGUCCGCGGAACAAACGG
-.(((((..[[[.))))).......]]]
-"""
-        bg = fgb.from_fasta_text(fasta)
-
     def test_big_structure(self):
         bg = fgb.BulgeGraph()
         bg.from_dotbracket('')
@@ -1536,79 +1521,6 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         # needs networkx, and for what?
         #bg.to_networkx()
 
-    def test_find_multiloop_loops_x1(self):
-        fasta = """>1L2X_A
-GCGCGGCACCGUCCGCGGAACAAACGG
-.(((((..[[[.))))).......]]]
-"""
-#2345678
-        bg = fgb.from_fasta_text(fasta)
-
-        loops,loop_nts = bg.find_multiloop_loops()
-        self.assertEqual(len(loops), 2)
-        for loop in loops:
-            self.assertFalse(('m0','m2') in loop)
-            self.assertFalse(('m2', 'm0') in loop)
-
-    def check_multiloops(self, dotbracket):
-        bg = fgb.BulgeGraph()
-        bg.from_dotbracket(dotbracket)
-
-        loops, loop_nts = bg.find_multiloop_loops()
-
-        for loop in loops:
-            self.assertGreater(len(loop), 2)
-
-    def test_find_multiloop_loops_x2(self):
-        dotbracket = '(([)]())'
-        bg = fgb.BulgeGraph()
-        bg.from_dotbracket(dotbracket)
-
-        loops, loop_nts = bg.find_multiloop_loops()
-
-    def test_find_multiloop_loops_x3(self):
-        self.check_multiloops('()()')
-        self.check_multiloops('(()())')
-        self.check_multiloops('((()())())')
-        self.check_multiloops('(([)]())')
-        self.check_multiloops('(([{)]}())')
-
-    def test_find_multiloop_loops_x5(self):
-        bg = fgb.BulgeGraph()
-        bg.from_dotbracket('(((())()()))')
-
-        loops, loop_nts = bg.find_multiloop_loops()
-        for loop in loops:
-            self.assertGreater(len(loop), 2)
-
-    def test_find_multiloop_loops_x4(self):
-        fasta = """>4FAW_A
-        UGUGCCCGGCAUGGGUGCAGUCUAUAGGGUGAGAGUCCCGAACUGUGAAGGCAGAAGUAACAGUUAGCCUAACGCAAGGGUGUCCGUGGCGACAUGGAAUCUGAAGGAAGCGGACGGCAAACCUUCGGUCUGAGGAACACGAACUUCAUAUGAGGCUAGGUAUCAAUGGAUGAGUUUGCAUAACAAAACAAAGUCCUUUCUGCCAAAGUUGGUACAGAGUAAAUGAAGCAGAUUGAUGAAGGGAAAGACUGCAUUCUUACCCGGGGAGGUCUGGAAACAGAAGUCAGCAGAAGUCAUAGUACCCUGUUCGCAGGGGAAGGACGGAACAAGUAUGGCGUUCGCGCCUAAGCUUGAACCGCCGUAUACCGAACGGUACGUACGGUGGUGUGG
-        .((.[[[[[[..{{{{{{{{{{{...(((.......)))..(((((...{{{{{{{...))))){.{{{...{{{..((((.((((((....))))))))))...)]..}}}...}}}.}.(((((((((((.(.....)...(((((.....([[[..[.[..[[[[[[[..[[[[.)......]]]]...]]]].}}}}}}}...]]]..].]..]]]...))))))))))...))))))...}}}}}}}}}}}...)]]]]](...((((....))))...).......(((.(....(((........)))...))))....(((((..(((.(..).)))...))))).(((((((((((((....)))..))))))))))....
-"""
-        bg = fgb.BulgeGraph()
-        bg = fgb.from_fasta_text(fasta)
-
-        loops, loop_nts = bg.find_multiloop_loops()
-        for loop, loop_nt in zip(loops, loop_nts):
-            self.assertGreater(len(loop), 2)
-
-    def test_get_multiloop_nucleotides(self):
-        fasta = """>1L2X_A
-GCGCGGCACCGUCCGCGGAACAAACGG
-.(((((..[[[.))))).......]]]
-"""
-#2345678
-        bg = fgb.BulgeGraph()
-        bg = fgb.from_fasta_text(fasta)
-
-        loops, loop_nts = bg.find_multiloop_loops()
-
-        self.assertEqual(list(loop_nts[1]),
-                sorted([11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]))
-
-        self.assertEqual(list(loop_nts[0]),
-                sorted([6,7,8,9,10,11,12,13]))
 
     def test_shortest_bg_loop(self):
         fasta = """>1L2X_A
@@ -1637,18 +1549,34 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
         self.assertNotIn(3, sbl)
         self.assertEqual(len(sbl), 12)
 
-    def test_loop_contains_pseudoknot(self):
+    def test_is_loop_pseudoknot(self):
+        fasta = """>test
+AAAAAAAAAAAAAAAA
+((...[[...))..]]
+"""
+        bg = fgb.from_fasta_text(fasta)
+        loops = bg.find_mlonly_multiloops()
+        self.assertEqual(len(loops), 1)
+        for loop in loops:
+            self.assertTrue(bg.is_loop_pseudoknot(loop))
+
+    @unittest.expectedFailure
+    def test_is_loop_pseudoknot_2(self):
+        """
+        The current loop-finding algorithm wrongly decomposes this into 2 loops
+
+        """
         fasta = """>1L2X_A
 AAAAAAAAAAAAAAAAAAAAAAAAAA
 ((...[[...{{...))..]]...}}
 """
-
         bg = fgb.from_fasta_text(fasta)
-
-        loops, loop_elems = bg.find_multiloop_loops()
+        loops = bg.find_mlonly_multiloops()
         for loop in loops:
+            log.info("%s, %s", loop, bg.describe_multiloop(loop))
             self.assertTrue(bg.is_loop_pseudoknot(loop))
 
+    def test_is_loop_pseudoknot_no_pk(self):
         dotbracket = '....((((.........)))).((((.(((((..(((((((((....(((.(((..(((..((.((((((((((.....)))))))))).))))).\
 .....(((......((((((((..((...(((((((.(((((....((((((....)))))).....)))))....((((.(((((....))))).))))...((((...)))).))))\
 )))..))))))))))(((....(((..((((((((.......)))))))))))......)))..((((((((....))))...))))))).(((((............))))).(((((\
@@ -1663,7 +1591,7 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
 (((((........)))))))....)..)..))))).....(((((((.(.....)..)))))))......))...)))))))))).))..(.(..((.(.((((.(((..((((((.((\
 ((((...(.((((....(((....))).)))).)..)))))).))))))..))).))))..).))...)..)..(((((((((....)))))))))......'
 
-        bg.from_dotbracket(dotbracket)
+        bg = fgb.from_fasta_text(dotbracket)
 
         loops = bg.find_mlonly_multiloops()
         for loop in loops:
@@ -1980,8 +1908,9 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg.log(logging.INFO)
         log.info("m4: %s %s %s", bg.connections("m4"), bg.get_angle_type("m4"), bg.get_angle_type("m4", allow_broken=True))
         mls = sorted([
-                    sorted(['m0', 'm1', 'm2', 'm6', 's1', 's2', 's5', 's6']),
-                    sorted(['m3', 'm4', 'm5', 's8', 's9', 's10'])
+                    sorted(['f0', 't0']),
+                    sorted(['m0', 'm1', 'm2', 'm6']),
+                    sorted(['m3', 'm4', 'm5'])
                     ])
         rods = sorted([
                         sorted(['s0', 'i0', 's1']),

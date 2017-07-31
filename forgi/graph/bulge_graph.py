@@ -1723,6 +1723,8 @@ class BulgeGraph(object):
             if elem[0] in "ft":
                 descriptors.add("open")
                 continue
+            elif elem[0] !="m":
+                raise ValueError("Non multiloop element '{}' encountered in describe_multiloop.".foemat(elem))
             conn = self.connections(elem)
             ctype = abs(self.connection_type(elem, conn))
             angle_types[ctype] += 1
@@ -1742,9 +1744,11 @@ class BulgeGraph(object):
             descriptors.add("regular_multiloop")
         elif angle_types[2]>1 or angle_types[4]>1:
             descriptors.add("pseudoknot")
+        elif "open" in descriptors and (angle_types[2]>0 or angle_types[4]>0):
+            descriptors.add("pseudoknot")
         return descriptors
 
-    def find_multiloop_loops(self):
+    '''def find_multiloop_loops(self):
         """
         Find out which defines are connected in a multiloop.
 
@@ -1777,7 +1781,7 @@ class BulgeGraph(object):
 
             loop_elems += [all_loops]
 
-        return loop_elems, loops
+        return loop_elems, loops'''
 
     def seq_ids_from_seq(self):
         """
@@ -3772,12 +3776,12 @@ class BulgeGraph(object):
         Get secondary structure domains.
 
         Currently domains found are:
-          * multiloops with connected stems
+          * multiloops (without any connected stems)
           * rods: stretches of stems + interior loops (without branching), with trailing hairpins
           * pseudoknots
         """
         domains = col.defaultdict(list)
-        multiloops, nucleotides = self.find_multiloop_loops()
+        multiloops = self.find_mlonly_multiloops()
         for ml in multiloops:
             ml = sorted(ml)
             if self.is_loop_pseudoknot(ml):
