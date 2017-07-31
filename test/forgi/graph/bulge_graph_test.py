@@ -1979,6 +1979,9 @@ class MultiloopFinding(unittest.TestCase):
         self.assertEqual(bg.get_next_ml_segment("f0"),None)
         self.assertEqual(bg.get_next_ml_segment("t0"),None)
         self.assertEqual(bg.get_next_ml_segment("f1"),"t0")
+    def test__get_next_ml_segment_no_stem(self):
+        bg = fgb.from_fasta_text(".....")
+        self.assertEqual(bg.get_next_ml_segment("f0"),None)
 
 
     def test_shortest_mlonly_multiloop(self):

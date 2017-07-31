@@ -1152,7 +1152,10 @@ class BulgeGraph(object):
 
             # The stem following the ml-segment
             s = self.get_node_from_residue_num(f)
-
+            if s == ml_segment:
+                # The Cg consists of only a single f-element.
+                assert len(self.defines)==1
+                return None
             side_stem, _ = self.get_sides_plus(s, ml_segment)
             # Get the stem-side where we expect to find the next ML-segment
             if side_stem == 0:

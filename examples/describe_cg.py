@@ -8,11 +8,17 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 import argparse
 from collections import defaultdict
+import logging
+
+import pandas as pd
+
+from logging_exceptions import log_to_exception
+
 import forgi.utilities.commandline_utils as fuc
 import forgi.threedee.model.descriptors as ftmd
 import forgi.threedee.model.coarse_grain as ftmc
-import pandas as pd
-import logging
+
+
 log = logging.getLogger(__name__)
 
 def generateParser():
@@ -31,56 +37,62 @@ if __name__=="__main__":
     cgs = fuc.cgs_from_args(args, "+", "any", enable_logging=True)
     data = defaultdict(list)
     for i, cg in enumerate(cgs):
-        data["name"].append(cg.name)
-        data["nt_length"].append(cg.seq_length)
-        data["num_cg_elems"].append(len(cg.defines))
-        for letter in "smifth":
-            data["num_"+letter].append(len([x for x in cg.defines if x[0] ==letter]))
-        multiloops = cg.find_mlonly_multiloops()
-        descriptors = []
-        junct3 = 0
-        junct4 = 0
-        for ml in multiloops:
-            descriptors.append(cg.describe_multiloop(ml))
-            if "regular_multiloop" in descriptors[-1]:
-                if len(ml)==3:
-                    junct3+=1
-                elif len(ml)==4:
-                    junct4+=1
-        data["3-way-junctions"].append(junct3)
-        data["4-way-junctions"].append(junct4)
+        try:
+            data["name"].append(cg.name)
+            data["nt_length"].append(cg.seq_length)
+            data["num_cg_elems"].append(len(cg.defines))
+            for letter in "smifth":
+                data["num_"+letter].append(len([x for x in cg.defines if x[0] ==letter]))
+            multiloops = cg.find_mlonly_multiloops()
+            descriptors = []
+            junct3 = 0
+            junct4 = 0
+            for ml in multiloops:
+                descriptors.append(cg.describe_multiloop(ml))
+                if "regular_multiloop" in descriptors[-1]:
+                    if len(ml)==3:
+                        junct3+=1
+                    elif len(ml)==4:
+                        junct4+=1
+            data["3-way-junctions"].append(junct3)
+            data["4-way-junctions"].append(junct4)
 
-        #print (descriptors)
-        data["open_mls"].append(len([d for d in descriptors if "open" in d]))
-        #print(data["open_mls"][-1])
-        data["pseudoknots"].append(len([d for d in descriptors if "pseudoknot" in d]))
-        data["regular_mls"].append(len([d for d in descriptors if "regular_multiloop" in d]))
-        data["total_mls"].append(len(multiloops))
-        try:
-            data["longest_ml"].append(max(len(x) for x in multiloops))
-        except ValueError:
-            data["longest_ml"].append(0)
-        try:
-            data["rog_fast"].append(cg.radius_of_gyration("fast"))
-        except (ftmc.RnaMissing3dError, AttributeError):
-            data["rog_fast"].append(float("nan"))
-            data["rog_vres"].append(float("nan"))
-            data["anisotropy_fast"].append(float("nan"))
-            data["anisotropy_vres"].append(float("nan"))
-            data["asphericity_fast"].append(float("nan"))
-            data["asphericity_vres"].append(float("nan"))
-        else:
-            data["rog_vres"].append(cg.radius_of_gyration("vres"))
-            data["anisotropy_fast"].append(ftmd.anisotropy(cg.get_ordered_stem_poss()))
-            data["anisotropy_vres"].append(ftmd.anisotropy(cg.get_ordered_virtual_residue_poss()))
-            data["asphericity_fast"].append(ftmd.asphericity(cg.get_ordered_stem_poss()))
-            data["asphericity_vres"].append(ftmd.asphericity(cg.get_ordered_virtual_residue_poss()))
+            #print (descriptors)
+            data["open_mls"].append(len([d for d in descriptors if "open" in d]))
+            #print(data["open_mls"][-1])
+            data["pseudoknots"].append(len([d for d in descriptors if "pseudoknot" in d]))
+            data["regular_mls"].append(len([d for d in descriptors if "regular_multiloop" in d]))
+            data["total_mls"].append(len(multiloops))
+            try:
+                data["longest_ml"].append(max(len(x) for x in multiloops))
+            except ValueError:
+                data["longest_ml"].append(0)
+            try:
+                data["rog_fast"].append(cg.radius_of_gyration("fast"))
+            except (ftmc.RnaMissing3dError, AttributeError):
+                data["rog_fast"].append(float("nan"))
+                data["rog_vres"].append(float("nan"))
+                data["anisotropy_fast"].append(float("nan"))
+                data["anisotropy_vres"].append(float("nan"))
+                data["asphericity_fast"].append(float("nan"))
+                data["asphericity_vres"].append(float("nan"))
+            else:
+                data["rog_vres"].append(cg.radius_of_gyration("vres"))
+                data["anisotropy_fast"].append(ftmd.anisotropy(cg.get_ordered_stem_poss()))
+                data["anisotropy_vres"].append(ftmd.anisotropy(cg.get_ordered_virtual_residue_poss()))
+                data["asphericity_fast"].append(ftmd.asphericity(cg.get_ordered_stem_poss()))
+                data["asphericity_vres"].append(ftmd.asphericity(cg.get_ordered_virtual_residue_poss()))
+        except Exception as e:
+            with log_to_exception(log, e):
+                log.error("Error occurred during describing %s", cg.name)
+            raise
     if args.keys:
         allowed_keys = args.keys.split(",")
         for key in list(data.keys()):
             if key not in allowed_keys:
                 del data[key]
     df = pd.DataFrame(data)
+    df.set_index("name", append=True, inplace=True)
     if args.csv:
         df.to_csv(args.csv, mode='a')
     else:

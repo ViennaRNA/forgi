@@ -4,26 +4,26 @@ from __future__ import division
 
 from builtins import range
 from past.utils import old_div
-import numpy as np
-import numpy.testing as nptest
 
 import unittest
 import sys
 import itertools as it
+import copy
+import time
+import math
+import logging
+import tempfile as tf
+
+import numpy as np
+import numpy.testing as nptest
+
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.similarity as ftme
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.debug as fud
-import tempfile as tf
-
-
 from ...graph import bulge_graph_test as tfgb
 
-import copy
-import time
-import math
-import logging
 log = logging.getLogger(__name__)
 
 
@@ -334,6 +334,12 @@ class CoarseGrainTest(tfgb.GraphVerification):
                                "producting the exactly same result? Something seems to be wrong.")
         self.assertLess(abs(rog_fast - rog_vres), 1, msg = "Different methods for ROG calculation "
                                                       "should produce roughly the same result.")
+
+    def test_radius_of_gyration_no_stems(self):
+        bg = fgb.from_fasta_text("....")
+        cg = ftmc.from_bulge_graph(bg)
+        cg.coords["f0"]=[0,0,0.],[12.,1,1]
+        self.assertTrue(math.isnan(cg.radius_of_gyration()))
 
     def test_get_coordinates_list(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')

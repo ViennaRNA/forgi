@@ -1159,6 +1159,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         :return: A number with the radius of gyration of this structure.
         '''
+        if len(list(self.stem_iterator()))==0:
+            log.warning("Cannnot calculate ROG (%s) for structure without stems", method)
+            return float("nan")
         if method=="fast":
             coords=self.get_ordered_stem_poss()
         elif method=="vres":
