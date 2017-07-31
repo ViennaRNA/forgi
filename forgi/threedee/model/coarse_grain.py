@@ -565,8 +565,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         for stem in self.stem_iterator():
             try:
+                log.debug("Adding virtual residues for stem %s with coords %s", stem, self.coords[stem])
                 ftug.add_virtual_residues(self, stem)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, AssertionError):
                 if np.all(np.isnan(self.coords[stem])):
                     raise RnaMissing3dError("No 3D coordinates available for stem {}".format(stem))
                 elif np.all(np.isnan(self.twists[stem])):
@@ -1121,6 +1122,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 continue
             if parts[0] == 'coord':
                 name = parts[1]
+
                 self.coords[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
             if parts[0] == 'twist':
                 name = parts[1]
@@ -1160,7 +1162,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         :return: A number with the radius of gyration of this structure.
         '''
         if len(list(self.stem_iterator()))==0:
-            log.warning("Cannnot calculate ROG (%s) for structure without stems", method)
+            log.warning("Cannnot calculate ROG (%s) for structure %s without stems", method, self.name)
             return float("nan")
         if method=="fast":
             coords=self.get_ordered_stem_poss()

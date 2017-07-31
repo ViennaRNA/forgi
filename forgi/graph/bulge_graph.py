@@ -1751,41 +1751,6 @@ class BulgeGraph(object):
             descriptors.add("pseudoknot")
         return descriptors
 
-    '''def find_multiloop_loops(self):
-        """
-        Find out which defines are connected in a multiloop.
-
-        :return: Two lists, one containing the sets of nucleotides comprising the shortest loops
-                 and the other containing sets of nucleotides comprising the shortest loops.
-        """
-        loops = set()
-
-        for d in self.mloop_iterator():
-            loop_nts = self.shortest_bg_loop(d)
-
-            if len(loop_nts) > 0:
-                if tuple(sorted(loop_nts)) not in loops:
-                    log.debug("Adding a loop.")
-                loops.add(tuple(sorted(loop_nts)))
-
-        loops = list(loops)
-        loop_elems = []
-
-        for loop in loops:
-            all_loops = set([self.get_node_from_residue_num(n) for n in loop])
-
-            # some multiloops might not contain any nucleotides, so we
-            # have to explicitly add these
-            for a, b in it.combinations(all_loops, r=2):
-                common_edges = set.intersection(self.edges[a], self.edges[b])
-                for e in common_edges:
-                    if self.element_length(e)==0:
-                        all_loops.add(e)
-
-            loop_elems += [all_loops]
-
-        return loop_elems, loops'''
-
     def seq_ids_from_seq(self):
         """
         Get the sequence ids of the string.

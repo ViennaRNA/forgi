@@ -18,6 +18,7 @@ import numpy as np
 import numpy.testing as nptest
 
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.graph.bulge_graph as fgb
 import forgi.threedee.model.similarity as ftme
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.vector as ftuv
@@ -336,7 +337,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
                                                       "should produce roughly the same result.")
 
     def test_radius_of_gyration_no_stems(self):
-        bg = fgb.from_fasta_text("....")
+        bg = fgb.from_fasta_text("AUCG\n....")
         cg = ftmc.from_bulge_graph(bg)
         cg.coords["f0"]=[0,0,0.],[12.,1,1]
         self.assertTrue(math.isnan(cg.radius_of_gyration()))
