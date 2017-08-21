@@ -41,7 +41,10 @@ def ppv(tp, fp):
     :param fp: The false positives
     :return: The ppv
     '''
-    return tp / float(tp + fp)
+    try:
+        return tp / float(tp + fp)
+    except ZeroDivisionError:
+        return float("nan")
 
 def sty(tp, fn):
     '''
@@ -51,7 +54,10 @@ def sty(tp, fn):
     :param fn: False negatives
     :return: The sensitivity
     '''
-    return tp / float(tp + fn)
+    try:
+        return tp / float(tp + fn)
+    except ZeroDivisionError:
+        return float("nan")
 
 def mcc(confusion_matrix):
     '''

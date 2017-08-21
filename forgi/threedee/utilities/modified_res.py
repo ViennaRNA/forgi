@@ -126,6 +126,11 @@ def to_4_letter_alphabeth(chain):
                 #DNA/ Amino Acid. Remove residue
                 chain.detach_child(r.id)
                 continue #Continue with same i (now different residue)
+            if res_info["Type description"] == "NON-POLYMER":
+                #e.g. GTP in 3DIR
+                chain.detach_child(r.id)
+                continue #Continue with same i (now different residue)
+
             r.resname = res_info["Standard parent"]
 
         # rename modified residues
@@ -133,9 +138,10 @@ def to_4_letter_alphabeth(chain):
             log.debug(r.id)
             # The following was added because of 1NYI.pdb. It includes a single G-residue denoted as HETATOM in chain A.
             # It forms a base-pair, but is probably not connected to the backbone.
-            # Instead of removing it, introducing cutpoint whereever the PDB Chain
+            # Instead of removing it/ in addition to removing it,
+            # introducing cutpoint whereever the PDB Chain
             # contains gaps would be another option (TODO).
-            if r.id[0].strip() in ["H_A", "H_U", "H_G", "H_C", "H_  G", "H_  C", "H_  A", "H_  U"]: #A plain AUGC as a HETATOM means it is a ligand.
+            if r.id[0].strip() in ["H_A", "H_U", "H_G", "H_C", "H_  G", "H_  C", "H_  A", "H_  U" ]: #A plain AUGC as a HETATOM means it is a ligand.
                 chain.detach_child(r.id)
                 continue #Continue with same i (now different residue)
 

@@ -4,7 +4,6 @@ from __future__ import division
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
-from past.types import basestring
 
 import collections as c
 import contextlib
@@ -51,6 +50,12 @@ from ...utilities.exceptions import CgConstructionError, CgIntegrityError, Graph
 from .linecloud import CoordinateStorage, LineSegmentStorage
 
 
+
+def is_string_type(stri):
+    if sys.version_info<(3,):
+        return isinstance(stri, (str, unicode))
+    else:
+        return isinstance(stri, str)
 
 
 log = logging.getLogger(__name__)
@@ -283,7 +288,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
-    elif isinstance(chain_id, basestring):
+    elif is_string_type(chain_id):
         chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
     else:
         chains = ftup.get_all_chains(pdb_filename, parser=parser)

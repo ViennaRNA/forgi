@@ -24,7 +24,7 @@ def get_parser():
     output_group.add_argument("--pdb-rmsd", help="Compare based on PDB-RMSD", action="store_true")
     return parser
 
-def main(parser):
+def main(args):
     with fuc.hide_traceback():
         cg1, cg2 = fuc.cgs_from_args(args, 2, rna_type="3d", enable_logging=True)
 

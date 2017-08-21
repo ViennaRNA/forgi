@@ -2,7 +2,12 @@ from __future__ import absolute_import, division, print_function
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
-from future.utils import viewkeys
+import sys
+if sys.version_info<(3,):
+    from future.utils import viewkeys
+else:
+    viewkeys = lambda dic, **kwargs: dic.keys(**kwargs)
+
 import numpy as np
 from collections import Mapping
 import itertools

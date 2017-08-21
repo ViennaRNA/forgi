@@ -34,10 +34,13 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
     else:
         raise ValueError("get_parser_any_cgsg does not support nargs={}".format(nargs) )
 
-    fileformats = ["pdb files"]
+    if rna_type!="only_cg":
+        fileformats = ["pdb files"]
+    else:
+        fileformats = []
     if rna_type!="pdb":
         fileformats.append("forgi cg files")
-        if rna_type!="3d":
+        if rna_type!="3d" and rna_type != "only_cg":
             fileformats.append("forgi bg files")
             fileformats.append("fasta files")
     if rna_type=="any":
@@ -65,27 +68,36 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
         logging_exceptions.update_parser(verbosity_group)
     return parser
 
-def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True):
+def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True, return_filenames = False):
     if enable_logging:
         logging.basicConfig(format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
         logging_exceptions.config_from_args(args)
 
     cg_rnas = []
+    filenames  = []
     for rna in args.rna:
         if isinstance(nargs, int):
-            cg_rnas.append(load_rna(rna, rna_type=rna_type, allow_many=False, pdb_chain=args.chain,
-                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
-                                    dissolve_length_one_stems = not args.keep_length_one_stems))
+            allow_many = False
         else:
-            cg_rnas.extend(load_rna(rna, rna_type=rna_type, allow_many=True, pdb_chain=args.chain,
-                                    pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
-                                    dissolve_length_one_stems = not args.keep_length_one_stems))
-    return cg_rnas
+            allow_many = True
+        cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many, pdb_chain=args.chain,
+                             pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
+                             dissolve_length_one_stems = not args.keep_length_one_stems)
+        if allow_many:
+            cg_rnas.extend(cg_or_cgs)
+            filenames.extend([rna]*len(cg_or_cgs))
+        else:
+            cg_rnas.append(cg_or_cgs)
+            filenames.append(rna)
+    if return_filenames:
+        return cg_rnas, filenames
+    else:
+        return cg_rnas
 
 
 def sniff_filetype(file):
     line = next(file)
-    if line.startswith("ATOM") or line.startswith("HEADER"):
+    if line.startswith("ATOM") or line.startswith("HEADER") or line.startswith("HETATM"):
         return "pdb"
     line=line.strip()
     #We allow comments in all files except PDB files.
@@ -123,6 +135,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
     :param rna_type: One of "any", "cg" and "3d" and "pdb"
                      "any": Return either BulgeGraph or CoarseGrainRNA objekte, depending on the input format
                      "cg":  Always convert to CoarseGrainRNA objects, even if they have no 3D information
+                     "only_cg": Only accept cg-files.
                      "3d":  Return CoarseGrainRNA objects, if the file contains 3D information, raise an error otherwise
                      "pdb": only accept pdb files
     :param allow_many: If True, return a list. If False raise an error, if more than one RNA is present.
@@ -148,9 +161,11 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
         filetype = sniff_filetype(rnafile)
     if rna_type=="pdb" and filetype!="pdb":
         raise WrongFileFormat("Only PDB files are accepted, but file {} has type {}.".format(filename, filetype))
+    if rna_type=="only_cg" and filetype!="forgi":
+        raise WrongFileFormat("Only forgi cg files are accepted, but file {} has type {}.".format(filename, filetype))
     if filetype=="forgi":
         cg = ftmc.CoarseGrainRNA(filename)
-        if rna_type=="3d" and not cg.coords.is_filled:
+        if rna_type in ["3d", "only_cg"] and not cg.coords.is_filled:
             raise WrongFileFormat("File {} does not contain all 3D coordinates!".format(filename))
         if allow_many:
             return [cg]

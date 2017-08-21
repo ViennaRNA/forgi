@@ -469,14 +469,14 @@ def vector_set_rmsd(set1, set2):
 
 def rotation_matrix(axis, theta):
     '''
-    Calculate the rotation matrix for a rotation of theta degrees around axis.
+    Calculate the rotation matrix for a rotation of theta around axis.
 
     Thanks to unutbu on StackOverflow
 
     http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
 
     :param axis: The axis around which to rotate
-    :param theta: The angle of rotation
+    :param theta: The angle of rotation (in rad)
     :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
