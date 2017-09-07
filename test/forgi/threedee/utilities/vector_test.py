@@ -42,6 +42,97 @@ class TestLineSegmentDistance(unittest.TestCase):
         b0 = np.array([-27.57744115,   6.96488989, -22.47619655])
         b1 = np.array([-16.93424799,  -4.0631445 , -16.19822301])
         self.assertLess(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 25)
+
+
+class TestLineSegmentCollinearity(unittest.TestCase):
+
+    def test_collinear_segments(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0,0,2.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,-1]),np.array([0,0,-2.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,-2]),np.array([0,0,-1.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([1,1,1]))
+        b = (np.array([2.,2,2]),np.array([3,3,3.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([1,1,1]))
+        b = (np.array([0.5,0.5,0.5]),np.array([0.7,0.7,0.7]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+
+    def test_fixed_angle(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,0,1])+ftuv.normalize([1,1,1.]))
+        x = np.linspace(0.01,4,500)
+        for f in x:
+            col = ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f))
+            self.assertLess(col, 0.95)
+            self.assertGreater(col, 0.6)
+
+    def test_normal_angle(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,1,1]))
+        x = np.linspace(0.01,4,500)
+        for f in x:
+            col = ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f))
+            self.assertLess(col, 0.6)
+            self.assertGreater(col, 0.)
+
+    def plot_fixed_angle(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,0,1])+ftuv.normalize([1,1,1.]))
+        x = np.linspace(0.01,4,5000)
+        y = []
+        for f in x:
+            y.append(ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f)))
+        import matplotlib.pyplot as plt
+        plt.title("Fixed angle")
+        plt.plot(x, y)
+        plt.show()
+        assert False
+    def plot_normal(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,1,1]))
+        x = np.linspace(0.01,4,5000)
+        y = []
+        for f in x:
+            y.append(ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f)))
+        import matplotlib.pyplot as plt
+        plt.title("normal")
+        plt.plot(x, y)
+        plt.show()
+        assert False
+    def test_distance(self):
+        #score decreases with increasing distance, but stays above 0
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        x = np.linspace(0.01,10,5000)
+        y_old = 1
+        for d in x:
+            b0 = a[1]+np.array([0,1.,0.])*d
+            b = b0, b0+np.array([0.,0,1])
+            y = ftuv.line_segments_collinearity(a,b)
+            self.assertLess(y, y_old)
+            self.assertGreater(y, 0)
+            y_old = y
+
+    def plot_distance(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        x = np.linspace(0.01,10,5000)
+        y=[]
+        for d in x:
+            b0 = a[1]+np.array([0,1.,0.])*d
+            b = b0, b0+np.array([0.,0,1])
+            y.append(ftuv.line_segments_collinearity(a,b))
+        import matplotlib.pyplot as plt
+        plt.title("distance")
+        plt.plot(x, y)
+        plt.show()
+
+
+
 class TestVector(unittest.TestCase):
     """Tests for the threedee.utilities.vector module"""
     def setUp(self):

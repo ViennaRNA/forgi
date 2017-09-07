@@ -337,6 +337,7 @@ def stem2_pos_from_stem1_1(transposed_stem1_basis, params):
 
     :param transposed_stem1_basis: The vtransposed basis of the first stem.
     :param params: The parameters describing the position of stem2 wrt stem1
+                   (i.e. the carthesian vector in standard coordinates pointing from stem1 to stem2)
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
@@ -393,7 +394,8 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
     rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
-    twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
+    #assert np.allclose(nl.inv(rot_mat), rot_mat.T)
+    twist2_new = np.dot(rot_mat.T, twist2_new)
 
     twist2_new_basis = np.dot(stem1_basis, twist2_new)
 
@@ -496,8 +498,131 @@ def get_virtual_stat(cg, ml1, ml2):
     dims = cg.get_bulge_dimensions(ml1)[0]+cg.get_bulge_dimensions(ml2)[0]
     return ftms.AngleStat("virtual", cg.name, dims, 1000, u, v, t, r1,
                                         u1, v1, 0, [], "")
+def get_angle_stat_geometry(stem1_vec, twist1, stem2_vec, twist2, bulge_vec):
+    """
+    :param stem1_vec: The vector of the first stem, pointing TOWARDS the bulge
+    :param twist1: The twist vector at the side of stem1 closest to the bulge
+    :param stem2_vec: The vector of the second stem, pointing AWAY FROM the bulge
+    :param twist2: The twist vector at the side of stem2 closest to the bulge
+    :param bulge_vec: The vector from stem1 to stem2
+
+    :returns: T 6-tuple: u,v (the orientation parameters),
+                         t (twist parameter) and
+                         r1, u1, v1 (the seperation parameters)
+
+
+        \                A
+         \ stem1        /
+          \            / stem2
+           V          /
+            --------->
+              bulge
+
+    """
+    try:
+        # Get the orientations for orienting these two stems
+        (r, u, v, t) = get_stem_orientation_parameters(stem1_vec, twist1,
+                                                            stem2_vec, twist2)
+        (r1, u1, v1) = get_stem_separation_parameters(stem1_vec, twist1, bulge_vec)
+    except ZeroDivisionError as e:
+        with log_to_exception(log, e):
+            log.error ("Cannot get stat. The 3D coodinates are probably wrong.")
+        raise
+
+    return u, v, t, r1, u1, v1
+
+def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
+    """
+    Get the deviation between a stems actual location and an imaginary location
+    expressed as a stat.
+    """
+    log.debug("Getting broken ML deviation")
+    import forgi.threedee.model.stats as ftms
+    s1, s2 = cg.edges[broken_ml_name]
+    if s1 == fixed_stem_name:
+        orig_stem_name = s2
+    elif s2 ==fixed_stem_name:
+        orig_stem_name = s1
+    else:
+        raise ValueError("fixed stem %s is not attached to ml %s",
+                         fixed_stem_name, broken_ml_name)
+
+    sides = cg.get_sides(fixed_stem_name, broken_ml_name)
+    fixed_s_vec = cg.coords.get_direction(fixed_stem_name)
+    if sides[0]==0:
+        fixed_s_vec = -fixed_s_vec
+    s_twist = cg.twists[fixed_stem_name][sides[0]]
+    fixed_stem_basis = ftuv.create_orthonormal_basis(fixed_s_vec, s_twist)
+    vbulge_vec, vstem_vec, vstem_twist = _virtual_stem_from_bulge(fixed_stem_basis, virtual_stat)
+
+    vstem_vec *=5
+    vstem_coords0 = cg.coords[fixed_stem_name][sides[0]] + vbulge_vec
+    vstem_coords1 = vstem_coords0 + vstem_vec
+
+    sides2 = cg.get_sides(orig_stem_name, broken_ml_name)
+    orig_stem_vec = cg.coords[orig_stem_name][sides2[1]] - cg.coords[orig_stem_name][sides2[0]]
+    true_bulge_vec = cg.coords[orig_stem_name][sides2[0]] - cg.coords[fixed_stem_name][sides[0]]
+
+    pos_dev = ( ftuv.vec_distance(cg.coords[orig_stem_name][sides2[0]], vstem_coords0) )
+    ang_dev = ftuv.vec_angle(vstem_vec, orig_stem_vec)
+    twist_dev = ftuv.vec_angle(cg.coords[fixed_stem_name][sides[0]], vstem_twist)
+    log.debug("Deviation: pos %s, orient %s, twist: %s", pos_dev,
+             math.degrees(ang_dev), math.degrees(twist_dev))
+
+    # For debugging
+    #max_diff = 6
+    #max_adiff = math.radians(3*max_diff)
+    #if pos_dev < max_diff and ang_dev<max_adiff and twist_dev<2*max_adiff:
+    if False: # plotting-code used for debugging
+        pos_adev = ftuv.vec_angle(true_bulge_vec, vbulge_vec)
+        log.info("Deviation: pos %s, %s orient %s, twist: %s", pos_dev, math.degrees(pos_adev),
+                 math.degrees(ang_dev), math.degrees(twist_dev))
+        log.info("Length: virtual: %s original: %s", ftuv.magnitude(vstem_vec), ftuv.magnitude(orig_stem_vec))
+        import matplotlib.pyplot as plt
+
+        plot_junction_2d(cg, broken_ml_name)
+        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], cg.coords[orig_stem_name][sides2[0]][0]],
+                 [cg.coords[fixed_stem_name][sides[0]][1], cg.coords[orig_stem_name][sides2[0]][1]],
+                 ".-", label="true bulge")
+        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], vstem_coords0[0]],
+                 [cg.coords[fixed_stem_name][sides[0]][1], vstem_coords0[1]],
+                 ".-", label="virtual bulge")
+        plt.plot([vstem_coords0[0], vstem_coords1[0]],
+                 [vstem_coords0[1], vstem_coords1[1]],
+                 "s-", label="virtual"+orig_stem_name )
+        plt.legend()
+        plt.show()
+    return pos_dev, ang_dev, twist_dev
+
+
+def plot_element(cg, elem, style="o-", name_suffix=""):
+    import matplotlib.pyplot as plt
+    plt.plot([cg.coords[elem][0][0], cg.coords[elem][1][0]],
+             [cg.coords[elem][0][1], cg.coords[elem][1][1]],
+             style,
+             label=elem+name_suffix)
+
+def plot_junction_2d(cg, broken_ml):
+    import matplotlib.pyplot as plt
+    plotted = set()
+    #plot_element(cg, broken_ml, name_suffix=" broken")
+    elem = cg.get_next_ml_segment(broken_ml)
+    while elem != broken_ml:
+        #plot_element(cg, elem)
+        for s in cg.edges[elem]:
+            if s not in plotted:
+                plot_element(cg,s)
+                plotted.add(s)
+        elem = cg.get_next_ml_segment(elem)
 
 def _virtual_stem_from_bulge(prev_stem_basis,  stat):
+    """
+    Return a virtual stem with length 1 that would be placed by stat and prev_stem
+
+    :param prev_stem_basis: The basis of the previous stem.
+    :param stat: The angle stat that describes the orientation of the
+                 virtual stem from the previous stem.
+    """
     transposed_stem1_basis = prev_stem_basis.transpose()
     start_location = stem2_pos_from_stem1_1(transposed_stem1_basis, stat.position_params())
     stem_orientation = stem2_orient_from_stem1_1(transposed_stem1_basis,
@@ -623,7 +748,16 @@ def invert_angle_stat(stat):
 
 
 def invert_angle_stat_quick(stat):
+    raise NotImplementedError("Incomplete implementation below")
     import forgi.threedee.model.stats as ftms
+    # Reverse the position parameters (in carthesian coordinates)
+    bulge2 = -cuv.spherical_polar_to_cartesian(stat.position_params())
+    stem2 = -cuv.spherical_polar_to_cartesian([1]+stat.orientation_params())
+    stem_orientation = stem2_orient_from_stem1_1(transposed_stem1_basis,
+                                                      [1] + list(stat.orientation_params()))
+
+    twist1 = twist2_orient_from_stem1_1(transposed_stem1_basis, stat.twist_params())
+    return start_location, stem_orientation, twist1
 
 
 

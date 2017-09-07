@@ -4,11 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, open, pow, range, round,
                       str, super, zip, object)
-from past.builtins import basestring
-
 
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.utilities.stuff as fus
 import collections as col
 import numpy as np
 import itertools as it
@@ -30,6 +29,8 @@ try:
 except NameError:
     def profile(x):
         return x
+
+
 
 
 def to_rgb(im):
@@ -790,7 +791,7 @@ class Projection2D(object):
             if ax is None:
                 raise TypeError()
 
-            if isinstance(c,basestring):
+            if fus.is_string_type(c):
                 color = c     # ie. use colors.colorConverter.to_rgba_array(c)
             else:
                 color = None  # use cmap, norm after collection is created

@@ -111,20 +111,59 @@ def describe_ml_segments(cg):
     loops = cg.find_mlonly_multiloops()
     for loop in loops:
         description = cg.describe_multiloop(loop)
+        try:
+            j3_roles = cg.assign_loop_roles(loop)
+        except ValueError:
+            j3_roles = None
+        if j3_roles:
+            j3_familyFlat = cg.junction_family_westhof1(j3_roles)
+            j3_family3D = cg.junction_family_3d(j3_roles)
+            j3_familyPerp = cg.junction_family_is_perpenticular(j3_roles)
+            j3_Delta = cg.get_length(j3_roles["J23"]) - cg.get_length(j3_roles["J31"])
+
+        else:
+            j3_family3D = None
+            j3_familyFlat = None
+            j3_familyPerp = None
+            j3_Delta = None
         for segment in loop:
             if segment[0] !="m":
                 continue
             data["segment"].append(segment)
             data["junction_length"].append(len(loop))
             data["segment_length"].append(cg.get_length(segment))
+            data["loops_largest_segment_length"].append(max(cg.get_length(x) for x in loop))
+            data["loops_shortest_segment_length"].append(min(cg.get_length(x) for x in loop))
+            data["sum_of_loops_segment_lengths"].append(sum(cg.get_length(x) for x in loop))
+            data["loop_segment_lengths"].append(",".join(map(str,sorted(cg.get_length(x) for x in loop))))
+
             data["angle_type"].append(abs(cg.get_angle_type(segment, allow_broken = True)))
             s1, s2 = cg.connections(segment)
-            data["angle_between_stems"].append( ftuv.vec_angle(cg.coords.get_direction(s1),
-                                                               cg.coords.get_direction(s2)))
+
+            vec1 = cg.coords.get_direction(s1)
+            if cg.get_sides(s1, segment) == (1,0):
+                vec1 = -vec1
+            else:
+                assert cg.get_sides(s1, segment) == (0,1)
+            vec2 = cg.coords.get_direction(s2)
+            if cg.get_sides(s2, segment) == (1,0):
+                vec2 = -vec2
+            else:
+                assert cg.get_sides(s2, segment) == (0,1)
+            data["angle_between_stems"].append( ftuv.vec_angle(vec1, vec2) )
             data["junction_va_distance"].append(ftug.junction_virtual_atom_distance(cg, segment))
             data["is_external_multiloop"].append("open" in description)
             data["is_pseudoknotted_multiloop"].append("pseudoknot" in description)
             data["is_regular_multiloop"].append("regular_multiloop" in description)
+            if j3_roles is not None:
+                elem_role, = [ x[0] for x in j3_roles.items() if x[1]==segment]
+            else:
+                elem_role = "?"
+            data["j3_role"].append(elem_role)
+            data["j3_familyFlat"].append(j3_familyFlat)
+            data["j3_family3D"].append(j3_family3D)
+            data["j3_familyPerp"].append(j3_familyPerp)
+            data["j3_Delta_j23_j31"].append(j3_Delta)
 
     return data
 

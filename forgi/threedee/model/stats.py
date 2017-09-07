@@ -311,7 +311,7 @@ class AngleStat(object):
         return (self.r1, self.u1, self.v1)
 
     def __str__(self):
-        out_str = "%s %s %d %d %f %f %f %f %f %f %d %s %s" % (self.stat_type,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s" % (self.stat_type,
                                                               self.pdb_name,
                                                               self.dim1,
                                                               self.dim2,
@@ -406,15 +406,16 @@ class AngleStat(object):
         :param angular_cutoff: in radians. If not given, uses the position cutoff as a value in degrees
         """
         if angular_cutoff is None:
-            angular_cutoff = math.radians(position_cutoff)
+            angular_cutoff = 4 * math.radians(position_cutoff)
         deviation = self.deviation_from(stat2)
         if deviation[0]>position_cutoff:
             log.debug("Dissimilar, because of position deviation = %f", deviation[0])
             return False
         for dev in deviation[1:]:
             if dev>angular_cutoff:
-                log.debug("Dissimilar, because of angular deviation %s (%s)", dev, deviation[1:])
+                log.debug("Dissimilar, because of angular deviation %s (%s) > %f", dev, deviation[1:], angular_cutoff)
                 return False
+        log.debug("%s < (%f, %f)", deviation, position_cutoff, angular_cutoff)
         return True
 
     def __neg__(self):

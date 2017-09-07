@@ -1715,6 +1715,7 @@ class BulgeGraph(object):
             loops.append(tuple(loop))
         return loops
 
+    
     def describe_multiloop(self, multiloop):
         """
         :param multiloop: An iterable of nodes (only "m", "t" and "f" elements)

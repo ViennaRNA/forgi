@@ -6,11 +6,20 @@ import random
 import shutil
 import tempfile as tf
 import collections as col
+import sys
 
 import forgi.utilities.debug as cud
 
 bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 bracket_right = ")]}>abcdefghijklmnopqrstuvwxyz"
+
+
+def is_string_type(stri):
+    if sys.version_info<(3,):
+        return isinstance(stri, (str, unicode))
+    else:
+        return isinstance(stri, str)
+
 
 #COVERAGE: Not used
 def grouped(iterable, n):

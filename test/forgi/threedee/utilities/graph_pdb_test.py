@@ -338,16 +338,6 @@ class TestVirtualStats(unittest.TestCase):
         cg.find_mlonly_multiloops = lambda *args: [ml1, ml2]
         self.verify_virtual_stat(cg, ml2, broken_m)
 
-    def test_twice_invert_angle_stat_gives_original_stat(self):
-        cg = self.cg
-        for ml in [ m for m in cg.get_mst() if m[0]=="m" ]:
-            stat, = [ stat for stat in cg.get_stats(ml) if stat.ang_type == cg.get_angle_type(ml) ]
-
-            inverse_stat = ftug.invert_angle_stat(stat)
-            # Make sure the inversion changes the stat
-            self.assert_all_angles_different(stat, inverse_stat)
-            # The second inversion changes it back to the original stat
-            self.assert_stats_equal(stat, ftug.invert_angle_stat(inverse_stat))
 
     def visualize_invert_stat(self):
         import matplotlib.pyplot as plt
@@ -370,28 +360,6 @@ class TestVirtualStats(unittest.TestCase):
             ax.legend()
             plt.show()
 
-    def test_invert_angle_stat2(self):
-        cg = self.cg
-        for ml in [ m for m in cg.get_mst() if m[0]=="m" ]:
-            stat1, stat2 = cg.get_stats(ml)
-            self.assert_all_angles_different(stat1, stat2)
-            self.assert_stats_equal(stat2, ftug.invert_angle_stat(stat1))
-            self.assert_stats_equal(stat1, ftug.invert_angle_stat(stat2))
-
-    def test_invert_angle_stat3(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
-
-        for loop in it.chain(cg.mloop_iterator(), cg.iloop_iterator()):
-            log.info("Checking loop %s", loop)
-            stat1, stat2 = cg.get_stats(loop)
-            inverse1 = ftug.invert_angle_stat(stat1)
-            inverse2 = ftug.invert_angle_stat(stat2)
-
-            #self.assert_all_angles_different(stat1, stat2)
-            self.assert_stats_equal(stat2, inverse1)
-            self.assert_stats_equal(stat1, inverse2)
-            self.assert_stats_equal(stat1, ftug.invert_angle_stat(inverse1))
-            self.assert_stats_equal(stat2, ftug.invert_angle_stat(inverse2))
 
     def test_sum_of_stats(self):
         for ml1 in ["m0", "m1", "m2"]:
@@ -469,6 +437,8 @@ class TestVirtualStats(unittest.TestCase):
             log.info("Stats for %s and %s with angle types %s and %s", ml1, ml2, stat1.ang_type, stat2.ang_type)
             self.assert_stats_equal(sum_stat, virtual_stat)
 
+
+
     def visualize_sum_of_stats(self):
         cg = self.cg
         import matplotlib.pyplot as plt
@@ -493,6 +463,9 @@ class TestVirtualStats(unittest.TestCase):
 
         ax.legend()
         plt.show()
+
+
+
 
 
 class TestDistanceCalculation(unittest.TestCase):

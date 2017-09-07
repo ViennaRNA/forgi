@@ -26,6 +26,7 @@ from pprint import pprint
 
 
 import numpy as np
+
 import scipy.spatial
 import scipy.stats
 
@@ -48,14 +49,11 @@ from ...utilities import stuff as fus
 from ...utilities.observedDict import observedDict
 from ...utilities.exceptions import CgConstructionError, CgIntegrityError, GraphConstructionError
 from .linecloud import CoordinateStorage, LineSegmentStorage
+from ...utilities.stuff import is_string_type
 
 
 
-def is_string_type(stri):
-    if sys.version_info<(3,):
-        return isinstance(stri, (str, unicode))
-    else:
-        return isinstance(stri, str)
+
 
 
 log = logging.getLogger(__name__)
@@ -816,12 +814,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             raise err
 
         try:
-            # Get the orientations for orienting these two stems
-            (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1,
-                                                                stem2, twist2)
-            (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
-        except ZeroDivisionError:
-            print ("Cannot get stats for {}. The 3D coodinates are probably wrong.".format(define), file=sys.stderr)
+            u, v, t, r1, u1, v1 = ftug.get_angle_stat_geometry(stem1, twist1, stem2, twist2, bulge)
+        except ZeroDivisionError as e:
+            with log_to_error(log, e):
+                log.error("Error getting stats for define %s", define)
             raise
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
@@ -1179,6 +1175,177 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         rog = ftud.radius_of_gyration(coords)
         return rog
 
+
+    def assign_loop_roles(self, loop):
+        """
+        For 3-way junctions: Assign the roles P1, P2 and P3
+        and J12, J31, J23 according to Lescoute and Westhof,
+        RNA 2006 (doi: 10.1261/rna.2208106)
+
+        We try to detect which helices stack and assign the roles in a way
+        that J12 is always the stacking segment.
+
+        :returns: None if no clear classification was possible,
+                  a dictionary otherwise.
+        """
+        if len(loop) != 3:
+            raise ValueError("junction_family is currentlty only implemented for 3-way junctions.")
+        # Find out which helices stack.
+        # Version 1: colinearity of helix axes:
+        stems = self.edges[loop[0]] | self.edges[loop[1]] | self.edges[loop[2]]
+        if len(stems)!=3:
+            e = ValueError("The multiloop segments do not form a 3-way junction.")
+            with log_to_exception(log, e):
+                log.error("stems are %s", stems)
+            raise e
+        collinearities = {}
+        for stem1, stem2 in it.combinations(stems, 2):
+            c = ftuv.line_segments_collinearity(self.coords[stem1], self.coords[stem2])
+            collinearities[(stem1, stem2)] = c
+        # The two helices that are most likely to stack.
+        stacking_stems = max(collinearities, key=lambda k:collinearities[k])
+        if collinearities[stacking_stems]<0.8:
+            return None
+        # The second best pair
+        second_best_pair, second_best_score = list(sorted(collinearities.items(), key=lambda x: x[1]))[1]
+        if collinearities[stacking_stems]-second_best_score<0.5:
+            #Two are possible. We look now which one has fewer offset to the 3rd stem.
+            # The reference stem could stack with both.
+            reference = set(stacking_stems) & set(second_best_pair)
+            other = set(stems) - reference
+            reference, = reference
+            stem1, stem2 = other
+            o1 = self.stem_offset(reference, stem1)
+            o2 = self.stem_offset(reference, stem2)
+            if abs(o1-o2)<0.2:  # Angstrom
+                log.warning("Cannot assign loop roles. Stacking is ambiguous.")
+                return None
+            elif o1<o2:
+                stacking_stems=(reference, stem1)
+            else:
+                stacking_stems=(reference, stem2)
+        # We have clearly identified the stacking helices.
+        # j12 is the ML-segment that connects the stacking helices.
+        j12, = self.edges[stacking_stems[0]] & self.edges[stacking_stems[1]]
+        # stem P1 is at the 5' side of the connecting multiloop...
+        p1 = self.get_node_from_residue_num(self.define_a(j12)[0])
+        # ...and P2 at the 3' side
+        p2 = self.get_node_from_residue_num(self.define_a(j12)[1])
+        assert set([p1,p2])==set(stacking_stems)
+        assert p1!=p2
+        # p3 is the third stem,
+        p3, = stems - set([p1,p2])
+        # j31 and j23 are the remaining ml segments
+        j31, = self.edges[p3] & self.edges[p1]
+        j23, = self.edges[p2] & self.edges[p3]
+        return {"P1":p1, "P2":p2,"P3":p3,"J12":j12, "J31":j31,"J23":j23}
+
+    def junction_family_westhof1(self, loop):
+        """
+        For 3-way junctions: Return the junction family according to
+        Lescoute and Westhof, RNA 2006 (doi: 10.1261/rna.2208106).
+
+        In this method, the junction family is defined via the relative
+        lengths of fragments, not the orientation of the elements.
+
+        :param loop: Either a dictionary, as returned by assign_loop_roles
+                     or a list of 3 loop segments.
+        """
+        if isinstance(loop, dict):
+            j_roles=loop
+        else:
+            j_roles = assign_loop_roles(loop)
+        # Now compare the lengths of J31 and J23 to determine the junction family
+        if self.get_length(j_roles["J31"])>self.get_length(j_roles["J23"]):
+            return "A"
+        elif self.get_length(j_roles["J31"])==self.get_length(j_roles["J23"]):
+            return "B"
+        else:
+            return "C"
+    def junction_family_3d(self, loop):
+        """
+        For 3-way junctions: Return the junction family depending
+        on the 3D orientation.
+
+        :param loop: Either a dictionary, as returned by assign_loop_roles
+                     or a list of 3 loop segments.
+        """
+        if isinstance(loop, dict):
+            j_roles=loop
+        else:
+            j_roles = assign_loop_roles(loop)
+        a31 = self.stem_angle(j_roles["P3"], j_roles["P1"])
+        a23 = self.stem_angle(j_roles["P2"], j_roles["P3"])
+        # If the stack is perfectly straight, a31+a23=180 degrees.
+        if a31>a23:
+            return 2
+        else:
+            return 1
+    def junction_family_is_perpenticular(self, loop):
+        """
+        For 3-way junctions: Return whether or not the not-stacking loop
+        is very roughly perpenticular to the stack.
+        :param loop: Either a dictionary, as returned by assign_loop_roles
+                     or a list of 3 loop segments.
+        """
+        if isinstance(loop, dict):
+            j_roles=loop
+        else:
+            j_roles = assign_loop_roles(loop)
+        a31 = self.stem_angle(j_roles["P3"], j_roles["P1"])
+        a23 = self.stem_angle(j_roles["P2"], j_roles["P3"])
+        # If the stack is perfectly straight, a31+a23=180 degrees.
+        if math.radians(60)<a31<math.radians(120) or math.radians(60)<a23<math.radians(120):
+            return 1
+        else:
+            return 0
+
+
+    def stem_offset(self, ref_stem, stem2):
+        """
+        How much is the offset between the start of stem 2
+        and the axis of stem1.
+
+        Assumes that stem1 and stem 2 are connected by a single bulge.
+        Then the start of stem2 is defined to be the stem side
+        closer to the bulge.
+        """
+        common_edges = self.edges[ref_stem] & self.edges[stem2]
+        if len(common_edges)!=1:
+            raise ValueError("Stem1 and stem2 must be connected by a single bulge "
+                             "to calculate stem_offset.")
+        bulge, = common_edges
+        side = self.get_sides(stem2, bulge)[0]
+        return ftuv.point_line_distance(self.coords[stem2][side],
+                                        self.coords[ref_stem][0],
+                                        self.coords.get_direction(ref_stem))
+
+
+    def stem_angle(self, stem1, stem2):
+        """
+        Returns the angle between two stems.
+
+        If they are connected via a single element,
+        use the direction pointing away from this element for both stems.
+        Otherwise, use the direction from start to end.
+        """
+        vec1 = self.coords.get_direction(stem1)
+        vec2 = self.coords.get_direction(stem2)
+
+        common_edges = self.edges[stem1] & self.edges[stem2]
+        if len(common_edges)==1:
+            bulge, = common_edges
+            if self.get_sides(stem1, bulge) == (1,0):
+                vec1 = -vec1
+            else:
+                assert self.get_sides(stem1, bulge) == (0,1)
+            if self.get_sides(stem2, bulge) == (1,0):
+                vec2 = -vec2
+            else:
+                assert self.get_sides(stem2, bulge) == (0,1)
+        return ftuv.vec_angle(vec1, vec2)
+
+
     def get_coordinates_list(self):
         warnings.warn("CoarseGrainRNA.get_coordinates_list is deprecated and being "
                       "replaced by get_coordinates_array!")
@@ -1401,6 +1568,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def reset_vatom_cache(self, key):
         """
+        Delete all cached information about virtual residues and virtual atoms.
         Used as on_call function for the observing of the self.coords dictionary.
 
         :param key: A coarse grain element name, e.g. "s1" or "m15"
