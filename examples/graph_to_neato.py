@@ -2,6 +2,7 @@
 
 import sys, math
 import forgi.graph.bulge_graph as cgb
+import logging
 
 from optparse import OptionParser
 
@@ -109,4 +110,6 @@ def main():
     print_neato(bg)
 
 if __name__=="__main__":
+    logging.basicConfig()
+    logging.getLogger("forgi.utilities.stuff").setLevel(logging.DEBUG)
     main()
