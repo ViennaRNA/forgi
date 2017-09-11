@@ -1,5 +1,5 @@
-forgi.threedee.visual.pymol module
-==================================
+forgi\.threedee\.visual\.pymol module
+=====================================
 
 .. automodule:: forgi.threedee.visual.pymol
     :members:

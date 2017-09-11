@@ -1,5 +1,9 @@
 #!/usr/bin/python
 from __future__ import absolute_import, division, print_function, unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
@@ -13,10 +17,10 @@ import forgi.threedee.model.coarse_grain as ftmc
 import forgi.projection.projection2d as fpp
 import forgi.projection.hausdorff as fph
 import forgi.threedee.utilities.vector as ftuv
-import Tkinter as tk
-import ttk
-from tkFileDialog import askopenfilename, asksaveasfilename
-import tkMessageBox
+import tkinter as tk
+import tkinter.ttk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
+import tkinter.messagebox
 import sys, argparse, math
 from PIL import Image, ImageTk
 import numpy as np
@@ -40,7 +44,7 @@ class RnaDisplay(object):
         self.root = tk.Tk()
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.title("Manual Projection Rasterization")
-        mainframe = ttk.Frame(self.root, padding="3 3 12 12")
+        mainframe = tkinter.ttk.Frame(self.root, padding="3 3 12 12")
         self.mainframe = mainframe
         mainframe.grid(column=0, row=0, sticky=(tk.N, tk.W, tk.E, tk.S))
 
@@ -57,7 +61,7 @@ class RnaDisplay(object):
                                                      ("All", "*")])
         self.cg = ftmc.CoarseGrainRNA(filename)
         #Image Display
-        self.imgDisplay = ttk.Label(mainframe)
+        self.imgDisplay = tkinter.ttk.Label(mainframe)
         mainframe.columnconfigure(0, minsize = min(int(args.width*3.75+1), 100))
         mainframe.columnconfigure(1, minsize = min(int(args.width*3.75+1), 100))
         mainframe.columnconfigure(2, minsize = min(int(args.width*3.75+1), 100))
@@ -69,35 +73,35 @@ class RnaDisplay(object):
         self.zoom = tk.IntVar()
         self.zoom.set(10)
         #self.zoom.set(10)
-        ttk.Label(mainframe, text="Zoom:").grid(row = 0, column = 0, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="Zoom:").grid(row = 0, column = 0, sticky = "E")
         tk.Scale(mainframe, from_=1, to_=15, orient=tk.HORIZONTAL, command = self.update, 
                  variable = self.zoom, length=180).grid(row = 0, column = 1, sticky = "W")
         #Nucleotide selection
         self.nucleotidePosition = tk.IntVar()
         self.nucleotidePosition.set(1)
-        ttk.Label(mainframe, text="Nucleotide:").grid(row = 1, column = 0, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="Nucleotide:").grid(row = 1, column = 0, sticky = "E")
         tk.Scale(mainframe, from_=1, to_=len(self.cg.seq), orient=tk.HORIZONTAL, 
                  command = self.update, length=len(self.cg.seq), tickinterval = 100,
                  variable = self.nucleotidePosition).grid(row = 1, column = 1, columnspan=3, sticky = "W")
         #Show virtual residues and stems
         self.showVres = tk.IntVar()
         self.showStems = tk.IntVar()
-        ttk.Checkbutton(mainframe,text = "Show virtual residues", command = self.update, 
+        tkinter.ttk.Checkbutton(mainframe,text = "Show virtual residues", command = self.update, 
                         variable = self.showVres).grid(row = 0, column = 2)
-        ttk.Checkbutton(mainframe,text = "Show stems", command = self.update, 
+        tkinter.ttk.Checkbutton(mainframe,text = "Show stems", command = self.update, 
                         variable = self.showStems).grid(row = 0, column = 3)
         # Offset
         self.offset_x = tk.IntVar()
         self.offset_y = tk.IntVar()
-        ttk.Label(mainframe, text="offset x (Angstrom):").grid(row = 2, column = 0, sticky = "E")        
+        tkinter.ttk.Label(mainframe, text="offset x (Angstrom):").grid(row = 2, column = 0, sticky = "E")        
         tk.Scale(mainframe, from_=-100, to_=100, orient=tk.HORIZONTAL, command = self.update, 
                  variable = self.offset_x, length=180).grid(row = 2, column = 1, sticky = "W")
-        ttk.Label(mainframe, text="offset y (Angstrom):").grid(row = 3, column = 0, sticky = "E")        
+        tkinter.ttk.Label(mainframe, text="offset y (Angstrom):").grid(row = 3, column = 0, sticky = "E")        
         tk.Scale(mainframe, from_=-100, to_=100, orient=tk.HORIZONTAL, command = self.update,
                  variable = self.offset_y, length=180).grid(row = 3, column = 1, sticky = "W")
         # Rotation
         self.inplane_rot = tk.IntVar()
-        ttk.Label(mainframe, text="rotate (degrees)").grid(row = 2, column = 2, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="rotate (degrees)").grid(row = 2, column = 2, sticky = "E")
         tk.Scale(mainframe, from_=-180, to_=180, orient=tk.HORIZONTAL, command = self.update,
                  variable = self.inplane_rot, length=180).grid(row = 2, column = 3, sticky = "W")
         #Projection Angles
@@ -107,30 +111,30 @@ class RnaDisplay(object):
             r,t,p = ftuv.spherical_cartesian_to_polar(self.cg.project_from)
             self.theta.set(int(t))
             self.phi.set(int(p))
-        ttk.Label(mainframe, text="Projection angle: THETA").grid(row = 4, column = 0, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="Projection angle: THETA").grid(row = 4, column = 0, sticky = "E")
         tk.Scale(mainframe, from_=-180, to_=180, orient=tk.HORIZONTAL, command = self.updateProjection,
                  variable = self.theta, length=180).grid(row = 4, column = 1, sticky = "W")
-        ttk.Label(mainframe, text="Projection angle: PHI").grid(row = 4, column = 2, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="Projection angle: PHI").grid(row = 4, column = 2, sticky = "E")
         tk.Scale(mainframe, from_=-90, to_=90, orient=tk.HORIZONTAL, command = self.updateProjection,
                  variable = self.phi, length=180).grid(row = 4, column = 3, sticky = "W")
         # Action Buttons
-        ttk.Button(mainframe, text="Print Coordinates", 
+        tkinter.ttk.Button(mainframe, text="Print Coordinates", 
                    command=self.createLandmark).grid(row = 3, column = 2)
-        ttk.Button(mainframe, text="Save Image as...", 
+        tkinter.ttk.Button(mainframe, text="Save Image as...", 
                    command=self.saveImage).grid(row = 3, column = 3)
 
         # Select width and dpi
-        ttk.Label(mainframe, text="Image width in Angstrom").grid(row = 5, column = 0, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="Image width in Angstrom").grid(row = 5, column = 0, sticky = "E")
         tk.Scale(mainframe, from_=50, to_=1000, orient=tk.HORIZONTAL, command = self.update,
                  variable = self.width, length=180).grid(row = 5, column = 1, sticky = "W")
-        ttk.Label(mainframe, text="Image width in Pixels").grid(row = 5, column = 2, sticky = "E")
+        tkinter.ttk.Label(mainframe, text="Image width in Pixels").grid(row = 5, column = 2, sticky = "E")
         tk.Scale(mainframe, from_=5, to_=80, orient=tk.HORIZONTAL, command = self.update,
                  variable = self.dpi, length=180).grid(row = 5, column = 3, sticky = "W")
 
         self.proj = None
         self.updateProjection()
     def show(self):      
-        ttk.Style().theme_use('clam')      
+        tkinter.ttk.Style().theme_use('clam')      
         self.root.mainloop()
 
     def updateProjection(self, _=None):
@@ -208,7 +212,7 @@ class RnaDisplay(object):
         print ("{},{},{}".format(selected, x, y))
 
     def on_closing(self):
-        if tkMessageBox.askokcancel("Quit", "This will exit the complete script. Proceed?"):
+        if tkinter.messagebox.askokcancel("Quit", "This will exit the complete script. Proceed?"):
             self.root.destroy()
             sys.exit(2)
 

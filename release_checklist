@@ -1,8 +1,8 @@
 * Create a release branch from develop. (Only bugfixes in release branch)
-* Increment version number in setup.py, bulge_graph.py, doc/conf.py (2 times) and in doc/index.rst
+* Increment version number in setup.py, __init__.py, doc/conf.py (2 times) and in doc/index.rst
 * Run nosetests
-* Update api-documentation to include all (new) modules and subpackages.
-* Build the documentation (`sphinx-build -a -E -W -b html doc compiledDoc` to build it)
+* Update api-documentation to include all (new) modules and subpackages. (venv/bin/sphinx-apidoc -o tempdir forgi) followed by comparing and manually merging tempdir with doc/apidoc 
+* Build the documentation (`venv/bin/sphinx-build -a -E -W -b html doc compiledDoc` to build it)
   Check all warnings during building of documentation
 * Make sure all authors of code parts are properly acknowledged and their license is compatible
 * Perform code-analysis with venv/bin/pylint forgi/ --ignore=average_atom_positions.py,average_atom_positions_sorted.py,average_stem_vres_atom_positions.py -f html -j 6 -E > pylint.html
@@ -11,8 +11,10 @@
 * Update setup.py to include all relevant subpackages and scripts
 * Check test coverage. Add tests if required.
 * Find dead code with `venv/bin/vulture forgi/ examples/ test/ ../ernwin/fess/ | less`, but manually check the results (vulture reports false positives)
-* Verify that all files are included in the git repo. Try fresh install on different machine
+* Verify that the travis build passes
 * Write a change log to document API changes
+* Rebuild the documentation
 * Run nosetests again.
 * Merge into master and develop
 * Tag inside master
+* Publish documentation to gh-pages

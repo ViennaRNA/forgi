@@ -1,12 +1,16 @@
+from __future__ import division
+from builtins import object
+
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as fud
 
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
 
-import itertools as it 
+import itertools as it
 import math
 import numpy as np
+from collections import defaultdict
 
 __all__ = ['AdjacencyCorrelation', 'cg_rmsd', 'rmsd', 'drmsd']
 
@@ -17,8 +21,16 @@ This module contains functions for the comparison of two cg objects or two order
 try:
     profile
 except:
-    def profile(f): 
+    def profile(f):
         return f
+
+class Incompareable(ValueError):
+    """
+    Raised if two objects are compared, which are incompareable.
+
+    E.g. Coordinate sets of different length are incompareable with respect to the RMSD.
+    """
+
 
 
 def ppv(tp, fp):
@@ -29,7 +41,10 @@ def ppv(tp, fp):
     :param fp: The false positives
     :return: The ppv
     '''
-    return tp / float(tp + fp)
+    try:
+        return tp / float(tp + fp)
+    except ZeroDivisionError:
+        return float("nan")
 
 def sty(tp, fn):
     '''
@@ -39,7 +54,10 @@ def sty(tp, fn):
     :param fn: False negatives
     :return: The sensitivity
     '''
-    return tp / float(tp + fn)
+    try:
+        return tp / float(tp + fn)
+    except ZeroDivisionError:
+        return float("nan")
 
 def mcc(confusion_matrix):
     '''
@@ -61,24 +79,24 @@ def mcc(confusion_matrix):
 class AdjacencyCorrelation(object):
     """
     A class used for calculating the ACC.
-    
-    The adjacency correlation coefficient is calculated as the Matthews correlation 
+
+    The adjacency correlation coefficient is calculated as the Matthews correlation
     coefficient of potential interactions, defined as nucleotides within 25 Angstrom
     from each other. See chapter 9.3 of Peter's thesis.
 
     This object is initialized with a reference structure and a distance for interactions.
     The evaluate() method is used for calculating this correlation matrix.
 
-    This is significantly faster than the confusion_matrix function, if 
+    This is significantly faster than the confusion_matrix function, if
     many structures will be compared to the same reference structure.
     """
     def __init__(self, reference_cg, distance=25.0, bp_distance=16):
-        self._distance=distance        
+        self._distance=distance
         self._bp_distance=bp_distance
-        self._reference_interactions=self.get_interactions(reference_cg)
+        self._reference_interactions=self._get_interactions(reference_cg)
 
     @profile
-    def get_interactions(self, cg):
+    def _get_interactions(self, cg):
         """
         :return: A set of 2-tuples containing elements that pair.
         """
@@ -93,17 +111,19 @@ class AdjacencyCorrelation(object):
 
         interactions=set(cg.coords.elements_closer_than(self._distance, ignore))
         return interactions
-    
+
     def evaluate(self, cg):
         '''
         Calculate the true_positive, false_positive,
         true_negative and false_negative rate for the tertiary
         distances of the elements of cg and the reference structure stored in this class.
 
-        :param cg: The first coarse grain model
+        :param cg: The coarse grain model with which self.reference_cg should be compared.
+                   Note: The result is only meaningful, if both coarse grained models
+                   correspond to the same RNA.
         :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
         '''
-        interactions=self.get_interactions(cg)
+        interactions=self._get_interactions(cg)
         nodes=set(cg.defines.keys())
         allIA=set()
         for n1, n2 in it.combinations(nodes, r=2):
@@ -121,103 +141,13 @@ class AdjacencyCorrelation(object):
         d["tn"]=len(allIA - (self._reference_interactions | interactions) )
         return d
 
-#NOTE: could be deprecated in the future. Use AdjacencyCorrelation.
-#NOTE: could be moved to tests as reference for Adjacency correlation.
-def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
-    '''
-    Calculate the true_positive, false_positive,
-    true_negative and false_negative rate for the tertiary
-    distances of the elements of two structures, cg1 and cg2.
-
-    :param cg1: The first coarse grain model
-    :param cg2: The second coarse grain model
-    :param distance: The distance to consider for interactions
-    :param bp_distance: Only consider elements separated by this many more pair
-                        and backbone bonds
-    :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
-    '''
-    nodes1 = set(cg1.defines.keys())
-    nodes2 = set(cg2.defines.keys())
-
-    tp = 0 #true positive
-    tn = 0 #true negative
-
-    fp = 0 #false positive
-    fn = 0 #false negative
-
-    #fud.pv('nodes1')
-    #fud.pv('nodes2')
-
-    assert(nodes1 == nodes2)
-
-    for n1, n2 in it.combinations(nodes1, r=2):
-        if cg1.connected(n1, n2):
-            continue
-
-        if cg2.connected(n1, n2):
-            raise Exception("{} {} connected in cg2 but not cg1".format(n1, n2))
-
-
-        bp_dist = cg2.min_max_bp_distance(n1, n2)[0]
-        if bp_dist < bp_distance:
-            continue
-
-        dist1 = cg1.element_physical_distance(n1, n2)
-        dist2 = cg2.element_physical_distance(n1, n2)
-
-        if dist1 < distance:
-            # positive
-            if dist2 < distance:
-                #true positive
-                tp += 1
-            else:
-                # false negative
-                fn += 1
-        else:
-            #negative
-            if dist2 < distance:
-                # false positive
-                fp += 1
-            else:
-                # true negative
-                tn += 1
-
-    return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}
-
-# COVERAGE NOTE: Never used in forgi or ernwin.
-# This is left in the code as an example for the usage of confusiom_matrix,
-# but might be removed in the future.
-def mcc_between_cgs(cg_query, cg_native, distance=25, bp_distance=16):
-    '''
-    Calculate the MCC of the distance between two elements.
-
-    :param cg_query: The second cg structure
-    :param cg_native: The native cg structure
-    :param distance: The distance between which we consider interactions.
-    :param bp_distance: Only consider pairs of elements that are separated by 
-                        MORE than this many base pairs
-    :return: The MCC for interactions within a certain distance
-    '''
-    cm = confusion_matrix(cg_query, cg_native, distance, bp_distance=16)
-    #cm['tp'] += 1
-    #cm['fp'] += 1
-    #cm['fn'] += 1
-    #cm['tn'] += 1
-    if cm['tp'] + cm['fp'] == 0:
-        return None
-    if cm['tp'] + cm['fn'] == 0:
-        return None
-
-    my_mcc = mcc(cm)
-    return my_mcc
-
-
 def optimal_superposition(crds1, crds2):
     """
     Returns best-fit rotation matrix as [3x3] numpy matrix for aligning crds1 onto crds2
     using the Kabsch algorithm
-    """        
-    assert(crds1.shape == crds2.shape)
+    """
+    if crds1.shape != crds2.shape:
+        raise Incompareable("Cannot superimpose coordinate lists of different length.")
     if crds1.shape[1] == 3 or crds1.shape[1] == 2:
         correlation_matrix = np.dot(np.transpose(crds1), crds2)
         v, s, w_tr = np.linalg.svd(correlation_matrix)
@@ -240,14 +170,28 @@ def cg_rmsd(cg1, cg2):
 
     residues1 = cg1.get_ordered_virtual_residue_poss()
     residues2 = cg2.get_ordered_virtual_residue_poss()
+    try:
+        return rmsd(residues1, residues2)
+    except Incompareable:
+        raise Incompareable("Cgs {} and {} cannot be compared according to the RMSD, "
+                            "because they do not have the same number of "
+                            "virtual residues.".format(cg1.name, cg2.name))
 
-    return rmsd(residues1, residues2)
+def rmsd_contrib_per_element(cg1, cg2):
+    residues1, elems1 = cg1.get_ordered_virtual_residue_poss(return_elements = True)
+    residues2, elems2 = cg2.get_ordered_virtual_residue_poss(return_elements = True)
+    if elems1 != elems2:
+        raise ValueError("RNAs with different structure are not compareable by RMSD.")
+    diff_vecs = _pointwise_deviation(residues1, residues2)
+    elem_devs = defaultdict(list)
+    for i, elem in enumerate(elems1):
+        elem_devs[elem].append(diff_vecs[i])
+    return elem_devs
 
-def rmsd_kabsch(crds1, crds2, is_centered=False):
-    '''
-    Center the coordinate vectors on their centroid
-    and then calculate the rmsd.
-    '''
+def _pointwise_deviation(crds1, crds2, is_centered=False):
+    """
+    Helper function for Kabsch RMSD
+    """
     if not is_centered:
         crds1 = ftuv.center_on_centroid(crds1)
         crds2 = ftuv.center_on_centroid(crds2)
@@ -256,8 +200,17 @@ def rmsd_kabsch(crds1, crds2, is_centered=False):
     crds_aligned = np.dot(crds1, os)
 
     diff_vecs = (crds2 - crds_aligned)
-    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
 
+    return diff_vecs
+
+def rmsd_kabsch(crds1, crds2, is_centered=False):
+    '''
+    Center the coordinate vectors on their centroid
+    and then calculate the rmsd.
+    '''
+    diff_vecs = _pointwise_deviation(crds1, crds2, is_centered)
+
+    vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
     return math.sqrt(sum(vec_lengths) / len(vec_lengths))
 
 def drmsd(coords1, coords2):
@@ -279,11 +232,14 @@ def drmsd(coords1, coords2):
 
     return rmsd
 
-#The function rmsd points to the faster QC version if available, else to our kabsch implementation.
-#The name rmsd_kabsch is always available to refer to our kabsch implementation.
+def rmsd_qc_wrap(coords1, coords2, is_centered=False):
+    r = rmsd_qc(coords1, coords2, is_centered)
+    if np.isnan(r):
+        return rmsd_kabsch(coords1, coords2, is_centered)
+    return r
+
 try:
-    from py_qcprot import rmsd as rmsd_qc
-    rmsd = rmsd_qc
+    from py_qcprot import rmsd as rmsd_qc #Faster C version, if available
+    rmsd = rmsd_qc_wrap
 except:
     rmsd = rmsd_kabsch
-

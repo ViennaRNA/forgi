@@ -75,10 +75,16 @@ remove overlapping base pairs before trying to obtain a nested structure.
 """
 
 from __future__ import division
+from __future__ import absolute_import
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
 from random import choice
 from numpy import sum, average, zeros
-from rna2d import Pairs
-from dict2d import Dict2D
+from .rna2d import Pairs
+from .dict2d import Dict2D
 
 __author__ = "Sandra Smit"
 __copyright__ = "Copyright 2007, The Cogent Project"
@@ -668,9 +674,9 @@ class ConflictMatrix(object):
                 raise ValueError("Can't convert data to Pairs")
 
         # handle the rows and columns in order and set RowOrder and ColOrder
-        ro = id_to_pr.keys()
+        ro = list(id_to_pr.keys())
         ro.sort()
-        co = id_to_pr.keys()
+        co = list(id_to_pr.keys())
         co.sort()
         conf = {} # dict of conflicts between blocks
         for id1, bl in id_to_pr.items():
@@ -706,7 +712,7 @@ class ConflictMatrix(object):
         result = []
         cm = self.Matrix
         for pr_id in cm.RowOrder:
-            if contains_true(cm[pr_id].values()):
+            if contains_true(list(cm[pr_id].values())):
                 result.append(pr_id)
         return result
 
@@ -716,7 +722,7 @@ class ConflictMatrix(object):
         result = []
         cm = self.Matrix
         for pr_id in cm.RowOrder:
-            if not contains_true(cm[pr_id].values()):
+            if not contains_true(list(cm[pr_id].values())):
                 result.append(pr_id)
         return result
 
@@ -1118,7 +1124,7 @@ def opt_all(pairs, return_removed=False, goal='max',\
             rem.sort()
             removed.append(rem)
         nested = [prs.toPairs() for prs in result]
-        return zip(nested, removed)
+        return list(zip(nested, removed))
     
     nested = [prs.toPairs() for prs in result] 
     return nested
@@ -1353,7 +1359,7 @@ def add_back_non_conflicting(paired_regions, removed):
                 added = True
                 break
 
-    return PairedRegions(id_to_pr.values()), new_removed
+    return PairedRegions(list(id_to_pr.values())), new_removed
 
 
 # Conflict-elimination heuristic.
@@ -1406,7 +1412,7 @@ def conflict_elimination(pairs, sel_function, add_back=True,\
         prs, removed = add_back_non_conflicting(prs, removed)
         
     if return_removed:
-        rem = PairedRegions(removed.values()).toPairs()
+        rem = PairedRegions(list(removed.values())).toPairs()
         return prs.toPairs(), rem
     return prs.toPairs()
 
@@ -1523,7 +1529,7 @@ def inc_length(pairs, reversed=False, return_removed=False):
     excluded = {}
     result = PairedRegions()
    
-    lengths = length_pos_data.keys()
+    lengths = list(length_pos_data.keys())
     lengths.sort()
     lengths.reverse() # longest regions first
 
@@ -1592,7 +1598,7 @@ def inc_range(pairs, reversed=False, return_removed=False):
         if reversed:
             v.reverse()
 
-    ranges = range_pos_data.keys()
+    ranges = list(range_pos_data.keys())
     ranges.sort()
 
     result = PairedRegions()
@@ -1692,7 +1698,7 @@ def nussinov_restricted(pairs, return_removed=False):
         nested = p  # if not Pseudoknots: return structure
     else:
         all_items = [x for x,y in p] + [y for x,y in p]
-        max_idx = max(filter(None, all_items))+1
+        max_idx = max([_f for _f in all_items if _f])+1
         m = nussinov_fill(p, size=max_idx)
         nested = nussinov_traceback(m, 0, max_idx-1, p)
         nested = Pairs(list(nested))

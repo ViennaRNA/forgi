@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import zip
 import unittest
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.similarity as ftme

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #bpseq.py
 
-"""Provides parser for bpseq files downloaded from Gutell's comparative 
+"""Provides parser for bpseq files downloaded from Gutell's comparative
 RNA website (CRW): http://www.rna.icmb.utexas.edu/
 
 Author: Sandra Smit (Sandra.Smit@colorado.edu)
@@ -34,8 +34,12 @@ residue partner. The residue partner is 0 if the base is unpaired.
 Numbering is 1-based!
 """
 from __future__ import division
-from string import strip
-from rna2d import Vienna, Pairs
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import map
+from builtins import str
+from builtins import range
+from .rna2d import Vienna, Pairs
 import sys
 
 class BpseqParseError(Exception):
@@ -44,14 +48,14 @@ class BpseqParseError(Exception):
 
 def parse_header(header_lines):
     """Return Info object from header information.
-   
+
     header_lines -- list of lines or anything that behaves like it.
 
     Parses only the first three header lines with Filename, Organism, and
     Accession number. In general lines that contain a colon will be parsed.
-    There's no error checking in here. If it fails to split on ':', the 
+    There's no error checking in here. If it fails to split on ':', the
     information is simply not added to the dictionary. The expected format
-    for header lines is "key: value". The citation lane is parsed differently. 
+    for header lines is "key: value". The citation lane is parsed differently.
     """
     info = {}
     for line in header_lines:
@@ -59,7 +63,7 @@ def parse_header(header_lines):
             info['Citation'] = line.split()[-1].strip()
         elif ':' in line:
             try:
-                field, value = map(strip,line.split(':',1))
+                field, value = map(str.strip,line.split(':',1))
                 info[field] = value
             except ValueError:
                 #no interesting header line
@@ -72,10 +76,10 @@ def construct_sequence(seq_dict):
     """Construct RnaSequence from dict of {pos:residue}.
 
     seq_dict -- dictionary of {position: residue}
-    
+
     Checks whether the first residue is 0. Checks whether all residues
     between min and max index are present. No checking on validity of
-    residue symbols. 
+    residue symbols.
     """
     if not seq_dict:
         raise BpseqParseError("No sequence information")
@@ -89,7 +93,7 @@ def construct_sequence(seq_dict):
         if idx not in seq_dict:
             raise BpseqParseError(\
                 "Description of residue with index %s is missing"%(idx))
-    seq = [] 
+    seq = []
     for idx in range(min_pos, max_pos+1):
         seq.append(seq_dict[idx])
     # Return as a simple string
@@ -98,7 +102,7 @@ def construct_sequence(seq_dict):
 def parse_residues(residue_lines, num_base, unpaired_symbol):
     """Return RnaSequence and Pairs object from residue lines.
 
-    residue_lines -- list of lines or anything that behaves like it. 
+    residue_lines -- list of lines or anything that behaves like it.
         Lines should contain:
         residue_position, residue_identiy, residue_partner.
     num_base -- int, basis of the residue numbering. In bpseq files from
@@ -108,7 +112,7 @@ def parse_residues(residue_lines, num_base, unpaired_symbol):
         unpaired_symbol is '0'. This parameter should be a string to allow
         other symbols that can't be casted to an integer to indicate
         unpaired bases.
-    
+
     Checks for double entries both in the sequence and the structure, and
     checks that the structre is valid in the sense that if (up,down) in there,
     that (down,up) is the same.
@@ -118,7 +122,7 @@ def parse_residues(residue_lines, num_base, unpaired_symbol):
         raise BpseqParseError("No residue lines in record")
     seq_dict = {}
     pairs = Pairs()
-    
+
     for line in residue_lines:
         try:
             pos, res, partner = line.strip().split()
@@ -131,7 +135,7 @@ def parse_residues(residue_lines, num_base, unpaired_symbol):
                 pos = int(pos) - num_base
                 partner = int(partner) - num_base
             pairs.append((pos,partner))
-            
+
             #fill seq_dict
             if pos in seq_dict:
                 raise BpseqParseError(\
@@ -139,35 +143,35 @@ def parse_residues(residue_lines, num_base, unpaired_symbol):
                     %(str(pos), str(pos+1)))
             else:
                 seq_dict[pos] = res
-        
+
         except ValueError:
             raise BpseqParseError("Failed to parse line: %s"%(line))
-    
-    #check for conflicts, remove unpaired bases 
+
+    #check for conflicts, remove unpaired bases
     if pairs.hasConflicts():
         raise BpseqParseError("Conflicts in the list of basepairs")
     pairs = pairs.directed()
     pairs.sort()
-    
+
     # construct sequence from seq_dict
     #seq = RnaSequence(construct_sequence(seq_dict))
     seq = construct_sequence(seq_dict)
-    
+
     return seq, pairs
 
 def MinimalBpseqParser(lines):
     """Separate header and content (residue lines).
-    
+
     lines -- a list of lines or anything that behaves like that.
 
     The standard bpseq header (from the CRW website) is recognized. Also,
     lines that contain a colon are accepted as header lines.
-    Header lines that aren't accepted as header, but that can be split into 
-    three parts are residue lines (sequence and structure description). 
+    Header lines that aren't accepted as header, but that can be split into
+    three parts are residue lines (sequence and structure description).
     Lines that don't fall into any of these categories are ignored.
     """
     result = {'HEADER':[], 'SEQ_STRUCT':[]}
-    
+
     for line in lines:
         if line.startswith('Filename') or line.startswith('Organism') or\
             line.startswith('Accession') or line.startswith('Citation') or\
@@ -192,7 +196,7 @@ def BpseqParser(lines, num_base=1, unpaired_symbol='0'):
         unpaired bases.
 
     Bpseq file looks like this:
-    
+
     Filename: d.16.b.E.coli.bpseq
     Organism: Escherichia coli
     Accession Number: J01695
@@ -210,7 +214,7 @@ def BpseqParser(lines, num_base=1, unpaired_symbol='0'):
     11 G 23
     12 U 22
     13 U 21
-        
+
     So, 4 header lines, followed by a list of residues.
     Position (indexed to 1), residue, partner position
     """
@@ -223,7 +227,7 @@ def BpseqParser(lines, num_base=1, unpaired_symbol='0'):
         num_base, unpaired_symbol)
     #add header info to the sequence as Info object
     #seq.Info = header_info
-    
+
     return header_info, seq, struct
 
 # ============================================================================
@@ -233,7 +237,7 @@ def BpseqParser(lines, num_base=1, unpaired_symbol='0'):
 def bpseq_specify_output(lines, num_base=1, unpaired_symbol='0',
     return_vienna=False, ):
     """Return Vienna structure of Pairs object with or without pseudoknots
-    
+
     lines -- filestream of bpseq file. File should contain a single record.
     num_base -- int, basis of the residue numbering. In bpseq files from
         the CRW website, the numbering starts at 1.
@@ -245,7 +249,7 @@ def bpseq_specify_output(lines, num_base=1, unpaired_symbol='0',
     return_vienna -- boolean, if True, a ViennaStructure object is returned,
         if False, a Pairs object is returned. If return_vienna is True,
         pseudoknots need to be removed from the structure.
-    
+
     """
     seq, pairs = BpseqParser(lines, num_base, unpaired_symbol)
 
@@ -259,6 +263,6 @@ def bpseq_specify_output(lines, num_base=1, unpaired_symbol='0',
 if __name__ == "__main__":
     from sys import argv
     seq, struct = BpseqParser(open(argv[1]))
-    print seq
-    print seq.Info
-    print struct
+    print(seq)
+    print(seq.Info)
+    print(struct)

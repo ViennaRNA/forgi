@@ -1,5 +1,5 @@
-forgi.utilities.graph module
-============================
+forgi\.utilities\.graph module
+==============================
 
 .. automodule:: forgi.utilities.graph
     :members:

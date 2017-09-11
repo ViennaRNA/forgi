@@ -1,5 +1,5 @@
-forgi.utilities.debug module
-============================
+forgi\.utilities\.debug module
+==============================
 
 .. automodule:: forgi.utilities.debug
     :members:

@@ -1,9 +1,10 @@
+from __future__ import print_function
 
 import networkx as nx
 
 def shortest_cycle(G, v):
     '''
-    Calculate the shortest cycle which includes the node v.
+    Calculate one of the shortest cycles which includes the node v.
 
     @param G: A networkx graph
     @param v: The node to include in the cycle
@@ -32,7 +33,6 @@ if __name__ == '__main__':
     G = nx.Graph()
     G.add_edges_from(edges)
 
-    print shortest_cycle(G, 1)
-    print shortest_cycle(G, 3)
-    print shortest_cycle(G, 4)
-
+    print(shortest_cycle(G, 1))
+    print(shortest_cycle(G, 3))
+    print(shortest_cycle(G, 4))

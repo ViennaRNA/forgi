@@ -1,6 +1,8 @@
 #### forgi Library for RNA Secondary Structure Analysis ####
 
-Full documentation: [http://www.tbi.univie.ac.at/~thiel/forgi/](http://www.tbi.univie.ac.at/~thiel/forgi/)
+[![Build Status](https://travis-ci.org/ViennaRNA/forgi.svg?branch=master)](https://travis-ci.org/ViennaRNA/forgi)
+
+Full documentation: [https://viennarna.github.io/forgi/](https://viennarna.github.io/forgi/)
 
 ##### Build the documentation #####
 
@@ -23,4 +25,6 @@ python setup.py install
 * Display an rna structure, save it to file, trim it and view it using eog
 
   >>> pdb_id="ideal_1_3_4_6.pdb"; venv/bin/python examples/visualize_pdb.py forgi/threedee/data/${pdb_id} --output /tmp/${pdb_id}.png; mogrify -trim /tmp/${pdb_id}.png; eog /tmp/${pdb_id}.png
+
+
 

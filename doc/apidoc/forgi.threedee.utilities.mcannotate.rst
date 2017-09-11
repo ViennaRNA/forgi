@@ -1,5 +1,5 @@
-forgi.threedee.utilities.mcannotate module
-==========================================
+forgi\.threedee\.utilities\.mcannotate module
+=============================================
 
 .. automodule:: forgi.threedee.utilities.mcannotate
     :members:

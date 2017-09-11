@@ -1,13 +1,13 @@
+from builtins import object
 import os
 import forgi
 
-class Configuration:
+class Configuration(object):
     mids_method="template"
     #mids_method="basenormals"
     base_dir = os.path.expanduser('.')
     #data_base_dir = os.path.expanduser('~/data/ernwin/processed')
     #pdb_base_dir = os.path.expanduser('~/data/ernwin/pdb')
-    stats_file = forgi.data_file('threedee/data/stats/temp.stats')
     stem_fragment_dir = os.path.join(base_dir, 'forgi/data')
     #lric_stats_fn = os.path.join(base_dir, 'fess/stats/temp.energy')
     #template_residue_fn = os.path.join(base_dir, 'fess/stats/residue_template.pdb')

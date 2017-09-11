@@ -28,7 +28,7 @@ use the `pdb_to_ss_fasta.py` script. By default, this script operates on the
 largest RNA chain in the provided pdb file (although a specific chain can be
 specified using the `-c` option).::
 
-    [pete@kat forgi]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb 
+    [pete@kat forgi]$ python examples/pdb_to_ss_fasta.py examples/1y26.pdb
     >1y26
     CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
     (((((((((...(((((((.......)))))))........((((((.......))))))..)))))))))
@@ -57,7 +57,7 @@ One can imagine an RNA molecule as a collection of helices and ... not helices
 helixes and representing them as cylinders, we can create a coarse grain
 representaiton of the RNA molecule::
 
-    [pkerp@plastilin forgi]$ python examples/pdb_to_cg.py ~/projects/ernwin/fess/structures/2l94.pdb 
+    [pkerp@plastilin forgi]$ python examples/pdb_to_cg.py ~/projects/ernwin/fess/structures/2l94.pdb
     name 2l94
     length 45
     seq GGGAAGAUCUGGCCUUCCCACAAGGGAAGGCCAGGGAAUCUUCCC
@@ -111,7 +111,7 @@ The ``get_stem_stats`` function returns a ``forgi.threedee.model.StemStat``
 structure which contains information about a stem, such as how many base pairs
 it has, how long it is (in Å) and how much its helix twists from the
 start to the end. It also stores information about which nucleotides it is
-composed of (its `define`). 
+composed of (its `define`).
 
 Using the structure 2MIS as an example::
 
@@ -128,9 +128,9 @@ Get A Description of an Angle Between Two Stems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The orientation of one helix (:math:`s_1`) with respect to another (:math:`s_2`), :math:`O(s_1,
-s_2)`, can be represented by six parameters: 
+s_2)`, can be represented by six parameters:
 
-1. :math:`r, \phi_d, \psi_d` which describe the location of the of the start of 
+1. :math:`r, \phi_d, \psi_d` which describe the location of the of the start of
    s2 relative to the end of s_1
 
 2. :math:`\phi_o, \psi_o`, which describe the direction of the axis vector of s2
@@ -152,7 +152,7 @@ stems (hereafter referred to as a 'joint' and 'i0' in the example below)::
     angle 2mis_A 3 1 1.762096 0.024409 0.822014 6.720167 1.294799 0.098387 7 9 20 20 GCAGC GAC
 
 The ``get_bulge_angle_stats`` function actually returns two sets of parameters,
-one for each orientation (:math:`O(s_1, s_2)` and :math:`O(s_2, s_1)`). 
+one for each orientation (:math:`O(s_1, s_2)` and :math:`O(s_2, s_1)`).
 
 The values stored by an ``AngleStat`` are the six parameters listed above as well
 as the name of the pdb file the coarse grain model represents, the size of the
@@ -193,9 +193,9 @@ stems it connects::
     >>> for iloop in cg.iloop_iterator():
     ...     conn = cg.connections(iloop)
     ...     # conn contains two values ['s0', 's1']
-    ...     angle = ftuv.vec_angle(cg.coords[conn[0]][1] - cg.coords[conn[0]][0], cg.coords[conn[1]][1] - cg.coords[conn[1]][0]) 
+    ...     angle = ftuv.vec_angle(cg.coords[conn[0]][1] - cg.coords[conn[0]][0], cg.coords[conn[1]][1] - cg.coords[conn[1]][0])
     ...     print iloop, angle
-    ... 
+    ...
     i3 0.307770762476
     i2 2.74681004918
     i1 0.1697963999
@@ -208,7 +208,7 @@ stems it connects::
 
 `conn[0]` and `conn[1]` are the identifiers of the first and second connected stems,
 respectively, while `cg.coords[conn[0]][0]` contains the coordinates of the front end
-of the first stem. Subtracting the coordinates of one end of the stem from the 
+of the first stem. Subtracting the coordinates of one end of the stem from the
 other gives us a vector which is used to calculate an angle.
 This example, using the Group-I intron,
 indicates the presence of a kink-turn at interior loop `i2`.
@@ -240,7 +240,7 @@ Example::
     >>> import Bio
     >>> import forgi.threedee.utilities.pdb as ftup
     >>> import os.path as op
-    >>> 
+    >>>
     >>> filename = op.expanduser('~/data/pdbs/1Y26.pdb')
     >>> structure = Bio.PDB.PDBParser().get_structure('blah', filename)
     >>> ftup.is_rna(list(structure.get_chains())[0])
@@ -293,29 +293,29 @@ compute the RMSD value amongst them::
 
     >>> import forgi.threedee.model.coarse_grain as ftmc
     >>> import forgi.threedee.model.similarity as ftms
-    >>> 
+    >>>
     >>> cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
     >>> cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
-    >>>  
+    >>>
     >>> print ftms.cg_rmsd(cg1,cg2)
     0.0
 
-If we like more control, we can export any list of coordinates from the coarse grain moidel that 
+If we like more control, we can export any list of coordinates from the coarse grain moidel that
 is in a defined order and calculate the rmsd between these two point clouds.
 Examples would include the start and end coordinates of every stem for a faster RMSD estimation
 that is less accurate but avoids the overhead of generating the virtual residues.
 
-Note that currently forgi.threedee.model.similarity.rmsd centers and optimallly rotates the 
-two point clouds to minimize the RMSD. For an uncentered RMSD use 
+Note that currently forgi.threedee.model.similarity.rmsd centers and optimallly rotates the
+two point clouds to minimize the RMSD. For an uncentered RMSD use
 forgi.threedee.utilities.vector.vector_set_rmsd
 
     >>> import forgi.threedee.model.coarse_grain as ftmc
     >>> import forgi.threedee.utilities.graph_pdb as ftug
     >>> import forgi.threedee.model.similarity as ftms
-    >>> 
+    >>>
     >>> cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
     >>> cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
-    >>> 
+    >>>
     >>> coords1 = cg1.get_ordered_stem_poss()
     >>> coords2 = cg2.get_ordered_stem_poss()
     >>>
@@ -338,14 +338,14 @@ of reference [3] and the papers referenced therein.
 
     >>> import forgi.threedee.model.coarse_grain as ftmc
     >>> import forgi.threedee.model.descriptors as ftmd
-    >>> 
+    >>>
     >>> cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
     >>>
     >>> print "Radius of Gyration", cg.radius_of_gyration()
     >>>
     >>> coords = cg.get_ordered_stem_poss() #Use only coarse grained coordinates of stems
     >>> coords = cg.get_ordered_virtual_residue_poss() #Alternatively use coordinates of virtual residues
-    >>> 
+    >>>
     >>> print "Anisotropy", ftmd.anisotropy(coords)
     >>> print "Asphericity", ftmd.asphericity(coords)
 
@@ -368,6 +368,18 @@ Example::
     >>> ftup.is_covalent([c[10]["C3'"], c[10]["C5'"]])
     False
 
+
+Determine the total rotation of a stem
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The location of a stem's minor groove at the beginning and the end of the stem is stored as
+the twist vector. To calculate the total rotation of a stem, we need to calculate the angle
+between the two twist vectors and find out how many full turns around the helix we took.
+
+An ideal helix turns 36.4 degrees per base-pair, so given the number of basepairs we can
+calculate the number of full turns.
+
+
 Citations
 ~~~~~~~~~
 
@@ -377,7 +389,6 @@ Citations
 **From knotted to nested RNA structures: a variety of computational methods for pseudoknot removal.**
 RNA (2008) 14(3):410-416.
 
-[3] *Handan Arkın and Wolfhard Janke*. 
+[3] *Handan Arkın and Wolfhard Janke*.
 **Gyration tensor based analysis of the shapes of polymer chains in an attractive spherical cage**
 The Journal of Chemical Physics (2013) 138:054904, http://dx.doi.org/10.1063/1.4788616
-

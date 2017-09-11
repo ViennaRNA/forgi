@@ -1,5 +1,5 @@
-forgi.utilities package
-=======================
+forgi\.utilities package
+========================
 
 Submodules
 ----------

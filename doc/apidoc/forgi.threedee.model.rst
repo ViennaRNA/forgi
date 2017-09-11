@@ -1,14 +1,15 @@
-forgi.threedee.model package
-============================
+forgi\.threedee\.model package
+==============================
 
 Submodules
 ----------
 
 .. toctree::
 
+   forgi.threedee.model.linecloud
    forgi.threedee.model.coarse_grain
-   forgi.threedee.model.similarity
    forgi.threedee.model.descriptors
+   forgi.threedee.model.similarity
    forgi.threedee.model.stats
 
 Module contents

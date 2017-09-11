@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+from __future__ import division
 import numpy as np
 import sys
 import subprocess as sp
@@ -94,11 +96,11 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    print "hi"
+    print("hi")
     if len(args) < num_args:
         parser.print_help()
         sys.exit(1)
-    print "hi1"
+    print("hi1")
 
     pp = cvp.PymolPrinter()
     pp.stem_color = options.stem_color
@@ -134,7 +136,7 @@ def main():
 
         to_color_nodes = options.color_gradual.split(',')
         for i,node in enumerate(to_color_nodes):
-            print node, cmap(i / float(len(to_color_nodes)))
+            print(node, cmap(i / float(len(to_color_nodes))))
             pp.element_specific_colors[node] = cmap(i / float(len(to_color_nodes)))
 
     for i, cg in enumerate(cgs):
@@ -213,7 +215,7 @@ def main():
             f1.write(pymol_cmd)
             f1.flush()
 
-            print "f1.name:", f1.name
+            print("f1.name:", f1.name)
 
             if options.batch:
                 p = sp.Popen(['pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
@@ -221,7 +223,7 @@ def main():
                 p = sp.Popen(['pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
             out, err = p.communicate()
-            print >>sys.stderr, "err:", err
+            print("err:", err, file=sys.stderr)
 
 if __name__ == '__main__':
     main()

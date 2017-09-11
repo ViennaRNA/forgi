@@ -1,5 +1,5 @@
-forgi.threedee.utilities.my_math module
-=======================================
+forgi\.threedee\.utilities\.my\_math module
+===========================================
 
 .. automodule:: forgi.threedee.utilities.my_math
     :members:

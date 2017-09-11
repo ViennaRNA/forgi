@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import map
+from builtins import range
 import unittest, math
 import numpy as np
 import numpy.testing as nptest

@@ -11,10 +11,10 @@ S. Smit, K. Rother, J. Heringa, and R. Knight
 Manuscript in preparation.
 
 FORMATS (-f and -F parameter)
-The two input formats allowed are bpseq and ct. 
+The two input formats allowed are bpseq and ct.
     BPSEQ format (as on the Comparative RNA website):
     4 header lines
-    sequence_position residue partner_position 
+    sequence_position residue partner_position
     NOTE: If base is unpaired, partner is 0
 
     CT format:
@@ -49,13 +49,17 @@ Revision History:
     Slightly restructured by B. Thiel on 19 Sep 2016: main now takes filehandle
 """
 from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from builtins import object
 from sys import exit
-from rna2d import Pairs
+from .rna2d import Pairs
 from optparse import OptionParser
-from bpseq import BpseqParser, BpseqParseError
-from ct_simple import MinimalCtParser, CtError
-from output import ct_output, bpseq_output, vienna_output
-from knots import conflict_elimination, ec, eg,\
+from .bpseq import BpseqParser, BpseqParseError
+from .ct_simple import MinimalCtParser, CtError
+from .output import ct_output, bpseq_output, vienna_output
+from .knots import conflict_elimination, ec, eg,\
     inc_order, inc_length, inc_range,\
     opt_all, opt_single_random, opt_single_property,\
     num_bps, hydrogen_bonds, nussinov_restricted
@@ -63,7 +67,7 @@ from knots import conflict_elimination, ec, eg,\
 KNOWN_INPUT_FORMATS = {'bpseq': BpseqParser, 'ct': MinimalCtParser}
 KNOWN_OUTPUT_FORMATS = {'bpseq': bpseq_output, 'ct': ct_output,
     'vienna': vienna_output}
-KNOWN_METHODS = {'EC': ec, 'EG': eg, 
+KNOWN_METHODS = {'EC': ec, 'EG': eg,
     'IO': inc_order, 'IL': inc_length, 'IR': inc_range,\
      'OA': opt_all, 'OSR': opt_single_random, 'OSP': opt_single_property,\
     'NR': nussinov_restricted,}
@@ -112,7 +116,7 @@ class NestedStructure(object):
 
 def parse_command_line_parameters():
     """Parse command line arguments"""
-    
+
     # USAGE AND HELP INFO
     usage = '\n'.join(["Usage: python %prog [options] structure_file",\
         "See web or script documentation for an explanation"+\
@@ -148,23 +152,23 @@ def parse_command_line_parameters():
     result.add_option('-o','--opt_method', action='store', type='string',\
         dest='opt_method', help=opt_method_help)
 
-    # DEFAULT VALUES 
+    # DEFAULT VALUES
     result.set_defaults(verbose=DEFAULT_VERBOSE)
     result.set_defaults(removed=DEFAULT_REMOVED)
     result.set_defaults(input_format=DEFAULT_INPUT_FORMAT)
     result.set_defaults(output_format=DEFAULT_OUTPUT_FORMAT)
     result.set_defaults(method=DEFAULT_METHOD)
     result.set_defaults(opt_method=DEFAULT_OPT_METHOD)
-    
+
     return result.parse_args()
-    
+
 
 def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
     output_format=DEFAULT_OUTPUT_FORMAT, method=DEFAULT_METHOD,\
     opt_method=DEFAULT_OPT_METHOD, verbose=DEFAULT_VERBOSE,\
     removed=DEFAULT_REMOVED):
     """Return string of output containing nested structures (+commens)
-    
+
     Use help function or see script documentation for an explanation
         of the parameters.
     """
@@ -183,7 +187,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
             %(format, ', '.join(KNOWN_INPUT_FORMATS.keys()))
         raise ValueError(message)
     if output_format not in KNOWN_OUTPUT_FORMATS:
-    	message = "'%s' is an invalid output format. Valid options are [%s]"\
+        message = "'%s' is an invalid output format. Valid options are [%s]"\
             %(format, ', '.join(KNOWN_OUTPUT_FORMATS.keys()))
         raise ValueError(message)
     if method not in KNOWN_METHODS:
@@ -195,7 +199,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
             "'%s' is an invalid optimization function. Valid options are [%s]"\
             %(opt_method, ', '.join(KNOWN_OPT_METHODS.keys()))
         raise ValueError(message)
-    
+
     if verbose:
         result.append('INPUT FILE = %s;'%(input_file))
         result.append('FORMAT = %s; METHOD = %s;'%(input_format, method))
@@ -218,7 +222,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
             for header, seq, pairs in input_parser(input_filehandle):
                 input_data.append(KnottedStructure(Knotted=pairs, Seq=seq,\
                     Header=header))
-    except (BpseqParseError, CtError, ValueError), e:
+    except (BpseqParseError, CtError, ValueError) as e:
         message_lines = ["Cannot read input file.",
             "Make sure the input file is in the specified format.",
             "Internal error message:","%s."%(str(e))]
@@ -230,7 +234,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
         raise ValueError("No input data found")
 
     pk_function = KNOWN_METHODS[method]
-    
+
     output_data = []
     for knotted_struct in input_data:
         if method in ['OA', 'OSR','OSP']:
@@ -247,7 +251,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
         else:
             if verbose:
                 result.append('OPTIMIZATION GOAL AND FUNCTION IGNORED')
-        
+
         if method == 'OA': # return value is a list of Pairs objects
             nested_result = pk_function(knotted_struct.Knotted,\
                 goal=opt_goal, scoring_function=opt_function,\
@@ -307,9 +311,9 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
     # =========================================================================
     # PRODUCE OUTPUT
     # =========================================================================
-    
+
     output_function = KNOWN_OUTPUT_FORMATS[output_format]
-    
+
     # return string with output
     for ns in output_data:
         result.append(output_function(seq=ns.Seq, pairs=ns.Nested,\
@@ -317,20 +321,20 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
     return '\n'.join(result)
 
 if __name__ == "__main__":
-     
+
     # =========================================================================
     # PARSE COMMAND LINE PARAMETERS AND SEND INFO TO MAIN FUNCTION
     # =========================================================================
-    
+
     opts,arg = parse_command_line_parameters()
 
     try:
         input_file = arg[0]
     except IndexError:
         raise ValueError("No input file specified")
-    
+
     with open(input_filename, 'U') as input_filehandle:
         result = k2n_main(input_filehandle, input_format=opts.input_format,\
         output_format=opts.output_format, method=opts.method,\
         opt_method=opts.opt_method, verbose=opts.verbose, removed=opts.removed)
-    print result
+    print(result)

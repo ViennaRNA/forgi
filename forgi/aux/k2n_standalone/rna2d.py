@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+from __future__ import print_function
+from builtins import map
+from builtins import str
+from builtins import filter
+from builtins import object
 import sys
 
 """Code for handling RNA secondary structure.
@@ -8,7 +13,7 @@ representation makes a large difference to the efficiency of different
 algorithms, so several different structural representations (and the means
 to interconvert them) are provided.
 
-Provides following classes:  
+Provides following classes:
     Stem: representation of a stem in a secondary structure
     Partners: list holding partner of each position.
     PseudoknowRemover: detects and removes pseudoknots.
@@ -18,7 +23,6 @@ Provides following classes:
     WussStructure: Wash U secondary structure format, handles pseudoknots.
     StructureNode: for tree representation of nested RNA structure.
 """
-from string import maketrans
 
 class keep_chars(object):
     """Returns a filter object o(s): call to return a filtered string.
@@ -26,7 +30,7 @@ class keep_chars(object):
     Specifically, strips out everything in s that is not in keep.
     This filter is case sensitive by default.
     """
-    allchars = maketrans('','')
+    allchars = str.maketrans('','')
     def __init__(self, keep, case_sens=True):
         """Returns a new keep_chars object, based on string keep"""
         if not case_sens:
@@ -34,7 +38,7 @@ class keep_chars(object):
             up = keep.upper()
             keep = low + up
         self.delchars = ''.join([c for c in self.allchars if c not in keep])
-    
+
     def __call__(self, s, a=None, d=None):
         """f(s) -> s, translates using self.allchars and self.delchars"""
         if a is None: a = self.allchars
@@ -54,14 +58,14 @@ class PairError(ValueError):
 
 class Partners(list):
     """Holds list p such that p[i] is the index of the partner of i, or None.
-    
+
     Primarily useful for testing whether a specified base is paired and, if so,
     extracting its partner.
 
     Each base may have precisely 0 or 1 partners. If A pairs with B, B must
     pair with A.
     All inconsistencies will be removed by setting previous partners to None.
-    Checking for conflicts and raising errors should be done in method that 
+    Checking for conflicts and raising errors should be done in method that
     constructs the Partners.
 
     If constructing by hand, should initialize with list of [None] * seq_length.
@@ -72,7 +76,7 @@ class Partners(list):
     def __setitem__(self, index, item):
         """Sets self[index] to item, enforcing integrity constraints."""
         if index == item:
-            raise ValueError, "Cannot set base %s to pair with itself." % item
+            raise ValueError("Cannot set base %s to pair with itself." % item)
         #if item already paired, raise Error or make partner unpaired
         if item and self[item]:
             self[self[item]] = None
@@ -80,12 +84,12 @@ class Partners(list):
         curr_partner = self[index]
         if curr_partner is not None:
             list.__setitem__(self, curr_partner, None)
-        #set self[index] to item    
+        #set self[index] to item
         list.__setitem__(self, index, item)
         #if item is not None, set self[item] to index
         if item is not None:
             list.__setitem__(self, item, index)
-                
+
     def toPairs(self):
         """Converts the partners to sorted list of pairs."""
         result = Pairs()
@@ -96,12 +100,12 @@ class Partners(list):
 
     def _not_implemented(self, *args, **kwargs):
         """Raises NotImplementedError for 'naughty' methods.
-        
+
         Not allowed any methods that insert/remove items or that change the
         order of the items, including things like sort or reverse.
         """
         raise NotImplementedError
-    
+
     __delitem__ = __delslice__ = __iadd__ = __imul__ = __setslice__ = append \
     = extend = insert = pop = remove = reverse = sort = _not_implemented
 
@@ -112,14 +116,14 @@ def EmptyPartners(length):
 
 class Pairs(list):
     """Holds list of base pairs, each of which is a 2-element sequence.
-    
+
     This is a very lightweight object for storing base pairs, and does not
     perform any validation. Useful as an intermediate in many different
     calculations.
     """
     def toPartners(self, length, offset=0, strict=True):
         """Returns a Partners object, if possible.
-        
+
         length of resulting sequence must be specified.
         offset is optional, and is added to each index.
         strict specifies whether collisions cause fatal errors. if not strict
@@ -129,14 +133,14 @@ class Pairs(list):
         for up, down in self:
             upstream = up + offset
             downstream = down + offset
-            
+
             if result[upstream] or result[downstream]:
                 if strict:
-                    raise ValueError, "Pairs contain conflicting partners: %s"\
-                        % self
+                    raise ValueError("Pairs contain conflicting partners: %s"\
+                        % self)
             result[upstream] = downstream
         return result
-            
+
     def toVienna(self, length, offset=0, strict=True):
         """Returns a Vienna structure string, if possible.
 
@@ -148,13 +152,13 @@ class Pairs(list):
         strict specifies whether collisions cause fatal errors.
         """
         if self.hasPseudoknots():
-            raise Exception, "Pairs contains pseudoknots %s"%(self)
-        
+            raise Exception("Pairs contains pseudoknots %s"%(self))
+
         try:
             length = int(length)
         except ValueError: #raised when length can't be converted to int
             length = len(length)
-       
+
         p = self.directed()
         result = ['.'] * length
         for up, down in p:
@@ -166,8 +170,8 @@ class Pairs(list):
 
             if strict:
                 if (result[upstream] != '.') or (result[downstream] != '.'):
-                    raise ValueError, "Pairs contain conflicting partners: %s"\
-                        % self
+                    raise ValueError("Pairs contain conflicting partners: %s"\
+                        % self)
             result[upstream] = '('
             result[downstream] = ')'
         return ViennaStructure(''.join(result))
@@ -179,7 +183,7 @@ class Pairs(list):
         different types, e.g. lists and tuples, will sort according to type
         rather than to position).
         """
-        self[:] = map(tuple, self)
+        self[:] = list(map(tuple, self))
 
     def unique(self):
         """Returns copy of self omitting duplicate pairs, preserving order.
@@ -196,8 +200,8 @@ class Pairs(list):
 
     def directed(self):
         """Returns copy of self where all pairs are (upstream, downstream).
-        
-        Omits any unpaired bases and any duplicates. Result is in arbitrary 
+
+        Omits any unpaired bases and any duplicates. Result is in arbitrary
         order.
         """
         seen = {}
@@ -207,26 +211,26 @@ class Pairs(list):
             if up > down:
                 up, down = down, up
             seen[(up, down)] = True
-        result = seen.keys()
+        result = list(seen.keys())
         return Pairs(result)
 
     def symmetric(self):
         """Retruns copy of self where  each up, down pair has a down, up pair.
-        
-        Result is in arbitrary order. Double pairs and pairs containing None 
+
+        Result is in arbitrary order. Double pairs and pairs containing None
         are left out.
         """
         result = self.directed()
         result.extend([(down, up) for up, down in result])
         return Pairs(result)
-     
+
     def paired(self):
         """Returns copy of self omitting items where a 'partner' is None."""
-        return Pairs(filter(not_none, self))
-        
+        return Pairs(list(filter(not_none, self)))
+
     def hasPseudoknots(self):
         """Returns True if the pair list contains pseudoknots.
-        
+
         (good_up,good_down) <=> (checked_up,checked_down)
         pseudoknot if checked_up<good_down and checked_down>good_down
         """
@@ -278,21 +282,21 @@ class Pairs(list):
             else:   #first and second were both non-empty: check partners
                 if first in partners:
                     if partners[first] != second:
-                        print >>sys.stderr, "here2"
-                        print >>sys.stderr, "first:", first, "second:", second, "partners[first]", partners[first]
-                        print "partners:", partners
+                        print("here2", file=sys.stderr)
+                        print("first:", first, "second:", second, "partners[first]", partners[first], file=sys.stderr)
+                        print("partners:", partners)
                         return True
                 if second in partners:
                     if partners[second] != first:
-                        print >>sys.stderr, "here3"
-                        print >>sys.stderr, "first:", first, "second:", second, "partners[second]:", partners[second]
+                        print("here3", file=sys.stderr)
+                        print("first:", first, "second:", second, "partners[second]:", partners[second], file=sys.stderr)
                         return True
                 #add current pair to the list of constraints
                 partners[first] = second
                 partners[second] = first
         #can only get here if there weren't conflicts
         return False
-            
+
     def mismatches(self, sequence, pairs=None):
         """Counts pairs that can't form in sequence.
 
@@ -306,36 +310,35 @@ class Pairs(list):
                 pairs = sequence.Alphabet.Pairs
             except AttributeError:
                 pairs = sequence.Pairs
-            
+
         for up, down in self.directed():
             curr = (sequence[up], sequence[down])
             if curr not in pairs:
                 mismatches += 1
         return mismatches
-    
-        
+
+
 
 class StructureString(str):
     """Base class for ViennaStructure and WussStructure. Immutable.
-    
-    StructureString holds a structure and a energy. By default energy is 
-    set to None. 
+
+    StructureString holds a structure and a energy. By default energy is
+    set to None.
     If you compare two StructureStrings the structure is the only important
     thing, since the energy is relative to the associated sequence.
     """
     Alphabet=None
     StartSymbols = ''      #dict of symbols that start base pairs
     EndSymbols = ''        #dict of symbols that end base pairs
-    
+
     def __new__(cls, Structure, Energy=None):
         """Returns new StructureString."""
         a = cls.Alphabet
         if a:
             for i in Structure:
                 if i not in a:
-                    raise ValueError,\
-                    "Tried to include unknown symbol '%s'" % i
-        
+                    raise ValueError("Tried to include unknown symbol '%s'" % i)
+
         return str.__new__(cls,Structure)
 
     def __init__(self, Structure='', Energy=None):
@@ -355,7 +358,7 @@ class StructureString(str):
 
     def toPartners(self):
         """Makes list containing partner of each position.
-        
+
         Constructs a list from 0 to the number of bases, where each position
         contains the index of its pair (or None if it is unpaired).
 
@@ -378,16 +381,15 @@ class StructureString(str):
                curr = stack.pop()  #return and delete last element
                result[i] = curr #make i pair with the last element...
                result[curr] = i #...and the last element pair with i
-               
-        #test whether there are any open pairs left unaccounted for        
+
+        #test whether there are any open pairs left unaccounted for
         if stack:
-           raise IndexError, \
-           "Too many open pairs in structure:\n%s" % self
+           raise IndexError("Too many open pairs in structure:\n%s" % self)
         return Partners(result)
 
     def toPairs(self):
         """Makes list of (upstream,downstream) partners.
-        
+
         Note that the numbering starts at 0 for the first position.
         Key will always be smaller than value.
 
@@ -402,10 +404,9 @@ class StructureString(str):
                stack.append(i)
            elif symbol in end:     #close a pair
                result[stack.pop()] = i
-        #test whether there are any open pairs left unaccounted for        
+        #test whether there are any open pairs left unaccounted for
         if stack:
-           raise IndexError, \
-           "Too many open pairs in structure:\n%s" % self
+           raise IndexError("Too many open pairs in structure:\n%s" % self)
         return Pairs([(key,result[key]) for key in result])
 
 
@@ -414,7 +415,7 @@ class ViennaStructure(StructureString):
     Alphabet = dict.fromkeys('(.)')
     StartSymbols = {'(':None}      #dict of symbols that start base pairs
     EndSymbols =   {')':None}      #dict of symbols that end base pairs
- 
+
 def Vienna(data,Energy=None):
     """Tries to extract structure and energy from string data.
 
@@ -434,5 +435,3 @@ def Vienna(data,Energy=None):
         else: #energy given by user overrules the one in structure
             energy = Energy
     return ViennaStructure(pieces[0], energy)
-
-

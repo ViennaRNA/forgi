@@ -9,14 +9,17 @@ File created on 21 Sept 2007.
 
 """
 from __future__ import division
-from rna2d import Pairs
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from .rna2d import Pairs
 
 class CtError(Exception):
     pass
 
 def is_ct_line(line):
     """Return True if line is header line
-    
+
     line -- str, single line
 
     Header line is recognized by one of the following words:
@@ -60,17 +63,17 @@ def ct_parse_header(line):
 
 def ct_parse_content(lines):
     """Return tuple of (raw_sequence, Pairs object)
-   
+
     lines -- list of lines or anything behaving like it
 
     This function parses seq/struct lines of files in .ct format.
     Return value is tuple of sequence and Pairs object
         raw_sequence is simple string of characters
-        Pairs object will be zero-based. 
+        Pairs object will be zero-based.
 
     This method should be universal for .ct files from different sources.
     In general they only differ in their header.
-    
+
     Assumes 1-based, and returns 0-based structure object, corresponding
         to the sequence.
     Not yet: (Parses standard 6-column format.)
@@ -128,7 +131,7 @@ def MinimalCtParser(lines, strict=True, header_parser=ct_parse_header,\
             header_info = header_parser(head)
             seq, pairs = content_parser(body)
             yield [header_info], seq, pairs
-        except CtError, e:
+        except CtError as e:
             if strict:
                 raise CtError(str(e))
             else:
@@ -144,7 +147,7 @@ def CtParser(lines, strict=True, header_parser=ct_parse_header,\
             sequence, pairs = supported[program]['INTEGRATION']\
                 (header_info, content_info)
             yield sequence, pairs
-        except CtError, e:
+        except CtError as e:
             if strict:
                 raise CtError(str(e))
             else:
@@ -156,4 +159,4 @@ if __name__ == "__main__":
     #    print lines
 
     for res in MinimalCtParser(open(argv[1],'U')):
-        print res
+        print(res)

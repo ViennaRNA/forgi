@@ -1,3 +1,4 @@
+from __future__ import print_function
 import inspect    
 import sys
 import traceback
@@ -11,11 +12,11 @@ def pv(name):
     record=inspect.getouterframes(inspect.currentframe())[1]
     frame=record[0]
     val=eval(name,frame.f_globals,frame.f_locals)
-    print >>sys.stderr, '{0}: {1}'.format(name, val)
+    print('{0}: {1}'.format(name, val), file=sys.stderr)
 
 def bt():
     '''
     Print the calls stack.
     '''
     for line in traceback.format_stack()[:-1]:
-        print line.strip()
+        print(line.strip())

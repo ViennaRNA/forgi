@@ -1,9 +1,12 @@
+from builtins import next
+from builtins import range
 import itertools as it
 import contextlib
 import random
 import shutil
 import tempfile as tf
 import collections as col
+import sys
 
 
 import logging
@@ -14,6 +17,14 @@ import forgi.utilities.debug as cud
 bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 bracket_right = ")]}>abcdefghijklmnopqrstuvwxyz"
 
+
+def is_string_type(stri):
+    if sys.version_info<(3,):
+        return isinstance(stri, (str, unicode))
+    else:
+        return isinstance(stri, str)
+
+
 #COVERAGE: Not used
 def grouped(iterable, n):
     '''
@@ -23,7 +34,7 @@ def grouped(iterable, n):
 
     s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ...
     '''
-    return it.izip(*[iter(iterable)]*n)
+    return zip(*[iter(iterable)]*n)
 
 def merge_intervals(intervals, diff = 0):
     '''
@@ -89,12 +100,12 @@ def insert_into_stack(stack, i, j):
     return k
 
 def delete_from_stack(stack, j):
-    #print "del", j 
+    #print "del", j
     k = 0
     while len(stack[k])==0 or stack[k][len(stack[k])-1] != j:
         k+=1
     stack[k].pop()
-    return k    
+    return k
 
 def pairtable_to_dotbracket(pt):
     """
@@ -109,7 +120,7 @@ def pairtable_to_dotbracket(pt):
 
         seen.add(pt[i])
 
-        if pt[i]==0: 
+        if pt[i]==0:
             res += '.'
         else:
             if pt[i]>i:                        # '(' check if we can stack it...
@@ -128,9 +139,9 @@ def inverse_brackets(bracket):
 def dotbracket_to_pairtable(struct):
     """
     Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).
-    
-    
-    """    
+
+
+    """
     pt = [0] * ((len(struct)+1)-struct.count("&"))
     pt[0] = len(struct)-struct.count("&")
 
@@ -138,15 +149,15 @@ def dotbracket_to_pairtable(struct):
     inverse_bracket_left = inverse_brackets(bracket_left)
     inverse_bracket_right = inverse_brackets(bracket_right)
 
-    i = 0 
+    i = 0
     for a in struct:
         if a=='&': continue
         i += 1
         #print i,a, pt
         log.debug("Parsing bracket %r", a)
         if a == ".": pt[i] = 0
-        else: 
-            if a in inverse_bracket_left: 
+        else:
+            if a in inverse_bracket_left:
                 stack[inverse_bracket_left[a]].append(i)
             else:
                 assert a in inverse_bracket_right
@@ -155,7 +166,7 @@ def dotbracket_to_pairtable(struct):
                 j = stack[inverse_bracket_right[a]].pop()
                 pt[i] = j
                 pt[j] = i
-        
+
     if len(stack[inverse_bracket_left[a]]) != 0:
         raise ValueError('Too many opening brackets!')
 
@@ -167,21 +178,21 @@ def pairtable_to_tuples(pt):
 
     i.e. [4,3,4,1,2] -> [(1,3),(2,4),(3,1),(4,2)]
 
-    :param pt: A pairtable 
+    :param pt: A pairtable
     :return: A list paired tuples
     '''
     pt = iter(pt)
 
     # get rid of the first element which contains the length
     # of the sequence. We'll figure it out after the traversal
-    pt.next()
+    next(pt)
 
     tuples = []
     for i, p in enumerate(pt):
         tuples += [(i+1, p)]
 
     return tuples
-        
+
 def tuples_to_pairtable(pair_tuples, seq_length=None):
     '''
     Convert a representation of an RNA consisting of a list of tuples
@@ -209,7 +220,7 @@ def tuples_to_pairtable(pair_tuples, seq_length=None):
 
 def pairtable_to_elements(pt, level, i, j):
     '''
-    Convert a pair table to a list of secondary structure 
+    Convert a pair table to a list of secondary structure
     elements:
 
      [['s',1,[2,3]]
@@ -229,7 +240,7 @@ def pairtable_to_elements(pt, level, i, j):
 
     if (i > j):
         return []
-        
+
     #iterate over the unpaired regions on either side
     #this is either 5' and 3' unpaired if level == 0
     #or an interior loop or a multiloop
@@ -280,14 +291,14 @@ def pairtable_to_elements(pt, level, i, j):
             m.append(k)
 
         m.pop()
-        m += u3 
-        
+        m += u3
+
         if (len(m) > 0):
             if (level == 0):
                 elements.append(['e', level, sorted(m) ]);
             else:
                 elements.append(['m', level, sorted(m) ]);
-        
+
         return elements;
 
     if (pt[i] == j):
@@ -319,4 +330,3 @@ def pairtable_to_elements(pt, level, i, j):
     elements.append(['s', level, sorted(s)])
 
     return elements + pairtable_to_elements(pt, level, i, j)
-

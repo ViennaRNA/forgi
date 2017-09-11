@@ -1,5 +1,5 @@
-forgi.threedee.visual package
-=============================
+forgi\.threedee\.visual package
+===============================
 
 Submodules
 ----------

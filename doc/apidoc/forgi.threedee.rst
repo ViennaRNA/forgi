@@ -1,5 +1,5 @@
-forgi.threedee package
-======================
+forgi\.threedee package
+=======================
 
 Subpackages
 -----------

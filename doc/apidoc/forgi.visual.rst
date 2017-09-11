@@ -1,5 +1,5 @@
-forgi.visual package
-====================
+forgi\.visual package
+=====================
 
 Submodules
 ----------

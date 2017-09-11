@@ -1,5 +1,11 @@
-import unittest, os, math
+from __future__ import print_function
+import unittest
+import os
+import math
+import itertools as it
+
 import numpy as np
+
 import forgi.threedee.model.descriptors as ftmd
 import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.debug as fud
@@ -13,6 +19,11 @@ class TestGyration(unittest.TestCase):
         r = ftmd.radius_of_gyration(a)
         self.assertGreater(r, 0)
         self.assertAlmostEqual(r, math.sqrt(2))
+
+    def test_gyration_tensor_no_coords(self):
+        a = np.array([])
+        g_tensor = ftmd.gyration_tensor(a, diagonalize=True)
+        self.assertTrue(all(math.isnan(g_tensor[i,j]) for i,j in it.product(range(3), repeat=2)))
 
     def test_gyration_tensor_vs_rog(self):
         a1 = np.array([[1., 1., 1.], [0., 0., 0.], [-1., -1., -1.], [-2,-2,-2]])
@@ -38,15 +49,16 @@ class TestGyration(unittest.TestCase):
 
     def test_anisotropy_linear(self):
         linear = np.array([[1., 1., 1.], [0., 0., 0.], [-1., -1., -1.], [-2,-2,-2]])
-        self.assertAlmostEqual(ftmd.anisotropy(linear), 1)       
-    def test_anisotropy_star(self): 
+        self.assertAlmostEqual(ftmd.anisotropy(linear), 1)
+    def test_anisotropy_star(self):
         star = np.array([[0.,0,1], [0,1,0], [1,0,0], [-1,0,0], [0,-1,0], [0,0,1], [0,0,0]])
         self.assertLessEqual(ftmd.anisotropy(star), 0.2)
     def test_anisotropy_planar(self):
         # The anisotropy for planar symmetric objects converges to 1/4.
         # See references 36-40 in doi:10.1063/1.4788616
-        planar = np.array([[0.,0,1], [0,1,0], [0,-1,0], [0,0,1], [0,0,0], 
+        planar = np.array([[0.,0,1], [0,1,0], [0,-1,0], [0,0,1], [0,0,0],
                            [0,0.6,0.6], [0,-0.6,0.6],[0,0.6,-0.6],[0,-0.6,-0.6]])
         self.assertAlmostEqual(ftmd.anisotropy(planar), 0.25, places=2)
-        
-
+    def test_anisotropy_no_coords(self):
+        a = np.array([])
+        self.assertTrue(np.isnan(ftmd.anisotropy(a)))

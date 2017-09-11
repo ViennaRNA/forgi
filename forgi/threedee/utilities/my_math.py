@@ -27,11 +27,6 @@ def clock_angle(a1, a2):
     @param a1: The first angle.
     @param a2: The second angle.
     '''
-    if a2 >= a1:
-        return a2 - a1
-
-    else:
+    if a2 < a1:
         a2 += 2. * math.pi
-
     return a2 - a1
-

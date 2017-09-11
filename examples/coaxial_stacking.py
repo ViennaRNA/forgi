@@ -1,5 +1,12 @@
 # coding: utf-8
 from __future__ import print_function, absolute_import, division, unicode_literals
+from builtins import str
+from builtins import zip
+from builtins import next
+from builtins import input
+from builtins import map
+from builtins import range
+from builtins import object
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, open, pow, range, round,
                       str, super, zip) 

@@ -1,13 +1,5 @@
-forgi.projection package
-========================
-
-Module contents
----------------
-
-.. automodule:: forgi.projection
-    :members:
-    :undoc-members:
-    :show-inheritance:
+forgi\.projection package
+=========================
 
 Submodules
 ----------
@@ -17,3 +9,10 @@ Submodules
    forgi.projection.hausdorff
    forgi.projection.projection2d
 
+Module contents
+---------------
+
+.. automodule:: forgi.projection
+    :members:
+    :undoc-members:
+    :show-inheritance:

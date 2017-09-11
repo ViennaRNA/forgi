@@ -1,5 +1,5 @@
-forgi.threedee.utilities.vector module
-======================================
+forgi\.threedee\.utilities\.vector module
+=========================================
 
 .. automodule:: forgi.threedee.utilities.vector
     :members:

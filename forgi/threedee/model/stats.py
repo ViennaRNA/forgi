@@ -1,5 +1,12 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import zip
+from builtins import map
+from builtins import object
+
 import csv
 import itertools as it
 import sys, warnings
@@ -21,47 +28,47 @@ import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
 
 # The two constants seem to be unused.
-avg_stem_bp_length = 2.24 
+avg_stem_bp_length = 2.24
 avg_twist_rotation_per_bp = 360 / 11.
 
 
-#loop_lengths = [ 
+#loop_lengths = [
 #        (0., 0.),
-#        ( 7.0 , 9.0 ), 
-#        ( 7.459 , 9.33 ), 
-#        ( 7.774 , 8.945 ), 
-#        ( 8.102 , 8.985 ), 
-#        ( 6.771 , 8.182 ), 
-#        ( 6.465 , 7.533 ), 
-#        ( 6.435 , 7.676 ), 
-#        ( 6.605 , 8.987 ), 
-#        ( 8.396 , 9.367 ), 
-#        ( 12.13 , 18.68 ), 
-#        ( 19.76 , 22.32 ), 
-#        ( 11.57 , 14.59 ), 
-#        ( 8.702 , 8.744 ), 
-#        ( 15.46 , 15.46 ), 
-#        ( 15.0 , 30.0 ), 
-#        ( 15.0 , 30.0 ), 
-#        ( 15.0 , 30.0 ), 
-#        ( 15. , 30. ), 
-#        ( 15. , 30. ), 
-#        ( 15. , 30. ), 
-#        ( 15. , 30. ), 
-#        ( 15. , 30. ), 
-#        ( 15. , 30. ), 
+#        ( 7.0 , 9.0 ),
+#        ( 7.459 , 9.33 ),
+#        ( 7.774 , 8.945 ),
+#        ( 8.102 , 8.985 ),
+#        ( 6.771 , 8.182 ),
+#        ( 6.465 , 7.533 ),
+#        ( 6.435 , 7.676 ),
+#        ( 6.605 , 8.987 ),
+#        ( 8.396 , 9.367 ),
+#        ( 12.13 , 18.68 ),
+#        ( 19.76 , 22.32 ),
+#        ( 11.57 , 14.59 ),
+#        ( 8.702 , 8.744 ),
+#        ( 15.46 , 15.46 ),
+#        ( 15.0 , 30.0 ),
+#        ( 15.0 , 30.0 ),
+#        ( 15.0 , 30.0 ),
+#        ( 15. , 30. ),
+#        ( 15. , 30. ),
+#        ( 15. , 30. ),
+#        ( 15. , 30. ),
+#        ( 15. , 30. ),
+#        ( 15. , 30. ),
 #        ( 33.02 , 33.02 ) ]
 #
 #def get_loop_length(bg, key):
 #
 #    if int(bg.defines[key][0]) > int(bg.defines[key][1]):
-#        loop_length = 1. 
+#        loop_length = 1.
 #    else:
 #        loop_length = int(bg.defines[key][1]) - int(bg.defines[key][0])
 #
 #    return rand.uniform(loop_lengths[loop_length][0], loop_lengths[loop_length][1])
 
-class LoopStat:
+class LoopStat(object):
     '''
     Class for storing the individual statistics about loops.
 
@@ -70,7 +77,7 @@ class LoopStat:
     def __init__(self, line='', s_type="loop"):
         self.stat_type = s_type
         self.pdb_name = ''
-        
+
         self.bp_length = 0
         self.phys_length = 0.
         self.r = 0.
@@ -78,14 +85,14 @@ class LoopStat:
         self.v = 0.
 
         self.define=[]
-        
+        self.seqs=[]
         if len(line) > 0:
             try:
                 self.parse_line(line)
             except:
-                print >>sys.stderr, "Error parsing line:", line
+                print("Error parsing line:", line, file=sys.stderr)
                 raise
-            
+
     def parse_line(self, line):
         '''
         Parse a line containing statistics about the shape of a stem.
@@ -102,22 +109,22 @@ class LoopStat:
         self.r = float(parts[3])
         self.u = float(parts[4])
         self.v = float(parts[5])
-        self.define = map(int, parts[6:])
+        if len(parts)>6:
+            self.define = list(map(int, [parts[6], parts[7]]))
+            self.seqs = parts[8:]
 
     def __str__(self):
-        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))
-        #return "pdb_name: %s bp: %d phys_length: %f define: %s" % (self.pdb_name, self.bp_length, 
-        #                                        self.phys_length, " ".join(map(str, self.define)))
+        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))+" "+" ".join(self.seqs)
 
     def __eq__(self, other):
         if type(self)==type(other):
             return self.__dict__ == other.__dict__
         return NotImplemented
-    
+
     def __ne__(self, other):
         return not self == other
-            
-class StemStat:
+
+class StemStat(object):
     '''
     Class for storing the individual statistics about helices.
 
@@ -129,13 +136,13 @@ class StemStat:
     '''
     def __init__(self, line=''):
         self.pdb_name = ''
-        
+
         self.bp_length = 0
         self.phys_length = 0.
 
         self.twist_angle = 0.
         self.define = []
-
+        self.seqs=[]
         if len(line) > 0:
             self.parse_line(line)
 
@@ -155,30 +162,39 @@ class StemStat:
         self.twist_angle = float(parts[4])
         if len(parts)>5:
             self.define = [int(parts[5]), int(parts[6]), int(parts[7]), int(parts[8])]
+        try:
+            self.seqs = [parts[9], parts[10]]
+        except IndexError:
+            pass
 
     def __str__(self):
-        return "stem {} {} {} {} {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, *self.define)
+        try:
+            return "stem {pdb_name} {bp_length} {phys_length} {twist_angle} ".format(**self.__dict__)+" ".join(map(str, self.define))+" "+" ".join(self.seqs)
+        except (KeyError, IndexError):
+            warnings.warn("Could not print define '{}' for StemStat".format(self.define))
+            return "stem {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle)
         #return "pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, " ".join(map(str, self.define)))
-    
+
     def __eq__(self, other):
         if type(self)==type(other):
             return self.__dict__ == other.__dict__
         return NotImplemented
-    
+
     def __ne__(self, other):
         return not self == other
-    
-class AngleStat:
+
+class AngleStat(object):
     '''
     Class for storing an individual statistic about inter-helical angles.
     '''
 
-    def __init__(self, pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
+    def __init__(self, stat_type="angle", pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
                  define=[], seqs=[]):
         #log.debug("Stat init called")
         self.pdb_name = pdb_name
         self.dim1 = dim1
         self.dim2 = dim2
+        self.stat_type = stat_type
 
         self.u = u
         self.v = v
@@ -229,6 +245,7 @@ class AngleStat:
     def parse_line(self, line):
         parts = line.strip().split(' ')
 
+        self.stat_type = parts[0]
         self.pdb_name = parts[1]
 
         self.dim1 = int(parts[2])
@@ -258,11 +275,11 @@ class AngleStat:
             if self.dim2 == 0:
                 def_len -= 2
 
-            # for interior loops, at least one strand has to 
+            # for interior loops, at least one strand has to
             # have an unpaired base
             assert(def_len > 0)
 
-        self.define = map(int,parts[11:11 + def_len])
+        self.define = list(map(int,parts[11:11 + def_len]))
         self.seqs = parts[11+def_len:]
 
     def orientation_params(self):
@@ -292,22 +309,10 @@ class AngleStat:
         :return: `(r1, u1, v1)`
         '''
         return (self.r1, self.u1, self.v1)
-        
+
     def __str__(self):
-        '''
-        out_str = "angle %s %d %d %f %f %f %f %f %f %d %s" % (self.pdb_name,
-                                                              self.dim1,
-                                                              self.dim2,
-                                                              self.u,
-                                                              self.v,
-                                                              self.t,
-                                                              self.r1,
-                                                              self.u1,
-                                                              self.v1,
-                                                              self.ang_type,
-                                                              " ".join(map(str, self.define)))
-        '''
-        out_str = "angle %s %d %d %f %f %f %f %f %f %d %s %s" % (self.pdb_name,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s" % (self.stat_type,
+                                                              self.pdb_name,
                                                               self.dim1,
                                                               self.dim2,
                                                               self.u,
@@ -323,61 +328,54 @@ class AngleStat:
     def __hash__(self):
         return hash(str(self))
 
-    def diff(self, other_angle, next_stem_length = 1):
-        '''
-        Calculate the distance between the start and end of the hypothetical
-        next stem defined by these two angles.
-
-        :param other_angle: The other angle stat
-        :param next_stem_length: the length of the stem that is attached to this angle.
-        :param return: The distance between the starts and ends of the two hypothetical
-                       next stems defined by this angle and the other angle
-        '''
-        this_stem_start = np.array(ftuv.spherical_polar_to_cartesian([self.r1, self.u1, self.v1]))
-        this_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, self.u, self.v]))
-
-        other_stem_start = np.array(ftuv.spherical_polar_to_cartesian([other_angle.r1, other_angle.u1, other_angle.v1]))
-        other_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v]))
-
-        return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_start+this_stem_end, other_stem_start + other_stem_end)
     def get_angle(self):
         '''
         Return the angle between the two connected stems.
         '''
         return ftuv.vec_angle(np.array([-1.,0.,0.]), ftuv.spherical_polar_to_cartesian([1, self.u, self.v]))
-    
-    def get_virtual_atom_distance(self):
-        raise NotImplementedError("This does currently not produce valid results")
-        import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
-        if self.ang_type not in [3]:
-            warnings.warn("get_virtual_atom_distance not implemented for angle type {}".format(self.ang_type))
-            return float("nan")
-        
-        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3'"]        
-        
-        stem1_vec = [1.0,0,0]
-        stem1_twist1 = [0,1.0,0]
-        basis1_t = np.array([-np.array(stem1_vec), stem1_twist1, [0,0,1.0]]).transpose()
 
-        
-        #The stem seperation.
-        start_stem2 = ftug.stem2_pos_from_stem1_1(basis1_t, self.position_params())
-        
-        #Basis of stem 2 expressed in the basis of stem1 = standard basis
-        stem2_orientation = ftug.stem2_orient_from_stem1_1(basis1_t, [1] + list(self.orientation_params()))
-        twist2 = ftug.twist2_orient_from_stem1_1(basis1_t, self.twist_params())
-        
-        stem2_basis = ftuv.create_orthonormal_basis(stem2_orientation, twist2)
-        
-        spos_2 = ftus.avg_stem_vres_atom_coords[0]["A"]["P"]
-        
-        spos2_in_std_basis = ftug.vres_to_global_coordinates(start_stem2, stem2_basis, {"Atom": spos_2})["Atom"]
-        #ftuv.change_basis(spos_2, basis1, stem2_basis)+start_stem2
-        #print(stem2_basis, spos_1, spos2_in_basis_1)
-        return ftuv.vec_distance(spos_1, spos2_in_std_basis)
-        
-        
-class RandomAngleStats():
+    def deviation_from(self, stat2):
+        """
+        How much does the other stat differ from this stat?
+
+        :param stat2: Another AngleStat
+        :returns: A 4-tuple: The positional deviation in Angstrom, and 3 absolute angular deviations in radians.
+                  The  angular deviations are u, v and t
+        """
+        ret = []
+        pos1 = ftuv.spherical_polar_to_cartesian(self.position_params())
+        pos2 = ftuv.spherical_polar_to_cartesian(stat2.position_params())
+        ret.append(ftuv.magnitude(pos1-pos2))
+        for attr in ["u", "v", "t"]:
+            raw_diff = getattr(self, attr) - getattr(stat2, attr)
+            #Map the difference to a value between 0 and pi
+            raw_diff_on_circle = abs((raw_diff+math.pi/2)%(math.pi)-math.pi/2)
+            log.debug("Angular difference for %s is %f, mapped to %f", attr, raw_diff, raw_diff_on_circle)
+            ret.append(raw_diff_on_circle)
+        return tuple(ret)
+
+    def is_similar_to(self, stat2, position_cutoff=4, angular_cutoff=None):
+        """
+        Returns True, if theAngleStat is similar
+        (according to the specified cutoff) to the other Angle Stat.
+
+        :param position_cutoff: in angstrom
+        :param angular_cutoff: in radians. If not given, uses the position cutoff as a value in degrees
+        """
+        if angular_cutoff is None:
+            angular_cutoff = 4 * math.radians(position_cutoff)
+        deviation = self.deviation_from(stat2)
+        if deviation[0]>position_cutoff:
+            log.debug("Dissimilar, because of position deviation = %f", deviation[0])
+            return False
+        for dev in deviation[1:]:
+            if dev>angular_cutoff:
+                log.debug("Dissimilar, because of angular deviation %s (%s) > %f", dev, deviation[1:], angular_cutoff)
+                return False
+        log.debug("%s < (%f, %f)", deviation, position_cutoff, angular_cutoff)
+        return True
+
+class RandomAngleStats(object):
     '''
     Store all of the angle stats.
     '''
@@ -391,13 +389,13 @@ class RandomAngleStats():
         each column in the statistics.
 
         :param stats: A table containing n rows and m columns
-        :return: A function returning m random values with a 
+        :return: A function returning m random values with a
                  maximum and minimum no greater than the largest
                  and least values in that column, respectively.
         '''
         mins = map(min,data.T)
         maxs = map(max,data.T)
-        
+
         def bounded_uniform():
             return [nr.uniform(i,x) for i,x in zip(mins, maxs)]
 
@@ -426,7 +424,7 @@ class RandomAngleStats():
             try:
                 self.cont_stats[dims] = self.create_random_function(np.array(data))
             except np.linalg.LinAlgError as lae:
-                print >>sys.stderr, "Singular matrix, dimensions:", dims
+                print("Singular matrix, dimensions:", dims, file=sys.stderr)
 
     def sample_stats(self, dims):
         '''
@@ -452,7 +450,7 @@ class RandomAngleStats():
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
 
-class ContinuousAngleStats():
+class ContinuousAngleStats(object):
     '''
     Store all of the angle stats.
     '''
@@ -492,7 +490,7 @@ class ContinuousAngleStats():
             try:
                 self.cont_stats[dims] = ss.gaussian_kde(np.array(data).T)
             except np.linalg.LinAlgError as lae:
-                print >>sys.stderr, "Singular matrix, dimensions:", dims
+                print("Singular matrix, dimensions:", dims, file=sys.stderr)
 
     def sample_stats(self, dims):
         '''
@@ -518,7 +516,7 @@ class ContinuousAngleStats():
         '''
         return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
 
-class ConstructionStats:
+class ConstructionStats(object):
     angle_stats = None
     stem_stats = None
     loop_stats = None
@@ -527,7 +525,7 @@ class ConstructionStats:
     conf_stats = None
 
 
-def get_angle_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_angle_stats(filename, refresh=False):
     '''
     Load the statistics about inter the helix-helix orientations from a file.
 
@@ -625,7 +623,7 @@ def get_one_d_stat_dims(d, stats, min_entries=1):
     return available_stats
 
 
-def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_stem_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -657,7 +655,7 @@ def get_stem_stats(filename=cbc.Configuration.stats_file, refresh=False):
     return ConstructionStats.stem_stats
 
 
-def get_fiveprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_fiveprime_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -683,7 +681,7 @@ def get_fiveprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     return ConstructionStats.fiveprime_stats
 
-def get_threeprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_threeprime_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -709,7 +707,7 @@ def get_threeprime_stats(filename=cbc.Configuration.stats_file, refresh=False):
 
     return ConstructionStats.threeprime_stats
 
-def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
+def get_loop_stats(filename, refresh=False):
     '''
     Load the statistics from the file.
 
@@ -738,7 +736,7 @@ def get_loop_stats(filename=cbc.Configuration.stats_file, refresh=False):
 class ClusteredAngleStats(object):
     def __init__(self, filename):
         """
-        A collection of clustered angle_stats. Whenever stats for a certain key are retrieved, 
+        A collection of clustered angle_stats. Whenever stats for a certain key are retrieved,
         only one (randomly choosen) representative per cluster is returned.
 
         Requires a clustered angle stats file (created by fess/scripts/cluster_stats.py).
@@ -769,12 +767,12 @@ class ClusteredAngleStats(object):
                     lastkey = (dim1, dim2, ang_type)
                 elif line.startswith('#'):
                     continue
-                else: 
+                else:
                     angle_stat = AngleStat()
                     angle_stat.parse_line(line)
-                    # I don't know what this does, I just copied the following 2 lines from 
+                    # I don't know what this does, I just copied the following 2 lines from
                     # Peter's code in get_angle_stats
-                    if len(angle_stat.define) > 0 and angle_stat.define[0] == 1: 
+                    if len(angle_stat.define) > 0 and angle_stat.define[0] == 1:
                         continue
 
                     assert lastkey == (angle_stat.dim1, angle_stat.dim2, angle_stat.ang_type) or lastkey == (angle_stat.dim2, angle_stat.dim1, -angle_stat.ang_type)
@@ -825,7 +823,7 @@ class ClusteredAngleStats(object):
         return available_stats
 
 class ConformationStats(object):
-    def __init__(self, stats_file=cbc.Configuration.stats_file, clustered_angle_stats_file=None):
+    def __init__(self, stats_file, clustered_angle_stats_file=None):
         if clustered_angle_stats_file is None:
             self.angle_stats = get_angle_stats(stats_file, refresh=True)
         else:
@@ -839,7 +837,7 @@ class ConformationStats(object):
 
     def constrain_stats(self, constraint_file):
         '''
-        Constrain the statistics for certain regions of the molecule. This 
+        Constrain the statistics for certain regions of the molecule. This
         is created for use with the JAR3D annotations for loop regions.
 
         :param constraint_file: A file containing the allowed statistics for
@@ -877,11 +875,11 @@ class ConformationStats(object):
                 if isinstance(stats, ClusteredAngleStats):
                     dims = stats.get_angle_stat_dims(dims[0], dims[1], ang_type)
                 else: # assert isinstance(stats, defaultdict)
-                    dims = get_angle_stat_dims(dims[0], dims[1], 
+                    dims = get_angle_stat_dims(dims[0], dims[1],
                                                ang_type, min_entries=min_entries)
             except IndexError:
-                print >>sys.stderr, "Error in sample_stats:"
-                print >>sys.stderr, "elem:", elem, "dims:", dims, "ang_type:", ang_type
+                print("Error in sample_stats:", file=sys.stderr)
+                print("elem:", elem, "dims:", dims, "ang_type:", ang_type, file=sys.stderr)
                 raise
         elif elem[0] == 'h':
             dims = dims[0]
@@ -914,9 +912,9 @@ class ConformationStats(object):
         return all_stats
 
 class FilteredConformationStats(ConformationStats):
-    def __init__(self, stats_file=cbc.Configuration.stats_file, filter_filename=None, filter_prob=1):
+    def __init__(self, stats_file, filter_filename=None, filter_prob=1):
         """
-        :param filter_prob: Return the filtered stats with this probability, else all stats.  
+        :param filter_prob: Return the filtered stats with this probability, else all stats.
                             Default=1 (100%)
         """
         super(FilteredConformationStats, self).__init__(stats_file)
@@ -977,7 +975,7 @@ class FilteredConformationStats(ConformationStats):
         # No filtered stats found. Return normal stats for this element.
         return super(FilteredConformationStats, self).sample_stats(bg, elem)
 
-def get_conformation_stats(stats_file=cbc.Configuration.stats_file, angle_stats_file=None):
+def get_conformation_stats(stats_file, angle_stats_file=None):
     if ConstructionStats.conf_stats is not None:
         return ConstructionStats.conf_stats
     else:
