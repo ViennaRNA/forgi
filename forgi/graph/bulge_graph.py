@@ -44,9 +44,6 @@ except:
 
 RESID = col.namedtuple("complete_resid", ["chain", "resid"])
 
-def hallo_world():
-    print("Hallo World")
-
 def resid_to_str(resid):
     if resid.chain is not None:
         out="{}:{}".format(resid.chain, resid.resid[1])
@@ -3329,8 +3326,9 @@ class BulgeGraph(object):
                 next_stem = set.difference(self.edges[current],
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
-                # If pseudoknots exist, the direction is not always 0! 
-                # assert self.get_stem_direction(prev, build_order[-1][2])==0 does not hold for pseudoknots!
+                # If pseudoknots exist, the direction is not always 0!
+                # assert self.get_stem_direction(prev, build_order[-1][2])==0 
+		# does not hold for pseudoknots!
         self.build_order = build_order
         self.ang_type = None
 

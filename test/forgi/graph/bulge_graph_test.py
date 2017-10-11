@@ -1435,7 +1435,7 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
         build_order = bg.traverse_graph()
         all_stems = set(bg.stem_iterator())
-        log.error(build_order)
+
         for (f, c, t) in build_order:
             if f in all_stems:
                 all_stems.remove(f)
