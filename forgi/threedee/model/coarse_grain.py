@@ -295,11 +295,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             raise CgConstructionError("Bad chain-id given. "
                                       "{} not present (or not an RNA)".format( set(chain_id) -
                                                                                        set([chain.id for chain in chains])))
-
+    log.debug("Before cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in chains})
     new_chains = []
     for chain in chains:
         chain = ftup.clean_chain(chain)
         new_chains.append(chain)
+    log.debug("After cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in new_chains})
 
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
 

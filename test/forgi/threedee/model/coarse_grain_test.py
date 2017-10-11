@@ -150,7 +150,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
     def test_from_pdb_f_in_second_chain(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0"]))
+        self.assertEqual(set(cg.defines.keys()), set(["t0", "s0", "f0"]))
 
     def test_from_pdb_multiple(self):
         cgE = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
@@ -159,7 +159,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(set(cg.chains.keys()), set(["E", "F"]))
         self.assertEqual(len(cg.backbone_breaks_after), 1)
         bp = cg.backbone_breaks_after[0]
-        self.assertEqual(bp, 4)
+        self.assertEqual(bp, 3)
         self.assertEqual(cg.seq[:bp+1], cgE.seq)
         self.assertEqual(cg.seq[1:bp+1], cgE.seq)
         self.assertEqual(cg.seq[bp+1:], cgF.seq)
