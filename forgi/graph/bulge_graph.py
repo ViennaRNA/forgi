@@ -15,7 +15,7 @@ import collections as col
 import random
 import re
 import itertools as it
-from ..aux.k2n_standalone import knotted2nested as fak
+from ..k2n_standalone import knotted2nested as fak
 from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
@@ -1715,7 +1715,7 @@ class BulgeGraph(object):
             loops.append(tuple(loop))
         return loops
 
-    
+
     def describe_multiloop(self, multiloop):
         """
         :param multiloop: An iterable of nodes (only "m", "t" and "f" elements)
@@ -3488,7 +3488,7 @@ class BulgeGraph(object):
 
         # knotted_struct = fak.KnottedStructure(pairs, Seq=self.seq, Header=[])
 
-        import forgi.aux.k2n_standalone.knots as fakk
+        import forgi.k2n_standalone.knots as fakk
 
         pk_function = fakk.eg
         nested_pairs, removed_pairs = pk_function(pairs, return_removed=True)

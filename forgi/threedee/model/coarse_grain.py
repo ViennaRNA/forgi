@@ -39,7 +39,7 @@ from ...graph import bulge_graph as fgb
 from ..utilities import graph_pdb as ftug
 from ..model import stats as ftms
 
-from ...aux.k2n_standalone import knotted2nested as cak
+from ...k2n_standalone import knotted2nested as cak
 from ..utilities import mcannotate as ftum
 from ..utilities import pdb as ftup
 from . import descriptors as ftud
