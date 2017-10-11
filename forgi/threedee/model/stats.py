@@ -363,7 +363,7 @@ class AngleStat(object):
         :param angular_cutoff: in radians. If not given, uses the position cutoff as a value in degrees
         """
         if angular_cutoff is None:
-            angular_cutoff = 4 * math.radians(position_cutoff)
+            angular_cutoff = math.radians(position_cutoff)
         deviation = self.deviation_from(stat2)
         if deviation[0]>position_cutoff:
             log.debug("Dissimilar, because of position deviation = %f", deviation[0])
