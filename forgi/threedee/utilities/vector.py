@@ -523,7 +523,7 @@ def rotation_matrix(axis, theta):
     :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
-    return rotation_matrix_weave(axis, theta)
+    # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
     # The following would be the slower pure-python implementation (for comparison)
     axis = normalize(axis)
     a = math.cos(theta/2)
