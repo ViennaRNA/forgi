@@ -1,0 +1,62 @@
+===============================================================================
+K2N: KNOTTED TO NESTED STANDALONE PACKAGE
+===============================================================================
+Written by: Sandra Smit (S.Smit@few.vu.nl)
+Last updated on: 18 Oct 2007
+
+This package contains stripped down versions of the full source code
+available as part of the PyCogent project:
+http://sourceforge.net/projects/pycogent/
+
+If you use this code in your work, please cite:
+
+Sandra Smit, Kristian Rother, Jaap Heringa, and Rob Knight.
+From knotted to nested RNA structures: a variety of computational methods
+for pseudoknot removal. (2007) Submitted.
+
+===============================================================================
+CODE AND EXAMPLE DATA
+===============================================================================
+
+Script to control pseudoknot removal methods:
+knotted2nested.py
+
+Related scripts:
+knots.py -- Module with pseudoknot removal methods
+bpseq.py -- Parser for bpseq format
+ct_simple.py -- Parser for ct format
+output.py -- Routines to produce output
+rna2d.py -- module with RNA structure representations
+dict2d.py -- module with 2D dictionary
+
+example_data contains several data files that can be used for testing
+
+===============================================================================
+INSTALLATION
+===============================================================================
+
+This package requires the following packages to be installed:
+python (2.3 or higher)
+numpy (1.0.1 or higher)
+
+===============================================================================
+USAGE
+===============================================================================
+
+Use "python knotted2nested.py -h" for help
+
+General usage:
+python knotted2nested.py [options] <input file>
+
+Examples:
+python knotted2nested.py -f bpseq -F vienna -m OA -o BPS 
+    example_data/example_small.bpseq
+python knotted2nested.py -f ct -F bpseq -m IO example_data/example_large.ct 
+
+===============================================================================
+DOCUMENTATION
+===============================================================================
+
+See knotted2nested.py, the web interface (at www.ibi.vu.nl/programs/k2nwww),
+and the paper for a description of the methods.
+

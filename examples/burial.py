@@ -15,8 +15,9 @@ from optparse import OptionParser
 
 def calculate_burial(kd, position, directions, radius=5, step_size=1., max_dist = 500):
     '''
-    Calculate how many atoms we have to go by if we travel in all
-    directions away from this point)
+    Calculate how far we need to travel from this position until we
+    arrive at a region with no atoms within the search radius.
+    (we assume we have got out of the protein)
 
     :param kd: A Bio.KDTree containing all the other atoms in this
               molecule
@@ -24,7 +25,7 @@ def calculate_burial(kd, position, directions, radius=5, step_size=1., max_dist 
     :param directions: The directions to travel in
     :param radius: The radius within which to check for neighbors
     :param step_size: How far to step at each point in the simulation
-    :param max_dist: The minimum distance to travel from the center
+    :param max_dist: The maximal distance to travel from the center
     '''
     distances = []
 
@@ -76,14 +77,13 @@ def main():
     kd.set_coords(atom_coords)
 
     for i,r in enumerate(chain.get_list()):
-        distance = calculate_burial(kd, r["C1'"].get_coord(), 
+        distance = calculate_burial(kd, r["C1'"].get_coord(),
                                     all_directions, radius=options.radius,
                                    step_size = options.step_size)
 
-        print("{}:{}".format(i+1, distance))
+        print("{}:{}".format(r, distance))
         pass
 
 
 if __name__ == '__main__':
     main()
-

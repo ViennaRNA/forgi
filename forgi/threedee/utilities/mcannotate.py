@@ -5,8 +5,14 @@ from builtins import range
 import sys
 import copy
 import re
-import forgi.utilities.debug as fud
 import logging
+from collections import defaultdict
+
+from logging_exceptions import log_to_exception, log_exception
+
+import forgi.utilities.debug as fud
+
+
 log = logging.getLogger(__name__)
 
 def parse_resid(mcann_resid):
@@ -25,7 +31,7 @@ def format_resid(pdb_resid):
     Convert a PDB.Chain.Residue id to an MC-Annotate formatted
     residue identifier.
     '''
-    
+
     if pdb_resid[2] == ' ':
         return str(pdb_resid[1])
     else:
@@ -67,11 +73,16 @@ def parse_base_pair_id(base_pair_id):
     @param base_pair_id: The identifier string for the interacting nucleotides (i.e. 'A33-B45')
     @return: 4-tuple containing of the form (chain1, res1, chain2, res2) i.e. ('A', 33, 'B', '45')
     """
-    
-        
-    parts = re.findall(r"((?:'\d+'|\w)[-0-9]\d*|(?:'\d+'|\w)\d+)", base_pair_id)
+    # A number in single quotes or a letter, followed by a (potentially negative) number and
+    # potentiallly by an insertion code.
+    residue_pattern = r"(?:'\d'|[A-Za-z])-?\d+(?:\.[A-Za-z])?"
+
+    parts = re.findall(residue_pattern, base_pair_id)
     if len(parts) != 2:
-        raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        e = ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        with log_to_exception(log, e):
+            log.error("Regex matched the following parts: %s", parts)
+        raise e
     if "-".join(parts) != base_pair_id:
         raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
 
@@ -122,7 +133,7 @@ def iterate_over_interactions(mcannotate_lines):
     for line in mcannotate_lines:
         if line.find("Base-pairs ---") == 0:
             base_pair_line = True
-            continue 
+            continue
         if line.find("Residue conformations") == 0:
             base_pair_line = False
             continue
@@ -131,36 +142,17 @@ def iterate_over_interactions(mcannotate_lines):
             try:
                 (from_chain, from_base, to_chain, to_base) =  get_interacting_base_pairs(line)
             except ValueError as ve:
-                print("ValueError:", ve, file=sys.stderr)
-                print("line:", line, file=sys.stderr)
+                log_exception(ve, logging.WARNING, with_stacktrace=False)
                 continue
 
             yield line.strip()
 
-# From:
-# http://code.activestate.com/recipes/389639/
-class DefaultDict(dict):
-    """Dictionary with a default value for unknown keys."""
-    def __init__(self, default):
-        self.default = default
-
-    def __getitem__(self, key):
-        if key in self: 
-            return self.get(key)
-        else:
-            ## Need copy in case self.default is something like []
-            return self.setdefault(key, copy.deepcopy(self.default))
-
-    def __copy__(self):
-        copy = DefaultDict(self.default)
-        copy.update(self)
-        return copy
 
 def get_dotplot(lines):
     """docstring for get_dotplot"""
     residues = []
     residue_types = []
-    bps = DefaultDict(-1)
+    bps = defaultdict(lambda:-1)
     output_str = ""
 
     for line in iterate_over_residue_list(lines):
@@ -184,7 +176,12 @@ def get_dotplot(lines):
             #print line
 
             if parts1[0] in paired or parts1[1] in paired:
-                print("paired:", parts1[0], parts1[1], file=sys.stderr)
+                if log.isEnabledFor(logging.WARNING):
+                    if parts1[0] in bps:
+                        existing = "{} - {}".format(parts1[0], residues[bps[parts1[0]]])
+                    else:
+                        existing = "{} - {}".format(parts1[1], residues[bps[parts1[1]]])
+                    log.warning("Base-triple encountered: Ignoring basepair %s - %s, because basepair %s exists", parts1[0], parts1[1], existing)
                 continue
 
             paired.add(parts1[0])

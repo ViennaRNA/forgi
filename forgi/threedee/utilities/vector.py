@@ -4,7 +4,6 @@ from builtins import map
 from builtins import range
 import timeit, sys
 
-import forgi.threedee.utilities.cytvec as ftuc
 import forgi.utilities.debug as fud
 import numpy as np
 import math
@@ -148,11 +147,11 @@ def get_non_colinear_unit_vector(vec):
 
     return np.array(unit)
 
-def is_almost_colinear(vec1, vec2):
+def is_almost_parallel(vec1, vec2):
     """
-    Returns true, if two vectors are almost colinear
+    Returns true, if two vectors are almost parallel
 
-    Note that every vector is colinear to the zero vector.
+    Note that every vector is parallel to the zero vector.
     """
     CUTOFF=10**-9
     for i in range(len(vec1)):
@@ -167,6 +166,62 @@ def is_almost_colinear(vec1, vec2):
         warnings.simplefilter("ignore")
         log.debug("vec1/vec2 = %s", [abs(vec1[i]/vec2[i]) for i in range(len(vec1))])
     return all((abs(vec1[i])<CUTOFF and abs(vec2[i])<CUTOFF) or (abs(vec2[i])>CUTOFF and abs(vec1[i]/vec2[i]-factor)<CUTOFF) for i in range(len(vec1)))
+
+
+def line_segments_collinearity(segment1, segment2):
+    """
+    Quantifies, how collinear (according to some measure) two line segments are.
+
+    :param segment1, segment2: Each a tuple of vectors (start, end)
+    """
+    dir1 = normalize(segment1[1]-segment1[0])
+    dir2 = normalize(segment2[1]-segment2[0])
+
+    # Get the average direction of the two vectors, if oriented correctly.
+    s1 = dir1+dir2
+    s2 = dir1-dir2
+    if magnitude(s1)>magnitude(s2):
+        sum_vec = s1
+    else:
+        sum_vec = s2
+    # Further more, the line should pass through the center of the
+    # 4 points defining the line segments.
+    points = np.array(segment1+segment2)
+    center = points.mean(axis=0)
+    '''
+    # Now plot for verification
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    log.info("Fiorst 2 points: X %s Y %s Z %s ", points[:2,0], points[:2,1], points[:2,2])
+    plt.plot(points[:2,0], points[:2,1], points[:2,2],"ro-")
+    plt.plot(points[2:,0], points[2:,1], points[2:,2],"bo-")
+
+    line = np.array([center-3*sum_vec, center, center+3*sum_vec])
+    plt.plot(line[:,0],line[:,1],line[:,2], "g-o")
+    ax.set_xlim(-5,5)
+    ax.set_ylim(-5,5)
+    ax.set_zlim(-5,5)
+
+    plt.show()'''
+
+    # Now calculate the distances of the 4 points from the fitted line
+    d_point_line = point_line_distance(points, center, sum_vec)
+    assert len(d_point_line)==4
+    # Return an R**2 value, like or linear regression (1=collinear, <1 worse)
+    return 1-sum(d_point_line**2)/((points-center)**2).sum()
+
+
+    # Different version via SVD
+    centered_points = points-center
+    uu, dd, vv = np.linalg.svd(centered_points)#, full_matrices=False)
+    # Now vv[0] is the direction of the target line.
+    # Calculate the deviation of the points from the target line.
+    distances_from_line = np.linalg.norm(np.cross(vv[0], centered_points), axis=1)/magnitude(vv[0])
+    r2 = 1 - (np.sum(distances_from_line**2)/ np.sum(centered_points**2))
+    return r2
 
 def create_orthonormal_basis(vec1, vec2=None, vec3=None):
     '''
@@ -184,18 +239,23 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
             if round(vec_angle(vec2, vec1),9)!=round(math.pi/2,9):
                 assert False, ("vec2 {} is not normal to vec1 {}! Angle is {} rad ({} degrees)".format(vec2, vec1, vec_angle(vec2, vec1), math.degrees(vec_angle(vec2, vec1)), math.pi/2))
 
-    if magnitude(vec1) == 0:
+    mag_vec1 = magnitude(vec1)
+    if mag_vec1 == 0:
         raise ZeroDivisionError("vec 1 {}  has magnitude 0.".format(vec1))
-    vec1 = vec1 / magnitude(vec1)
+    vec1 = vec1 / mag_vec1
 
-    if magnitude(vec2) == 0:
+    mag_vec2 = magnitude(vec2)
+    if mag_vec2 == 0:
         raise ZeroDivisionError("vec 2 has magnitude 0. vecs are so far {} and {} ".format(vec1, vec2))
-    vec2 = vec2 / magnitude(vec2)
+    vec2 = vec2 / mag_vec2
+
     if vec3 is None:
         vec3 = np.cross(vec1, vec2)
-    if magnitude(vec3) == 0:
+
+    mag_vec3 = magnitude(vec3)
+    if mag_vec3 == 0:
         raise ZeroDivisionError("vec 3 has magnitude 0. vecs are {}, {} and {}".format(repr(vec1), repr(vec2), repr(vec3)))
-    vec3 = vec3 / magnitude(vec3)
+    vec3 = vec3 / mag_vec3
 
     return np.array([vec1, vec2, vec3])
 
@@ -444,10 +504,34 @@ def rotation_matrix_weave(axis, theta, mat = None):
         mat[3*2 + 2] = a*a+d*d-b*b-c*c;
     """
 
-    import scipy as sp
-    sp.weave.inline(code, ['axis', 'theta', 'mat'], support_code = support, libraries = ['m'])
+    from scipy import weave
+    weave.inline(code, ['axis', 'theta', 'mat'], support_code = support, libraries = ['m'])
 
     return mat
+
+
+def rotation_matrix(axis, theta):
+    '''
+    Calculate the rotation matrix for a rotation of theta around axis.
+
+    Thanks to unutbu on StackOverflow
+
+    http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
+
+    :param axis: The axis around which to rotate
+    :param theta: The angle of rotation (in rad)
+    :return: A matrix which can be used to perform the given rotation. The coordinates
+             need only be multiplied by the matrix.
+    '''
+    # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
+    # The following would be the slower pure-python implementation (for comparison)
+    axis = normalize(axis)
+    a = math.cos(theta/2)
+    b, c, d = -axis*math.sin(theta/2)
+
+    return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
+                  [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
+                  [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
 
 
 def vector_set_rmsd(set1, set2):
@@ -468,26 +552,6 @@ def vector_set_rmsd(set1, set2):
     rmsd /= count
     return math.sqrt(rmsd)
 
-def rotation_matrix(axis, theta):
-    '''
-    Calculate the rotation matrix for a rotation of theta degrees around axis.
-
-    Thanks to unutbu on StackOverflow
-
-    http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
-
-    :param axis: The axis around which to rotate
-    :param theta: The angle of rotation
-    :return: A matrix which can be used to perform the given rotation. The coordinates
-             need only be multiplied by the matrix.
-    '''
-    axis = normalize(axis)
-    a = math.cos(theta/2)
-    b, c, d = -axis*math.sin(theta/2)
-
-    return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
-                  [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
-                  [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
 
 def get_vector_centroid(crds1):
     '''
@@ -704,10 +768,24 @@ def seg_intersect(line1, line2) :
         return []
 
 
+def point_line_distance(point, line_start, line_dir):
+    """
+    Calculate the distance between the point and the line
+    through line_point with direction line_dir.
+
+    :param point: A point(an array with shape (3,)) or multiple points (shape n,3)
+    """
+    if np.shape(point)==(3,):
+        return magnitude(np.cross(line_dir, (line_start-point)))/magnitude(line_dir)
+    else:
+        # More than one point
+        return np.linalg.norm(np.cross(line_dir, line_start-point), axis=1)/magnitude(line_dir)
 
 def vec_distance(vec1, vec2):
-    return ftuc.vec_distance(vec1, vec2)
-    #return math.sqrt(np.dot(vec2 - vec1, vec2 - vec1))
+    vec1 = np.asarray(vec1)
+    vec2 = np.asarray(vec2)
+    direction = vec2-vec1
+    return math.sqrt(np.dot(direction, direction))
 
 @profile
 def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):

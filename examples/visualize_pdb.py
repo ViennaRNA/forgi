@@ -90,9 +90,9 @@ def main():
     if options.only_elements is not None:
         pp.only_elements = options.only_elements.split(',')
 
-    with tf.NamedTemporaryFile() as f:
-        with tf.NamedTemporaryFile(suffix='.pml') as f1:
-            with tf.NamedTemporaryFile(suffix='.pdb') as f2:
+    with tf.NamedTemporaryFile(mode="w+") as f:
+        with tf.NamedTemporaryFile(suffix='.pml',mode="w+") as f1:
+            with tf.NamedTemporaryFile(suffix='.pdb',mode="w+") as f2:
                 # extract just the biggest chain and renumber it so
                 # the nucleotides start at 1
                 if chain_id is None:
@@ -122,7 +122,7 @@ def main():
 
                         pp.add_dashed(vec1, vec2, width=1.2)
 
-                f.write(pp.pymol_string())
+                print(pp.pymol_string(), file=f)
                 f.flush()
 
                 pymol_cmd = 'hide all\n'

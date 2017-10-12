@@ -42,6 +42,97 @@ class TestLineSegmentDistance(unittest.TestCase):
         b0 = np.array([-27.57744115,   6.96488989, -22.47619655])
         b1 = np.array([-16.93424799,  -4.0631445 , -16.19822301])
         self.assertLess(ftuv.vec_distance(*ftuv.line_segment_distance(a0,a1,b0,b1)), 25)
+
+
+class TestLineSegmentCollinearity(unittest.TestCase):
+
+    def test_collinear_segments(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0,0,2.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,-1]),np.array([0,0,-2.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,-2]),np.array([0,0,-1.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([1,1,1]))
+        b = (np.array([2.,2,2]),np.array([3,3,3.]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+        a = (np.array([0.,0,0]),np.array([1,1,1]))
+        b = (np.array([0.5,0.5,0.5]),np.array([0.7,0.7,0.7]))
+        self.assertAlmostEqual(ftuv.line_segments_collinearity(a,b), 1)
+
+    def test_fixed_angle(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,0,1])+ftuv.normalize([1,1,1.]))
+        x = np.linspace(0.01,4,500)
+        for f in x:
+            col = ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f))
+            self.assertLess(col, 0.95)
+            self.assertGreater(col, 0.6)
+
+    def test_normal_angle(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,1,1]))
+        x = np.linspace(0.01,4,500)
+        for f in x:
+            col = ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f))
+            self.assertLess(col, 0.6)
+            self.assertGreater(col, 0.)
+
+    def plot_fixed_angle(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,0,1])+ftuv.normalize([1,1,1.]))
+        x = np.linspace(0.01,4,5000)
+        y = []
+        for f in x:
+            y.append(ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f)))
+        import matplotlib.pyplot as plt
+        plt.title("Fixed angle")
+        plt.plot(x, y)
+        plt.show()
+        assert False
+    def plot_normal(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        b = (np.array([0.,0,1]),np.array([0.,1,1]))
+        x = np.linspace(0.01,4,5000)
+        y = []
+        for f in x:
+            y.append(ftuv.line_segments_collinearity(a, (b[0]*f, b[1]*f)))
+        import matplotlib.pyplot as plt
+        plt.title("normal")
+        plt.plot(x, y)
+        plt.show()
+        assert False
+    def test_distance(self):
+        #score decreases with increasing distance, but stays above 0
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        x = np.linspace(0.01,10,5000)
+        y_old = 1
+        for d in x:
+            b0 = a[1]+np.array([0,1.,0.])*d
+            b = b0, b0+np.array([0.,0,1])
+            y = ftuv.line_segments_collinearity(a,b)
+            self.assertLess(y, y_old)
+            self.assertGreater(y, 0)
+            y_old = y
+
+    def plot_distance(self):
+        a = (np.array([0.,0,0]),np.array([0,0,1]))
+        x = np.linspace(0.01,10,5000)
+        y=[]
+        for d in x:
+            b0 = a[1]+np.array([0,1.,0.])*d
+            b = b0, b0+np.array([0.,0,1])
+            y.append(ftuv.line_segments_collinearity(a,b))
+        import matplotlib.pyplot as plt
+        plt.title("distance")
+        plt.plot(x, y)
+        plt.show()
+
+
+
 class TestVector(unittest.TestCase):
     """Tests for the threedee.utilities.vector module"""
     def setUp(self):
@@ -72,8 +163,8 @@ class TestVector(unittest.TestCase):
         vec1=np.array([0.5,0.7,0.9])
         vec2=np.array([0.345,3.4347,0.55])
         rotMat=ftuv.get_alignment_matrix(vec1,vec2)
-        self.assertTrue( ftuv.is_almost_colinear(vec2, np.dot(vec1, rotMat)) )
-        self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2), vec1) )
+        self.assertTrue( ftuv.is_almost_parallel(vec2, np.dot(vec1, rotMat)) )
+        self.assertTrue( ftuv.is_almost_parallel(np.dot(rotMat, vec2), vec1) )
 
     def test_get_double_alignment_matrix(self):
         vec1=np.array([0.5,0.7,0.9])
@@ -81,10 +172,10 @@ class TestVector(unittest.TestCase):
         vec2=np.array([0.345,3.5,0.55])
         vec2b=np.array([0., 0.55, -3.5])
         rotMat=ftuv.get_double_alignment_matrix((vec1, vec1b),(vec2, vec2b))
-        self.assertTrue( ftuv.is_almost_colinear(vec2, np.dot(vec1, rotMat)) )
-        self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2), vec1) )
-        self.assertTrue( ftuv.is_almost_colinear(vec2b, np.dot(vec1b, rotMat)) , msg="{} not colinear with {}".format(vec2b, np.dot(vec1b, rotMat)))
-        self.assertTrue( ftuv.is_almost_colinear(np.dot(rotMat, vec2b), vec1b) , msg="{} not colinear with {}".format(np.dot(rotMat, vec2b), vec1b))
+        self.assertTrue( ftuv.is_almost_parallel(vec2, np.dot(vec1, rotMat)) )
+        self.assertTrue( ftuv.is_almost_parallel(np.dot(rotMat, vec2), vec1) )
+        self.assertTrue( ftuv.is_almost_parallel(vec2b, np.dot(vec1b, rotMat)) , msg="{} not colinear with {}".format(vec2b, np.dot(vec1b, rotMat)))
+        self.assertTrue( ftuv.is_almost_parallel(np.dot(rotMat, vec2b), vec1b) , msg="{} not colinear with {}".format(np.dot(rotMat, vec2b), vec1b))
 
 
     def test_get_orthogonal_unit_vector(self):
@@ -151,32 +242,32 @@ class TestVector(unittest.TestCase):
             ftuv.seg_intersect(([0., 5.], [4.34]), ([0.,1.], [-5.,7.]))
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
-    def test_is_almost_colinear(self):
+    def test_is_almost_parallel(self):
         #Zero-vector is colinear to everything
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0.,0.,0.])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0.4,0,0]),np.array([0.,0.,0.])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,0]),np.array([0,20,0])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,0]),np.array([0.,0.,0.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([0.4,0,0]),np.array([0.,0.,0.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,0]),np.array([0,20,0])))
 
         #10*-9 is treated as zero
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0,1,1]),np.array([10**-10,2,2])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([1,0,1]),np.array([2, 10**-10,2])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([1,1,0]),np.array([2,2,10**-10])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([10**-10,2,2]), np.array([0,1,1])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([2, 10**-10,2]), np.array([1,0,1])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([2,2,10**-10]), np.array([1,1,0])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([0,1,1]),np.array([10**-10,2,2])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([1,0,1]),np.array([2, 10**-10,2])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([1,1,0]),np.array([2,2,10**-10])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([10**-10,2,2]), np.array([0,1,1])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([2, 10**-10,2]), np.array([1,0,1])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([2,2,10**-10]), np.array([1,1,0])))
 
         #Colinear
-        self.assertTrue(ftuv.is_almost_colinear(np.array([0,0,2]),np.array([0.,0.,3.])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,7]),np.array([9.,18.,21.])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([3,6,0]),np.array([9.,18.,0.])))
-        self.assertTrue(ftuv.is_almost_colinear(np.array([3,0,8]),np.array([9.,0.,24.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,2]),np.array([0.,0.,3.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,7]),np.array([9.,18.,21.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,0]),np.array([9.,18.,0.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([3,0,8]),np.array([9.,0.,24.])))
 
         #Not colinear
-        self.assertFalse(ftuv.is_almost_colinear(np.array([0,0,3.]),np.array([2.,0,0])))
-        self.assertFalse(ftuv.is_almost_colinear(np.array([0,3.,0]),np.array([0,0,3.])))
-        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,4.,-6.])))
-        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([3.,4.,6.])))
-        self.assertFalse(ftuv.is_almost_colinear(np.array([1,2,3]),np.array([2.,5.,6.])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([0,0,3.]),np.array([2.,0,0])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([0,3.,0]),np.array([0,0,3.])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([1,2,3]),np.array([2.,4.,-6.])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([1,2,3]),np.array([3.,4.,6.])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([1,2,3]),np.array([2.,5.,6.])))
 
     def test_middlepoint(self):
         self.assertIsInstance(ftuv.middlepoint((1,2,3),(4,5,6)), tuple)
@@ -190,14 +281,14 @@ class TestVector(unittest.TestCase):
     def test_create_orthonormal_basis(self):
         #Note: If the input vectors are not orthogonal, the result are 3 vectors that might not form a basis.
         basis1=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]))
-        self.assertTrue( ftuv.is_almost_colinear(basis1[0], np.array([0.,0.,2.])) )
+        self.assertTrue( ftuv.is_almost_parallel(basis1[0], np.array([0.,0.,2.])) )
         basis2=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]))
-        self.assertTrue( ftuv.is_almost_colinear(basis2[0], np.array([0.,0.,2.])) )
-        self.assertTrue( ftuv.is_almost_colinear(basis2[1], np.array([0.,3.6,0])) )
+        self.assertTrue( ftuv.is_almost_parallel(basis2[0], np.array([0.,0.,2.])) )
+        self.assertTrue( ftuv.is_almost_parallel(basis2[1], np.array([0.,3.6,0])) )
         basis3=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]), np.array([1.,0,0]))
-        self.assertTrue( ftuv.is_almost_colinear(basis3[0], np.array([0.,0.,2.])) )
-        self.assertTrue( ftuv.is_almost_colinear(basis3[1], np.array([0.,3.6,0])) )
-        self.assertTrue( ftuv.is_almost_colinear(basis3[2], np.array([1.,0,0])) )
+        self.assertTrue( ftuv.is_almost_parallel(basis3[0], np.array([0.,0.,2.])) )
+        self.assertTrue( ftuv.is_almost_parallel(basis3[1], np.array([0.,3.6,0])) )
+        self.assertTrue( ftuv.is_almost_parallel(basis3[2], np.array([1.,0,0])) )
         for basis in [basis1, basis2, basis3]:
           self.assertAlmostEqual(np.dot(basis[0],basis[1]),0)
           self.assertAlmostEqual(np.dot(basis[0],basis[2]),0)

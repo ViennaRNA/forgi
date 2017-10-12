@@ -4,26 +4,27 @@ from __future__ import division
 
 from builtins import range
 from past.utils import old_div
-import numpy as np
-import numpy.testing as nptest
 
 import unittest
 import sys
 import itertools as it
-import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.model.similarity as ftme
-import forgi.threedee.utilities.graph_pdb as ftug
-import forgi.threedee.utilities.vector as ftuv
-import forgi.utilities.debug as fud
-import tempfile as tf
-
-
-from ...graph import bulge_graph_test as tfgb
-
 import copy
 import time
 import math
 import logging
+import tempfile as tf
+
+import numpy as np
+import numpy.testing as nptest
+
+import forgi.threedee.model.coarse_grain as ftmc
+import forgi.graph.bulge_graph as fgb
+import forgi.threedee.model.similarity as ftme
+import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.utilities.vector as ftuv
+import forgi.utilities.debug as fud
+from ...graph import bulge_graph_test as tfgb
+
 log = logging.getLogger(__name__)
 
 
@@ -57,6 +58,7 @@ def cg_from_sg(cg, sg):
 class CoarseGrainIoTest(tfgb.GraphVerification):
 
     def check_cg_integrity(self, cg):
+        self.assertGreater(len(list(cg.stem_iterator())), 0)
         for s in cg.stem_iterator():
             edges = list(cg.edges[s])
             if len(edges) < 2:
@@ -80,22 +82,6 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
                                          cg.coords[edges[1]][1]))
 
 
-    @unittest.skip("Test not yet implemented")
-    def test_from_cg_str(self):
-        pass
-
-        '''
-        bg = cgb.BulgeGraph()
-        cg = ftmc.CoarseGrainRNA()
-        bg.from_bg_string(self.text)
-        cg.from_cg_string(self.text)
-
-        self.compare_bg_to_cg(bg, cg)
-        '''
-    @unittest.skip("Test not yet implemented")
-    def test_from_file(self):
-        pass
-
     def test_from_mmcif(self):
         import Bio.PDB as bpdb
 
@@ -114,14 +100,6 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
         self.check_cg_integrity(cg)
 
-        #cg = ftmc.from_pdb('test/forgi/threedee/data/1ymo.pdb',
-        #                   intermediate_file_dir='tmp',
-        #                   remove_pseudoknots=False)
-        #self.check_cg_integrity(cg)
-
-        #node = cg.get_node_from_residue_num(25)
-        #self.assertFalse(node[0] == 'h')
-
         cg = ftmc.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb', intermediate_file_dir='tmp')
         self.check_cg_integrity(cg)
 
@@ -136,8 +114,9 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb',
                            intermediate_file_dir='tmp', chain_id='Y')
-        self.check_cg_integrity(cg)
-
+        self.assertEqual(len(cg.defines), 1)
+        self.assertIn("f0", cg.defines)
+        self.assertEqual(cg.seq, "U")
         cg = ftmc.from_pdb('test/forgi/threedee/data/1X8W.pdb',
                            intermediate_file_dir='tmp', chain_id='A')
         self.check_cg_integrity(cg)
@@ -154,8 +133,14 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
                 # make sure all the seq_ids are there
                 print (cg.seq_ids[r - 1])
 
+    def test_from_pdb_cofold(self):
+        # 1FUF triggers the if fromA.chain != fromB.chain clause in _are_adjacent_basepairs
+        cg, = ftmc.connected_cgs_from_pdb('test/forgi/threedee/data/1FUF.pdb',
+                                   dissolve_length_one_stems=True)
+        self.check_cg_integrity(cg)
+
     def verify_multiple_chains(self, cg, single_chain_cgs):
-        print(cg.backbone_breaks_after)
+        log.warning("Backbone in %s breaks after %s", cg.name, cg.backbone_breaks_after)
         self.assertEqual(len(cg.backbone_breaks_after), len(single_chain_cgs)-1)
 
         self.assertEqual(cg.seq_length, sum(x.seq_length for x in single_chain_cgs))
@@ -165,7 +150,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
     def test_from_pdb_f_in_second_chain(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0"]))
+        self.assertEqual(set(cg.defines.keys()), set(["t0", "s0", "f0"]))
 
     def test_from_pdb_multiple(self):
         cgE = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='E')
@@ -174,7 +159,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(set(cg.chains.keys()), set(["E", "F"]))
         self.assertEqual(len(cg.backbone_breaks_after), 1)
         bp = cg.backbone_breaks_after[0]
-        self.assertEqual(bp, 4)
+        self.assertEqual(bp, 3)
         self.assertEqual(cg.seq[:bp+1], cgE.seq)
         self.assertEqual(cg.seq[1:bp+1], cgE.seq)
         self.assertEqual(cg.seq[bp+1:], cgF.seq)
@@ -184,7 +169,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cgB = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='B')
         cgC = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='C')
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb',  chain_id='all')
-        log.warning("cg now has {} cutpoints".format(cg.seq.count('&')))
+        log.warning("cg now has %s cutpoints: %s",cg.seq.count('&'),cg.backbone_breaks_after )
         self.verify_multiple_chains(cg, [cgA, cgB, cgC])
 
     def test_multiple_chain_to_cg(self):
@@ -200,6 +185,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
 
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='all')
+        cg.log(logging.WARNING)
         cg_str = cg.to_cg_string()
         cg2 = ftmc.CoarseGrainRNA()
         cg2.from_cg_string(cg_str)
@@ -218,6 +204,10 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cgs[3].name, "1DUQ_G-H")
         self.assertEqual(cgs[0].defines, cgs[2].defines)
         self.assertEqual(cgs[1].defines, cgs[3].defines)
+
+    def test_multiple_models_in_file(self):
+        cgs = ftmc.connected_cgs_from_pdb('test/forgi/threedee/data/1byj.pdb')
+        self.assertEqual(len(cgs), 1) #Only look at first model!
 
 class CoarseGrainTest(tfgb.GraphVerification):
     '''
@@ -345,6 +335,12 @@ class CoarseGrainTest(tfgb.GraphVerification):
                                "producting the exactly same result? Something seems to be wrong.")
         self.assertLess(abs(rog_fast - rog_vres), 1, msg = "Different methods for ROG calculation "
                                                       "should produce roughly the same result.")
+
+    def test_radius_of_gyration_no_stems(self):
+        bg = fgb.from_fasta_text("AUCG\n....")
+        cg = ftmc.from_bulge_graph(bg)
+        cg.coords["f0"]=[0,0,0.],[12.,1,1]
+        self.assertTrue(math.isnan(cg.radius_of_gyration()))
 
     def test_get_coordinates_list(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')

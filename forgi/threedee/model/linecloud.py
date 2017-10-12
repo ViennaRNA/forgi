@@ -2,7 +2,12 @@ from __future__ import absolute_import, division, print_function
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
-from future.utils import viewkeys
+import sys
+if sys.version_info<(3,):
+    from future.utils import viewkeys
+else:
+    viewkeys = lambda dic, **kwargs: dic.keys(**kwargs)
+
 import numpy as np
 from collections import Mapping
 import itertools
@@ -32,6 +37,7 @@ class CoordinateStorage(Mapping):
         #Initialize coordinate array to NANs
         self._dimensions = 3
         self._coords_per_key = 2
+        log.debug("Initializing CoordinateStorage with Nans")
         self._coordinates = np.ones((self._coords_per_key*len(element_names),self._dimensions))*np.nan
         self._elem_names = { elem: position for position, elem in enumerate(element_names)}
 
@@ -84,6 +90,7 @@ class CoordinateStorage(Mapping):
                                  "found {} for entry {}".format(self._dimensions, len(value[i]), i))
         indices = self._indices_for(key)
         for i, index in enumerate(indices):
+            log.debug("Setting coordinate %s(%d) to %s", key, i, value[i])
             self._coordinates[index] = value[i]
         self.on_change(key)
     def __contains__(self, key):

@@ -1,5 +1,5 @@
 import unittest
-import forgi.threedee.utilities.dssr as ftud
+import forgi.threedee.utilities._dssr as ftud
 import forgi.threedee.model.coarse_grain as ftmc
 
 class TestHelperFunctions(unittest.TestCase):
@@ -30,4 +30,3 @@ class TestCoaxialStacks(unittest.TestCase):
             self.assertEqual(x.forgi, "stacking")
         for x in dssr:
             self.assertEqual(x.dssr, "stacking")
-

@@ -6,45 +6,43 @@ from builtins import range
 from builtins import object
 from builtins import zip, str
 
-import Bio.PDB as bp
-import Bio.PDB as bpdb
-import Bio.PDB.PDBExceptions
-import operator
 import itertools as it
 import collections as col
-
 import os.path as op
-import forgi.config as cc
 import warnings
-
-import math as m
-
-import numpy as np
-import numpy.linalg as nl
-import numpy.testing as nptest
 import random
 import sys
 import math
 import json
-
+import operator
 from pprint import pprint
 import logging
-log = logging.getLogger(__name__)
+import uuid
+
+
+import numpy as np
+import numpy.linalg as nl
+import numpy.testing as nptest
+import scipy.optimize as so
+import Bio.PDB as bp
+import Bio.PDB as bpdb
+import Bio.PDB.PDBExceptions
 
 from logging_exceptions import log_to_exception
 
+
+import forgi.config as cc
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as cuv
 import forgi.threedee.utilities.vector as ftuv
-
 import forgi
 from forgi.threedee.utilities.modified_res import change_residue_id
-import uuid
+from forgi.utilities.exceptions import CgConstructionError
 
-import scipy.optimize as so
+log = logging.getLogger(__name__)
 
 catom_name = "C1'"
 REFERENCE_CATOM = "C1'"
@@ -110,7 +108,7 @@ def stem_stem_orientation(cg, s1, s2):
     dist = cuv.magnitude(i_vec) + 0.0001
 
     ortho_offset = cuv.magnitude(i_rej)
-    lateral_offset = m.sqrt(dist * dist - ortho_offset * ortho_offset)
+    lateral_offset = math.sqrt(dist * dist - ortho_offset * ortho_offset)
 
     return (cuv.magnitude(i_vec), ang1,
             ang2, cuv.vec_angle(s1_vec, s2_vec), lateral_offset, ortho_offset)
@@ -167,7 +165,7 @@ def get_twist_angle(coords, twists):
     twist2 = cuv.change_basis(twists[1], basis, cuv.standard_basis)
     #assert_allclose(twist2[0], 0., rtol=1e-7, atol=1e-7)
 
-    angle = m.atan2(twist2[2], twist2[1])
+    angle = math.atan2(twist2[2], twist2[1])
     return angle
 
 
@@ -182,7 +180,7 @@ def twist2_from_twist1(stem_vec, twist1, angle):
     '''
     basis = cuv.create_orthonormal_basis(stem_vec, twist1)
 
-    twist2_new = np.array([0., m.cos(angle), m.sin(angle)])
+    twist2_new = np.array([0., math.cos(angle), math.sin(angle)])
     twist2 = np.dot(basis.transpose(), twist2_new)
     #twist2 = cuv.change_basis(twist2_new, cuv.standard_basis, basis)
 
@@ -201,14 +199,14 @@ def get_twist_parameter(twist1, twist2, u_v):
 
     u,v = u_v
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     twist2_new = np.dot(rot_mat1, twist2)
     twist2_new = np.dot(rot_mat2, twist2_new)
 
     #print "get_twist_parameter twist2:", twist2_new
 
-    return m.atan2(twist2_new[2], twist2_new[1])
+    return math.atan2(twist2_new[2], twist2_new[1])
 
 
 def get_stem_orientation_parameters(stem1_vec, twist1, stem2_vec, twist2):
@@ -339,6 +337,7 @@ def stem2_pos_from_stem1_1(transposed_stem1_basis, params):
 
     :param transposed_stem1_basis: The vtransposed basis of the first stem.
     :param params: The parameters describing the position of stem2 wrt stem1
+                   (i.e. the carthesian vector in standard coordinates pointing from stem1 to stem2)
     '''
     (r, u, v) = params
     stem2 = cuv.spherical_polar_to_cartesian((r, u, v))
@@ -358,10 +357,10 @@ def twist2_orient_from_stem1(stem1, twist1, u_v_t):
                       oriented with respect to stem1. A triple `(u, v, t)`
     '''
     u, v, t = u_v_t
-    twist2_new = np.array([0., m.cos(t), m.sin(t)])
+    twist2_new = np.array([0., math.cos(t), math.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
@@ -389,13 +388,14 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
                       oriented with respect to stem1. A triple `(u, v, t)`
     '''
     u, v, t = u_v_t
-    twist2_new = np.array([0., m.cos(t), m.sin(t)])
+    twist2_new = np.array([0., math.cos(t), math.sin(t)])
 
     rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - m.pi / 2.)
+    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
-    twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
+    #assert np.allclose(nl.inv(rot_mat), rot_mat.T)
+    twist2_new = np.dot(rot_mat.T, twist2_new)
 
     twist2_new_basis = np.dot(stem1_basis, twist2_new)
 
@@ -431,204 +431,164 @@ def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
 
     return stem2
 
-def get_virtual_stat(cg, ml1, ml2):
-    """
-    For two adjacent multi loop elements ml1 and ml2, generate the fictitious
-    stat if the two multi loop segments were replaced by a single segment.
 
-    This fictitious stat also has the direction from the first to the second stem
-    that would be returned by cg.connections if the two ml segments were replaced by one.
+def get_angle_stat_geometry(stem1_vec, twist1, stem2_vec, twist2, bulge_vec):
+    """
+    :param stem1_vec: The vector of the first stem, pointing TOWARDS the bulge
+    :param twist1: The twist vector at the side of stem1 closest to the bulge
+    :param stem2_vec: The vector of the second stem, pointing AWAY FROM the bulge
+    :param twist2: The twist vector at the side of stem2 closest to the bulge
+    :param bulge_vec: The vector from stem1 to stem2
+
+    :returns: T 6-tuple: u,v (the orientation parameters),
+                         t (twist parameter) and
+                         r1, u1, v1 (the seperation parameters)
+
+
+        \                A
+         \ stem1        /
+          \            / stem2
+           V          /
+            --------->
+              bulge
+
+    """
+    try:
+        # Get the orientations for orienting these two stems
+        (r, u, v, t) = get_stem_orientation_parameters(stem1_vec, twist1,
+                                                            stem2_vec, twist2)
+        (r1, u1, v1) = get_stem_separation_parameters(stem1_vec, twist1, bulge_vec)
+    except ZeroDivisionError as e:
+        with log_to_exception(log, e):
+            log.error ("Cannot get stat. The 3D coodinates are probably wrong.")
+        raise
+
+    return u, v, t, r1, u1, v1
+
+def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
+    """
+    If we assgin a stat to a broken ml-segment, how much would the attached
+    stem deviate from its true location.
+
+    Calculates the position of a '"virtual stem", which would be
+    placed after the broken ml-segment, if it was a true ml-segment
+    with the virtual stat assigned.
+    Then calculates teh deviation between this virtual stem and the actual stem.
 
     :param cg: The CoarseGrainRNA
-    :param ml1, ml2: Two element names of adjacent multiloop elements, in arbitrary order.
+    :param broken_ml_name: The name of the ml-segment of interest.
+                           It should not be part of cg.mst.
+    :param fixed_stem_name: The name of a stem (e.g. "s0") attached to the
+                            broken ml segment. This stem will be used as reference,
+                            For the other stem attached to the broken ml-segment (original_stem),
+                            the virtual stem position will be calculated.
+    :param virtual_stat: The stat assigned to the broken ml segment, in the direction
+                         from fixed_stem_name to the other stem.
+
+    :returns: A triple: positional_deviation, angular_deviation and twist_deviation.
+              positional_deviation measures how far the start of the virtual stem
+              is from the start of the true ("original") stem.
+              Angular deviation measures (in radians) the differece in the stem's orientation.
+              twist_deviation measures the angle (in radians) between the two stem's twist vectors.
     """
+
+    log.debug("Getting broken ML deviation")
     import forgi.threedee.model.stats as ftms
-    if cg.define_a(ml2)[0]<cg.define_a(ml1)[0]:
-        ml1, ml2 = ml2, ml1
-
-    stem1a, stem1b = cg.connections(ml1)
-    stem2a, stem2b = cg.connections(ml2)
-
-    if len({stem1a, stem1b, stem2a, stem2b})==2:
-        log.warning("Getting virtual stat for a pseudoknot, where the stats "
-                    "involve only 2 stems.")
-        # A special case of pseudoknot.
-        def1 = cg.define_a(ml1)
-        def2 = cg.define_a(ml2)
-        if cg.pairing_partner(def1[0])==def2[1]:
-            ml1, ml2 = ml2, ml1 # Reverse
-            middle_stem = cg.get_node_from_residue_num(def1[0])
-            stem1, = stem2, = [ x for x in [stem1a, stem1b] if x != middle_stem ]
-        else:
-            assert cg.pairing_partner(def1[1])==def2[0]
-            middle_stem = cg.get_node_from_residue_num(def1[1])
-            stem1, = stem2, = [ x for x in [stem1a, stem1b] if x != middle_stem ]
+    s1, s2 = cg.edges[broken_ml_name]
+    if s1 == fixed_stem_name:
+        orig_stem_name = s2
+    elif s2 ==fixed_stem_name:
+        orig_stem_name = s1
     else:
-        if stem1a == stem2a:
-            middle_stem = stem1a
-            stem1 = stem1b
-            stem2 = stem2b
-        elif stem1b == stem2b:
-            ml1, ml2 = ml2, ml1 # Reverse
-            middle_stem = stem1b
-            stem2 = stem1a
-            stem1 = stem2a
-        elif stem1a == stem2b:
-            middle_stem = stem1a
-            stem1 = stem1b
-            stem2 = stem2a
-        else:
-            middle_stem = stem1b
-            stem1 = stem1a
-            stem2 = stem2b
+        raise ValueError("fixed stem %s is not attached to ml %s",
+                         fixed_stem_name, broken_ml_name)
 
-    stem1_vec, twist1, msv,mst,bulge1 = get_stem_twist_and_bulge_vecs(cg, ml1,
-                                                [stem1, middle_stem])
-    msv1,mst1,stem2_vec, twist2, bulge2 = get_stem_twist_and_bulge_vecs(cg, ml2,
-                                                [middle_stem, stem2])
-    log.debug("Middle stem one: %s, two: %s, twist one %s two %s", msv, msv1, mst, mst1)
-    assert np.allclose(mst, mst1)
+    sides = cg.get_sides(fixed_stem_name, broken_ml_name)
+    fixed_s_vec = cg.coords.get_direction(fixed_stem_name)
+    if sides[0]==0:
+        fixed_s_vec = -fixed_s_vec
+    s_twist = cg.twists[fixed_stem_name][sides[0]]
+    fixed_stem_basis = ftuv.create_orthonormal_basis(fixed_s_vec, s_twist)
+    vbulge_vec, vstem_vec, vstem_twist = _virtual_stem_from_bulge(fixed_stem_basis, virtual_stat)
 
-    virtual_bulge = bulge1+bulge2
-    r, u, v, t = get_stem_orientation_parameters(stem1_vec, twist1,
-                                                          stem2_vec, twist2)
-    r1, u1, v1 = get_stem_separation_parameters(stem1_vec, twist1, virtual_bulge)
-    log.debug("%s %s", r, r1)
+    vstem_vec *=5
+    vstem_coords0 = cg.coords[fixed_stem_name][sides[0]] + vbulge_vec
+    vstem_coords1 = vstem_coords0 + vstem_vec
 
-    dims = cg.get_bulge_dimensions(ml1)[0]+cg.get_bulge_dimensions(ml2)[0]
-    return ftms.AngleStat("virtual", cg.name, dims, 1000, u, v, t, r1,
-                                        u1, v1, 0, [], "")
+    sides2 = cg.get_sides(orig_stem_name, broken_ml_name)
+    orig_stem_vec = cg.coords[orig_stem_name][sides2[1]] - cg.coords[orig_stem_name][sides2[0]]
+    true_bulge_vec = cg.coords[orig_stem_name][sides2[0]] - cg.coords[fixed_stem_name][sides[0]]
+
+    pos_dev = ( ftuv.vec_distance(cg.coords[orig_stem_name][sides2[0]], vstem_coords0) )
+    ang_dev = ftuv.vec_angle(vstem_vec, orig_stem_vec)
+    twist_dev = ftuv.vec_angle(cg.coords[fixed_stem_name][sides[0]], vstem_twist)
+    log.debug("Deviation: pos %s, orient %s, twist: %s", pos_dev,
+             math.degrees(ang_dev), math.degrees(twist_dev))
+
+    # For debugging
+    #max_diff = 6
+    #max_adiff = math.radians(3*max_diff)
+    #if pos_dev < max_diff and ang_dev<max_adiff and twist_dev<2*max_adiff:
+    if False: # plotting-code used for debugging
+        pos_adev = ftuv.vec_angle(true_bulge_vec, vbulge_vec)
+        log.info("Deviation: pos %s, %s orient %s, twist: %s", pos_dev, math.degrees(pos_adev),
+                 math.degrees(ang_dev), math.degrees(twist_dev))
+        log.info("Length: virtual: %s original: %s", ftuv.magnitude(vstem_vec), ftuv.magnitude(orig_stem_vec))
+        import matplotlib.pyplot as plt
+
+        _plot_junction_2d(cg, broken_ml_name)
+        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], cg.coords[orig_stem_name][sides2[0]][0]],
+                 [cg.coords[fixed_stem_name][sides[0]][1], cg.coords[orig_stem_name][sides2[0]][1]],
+                 ".-", label="true bulge")
+        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], vstem_coords0[0]],
+                 [cg.coords[fixed_stem_name][sides[0]][1], vstem_coords0[1]],
+                 ".-", label="virtual bulge")
+        plt.plot([vstem_coords0[0], vstem_coords1[0]],
+                 [vstem_coords0[1], vstem_coords1[1]],
+                 "s-", label="virtual"+orig_stem_name )
+        plt.legend()
+        plt.show()
+    return pos_dev, ang_dev, twist_dev
 
 
+def _plot_element(cg, elem, style="o-", name_suffix=""):
+    import matplotlib.pyplot as plt
+    plt.plot([cg.coords[elem][0][0], cg.coords[elem][1][0]],
+             [cg.coords[elem][0][1], cg.coords[elem][1][1]],
+             style,
+             label=elem+name_suffix)
+
+def _plot_junction_2d(cg, broken_ml):
+    """
+    TODO: Move this to a proper location
+    """
+    import matplotlib.pyplot as plt
+    plotted = set()
+    plot_element(cg, broken_ml, name_suffix=" broken")
+    elem = cg.get_next_ml_segment(broken_ml)
+    while elem != broken_ml:
+        _plot_element(cg, elem)
+        for s in cg.edges[elem]:
+            if s not in plotted:
+                _plot_element(cg,s)
+                plotted.add(s)
+        elem = cg.get_next_ml_segment(elem)
 
 def _virtual_stem_from_bulge(prev_stem_basis,  stat):
+    """
+    Return a virtual stem with length 1 that would be placed
+    by stat and prev_stem
+
+    :param prev_stem_basis: The basis of the previous stem.
+    :param stat: The angle stat that describes the orientation of the
+                 virtual stem from the previous stem.
+    """
     transposed_stem1_basis = prev_stem_basis.transpose()
     start_location = stem2_pos_from_stem1_1(transposed_stem1_basis, stat.position_params())
     stem_orientation = stem2_orient_from_stem1_1(transposed_stem1_basis,
                                                       [1] + list(stat.orientation_params()))
     twist1 = twist2_orient_from_stem1_1(transposed_stem1_basis, stat.twist_params())
     return start_location, stem_orientation, twist1
-
-def sum_of_stats(stat1, stat2):
-    import forgi.threedee.model.stats as ftms
-    vec_asserts = ftuv.USE_ASSERTS
-    ftuv.USE_ASSERTS = False # to speed-up the calculations
-    st_basis = ftuv.standard_basis
-    bulge1, stem1, twist1 = _virtual_stem_from_bulge(ftuv.standard_basis, stat1)
-    middle_basis = ftuv.create_orthonormal_basis(-stem1, twist1)
-    bulge2, stem2, twist2 = _virtual_stem_from_bulge(middle_basis, stat2)
-
-    overall_seperation = bulge1 + bulge2
-    # overall stat
-    r, u, v, t = get_stem_orientation_parameters(st_basis[0], st_basis[1],
-                                                          stem2, twist2)
-    r1, u1, v1 = get_stem_separation_parameters(st_basis[0], st_basis[1], overall_seperation)
-    dims = stat1.dim1+stat2.dim1
-    ftuv.USE_ASSERTS = vec_asserts
-    return ftms.AngleStat("virtual", stat1.pdb_name+"+"+stat2.pdb_name, dims, 1000, u, v, t, r1,
-                          u1, v1, 0, [], "")
-
-def sum_of_stat_in_standard_direction(stat1, stat2):
-    """
-    Return the sum of stats in the direction from the stem with the lowest
-    nucleotide to the stem with the highest.
-
-    :param stat1, stat2: Two angle stat objects with stat2 directly following after
-                         stat1 in the multiloop when going from 5' to 3'.
-
-    For a 3-way junction, we have the following angle types (in direction of the arrow) ::
-
-        5' HHHHH-2-->-2->-2->-HHHHH
-        3' HHHHH\            AHHHHH
-                 V          3
-                  4        A
-                   V      3
-                    4    A
-                     V  3
-                      HH
-                      HH
-                      HH
-                      HH
-
-    In the case of angle type 4, it points from 5' to 3', not from 3' to 5'.
-    For this reason we treat it seperately.
-
-    The sum of 2 stats in a 3way junction has the same direction as the third stat.
-    """
-
-    # Special case for angle type 4: a positive sign means it points
-    # against the backbone
-    at1 = stat1.ang_type
-    at2 = stat2.ang_type
-    if at1==4 or at2==4:
-        log.debug("Special treatment of angle type 4")
-        if at1>0 and at1!=4:
-            stat1 = -stat1
-        if at2>0 and at2!=4:
-            stat2 = -stat2
-        return sum_of_stats(stat2, stat1)
-    elif abs(at1)==abs(at2)==5:
-        if at1==at2==5:
-            # The following illustrates the case of two subsequent
-            # angles of type 5
-            #
-            #                        3'->5'
-            #   3'      +--------------------------+       5'
-            #   |       |                          |       |
-            #   0 ----- 3                          0 ----- 3
-            #   (-------)   +------+       +---+   (-------)
-            #   (- s0 - )   |      |       |   |   (- s2 - )
-            #   (-------)   |      0 ----- 3   |   (-------)
-            #   1 ----- 2   |      (-------)   |   1 ----- 2
-            #   |       |   |      (- s1  -)   |   |       |
-            #   +-------+---+      (-------)   +---+-------+
-            #           |          1 ----- 2       |
-            #           |  stat2   |       | stat1 |
-            #           +-->>5>>---+       +->>5>>-+
-            #           $   3'<-5'          3'<-5' $
-            #           $                          $
-            #           $~~~~~~~ >>sum>> ~~~~~~~~~~$
-            #
-            return sum_of_stats(stat2, stat1)
-        else:
-            #Very weird pseudoknot
-            raise NotImplementedError("Please mail the RNA that triggered this "
-                                  "Error to the maintainer of forgi. We need"
-                                  " a test-case, before we implement this.")
-    else:
-        if -4<at1<0 or at1==5:
-            log.debug("Inverting stat1")
-            stat1 = -stat1
-        if -4<at2<0 or at2==5:
-            log.debug("Inverting stat2")
-            stat2 = -stat2
-        log.debug("Calculating sum of stats %r + %r", stat1.pdb_name, stat2.pdb_name)
-        return sum_of_stats(stat1, stat2)
-
-
-def invert_angle_stat(stat):
-    """
-    Get the angle stat in the inverse direction.
-
-    Todo: Move the code from here to stat.__neg__
-    """
-    import forgi.threedee.model.stats as ftms
-    # Note: This is a slow implementation that relies of well-tested methods.
-    # A faster implementation would be certainly possibly by taking advantage of
-    # the fact that stem1basis can be arbitrarely choosen.
-    stem1basis = ftuv.standard_basis
-    # Get Stem 2 from Stem 1
-    bulge2, stem2, twist2 = _virtual_stem_from_bulge(stem1basis, stat)
-    # Now get the stat in reverse direction
-    r, u, v, t = get_stem_orientation_parameters(-stem2, twist2, -stem1basis[0], stem1basis[1])
-    r1, u1, v1 = get_stem_separation_parameters(-stem2, twist2, -bulge2)
-    return ftms.AngleStat(stat.stat_type, "-"+stat.pdb_name, stat.dim1, stat.dim2, u, v, t, r1,
-                          u1, v1, -stat.ang_type, stat.define, stat.seqs)
-
-
-def invert_angle_stat_quick(stat):
-    import forgi.threedee.model.stats as ftms
-
 
 
 def get_centroid(chain, residue_num):
@@ -688,6 +648,9 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
 def stem_from_chains(cg, chains, elem_name):
     """
     This function combines get_mids and get_twists into one more efficient routine.
+
+    :param chains: A dictionary {chain_id: Biopython_PDB_chain}
+    :param elem_name: e.g. "s0"
     """
     stem_length = cg.stem_length(elem_name)
     template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
@@ -697,7 +660,7 @@ def stem_from_chains(cg, chains, elem_name):
         ideal_chain = ftup.get_first_chain(filename)
     except IOError:
         if stem_length>40:
-            raise ValueError("Cannot create coordinates. "
+            raise CgConstructionError("Cannot create coordinates. "
                          "Helices with lengths greater than 40 are currently not supported in forgi.")
         else:
             raise
@@ -838,6 +801,29 @@ def get_twists(cg, chain, elem_name, mids=None):
     coords, twists = stem_from_chains(cg, chain, elem_name)
     return twists
 
+def total_helix_rotation(coords, twists, stem_len):
+    """
+    Calculate the total rotation of the helix in radians from the twists.
+
+    When we calculate the angle between the two twists, we only know
+    the true rotation modulo 2*pi (i.e. a rotation of 45 degrees could
+    mean 45 degrees or 405 degrees). Depending on the number of nucleotides and
+    knowledge of the ideal helix (which turns roughly 30 degrees per base-pair),
+    this function outputs the correct result.
+    """
+    stem_vec = coords[1] - coords[0]
+
+    # the angle of the second twist with respect to the first
+    stem_basis = cuv.create_orthonormal_basis(stem_vec, twists[0])
+    t2 = cuv.change_basis(twists[1], stem_basis, cuv.standard_basis)
+    twist_angle = ftum.atan3(t2[2], t2[1])
+
+    # calculated from an ideal length 30 helix
+    average_ang_per_nt = 0.636738030735
+    expected_total_ang = (stem_len - 1) * average_ang_per_nt
+    expected_twist_ang = expected_total_ang % (2*math.pi)
+
+
 def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     '''
     Calculate the virtual position of the i'th nucleotide in the stem.
@@ -872,15 +858,15 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     average_ang_per_nt = 0.636738030735
     expected_ang = (stem_len - 1) * average_ang_per_nt
     expected_dev = expected_ang
-    while (expected_dev - (2 * m.pi) > 0):
-        expected_dev -= 2 * m.pi
-
+    while (expected_dev - (2 * math.pi) > 0):
+        expected_dev -= 2 * math.pi
+    #expected_dev uis now between 0 and 360 degrees
     if ang < expected_dev:
-        forward = 2 * m.pi + ang - expected_dev
+        forward = 2 * math.pi + ang - expected_dev
         backward = expected_dev - ang
     else:
         forward = ang - expected_dev
-        backward = 2 * m.pi + expected_dev - ang
+        backward = 2 * math.pi + expected_dev - ang
 
     if forward < backward:
         ang = expected_ang + forward
@@ -901,9 +887,9 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     ang_offset = 0.9
     # equation for a circle in 3-space
     return (vres_stem_pos,
-            u * m.cos(ang) + v * m.sin(ang),
-            u * m.cos(ang + ang_offset) + v * m.sin(ang + ang_offset),
-            u * m.cos(ang - ang_offset) + v * m.sin(ang - ang_offset))
+            u * math.cos(ang) + v * math.sin(ang),
+            u * math.cos(ang + ang_offset) + v * math.sin(ang + ang_offset),
+            u * math.cos(ang - ang_offset) + v * math.sin(ang - ang_offset))
 
 
 def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
@@ -1513,8 +1499,16 @@ def add_loop_information_from_pdb_chains(bg):
                 if catom_name in res:
                     first_res = res
                     break
-
-            start_point = first_res[catom_name].get_vector().get_array() #Currently this can thows a TypeError (NoneType has no __getitem__
+            try:
+                start_point = first_res[catom_name].get_vector().get_array()
+            except TypeError:
+                if first_res is not None:
+                    raise
+                else:
+                    e = CgConstructionError("The PDB chain does not contain any C1' atom (despite containing {} residues).".format(len(list(chain.get_residues()))))
+                    with log_to_exception(log, e):
+                        log.error("The chain's last residue only has the following atoms: %s", res.child_list)
+                        raise e
             centroid = get_furthest_c_alpha(bg, chain,
                                             first_res[catom_name].get_vector().get_array(),
                                             d)

@@ -4,17 +4,20 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, open, pow, range, round,
                       str, super, zip, object)
-from past.builtins import basestring
-
 
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.utilities.stuff as fus
 import collections as col
 import numpy as np
 import itertools as it
 # import networkx as nx Takes to long. Import only when needed
 import warnings, math
 import copy, sys
+import logging
+
+
+log = logging.getLogger(__name__)
 
 """
 This module uses code by David Eppstein
@@ -30,6 +33,8 @@ try:
 except NameError:
     def profile(x):
         return x
+
+
 
 
 def to_rgb(im):
@@ -440,10 +445,11 @@ class Projection2D(object):
                        Else: only count (branch)points of the given degree
         """
         import networkx as nx
+        assert int(nx.__version__[0]) >= 2, "This function only works with networkx version 2, not {}!".format(nx.__version__)
         if degree is None:
-            return len([x for x in nx.degree(self.proj_graph).values() if x>=3])
+            return len([x[1] for x in nx.degree(self.proj_graph) if x[1]>=3])
         else:
-            return len([x for x in nx.degree(self.proj_graph).values() if x==degree])
+            return len([x[1] for x in nx.degree(self.proj_graph) if x[1]==degree])
 
     def get_cyclebasis_len(self):
         """
@@ -470,7 +476,7 @@ class Projection2D(object):
             on future evaluation of the usefulness of this and similar descriptors.
         """
         l=0
-        for edge in self.proj_graph.edges_iter():
+        for edge in self.proj_graph.edges():
             l+=ftuv.vec_distance(edge[0], edge[1])
         return l
 
@@ -493,7 +499,7 @@ class Projection2D(object):
         import networkx as nx
         lengths={}
         target={}
-        for leaf, degree in nx.degree(self.proj_graph).items():
+        for leaf, degree in nx.degree(self.proj_graph):
             if degree!=1: continue
             lengths[leaf]=0
             previous=None
@@ -570,8 +576,8 @@ class Projection2D(object):
         """
         import networkx as nx
         maxl=0
-        for i, node1 in enumerate(self.proj_graph.nodes_iter()):
-            for j, node2 in enumerate(self.proj_graph.nodes_iter()):
+        for i, node1 in enumerate(self.proj_graph.nodes()):
+            for j, node2 in enumerate(self.proj_graph.nodes()):
                 if j<=i: continue
                 all_paths=nx.all_simple_paths(self.proj_graph, node1, node2)
                 for path in all_paths:
@@ -790,7 +796,7 @@ class Projection2D(object):
             if ax is None:
                 raise TypeError()
 
-            if isinstance(c,basestring):
+            if fus.is_string_type(c):
                 color = c     # ie. use colors.colorConverter.to_rgba_array(c)
             else:
                 color = None  # use cmap, norm after collection is created
@@ -1007,18 +1013,18 @@ class Projection2D(object):
 
         :returns: True if a condensation was done, False if no condenstaion is possible.
         """
-        for i,node1 in enumerate(self.proj_graph.nodes_iter()):
-            for j, node2 in enumerate(self.proj_graph.nodes_iter()):
+        for i,node1 in enumerate(self.proj_graph.nodes()):
+            for j, node2 in enumerate(self.proj_graph.nodes()):
                 if j<=i: continue
                 if ftuv.vec_distance(node1, node2)<cutoff:
                     newnode=ftuv.middlepoint(node1, node2)
                     #self.proj_graph.add_node(newnode)
-                    for neighbor in list(self.proj_graph.edge[node1].keys()):
+                    for neighbor in list(self.proj_graph.adj[node1].keys()):
                         self.proj_graph.add_edge(newnode, neighbor,
-                                                attr_dict=self.proj_graph.edge[node1][neighbor])
-                    for neighbor in list(self.proj_graph.edge[node2].keys()):
+                                                attr_dict=self.proj_graph.adj[node1][neighbor])
+                    for neighbor in list(self.proj_graph.adj[node2].keys()):
                         self.proj_graph.add_edge(newnode, neighbor,
-                                                 attr_dict=self.proj_graph.edge[node2][neighbor])
+                                                 attr_dict=self.proj_graph.adj[node2][neighbor])
                     if newnode!=node1: #Equality can happen because of floating point inaccuracy
                         self.proj_graph.remove_node(node1)
                     if newnode!=node2:
@@ -1031,10 +1037,10 @@ class Projection2D(object):
         Used by `self.condense(cutoff)` as a single condensation step of a point
         with a line segment.
         """
-        for i,source in enumerate(self.proj_graph.nodes_iter()):
-            for j,target in enumerate(self.proj_graph.nodes_iter()):
+        for i,source in enumerate(self.proj_graph.nodes()):
+            for j,target in enumerate(self.proj_graph.nodes()):
                 if j>i and self.proj_graph.has_edge(source,target):
-                    for k, node in enumerate(self.proj_graph.nodes_iter()):
+                    for k, node in enumerate(self.proj_graph.nodes()):
                         if k==i or k==j:
                             continue
                         nearest=ftuv.closest_point_on_seg( source, target, node)
@@ -1043,7 +1049,7 @@ class Projection2D(object):
                             continue
                         if (ftuv.vec_distance(nearest, node)<cutoff):
                             newnode=ftuv.middlepoint(node, tuple(nearest))
-                            attr_dict=self.proj_graph.edge[source][target]
+                            attr_dict=self.proj_graph.adj[source][target]
                             self.proj_graph.remove_edge(source, target)
                             if source!=newnode:
                                 self.proj_graph.add_edge(source, newnode, attr_dict=attr_dict)
@@ -1051,8 +1057,8 @@ class Projection2D(object):
                                 self.proj_graph.add_edge(target, newnode,
                                                          attr_dict=attr_dict)
                             if newnode!=node: #Equality possible bcse of floating point inaccuracy
-                                for neighbor in self.proj_graph.edge[node].keys():
-                                    attr_dict=self.proj_graph.edge[node][neighbor]
+                                for neighbor in self.proj_graph.adj[node].keys():
+                                    attr_dict=self.proj_graph.adj[node][neighbor]
                                     self.proj_graph.add_edge(newnode, neighbor,
                                                              attr_dict=attr_dict)
                                 self.proj_graph.remove_node(node)

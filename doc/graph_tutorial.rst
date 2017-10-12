@@ -16,16 +16,20 @@ The secondary structure of an RNA molecule can be divided into
 five different types of 'elements'. Each element is assigned a name that
 can be used to refer to it and to determine its identity:
 
-* **fiveprime:** The unpaired nucleotides at the 5' end of a molecule. Always start with 'f' and there can be only one in the structure (i.e. 'f0')
-* **threeprime**: The unpaired nucleotides at the 3' end of a molecule. Always start with 't' and there can be only one in the structure (i.e 't0')
-* **stem:** Regions of contiguous canonical Watson-Crick base-paired nucleotides. Always start with 's' and there can be many in the structure (i.e., 's0', 's1', 's2', ...)
-* **interior loop:** Double-stranded unpaired regions flanked by stems on either side. Always start with 'i' and there can be many in the structure ('i0', 'i1', 'i2',...)
-* **multiloop:** Single-stranded unpaired regionsAlways start with 'm' and there can be many in the structure ('m0', 'm1', 'm2'...)
+* **fiveprime:** The unpaired nucleotides at the 5' end of a molecule/ chain. Always start with 'f' (e.g. 'f0').
+* **threeprime**: The unpaired nucleotides at the 3' end of a molecule/ chain. Always start with 't' (e.g. 't0')
+* **stem:** Regions of contiguous canonical Watson-Crick base-paired nucleotides.
+            Always start with 's' (e.g., 's0', 's1', 's2', ...)
+* **interior loop:** Bulged out nucleotides. Unpaird double stranded regions, flanked by stems on either side.
+                     Always start with 'i' ('i0', 'i1', 'i2',...)
+* **multiloop segment:** Single-stranded unpaired regions. Always start with 'm'. ('m0', 'm1', 'm2'...)
+                      In the current version of forgi, pseudo-knots and exterior loops segments between stems are treated as multiloop segments.
+* **hairpin loop:** Always start with 'h'.
 
 A Simple Example
 ----------------
 
-It's use is perhaps best illustrated with an
+The use of forgi is perhaps best illustrated with an
 example.
 
 
@@ -36,7 +40,7 @@ Let's take an RNA sequence:
 We can predict its secondary structure using one of a number of tools,
 including the Vienna RNA Package's RNAfold program:
 
-http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi
+http://rna.tbi.univie.ac.at/cgi-bin/RNAWebSuite/RNAfold.cgi
 
 This will return a minimum free energy structure which can be represented using
 dot-bracket notation:
@@ -68,7 +72,7 @@ represented by a graph.
 The forgi package can be used to do just this by using the
 dotbracket_to_bulge_graph.py script::
 
-    [pkerp@plastilin forgi]$ python examples/dotbracket_to_bulge_graph.py examples/input/1y26_ss.dotbracket
+    $ python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T forgi
     name untitled
     length 71
     define m2 34 41
@@ -90,42 +94,52 @@ loops with an 'i', five-prime unpaired regions with an 'f' and three-prime
 unpaired regions with a 't'. The numbers indicate the nucleotides that are
 present in each element. So the stem s0 is composed of nucleotides 1 to 9 on
 one strand and 63 to 71 on the other. The other elements are described in a
-similar manner. The hairpin *h0* includs the nucleotides 19 to 27.
+similar manner. The hairpin *h0* includes the nucleotides 19 to 27.
 
 In this case it is difficult to picture which section is which from the text
-representation. To make it easier, another example script will generate a file
+representation. To make it easier, we will generate a file
 readable by graphviz. The *neato* program can take that as input and create a
 nice visualization of the graph::
 
-    python examples/graph_to_neato.py -d examples/input/1y26_ss.dotbracket | neato -Tpng -o 1y26_neato.png
-    
+    python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T neato | neato -Tpng -o 1y26_neato.png
+
 The result is the following graph representation of the structure.
 
 .. image:: 1y26_neato.png
     :width: 200
     :height: 200
     :align: center
-    
+
+Here square nodes represent stems and round nodes represent other elements.
+The connections in this representation do not contain any nucleotides,
+but simply illustrate which coarse grained elements are connected to each other.
+
+The label of the nodes are the element names (as described above), so "s0" means stem number 0.
+The numbers in parenthesis below the element names represent the number of nucleotides in the element.
+In case of interior loops (not shown in this example), there can be two numbers, if the RNA has
+unpaired nucleotides on both sides of the bulge.
+
 Notice the similarity to the original base paired image? The top stem can be
-identified as *s0*. The two hairpin loops are *b0* and *b1*. The regions in the
-multiloop are given their own names. *f1* and *t1* should correspond to the 5'
-and 3' unpaired regions. In this case, the structure lacks these regions so the
-nodes in the graph are just place-holders. 
+identified as *s0*. The two hairpin loops are *h0* and *h1*. The regions in the
+multiloop are given their own names.
+
+This graph visualization is useful to get an idea of the coarse grained representation
+of the RNA introduced by forgi. However, some information is lost in this picture:
+This graph only shows, which stem is connected to which bulge, but it does not show which
+side of the stem and bulge is involved in the connection.
 
 Getting a Condensed Representation of the Element Types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Mapping nucleotide positions to secondary structure element types (stems,
 hairpins, multiloops) is easily done using an example script::
 
-    python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
+    $ python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T element_string
     (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
     sssssssssmmmsssssshhhhhhhhhssssssmmmmmmmmsssssshhhhhhhssssssmmsssssssss
 
 In this example, one can clearly see that the paired regions are stems. Some
-multiloops are present as well as two hairpin regions. The -s option was used
-to print out the dotbracket representation as well as the element type
-representation. Omitting it will only output the latter line.
+multiloops are present as well as two hairpin regions.
 
 Another Example
 ^^^^^^^^^^^^^^^
@@ -149,7 +163,7 @@ Which looks like this:
 
 Can be transformed using the command:
 
-``python examples/graph_to_neato.py -d examples/input/1gid_ss.dotbracket | neato -Tpng -o 1gid_neato.png``
+``python examples/rnaConvert.py -T neato examples/input/1gid_ss.dotbracket | neato -Tpng -o 1gid_neato.png``
 
 Into a graph that looks like this:
 
@@ -209,13 +223,13 @@ can load this file and create graph structure from it using the
 
     >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph()
-    >>> bpstr="""1 A 0                                                                                                 
-    ... 2 A 12 
+    >>> bpstr="""1 A 0
+    ... 2 A 12
     ... 3 A 11
     ... 4 A 9
     ... 5 A 8
     ... 6 A 0
-    ... 7 A 0 
+    ... 7 A 0
     ... 8 A 5
     ... 9 A 4
     ... 10 A 0
@@ -231,13 +245,13 @@ can load this file and create graph structure from it using the
     ... 20 A 15
     ... 21 A 0
     ... """
-    >>> 
-    >>> bg.from_bpseq_str(bpstr)                                                                                       
+    >>>
+    >>> bg.from_bpseq_str(bpstr)
     >>> print bg.to_bg_string()
     name untitled
     length 21
     seq AAAAAAAAAAAAAAAAAAAAA
-    seq_ids 
+    seq_ids
     define f1 1 1
     define i0 10 10
     define h1 17 18
@@ -266,7 +280,7 @@ dot-bracket notation can be used to create a BulgeGraph structure::
     name blah
     length 29
     seq AAAACCGGGCCUUUUACCCCAAAUUGGAA
-    seq_ids 
+    seq_ids
     define s0 1 4 17 20
     define i0 5 6 15 16
     define s1 7 9 12 14
@@ -316,7 +330,7 @@ Getting the Name of an Element from the Residue Number
 
 Various applictions of ``forgi`` require knowledge of the internal name
 of a particular element. As these names are generated by ``forgi`` itself, it's
-useful to be to retrieve the name of an element given the number of a 
+useful to be to retrieve the name of an element given the number of a
 residue which is part of it. To demonstrate how to do this we will first need
 to load a secondary structure::
 
@@ -325,7 +339,7 @@ to load a secondary structure::
     >>> print bg.to_bg_string()
     name untitled
     length 14
-    seq_ids 
+    seq_ids
     define s0 1 2 5 6
     define h0 3 4
     define m0 7 8
@@ -363,7 +377,7 @@ iterating over the stems and checking their lengths::
     bg.from_dotbracket(brackets)
     biggest_stem = (-1, 'x')
     for s in bg.stem_iterator():
-        if bg.stem_length(s) > biggest_stem[0]: 
+        if bg.stem_length(s) > biggest_stem[0]:
             biggest_stem = (bg.stem_length(s), s)
 
 This is best illustrated with two examples::
@@ -432,8 +446,8 @@ segment), but in order to maintain consistency with interior loops, we make it
 a tuple by attaching 1000 as the second value::
 
     import forgi.graph.bulge_graph as fgb
-    >>> 
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((.(.))..((..)))')                                                                
+    >>>
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((.(.))..((..)))')
     >>> bg.get_bulge_dimensions('i0')
     (1, 0)
     >>> bg.get_bulge_dimensions('m0')
@@ -478,7 +492,7 @@ be on one side of it. Which side it's on can be elucidated using the
 
 The result shows that the loop `i0` is on side 1 of stem `s0` and side 0 of
 stem `s1`. If `bg.get_sides(s,b)` return a tuple `(sb, se)`, where the nucleotides
-in `bg.coords[sb]` are on the side of the loop. 
+in `bg.coords[sb]` are on the side of the loop.
 
 Iteration
 ---------
@@ -502,7 +516,7 @@ iterator which iterates over the nucleotides within a particular element::
     >>> for iloop in bg.iloop_iterator():
     ...     for rn in bg.define_residue_num_iterator(iloop):
     ...             sys.stdout.write(str(rn) + " ")
-    ... 
+    ...
     10 11 12 13 2 3 4 5 26 27 28 29 18 19 20 21
 
 Iterating Over The List of Elements
@@ -569,7 +583,7 @@ As an example, consider the following structure:
 To break the cycle, we would like to remove the segment 'm0'. This is easily
 done using the `get_mst()` function of the `BulgeGraph` data structure::
 
-    >>> import forgi.graph.bulge_graph as fgb 
+    >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph(dotbracket_str="((..((.)).(.).))")
     >>> bg.get_mst()
     set(['s2', 's1', 's0', 'm1', 'm2'])
@@ -596,7 +610,7 @@ Finding the elements which form the multiloops of a structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `find_multiloop_loops()` function returns a list of sets where each set
-contains the elements that are part of a particular junction. 
+contains the elements that are part of a particular junction.
 
 
 .. image:: find_loops.png
@@ -688,7 +702,7 @@ The `Rosetta <http://www.rosettacommons.org/>`_ protein structure prediction
 package provides a program for RNA 3D structure prediction called `rna_denovo
 <http://www.rosettacommons.org/manuals/rosetta3.3_user_guide/d2/d82/rna_denovo.html>`_.
 To specify the secondary structure of an RNA molecule, one needs to pass in a
-parameter file indicating which nucleotides are paired. 
+parameter file indicating which nucleotides are paired.
 
 Given an dot-bracket sequence as input, forgi can be easily be used to generate
 the parameter file for rna_denovo.Using the secondary structure of 1y26 (shown
@@ -720,9 +734,3 @@ And get an appropriately formatted parameter file::
     STEM PAIR 7 65
     STEM PAIR 8 64
     STEM PAIR 9 63
-
-
-
-
-
-

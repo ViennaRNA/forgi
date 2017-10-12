@@ -419,6 +419,7 @@ def output_multiple_chains(chains, filename):
     m = bpdb.Model.Model(' ')
     s = bpdb.Structure.Structure(' ')
     for chain in chains:
+        log.debug("Adding chain %s with %s residues", chain.id, len(chain))
         m.add(chain)
 
     s.add(m)
@@ -529,7 +530,9 @@ def get_all_chains(in_filename, parser=None):
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
 
-    chains = list(chain for chain in s.get_chains() if contains_rna(chain))
+    if len(s)>1:
+        warnings.warn("Multiple models in file. Using only the first model")
+    chains = list(chain for chain in s[0] if contains_rna(chain))
     return chains
 
 

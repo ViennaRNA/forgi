@@ -1,11 +1,14 @@
 from __future__ import division
 from builtins import range
 
-import numpy as np
 import math, warnings, sys
 import forgi.threedee.utilities.vector as ftuv
 import itertools as it
+import logging
 
+import numpy as np
+
+log = logging.getLogger(__name__)
 """
 This module contains functions for characterising a single point-cloud.
 """
@@ -33,6 +36,9 @@ def gyration_tensor(coords, diagonalize = True):
 
     :param diagonalize: Diagonalize the tensor to diag(lambda1, lambda2, lambda3)
     '''
+    if len(coords)==0:
+        log.warning("Cannot calculate gyration tensor: coords are empty")
+        return np.zeros((3,3)) * float("nan")
     if len(coords[0])!=3:
         raise ValueError("Coordinates for Gyration Tensor must be in 3D space")
     centroid = sum(coords) / float(len(coords))

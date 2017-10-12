@@ -311,7 +311,7 @@ class AngleStat(object):
         return (self.r1, self.u1, self.v1)
 
     def __str__(self):
-        out_str = "%s %s %d %d %f %f %f %f %f %f %d %s %s" % (self.stat_type,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s" % (self.stat_type,
                                                               self.pdb_name,
                                                               self.dim1,
                                                               self.dim2,
@@ -328,78 +328,55 @@ class AngleStat(object):
     def __hash__(self):
         return hash(str(self))
 
-    def diff(self, other_angle, next_stem_length = 1):
-        '''
-        Calculate the distance between the start and end of the hypothetical
-        next stem defined by these two angles.
-
-        :param other_angle: The other angle stat
-        :param next_stem_length: the length of the stem that is attached to this angle.
-        :param return: The distance between the starts and ends of the two hypothetical
-                       next stems defined by this angle and the other angle
-        '''
-        this_stem_start = np.array(ftuv.spherical_polar_to_cartesian([self.r1, self.u1, self.v1]))
-        this_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, self.u, self.v]))
-
-        other_stem_start = np.array(ftuv.spherical_polar_to_cartesian([other_angle.r1, other_angle.u1, other_angle.v1]))
-        other_stem_end = np.array(ftuv.spherical_polar_to_cartesian([next_stem_length, other_angle.u, other_angle.v]))
-
-        return ftuv.vec_distance(this_stem_start, other_stem_start) + ftuv.vec_distance(this_stem_start+this_stem_end, other_stem_start + other_stem_end)
     def get_angle(self):
         '''
         Return the angle between the two connected stems.
         '''
         return ftuv.vec_angle(np.array([-1.,0.,0.]), ftuv.spherical_polar_to_cartesian([1, self.u, self.v]))
 
-    def get_virtual_atom_distance(self):
-        raise NotImplementedError("This does currently not produce valid results")
-        import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
-        if self.ang_type not in [3]:
-            warnings.warn("get_virtual_atom_distance not implemented for angle type {}".format(self.ang_type))
-            return float("nan")
+    def deviation_from(self, stat2):
+        """
+        How much does the other stat differ from this stat?
 
-        spos_1 = ftus.avg_stem_vres_atom_coords[1]["A"]["O3'"]
+        :param stat2: Another AngleStat
+        :returns: A 4-tuple: The positional deviation in Angstrom, and 3 absolute angular deviations in radians.
+                  The  angular deviations are u, v and t
+        """
+        ret = []
+        pos1 = ftuv.spherical_polar_to_cartesian(self.position_params())
+        pos2 = ftuv.spherical_polar_to_cartesian(stat2.position_params())
+        ret.append(ftuv.magnitude(pos1-pos2))
+        log.debug("Position difference is %f", ret[-1])
 
-        stem1_vec = [1.0,0,0]
-        stem1_twist1 = [0,1.0,0]
-        basis1_t = np.array([-np.array(stem1_vec), stem1_twist1, [0,0,1.0]]).transpose()
 
+        for attr in ["u", "v", "t"]:
+            raw_diff = getattr(self, attr) - getattr(stat2, attr)
+            #Map the difference to a value between 0 and pi
+            raw_diff_on_circle = abs((raw_diff+math.pi/2)%(math.pi)-math.pi/2)
+            log.debug("Angular difference for %s is %f, mapped to %f", attr, raw_diff, raw_diff_on_circle)
+            ret.append(raw_diff_on_circle)
+        return tuple(ret)
 
-        #The stem seperation.
-        start_stem2 = ftug.stem2_pos_from_stem1_1(basis1_t, self.position_params())
+    def is_similar_to(self, stat2, position_cutoff=4, angular_cutoff=None):
+        """
+        Returns True, if theAngleStat is similar
+        (according to the specified cutoff) to the other Angle Stat.
 
-        #Basis of stem 2 expressed in the basis of stem1 = standard basis
-        stem2_orientation = ftug.stem2_orient_from_stem1_1(basis1_t, [1] + list(self.orientation_params()))
-        twist2 = ftug.twist2_orient_from_stem1_1(basis1_t, self.twist_params())
-
-        stem2_basis = ftuv.create_orthonormal_basis(stem2_orientation, twist2)
-
-        spos_2 = ftus.avg_stem_vres_atom_coords[0]["A"]["P"]
-
-        spos2_in_std_basis = ftug.vres_to_global_coordinates(start_stem2, stem2_basis, {"Atom": spos_2})["Atom"]
-        #ftuv.change_basis(spos_2, basis1, stem2_basis)+start_stem2
-        #print(stem2_basis, spos_1, spos2_in_basis_1)
-        return ftuv.vec_distance(spos_1, spos2_in_std_basis)
-
-    def is_similar_to(self, stat2):
-        CUTOFF_ANGLE = math.radians(6)
-        CUTOFF_DIST = 4
-        if abs(self.r1-stat2.r1)>CUTOFF_DIST:
+        :param position_cutoff: in angstrom
+        :param angular_cutoff: in radians. If not given, uses the position cutoff as a value in degrees
+        """
+        if angular_cutoff is None:
+            angular_cutoff = math.radians(position_cutoff)
+        deviation = self.deviation_from(stat2)
+        if deviation[0]>position_cutoff:
+            log.debug("Dissimilar, because of position deviation = %f", deviation[0])
             return False
-        for attr in ["u", "v", "u1", "v1", "t"]:
-            if abs(getattr(self, attr) - getattr(stat2, attr))>CUTOFF_ANGLE:
+        for dev in deviation[1:]:
+            if dev>angular_cutoff:
+                log.debug("Dissimilar, because of angular deviation %s (%s) > %f", dev, deviation[1:], angular_cutoff)
                 return False
+        log.debug("%s < (%f, %f)", deviation, position_cutoff, angular_cutoff)
         return True
-
-    def __neg__(self):
-        """
-        The stat in the opposite direction.
-
-        I choose to use -stat instead of ~stat, because a stat is similar to a
-        vector and using minus to change a carthesian vector's direction is intuitive.
-        """
-        log.debug("Unary minus called for Angle stat")
-        return ftug.invert_angle_stat(self)
 
 class RandomAngleStats(object):
     '''

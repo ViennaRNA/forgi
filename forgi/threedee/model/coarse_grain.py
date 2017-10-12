@@ -5,29 +5,8 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
 
-from ...graph import bulge_graph as fgb
-from ..utilities import graph_pdb as ftug
-from ..model import stats as ftms
-
-from ...aux.k2n_standalone import knotted2nested as cak
-from ..utilities import mcannotate as ftum
-from ..utilities import pdb as ftup
-from . import descriptors as ftud
-from ..utilities import vector as ftuv
-from ...utilities import debug as fud
-from ...utilities import stuff as fus
-from ...utilities.observedDict import observedDict
-from .linecloud import CoordinateStorage, LineSegmentStorage
-import Bio.PDB as bpdb
 import collections as c
-try:
-    from collections import Collection
-except ImportError: #python 2
-    from collections import Container as Collection
 import contextlib
-import numpy as np
-import scipy.spatial
-import scipy.stats
 import os
 import os.path as op
 import shutil
@@ -45,23 +24,35 @@ except ImportError: #Python 2
 import logging
 from pprint import pprint
 
-from logging_exceptions import log_to_exception
+
+import numpy as np
+
+import scipy.spatial
+import scipy.stats
+
+import Bio.PDB as bpdb
+
+from logging_exceptions import log_to_exception, log_exception
+
+
+from ...graph import bulge_graph as fgb
+from ..utilities import graph_pdb as ftug
+from ..model import stats as ftms
+
+from ..._k2n_standalone import knotted2nested as cak
+from ..utilities import mcannotate as ftum
+from ..utilities import pdb as ftup
+from . import descriptors as ftud
+from ..utilities import vector as ftuv
+from ...utilities import debug as fud
+from ...utilities import stuff as fus
+from ...utilities.observedDict import observedDict
+from ...utilities.exceptions import CgConstructionError, CgIntegrityError, GraphConstructionError
+from .linecloud import CoordinateStorage, LineSegmentStorage
+from ...utilities.stuff import is_string_type
+
 
 log = logging.getLogger(__name__)
-
-class CgConstructionError(fgb.GraphConstructionError):
-    """
-    Exceptions raised if the CoarseGrainRNA could be constructed from the given input.
-
-    Raised for Errors related to the 3D information.
-    """
-    pass
-class CgIntegrityError(fgb.GraphIntegrityError):
-    """
-    Exception raised if a BulgeGraphCoarseGrainRNA was found to be in an inconsistent or faulty state,
-    related to the 3D Information
-    """
-    pass
 
 
 try:
@@ -140,7 +131,30 @@ def breakpoints_from_residuemap(residue_map):
         old_chain = from_chain
     return breakpoints
 
-def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
+def _are_adjacent_basepairs(cg, edge1, edge2):
+    """
+    Helper function used by connected_cgs_from_pdb.
+
+    :param cg: A (potentially) inconsistent cg. Only seq_ids are needed.
+    :param edge1, edge2: A dictionary with the key "basepair" mapping to a two-tuple of RESIDS
+    """
+    fromA, toA = edge1["basepair"]
+    fromB, toB = edge2["basepair"]
+    if fromA.chain != fromB.chain:
+        if fromA.chain==toB.chain:
+            fromB, toB = toB, fromB
+            assert toA.chain==toB.chain
+        else:
+            assert False
+    if (abs(cg.seq_ids.index(fromA)-cg.seq_ids.index(fromB))==1 and
+        abs(cg.seq_ids.index(toA)-cg.seq_ids.index(toB))==1):
+        log.debug("Basepairs %s and %s are adjacent. No length 1 stem", edge1, edge2)
+        return True
+    log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
+    return False
+
+
+def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_length_one_stems = True):
     with fus.make_temp_directory() as output_dir:
         chains = ftup.get_all_chains(pdb_filename)
         new_chains = []
@@ -156,7 +170,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
             f.flush()
 
         # first we annotate the 3D structure
-        log.info("Starting MC-Annotate")
+        log.info("Starting MC-Annotate for all chains")
         out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True)
         lines = out.strip().split('\n')
 
@@ -190,7 +204,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
 
 
         import networkx as nx
-        chain_connections = nx.Graph()
+        chain_connections_multigraph = nx.MultiGraph()
         cg = CoarseGrainRNA()
         cg.seqids_from_residue_map(residue_map)
 
@@ -199,23 +213,51 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False):
                 from_, res, to_ = line.split()
             except:
                 continue
-            if int(to_) != 0:
-                from_chain = cg.seq_ids[int(from_)-1].chain
-                to_chain   = cg.seq_ids[int(to_)-1].chain
-                log.debug("Adding {} - {}".format(from_chain, to_chain))
-                chain_connections.add_edge(from_chain, to_chain)
+            from_seqid = cg.seq_ids[int(from_)-1]
+            from_chain = from_seqid.chain
+            chain_connections_multigraph.add_node(from_chain)
+            if int(to_) != 0 and int(to_)>int(from_):
+                to_seqid = cg.seq_ids[int(to_)-1]
+                from_seqid = cg.seq_ids[int(from_)-1]
+                to_seqid = cg.seq_ids[int(to_)-1]
+                from_chain = from_seqid.chain
+                to_chain   = to_seqid.chain
+                if from_chain != to_chain:
+                    log.debug("Adding {} - {}".format(from_chain, to_chain))
+                    chain_connections_multigraph.add_edge(from_chain, to_chain, basepair=(from_seqid, to_seqid))
+        chain_connections = nx.Graph(chain_connections_multigraph)
+        if dissolve_length_one_stems:
+            for chain1, chain2 in it.combinations(chain_connections_multigraph.nodes(), 2):
+                if chain2 in chain_connections_multigraph.adj[chain1]:
+                    for edge1, edge2 in it.combinations(chain_connections_multigraph.adj[chain1][chain2].values(), 2):
+                        if _are_adjacent_basepairs(cg, edge1, edge2):
+                            break
+                    else: #break NOT encountered.
+                        log.debug("No connection remaining between chains %s and %s", chain1, chain2)
+                        chain_connections.remove_edge(chain1, chain2)
+
+        # Now remove multiple edges. We don't care what nx does with the edge attributes.
+
         log.debug("CONNECTIONS: {}, nodes {}".format(chain_connections, chain_connections.nodes()))
         log.debug("Edges {}".format(chain_connections.edges()))
         cgs = []
         for component in nx.connected_components(chain_connections):
             #print(component, type(component))
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
-            cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+            try:
+                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+            except GraphConstructionError as e:
+                log_exception(e, logging.ERROR, with_stacktrace=False)
+                log.error("Could not load chains %s, due to the above mentioned error.", list(component))
         cgs.sort(key=lambda x: x.name)
+        if dissolve_length_one_stems:
+            for cg in cgs:
+                cg.dissolve_length_one_stems()
         return cgs
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
-                            chain_id=None, remove_pseudoknots=True, parser=None):
+                            chain_id=None, remove_pseudoknots=True, parser=None,
+                            dissolve_length_one_stems=True):
     '''
     Create the coarse grain model from a pdb file and store all
     of the intermediate files in the given directory.
@@ -239,19 +281,21 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:
         chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
-    elif isinstance(chain_id, Collection):
+    elif is_string_type(chain_id):
+        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+    else:
         chains = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):
             raise CgConstructionError("Bad chain-id given. "
                                       "{} not present (or not an RNA)".format( set(chain_id) -
-                                                                               set([chain.id for chain in chains])))
-    else:
-        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+                                                                                       set([chain.id for chain in chains])))
+    log.debug("Before cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in chains})
     new_chains = []
     for chain in chains:
         chain = ftup.clean_chain(chain)
         new_chains.append(chain)
+    log.debug("After cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in new_chains})
 
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
 
@@ -276,8 +320,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         f.flush()
 
     # first we annotate the 3D structure
-    log.info("Starting MC-Annotate")
-    out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True)
+    log.info("Starting MC-Annotate for chain(s) %s", chain_id)
+    if hasattr(sp, "DEVNULL"): #python>=3.3
+        kwargs = {"stderr":sp.DEVNULL}
+    else:
+        kwargs = {}
+    out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True, **kwargs)
 
     lines = out.strip().split('\n')
 
@@ -285,8 +333,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     try:
         (dotplot, residue_map) = ftum.get_dotplot(lines)
     except Exception as e:
-        print (e, file=sys.stderr)
-        return cg
+        log.exception("Could not convert MC-Annotate output to dotplot")
+        raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
 
     # f2 will store the dotbracket notation
     #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
@@ -298,12 +346,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         warnings.warn("Not adding any longrange interactions because secondary structure is given.")
         if remove_pseudoknots:
             warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
-        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=False)
+        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=dissolve_length_one_stems)
         breakpoints = breakpoints_from_residuemap(residue_map)
         cg.seqids_from_residue_map(residue_map)
 
     else:
         if remove_pseudoknots:
+            log.info("Removing pseudoknots")
             out = cak.k2n_main(io.StringIO(dotplot), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
@@ -316,8 +365,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         else:
             out = dotplot
         breakpoints = breakpoints_from_residuemap(residue_map)
-        log.debug("Breakpoints are {}".format(breakpoints))
-        cg.from_bpseq_str(out, False, breakpoints) #Sets the seq without cutpoints
+        log.info("Breakpoints in %s are %s",pdb_base, breakpoints)
+        cg.from_bpseq_str(out, breakpoints = breakpoints, dissolve_length_one_stems=dissolve_length_one_stems) #Sets the seq without cutpoints
         cg.seqids_from_residue_map(residue_map)
         add_longrange_interactions(cg, lines)
 
@@ -347,7 +396,8 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
 
 def load_cg_from_pdb(pdb_filename, secondary_structure='',
                      intermediate_file_dir=None, chain_id=None,
-                    remove_pseudoknots=True, parser=None):
+                    remove_pseudoknots=True, parser=None,
+                    dissolve_length_one_stems=True):
     '''
     Load a coarse grain model from a PDB file, by extracing
     the bulge graph.
@@ -362,31 +412,36 @@ def load_cg_from_pdb(pdb_filename, secondary_structure='',
 
         cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
                                      secondary_structure, chain_id=chain_id,
-                                    remove_pseudoknots=remove_pseudoknots, parser=parser)
+                                    remove_pseudoknots=remove_pseudoknots, parser=parser,
+                                    dissolve_length_one_stems=dissolve_length_one_stems)
     else:
         with fus.make_temp_directory() as output_dir:
             cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
                                          secondary_structure, chain_id = chain_id,
-                                        remove_pseudoknots=remove_pseudoknots, parser=parser)
+                                        remove_pseudoknots=remove_pseudoknots, parser=parser,
+                                        dissolve_length_one_stems=dissolve_length_one_stems)
 
     return cg
 
 def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
-             chain_id=None, remove_pseudoknots=True, parser=None):
+             chain_id=None, remove_pseudoknots=True, parser=None, dissolve_length_one_stems=True):
     cg = load_cg_from_pdb(pdb_filename, secondary_structure,
                           intermediate_file_dir, chain_id=chain_id,
-                         remove_pseudoknots=remove_pseudoknots, parser=parser)
+                         remove_pseudoknots=remove_pseudoknots, parser=parser,
+                         dissolve_length_one_stems=dissolve_length_one_stems)
     return cg
 
 def from_bulge_graph(bulge_graph):
     """
     Create a CoarseGrainRNA from a BulgeGraph
     """
-    bg_str = bulge_graph.to_bg_string
+    if not bulge_graph.seq:
+        raise CgConstructionError("Sequence missing in BulgeGraph. Cannot create CoarseGrainRNA.")
+    bg_str = bulge_graph.to_bg_string()
     cg = CoarseGrainRNA()
     cg.from_cg_string(bg_str)
     return  cg
-    
+
 class RnaMissing3dError(LookupError):
     pass
 
@@ -449,7 +504,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if not self.defines:
                 raise CgConstructionError("Empty CoarseGrainRNA created. Was '{}' in *.cg/ *.coord file format?".format(cg_file))
 
-
     def get_coord_str(self):
         '''
         Place the start and end coordinates of each stem into a string.
@@ -510,8 +564,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         for stem in self.stem_iterator():
             try:
+                log.debug("Adding virtual residues for stem %s with coords %s", stem, self.coords[stem])
                 ftug.add_virtual_residues(self, stem)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, AssertionError):
                 if np.all(np.isnan(self.coords[stem])):
                     raise RnaMissing3dError("No 3D coordinates available for stem {}".format(stem))
                 elif np.all(np.isnan(self.twists[stem])):
@@ -755,12 +810,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             raise err
 
         try:
-            # Get the orientations for orienting these two stems
-            (r, u, v, t) = ftug.get_stem_orientation_parameters(stem1, twist1,
-                                                                stem2, twist2)
-            (r1, u1, v1) = ftug.get_stem_separation_parameters(stem1, twist1, bulge)
-        except ZeroDivisionError:
-            print ("Cannot get stats for {}. The 3D coodinates are probably wrong.".format(define), file=sys.stderr)
+            u, v, t, r1, u1, v1 = ftug.get_angle_stat_geometry(stem1, twist1, stem2, twist2, bulge)
+        except ZeroDivisionError as e:
+            with log_to_error(log, e):
+                log.error("Error getting stats for define %s", define)
             raise
         dims =self.get_bulge_dimensions(define)
         ang_type = self.connection_type(define, connections)
@@ -876,6 +929,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def get_stacking_helices(self, method="Tyagi"):
         """
+        EXPERIMENTAL
+
         Return all helices (longer stacking regions) as sets.
 
         Two stems and one bulge are in a stacking relation, if self.is_stacking(bulge) is true and the stems are connected to the bulge.
@@ -904,9 +959,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return helices
     def is_stacking(self, bulge, method="Tyagi", verbose=False):
         """
+        EXPERIMENTAL
+
         Reports, whether the stems connected by the given bulge are coaxially stacking.
-
-
 
         :param bulge: STRING. Name of a interior loop or multiloop (e.g. "m3")
         :param method": STRING. "Tyagi": Use cutoffs from doi:10.1261/rna.305307, PMCID: PMC1894924.
@@ -1066,6 +1121,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 continue
             if parts[0] == 'coord':
                 name = parts[1]
+
                 self.coords[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
             if parts[0] == 'twist':
                 name = parts[1]
@@ -1104,6 +1160,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         :return: A number with the radius of gyration of this structure.
         '''
+        if len(list(self.stem_iterator()))==0:
+            log.warning("Cannnot calculate ROG (%s) for structure %s without stems", method, self.name)
+            return float("nan")
         if method=="fast":
             coords=self.get_ordered_stem_poss()
         elif method=="vres":
@@ -1113,6 +1172,186 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         rog = ftud.radius_of_gyration(coords)
         return rog
+
+
+    def assign_loop_roles(self, loop):
+        """
+        EXPERIMENTAL
+
+        For 3-way junctions: Assign the roles P1, P2 and P3
+        and J12, J31, J23 according to Lescoute and Westhof,
+        RNA 2006 (doi: 10.1261/rna.2208106)
+
+        We try to detect which helices stack and assign the roles in a way
+        that J12 is always the stacking segment.
+
+        :returns: None if no clear classification was possible,
+                  a dictionary otherwise.
+        """
+        if len(loop) != 3:
+            raise ValueError("junction_family is currentlty only implemented for 3-way junctions.")
+        # Find out which helices stack.
+        # Version 1: colinearity of helix axes:
+        stems = self.edges[loop[0]] | self.edges[loop[1]] | self.edges[loop[2]]
+        if len(stems)!=3:
+            e = ValueError("The multiloop segments do not form a 3-way junction.")
+            with log_to_exception(log, e):
+                log.error("stems are %s", stems)
+            raise e
+        collinearities = {}
+        for stem1, stem2 in it.combinations(stems, 2):
+            c = ftuv.line_segments_collinearity(self.coords[stem1], self.coords[stem2])
+            collinearities[(stem1, stem2)] = c
+        # The two helices that are most likely to stack.
+        stacking_stems = max(collinearities, key=lambda k:collinearities[k])
+        if collinearities[stacking_stems]<0.8:
+            return None
+        # The second best pair
+        second_best_pair, second_best_score = list(sorted(collinearities.items(), key=lambda x: x[1]))[1]
+        if collinearities[stacking_stems]-second_best_score<0.5:
+            #Two are possible. We look now which one has fewer offset to the 3rd stem.
+            # The reference stem could stack with both.
+            reference = set(stacking_stems) & set(second_best_pair)
+            other = set(stems) - reference
+            reference, = reference
+            stem1, stem2 = other
+            o1 = self.stem_offset(reference, stem1)
+            o2 = self.stem_offset(reference, stem2)
+            if abs(o1-o2)<0.2:  # Angstrom
+                log.warning("Cannot assign loop roles. Stacking is ambiguous.")
+                return None
+            elif o1<o2:
+                stacking_stems=(reference, stem1)
+            else:
+                stacking_stems=(reference, stem2)
+        # We have clearly identified the stacking helices.
+        # j12 is the ML-segment that connects the stacking helices.
+        j12, = self.edges[stacking_stems[0]] & self.edges[stacking_stems[1]]
+        # stem P1 is at the 5' side of the connecting multiloop...
+        p1 = self.get_node_from_residue_num(self.define_a(j12)[0])
+        # ...and P2 at the 3' side
+        p2 = self.get_node_from_residue_num(self.define_a(j12)[1])
+        assert set([p1,p2])==set(stacking_stems)
+        assert p1!=p2
+        # p3 is the third stem,
+        p3, = stems - set([p1,p2])
+        # j31 and j23 are the remaining ml segments
+        j31, = self.edges[p3] & self.edges[p1]
+        j23, = self.edges[p2] & self.edges[p3]
+        return {"P1":p1, "P2":p2,"P3":p3,"J12":j12, "J31":j31,"J23":j23}
+
+    def junction_family_westhof1(self, loop):
+        """
+        EXPERIMENTAL
+
+        For 3-way junctions: Return the junction family according to
+        Lescoute and Westhof, RNA 2006 (doi: 10.1261/rna.2208106).
+
+        In this method, the junction family is defined via the relative
+        lengths of fragments, not the orientation of the elements.
+
+        :param loop: Either a dictionary, as returned by assign_loop_roles
+                     or a list of 3 loop segments.
+        """
+        if isinstance(loop, dict):
+            j_roles=loop
+        else:
+            j_roles = assign_loop_roles(loop)
+        # Now compare the lengths of J31 and J23 to determine the junction family
+        if self.get_length(j_roles["J31"])>self.get_length(j_roles["J23"]):
+            return "A"
+        elif self.get_length(j_roles["J31"])==self.get_length(j_roles["J23"]):
+            return "B"
+        else:
+            return "C"
+    def junction_family_3d(self, loop):
+        """
+        EXPERIMENTAL
+
+        For 3-way junctions: Return the junction family depending
+        on the 3D orientation.
+
+        :param loop: Either a dictionary, as returned by assign_loop_roles
+                     or a list of 3 loop segments.
+        """
+        if isinstance(loop, dict):
+            j_roles=loop
+        else:
+            j_roles = assign_loop_roles(loop)
+        a31 = self.stem_angle(j_roles["P3"], j_roles["P1"])
+        a23 = self.stem_angle(j_roles["P2"], j_roles["P3"])
+        # If the stack is perfectly straight, a31+a23=180 degrees.
+        if a31>a23:
+            return 2
+        else:
+            return 1
+    def junction_family_is_perpenticular(self, loop):
+        """
+        EXPERIMENTAL
+
+        For 3-way junctions Return whether or not the not-stacking loop
+        is very roughly perpenticular to the stack.
+
+        :param loop: Either a dictionary, as returned by assign_loop_roles
+                     or a list of 3 loop segments.
+        """
+        if isinstance(loop, dict):
+            j_roles=loop
+        else:
+            j_roles = assign_loop_roles(loop)
+        a31 = self.stem_angle(j_roles["P3"], j_roles["P1"])
+        a23 = self.stem_angle(j_roles["P2"], j_roles["P3"])
+        # If the stack is perfectly straight, a31+a23=180 degrees.
+        if math.radians(60)<a31<math.radians(120) or math.radians(60)<a23<math.radians(120):
+            return 1
+        else:
+            return 0
+
+
+    def stem_offset(self, ref_stem, stem2):
+        """
+        How much is the offset between the start of stem 2
+        and the axis of stem1.
+
+        Assumes that stem1 and stem 2 are connected by a single bulge.
+        Then the start of stem2 is defined to be the stem side
+        closer to the bulge.
+        """
+        common_edges = self.edges[ref_stem] & self.edges[stem2]
+        if len(common_edges)!=1:
+            raise ValueError("Stem1 and stem2 must be connected by a single bulge "
+                             "to calculate stem_offset.")
+        bulge, = common_edges
+        side = self.get_sides(stem2, bulge)[0]
+        return ftuv.point_line_distance(self.coords[stem2][side],
+                                        self.coords[ref_stem][0],
+                                        self.coords.get_direction(ref_stem))
+
+
+    def stem_angle(self, stem1, stem2):
+        """
+        Returns the angle between two stems.
+
+        If they are connected via a single element,
+        use the direction pointing away from this element for both stems.
+        Otherwise, use the direction from start to end.
+        """
+        vec1 = self.coords.get_direction(stem1)
+        vec2 = self.coords.get_direction(stem2)
+
+        common_edges = self.edges[stem1] & self.edges[stem2]
+        if len(common_edges)==1:
+            bulge, = common_edges
+            if self.get_sides(stem1, bulge) == (1,0):
+                vec1 = -vec1
+            else:
+                assert self.get_sides(stem1, bulge) == (0,1)
+            if self.get_sides(stem2, bulge) == (1,0):
+                vec2 = -vec2
+            else:
+                assert self.get_sides(stem2, bulge) == (0,1)
+        return ftuv.vec_angle(vec1, vec2)
+
 
     def get_coordinates_list(self):
         warnings.warn("CoarseGrainRNA.get_coordinates_list is deprecated and being "
@@ -1336,6 +1575,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def reset_vatom_cache(self, key):
         """
+        Delete all cached information about virtual residues and virtual atoms.
         Used as on_call function for the observing of the self.coords dictionary.
 
         :param key: A coarse grain element name, e.g. "s1" or "m15"

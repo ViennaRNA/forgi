@@ -2,7 +2,7 @@ from __future__ import division
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.model.similarity as ftme
 import forgi.utilities.debug as fud
-import forgi.threedee.utilities.graph_pdb as ftug 
+import forgi.threedee.utilities.graph_pdb as ftug
 import unittest
 import unittest, os, math
 import numpy as np
@@ -30,6 +30,11 @@ class CompareTest(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_ppv(self):
+        self.assertAlmostEqual(ftme.ppv(1,1), 0.5)
+        self.assertAlmostEqual(ftme.ppv(1,0), 1)
+        self.assertAlmostEqual(ftme.ppv(0,1), 0)
+        self.assertTrue(np.isnan(ftme.ppv(0,0)))
 
     def test_mcc(self):
         cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
@@ -59,7 +64,7 @@ class CompareTest(unittest.TestCase):
         self.assertAlmostEqual(mcc_n, 0.6756639246921762)
 
 
-        cm = confusion_matrix(cg1, cg1)        
+        cm = confusion_matrix(cg1, cg1)
         mcc = ftme.mcc(cm)
         mcc_n = ftme.mcc(cm_new.evaluate(cg1))
         self.assertAlmostEqual(mcc, mcc_n)
@@ -68,7 +73,7 @@ class CompareTest(unittest.TestCase):
     def test_cg_rmsd(self):
         cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
         cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
-        residues1 = ftug.bg_virtual_residues(cg1) 
+        residues1 = ftug.bg_virtual_residues(cg1)
         residues2 = ftug.bg_virtual_residues(cg2)
         self.assertAlmostEqual(ftme.rmsd(residues1, residues2), ftme.cg_rmsd(cg1,cg2))
 
@@ -78,6 +83,13 @@ class CompareTest(unittest.TestCase):
         cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
         self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 7.684377397812648)
 
+    def test_cg_rmsd3(self):
+        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg2.coords.rotate(ftuv.rotation_matrix([1.,2.,3.], 22))
+        cg2.twists.rotate(ftuv.rotation_matrix([1.,2.,3.], 22))
+
+        self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 0)
 
 class TestRMSD(unittest.TestCase):
     '''
@@ -91,7 +103,7 @@ class TestRMSD(unittest.TestCase):
         a3 = np.array([[2., 2., 2.], [0., 0., 0.], [-2., -2., -2.]])
         self.assertAlmostEqual(ftme.rmsd(a1,a3), math.sqrt(2))
 
-    @unittest.expectedFailure
+    @unittest.expectedFailure # Currently it DOES center!
     def test_rmsd_doesnt_center(self):
         a1 = np.array([[1., 1., 1.], [0., 0., 0.], [-1., -1., -1.]])
         a2 = np.array([[1., 2., 1.], [0., -1., 0.], [-1., -1., -1.]])
@@ -133,7 +145,7 @@ class TestRMSD(unittest.TestCase):
         self.assertAlmostEqual(ftme.rmsd(a3, a3), 0)
         self.assertAlmostEqual(ftme.rmsd(a1, a2), math.sqrt(4./3.))
         self.assertGreater(ftme.rmsd(a1, a3), ftme.rmsd(a1, a2))
- 
+
 
 
 
@@ -182,7 +194,7 @@ def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
 
         dist1 = cg1.element_physical_distance(n1, n2)
         dist2 = cg2.element_physical_distance(n1, n2)
-        
+
         if dist1 < distance:
             # positive
             if dist2 < distance:
@@ -199,6 +211,6 @@ def confusion_matrix(cg1, cg2, distance=25, bp_distance=16):
             else:
                 # true negative
                 tn += 1
-            
+
 
     return {"tp": tp, "tn": tn, "fp": fp, "fn": fn}

@@ -10,6 +10,7 @@ import forgi.threedee.model.coarse_grain as ftmc
 import matplotlib.pyplot as plt
 import sys
 
+@unittest.skip("Skipping Hausdorff tests")
 class TestOffsetbasedIteration(unittest.TestCase):
     def setUp(self):
         return
@@ -21,7 +22,7 @@ class TestOffsetbasedIteration(unittest.TestCase):
             self.assertAlmostEqual(fph.norm(dd), norm)
             self.assertGreaterEqual(fph.norm(dd), fph.norm((olddx,olddy)))
             olddx, olddy = dd
-            if olddx>120: 
+            if olddx>120:
                 break
 
     def test_all_covered_once(self):
@@ -30,7 +31,7 @@ class TestOffsetbasedIteration(unittest.TestCase):
             if 30+dd[0] in range(len(img)) and 30+dd[1] in range(len(img[0])):
                 img[30+dd[0], 30+dd[1]]=img[30+dd[0], 30+dd[1]]+1
             if (dd[0]>30 or dd[0]<-30) and (dd[1]>30 or dd[1]<-30):
-                break        
+                break
         self.assertEqual(np.min(img), 1, " - ".join(map(str,np.transpose(np.where(img==0)))))
         self.assertEqual(np.max(img), 1)
 
@@ -41,7 +42,7 @@ class TestOffsetbasedIteration(unittest.TestCase):
           for dd2, norm2 in fph.offsets():
               self.assertGreaterEqual(norm2, fph.norm(olddd2))
               olddd2=dd2
-              if olddd2[0]>15: 
+              if olddd2[0]>15:
                   break
           self.assertGreaterEqual(norm1, fph.norm(olddd1))
           olddd1=dd1
@@ -56,7 +57,7 @@ class TestOffsetbasedIteration(unittest.TestCase):
             if 40+dx>=0 and 40+dy>=0:
                 try:
                     img[40+dx, 40+dy]=img[40+dx, 40+dy]+1
-                except IndexError: 
+                except IndexError:
                     pass
             if (dx>40 or dx<-40) and (dy>40 or dy<-40):
                 break
@@ -65,7 +66,7 @@ class TestOffsetbasedIteration(unittest.TestCase):
             if 40+dx>=0 and 40+dy>=0:
                 try:
                     img2[40+dx, 40+dy]=img2[40+dx, 40+dy]+1
-                except IndexError: 
+                except IndexError:
                     pass
             if (dx>40 or dx<-40) and (dy>40 or dy<-40):
                 break
@@ -74,6 +75,7 @@ class TestOffsetbasedIteration(unittest.TestCase):
         self.assertEqual(np.max(img2), 1)
         self.assertEqual(np.min(img2), 1," - ".join(map(str,np.transpose(np.where(img2==0)))))
 
+@unittest.skip("Skipping Hausdorff tests")
 class TestHausdorffDistances(unittest.TestCase):
     def setUp(self):
         img=np.zeros((80,80))
@@ -118,6 +120,7 @@ class TestHausdorffDistances(unittest.TestCase):
         self.assertEqual(fph.modified_hausdorff_distance(self.img, self.img),0)
         self.assertEqual(fph.modified_hausdorff_distance(self.img2, self.img2),0)
 
+@unittest.skip("Skipping Hausdorff tests")
 class TestHelperFunctions(unittest.TestCase):
     def setUp(self):
         self.img = np.zeros((10,10))
@@ -137,8 +140,8 @@ class TestHelperFunctions(unittest.TestCase):
         ref_proj =  fpp.Projection2D(cg, [1., 1.,   1.   ], project_virtual_atoms=True)
         ref_box=ref_proj.get_bounding_square(margin=30)
         scale=ref_box[1]-ref_box[0]
-        img1, _=ref_proj.rasterize(70, bounding_square=ref_box, rotate=0) 
-        img2, _=ref_proj.rasterize(40, bounding_square=ref_box, rotate=0) 
+        img1, _=ref_proj.rasterize(70, bounding_square=ref_box, rotate=0)
+        img2, _=ref_proj.rasterize(40, bounding_square=ref_box, rotate=0)
         img3, _=ref_proj.rasterize(60, bounding_square=ref_box, rotate=10)
         d1 = fph.get_longest_img_diameter(img1, scale)
         d2 = fph.get_longest_img_diameter(img2, scale)
@@ -154,6 +157,7 @@ class TestHelperFunctions(unittest.TestCase):
         ref_img, _=ref_proj.rasterize(70, bounding_square=ref_box, rotate=0)
         self.assertAlmostEqual(ref_proj.longest_axis, fph.get_longest_img_diameter(ref_img, scale), places=-1)
 
+@unittest.skip("Skipping Hausdorff tests")
 class TestDistanceCgToImg(unittest.TestCase):
     def setUp(self):
         self.cg = ftmc.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb')

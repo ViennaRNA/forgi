@@ -6,11 +6,24 @@ import random
 import shutil
 import tempfile as tf
 import collections as col
+import sys
+
+
+import logging
+log = logging.getLogger(__name__)
 
 import forgi.utilities.debug as cud
 
 bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 bracket_right = ")]}>abcdefghijklmnopqrstuvwxyz"
+
+
+def is_string_type(stri):
+    if sys.version_info<(3,):
+        return isinstance(stri, (str, unicode))
+    else:
+        return isinstance(stri, str)
+
 
 #COVERAGE: Not used
 def grouped(iterable, n):
@@ -141,6 +154,7 @@ def dotbracket_to_pairtable(struct):
         if a=='&': continue
         i += 1
         #print i,a, pt
+        log.debug("Parsing bracket %r", a)
         if a == ".": pt[i] = 0
         else:
             if a in inverse_bracket_left:
