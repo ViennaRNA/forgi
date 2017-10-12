@@ -15,7 +15,6 @@ import collections as col
 import random
 import re
 import itertools as it
-from .._k2n_standalone import knotted2nested as fak
 from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
@@ -1737,8 +1736,8 @@ class BulgeGraph(object):
             all_stems.update(self.edges[elem])
         if sum(v % 2 for v in all_stems.values())==2: #Odd number of occurrences for 2 stems.
             descriptors.add("open")
-        else:
-            if sum(v % 2 for v in all_stems.values())!=0:
+        elif "open" not in descriptors:
+            if any(v!=2 for v in all_stems.values()):
                 print(all_stems)
                 print(multiloop)
                 print(self.to_dotbracket_string())
@@ -2575,7 +2574,7 @@ class BulgeGraph(object):
                 dists += [(abs(n2 - n1), n1, n2)]
         dists.sort()
 
-        # return the ones which are closest to each other
+        # return the ones which are closest to each other first
         if conn[0] == 'i':
             return sorted([list(dists[0][1:]), list(dists[1][1:])])
         else:
@@ -3293,6 +3292,8 @@ class BulgeGraph(object):
         Traverse the graph to get the angle types. The angle type depends on
         which corners of the stem are connected by the multiloop or internal
         loop.
+
+        :returns: A list of triples (stem, loop, stem)
         """
         if self.mst is None:
             self.mst = self.get_mst()
@@ -3326,7 +3327,8 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
                 # If pseudoknots exist, the direction is not always 0!
-                # assert self.get_stem_direction(prev, build_order[-1][2])==0 does not hold!
+                # assert self.get_stem_direction(prev, build_order[-1][2])==0 
+		# does not hold for pseudoknots!
         self.build_order = build_order
         self.ang_type = None
 
@@ -3485,8 +3487,6 @@ class BulgeGraph(object):
         # remove unpaired bases and redundant pairs (i.e. (2,3) and (3,2))
         pairs = sorted([tuple(sorted(p)) for p in self.to_pair_tuples() if p[1] != 0])
         pairs = list(set(pairs))
-
-        # knotted_struct = fak.KnottedStructure(pairs, Seq=self.seq, Header=[])
 
         import forgi._k2n_standalone.knots as fakk
 

@@ -8,6 +8,10 @@ import tempfile as tf
 import collections as col
 import sys
 
+
+import logging
+log = logging.getLogger(__name__)
+
 import forgi.utilities.debug as cud
 
 bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -150,6 +154,7 @@ def dotbracket_to_pairtable(struct):
         if a=='&': continue
         i += 1
         #print i,a, pt
+        log.debug("Parsing bracket %r", a)
         if a == ".": pt[i] = 0
         else:
             if a in inverse_bracket_left:
