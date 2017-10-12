@@ -143,6 +143,8 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
     :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.
     :param odb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
     :param dissolve_length_one_stems: Ignored if input is in forgi bg/cg format.
+
+    :retuns: A list of RNAs or a single RNA
     """
     # Is filename a dotbracket string and not a filename?
     if all( c in ".()[]{}&" for c in filename):
@@ -225,7 +227,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
             for bg in bgs:
                 bg.dissolve_length_one_stems()
         if rna_type=="cg":
-            bgs = map(ftmc.from_bulge_graph, bgs)
+            bgs = list(map(ftmc.from_bulge_graph, bgs))
         if allow_many:
             return bgs
         else:
