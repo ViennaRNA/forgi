@@ -1,0 +1,387 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>logging_exceptions &#8212; forgi 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 1.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for logging_exceptions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">logging.handlers</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="c1">###########################################################</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;log_to_exception&#39;</span><span class="p">,</span> <span class="s1">&#39;log_exception&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;update_parser&#39;</span><span class="p">,</span> <span class="s1">&#39;config_from_args&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;log_at_caller&#39;</span><span class="p">]</span>
+
+<span class="c1">##############################################################################</span>
+<span class="c1"># A costum sys.excepthook that displays all log messages</span>
+<span class="c1"># associated with an unhandled exception.</span>
+<span class="c1">###############################################################################</span>
+
+<span class="c1"># The except_hook before we modify it</span>
+<span class="n">default_excepthook</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">excepthook</span>
+
+
+<span class="k">def</span> <span class="nf">logging_excepthook</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A except_hook that inspects the exception for the &#39;log&#39; attribute.</span>
+<span class="sd">    If it finds this attribute, it logs the contained log-records with the</span>
+<span class="sd">    level &#39;&#39;critical&#39; before calling default_excepthook</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">exception</span><span class="o">.</span><span class="n">log</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+    <span class="n">default_excepthook</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="n">traceback</span><span class="p">)</span>
+
+
+<span class="n">sys</span><span class="o">.</span><span class="n">excepthook</span> <span class="o">=</span> <span class="n">logging_excepthook</span>
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1"># A costum Logger subclass that does not record functions and filename</span>
+<span class="c1"># of this file, but instead the caller&#39;s filename and function name.</span>
+<span class="c1">###############################################################################</span>
+
+<span class="c1"># See the comment for logging._srcfile for an explaination why we don&#39;t use __file__</span>
+<span class="c1"># as the second string.</span>
+<span class="c1"># This variable takes the role of logging._srcfile</span>
+<span class="n">ignored_filenames</span> <span class="o">=</span> <span class="p">[</span> <span class="n">logging</span><span class="o">.</span><span class="n">_srcfile</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">logging_excepthook</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_filename</span><span class="p">)]</span>
+
+
+<span class="k">class</span> <span class="nc">ExlogLogger</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">NOTSET</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExlogLogger</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ignored_functions</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">findCaller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stack_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modified copy of the original logging.Logger.findCaller function.</span>
+
+<span class="sd">        Instead of only ignoring the logging Module when searching for</span>
+<span class="sd">        the function with the logging call, this also ignores logging_exceptions.</span>
+
+<span class="sd">        This is implemented by replacing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+        <span class="c1">#On some versions of IronPython, currentframe() returns None if</span>
+        <span class="c1">#IronPython isn&#39;t run with -X:Frames.</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">f_back</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="s2">&quot;(unknown file)&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;(unknown function)&quot;</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;f_code&quot;</span><span class="p">):</span>
+            <span class="n">co</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">f_code</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">co</span><span class="o">.</span><span class="n">co_filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ignored_filenames</span> <span class="ow">or</span> <span class="n">co</span><span class="o">.</span><span class="n">co_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignored_functions</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">f_back</span>
+                <span class="k">continue</span>
+            <span class="n">sinfo</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">stack_info</span><span class="p">:</span>
+                <span class="n">sio</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+                <span class="n">sio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Stack (most recent call last):</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_stack</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sio</span><span class="p">)</span>
+                <span class="n">sinfo</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">sinfo</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                    <span class="n">sinfo</span> <span class="o">=</span> <span class="n">sinfo</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">sio</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="p">(</span><span class="n">co</span><span class="o">.</span><span class="n">co_filename</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">f_lineno</span><span class="p">,</span> <span class="n">co</span><span class="o">.</span><span class="n">co_name</span><span class="p">,</span> <span class="n">sinfo</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span><span class="o">&lt;</span><span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rv</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+
+<span class="n">logging</span><span class="o">.</span><span class="n">setLoggerClass</span><span class="p">(</span><span class="n">ExlogLogger</span><span class="p">)</span>
+
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">log_at_caller</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A context manager for using the parent function as the</span>
+<span class="sd">    function name attached to the log record</span>
+
+<span class="sd">    :param logger: An instance of ExlogLogger. By importing logging_exceptions,</span>
+<span class="sd">                   the logger class is automatically set to ExlogLogger for all</span>
+<span class="sd">                   loggers created after logging_exceptions was imported.</span>
+
+<span class="sd">    .. warning::</span>
+
+<span class="sd">        If logger is not an instance of ExlogLogger (in particular if it is the root logger),</span>
+<span class="sd">        this context manager will do nothing</span>
+
+<span class="sd">    New in Version 0.1.6</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># store the original ignored_functions</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">orig_ignored_f</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">ignored_functions</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="c1">#The logger is not a ExlogLogger. Do nothing</span>
+        <span class="n">orig_ignored_f</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Make a copy of ignored_functions and add the caller of this contect manager</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">ignored_functions</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">ignored_functions</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">ignored_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_name</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">orig_ignored_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">ignored_functions</span> <span class="o">=</span> <span class="n">orig_ignored_f</span>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Public API for attaching log messages to exceptions and</span>
+<span class="c1"># for displaying logs associated with caught exceptions.</span>
+<span class="c1">###############################################################################</span>
+
+
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">log_to_exception</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">exception</span><span class="p">):</span>
+    <span class="c1"># __enter__:</span>
+    <span class="c1"># store the original logger configuration</span>
+    <span class="n">propagate</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span>
+    <span class="n">original_handlers</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span>
+    <span class="c1"># Assign a new handler</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">handlers</span><span class="o">.</span><span class="n">BufferingHandler</span><span class="p">(</span><span class="mi">1000</span><span class="p">)]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># __exit__:</span>
+        <span class="c1"># Attach the log records to the exception</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">exception</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># No attribute extend. Issue a warning and discard buffered</span>
+                <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Cannot attach log to exception </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                              <span class="s2">&quot;Potential name clash with attribute &quot;</span>
+                              <span class="s2">&quot;&#39;log&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">exception</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">buffer</span>
+        <span class="c1"># Restore original logger configutration</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="n">propagate</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="n">original_handlers</span>
+
+
+<span class="k">def</span> <span class="nf">log_exception</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_stacktrace</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Log the given exception at the specified level with the specified logger.</span>
+
+<span class="sd">    If a logger is given, its name is not used, however, its handler</span>
+<span class="sd">    and its level are respected.</span>
+
+<span class="sd">    :param with_stacktrace: Whether or not to show the stack_trace. New in version 0.1.5</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">exception</span><span class="o">.</span><span class="n">log</span><span class="p">:</span>
+            <span class="n">_log_at_level</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">log</span> <span class="ow">and</span> <span class="n">logger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">exception</span><span class="o">.</span><span class="n">log</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span>
+
+    <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Exception of type &#39;</span><span class="si">%s</span><span class="s2">&#39; occurred:&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">with_stacktrace</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span>
+               <span class="nb">type</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="n">with_stacktrace</span><span class="p">)</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">log_exception</span>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Public API: Convenience functions for argparsing</span>
+<span class="c1">###############################################################################</span>
+
+<span class="c1"># A sentinel</span>
+<span class="k">class</span> <span class="nc">_Default</span><span class="p">:</span>
+    <span class="k">pass</span>
+<span class="n">_DEFAULT</span> <span class="o">=</span> <span class="n">_Default</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">update_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">use_shortcuts</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds the options &#39;verbose&#39;, &#39;debug&#39; and &#39;quiet&#39; to an argparse.ArgumentParser object</span>
+
+<span class="sd">    If use_shortcuts is True, &#39;-v&#39;, &#39;-q&#39; are added as well.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">use_shortcuts</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">]</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-q&#39;</span><span class="p">,</span> <span class="s1">&#39;--quiet&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;--verbose&#39;</span><span class="p">]</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;--quiet&#39;</span><span class="p">]</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show verbose output (Output logged at level logging.INFO)&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--debug&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="n">_DEFAULT</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A comma-seperated list of logger names for which debug output will be activated.&quot;</span>
+                             <span class="s2">&quot;WARNING: If you misspell the logger name, this argument will be ignored&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="n">_DEFAULT</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A comma-seperated list of logger names for which only messages logged at the level &#39;CRITICAL&#39; will be shown.&quot;</span>
+                             <span class="s2">&quot;Use this without arguments if everything should be quiet.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span>
+
+
+<span class="k">def</span> <span class="nf">config_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the --quiet, --verbose and --debug options.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">&quot;verbose&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="n">_DEFAULT</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">logger_name</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">logger_name</span> <span class="o">==</span> <span class="s2">&quot;__root__&quot;</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">logger_name</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">quiet</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">quiet</span> <span class="ow">is</span> <span class="n">_DEFAULT</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">logger_name</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">quiet</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">logger_name</span> <span class="o">==</span> <span class="s2">&quot;__root__&quot;</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">logger_name</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">)</span>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Private utility functions</span>
+<span class="c1">###############################################################################</span>
+
+
+<span class="k">def</span> <span class="nf">_log_at_level</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Log a log-record at the given level using the given logger.</span>
+
+<span class="sd">    If logger is None, uses the root logger.</span>
+<span class="sd">    If level is None, use the record&#39;s level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">=</span> <span class="n">level</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">levelname</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelName</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">():</span>
+        <span class="c1"># We use callHandlers instead of handle, because we already applied</span>
+        <span class="c1"># the filters when the log record was created.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">callHandlers</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Colored log messages, Thanks to airmind @ stackoverflow</span>
+<span class="c1"># This is not part of the public API and may be replaced by the</span>
+<span class="c1"># colorlog package in the future</span>
+<span class="c1">###############################################################################</span>
+<span class="c1"># Colored log output http://stackoverflow.com/a/384125</span>
+<span class="c1"># The foreground is set with 30 plus the number of the color</span>
+<span class="n">BLACK</span><span class="p">,</span> <span class="n">RED</span><span class="p">,</span> <span class="n">GREEN</span><span class="p">,</span> <span class="n">YELLOW</span><span class="p">,</span> <span class="n">BLUE</span><span class="p">,</span> <span class="n">MAGENTA</span><span class="p">,</span> <span class="n">CYAN</span><span class="p">,</span> <span class="n">WHITE</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+
+<span class="c1"># These are the sequences need to get colored ouput</span>
+<span class="n">RESET_SEQ</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+<span class="n">COLOR_SEQ</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1;</span><span class="si">%d</span><span class="s2">m&quot;</span>
+<span class="n">BOLD_SEQ</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1m&quot;</span>
+
+<span class="n">COLORS_LIGHT</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;WARNING&#39;</span><span class="p">:</span> <span class="n">YELLOW</span><span class="p">,</span>
+    <span class="s1">&#39;INFO&#39;</span><span class="p">:</span> <span class="n">BLACK</span><span class="p">,</span>
+    <span class="s1">&#39;DEBUG&#39;</span><span class="p">:</span> <span class="n">WHITE</span><span class="p">,</span>
+    <span class="s1">&#39;CRITICAL&#39;</span><span class="p">:</span> <span class="n">RED</span><span class="p">,</span>
+    <span class="s1">&#39;ERROR&#39;</span><span class="p">:</span> <span class="n">RED</span>
+<span class="p">}</span>
+<span class="n">COLORS_DARK</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;WARNING&#39;</span><span class="p">:</span> <span class="n">YELLOW</span><span class="p">,</span>
+    <span class="s1">&#39;INFO&#39;</span><span class="p">:</span> <span class="n">WHITE</span><span class="p">,</span>
+    <span class="s1">&#39;DEBUG&#39;</span><span class="p">:</span> <span class="n">BLACK</span><span class="p">,</span>
+    <span class="s1">&#39;CRITICAL&#39;</span><span class="p">:</span> <span class="n">RED</span><span class="p">,</span>
+    <span class="s1">&#39;ERROR&#39;</span><span class="p">:</span> <span class="n">RED</span>
+<span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">ColoredFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span>
+
+    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">levelname</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">levelname</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">COLOR_SEQ</span> <span class="o">%</span> <span class="p">(</span><span class="mi">30</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">colors</span><span class="p">[</span><span class="n">levelname</span><span class="p">])</span> <span class="o">+</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span> <span class="o">+</span> <span class="n">RESET_SEQ</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">use_colored_output</span><span class="p">(</span><span class="n">dark_bg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">ch</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+    <span class="n">ch</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dark_bg</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">COLORS_DARK</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">COLORS_LIGHT</span>
+    <span class="n">ch</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">ColoredFormatter</span><span class="p">(</span>
+        <span class="n">colors</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">.</span><span class="si">%(funcName)s</span><span class="s2">[</span><span class="si">%(lineno)d</span><span class="s2">]: </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,130 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.utilities.modified_res module &#8212; forgi 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.threedee.utilities.modified_res_lookup module" href="forgi.threedee.utilities.modified_res_lookup.html" />
+    <link rel="prev" title="forgi.threedee.utilities.mcannotate module" href="forgi.threedee.utilities.mcannotate.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 1.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.utilities.mcannotate.html">forgi.threedee.utilities.mcannotate module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.threedee.utilities.modified_res_lookup.html">forgi.threedee.utilities.modified_res_lookup module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.threedee.utilities.modified_res">
+<span id="forgi-threedee-utilities-modified-res-module"></span><h1>forgi.threedee.utilities.modified_res module<a class="headerlink" href="#module-forgi.threedee.utilities.modified_res" title="Permalink to this headline">¶</a></h1>
+<p>A module for dealing with modified residues.</p>
+<p>For now the only functionality is to find out the corresponding
+unmodified residue.</p>
+<dl class="class">
+<dt id="forgi.threedee.utilities.modified_res.ModifiedResidueLookup">
+<em class="property">class </em><code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">ModifiedResidueLookup</code><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#ModifiedResidueLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.ModifiedResidueLookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Convenience wrapper to access modified_res_lookup.RESIDUE_DICT.
+If a key does not exist, query the database to add it.</p>
+<dl class="method">
+<dt id="forgi.threedee.utilities.modified_res.ModifiedResidueLookup.clean_failed">
+<code class="descname">clean_failed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#ModifiedResidueLookup.clean_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.ModifiedResidueLookup.clean_failed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.modified_res.change_residue_id">
+<code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">change_residue_id</code><span class="sig-paren">(</span><em>residue</em>, <em>new_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#change_residue_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.change_residue_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.modified_res.dict_from_pdbs">
+<code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">dict_from_pdbs</code><span class="sig-paren">(</span><em>filenames</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#dict_from_pdbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.dict_from_pdbs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.modified_res.query_PDBeChem">
+<code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">query_PDBeChem</code><span class="sig-paren">(</span><em>three_letter_code</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#query_PDBeChem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.query_PDBeChem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Query the PDBeChem and return a dictionary with key-value pairs.</p>
+<p>Unfortunately, this information does not seem to be provided in any
+machine-readable format. We have to parse the html.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.modified_res.to_4_letter_alphabeth">
+<code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">to_4_letter_alphabeth</code><span class="sig-paren">(</span><em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#to_4_letter_alphabeth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.to_4_letter_alphabeth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename the modified residues so that they have the same
+names as unmodified residues.</p>
+<p>If a residue’s name is unknown, query PDBeChem.</p>
+<p>If the residue is not a ribonucleotide, remove it from the chain.</p>
+<p>If it is a modified ribonucleotde, replace it by the unmodified “standard parent”</p>
+<p>TODO: What to do with I (INOSINIC ACID)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chain</strong> – A Bio.PDB.Chain structure</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The same chain, but with only AUGC residues.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.utilities.mcannotate.html">forgi.threedee.utilities.mcannotate module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.threedee.utilities.modified_res_lookup.html">forgi.threedee.utilities.modified_res_lookup module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+    </div>
+  </body>
+</html>

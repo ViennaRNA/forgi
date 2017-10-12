@@ -1,0 +1,160 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.model.linecloud module &#8212; forgi 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.threedee.model.descriptors module" href="forgi.threedee.model.descriptors.html" />
+    <link rel="prev" title="forgi.threedee.model.coarse_grain module" href="forgi.threedee.model.coarse_grain.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 1.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.model.coarse_grain.html">forgi.threedee.model.coarse_grain module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.threedee.model.descriptors.html">forgi.threedee.model.descriptors module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.threedee.model.linecloud">
+<span id="forgi-threedee-model-linecloud-module"></span><h1>forgi.threedee.model.linecloud module<a class="headerlink" href="#module-forgi.threedee.model.linecloud" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.threedee.model.linecloud.CoordinateStorage">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.linecloud.</code><code class="descname">CoordinateStorage</code><span class="sig-paren">(</span><em>element_names</em>, <em>on_change=&lt;function &lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#CoordinateStorage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.CoordinateStorage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">_abcoll.Mapping</span></code></p>
+<p>Provides a dictionary-like interface for the access to coordinates of elements,
+while the coordinates are actually stored as numpy array to allow for manipultion
+with array operations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>defines</strong> – The keys that will be used.</li>
+<li><strong>on_change</strong> – A function that will be called, whenever coordinates are changed.
+It will receive the key for which the coordinates are changed as sole argument.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="forgi.threedee.model.linecloud.CoordinateStorage.get_array">
+<code class="descname">get_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#CoordinateStorage.get_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.CoordinateStorage.get_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a copy of the underlying numpy array.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.linecloud.CoordinateStorage.is_filled">
+<code class="descname">is_filled</code><a class="headerlink" href="#forgi.threedee.model.linecloud.CoordinateStorage.is_filled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if all coordinates are set to somethiong different than nan.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.linecloud.CoordinateStorage.on_change">
+<code class="descname">on_change</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.linecloud.CoordinateStorage.on_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>on-change function is called whenever coordinates are modified.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.linecloud.CoordinateStorage.rotate">
+<code class="descname">rotate</code><span class="sig-paren">(</span><em>rotation_matrix</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#CoordinateStorage.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.CoordinateStorage.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate all coordinates using the given rotation matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.linecloud.LineSegmentStorage">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.linecloud.</code><code class="descname">LineSegmentStorage</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#LineSegmentStorage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.LineSegmentStorage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#forgi.threedee.model.linecloud.CoordinateStorage" title="forgi.threedee.model.linecloud.CoordinateStorage"><code class="xref py py-class docutils literal"><span class="pre">forgi.threedee.model.linecloud.CoordinateStorage</span></code></a></p>
+<dl class="method">
+<dt id="forgi.threedee.model.linecloud.LineSegmentStorage.center">
+<code class="descname">center</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#LineSegmentStorage.center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.LineSegmentStorage.center" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.linecloud.LineSegmentStorage.elements_closer_than">
+<code class="descname">elements_closer_than</code><span class="sig-paren">(</span><em>cutoff</em>, <em>ignore=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#LineSegmentStorage.elements_closer_than"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.LineSegmentStorage.elements_closer_than" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ignore</strong> – A set of tuples (element name-pairs) to ignore</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.linecloud.LineSegmentStorage.get_direction">
+<code class="descname">get_direction</code><span class="sig-paren">(</span><em>elem_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#LineSegmentStorage.get_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.LineSegmentStorage.get_direction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.linecloud.LineSegmentStorage.rmsd_to">
+<code class="descname">rmsd_to</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#LineSegmentStorage.rmsd_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.LineSegmentStorage.rmsd_to" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.linecloud.profile">
+<code class="descclassname">forgi.threedee.model.linecloud.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/linecloud.html#profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.linecloud.profile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.model.coarse_grain.html">forgi.threedee.model.coarse_grain module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.threedee.model.descriptors.html">forgi.threedee.model.descriptors module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+    </div>
+  </body>
+</html>
