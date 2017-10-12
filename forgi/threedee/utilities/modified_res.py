@@ -128,6 +128,7 @@ def to_4_letter_alphabeth(chain):
                 continue #Continue with same i (now different residue)
             if res_info["Type description"] == "NON-POLYMER":
                 #e.g. GTP in 3DIR
+                log.warning("Detaching %s, because %s is classified as non-polymeric.", r, r.resname)
                 chain.detach_child(r.id)
                 continue #Continue with same i (now different residue)
 
@@ -162,6 +163,7 @@ class ModifiedResidueLookup(object):
         if key not in self._dict:
             try:
                 self._dict[key]=query_PDBeChem(key)
+                log.debug("Successfully looked up %s", key)
             except:
                 log.warning("Could not look-up modified residue key %s", key)
                 self._dict[key]=None

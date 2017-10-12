@@ -1093,7 +1093,7 @@ class BulgeGraph(object):
         """
         log.debug("Starting shortest BG loop for {}".format(vertex))
         G = self.to_networkx()
-        log.debug("nx graph  %r with edges %r ", G, G.edge)
+        log.debug("nx graph  %r with edges %r ", G, G.adj)
 
         # use the nucleotide in the middle of this element as the starting point
         residues = sorted(list(self.define_residue_num_iterator(vertex, adjacent=True)))
@@ -1714,7 +1714,7 @@ class BulgeGraph(object):
             loops.append(tuple(loop))
         return loops
 
-    
+
     def describe_multiloop(self, multiloop):
         """
         :param multiloop: An iterable of nodes (only "m", "t" and "f" elements)

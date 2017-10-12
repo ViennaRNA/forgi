@@ -20,17 +20,18 @@ class Projection2DBasicTest(unittest.TestCase):
     def test_init_projection(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         proj=fpp.Projection2D(cg, [1.,1.,1.])
-        self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])),
+        self.assertTrue(ftuv.is_almost_parallel(proj.proj_direction,np.array([1.,1.,1.])),
                         msg="The projection direction was not stored correctly. Should be coliniar"
                             " with {}, got {}".format(np.array([1.,1.,1.]),proj.proj_direction))
     def test_init_projection2(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         cg.project_from = [1.,1.,1.]
         proj=fpp.Projection2D(cg)
-        self.assertTrue(ftuv.is_almost_colinear(proj.proj_direction,np.array([1.,1.,1.])),
+        self.assertTrue(ftuv.is_almost_parallel(proj.proj_direction,np.array([1.,1.,1.])),
                         msg="The projection direction was not stored correctly. Should be coliniar"
                             " with {}, got {}".format(np.array([1.,1.,1.]),proj.proj_direction))
 
+    @unittest.skip("Skipping projection tests that take long")
     def test_init_with_rotate_for_coords(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         proj=fpp.Projection2D(cg, [1.,1.,1.])
@@ -67,6 +68,7 @@ class Projection2DBasicTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             proj=fpp.Projection2D(cg)
 
+    @unittest.skip("Skipping projection tests that take long")
     def test_projection_with_virtual_atoms(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         proj=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_atoms=True)
@@ -75,6 +77,7 @@ class Projection2DBasicTest(unittest.TestCase):
         self.assertEqual(all_vas, proj._virtual_atoms.shape[0])
         self.assertGreater(proj._virtual_atoms.shape[0], 5)
 
+    @unittest.skip("Skipping projection tests that take long")
     def test_projection_with_some_virtual_atoms(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         proj=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_atoms="selected")
@@ -85,6 +88,7 @@ class Projection2DBasicTest(unittest.TestCase):
         self.assertLess(proj._virtual_atoms.shape[0], proj_all._virtual_atoms.shape[0])
         self.assertGreater(proj._virtual_atoms.shape[0], 5) #At least some atoms
 
+    @unittest.skip("Skipping projection tests that take long")
     def test_projection_with_virtual_residues(self):
 
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')

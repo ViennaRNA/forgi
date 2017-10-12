@@ -233,8 +233,8 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
         chain_connections = nx.Graph(chain_connections_multigraph)
         if dissolve_length_one_stems:
             for chain1, chain2 in it.combinations(chain_connections_multigraph.nodes(), 2):
-                if chain2 in chain_connections_multigraph.edge[chain1]:
-                    for edge1, edge2 in it.combinations(chain_connections_multigraph.edge[chain1][chain2].values(), 2):
+                if chain2 in chain_connections_multigraph.adj[chain1]:
+                    for edge1, edge2 in it.combinations(chain_connections_multigraph.adj[chain1][chain2].values(), 2):
                         if _are_adjacent_basepairs(cg, edge1, edge2):
                             break
                     else: #break NOT encountered.
@@ -295,11 +295,12 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
             raise CgConstructionError("Bad chain-id given. "
                                       "{} not present (or not an RNA)".format( set(chain_id) -
                                                                                        set([chain.id for chain in chains])))
-
+    log.debug("Before cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in chains})
     new_chains = []
     for chain in chains:
         chain = ftup.clean_chain(chain)
         new_chains.append(chain)
+    log.debug("After cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in new_chains})
 
     pdb_base = op.splitext(op.basename(pdb_filename))[0]
 

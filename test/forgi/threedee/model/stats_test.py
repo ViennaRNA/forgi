@@ -74,30 +74,39 @@ class TestStats(unittest.TestCase):
         self.assertGreater(len(t1_stats), 0)
         '''
 
-    def test_angle_stat_difference(self):
+    def test_angle_stat_deviation_from(self):
         as1 = ftms.AngleStat(u=1.57, v=0., r1=1, u1=1.57, v1=0)
         as2 = ftms.AngleStat(u=1.57, v=0., r1=1, u1=1.57, v1=0)
 
-        self.assertTrue(np.allclose([as1.diff(as2)],[0]))
+        self.assertTrue(np.allclose([as1.deviation_from(as2)],(0,0,0,0)))
         as2 = ftms.AngleStat(u=0, v=0., r1=1, u1=1.57, v1=0)
 
-        self.assertTrue(np.allclose([as1.diff(as2)],[math.sqrt(2)],0.01))
+        self.assertTrue(np.allclose([as1.deviation_from(as2)],(0,1.57,0,0),atol=0.01))
 
-        as2 = ftms.AngleStat(u=1.57, v=0., r1=1, u1=0, v1=0)
-        fud.pv('as1.diff(as2)')
+    def test_angle_stat_deviation_from_around_circle(self):
+        as1 = ftms.AngleStat(u=0.17, v=0.17, r1=1, u1=1.57, v1=0)  # 0.17 rad ~ 10 degrees
+        as2 = ftms.AngleStat(u=2.96, v=3.32, r1=2, u1=1.57, v1=0)  # 2.96 rad ~ 170 deg, 3.32 rad ~ 190 deg
+        self.assertTrue(np.allclose([as1.deviation_from(as2)],(1,0.35,0,0), atol=0.05) ) # 0.35 rad ~ 20 deg
+
+    def test_angle_stat_deviation_from_zero_r(self):
+        as1 = ftms.AngleStat(u=0.17, v=0.17, r1=0, u1=1.57, v1=0)
+        as2 = ftms.AngleStat(u=0.17, v=0.17, r1=0, u1=2.7, v1=0.2)
+        self.assertTrue(np.allclose([as1.deviation_from(as2)],(0,0,0,0)))
+
 
     def test_3gx5_stats(self):
         cs = ftms.ConformationStats('test/forgi/threedee/data/3gx5.stats')
 
         self.assertTrue((8,8) in cs.stem_stats)
 
-    @unittest.expectedFailure
     def test_angle_stat_get_angle(self):
-        as1 = ftms.AngleStat(u=math.pi/2, v=0., r1=1, u1=1.57, v1=1.1)
-        #self.assertAlmostEqual(as1.get_angle(), 0)
-
         as1 = ftms.AngleStat(u=math.pi/2, v=math.pi/4, r1=4, u1=1.27, v1=1.5)
-        self.assertAlmostEqual(as1.get_angle(), math.pi/4)
+        self.assertAlmostEqual(as1.get_angle(), 3*math.pi/4)
+        # If u=0 or 180 deg, the angle is always 90 deg
+        as1 = ftms.AngleStat(u=0, v=1.23456, r1=3, u1=1.27, v1=1.5)
+        self.assertAlmostEqual(as1.get_angle(), math.pi/2)
+        as1 = ftms.AngleStat(u=math.pi, v=0.987654, r1=3, u1=1.27, v1=1.5)
+        self.assertAlmostEqual(as1.get_angle(), math.pi/2)
 
     def test_angle_stat_get_angle_from_cg(self):
         fa_text = """>1

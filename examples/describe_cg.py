@@ -49,7 +49,7 @@ def describe_rna(cg, file_num, dist_pais, angle_pairs):
     junct4 = 0
     for ml in multiloops:
         descriptors = cg.describe_multiloop(ml)
-        if "regular_multiloop" in descriptors[-1]:
+        if "regular_multiloop" in descriptors:
             if len(ml)==3:
                 junct3+=1
             elif len(ml)==4:
@@ -64,7 +64,7 @@ def describe_rna(cg, file_num, dist_pais, angle_pairs):
     data["regular_mls"] = len([d for d in descriptors if "regular_multiloop" in d])
     data["total_mls"] = len(multiloops)
     try:
-        data["longest_ml"] = mmax(len(x) for x in multiloops)
+        data["longest_ml"] = max(len(x) for x in multiloops)
     except ValueError:
         data["longest_ml"] = 0
     try:
