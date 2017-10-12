@@ -14,6 +14,10 @@ import itertools as it
 # import networkx as nx Takes to long. Import only when needed
 import warnings, math
 import copy, sys
+import logging
+
+
+log = logging.getLogger(__name__)
 
 """
 This module uses code by David Eppstein
@@ -441,10 +445,11 @@ class Projection2D(object):
                        Else: only count (branch)points of the given degree
         """
         import networkx as nx
+        assert int(nx.__version__[0]) >= 2, "This function only works with networkx version 2, not {}!".format(nx.__version__)
         if degree is None:
-            return len([x for x in nx.degree(self.proj_graph).values() if x>=3])
+            return len([x[1] for x in nx.degree(self.proj_graph) if x[1]>=3])
         else:
-            return len([x for x in nx.degree(self.proj_graph).values() if x==degree])
+            return len([x[1] for x in nx.degree(self.proj_graph) if x[1]==degree])
 
     def get_cyclebasis_len(self):
         """
@@ -471,7 +476,7 @@ class Projection2D(object):
             on future evaluation of the usefulness of this and similar descriptors.
         """
         l=0
-        for edge in self.proj_graph.edges_iter():
+        for edge in self.proj_graph.edges():
             l+=ftuv.vec_distance(edge[0], edge[1])
         return l
 
@@ -494,7 +499,7 @@ class Projection2D(object):
         import networkx as nx
         lengths={}
         target={}
-        for leaf, degree in nx.degree(self.proj_graph).items():
+        for leaf, degree in nx.degree(self.proj_graph):
             if degree!=1: continue
             lengths[leaf]=0
             previous=None
