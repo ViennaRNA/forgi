@@ -41,16 +41,16 @@ setup(
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      packages=['forgi', 'forgi.graph', 'forgi.threedee', 
-                'forgi.threedee.model', 'forgi.utilities', 
-                'forgi.threedee.utilities', 
-                'forgi._k2n_standalone', 'forgi.threedee.visual', 
+      packages=['forgi', 'forgi.graph', 'forgi.threedee',
+                'forgi.threedee.model', 'forgi.utilities',
+                'forgi.threedee.utilities',
+                'forgi._k2n_standalone', 'forgi.threedee.visual',
                 'forgi.visual', 'forgi.projection'],
       package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json']},
       scripts=['examples/rnaConvert.py',
-               'examples/describeRNA.py',
-               'examples/visualize_cg.py', 
-               'examples/visualize_pdb.py'], 
+               'examples/describe_cg.py',
+               'examples/visualize_cg.py',
+               'examples/visualize_pdb.py'],
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are
