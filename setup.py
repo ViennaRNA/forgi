@@ -43,19 +43,14 @@ setup(
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
       packages=['forgi', 'forgi.graph', 'forgi.threedee', 
                 'forgi.threedee.model', 'forgi.utilities', 
-                'forgi.threedee.utilities', 'forgi.aux', 
-                'forgi.aux.k2n_standalone', 'forgi.threedee.visual', 
+                'forgi.threedee.utilities', 
+                'forgi._k2n_standalone', 'forgi.threedee.visual', 
                 'forgi.visual', 'forgi.projection'],
       package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json']},
       scripts=['examples/rnaConvert.py',
+               'examples/describeRNA.py',
                'examples/visualize_cg.py', 
-               'examples/visualize_pdb.py', 
-               'examples/cg_to_fornac.py',
-               'examples/average_atom_positions.py',
-               'examples/compare_projections.py',
-               'examples/investigate_projection.py',
-               'examples/multipleProjectionRMSD.py',
-               'examples/plot_projection.py'],
+               'examples/visualize_pdb.py'], 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are
