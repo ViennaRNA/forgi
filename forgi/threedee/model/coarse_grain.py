@@ -1289,8 +1289,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         EXPERIMENTAL
 
-        For 3-way junctions: Return whether or not the not-stacking loop
+        For 3-way junctions Return whether or not the not-stacking loop
         is very roughly perpenticular to the stack.
+
         :param loop: Either a dictionary, as returned by assign_loop_roles
                      or a list of 3 loop segments.
         """

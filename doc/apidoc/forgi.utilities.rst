@@ -6,7 +6,9 @@ Submodules
 
 .. toctree::
 
+   forgi.utilities.commandline_utils
    forgi.utilities.debug
+   forgi.utilities.exceptions
    forgi.utilities.graph
    forgi.utilities.observedDict
    forgi.utilities.stuff
