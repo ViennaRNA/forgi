@@ -2,7 +2,7 @@ numpy>=1.10.0
 scipy
 future
 nose2
-networkx=2
+networkx==2
 biopython
 logging_exceptions>=0.1.6
 beautifulsoup4
