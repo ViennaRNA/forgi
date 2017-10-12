@@ -571,8 +571,8 @@ class Projection2D(object):
         """
         import networkx as nx
         maxl=0
-        for i, node1 in enumerate(self.proj_graph.nodes_iter()):
-            for j, node2 in enumerate(self.proj_graph.nodes_iter()):
+        for i, node1 in enumerate(self.proj_graph.nodes()):
+            for j, node2 in enumerate(self.proj_graph.nodes()):
                 if j<=i: continue
                 all_paths=nx.all_simple_paths(self.proj_graph, node1, node2)
                 for path in all_paths:
@@ -1008,8 +1008,8 @@ class Projection2D(object):
 
         :returns: True if a condensation was done, False if no condenstaion is possible.
         """
-        for i,node1 in enumerate(self.proj_graph.nodes_iter()):
-            for j, node2 in enumerate(self.proj_graph.nodes_iter()):
+        for i,node1 in enumerate(self.proj_graph.nodes()):
+            for j, node2 in enumerate(self.proj_graph.nodes()):
                 if j<=i: continue
                 if ftuv.vec_distance(node1, node2)<cutoff:
                     newnode=ftuv.middlepoint(node1, node2)
@@ -1032,10 +1032,10 @@ class Projection2D(object):
         Used by `self.condense(cutoff)` as a single condensation step of a point
         with a line segment.
         """
-        for i,source in enumerate(self.proj_graph.nodes_iter()):
-            for j,target in enumerate(self.proj_graph.nodes_iter()):
+        for i,source in enumerate(self.proj_graph.nodes()):
+            for j,target in enumerate(self.proj_graph.nodes()):
                 if j>i and self.proj_graph.has_edge(source,target):
-                    for k, node in enumerate(self.proj_graph.nodes_iter()):
+                    for k, node in enumerate(self.proj_graph.nodes()):
                         if k==i or k==j:
                             continue
                         nearest=ftuv.closest_point_on_seg( source, target, node)

@@ -233,8 +233,8 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
         chain_connections = nx.Graph(chain_connections_multigraph)
         if dissolve_length_one_stems:
             for chain1, chain2 in it.combinations(chain_connections_multigraph.nodes(), 2):
-                if chain2 in chain_connections_multigraph.edge[chain1]:
-                    for edge1, edge2 in it.combinations(chain_connections_multigraph.edge[chain1][chain2].values(), 2):
+                if chain2 in chain_connections_multigraph.adj[chain1]:
+                    for edge1, edge2 in it.combinations(chain_connections_multigraph.adj[chain1][chain2].values(), 2):
                         if _are_adjacent_basepairs(cg, edge1, edge2):
                             break
                     else: #break NOT encountered.
