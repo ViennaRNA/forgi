@@ -346,6 +346,9 @@ class AngleStat(object):
         pos1 = ftuv.spherical_polar_to_cartesian(self.position_params())
         pos2 = ftuv.spherical_polar_to_cartesian(stat2.position_params())
         ret.append(ftuv.magnitude(pos1-pos2))
+        log.debug("Position difference is %f", ret[-1])
+
+
         for attr in ["u", "v", "t"]:
             raw_diff = getattr(self, attr) - getattr(stat2, attr)
             #Map the difference to a value between 0 and pi
