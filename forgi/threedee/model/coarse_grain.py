@@ -52,12 +52,7 @@ from .linecloud import CoordinateStorage, LineSegmentStorage
 from ...utilities.stuff import is_string_type
 
 
-
-
-
-
 log = logging.getLogger(__name__)
-
 
 
 try:
@@ -934,6 +929,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def get_stacking_helices(self, method="Tyagi"):
         """
+        EXPERIMENTAL
+
         Return all helices (longer stacking regions) as sets.
 
         Two stems and one bulge are in a stacking relation, if self.is_stacking(bulge) is true and the stems are connected to the bulge.
@@ -962,9 +959,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return helices
     def is_stacking(self, bulge, method="Tyagi", verbose=False):
         """
+        EXPERIMENTAL
+
         Reports, whether the stems connected by the given bulge are coaxially stacking.
-
-
 
         :param bulge: STRING. Name of a interior loop or multiloop (e.g. "m3")
         :param method": STRING. "Tyagi": Use cutoffs from doi:10.1261/rna.305307, PMCID: PMC1894924.
@@ -1179,6 +1176,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def assign_loop_roles(self, loop):
         """
+        EXPERIMENTAL
+
         For 3-way junctions: Assign the roles P1, P2 and P3
         and J12, J31, J23 according to Lescoute and Westhof,
         RNA 2006 (doi: 10.1261/rna.2208106)
@@ -1243,6 +1242,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def junction_family_westhof1(self, loop):
         """
+        EXPERIMENTAL
+
         For 3-way junctions: Return the junction family according to
         Lescoute and Westhof, RNA 2006 (doi: 10.1261/rna.2208106).
 
@@ -1265,6 +1266,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             return "C"
     def junction_family_3d(self, loop):
         """
+        EXPERIMENTAL
+
         For 3-way junctions: Return the junction family depending
         on the 3D orientation.
 
@@ -1284,6 +1287,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             return 1
     def junction_family_is_perpenticular(self, loop):
         """
+        EXPERIMENTAL
+
         For 3-way junctions: Return whether or not the not-stacking loop
         is very roughly perpenticular to the stack.
         :param loop: Either a dictionary, as returned by assign_loop_roles
