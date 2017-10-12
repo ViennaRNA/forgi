@@ -1,41 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Changelog &#8212; forgi 0.4 documentation</title>
-    
+    <title>Changelog &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="index.html" />
     <link rel="next" title="Credits &amp; Citing" href="credit_link.html" />
     <link rel="prev" title="Installation" href="download.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -53,6 +50,127 @@
         
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-0">
+<h2>Changes in Version 1.0<a class="headerlink" href="#changes-in-version-1-0" title="Permalink to this headline">¶</a></h2>
+<p>With version 1.0, we introduce support for <strong>cofold</strong> and multifold structures.
+Further more, we are finally compatible with <strong>Python 3</strong> and <strong>Python 2</strong></p>
+<p>In the following list of the biggest changes, the most important
+changes are highlighted in bold.</p>
+<ul>
+<li><p class="first"><strong>Python 3 compatibility:</strong> forgi is now compatible with python 2 and 3.
+In paticular, we have automatic tests for python 3.5, 3.6 and 2.7</p>
+</li>
+<li><p class="first">Logging support. We now use the <code class="code docutils literal"><span class="pre">logging</span></code> module instead of print statements.</p>
+</li>
+<li><p class="first">In <code class="code docutils literal"><span class="pre">forgi.graph.bulge_graph</span></code>:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt><strong>Cofold Structures</strong> A BulgeGraph can now hold multiple RNA chains,</dt>
+<dd><p class="first last">if they are all connected by basepairs.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">bg.seq_ids now holds named tuples (chain, resid)</p>
+</li>
+<li><p class="first">New Errors (<code class="code docutils literal"><span class="pre">GraphConstructionError</span></code> and <code class="code docutils literal"><span class="pre">GraphIntegrityError</span></code>) as
+specializations of ValueError are introduced and sometimes raised
+by BulgeGraph instances.</p>
+</li>
+<li><p class="first">Fasta sequences containing ‘T’ characters are now allowed (and converted to ‘U’)</p>
+</li>
+<li><p class="first"><strong>Sequence class:</strong> Introduced <code class="code docutils literal"><span class="pre">Sequence</span></code> class, a string subclass with 1-based indexing and support for ‘&amp;’ (cofold structures)</p>
+</li>
+<li><p class="first"><code class="code docutils literal"><span class="pre">define_range_iterator</span></code> no longer accepts the <code class="code docutils literal"><span class="pre">seq_ids</span></code> keyword.</p>
+</li>
+<li><p class="first">The Bulge-graph now has a new method <code class="code docutils literal"><span class="pre">define_a</span></code>. It returns the define with
+adjacent nucleotides (if present) and also works for 0-nucleotide multiloops.</p>
+</li>
+<li><p class="first"><strong>Consistent element numbering:</strong></p>
+<blockquote>
+<div><ul class="simple">
+<li>During graph creation, multiloops are now numbered from m0, m1, … according
+to their position along the backbone.</li>
+<li>The numbering of elements during bulge-graph construction is now
+consistent independent of the order of dictionaries
+(which was randomized in python 3 and is ordered in python 3.6)</li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="first docutils">
+<dt><strong>Looking at multiloops as a whole:</strong></dt>
+<dd><p class="first">Multiloops continue to consist of independent multiloop segments.
+However, we additionally introduced methods to look at multiloops as a whole.</p>
+<ul class="last simple">
+<li><dl class="first docutils">
+<dt><code class="code docutils literal"><span class="pre">find_mlonly_multiloops</span></code> finds out, which multiloop segment belong</dt>
+<dd>together in a junction</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="code docutils literal"><span class="pre">describe_multiloop</span></code>: reports whether the junctions found with the</dt>
+<dd>previous method belong to a pseudoknot, a multiloop or an exterior loop.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><code class="code docutils literal"><span class="pre">get_angle_type</span></code> now supports the <code class="code docutils literal"><span class="pre">allow_broken</span></code> keyword to return an
+angle type instread of None in case of Multiloop segments that are not
+part of the Minimum Spanning Tree</p>
+</li>
+<li><p class="first"><code class="code docutils literal"><span class="pre">bg.iter_elements_along_backbone</span></code> introduced.</p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="first docutils">
+<dt><code class="code docutils literal"><span class="pre">forgi.threedee.utilities.average_atom_positions</span></code> was converted to a JSON</dt>
+<dd><p class="first last">data file, which is read by <code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb</span></code>. This saves
+time upon import. In the future, average_atom_positions might be entirely removed.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">New module <code class="code docutils literal"><span class="pre">forgi.threedee.model.linecloud</span></code> to store the coordinate and twist vectors.
+This module’s classes implement a Mapping interface but internally use a numpy array,
+which allows for speedup of many operations.</p>
+</li>
+<li><p class="first">In <code class="code docutils literal"><span class="pre">forgi.graph.bulge_graph</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Exceptions <code class="code docutils literal"><span class="pre">CgConstructionErrorCgConstructionError</span></code> and <code class="code docutils literal"><span class="pre">CgIntegrityError</span></code> as
+subclasses of the new bulge graph exceptions</li>
+<li><strong>Load all chains from a PDB file</strong>: The module level function
+<code class="code docutils literal"><span class="pre">connected_cgs_from_pdb</span></code> loads all RNA chains from a PDB file
+and greates a cg object for each connected component.</li>
+<li>Bugfix: Supplying the secondary structure during loading of PDBs
+now works again.</li>
+<li>Convenience function <code class="code docutils literal"><span class="pre">cg.get_stats</span></code> as a wrapper around <code class="code docutils literal"><span class="pre">get_bulge_abgle_stats</span></code>,
+<code class="code docutils literal"><span class="pre">get_loop_stats</span></code> and <code class="code docutils literal"><span class="pre">get_stem_stats</span></code> respectively.</li>
+<li>Code for steric value and stacking detection is EXPERIMENTAL!</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Modules <code class="code docutils literal"><span class="pre">ftm.ensemble</span></code>, <code class="code docutils literal"><span class="pre">ftm.ensemble2</span></code> and <code class="code docutils literal"><span class="pre">ftu.dssr</span></code> are EXPERIMENTAL</p>
+</li>
+<li><p class="first">Faster RMSD by using QCOrot algorithm with Cython instead of Kabsch algorithm</p>
+</li>
+<li><p class="first">AngleStat class now supports unary minus operator.</p>
+</li>
+<li><p class="first">Recalculated <code class="code docutils literal"><span class="pre">average_stem_vres_positions</span></code> from the NR-list.</p>
+</li>
+<li><dl class="first docutils">
+<dt>In <code class="code docutils literal"><span class="pre">forgi.threedee.utilities.graph_pdb</span></code>: virtual stats and sum of angle stats</dt>
+<dd><p class="first last">to describe orientation of non-adjacent stems in multiloops.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first"><strong>Modified Residues</strong>: Better treatement of modified residues.
+We try to query PDBeChem to replace the modified residue with the unmodified parent.</p>
+</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-0-4">
 <h2>Changes in Version 0.4<a class="headerlink" href="#changes-in-version-0-4" title="Permalink to this headline">¶</a></h2>
 <ul>
@@ -66,7 +184,7 @@ to determine the direction of a bulge. This is used in the new member function <
 <li>Added function <code class="code docutils literal"><span class="pre">BulgeGraph.get_domains</span></code>, to return a lists of pseudoknots, multiloops and rods.
 The interface of this function might change in the future.</li>
 <li>Merged pull-request by tcarlile for <code class="code docutils literal"><span class="pre">forgi.graph.bulge_graph</span></code>:<ul>
-<li><code class="code docutils literal"><span class="pre">BulgeGraph.get_stem_edge(self,</span> <span class="pre">stem,</span> <span class="pre">pos)</span></code>: Returns 0 if pos on 5&#8217; edge of stem, returns 1 if pos on 3&#8217; edge of stem.</li>
+<li><code class="code docutils literal"><span class="pre">BulgeGraph.get_stem_edge(self,</span> <span class="pre">stem,</span> <span class="pre">pos)</span></code>: Returns 0 if pos on 5’ edge of stem, returns 1 if pos on 3’ edge of stem.</li>
 <li><code class="code docutils literal"><span class="pre">BulgeGraph.shortest_path(self,</span> <span class="pre">e1,</span> <span class="pre">e2)</span></code>:    Returns a list of the nodes along the shortest path between e1, and e2.</li>
 </ul>
 </li>
@@ -114,7 +232,7 @@ Replaces <code class="code docutils literal"><span class="pre">forgi.threedee.ut
 Now 0-length bulges are possible. This makes saving and loading stats consistent.</p>
 </li>
 <li><p class="first"><code class="code docutils literal"><span class="pre">self.get_coordinates_array</span></code> now returns a 2D <code class="code docutils literal"><span class="pre">nx3</span> <span class="pre">numpy</span> <span class="pre">array</span></code> holding n coordinate entries.
-You can use numpy&#8217;s <code class="code docutils literal"><span class="pre">.flatten()</span></code> to generate a 1D array. If you want to load a 1D flat coordinate array <code class="code docutils literal"><span class="pre">a</span></code>, use
+You can use numpy’s <code class="code docutils literal"><span class="pre">.flatten()</span></code> to generate a 1D array. If you want to load a 1D flat coordinate array <code class="code docutils literal"><span class="pre">a</span></code>, use
 <code class="code docutils literal"><span class="pre">self.load_coordinates_array(a.reshape((-1,3))</span></code></p>
 </li>
 <li><p class="first">Overrides the newly introduced method <code class="code docutils literal"><span class="pre">sorted_edges_for_mst</span></code> from BulgeGraph.
@@ -180,8 +298,8 @@ repeated comparisons to the same reference.</li>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

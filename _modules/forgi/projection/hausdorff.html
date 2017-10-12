@@ -1,38 +1,36 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.projection.hausdorff &mdash; forgi 0.4 documentation</title>
-    
+    <title>forgi.projection.hausdorff &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
-    <link rel="top" title="forgi 0.4 documentation" href="../../../index.html" />
-    <link rel="up" title="forgi" href="../../forgi.html" /> 
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../../../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -45,13 +43,14 @@
         
         
   <h1>Source code for forgi.projection.hausdorff</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
 <span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">..threedee.utilities</span> <span class="kn">import</span> <span class="n">vector</span> <span class="k">as</span> <span class="n">ftuv</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">projection2d</span> <span class="k">as</span> <span class="n">fhp</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">..threedee.utilities</span> <span class="k">import</span> <span class="n">vector</span> <span class="k">as</span> <span class="n">ftuv</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">projection2d</span> <span class="k">as</span> <span class="n">fhp</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
 
 <span class="n">__all__</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;offsets&quot;</span><span class="p">,</span> <span class="s2">&quot;modified_hausdorff_distance&quot;</span><span class="p">,</span> <span class="s2">&quot;hausdorff_distance&quot;</span><span class="p">,</span> 
          <span class="s2">&quot;locally_minimal_distance&quot;</span><span class="p">,</span> <span class="s2">&quot;globally_minimal_distance&quot;</span><span class="p">,</span> <span class="s2">&quot;get_box&quot;</span><span class="p">,</span> 
@@ -107,7 +106,7 @@
         <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">i</span><span class="o">=</span><span class="n">toskip</span><span class="p">[</span><span class="n">skip</span><span class="p">]</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="c1"># Iterate over to_iterate.</span>
         <span class="c1"># If we reached the end, increase to_iterate and </span>
         <span class="c1"># continue iteration with first added element.</span>
@@ -135,7 +134,7 @@
                 <span class="k">if</span> <span class="n">dd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dists</span><span class="p">:</span>
                     <span class="n">dists</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">=</span><span class="n">norm</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span>
         <span class="n">oldlen</span><span class="o">=</span><span class="n">to_iterate</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">to_iterate</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
-        <span class="k">print</span> <span class="p">(</span><span class="s2">&quot;sorting {} elements for newlength {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dists</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">newlength</span><span class="p">))</span>
+        <span class="c1">#print (&quot;sorting {} elements for newlength {}&quot;.format(len(dists.keys()), newlength))</span>
         <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dists</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">dists</span><span class="p">[</span><span class="n">x</span><span class="p">]):</span>
             <span class="k">if</span> <span class="n">length</span><span class="o">&lt;</span><span class="n">dists</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="o">&lt;</span><span class="n">newlength</span><span class="p">:</span>
                 <span class="n">to_iterate</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">dists</span><span class="p">[</span><span class="n">x</span><span class="p">]))</span>
@@ -206,8 +205,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">x</span><span class="o">=</span><span class="mi">0</span>
     <span class="n">y</span><span class="o">=</span><span class="mi">0</span>
-    <span class="n">oldx</span><span class="o">=</span><span class="bp">None</span>
-    <span class="n">oldy</span><span class="o">=</span><span class="bp">None</span>
+    <span class="n">oldx</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">oldy</span><span class="o">=</span><span class="kc">None</span>
     <span class="n">skip</span><span class="o">=</span><span class="mi">0</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">maxh</span><span class="o">=</span><span class="mi">0</span>
@@ -247,9 +246,9 @@
         <span class="n">h2</span><span class="o">=</span><span class="n">maxh</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;x: {}, y: {}, oldx: {}, oldy: {}, oldh: {}, maxh: {}, &quot;</span> 
-              <span class="s2">&quot;h1: {}, skip={}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">oldx</span><span class="p">,</span><span class="n">oldy</span><span class="p">,</span><span class="n">oldh</span><span class="p">,</span><span class="n">maxh</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span><span class="n">skip</span><span class="p">))</span>
-        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x: </span><span class="si">{}</span><span class="s2">, y: </span><span class="si">{}</span><span class="s2">, oldx: </span><span class="si">{}</span><span class="s2">, oldy: </span><span class="si">{}</span><span class="s2">, oldh: </span><span class="si">{}</span><span class="s2">, maxh: </span><span class="si">{}</span><span class="s2">, &quot;</span> 
+              <span class="s2">&quot;h1: </span><span class="si">{}</span><span class="s2">, skip=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">oldx</span><span class="p">,</span><span class="n">oldy</span><span class="p">,</span><span class="n">oldh</span><span class="p">,</span><span class="n">maxh</span><span class="p">,</span><span class="n">h1</span><span class="p">,</span><span class="n">skip</span><span class="p">))</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
@@ -258,7 +257,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
         <span class="k">raise</span>
 
-<div class="viewcode-block" id="modified_hausdorff_distance"><a class="viewcode-back" href="../../../apidoc/forgi.projection.hausdorff.html#forgi.projection.hausdorff.modified_hausdorff_distance">[docs]</a><span class="k">def</span> <span class="nf">modified_hausdorff_distance</span><span class="p">(</span> <span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">,</span> <span class="n">_</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="modified_hausdorff_distance"><a class="viewcode-back" href="../../../apidoc/forgi.projection.hausdorff.html#forgi.projection.hausdorff.modified_hausdorff_distance">[docs]</a><span class="k">def</span> <span class="nf">modified_hausdorff_distance</span><span class="p">(</span> <span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">,</span> <span class="n">_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the grid-based Modified Hausdorff distance between two aligned boolean matrices.</span>
 <span class="sd">    This distance was proposed in the following paper: TODO</span>
@@ -272,12 +271,12 @@
            <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">img</span><span class="p">)))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">max</span><span class="p">(</span> <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">)</span></div>
 
-<span class="k">def</span> <span class="nf">tp_fp_distance</span><span class="p">(</span> <span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">,</span> <span class="n">_</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">tp_fp_distance</span><span class="p">(</span> <span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">,</span> <span class="n">_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">tp</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">))</span>
     <span class="n">alle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">img</span><span class="p">,</span><span class="n">ref_img</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">alle</span><span class="o">/</span><span class="n">tp</span>
 
-<span class="k">def</span> <span class="nf">combined_distance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">,</span> <span class="n">_</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">combined_distance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">,</span> <span class="n">_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">tp_fp_distance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">)</span> <span class="o">+</span> <span class="n">hausdorff_distance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ref_img</span><span class="p">)</span>
 <span class="c1">##############################################################################</span>
 <span class="c1"># Helper functions for working with projections</span>
@@ -298,10 +297,10 @@
         <span class="n">center_ver</span><span class="o">-</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">center_ver</span><span class="o">+</span><span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">box</span></div>
 
-<span class="nd">@profile</span>
-<div class="viewcode-block" id="locally_minimal_distance"><a class="viewcode-back" href="../../../apidoc/forgi.projection.hausdorff.html#forgi.projection.hausdorff.locally_minimal_distance">[docs]</a><span class="k">def</span> <span class="nf">locally_minimal_distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> 
-                             <span class="n">start_rot</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">proj_dir</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                             <span class="n">maxiter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">advanced</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">virtual_atoms</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> 
+<div class="viewcode-block" id="locally_minimal_distance"><a class="viewcode-back" href="../../../apidoc/forgi.projection.hausdorff.html#forgi.projection.hausdorff.locally_minimal_distance">[docs]</a><span class="nd">@profile</span>
+<span class="k">def</span> <span class="nf">locally_minimal_distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> 
+                             <span class="n">start_rot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">proj_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                             <span class="n">maxiter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">advanced</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">virtual_atoms</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                              <span class="n">distance</span><span class="o">=</span><span class="n">hausdorff_distance</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Local optimization of the Hausdorff distance between a image and a CoarseGrainRNA</span>
@@ -342,11 +341,11 @@
         <span class="n">curr_best_rotation</span><span class="o">=</span><span class="n">start_rot</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">curr_best_rotation</span><span class="o">=</span><span class="mi">0</span>
-    <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">curr_best_offs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">curr_best_offs</span><span class="o">=</span><span class="n">offset</span>
-    <span class="k">if</span> <span class="n">proj_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">proj_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">curr_best_pro</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">proj_dir</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">curr_best_pro</span><span class="o">=</span><span class="n">to_polar</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">project_from</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
@@ -355,13 +354,13 @@
     <span class="n">projection</span><span class="o">=</span><span class="n">fhp</span><span class="o">.</span><span class="n">Projection2D</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">from_polar</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">curr_best_pro</span><span class="p">)),</span> 
                                 <span class="n">project_virtual_atoms</span><span class="o">=</span><span class="n">virtual_atoms</span><span class="p">)</span>
     <span class="n">box</span><span class="o">=</span><span class="n">get_box</span><span class="p">(</span><span class="n">projection</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">curr_best_offs</span><span class="p">)</span>
-    <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+    <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                          <span class="n">rotate</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="p">)</span>
     <span class="n">curr_best_score</span><span class="o">=</span><span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
 
     <span class="c1">#Stepwise improve score</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
-        <span class="n">found</span><span class="o">=</span><span class="bp">False</span>
+        <span class="n">found</span><span class="o">=</span><span class="kc">False</span>
         <span class="c1"># ---------------</span>
         <span class="c1"># Optimize offset      </span>
         <span class="c1"># --------------- </span>
@@ -373,7 +372,7 @@
             <span class="n">co</span><span class="o">=</span><span class="n">co</span><span class="o">*</span><span class="n">offset_stepwidth</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
                 <span class="n">box</span><span class="o">=</span><span class="n">get_box</span><span class="p">(</span><span class="n">projection</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">curr_best_offs</span><span class="o">+</span><span class="n">co</span><span class="p">)</span>
-                <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                                      <span class="n">rotate</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="p">)</span>
                 <span class="n">tmp_score</span><span class="o">=</span><span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">curr_best_score</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">tmp_score</span><span class="o">&gt;</span><span class="n">curr_best_score</span><span class="p">:</span>
@@ -390,7 +389,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">pass</span> <span class="c1">#print (&quot;Offset: No change in direction &quot;, co)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">best_change_offs</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))):</span>
-            <span class="n">found</span><span class="o">=</span><span class="bp">True</span>
+            <span class="n">found</span><span class="o">=</span><span class="kc">True</span>
         <span class="c1">#Save the new currently best offset</span>
         <span class="n">curr_best_offs</span><span class="o">=</span><span class="n">curr_best_offs</span><span class="o">+</span><span class="n">best_change_offs</span>
 
@@ -404,7 +403,7 @@
         <span class="n">best_change_rot</span><span class="o">=</span><span class="mi">0</span> <span class="c1">#degrees</span>
         <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
-                <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                                      <span class="n">rotate</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="o">+</span><span class="n">cr</span><span class="p">)</span>
                 <span class="n">tmp_score</span><span class="o">=</span><span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">curr_best_score</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">tmp_score</span><span class="o">&gt;</span><span class="n">curr_best_score</span><span class="p">:</span>
@@ -421,7 +420,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">pass</span> <span class="c1">#print (&quot;Rotation: No change in direction &quot;, cr)</span>
         <span class="k">if</span> <span class="n">best_change_rot</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-            <span class="n">found</span><span class="o">=</span><span class="bp">False</span>
+            <span class="n">found</span><span class="o">=</span><span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span> <span class="c1"># If we didn&#39;t change the offset and didn&#39;t change the rotation, found stays True</span>
         <span class="n">curr_best_rotation</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="o">+</span><span class="n">best_change_rot</span>
@@ -441,7 +440,7 @@
                 <span class="n">tmp_projection</span><span class="o">=</span><span class="n">fhp</span><span class="o">.</span><span class="n">Projection2D</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">from_polar</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">curr_best_pro</span><span class="o">+</span><span class="n">cp</span><span class="p">)),</span> 
                                 <span class="n">project_virtual_atoms</span><span class="o">=</span><span class="n">virtual_atoms</span><span class="p">)</span>
                 <span class="n">box</span><span class="o">=</span><span class="n">get_box</span><span class="p">(</span><span class="n">tmp_projection</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">curr_best_offs</span><span class="p">)</span>
-                <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">tmp_projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">tmp_projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                                                <span class="n">rotate</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="p">)</span>
                 <span class="n">tmp_score</span><span class="o">=</span><span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">curr_best_score</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">tmp_score</span><span class="o">&gt;</span><span class="n">curr_best_score</span><span class="p">:</span>
@@ -463,7 +462,7 @@
                 <span class="k">pass</span> <span class="c1">#print (&quot;Projection: No change in direction &quot;, cp)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">change_pro</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">))):</span>
             <span class="c1"># If we didn&#39;t change offset, projection or rotation, found still stays True</span>
-            <span class="n">found</span><span class="o">=</span><span class="bp">False</span>
+            <span class="n">found</span><span class="o">=</span><span class="kc">False</span>
         <span class="n">curr_best_pro</span><span class="o">=</span><span class="n">curr_best_pro</span><span class="o">+</span><span class="n">change_pro</span>
         <span class="k">if</span> <span class="n">found</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">curr_best_score</span><span class="p">:</span>
             <span class="k">break</span>
@@ -475,12 +474,12 @@
     <span class="n">tmp_projection</span><span class="o">=</span><span class="n">fhp</span><span class="o">.</span><span class="n">Projection2D</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">from_polar</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">curr_best_pro</span><span class="p">)),</span> 
                                   <span class="n">project_virtual_atoms</span><span class="o">=</span><span class="n">virtual_atoms</span><span class="p">)</span>
     <span class="n">box</span><span class="o">=</span><span class="n">get_box</span><span class="p">(</span><span class="n">tmp_projection</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">curr_best_offs</span><span class="p">)</span>
-    <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">tmp_projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+    <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">tmp_projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                                                <span class="n">rotate</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="p">)</span>
     <span class="n">best_score</span> <span class="o">=</span> <span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">best_score</span><span class="o">==</span><span class="n">curr_best_score</span>
     <span class="n">box</span><span class="o">=</span><span class="n">get_box</span><span class="p">(</span><span class="n">projection</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">curr_best_offs</span><span class="p">)</span>
-    <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+    <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">projection</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                                                <span class="n">rotate</span><span class="o">=</span><span class="n">curr_best_rotation</span><span class="p">)</span>
     <span class="n">best_score</span> <span class="o">=</span> <span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">best_score</span><span class="o">==</span><span class="n">curr_best_score</span>
@@ -489,8 +488,8 @@
     <span class="k">return</span> <span class="n">curr_best_score</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="p">[</span> <span class="n">curr_best_pro</span><span class="p">,</span> <span class="n">curr_best_rotation</span><span class="p">,</span> <span class="n">curr_best_offs</span> <span class="p">]</span></div>
 
 <div class="viewcode-block" id="try_parameters"><a class="viewcode-back" href="../../../apidoc/forgi.projection.hausdorff.html#forgi.projection.hausdorff.try_parameters">[docs]</a><span class="k">def</span> <span class="nf">try_parameters</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> 
-                   <span class="n">rotations</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">180</span><span class="p">),</span> <span class="n">offsets</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),),</span> <span class="n">proj_directions</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-                   <span class="n">virtual_atoms</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                   <span class="n">rotations</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">180</span><span class="p">),</span> <span class="n">offsets</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),),</span> <span class="n">proj_directions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">virtual_atoms</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Try all combinations of the given starting parameters </span>
 <span class="sd">    (offset, in-plane rotation and projection direction)</span>
@@ -510,11 +509,11 @@
 <span class="sd">              Where best_distance is a float, best_image a matrix and best params is a triple:</span>
 <span class="sd">              np.array([theta, phi]), degrees, np.array([x_offset, y_offset])</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">proj_directions</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">proj_directions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">proj_directions</span><span class="o">=</span><span class="p">[</span><span class="n">to_polar</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">project_from</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]]</span>
     <span class="n">best_distance</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
     <span class="n">params</span><span class="o">=</span><span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])]</span>
-    <span class="n">best_img</span><span class="o">=</span><span class="bp">None</span>
+    <span class="n">best_img</span><span class="o">=</span><span class="kc">None</span>
     <span class="k">for</span> <span class="n">rot</span> <span class="ow">in</span> <span class="n">rotations</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">offsets</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">proj</span> <span class="ow">in</span> <span class="n">proj_directions</span><span class="p">:</span>
@@ -590,7 +589,7 @@
     <span class="n">best_score</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
     <span class="n">decrease</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">project_dir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">start_points</span><span class="p">):</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;{:2.0%}</span><span class="se">\r</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">start_points</span><span class="p">)))</span><span class="c1">#Progress</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:2.0%}</span><span class="se">\r</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">start_points</span><span class="p">)))</span><span class="c1">#Progress</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
         <span class="n">proj</span><span class="o">=</span><span class="n">fhp</span><span class="o">.</span><span class="n">Projection2D</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">from_polar</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)),</span> 
                               <span class="n">project_virtual_atoms</span><span class="o">=</span><span class="n">virtual_atoms</span><span class="p">)</span>
@@ -606,7 +605,7 @@
         <span class="n">loc_best_score</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">rot</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">starting_rotations</span><span class="p">,</span> <span class="n">starting_offsets</span><span class="p">):</span>
             <span class="n">box</span><span class="o">=</span><span class="n">get_box</span><span class="p">(</span><span class="n">proj</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
-            <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">proj</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="n">rot</span><span class="p">)</span>
+            <span class="n">img</span><span class="p">,</span><span class="n">_</span><span class="o">=</span><span class="n">proj</span><span class="o">.</span><span class="n">rasterize</span><span class="p">(</span><span class="n">dpi</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="n">box</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="n">rot</span><span class="p">)</span>
             <span class="n">score</span> <span class="o">=</span> <span class="n">distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">score</span><span class="o">&lt;</span><span class="n">loc_best_score</span><span class="p">:</span>
                 <span class="n">loc_best_score</span><span class="o">=</span><span class="n">score</span>
@@ -643,23 +642,23 @@
             <span class="k">break</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   </span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Global optimization performe!</span><span class="se">\n</span><span class="s2">&quot;</span>
-              <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">{} local optimizations performed</span><span class="se">\n</span><span class="s2">&quot;</span>
-              <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">{} skipped (longest distance)</span><span class="se">\n</span><span class="s2">&quot;</span>
-              <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">{} skipped (score)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">no_heur</span><span class="p">,</span> <span class="n">la_heur</span><span class="p">,</span> <span class="n">score_heur</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Global optimization performe!</span><span class="se">\n</span><span class="s2">&quot;</span>
+              <span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> local optimizations performed</span><span class="se">\n</span><span class="s2">&quot;</span>
+              <span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> skipped (longest distance)</span><span class="se">\n</span><span class="s2">&quot;</span>
+              <span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> skipped (score)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">no_heur</span><span class="p">,</span> <span class="n">la_heur</span><span class="p">,</span> <span class="n">score_heur</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">no_heur</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;During global optimization, NO SMALL DISTANCE could be found.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                  <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">{} attempts were skipped because the diameters didn&#39;t match.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">la_heur</span><span class="p">))</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;During global optimization, NO SMALL DISTANCE could be found.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                  <span class="s2">&quot;</span><span class="se">\t</span><span class="si">{}</span><span class="s2"> attempts were skipped because the diameters didn&#39;t match.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">la_heur</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])]</span>
     <span class="k">return</span> <span class="n">best_score</span><span class="p">,</span> <span class="n">best_img</span><span class="p">,</span> <span class="n">best_params</span>
 
 <div class="viewcode-block" id="globally_minimal_distance"><a class="viewcode-back" href="../../../apidoc/forgi.projection.hausdorff.html#forgi.projection.hausdorff.globally_minimal_distance">[docs]</a><span class="k">def</span> <span class="nf">globally_minimal_distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span>                               
                               <span class="n">start_points</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
                               <span class="n">starting_rotations</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> 
                               <span class="n">starting_offsets</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> <span class="p">),</span> 
-                              <span class="n">local_maxiter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">use_heuristic</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">virtual_atoms</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-                              <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">hausdorff_distance</span><span class="p">):</span>
+                              <span class="n">local_maxiter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">use_heuristic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">virtual_atoms</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                              <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">hausdorff_distance</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Global minimization of Hausdorff distance.</span>
 
@@ -707,7 +706,7 @@
 
     <span class="c1">#Global search in vicinity of best match</span>
     <span class="n">sp</span> <span class="o">=</span> <span class="n">get_start_points_near</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">start_points</span><span class="p">,</span> <span class="n">best_params</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">best_params</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Current best score {}, refining on {} points&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">best_score</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sp</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Current best score </span><span class="si">{}</span><span class="s2">, refining on </span><span class="si">{}</span><span class="s2"> points&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">best_score</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sp</span><span class="p">)))</span>
     <span class="n">best_score1</span><span class="p">,</span> <span class="n">best_img1</span><span class="p">,</span> <span class="n">best_params1</span> <span class="o">=</span><span class="n">_try_startpoints</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span>
                       <span class="p">[</span><span class="n">best_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">best_params</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">local_maxiter</span><span class="p">,</span> <span class="n">virtual_atoms</span><span class="p">,</span>
                       <span class="n">use_heuristic</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
@@ -715,7 +714,7 @@
         <span class="n">best_score</span><span class="o">=</span><span class="n">best_score1</span>
         <span class="n">best_params</span><span class="o">=</span><span class="n">best_params1</span>
         <span class="n">best_img</span><span class="o">=</span><span class="n">best_img1</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Refinement helped.&quot;</span><span class="p">,</span> <span class="n">best_score</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Refinement helped.&quot;</span><span class="p">,</span> <span class="n">best_score</span><span class="p">)</span>
     <span class="c1">#import matplotlib.pyplot as plt</span>
     <span class="c1">#fig, ax=plt.subplots(2)</span>
     <span class="c1">#ax[0].imshow(ref_img, interpolation=&quot;none&quot;, cmap=&#39;gray&#39;)</span>
@@ -728,7 +727,7 @@
     <span class="n">score</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">locally_minimal_distance</span><span class="p">(</span><span class="n">ref_img</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> 
                                                   <span class="n">best_params</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">best_params</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">best_params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                                                   <span class="n">maxiter</span><span class="o">=</span><span class="mi">20</span><span class="o">*</span><span class="n">local_maxiter</span><span class="p">,</span>
-                                                  <span class="n">advanced</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                  <span class="n">advanced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                                   <span class="n">virtual_atoms</span><span class="o">=</span><span class="n">virtual_atoms</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">distance</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">score</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span> <span class="n">params</span></div>
@@ -746,9 +745,9 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Sep 05, 2016.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

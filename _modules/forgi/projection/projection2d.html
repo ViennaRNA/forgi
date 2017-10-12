@@ -1,38 +1,36 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.projection.projection2d &mdash; forgi 0.4 documentation</title>
-    
+    <title>forgi.projection.projection2d &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
-    <link rel="top" title="forgi 0.4 documentation" href="../../../index.html" />
-    <link rel="up" title="forgi" href="../../forgi.html" /> 
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../../../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -45,30 +43,32 @@
         
         
   <h1>Source code for forgi.projection.projection2d</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ascii</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">chr</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">filter</span><span class="p">,</span> <span class="nb">hex</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span>
-                      <span class="nb">map</span><span class="p">,</span> <span class="nb">next</span><span class="p">,</span> <span class="nb">oct</span><span class="p">,</span> <span class="nb">open</span><span class="p">,</span> <span class="nb">pow</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span>
-                      <span class="nb">str</span><span class="p">,</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">zip</span><span class="p">)</span> 
-<span class="c1"># int is not imported from builtins here for performance reasons. </span>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="c1"># int is not imported from builtins here for performance reasons.</span>
 <span class="c1"># See: https://github.com/PythonCharmers/python-future/issues/136</span>
-<span class="kn">from</span> <span class="nn">future.builtins.disabled</span> <span class="kn">import</span> <span class="p">(</span><span class="nb">apply</span><span class="p">,</span> <span class="nb">cmp</span><span class="p">,</span> <span class="nb">coerce</span><span class="p">,</span> <span class="nb">execfile</span><span class="p">,</span>
-                             <span class="nb">file</span><span class="p">,</span> <span class="nb">long</span><span class="p">,</span> <span class="nb">raw_input</span><span class="p">,</span> <span class="nb">reduce</span><span class="p">,</span> <span class="nb">reload</span><span class="p">,</span>
-                             <span class="nb">unicode</span><span class="p">,</span> <span class="nb">xrange</span><span class="p">,</span> <span class="ne">StandardError</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="p">(</span><span class="n">ascii</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">chr</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">filter</span><span class="p">,</span> <span class="nb">hex</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span>
+                      <span class="nb">map</span><span class="p">,</span> <span class="nb">next</span><span class="p">,</span> <span class="nb">oct</span><span class="p">,</span> <span class="nb">open</span><span class="p">,</span> <span class="nb">pow</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span>
+                      <span class="nb">str</span><span class="p">,</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">zip</span><span class="p">,</span> <span class="nb">object</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="kn">as</span> <span class="nn">ftuv</span>
-<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="kn">as</span> <span class="nn">ftug</span>
-<span class="kn">import</span> <span class="nn">collections</span> <span class="kn">as</span> <span class="nn">col</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="k">as</span> <span class="nn">ftuv</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="k">as</span> <span class="nn">ftug</span>
+<span class="kn">import</span> <span class="nn">forgi.utilities.stuff</span> <span class="k">as</span> <span class="nn">fus</span>
+<span class="kn">import</span> <span class="nn">collections</span> <span class="k">as</span> <span class="nn">col</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
 <span class="c1"># import networkx as nx Takes to long. Import only when needed</span>
 <span class="kn">import</span> <span class="nn">warnings</span><span class="o">,</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This module uses code by David Eppstein </span>
+<span class="sd">This module uses code by David Eppstein</span>
 <span class="sd">(http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/)</span>
-<span class="sd">under the PSF license and code by Syrtis Major </span>
-<span class="sd">(c)2014-2015 (http://stackoverflow.com/a/24567352/5069869) under the BSD 3-Clause license </span>
+<span class="sd">under the PSF license and code by Syrtis Major</span>
+<span class="sd">(c)2014-2015 (http://stackoverflow.com/a/24567352/5069869) under the BSD 3-Clause license</span>
 <span class="sd">and potentially copyrighted code from matplotlib under the PSF license</span>
 <span class="sd">(http://matplotlib.org/examples/api/line_with_text.html).</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -76,11 +76,13 @@
 <span class="k">try</span><span class="p">:</span>
     <span class="n">profile</span>  <span class="c1">#The @profile decorator from line_profiler (kernprof)</span>
 <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
-<div class="viewcode-block" id="profile"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.profile">[docs]</a>    <span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> 
+<div class="viewcode-block" id="profile"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.profile">[docs]</a>    <span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span></div>
 
 
-<div class="viewcode-block" id="to_rgb"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.to_rgb">[docs]</a><span class="k">def</span> <span class="nf">to_rgb</span><span class="p">(</span><span class="n">im</span><span class="p">):</span>
+
+
+<div class="viewcode-block" id="to_rgb"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.to_rgb">[docs]</a><span class="k">def</span> <span class="nf">to_rgb</span><span class="p">(</span><span class="n">im</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert an np array image from grayscale to RGB</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -96,7 +98,7 @@
         <span class="k">return</span> <span class="n">newImg</span></div>
 
 
-<div class="viewcode-block" id="to_grayscale"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.to_grayscale">[docs]</a><span class="k">def</span> <span class="nf">to_grayscale</span><span class="p">(</span><span class="n">im</span><span class="p">):</span>
+<div class="viewcode-block" id="to_grayscale"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.to_grayscale">[docs]</a><span class="k">def</span> <span class="nf">to_grayscale</span><span class="p">(</span><span class="n">im</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert an np array image from RGB to grayscale</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -109,7 +111,7 @@
         <span class="n">newImg</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">im</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="o">+</span><span class="n">im</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="o">+</span><span class="n">im</span><span class="p">[:,:,</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="mi">255</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span>
         <span class="k">return</span> <span class="n">newImg</span></div>
 
-<div class="viewcode-block" id="rasterized_2d_coordinates"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.rasterized_2d_coordinates">[docs]</a><span class="k">def</span> <span class="nf">rasterized_2d_coordinates</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">angstrom_per_cell</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rotate</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="rasterized_2d_coordinates"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.rasterized_2d_coordinates">[docs]</a><span class="k">def</span> <span class="nf">rasterized_2d_coordinates</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">angstrom_per_cell</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rotate</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="n">angle</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">rotate</span><span class="p">)</span>
     <span class="n">c</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
     <span class="n">s</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
@@ -123,24 +125,24 @@
     <span class="k">assert</span> <span class="p">(</span><span class="n">a</span><span class="o">==</span><span class="p">(</span><span class="n">b</span><span class="o">//</span><span class="n">angstrom_per_cell</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">a</span></div>
 
-<div class="viewcode-block" id="crop_coordinates_to_bounds"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.crop_coordinates_to_bounds">[docs]</a><span class="k">def</span> <span class="nf">crop_coordinates_to_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">):</span>
+<div class="viewcode-block" id="crop_coordinates_to_bounds"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.crop_coordinates_to_bounds">[docs]</a><span class="k">def</span> <span class="nf">crop_coordinates_to_bounds</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">num_cells</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :a: an array of x,y coordinates (modified in place)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">num_cells</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
 
-<span class="c1">### The following functions are from </span>
+<span class="c1">### The following functions are from</span>
 <span class="c1">### http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/</span>
 <span class="c1">### Used under the PSF License</span>
 <span class="c1">############################################################################################</span>
 <span class="c1">### convex hull (Graham scan by x-coordinate) and diameter of a set of points</span>
 <span class="c1">### David Eppstein, UC Irvine, 7 Mar 2002</span>
-<div class="viewcode-block" id="orientation"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.orientation">[docs]</a><span class="k">def</span> <span class="nf">orientation</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">r</span><span class="p">):</span>
+<div class="viewcode-block" id="orientation"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.orientation">[docs]</a><span class="k">def</span> <span class="nf">orientation</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">r</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.&#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
 <span class="c1">#@profile</span>
-<div class="viewcode-block" id="hulls"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.hulls">[docs]</a><span class="k">def</span> <span class="nf">hulls</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
+<div class="viewcode-block" id="hulls"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.hulls">[docs]</a><span class="k">def</span> <span class="nf">hulls</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Graham scan to find upper and lower convex hulls of a set of 2d points.&#39;&#39;&#39;</span>
     <span class="n">U</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
@@ -152,7 +154,7 @@
         <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">U</span><span class="p">,</span><span class="n">L</span></div>
 
-<div class="viewcode-block" id="rotatingCalipers"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.rotatingCalipers">[docs]</a><span class="k">def</span> <span class="nf">rotatingCalipers</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
+<div class="viewcode-block" id="rotatingCalipers"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.rotatingCalipers">[docs]</a><span class="k">def</span> <span class="nf">rotatingCalipers</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Given a list of 2d points, finds all ways of sandwiching the points</span>
 <span class="sd">between two parallel lines that touch one point each, and yields the sequence</span>
 <span class="sd">of pairs of points touched by each pair of lines.&#39;&#39;&#39;</span>
@@ -161,11 +163,11 @@
     <span class="n">j</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">U</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
-        
+
         <span class="c1"># if all the way through one side of hull, advance the other side</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="n">j</span> <span class="o">-=</span> <span class="mi">1</span>
         <span class="k">elif</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-        
+
         <span class="c1"># still points left on both lists, compare slopes of next hull edges</span>
         <span class="c1"># being careful to avoid divide-by-zero in slope calculation</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">U</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> \
@@ -173,13 +175,13 @@
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span> <span class="n">j</span> <span class="o">-=</span> <span class="mi">1</span></div>
 
-<div class="viewcode-block" id="diameter"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.diameter">[docs]</a><span class="k">def</span> <span class="nf">diameter</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
+<div class="viewcode-block" id="diameter"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.diameter">[docs]</a><span class="k">def</span> <span class="nf">diameter</span><span class="p">(</span><span class="n">Points</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Given a list of 2d points, returns the pair that&#39;s farthest apart.&#39;&#39;&#39;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">diam</span><span class="p">,</span><span class="n">pair</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
-                    <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="ow">in</span> <span class="n">rotatingCalipers</span><span class="p">(</span><span class="n">Points</span><span class="p">)],</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>    
+                    <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="ow">in</span> <span class="n">rotatingCalipers</span><span class="p">(</span><span class="n">Points</span><span class="p">)],</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">([((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
                      <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="ow">in</span> <span class="n">rotatingCalipers</span><span class="p">(</span><span class="n">Points</span><span class="p">)]))</span>
         <span class="k">raise</span>
     <span class="k">return</span> <span class="n">pair</span></div>
@@ -188,12 +190,12 @@
 <span class="c1">#### END David Eppstein</span>
 
 <span class="c1">#@profile</span>
-<div class="viewcode-block" id="rotate2D"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.rotate2D">[docs]</a><span class="k">def</span> <span class="nf">rotate2D</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">cosPhi</span><span class="p">,</span> <span class="n">sinPhi</span><span class="p">):</span>
+<div class="viewcode-block" id="rotate2D"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.rotate2D">[docs]</a><span class="k">def</span> <span class="nf">rotate2D</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">cosPhi</span><span class="p">,</span> <span class="n">sinPhi</span><span class="p">):</span>
     <span class="n">x</span><span class="o">=</span><span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">cosPhi</span><span class="o">-</span><span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">sinPhi</span>
     <span class="n">y</span><span class="o">=</span><span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">sinPhi</span><span class="o">+</span><span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">cosPhi</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="bresenham"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.bresenham">[docs]</a><span class="k">def</span> <span class="nf">bresenham</span><span class="p">(</span><span class="n">start</span><span class="p">,</span><span class="n">end</span><span class="p">):</span>
+<div class="viewcode-block" id="bresenham"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.bresenham">[docs]</a><span class="k">def</span> <span class="nf">bresenham</span><span class="p">(</span><span class="n">start</span><span class="p">,</span><span class="n">end</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rasterize a line from start to end onto a grid with grid-width 1.</span>
 
@@ -241,39 +243,39 @@
     <span class="k">return</span> <span class="n">points</span></div>
 
 
-<div class="viewcode-block" id="Projection2D"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D">[docs]</a><span class="k">class</span> <span class="nc">Projection2D</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D">[docs]</a><span class="k">class</span> <span class="nc">Projection2D</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A 2D Projection of a CoarseGrainRNA unto a 2D-plane</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@profile</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">proj_direction</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">project_virtual_atoms</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">proj_direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">project_virtual_atoms</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">project_virtual_residues</span> <span class="o">=</span> <span class="p">[]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param cg: a CoarseGrainRNA object with 3D coordinates for every element</span>
 
-<span class="sd">                   .. note:: </span>
-<span class="sd">                      The projection is generated from this cg, but it is not associated </span>
+<span class="sd">                   .. note::</span>
+<span class="sd">                      The projection is generated from this cg, but it is not associated</span>
 <span class="sd">                      with it after construction.</span>
 <span class="sd">                      Thus future changes of the cg are not reflected in the projection.</span>
 
-<span class="sd">        :param proj_direction: a carthesian vector (in 3D space) in the direction of projection. </span>
+<span class="sd">        :param proj_direction: a carthesian vector (in 3D space) in the direction of projection.</span>
 <span class="sd">                               The length of this vector is not used.</span>
 <span class="sd">                               If proj_direction is None, cg.project_from is used.</span>
 <span class="sd">                               If proj_direction and cg.project_from is None, an error is raised.</span>
 <span class="sd">        :param rotate: Degrees. Rotate the projection by this amount.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">#: The projected coordinates of all stems</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cross_points</span><span class="o">=</span><span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cross_points</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span><span class="o">=</span><span class="kc">None</span>
 
         <span class="c1">#Calculate orthonormal basis of projection plane.</span>
-        <span class="k">if</span> <span class="n">proj_direction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="c1">#Compare to none, because `if np.array:` raises ValueError.</span>
+        <span class="k">if</span> <span class="n">proj_direction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1">#Compare to none, because `if np.array:` raises ValueError.</span>
             <span class="n">proj_direction</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">proj_direction</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">cg</span><span class="o">.</span><span class="n">project_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="c1"># We make a copy here. In case cg.project_from is modified, </span>
+        <span class="k">elif</span> <span class="n">cg</span><span class="o">.</span><span class="n">project_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We make a copy here. In case cg.project_from is modified,</span>
             <span class="c1"># we still want to be able to look up from what direction the projection was generated.</span>
             <span class="n">proj_direction</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">project_from</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -298,7 +300,7 @@
         <span class="n">shift</span><span class="o">=</span><span class="p">(</span><span class="n">v1</span><span class="o">+</span><span class="n">v2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">shift</span><span class="p">,</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">shift</span><span class="p">)</span>
-        
+
         <span class="k">if</span> <span class="n">project_virtual_atoms</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="o">-</span><span class="n">shift</span>
         <span class="k">if</span> <span class="n">project_virtual_residues</span><span class="p">:</span>
@@ -321,8 +323,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">rotation</span><span class="p">)</span>
 
     <span class="c1">### Functions modifying the projection in place ###</span>
-    <span class="nd">@profile</span>
-<div class="viewcode-block" id="Projection2D.rotate"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.rotate"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.rotate">[docs]</a>    <span class="nd">@profile</span>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rotate the projection in place around the origin (0,0)</span>
 
@@ -330,8 +332,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">angle</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
         <span class="n">c</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">s</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>        
-        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span><span class="o">=</span><span class="bp">None</span>
+        <span class="n">s</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span><span class="o">=</span><span class="kc">None</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">rotate2D</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span> <span class="n">s</span><span class="p">),</span> <span class="n">rotate2D</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="p">,</span><span class="n">s</span><span class="p">))</span>
 
@@ -341,16 +343,16 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">virtual_residue_numbers</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_virtual_residues</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_residues</span><span class="p">,</span> <span class="n">transRotMat</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Projection2D.condense_points"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.condense_points">[docs]</a>    <span class="k">def</span> <span class="nf">condense_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.condense_points"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.condense_points">[docs]</a>    <span class="k">def</span> <span class="nf">condense_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Condenses several projection points that are within a range of less than cutoff into</span>
 <span class="sd">        one point. This function modifies this Projection2D object.</span>
-<span class="sd">  </span>
+
 <span class="sd">        .. note::</span>
-<span class="sd">           The result depends on the ordering of the dictionary holding </span>
+<span class="sd">           The result depends on the ordering of the dictionary holding</span>
 <span class="sd">           the nodes and might thus be pseudorandomly</span>
 
-<span class="sd">        :param cutoff: Two point with a distance smaller than cuttoff are contracted. </span>
+<span class="sd">        :param cutoff: Two point with a distance smaller than cuttoff are contracted.</span>
 <span class="sd">                       A value below 20 is reasonable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">cutoff</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span> <span class="k">return</span>
@@ -358,23 +360,23 @@
             <span class="k">pass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">remove_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">selfloop_edges</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="Projection2D.condense"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.condense">[docs]</a>    <span class="k">def</span> <span class="nf">condense</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.condense"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.condense">[docs]</a>    <span class="k">def</span> <span class="nf">condense</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Condenses points that are within the cutoff of another point or edge (=line segment) </span>
+<span class="sd">        Condenses points that are within the cutoff of another point or edge (=line segment)</span>
 <span class="sd">        into a new point. This function modifies this Projection2D object.</span>
-<span class="sd">        </span>
-<span class="sd">        The contraction of two points works like documented in </span>
+
+<span class="sd">        The contraction of two points works like documented in</span>
 <span class="sd">        `self.condense_points(self, cutoff)`.</span>
-<span class="sd">        If a node is close to a line segment, a new point is generated between </span>
+<span class="sd">        If a node is close to a line segment, a new point is generated between</span>
 <span class="sd">        this node and the line segment. Then the original line and the original node</span>
 <span class="sd">        are deleted and all connections attached to the new point.</span>
-<span class="sd">  </span>
+
 <span class="sd">        .. note::</span>
-<span class="sd">           The result depends on the ordering of the dictionary holding the nodes and </span>
+<span class="sd">           The result depends on the ordering of the dictionary holding the nodes and</span>
 <span class="sd">           might thus be pseudorandomly</span>
 
-<span class="sd">        </span>
-<span class="sd">        :param cutoff: Two point with a distance smaller than cuttoff are contracted. </span>
+
+<span class="sd">        :param cutoff: Two point with a distance smaller than cuttoff are contracted.</span>
 <span class="sd">                       A value below 20 is reasonable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">cutoff</span><span class="o">&lt;=</span><span class="mi">0</span><span class="p">:</span> <span class="k">return</span>
@@ -387,7 +389,7 @@
     <span class="k">def</span> <span class="nf">vres_iterator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">nr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_residue_numbers</span><span class="p">):</span>
             <span class="k">yield</span> <span class="n">nr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_virtual_residues</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-<div class="viewcode-block" id="Projection2D.get_vres_by_position"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_vres_by_position">[docs]</a>    <span class="k">def</span> <span class="nf">get_vres_by_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_vres_by_position"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_vres_by_position">[docs]</a>    <span class="k">def</span> <span class="nf">get_vres_by_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param pos: The nucleotide position in the sequence</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -406,10 +408,10 @@
     <span class="k">def</span> <span class="nf">crossingPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        All points, where 2 segments intersect</span>
-<span class="sd">        </span>
+
 <span class="sd">        A list of triples `(key1, key2, coordinate)`, where coordinate is a 2D vector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cross_points</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cross_points</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cross_points</span><span class="o">=</span><span class="n">col</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">key1</span><span class="p">,</span> <span class="n">key2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">cr</span> <span class="ow">in</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">seg_intersect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">key1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">key2</span><span class="p">]):</span>
@@ -424,26 +426,26 @@
 
 <span class="sd">        This graph is stored as a `networkx` graph object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_build_proj_graph</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        All points that are at the ends of coarse-grain elements. </span>
+<span class="sd">        All points that are at the ends of coarse-grain elements.</span>
 <span class="sd">        This does not include points where coarse grain elements intersect in the projection.</span>
-<span class="sd">  </span>
+
 <span class="sd">        Some points might be duplicates</span>
-<span class="sd">        </span>
+
 <span class="sd">        :returns: A generator yielding all points.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        
+
         <span class="c1"># Exclude m and i Elements, as they are always flanked by stems.</span>
-        <span class="k">return</span> <span class="p">(</span> <span class="n">p</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="s2">&quot;i&quot;</span> <span class="ow">and</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="s2">&quot;m&quot;</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="p">(</span> <span class="n">p</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="s2">&quot;i&quot;</span> <span class="ow">and</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">!=</span><span class="s2">&quot;m&quot;</span><span class="p">)</span>
     <span class="c1">### Functions returning descriptors of the projection, mostly independent on the resolution ###</span>
 
-    <span class="c1">### Function returning descriptors of the projection, dependent on the resolution ###    </span>
-<div class="viewcode-block" id="Projection2D.get_bounding_box"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_bounding_box">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounding_box</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+    <span class="c1">### Function returning descriptors of the projection, dependent on the resolution ###</span>
+<div class="viewcode-block" id="Projection2D.get_bounding_box"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_bounding_box">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounding_box</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the coordinates for a box that contains all points of the 2D projection.</span>
 
@@ -459,7 +461,7 @@
         <span class="c1">#print &quot;BB&quot;,  left, right, bottom, top</span>
         <span class="k">return</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">top</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_bounding_square"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_bounding_square">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounding_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_bounding_square"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_bounding_square">[docs]</a>    <span class="k">def</span> <span class="nf">get_bounding_square</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the coordinates for a square that contains all points of the 2D projection.</span>
 
@@ -472,81 +474,82 @@
         <span class="n">y</span><span class="o">=</span><span class="p">(</span><span class="n">bb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">bb</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
         <span class="k">return</span> <span class="n">x</span><span class="o">-</span><span class="n">length</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="n">length</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="n">length</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="n">length</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_branchpoint_count"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_branchpoint_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_branchpoint_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_branchpoint_count"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_branchpoint_count">[docs]</a>    <span class="k">def</span> <span class="nf">get_branchpoint_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the number of branchpoint.</span>
 
-<span class="sd">        .. note:: </span>
+<span class="sd">        .. note::</span>
 <span class="sd">           This measure is sensitive to the resolution of a projection.</span>
 <span class="sd">           In an AFM image, one might not see all branching points.</span>
-<span class="sd">    </span>
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 
 <span class="sd">        :param degree: If degree is None, count all points with degree&gt;=3</span>
 <span class="sd">                       Else: only count (branch)points of the given degree</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
-        <span class="k">if</span> <span class="n">degree</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span><span class="o">&gt;=</span><span class="mi">3</span><span class="p">])</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+        <span class="k">assert</span> <span class="nb">int</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">__version__</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;This function only works with networkx version 2, not </span><span class="si">{}</span><span class="s2">!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">degree</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;=</span><span class="mi">3</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span><span class="o">==</span><span class="n">degree</span><span class="p">])</span></div>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">degree</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_cyclebasis_len"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_cyclebasis_len">[docs]</a>    <span class="k">def</span> <span class="nf">get_cyclebasis_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_cyclebasis_len"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_cyclebasis_len">[docs]</a>    <span class="k">def</span> <span class="nf">get_cyclebasis_len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the number of cycles of length&gt;1 in the cycle basis.</span>
 
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">cycle_basis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_total_length"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_total_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_total_length"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_total_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the sum of the lengths of all edges in the projection graph.      </span>
+<span class="sd">        Returns the sum of the lengths of all edges in the projection graph.</span>
 
-<span class="sd">        .. note:: </span>
+<span class="sd">        .. note::</span>
 <span class="sd">           This measure is sensitive to the resolution of a projection.</span>
 <span class="sd">           In an AFM image, one might not see all cycles.</span>
 
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">l</span><span class="o">=</span><span class="mi">0</span>
-        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edges_iter</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
             <span class="n">l</span><span class="o">+=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">l</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_longest_arm_length"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_longest_arm_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_longest_arm_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_longest_arm_length"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_longest_arm_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_longest_arm_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the length of the longest arm.</span>
 
-<span class="sd">        An arm is a simple path from a node of `degree!=2` to a node of `degree 1`, </span>
+<span class="sd">        An arm is a simple path from a node of `degree!=2` to a node of `degree 1`,</span>
 <span class="sd">        if all the other nodes on the path have `degree 2`.</span>
 
-<span class="sd">        .. note:: This measure is sensitive to the resolution of a projection </span>
+<span class="sd">        .. note:: This measure is sensitive to the resolution of a projection</span>
 <span class="sd">                  the same way the length of a coastline is sensitive to the resolution.</span>
 
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 
 <span class="sd">        :returns: The length and a tuple of points `(leaf_node, corresponding_branch_point)`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
         <span class="n">lengths</span><span class="o">=</span><span class="p">{}</span>
         <span class="n">target</span><span class="o">=</span><span class="p">{}</span>
-        <span class="k">for</span> <span class="n">leaf</span><span class="p">,</span> <span class="n">degree</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>        
-            <span class="k">if</span> <span class="n">degree</span><span class="o">!=</span><span class="mi">1</span><span class="p">:</span> <span class="k">continue</span>              
-            <span class="n">lengths</span><span class="p">[</span><span class="n">leaf</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>          
-            <span class="n">previous</span><span class="o">=</span><span class="bp">None</span>
+        <span class="k">for</span> <span class="n">leaf</span><span class="p">,</span> <span class="n">degree</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">degree</span><span class="o">!=</span><span class="mi">1</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">lengths</span><span class="p">[</span><span class="n">leaf</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+            <span class="n">previous</span><span class="o">=</span><span class="kc">None</span>
             <span class="n">current</span><span class="o">=</span><span class="n">leaf</span>
-            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="nb">next</span><span class="o">=</span><span class="p">[</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">[</span><span class="n">current</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">previous</span> <span class="p">]</span>
                 <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">next</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span>
                 <span class="nb">next</span><span class="o">=</span><span class="nb">next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -559,13 +562,13 @@
         <span class="n">best_leaf</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">lengths</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">lengths</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">lengths</span><span class="p">[</span><span class="n">best_leaf</span><span class="p">],</span> <span class="p">(</span><span class="n">best_leaf</span><span class="p">,</span> <span class="n">target</span><span class="p">[</span><span class="n">best_leaf</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_leaf_leaf_distances"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_leaf_leaf_distances">[docs]</a>    <span class="k">def</span> <span class="nf">get_leaf_leaf_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_leaf_leaf_distances"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_leaf_leaf_distances">[docs]</a>    <span class="k">def</span> <span class="nf">get_leaf_leaf_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a list of distances between any pair of leaf nodes.</span>
 <span class="sd">        The distances are measured in direct line, not along the path</span>
 
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 
 <span class="sd">        :returns: a list of floats (lengths in Angstrom)</span>
@@ -574,16 +577,16 @@
         <span class="n">leaves</span><span class="o">=</span><span class="p">[</span> <span class="n">leaf</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">leaf</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">leaf1</span><span class="p">,</span> <span class="n">leaf2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">leaves</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
             <span class="n">lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">leaf1</span><span class="p">,</span> <span class="n">leaf2</span><span class="p">))</span>
-        <span class="n">lengths</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">lengths</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">lengths</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_some_leaf_leaf_distances"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_some_leaf_leaf_distances">[docs]</a>    <span class="k">def</span> <span class="nf">get_some_leaf_leaf_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_some_leaf_leaf_distances"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_some_leaf_leaf_distances">[docs]</a>    <span class="k">def</span> <span class="nf">get_some_leaf_leaf_distances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a list of distances between some pairs of leaf nodes.</span>
 <span class="sd">        The distances are measured in direct line, not along the path</span>
 
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 
 <span class="sd">        :returns: a list of floats (lengths in Angstrom)</span>
@@ -592,7 +595,7 @@
         <span class="n">leaves</span><span class="o">=</span><span class="p">[</span> <span class="n">leaf</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">leaf</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">leaf1</span><span class="p">,</span> <span class="n">leaf2</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">leaves</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
             <span class="n">lengths</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">leaf1</span><span class="p">,</span> <span class="n">leaf2</span><span class="p">),</span> <span class="n">leaf1</span><span class="p">,</span> <span class="n">leaf2</span><span class="p">))</span>
-        <span class="n">lengths</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">lengths</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">newlengths</span><span class="o">=</span><span class="p">[]</span>
         <span class="n">visited</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">leaf1</span><span class="p">,</span> <span class="n">leaf2</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">:</span>
@@ -602,24 +605,24 @@
             <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">leaf2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">newlengths</span></div>
 
-<div class="viewcode-block" id="Projection2D.get_maximal_path_length"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.get_maximal_path_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_maximal_path_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.get_maximal_path_length"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.get_maximal_path_length">[docs]</a>    <span class="k">def</span> <span class="nf">get_maximal_path_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the maximal path length from all simple paths that traverses the projection graph from </span>
+<span class="sd">        Get the maximal path length from all simple paths that traverses the projection graph from</span>
 <span class="sd">        one leave node to another.</span>
 
-<span class="sd">        .. note:: </span>
-<span class="sd">           This measure is sensitive to the resolution of a projection </span>
+<span class="sd">        .. note::</span>
+<span class="sd">           This measure is sensitive to the resolution of a projection</span>
 <span class="sd">           the same way the length of a coastline is sensitive to the resoltuion.</span>
 
-<span class="sd">        .. warning:: </span>
-<span class="sd">            Whether this code will stay in the library or not depends </span>
+<span class="sd">        .. warning::</span>
+<span class="sd">            Whether this code will stay in the library or not depends</span>
 <span class="sd">            on future evaluation of the usefulness of this and similar descriptors.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
         <span class="n">maxl</span><span class="o">=</span><span class="mi">0</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
                 <span class="k">if</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">:</span> <span class="k">continue</span>
                 <span class="n">all_paths</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">all_simple_paths</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="p">,</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">all_paths</span><span class="p">:</span>
@@ -628,37 +631,37 @@
         <span class="k">return</span> <span class="n">maxl</span></div>
 
     <span class="c1">### Functions for graphical representations of the projection ###</span>
-    <span class="nd">@profile</span>
-<div class="viewcode-block" id="Projection2D.rasterize"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.rasterize">[docs]</a>    <span class="k">def</span> <span class="nf">rasterize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> 
-                  <span class="n">virtual_atoms</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">virtual_residues</span> <span class="o">=</span> <span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Projection2D.rasterize"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.rasterize">[docs]</a>    <span class="nd">@profile</span>
+    <span class="k">def</span> <span class="nf">rasterize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">bounding_square</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">virtual_atoms</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">virtual_residues</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rasterize the projection to a square image of the given resolution.</span>
 <span class="sd">        Uses the Bresenham algorithm for line rasterization.</span>
 
-<span class="sd">        :param resolution: </span>
+<span class="sd">        :param resolution:</span>
 <span class="sd">                        The number of pixels in each direction.</span>
 
-<span class="sd">        :param bounding_square: </span>
-<span class="sd">                        Rasterize onto the given square. </span>
+<span class="sd">        :param bounding_square:</span>
+<span class="sd">                        Rasterize onto the given square.</span>
 <span class="sd">                        If `None`, automatically get a bounding_square that</span>
 <span class="sd">                        shows the whole projection</span>
 
-<span class="sd">        :param warn:    If True, raise a warning if parts of the projection are not inside </span>
+<span class="sd">        :param warn:    If True, raise a warning if parts of the projection are not inside</span>
 <span class="sd">                        the given bounding square.</span>
 
-<span class="sd">        :param virtual_atoms: </span>
+<span class="sd">        :param virtual_atoms:</span>
 <span class="sd">                        If True, virtual atoms are also rasterized.</span>
-<span class="sd">  </span>
+
 <span class="sd">        :param rot:     The in-plane rotation in degrees, applied before rotation.</span>
 
 <span class="sd">        :returns:       A tuple `(np.array, float)`. The first value is a resolution x resolution</span>
-<span class="sd">                        numpy 2D array. </span>
+<span class="sd">                        numpy 2D array.</span>
 <span class="sd">                        The values are floats from 0.0 (black) to 1.0 (white).</span>
-<span class="sd">                        This array can be directly plotted using matplotlib: </span>
+<span class="sd">                        This array can be directly plotted using matplotlib:</span>
 <span class="sd">                        `pyplot.imshow(array, cmap=&#39;gray&#39;, interpolation=&#39;none&#39;)`</span>
 <span class="sd">                        The second value is the length of one pixle in angstrom.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">bounding_square</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bounding_square</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">bounding_square</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_bounding_square</span><span class="p">()</span>
         <span class="n">box</span><span class="o">=</span><span class="n">bounding_square</span>
         <span class="n">steplength</span><span class="o">=</span><span class="p">(</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">resolution</span>
@@ -670,7 +673,7 @@
         <span class="n">starts</span><span class="o">=</span><span class="p">[]</span>
         <span class="n">ends</span><span class="o">=</span><span class="p">[]</span>
         <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">virtual_atoms</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="p">):</span> 
+            <span class="k">if</span> <span class="n">virtual_atoms</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="k">continue</span>
             <span class="n">starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">ends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
@@ -693,80 +696,80 @@
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;WARNING during rasterization of virtual atoms: &quot;</span>
                               <span class="s2">&quot;Parts of the projection are cropped off.&quot;</span><span class="p">)</span>
             <span class="n">image</span><span class="p">[</span><span class="n">rot_virtual_atoms_clip</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">rot_virtual_atoms_clip</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]]</span><span class="o">=</span><span class="mi">1</span>
-        <span class="k">if</span> <span class="n">virtual_residues</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">virtual_residue_numbers</span><span class="p">:</span>            
+        <span class="k">if</span> <span class="n">virtual_residues</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">virtual_residue_numbers</span><span class="p">:</span>
             <span class="n">image</span> <span class="o">=</span> <span class="n">to_rgb</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
             <span class="n">rot_virtual_res</span> <span class="o">=</span> <span class="n">rasterized_2d_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_residues</span><span class="p">,</span> <span class="n">steplength</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]]),</span> <span class="n">rotate</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rot_virtual_res</span><span class="p">):</span>
                 <span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">150</span><span class="p">,</span><span class="mi">255</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_residue_numbers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">//</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_residue_numbers</span><span class="p">))</span>
                 <span class="k">if</span> <span class="mi">0</span><span class="o">&lt;=</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">img_length</span> <span class="ow">and</span> <span class="mi">0</span><span class="o">&lt;=</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">img_length</span><span class="p">:</span>
                     <span class="n">image</span><span class="p">[</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">=</span><span class="n">color</span>
-                <span class="k">else</span><span class="p">:</span>                    
+                <span class="k">else</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">warn</span><span class="p">:</span> <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;WARNING during rasterization of virtual residues: &quot;</span>
                                            <span class="s2">&quot;Parts of the projection are cropped off.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">steplength</span></div>
 
-<div class="viewcode-block" id="Projection2D.plot"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d_LOCAL_22707.html#forgi.projection.projection2d.Projection2D.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> 
-                   <span class="n">linewidth</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">add_labels</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+<div class="viewcode-block" id="Projection2D.plot"><a class="viewcode-back" href="../../../apidoc/forgi.projection.projection2d.html#forgi.projection.projection2d.Projection2D.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                   <span class="n">linewidth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">line2dproperties</span><span class="o">=</span><span class="p">{},</span> <span class="n">xshift</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">yshift</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                   <span class="n">show_distances</span><span class="o">=</span><span class="p">[],</span> <span class="n">print_distances</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                   <span class="n">virtual_atoms</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                   <span class="n">show_distances</span><span class="o">=</span><span class="p">[],</span> <span class="n">print_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">virtual_atoms</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plots the 2D projection.</span>
 
-<span class="sd">        This uses modified copy-paste code by Syrtis Major (c)2014-2015 </span>
+<span class="sd">        This uses modified copy-paste code by Syrtis Major (c)2014-2015</span>
 <span class="sd">        under the BSD 3-Clause license and code from matplotlib under the PSF license.</span>
 
-<span class="sd">        :param ax:          The axes to draw to. </span>
+<span class="sd">        :param ax:          The axes to draw to.</span>
 <span class="sd">                            You can get it by calling `fig, ax=matplotlib.pyplot.subplots()`</span>
 
-<span class="sd">        :param show:        If true, the matplotlib.pyplot.show() will be called at the </span>
+<span class="sd">        :param show:        If true, the matplotlib.pyplot.show() will be called at the</span>
 <span class="sd">                            end of this function.</span>
 
-<span class="sd">        :param margin:      A numeric value. </span>
+<span class="sd">        :param margin:      A numeric value.</span>
 <span class="sd">                            The margin around the plotted projection inside the (sub-)plot.</span>
 
 <span class="sd">        :param linewidth:   The width of the lines projection.</span>
 
-<span class="sd">        :param add_labels:  Display the name of the corresponding coarse grain element in </span>
+<span class="sd">        :param add_labels:  Display the name of the corresponding coarse grain element in</span>
 <span class="sd">                            the middle of each segment in the projection.</span>
 <span class="sd">                            Either a bool or a set of labels to display.</span>
 
-<span class="sd">        :param line2dproperties: </span>
-<span class="sd">                            A dictionary. Will be passed as `**kwargs` to the constructor of </span>
+<span class="sd">        :param line2dproperties:</span>
+<span class="sd">                            A dictionary. Will be passed as `**kwargs` to the constructor of</span>
 <span class="sd">                            `matplotlib.lines.Line2D`.</span>
 <span class="sd">                            See http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D</span>
 
-<span class="sd">        :param xshift, yshift: </span>
+<span class="sd">        :param xshift, yshift:</span>
 <span class="sd">                            Shift the projection by the given amount inside the canvas.</span>
 
-<span class="sd">        :param show_distances: </span>
-<span class="sd">                            A list of tuples of strings, e.g. `[(&quot;h1&quot;,&quot;h8&quot;),(&quot;h2&quot;,&quot;m15&quot;)]`. </span>
+<span class="sd">        :param show_distances:</span>
+<span class="sd">                            A list of tuples of strings, e.g. `[(&quot;h1&quot;,&quot;h8&quot;),(&quot;h2&quot;,&quot;m15&quot;)]`.</span>
 <span class="sd">                            Show the distances between these elements in the plot</span>
 
-<span class="sd">        :param print_distances: </span>
+<span class="sd">        :param print_distances:</span>
 <span class="sd">                            Bool. Print all distances from show_distances at the side of the plot</span>
 <span class="sd">                            instead of directly next to the distance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># In case of ssh without -X option, a TypeError might be raised </span>
+        <span class="c1"># In case of ssh without -X option, a TypeError might be raised</span>
         <span class="c1"># during the import of pyplot</span>
         <span class="c1"># This probably depends on the version of some library.</span>
         <span class="c1"># This is also the reason why we import matplotlib only inside the plot function.</span>
         <span class="n">text</span><span class="o">=</span><span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">show</span><span class="p">:</span>
-                <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-            <span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="kn">as</span> <span class="nn">lines</span>
-            <span class="kn">import</span> <span class="nn">matplotlib.transforms</span> <span class="kn">as</span> <span class="nn">mtransforms</span>
-            <span class="kn">import</span> <span class="nn">matplotlib.text</span> <span class="kn">as</span> <span class="nn">mtext</span>
-            <span class="kn">import</span> <span class="nn">matplotlib.font_manager</span> <span class="kn">as</span> <span class="nn">font_manager</span>
+            <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">show</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.lines</span> <span class="k">as</span> <span class="nn">lines</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.transforms</span> <span class="k">as</span> <span class="nn">mtransforms</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.text</span> <span class="k">as</span> <span class="nn">mtext</span>
+            <span class="kn">import</span> <span class="nn">matplotlib.font_manager</span> <span class="k">as</span> <span class="nn">font_manager</span>
         <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Cannot plot projection. Maybe you could not load Gtk &quot;</span>
                           <span class="s2">&quot;(no X11 server available)? During the import of matplotlib&quot;</span>
-                          <span class="s2">&quot;the following Error occured:</span><span class="se">\n</span><span class="s2"> {}: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+                          <span class="s2">&quot;the following Error occured:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
             <span class="k">return</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Cannot import matplotlib. Do you have matplotlib installed? &quot;</span>
-                          <span class="s2">&quot;The following error occured:</span><span class="se">\n</span><span class="s2"> {}: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+                          <span class="s2">&quot;The following error occured:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
             <span class="k">return</span>
         <span class="c1">#try:</span>
         <span class="c1">#    import shapely.geometry as sg</span>
@@ -778,19 +781,19 @@
         <span class="c1">#    #return</span>
         <span class="c1">#else:</span>
         <span class="c1">#    area=True</span>
-        <span class="n">area</span><span class="o">=</span><span class="bp">False</span>
+        <span class="n">area</span><span class="o">=</span><span class="kc">False</span>
         <span class="n">polygons</span><span class="o">=</span><span class="p">[]</span>
 
-        <span class="k">def</span> <span class="nf">circles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">circles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Make a scatter of circles plot of x vs y, where x and y are sequence </span>
+<span class="sd">            Make a scatter of circles plot of x vs y, where x and y are sequence</span>
 <span class="sd">            like objects of the same lengths. The size of circles are in data scale.</span>
 
 <span class="sd">            Parameters</span>
 <span class="sd">            ----------</span>
 <span class="sd">            x,y : scalar or array_like, shape (n, )</span>
 <span class="sd">                Input data</span>
-<span class="sd">            s : scalar or array_like, shape (n, ) </span>
+<span class="sd">            s : scalar or array_like, shape (n, )</span>
 <span class="sd">                Radius of circle in data scale (ie. in data unit)</span>
 <span class="sd">            c : color or sequence of color, optional, default : &#39;b&#39;</span>
 <span class="sd">                `c` can be a single color format string, or a sequence of color</span>
@@ -824,7 +827,7 @@
 
 <span class="sd">            License</span>
 <span class="sd">            --------</span>
-<span class="sd">            This function is copied (and potentially modified) from </span>
+<span class="sd">            This function is copied (and potentially modified) from</span>
 <span class="sd">            http://stackoverflow.com/a/24567352/5069869</span>
 
 <span class="sd">            Copyright Syrtis Major, 2014-2015</span>
@@ -832,16 +835,16 @@
 <span class="sd">            This function is under [The BSD 3-Clause License]</span>
 <span class="sd">            (http://opensource.org/licenses/BSD-3-Clause)</span>
 <span class="sd">            &quot;&quot;&quot;</span>
-            <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Circle</span>
-            <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="kn">import</span> <span class="n">PatchCollection</span>
+            <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="k">import</span> <span class="n">Circle</span>
+            <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="k">import</span> <span class="n">PatchCollection</span>
             <span class="c1">#import matplotlib.colors as colors</span>
-            <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">()</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">fus</span><span class="o">.</span><span class="n">is_string_type</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
                 <span class="n">color</span> <span class="o">=</span> <span class="n">c</span>     <span class="c1"># ie. use colors.colorConverter.to_rgba_array(c)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">color</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c1"># use cmap, norm after collection is created</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># use cmap, norm after collection is created</span>
             <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -852,9 +855,9 @@
                 <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">),</span> <span class="n">s_</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">,</span><span class="n">s_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">s</span><span class="p">)]</span>
             <span class="n">collection</span> <span class="o">=</span> <span class="n">PatchCollection</span><span class="p">(</span><span class="n">patches</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">collection</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">vmin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">vmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">vmin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">collection</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
 
             <span class="n">ax</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>
@@ -864,7 +867,7 @@
         <span class="k">class</span> <span class="nc">MyLine</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Copied and modified from http://matplotlib.org/examples/api/line_with_text.html,</span>
-<span class="sd">            which is part of matplotlib 1.5.0 (Copyright (c) 2012-2013 Matplotlib Development </span>
+<span class="sd">            which is part of matplotlib 1.5.0 (Copyright (c) 2012-2013 Matplotlib Development</span>
 <span class="sd">            Team; All Rights Reserved).</span>
 <span class="sd">            Used under the matplotlib license: http://matplotlib.org/users/license.html</span>
 <span class="sd">            &quot;&quot;&quot;</span>
@@ -872,7 +875,7 @@
                 <span class="c1"># we&#39;ll update the position when the line data is set</span>
                 <span class="n">fm</span><span class="o">=</span><span class="n">font_manager</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="s2">&quot;large&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;demi&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">mtext</span><span class="o">.</span><span class="n">Text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="p">)</span>
-                <span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
                 <span class="c1"># we can&#39;t access the label attr until *after* the line is</span>
                 <span class="c1"># inited</span>
@@ -902,20 +905,20 @@
                 <span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="s2">&quot;linewidth&quot;</span> <span class="ow">in</span> <span class="n">line2dproperties</span> <span class="ow">and</span> <span class="n">linewidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;linewidth&quot;</span> <span class="ow">in</span> <span class="n">line2dproperties</span> <span class="ow">and</span> <span class="n">linewidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Got multiple values for &#39;linewidth&#39; (also present in line2dproperties)&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">linewidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">linewidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">line2dproperties</span><span class="p">[</span><span class="s2">&quot;linewidth&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">linewidth</span>
         <span class="k">if</span> <span class="s2">&quot;solid_capstyle&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line2dproperties</span><span class="p">:</span>
             <span class="n">line2dproperties</span><span class="p">[</span><span class="s2">&quot;solid_capstyle&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;round&quot;</span>
 
-        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>            
+                <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Cannot create Axes  or Figure. You probably have no graphical &quot;</span>                             
-                          <span class="s2">&quot;display available. The Error was:</span><span class="se">\n</span><span class="s2"> {}: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
-                <span class="k">return</span>      
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Cannot create Axes  or Figure. You probably have no graphical &quot;</span>
+                          <span class="s2">&quot;display available. The Error was:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+                <span class="k">return</span>
         <span class="n">lprop</span><span class="o">=</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">line2dproperties</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">virtual_atoms</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
             <span class="n">circles</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
@@ -933,12 +936,12 @@
                     <span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;black&quot;</span>
-            <span class="k">if</span> <span class="n">add_labels</span><span class="o">!=</span><span class="bp">False</span> <span class="ow">and</span> <span class="p">(</span><span class="n">add_labels</span><span class="o">==</span><span class="bp">True</span> <span class="ow">or</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">add_labels</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">add_labels</span><span class="o">!=</span><span class="kc">False</span> <span class="ow">and</span> <span class="p">(</span><span class="n">add_labels</span><span class="o">==</span><span class="kc">True</span> <span class="ow">or</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">add_labels</span><span class="p">):</span>
                 <span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">=</span><span class="n">label</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">lprop</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-            <span class="c1">#line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **lprop) </span>
-            <span class="n">line</span><span class="o">=</span><span class="n">MyLine</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">],[</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">,</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">],</span> <span class="o">**</span><span class="n">lprop</span><span class="p">)</span> 
+            <span class="c1">#line=lines.Line2D([s[0], e[0]],[s[1],e[1]], **lprop)</span>
+            <span class="n">line</span><span class="o">=</span><span class="n">MyLine</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">],[</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">,</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">],</span> <span class="o">**</span><span class="n">lprop</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xshift</span><span class="p">,</span> <span class="n">yshift</span><span class="p">])</span>
             <span class="n">e</span><span class="o">=</span><span class="n">e</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xshift</span><span class="p">,</span> <span class="n">yshift</span><span class="p">])</span>
@@ -953,7 +956,7 @@
             <span class="n">c</span><span class="o">=</span><span class="n">s</span><span class="o">+</span><span class="n">nvec</span><span class="o">*</span><span class="mi">5</span><span class="o">/</span><span class="n">div</span>
             <span class="n">d</span><span class="o">=</span><span class="n">s</span><span class="o">-</span><span class="n">nvec</span><span class="o">*</span><span class="mi">5</span><span class="o">/</span><span class="n">div</span>
             <span class="c1">#For now disabling area representation</span>
-            <span class="n">area</span><span class="o">=</span><span class="bp">False</span>
+            <span class="n">area</span><span class="o">=</span><span class="kc">False</span>
             <span class="k">if</span> <span class="n">area</span><span class="p">:</span>
                 <span class="n">polygon</span><span class="o">=</span><span class="n">sg</span><span class="o">.</span><span class="n">Polygon</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">c</span><span class="p">])</span>
                 <span class="n">polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
@@ -962,18 +965,18 @@
             <span class="n">en</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">e</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">e</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
             <span class="n">d</span><span class="o">=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">st</span><span class="p">,</span><span class="n">en</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">print_distances</span><span class="p">:</span>
-                <span class="n">line</span><span class="o">=</span><span class="n">MyLine</span><span class="p">([</span><span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">,</span> <span class="n">en</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">],[</span><span class="n">st</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">,</span><span class="n">en</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">],</span> 
+                <span class="n">line</span><span class="o">=</span><span class="n">MyLine</span><span class="p">([</span><span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">,</span> <span class="n">en</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">],[</span><span class="n">st</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">,</span><span class="n">en</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">],</span>
                             <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
-                <span class="n">text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;{:3} - {:3}: {:5.2f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">e</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+                <span class="n">text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:3}</span><span class="s2"> - </span><span class="si">{:3}</span><span class="s2">: </span><span class="si">{:5.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">e</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">line</span><span class="o">=</span><span class="n">MyLine</span><span class="p">([</span><span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">,</span> <span class="n">en</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">],[</span><span class="n">st</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">,</span><span class="n">en</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">],</span> 
+                <span class="n">line</span><span class="o">=</span><span class="n">MyLine</span><span class="p">([</span><span class="n">st</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">,</span> <span class="n">en</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">xshift</span><span class="p">],[</span><span class="n">st</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">,</span><span class="n">en</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">yshift</span><span class="p">],</span>
                             <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">add_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
         <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_bounding_square</span><span class="p">(</span><span class="n">margin</span><span class="p">))</span>
         <span class="n">fm</span><span class="o">=</span><span class="n">font_manager</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">([</span><span class="s2">&quot;monospace&quot;</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;x-small&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">print_distances</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;Distances:&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">text</span><span class="p">),</span> 
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.01</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;Distances:&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">text</span><span class="p">),</span>
                     <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">area</span><span class="p">:</span>
             <span class="n">rnaArea</span><span class="o">=</span><span class="n">so</span><span class="o">.</span><span class="n">cascaded_union</span><span class="p">(</span><span class="n">polygons</span><span class="p">)</span>
@@ -989,20 +992,20 @@
     <span class="c1">#Note: This is SLOW. Should be improved or removed in the future</span>
     <span class="k">def</span> <span class="nf">_build_proj_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate a graph from the 2D projection. </span>
-<span class="sd">  </span>
+<span class="sd">        Generate a graph from the 2D projection.</span>
+
 <span class="sd">        This is implemented as a networkx.Graph with the coordinates as nodes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
         <span class="n">proj_graph</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">crs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">crossingPoints</span>
-            <span class="n">sortedCrs</span><span class="o">=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">sortAlongLine</span><span class="p">(</span><span class="n">element</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">element</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">crs</span><span class="p">[</span><span class="n">key</span><span class="p">]])</span>     
-            <span class="n">oldpoint</span><span class="o">=</span><span class="bp">None</span>
+            <span class="n">sortedCrs</span><span class="o">=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">sortAlongLine</span><span class="p">(</span><span class="n">element</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">element</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">crs</span><span class="p">[</span><span class="n">key</span><span class="p">]])</span>
+            <span class="n">oldpoint</span><span class="o">=</span><span class="kc">None</span>
             <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">sortedCrs</span><span class="p">:</span>
                 <span class="n">point</span><span class="o">=</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#Tuple, to be hashable</span>
-                <span class="k">if</span> <span class="n">oldpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                    <span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">oldpoint</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">attr_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">})</span>                 
+                <span class="k">if</span> <span class="n">oldpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">oldpoint</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">attr_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">})</span>
                 <span class="n">oldpoint</span><span class="o">=</span><span class="n">point</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_proj_graph</span><span class="o">=</span><span class="n">proj_graph</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">condense_points</span><span class="p">(</span><span class="mf">0.00000000001</span><span class="p">)</span> <span class="c1">#To avoid floating point problems</span>
@@ -1023,14 +1026,14 @@
             <span class="n">end</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">basis</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
         <span class="n">va</span><span class="o">=</span><span class="p">[]</span>
-        <span class="k">if</span> <span class="n">project_virtual_atoms</span><span class="p">:</span>        
+        <span class="k">if</span> <span class="n">project_virtual_atoms</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">residuePos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">cg</span><span class="o">.</span><span class="n">seq_length</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="n">residue</span><span class="o">=</span><span class="n">cg</span><span class="o">.</span><span class="n">virtual_atoms</span><span class="p">(</span><span class="n">residuePos</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">project_virtual_atoms</span><span class="o">==</span><span class="s2">&quot;selected&quot;</span><span class="p">:</span>
                     <span class="k">try</span><span class="p">:</span>             <span class="n">va</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">residue</span><span class="p">[</span><span class="s1">&#39;P&#39;</span><span class="p">])</span>
                     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">pass</span>
                     <span class="k">try</span><span class="p">:</span>             <span class="n">va</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">residue</span><span class="p">[</span><span class="s2">&quot;C1&#39;&quot;</span><span class="p">])</span>
-                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">assert</span> <span class="bp">False</span> <span class="c1">#Should never happen</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">assert</span> <span class="kc">False</span> <span class="c1">#Should never happen</span>
                     <span class="k">try</span><span class="p">:</span>             <span class="n">va</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">residue</span><span class="p">[</span><span class="s1">&#39;C1&#39;</span><span class="p">])</span>
                     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span> <span class="k">pass</span>
                     <span class="k">try</span><span class="p">:</span>             <span class="n">va</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">residue</span><span class="p">[</span><span class="s2">&quot;O3&#39;&quot;</span><span class="p">])</span>
@@ -1041,71 +1044,71 @@
             <span class="k">if</span> <span class="n">va</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_virtual_atoms</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">va</span><span class="p">),</span> <span class="n">basis</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No virtual atoms present in {} of length {}!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">seq</span><span class="p">)))</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No virtual atoms present in </span><span class="si">{}</span><span class="s2"> of length </span><span class="si">{}</span><span class="s2">!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">seq</span><span class="p">)))</span>
         <span class="n">vr</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">project_virtual_residues</span><span class="p">:</span>
-            <span class="n">vr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">get_virtual_residue</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="bp">True</span><span class="p">),</span> <span class="n">basis</span><span class="p">))</span>
+            <span class="n">vr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">get_virtual_residue</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">basis</span><span class="p">))</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">vr</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">project_virtual_residues</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">vr</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_virtual_residues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vr</span><span class="p">)</span>
-  
+
     <span class="k">def</span> <span class="nf">_condense_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Condenses two adjacent projection points into one.</span>
 
 <span class="sd">        :returns: True if a condensation was done, False if no condenstaion is possible.</span>
-<span class="sd">        &quot;&quot;&quot;</span>        
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">node1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
-                <span class="k">if</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">:</span> <span class="k">continue</span>                
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">node1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">node2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="n">j</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">:</span> <span class="k">continue</span>
                 <span class="k">if</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">)</span><span class="o">&lt;</span><span class="n">cutoff</span><span class="p">:</span>
                     <span class="n">newnode</span><span class="o">=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">middlepoint</span><span class="p">(</span><span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">)</span>
                     <span class="c1">#self.proj_graph.add_node(newnode)</span>
-                    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">node1</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">newnode</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span> 
-                                                <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">node1</span><span class="p">][</span><span class="n">neighbor</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">newnode</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span> 
-                                                 <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">node2</span><span class="p">][</span><span class="n">neighbor</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node1</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">newnode</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span>
+                                                <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node1</span><span class="p">][</span><span class="n">neighbor</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">newnode</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span>
+                                                 <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node2</span><span class="p">][</span><span class="n">neighbor</span><span class="p">])</span>
                     <span class="k">if</span> <span class="n">newnode</span><span class="o">!=</span><span class="n">node1</span><span class="p">:</span> <span class="c1">#Equality can happen because of floating point inaccuracy</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">newnode</span><span class="o">!=</span><span class="n">node2</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span>
-                    <span class="k">return</span> <span class="bp">True</span>
-        <span class="k">return</span> <span class="bp">False</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">_condense_pointWithLine_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Used by `self.condense(cutoff)` as a single condensation step of a point </span>
+<span class="sd">        Used by `self.condense(cutoff)` as a single condensation step of a point</span>
 <span class="sd">        with a line segment.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">source</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">source</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
                 <span class="k">if</span> <span class="n">j</span><span class="o">&gt;</span><span class="n">i</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="n">target</span><span class="p">):</span>
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes_iter</span><span class="p">()):</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
                         <span class="k">if</span> <span class="n">k</span><span class="o">==</span><span class="n">i</span> <span class="ow">or</span> <span class="n">k</span><span class="o">==</span><span class="n">j</span><span class="p">:</span>
                             <span class="k">continue</span>
                         <span class="n">nearest</span><span class="o">=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">closest_point_on_seg</span><span class="p">(</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
                         <span class="n">nearest</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">nearest</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">nearest</span><span class="o">==</span><span class="n">source</span> <span class="ow">or</span> <span class="n">nearest</span><span class="o">==</span><span class="n">target</span><span class="p">:</span> 
-                            <span class="k">continue</span>   
+                        <span class="k">if</span> <span class="n">nearest</span><span class="o">==</span><span class="n">source</span> <span class="ow">or</span> <span class="n">nearest</span><span class="o">==</span><span class="n">target</span><span class="p">:</span>
+                            <span class="k">continue</span>
                         <span class="k">if</span> <span class="p">(</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">nearest</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span><span class="o">&lt;</span><span class="n">cutoff</span><span class="p">):</span>
                             <span class="n">newnode</span><span class="o">=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">middlepoint</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nearest</span><span class="p">))</span>
-                            <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">source</span><span class="p">][</span><span class="n">target</span><span class="p">]</span>
+                            <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">source</span><span class="p">][</span><span class="n">target</span><span class="p">]</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">source</span><span class="o">!=</span><span class="n">newnode</span><span class="p">:</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">newnode</span><span class="p">,</span> <span class="n">attr_dict</span><span class="o">=</span><span class="n">attr_dict</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">target</span><span class="o">!=</span><span class="n">newnode</span><span class="p">:</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">newnode</span><span class="p">,</span>
-                                                         <span class="n">attr_dict</span><span class="o">=</span><span class="n">attr_dict</span><span class="p">)</span>             
+                                                         <span class="n">attr_dict</span><span class="o">=</span><span class="n">attr_dict</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">newnode</span><span class="o">!=</span><span class="n">node</span><span class="p">:</span> <span class="c1">#Equality possible bcse of floating point inaccuracy</span>
-                                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                                    <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">edge</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">neighbor</span><span class="p">]</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">newnode</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span> 
+                                <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                                    <span class="n">attr_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">neighbor</span><span class="p">]</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">newnode</span><span class="p">,</span> <span class="n">neighbor</span><span class="p">,</span>
                                                              <span class="n">attr_dict</span><span class="o">=</span><span class="n">attr_dict</span><span class="p">)</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">proj_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-                            <span class="k">return</span> <span class="bp">True</span>
-        <span class="k">return</span> <span class="bp">False</span>
+                            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">_get_path_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1127,9 +1130,9 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Sep 05, 2016.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

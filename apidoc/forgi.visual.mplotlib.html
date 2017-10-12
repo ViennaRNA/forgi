@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.visual.mplotlib module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.visual.mplotlib module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.visual package" href="forgi.visual.html" />
     <link rel="next" title="forgi.config module" href="forgi.config.html" />
     <link rel="prev" title="forgi.visual.fornac module" href="forgi.visual.fornac.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -52,8 +48,95 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-visual-mplotlib-module">
-<h1>forgi.visual.mplotlib module<a class="headerlink" href="#forgi-visual-mplotlib-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.visual.mplotlib">
+<span id="forgi-visual-mplotlib-module"></span><h1>forgi.visual.mplotlib module<a class="headerlink" href="#module-forgi.visual.mplotlib" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="forgi.visual.mplotlib.circles">
+<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">circles</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>s</em>, <em>c='b'</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#circles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.circles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a scatter of circles plot of x vs y, where x and y are sequence 
+like objects of the same lengths. The size of circles are in data scale.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong><strong>,</strong><strong>y</strong> – scalar or array_like, shape (n, )
+Input data</li>
+<li><strong>s</strong> – scalar or array_like, shape (n, ) 
+Radius of circle in data scale (ie. in data unit)</li>
+<li><strong>c</strong> – color or sequence of color, optional, default : ‘b’
+<code class="code docutils literal"><span class="pre">c</span></code> can be a single color format string, or a sequence of color
+specifications of length <code class="code docutils literal"><span class="pre">N</span></code>, or a sequence of <code class="code docutils literal"><span class="pre">N</span></code> numbers to be
+mapped to colors using the <code class="code docutils literal"><span class="pre">cmap</span></code> and <code class="code docutils literal"><span class="pre">norm</span></code> specified via kwargs.
+Note that <code class="code docutils literal"><span class="pre">c</span></code> should not be a single numeric RGB or
+RGBA sequence because that is indistinguishable from an array of
+values to be colormapped.  <code class="code docutils literal"><span class="pre">c</span></code> can be a 2-D array in which the
+rows are RGB or RGBA, however.</li>
+<li><strong>ax</strong> – Axes object, optional, default: None
+Parent axes of the plot. It uses gca() if not specified.</li>
+<li><strong>vmax</strong> (<em>vmin</em><em>,</em>) – scalar, optional, default: None
+<code class="code docutils literal"><span class="pre">vmin</span></code> and <code class="code docutils literal"><span class="pre">vmax</span></code> are used in conjunction with <code class="code docutils literal"><span class="pre">norm</span></code> to normalize
+luminance data.  If either are <code class="code docutils literal"><span class="pre">None</span></code>, the min and max of the
+color array is used.  (Note if you pass a <code class="code docutils literal"><span class="pre">norm</span></code> instance, your
+settings for <code class="code docutils literal"><span class="pre">vmin</span></code> and <code class="code docutils literal"><span class="pre">vmax</span></code> will be ignored.)</li>
+<li><strong>kwargs</strong> – <code class="code docutils literal"><span class="pre">~matplotlib.collections.Collection</span></code> properties
+eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">paths : <code class="code docutils literal"><span class="pre">~matplotlib.collections.PathCollection</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
+<span class="n">circles</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">*</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This code is under [The BSD 3-Clause License]
+(<a class="reference external" href="http://opensource.org/licenses/BSD-3-Clause">http://opensource.org/licenses/BSD-3-Clause</a>)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.visual.mplotlib.plot_pdb">
+<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">plot_pdb</code><span class="sig-paren">(</span><em>filename</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#plot_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.plot_pdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a pdb file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>structure</strong> – A Bio.PDB.Structure</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">An Axes object (ax)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.visual.mplotlib.plot_rna">
+<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">plot_rna</code><span class="sig-paren">(</span><em>cg</em>, <em>ax=None</em>, <em>offset=(0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#plot_rna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.plot_rna" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot an RNA structure given a set of nucleotide coordinates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cg</strong> – A forgi.threedee.model.coarse_grain.CoarseGrainRNA structure</li>
+<li><strong>ax</strong> – A matplotlib plotting area</li>
+<li><strong>offset</strong> – Offset the plot by these coordinates. If a simple True is passed in, then
+offset by the current width of the plot</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(ax, coords) The axes and the coordinates for each nucleotide</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -72,8 +155,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

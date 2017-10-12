@@ -1,47 +1,43 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.threedee.model.stats module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.threedee.model.stats module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.threedee.model package" href="forgi.threedee.model.html" />
     <link rel="next" title="forgi.threedee.utilities package" href="forgi.threedee.utilities.html" />
-    <link rel="prev" title="forgi.threedee.model.descriptors module" href="forgi.threedee.model.descriptors.html" /> 
+    <link rel="prev" title="forgi.threedee.model.similarity module" href="forgi.threedee.model.similarity.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
         <p>
-        «&#160;&#160;<a href="forgi.threedee.model.descriptors.html">forgi.threedee.model.descriptors module</a>
+        «&#160;&#160;<a href="forgi.threedee.model.similarity.html">forgi.threedee.model.similarity module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -52,8 +48,575 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-threedee-model-stats-module">
-<h1>forgi.threedee.model.stats module<a class="headerlink" href="#forgi-threedee-model-stats-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.threedee.model.stats">
+<span id="forgi-threedee-model-stats-module"></span><h1>forgi.threedee.model.stats module<a class="headerlink" href="#module-forgi.threedee.model.stats" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.threedee.model.stats.AngleStat">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">AngleStat</code><span class="sig-paren">(</span><em>stat_type='angle'</em>, <em>pdb_name=''</em>, <em>dim1=0</em>, <em>dim2=0</em>, <em>u=0</em>, <em>v=0</em>, <em>t=0</em>, <em>r1=0</em>, <em>u1=0</em>, <em>v1=0</em>, <em>ang_type='x'</em>, <em>define=[]</em>, <em>seqs=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Class for storing an individual statistic about inter-helical angles.</p>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.deviation_from">
+<code class="descname">deviation_from</code><span class="sig-paren">(</span><em>stat2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.deviation_from"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.deviation_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>How much does the other stat differ from this stat?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stat2</strong> – Another AngleStat</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A 4-tuple: The positional deviation in Angstrom, and 3 absolute angular deviations in radians.
+The  angular deviations are u, v and t</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.get_angle">
+<code class="descname">get_angle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.get_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.get_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the angle between the two connected stems.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.is_similar_to">
+<code class="descname">is_similar_to</code><span class="sig-paren">(</span><em>stat2</em>, <em>position_cutoff=4</em>, <em>angular_cutoff=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.is_similar_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.is_similar_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True, if theAngleStat is similar
+(according to the specified cutoff) to the other Angle Stat.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>position_cutoff</strong> – in angstrom</li>
+<li><strong>angular_cutoff</strong> – in radians. If not given, uses the position cutoff as a value in degrees</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.orientation_params">
+<code class="descname">orientation_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.orientation_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.orientation_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tuple containing the parameters which specify the orientation
+of one stem with respect to another.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(u, v)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.parse_line">
+<code class="descname">parse_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.parse_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.parse_line" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.position_params">
+<code class="descname">position_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.position_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.position_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tuple containing the parameters which specify the position
+of one stem with respect to another.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="code docutils literal"><span class="pre">(r1,</span> <span class="pre">u1,</span> <span class="pre">v1)</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.AngleStat.twist_params">
+<code class="descname">twist_params</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#AngleStat.twist_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.AngleStat.twist_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple containing the parameters which specify the difference in
+twist between two stems.</p>
+<p>:return (u, v, t)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.ClusteredAngleStats">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">ClusteredAngleStats</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ClusteredAngleStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ClusteredAngleStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A collection of clustered angle_stats. Whenever stats for a certain key are retrieved,
+only one (randomly choosen) representative per cluster is returned.</p>
+<p>Requires a clustered angle stats file (created by fess/scripts/cluster_stats.py).
+The file should look like this:</p>
+<p>‘
+# Cluster 0 for (1, 1, -1):
+angle RS_1788_S_000008_A 1 1 1.520877 1.837257 -1.380352 11.237569 0.867246 2.057771 1 19 19 30 30 UCG CAA
+# Cluster 1 for (1, 1, -1):
+angle RS_1140_S_000002_A 1 1 1.563667 1.869580 -0.967966 16.241881 0.896602 2.177000 -1 13 13 24 24 ACG CUU
+angle RS_1183_S_000008_A 1 1 1.533551 1.914482 -1.108396 15.780723 0.829850 2.255556 -1 4 4 46 46 UAG CAG
+‘</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – The filename of the clustered angle stats file.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ClusteredAngleStats.cluster_of">
+<code class="descname">cluster_of</code><span class="sig-paren">(</span><em>stat</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ClusteredAngleStats.cluster_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ClusteredAngleStats.cluster_of" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ClusteredAngleStats.get_angle_stat_dims">
+<code class="descname">get_angle_stat_dims</code><span class="sig-paren">(</span><em>dim0</em>, <em>dim1</em>, <em>ang_type</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ClusteredAngleStats.get_angle_stat_dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ClusteredAngleStats.get_angle_stat_dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of pairs,`(dist, key)` ordered by increasing distance of the key to the query key.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dim1</strong> – dim1 of the query key</li>
+<li><strong>dim2</strong> – dim2 of the query key</li>
+<li><strong>ang_type</strong> – angle_type of the query key.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ClusteredAngleStats.keys">
+<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ClusteredAngleStats.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ClusteredAngleStats.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ClusteredAngleStats.lookup_stat">
+<code class="descname">lookup_stat</code><span class="sig-paren">(</span><em>stat</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ClusteredAngleStats.lookup_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ClusteredAngleStats.lookup_stat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.ConformationStats">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">ConformationStats</code><span class="sig-paren">(</span><em>stats_file</em>, <em>clustered_angle_stats_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ConformationStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ConformationStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ConformationStats.constrain_stats">
+<code class="descname">constrain_stats</code><span class="sig-paren">(</span><em>constraint_file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ConformationStats.constrain_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ConformationStats.constrain_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constrain the statistics for certain regions of the molecule. This
+is created for use with the JAR3D annotations for loop regions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>constraint_file</strong> – A file containing the allowed statistics for
+a particular loop.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ConformationStats.sample_stats">
+<code class="descname">sample_stats</code><span class="sig-paren">(</span><em>bg</em>, <em>elem</em>, <em>min_entries=10</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ConformationStats.sample_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ConformationStats.sample_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a set of statistics compatible with this element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bg</strong> – The graph representation we’re using.</li>
+<li><strong>elem</strong> – The name of the element</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of compatible statistics</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.ConstructionStats">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">ConstructionStats</code><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ConstructionStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<dl class="attribute">
+<dt id="forgi.threedee.model.stats.ConstructionStats.angle_stats">
+<code class="descname">angle_stats</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats.angle_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.stats.ConstructionStats.conf_stats">
+<code class="descname">conf_stats</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats.conf_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.stats.ConstructionStats.fiveprime_stats">
+<code class="descname">fiveprime_stats</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats.fiveprime_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.stats.ConstructionStats.loop_stats">
+<code class="descname">loop_stats</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats.loop_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.stats.ConstructionStats.stem_stats">
+<code class="descname">stem_stats</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats.stem_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.stats.ConstructionStats.threeprime_stats">
+<code class="descname">threeprime_stats</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.stats.ConstructionStats.threeprime_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.ContinuousAngleStats">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">ContinuousAngleStats</code><span class="sig-paren">(</span><em>discrete_angle_stats</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ContinuousAngleStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ContinuousAngleStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Store all of the angle stats.</p>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ContinuousAngleStats.make_continuous">
+<code class="descname">make_continuous</code><span class="sig-paren">(</span><em>discrete_angle_stats</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ContinuousAngleStats.make_continuous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ContinuousAngleStats.make_continuous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a kernel density estimation of the statistics
+for each bulge dimension represented in the collection
+of discrete angle statistics.</p>
+<p>Each KDE will have six dimensions corresponding to the six
+dimensions necessary for describing the orientation of one
+helix with respect to another.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>discrete_angle_statistics</strong> – A dictionary of dictionaries,
+each one containing and AngleStats structure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ContinuousAngleStats.sample_stats">
+<code class="descname">sample_stats</code><span class="sig-paren">(</span><em>dims</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ContinuousAngleStats.sample_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ContinuousAngleStats.sample_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample a set of statistics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dims</strong> – The dimensions of the bulge for which to sample.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.ContinuousAngleStats.stats_by_dimensions">
+<code class="descname">stats_by_dimensions</code><span class="sig-paren">(</span><em>dims</em>, <em>n</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#ContinuousAngleStats.stats_by_dimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.ContinuousAngleStats.stats_by_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a set of n AngleStats for a bulge with a dimension
+of of dims.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dims</strong> – The dimensions of the bulge (i.e. (1,2))</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Params n:</th><td class="field-body">The number of angle stats to return. If n is greater
+than the number of stats stored, then return the number of
+stats available.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.FilteredConformationStats">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">FilteredConformationStats</code><span class="sig-paren">(</span><em>stats_file</em>, <em>filter_filename=None</em>, <em>filter_prob=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#FilteredConformationStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.FilteredConformationStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#forgi.threedee.model.stats.ConformationStats" title="forgi.threedee.model.stats.ConformationStats"><code class="xref py py-class docutils literal"><span class="pre">forgi.threedee.model.stats.ConformationStats</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filter_prob</strong> – Return the filtered stats with this probability, else all stats.
+Default=1 (100%)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.FilteredConformationStats.from_file">
+<code class="descname">from_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#FilteredConformationStats.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.FilteredConformationStats.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the statistics in from a file, with the following formatting:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sampled</span> <span class="n">i3</span> <span class="mi">1</span><span class="n">X8W_A</span> <span class="mi">4</span> <span class="mi">27</span> <span class="mi">31</span> <span class="mi">101</span> <span class="mi">104</span> <span class="s2">&quot;&quot;</span>
+<span class="n">sampled</span> <span class="n">i2</span> <span class="mi">3</span><span class="n">U5F_6</span> <span class="mi">4</span> <span class="mi">1348</span> <span class="mi">1348</span> <span class="mi">1365</span> <span class="mi">1367</span> <span class="s2">&quot;cWW AG or UU&quot;</span>
+<span class="n">sampled</span> <span class="n">i2</span> <span class="mi">2</span><span class="n">QBG_B</span> <span class="mi">4</span> <span class="mi">1013</span> <span class="mi">1014</span> <span class="mi">1103</span> <span class="mi">1103</span> <span class="s2">&quot;cWW AG or UU&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.FilteredConformationStats.sample_stats">
+<code class="descname">sample_stats</code><span class="sig-paren">(</span><em>bg</em>, <em>elem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#FilteredConformationStats.sample_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.FilteredConformationStats.sample_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.LoopStat">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">LoopStat</code><span class="sig-paren">(</span><em>line=''</em>, <em>s_type='loop'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#LoopStat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.LoopStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Class for storing the individual statistics about loops.</p>
+<p>phys_length: The length between the start and the centroid of the loop.</p>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.LoopStat.parse_line">
+<code class="descname">parse_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#LoopStat.parse_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.LoopStat.parse_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a line containing statistics about the shape of a stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>line</strong> – The line from the statistics file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.RandomAngleStats">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">RandomAngleStats</code><span class="sig-paren">(</span><em>discrete_angle_stats</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#RandomAngleStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.RandomAngleStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Store all of the angle stats.</p>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.RandomAngleStats.create_random_function">
+<code class="descname">create_random_function</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#RandomAngleStats.create_random_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.RandomAngleStats.create_random_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a function that returns a random value for
+each column in the statistics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stats</strong> – A table containing n rows and m columns</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A function returning m random values with a
+maximum and minimum no greater than the largest
+and least values in that column, respectively.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.RandomAngleStats.make_random">
+<code class="descname">make_random</code><span class="sig-paren">(</span><em>discrete_angle_stats</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#RandomAngleStats.make_random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.RandomAngleStats.make_random" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a set of statistsics that is random in each direction.</p>
+<p>The maximum and minimum u and v values will be taken
+from the discrete statistics.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.RandomAngleStats.sample_stats">
+<code class="descname">sample_stats</code><span class="sig-paren">(</span><em>dims</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#RandomAngleStats.sample_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.RandomAngleStats.sample_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample a set of statistics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dims</strong> – The dimensions of the bulge for which to sample.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.model.stats.RandomAngleStats.stats_by_dimensions">
+<code class="descname">stats_by_dimensions</code><span class="sig-paren">(</span><em>dims</em>, <em>n</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#RandomAngleStats.stats_by_dimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.RandomAngleStats.stats_by_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a set of n AngleStats for a bulge with a dimension
+of of dims.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dims</strong> – The dimensions of the bulge (i.e. <code class="code docutils literal"><span class="pre">(1,2)</span></code>)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Params n:</th><td class="field-body">The number of angle stats to return. If n is greater
+than the number of stats stored, then return the number of
+stats available.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.threedee.model.stats.StemStat">
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">StemStat</code><span class="sig-paren">(</span><em>line=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#StemStat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.StemStat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>Class for storing the individual statistics about helices.</p>
+<p>Each stem will be defined by its base pair length. Two
+parameters are associated with each base pair length:</p>
+<p>phys_length: The physical length of such a helix
+twist_angle: The angle between its two twist segments</p>
+<dl class="method">
+<dt id="forgi.threedee.model.stats.StemStat.parse_line">
+<code class="descname">parse_line</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#StemStat.parse_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.StemStat.parse_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a line containing statistics about the shape of a stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>line</strong> – The line from the statistics file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_angle_stat_dims">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_angle_stat_dims</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em>, <em>angle_type</em>, <em>min_entries=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_angle_stat_dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_angle_stat_dims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of tuples which indicate the dimensions for which angle
+stats are avilable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s1</strong> – The first size</li>
+<li><strong>s2</strong> – The second size</li>
+<li><strong>angle_type</strong> – The type of the angle.</li>
+<li><strong>min_entries</strong> – The minimum number of stats that have to be available</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_angle_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_angle_stats</code><span class="sig-paren">(</span><em>filename</em>, <em>refresh=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_angle_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_angle_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the statistics about inter the helix-helix orientations from a file.</p>
+<p>The file format should be as follows:</p>
+<p><code class="code docutils literal"><span class="pre">angle</span> <span class="pre">pdb_name</span> <span class="pre">dim1</span> <span class="pre">dim2</span> <span class="pre">r</span> <span class="pre">u</span> <span class="pre">v</span> <span class="pre">t</span> <span class="pre">r1</span> <span class="pre">u1</span> <span class="pre">v1</span> <span class="pre">s1b</span> <span class="pre">s2b</span></code></p>
+<p>Where the parameters are as follows:</p>
+<ul class="simple">
+<li><code class="code docutils literal"><span class="pre">angle</span></code>: identifier for a type of statistics… should always just be ‘angle’</li>
+<li><code class="code docutils literal"><span class="pre">pdb_name</span></code>: the name of the pdb file these statistics came from</li>
+<li><code class="code docutils literal"><span class="pre">dim1</span></code>: the smaller dimension of the bulge</li>
+<li><code class="code docutils literal"><span class="pre">dim2</span></code>: the larger dimension of the bulge</li>
+<li><code class="code docutils literal"><span class="pre">u</span></code>: the polar angle of the orientation of the 2nd stem</li>
+<li><code class="code docutils literal"><span class="pre">v</span></code>: the azimuth of the orientation of the 2nd stem</li>
+<li><code class="code docutils literal"><span class="pre">t</span></code>: the orientation of the twist of the second stem</li>
+<li><dl class="first docutils">
+<dt><code class="code docutils literal"><span class="pre">r1</span></code>: the distance of the start of the 2nd stem helix from the end of the 1st</dt>
+<dd>stem helix</dd>
+</dl>
+</li>
+<li><code class="code docutils literal"><span class="pre">u1</span></code>: the polar angle of the separation vector of the two helices</li>
+<li><code class="code docutils literal"><span class="pre">v1</span></code>: the azimuth of the separation vector of the two helices</li>
+<li><code class="code docutils literal"><span class="pre">s1b</span></code>: The side of the first stem closest to the bulge</li>
+<li><code class="code docutils literal"><span class="pre">s2b</span></code>: The side of the second stem closest to the bulge</li>
+</ul>
+<p>The azimuth is always defined with respect to the coordinate system defined
+by the stem1 helix axis vector and it’s twist vector (the one adjacent to the
+bulge element).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_conformation_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_conformation_stats</code><span class="sig-paren">(</span><em>stats_file</em>, <em>angle_stats_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_conformation_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_conformation_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_fiveprime_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_fiveprime_stats</code><span class="sig-paren">(</span><em>filename</em>, <em>refresh=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_fiveprime_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_fiveprime_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the statistics from the file.</p>
+<p>format:</p>
+<p><code class="code docutils literal"><span class="pre">fiveprime</span> <span class="pre">pdb_name</span> <span class="pre">bp_length</span> <span class="pre">phys_length</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – The name of the file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_loop_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_loop_stats</code><span class="sig-paren">(</span><em>filename</em>, <em>refresh=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_loop_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_loop_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the statistics from the file.</p>
+<p>format:</p>
+<p><code class="code docutils literal"><span class="pre">loop</span> <span class="pre">pdb_name</span> <span class="pre">bp_length</span> <span class="pre">phys_length</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – The name of the file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_one_d_stat_dims">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_one_d_stat_dims</code><span class="sig-paren">(</span><em>d</em>, <em>stats</em>, <em>min_entries=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_one_d_stat_dims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_one_d_stat_dims" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_stem_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_stem_stats</code><span class="sig-paren">(</span><em>filename</em>, <em>refresh=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_stem_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_stem_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the statistics from the file.</p>
+<p>format:</p>
+<p>stem pdb_name bp_length phys_length twist_angle</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – The name of the file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.get_threeprime_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">get_threeprime_stats</code><span class="sig-paren">(</span><em>filename</em>, <em>refresh=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#get_threeprime_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.get_threeprime_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the statistics from the file.</p>
+<p>format:</p>
+<p><code class="code docutils literal"><span class="pre">threeprime</span> <span class="pre">pdb_name</span> <span class="pre">bp_length</span> <span class="pre">phys_length</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – The name of the file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.model.stats.set_conformation_stats">
+<code class="descclassname">forgi.threedee.model.stats.</code><code class="descname">set_conformation_stats</code><span class="sig-paren">(</span><em>conf_stats</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/stats.html#set_conformation_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.stats.set_conformation_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
@@ -61,7 +624,7 @@
       <div class="bottomnav">
       
         <p>
-        «&#160;&#160;<a href="forgi.threedee.model.descriptors.html">forgi.threedee.model.descriptors module</a>
+        «&#160;&#160;<a href="forgi.threedee.model.similarity.html">forgi.threedee.model.similarity module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -72,8 +635,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

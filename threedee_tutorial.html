@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>RNA 3D Structure Using forgi.threedee &#8212; forgi 0.4 documentation</title>
-    
+    <title>RNA 3D Structure Using forgi.threedee &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="index.html" />
-    <link rel="up" title="Forgi Tutorial" href="tutorial.html" />
     <link rel="next" title="Forgi API documentation" href="apidoc/forgi.html" />
     <link rel="prev" title="RNA Secondary Structure as a Graph Using the forgi Library" href="graph_tutorial.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -94,7 +90,7 @@ listed in the citations section at the bottom of this page.</p>
 </div>
 <div class="section" id="creating-a-coarse-grain-3d-representation-of-an-rna-molecule">
 <h2>Creating a Coarse Grain 3D Representation of an RNA Molecule<a class="headerlink" href="#creating-a-coarse-grain-3d-representation-of-an-rna-molecule" title="Permalink to this headline">¶</a></h2>
-<p>One can imagine an RNA molecule as a collection of helices and ... not helices
+<p>One can imagine an RNA molecule as a collection of helices and … not helices
 (hairpins, interior loops, multiloops, etc..) as described in the
 <a class="reference internal" href="graph_tutorial.html#forgi-graph-tutorial"><span class="std std-ref">RNA Secondary Structure as a Graph Using the forgi Library</span></a>. By creating an abstraction for the canonical
 helixes and representing them as cylinders, we can create a coarse grain
@@ -153,7 +149,7 @@ composed of (its <code class="code docutils literal"><span class="pre">define</s
 <span class="go">pdb_name: 2mis_A bp_length: 6 phys_length: 14.735000 twist_angle: 2.822735 define: 1 6 21 26</span>
 </pre></div>
 </div>
-<p>The first stem in the structure (&#8216;s0&#8217;), is composed of nucleotides 1 - 6 and 21
+<p>The first stem in the structure (‘s0’), is composed of nucleotides 1 - 6 and 21
 - 26, has a length of 14.735 Angstroms and a twist of 2.82 radians. It contains
 6 base pairs and comes from a structure named <code class="code docutils literal"><span class="pre">2mis_A</span></code>.</p>
 </div>
@@ -170,7 +166,7 @@ s2 relative to the end of s_1</li>
 <p>Using these six parameters, one can reproduce the position of a second helix
 given the position of the first. The <code class="docutils literal"><span class="pre">get_bulge_angle_stats</span></code> function returns
 this set of parameters for any secondary structure element which connects two
-stems (hereafter referred to as a &#8216;joint&#8217; and &#8216;i0&#8217; in the example below):</p>
+stems (hereafter referred to as a ‘joint’ and ‘i0’ in the example below):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="s1">&#39;test/forgi/threedee/data/2mis.pdb&#39;</span><span class="p">,</span> <span class="n">intermediate_file_dir</span><span class="o">=</span><span class="s1">&#39;tmp&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_bulge_angle_stats</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)</span>
@@ -389,6 +385,14 @@ function tries to determine the whether two atoms are covalently bonded.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="determine-the-total-rotation-of-a-stem">
+<h2>Determine the total rotation of a stem<a class="headerlink" href="#determine-the-total-rotation-of-a-stem" title="Permalink to this headline">¶</a></h2>
+<p>The location of a stem’s minor groove at the beginning and the end of the stem is stored as
+the twist vector. To calculate the total rotation of a stem, we need to calculate the angle
+between the two twist vectors and find out how many full turns around the helix we took.</p>
+<p>An ideal helix turns 36.4 degrees per base-pair, so given the number of basepairs we can
+calculate the number of full turns.</p>
+</div>
 <div class="section" id="citations">
 <h2>Citations<a class="headerlink" href="#citations" title="Permalink to this headline">¶</a></h2>
 <p>[1] <em>Gendron P, Lemieux S, Major F</em>. <strong>Quantitative analysis of nucleic acid three-dimensional structures.</strong> J Mol Biol (2001) 308:919–936.</p>
@@ -417,8 +421,8 @@ The Journal of Chemical Physics (2013) 138:054904, <a class="reference external"
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

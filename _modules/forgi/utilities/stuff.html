@@ -1,38 +1,36 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.utilities.stuff &mdash; forgi 0.4 documentation</title>
-    
+    <title>forgi.utilities.stuff &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
-    <link rel="top" title="forgi 0.4 documentation" href="../../../index.html" />
-    <link rel="up" title="forgi" href="../../forgi.html" /> 
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../../../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -45,17 +43,32 @@
         
         
   <h1>Source code for forgi.utilities.stuff</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">itertools</span> <span class="kn">as</span> <span class="nn">it</span>
+<span></span><span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">next</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
 <span class="kn">import</span> <span class="nn">contextlib</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">import</span> <span class="nn">tempfile</span> <span class="kn">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">collections</span> <span class="kn">as</span> <span class="nn">col</span>
+<span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">collections</span> <span class="k">as</span> <span class="nn">col</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 
-<span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="kn">as</span> <span class="nn">cud</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="k">as</span> <span class="nn">cud</span>
 
 <span class="n">bracket_left</span> <span class="o">=</span>  <span class="s2">&quot;([{&lt;ABCDEFGHIJKLMNOPQRSTUVWXYZ&quot;</span>
 <span class="n">bracket_right</span> <span class="o">=</span> <span class="s2">&quot;)]}&gt;abcdefghijklmnopqrstuvwxyz&quot;</span>
+
+
+<div class="viewcode-block" id="is_string_type"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.is_string_type">[docs]</a><span class="k">def</span> <span class="nf">is_string_type</span><span class="p">(</span><span class="n">stri</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">&lt;</span><span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stri</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stri</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span></div>
+
 
 <span class="c1">#COVERAGE: Not used</span>
 <div class="viewcode-block" id="grouped"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.grouped">[docs]</a><span class="k">def</span> <span class="nf">grouped</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -66,7 +79,7 @@
 
 <span class="sd">    s -&gt; (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ...</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">return</span> <span class="n">it</span><span class="o">.</span><span class="n">izip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)]</span><span class="o">*</span><span class="n">n</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)]</span><span class="o">*</span><span class="n">n</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="merge_intervals"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.merge_intervals">[docs]</a><span class="k">def</span> <span class="nf">merge_intervals</span><span class="p">(</span><span class="n">intervals</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -112,8 +125,8 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">,</span><span class="s1">&#39;G&#39;</span><span class="p">,</span><span class="s1">&#39;U&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">l</span><span class="p">)])</span></div>
 
-<span class="nd">@contextlib.contextmanager</span>
-<div class="viewcode-block" id="make_temp_directory"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.make_temp_directory">[docs]</a><span class="k">def</span> <span class="nf">make_temp_directory</span><span class="p">():</span>
+<div class="viewcode-block" id="make_temp_directory"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.make_temp_directory">[docs]</a><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">make_temp_directory</span><span class="p">():</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Yanked from:</span>
 
@@ -132,12 +145,12 @@
     <span class="k">return</span> <span class="n">k</span></div>
 
 <div class="viewcode-block" id="delete_from_stack"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.delete_from_stack">[docs]</a><span class="k">def</span> <span class="nf">delete_from_stack</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
-    <span class="c1">#print &quot;del&quot;, j </span>
+    <span class="c1">#print &quot;del&quot;, j</span>
     <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">==</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">stack</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
         <span class="n">k</span><span class="o">+=</span><span class="mi">1</span>
     <span class="n">stack</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">k</span>    </div>
+    <span class="k">return</span> <span class="n">k</span></div>
 
 <div class="viewcode-block" id="pairtable_to_dotbracket"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.pairtable_to_dotbracket">[docs]</a><span class="k">def</span> <span class="nf">pairtable_to_dotbracket</span><span class="p">(</span><span class="n">pt</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -152,7 +165,7 @@
 
         <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
-        <span class="k">if</span> <span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">+=</span> <span class="s1">&#39;.&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;</span><span class="n">i</span><span class="p">:</span>                        <span class="c1"># &#39;(&#39; check if we can stack it...</span>
@@ -171,28 +184,34 @@
 <div class="viewcode-block" id="dotbracket_to_pairtable"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.dotbracket_to_pairtable">[docs]</a><span class="k">def</span> <span class="nf">dotbracket_to_pairtable</span><span class="p">(</span><span class="n">struct</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).</span>
-<span class="sd">    &quot;&quot;&quot;</span>    
-    <span class="n">pt</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">struct</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">struct</span><span class="p">)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">struct</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="n">struct</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">))</span>
+    <span class="n">pt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">struct</span><span class="p">)</span><span class="o">-</span><span class="n">struct</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)</span>
 
     <span class="n">stack</span> <span class="o">=</span> <span class="n">col</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">inverse_bracket_left</span> <span class="o">=</span> <span class="n">inverse_brackets</span><span class="p">(</span><span class="n">bracket_left</span><span class="p">)</span>
     <span class="n">inverse_bracket_right</span> <span class="o">=</span> <span class="n">inverse_brackets</span><span class="p">(</span><span class="n">bracket_right</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">struct</span><span class="p">):</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">struct</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">==</span><span class="s1">&#39;&amp;&#39;</span><span class="p">:</span> <span class="k">continue</span>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="c1">#print i,a, pt</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parsing bracket </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span> <span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span> 
-            <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">inverse_bracket_left</span><span class="p">:</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">inverse_bracket_left</span><span class="p">:</span>
                 <span class="n">stack</span><span class="p">[</span><span class="n">inverse_bracket_left</span><span class="p">[</span><span class="n">a</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span> 
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">inverse_bracket_right</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="n">inverse_bracket_right</span><span class="p">[</span><span class="n">a</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Too many closing brackets!&#39;</span><span class="p">)</span>
                 <span class="n">j</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="n">inverse_bracket_right</span><span class="p">[</span><span class="n">a</span><span class="p">]]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
                 <span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span>
                 <span class="n">pt</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
-        
+
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="n">inverse_bracket_left</span><span class="p">[</span><span class="n">a</span><span class="p">]])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Too many opening brackets!&#39;</span><span class="p">)</span>
 
@@ -204,22 +223,22 @@
 
 <span class="sd">    i.e. [4,3,4,1,2] -&gt; [(1,3),(2,4),(3,1),(4,2)]</span>
 
-<span class="sd">    :param pt: A pairtable </span>
+<span class="sd">    :param pt: A pairtable</span>
 <span class="sd">    :return: A list paired tuples</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
 
     <span class="c1"># get rid of the first element which contains the length</span>
     <span class="c1"># of the sequence. We&#39;ll figure it out after the traversal</span>
-    <span class="n">pt</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+    <span class="nb">next</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
 
     <span class="n">tuples</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pt</span><span class="p">):</span>
         <span class="n">tuples</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">)]</span>
 
     <span class="k">return</span> <span class="n">tuples</span></div>
-        
-<div class="viewcode-block" id="tuples_to_pairtable"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.tuples_to_pairtable">[docs]</a><span class="k">def</span> <span class="nf">tuples_to_pairtable</span><span class="p">(</span><span class="n">pair_tuples</span><span class="p">,</span> <span class="n">seq_length</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="tuples_to_pairtable"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.tuples_to_pairtable">[docs]</a><span class="k">def</span> <span class="nf">tuples_to_pairtable</span><span class="p">(</span><span class="n">pair_tuples</span><span class="p">,</span> <span class="n">seq_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Convert a representation of an RNA consisting of a list of tuples</span>
 <span class="sd">    to a pair table:</span>
@@ -231,7 +250,7 @@
 <span class="sd">                       the unpaired nucleotides aren&#39;t passed in as (x,0) tuples.</span>
 <span class="sd">    :return: A pair table</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">seq_length</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">seq_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">max_bp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pair_tuples</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">max_bp</span> <span class="o">=</span> <span class="n">seq_length</span>
@@ -246,7 +265,7 @@
 
 <div class="viewcode-block" id="pairtable_to_elements"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.pairtable_to_elements">[docs]</a><span class="k">def</span> <span class="nf">pairtable_to_elements</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Convert a pair table to a list of secondary structure </span>
+<span class="sd">    Convert a pair table to a list of secondary structure</span>
 <span class="sd">    elements:</span>
 
 <span class="sd">     [[&#39;s&#39;,1,[2,3]]</span>
@@ -266,7 +285,7 @@
 
     <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[]</span>
-        
+
     <span class="c1">#iterate over the unpaired regions on either side</span>
     <span class="c1">#this is either 5&#39; and 3&#39; unpaired if level == 0</span>
     <span class="c1">#or an interior loop or a multiloop</span>
@@ -285,7 +304,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># check to see if we have chain breaks due</span>
             <span class="c1"># to multiple strands in the input</span>
-            <span class="n">external</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">external</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">left</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">right</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">u5</span><span class="p">)):</span>
@@ -317,14 +336,14 @@
             <span class="n">m</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
         <span class="n">m</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-        <span class="n">m</span> <span class="o">+=</span> <span class="n">u3</span> 
-        
+        <span class="n">m</span> <span class="o">+=</span> <span class="n">u3</span>
+
         <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">level</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
                 <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="p">]);</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="p">]);</span>
-        
+
         <span class="k">return</span> <span class="n">elements</span><span class="p">;</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">pt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">j</span><span class="p">):</span>
@@ -356,7 +375,6 @@
     <span class="n">elements</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">)])</span>
 
     <span class="k">return</span> <span class="n">elements</span> <span class="o">+</span> <span class="n">pairtable_to_elements</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span></div>
-
 </pre></div>
 
       </div>
@@ -369,9 +387,9 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Sep 05, 2016.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>RNA Secondary Structure as a Graph Using the forgi Library &#8212; forgi 0.4 documentation</title>
-    
+    <title>RNA Secondary Structure as a Graph Using the forgi Library &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="index.html" />
-    <link rel="up" title="Forgi Tutorial" href="tutorial.html" />
     <link rel="next" title="RNA 3D Structure Using forgi.threedee" href="threedee_tutorial.html" />
     <link rel="prev" title="RNA Secondary Structure Utilities Using the forgi.utilities Submodule" href="utilities_tutorial.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -62,25 +58,38 @@ outputting RNA structures. It classifies and stores RNA secondary
 structure in a data structure that quickly allows one to determine
 which elements are connected and which nucleotides they contain.</p>
 <p>The secondary structure of an RNA molecule can be divided into
-five different types of &#8216;elements&#8217;. Each element is assigned a name that
+five different types of ‘elements’. Each element is assigned a name that
 can be used to refer to it and to determine its identity:</p>
 <ul class="simple">
-<li><strong>fiveprime:</strong> The unpaired nucleotides at the 5&#8217; end of a molecule. Always start with &#8216;f&#8217; and there can be only one in the structure (i.e. &#8216;f0&#8217;)</li>
-<li><strong>threeprime</strong>: The unpaired nucleotides at the 3&#8217; end of a molecule. Always start with &#8216;t&#8217; and there can be only one in the structure (i.e &#8216;t0&#8217;)</li>
-<li><strong>stem:</strong> Regions of contiguous canonical Watson-Crick base-paired nucleotides. Always start with &#8216;s&#8217; and there can be many in the structure (i.e., &#8216;s0&#8217;, &#8216;s1&#8217;, &#8216;s2&#8217;, ...)</li>
-<li><strong>interior loop:</strong> Double-stranded unpaired regions flanked by stems on either side. Always start with &#8216;i&#8217; and there can be many in the structure (&#8216;i0&#8217;, &#8216;i1&#8217;, &#8216;i2&#8217;,...)</li>
-<li><strong>multiloop:</strong> Single-stranded unpaired regionsAlways start with &#8216;m&#8217; and there can be many in the structure (&#8216;m0&#8217;, &#8216;m1&#8217;, &#8216;m2&#8217;...)</li>
+<li><strong>fiveprime:</strong> The unpaired nucleotides at the 5’ end of a molecule/ chain. Always start with ‘f’ (e.g. ‘f0’).</li>
+<li><strong>threeprime</strong>: The unpaired nucleotides at the 3’ end of a molecule/ chain. Always start with ‘t’ (e.g. ‘t0’)</li>
+<li><dl class="first docutils">
+<dt><strong>stem:</strong> Regions of contiguous canonical Watson-Crick base-paired nucleotides.</dt>
+<dd>Always start with ‘s’ (e.g., ‘s0’, ‘s1’, ‘s2’, …)</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>interior loop:</strong> Bulged out nucleotides. Unpaird double stranded regions, flanked by stems on either side.</dt>
+<dd>Always start with ‘i’ (‘i0’, ‘i1’, ‘i2’,…)</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>multiloop segment:</strong> Single-stranded unpaired regions. Always start with ‘m’. (‘m0’, ‘m1’, ‘m2’…)</dt>
+<dd>In the current version of forgi, pseudo-knots and exterior loops segments between stems are treated as multiloop segments.</dd>
+</dl>
+</li>
+<li><strong>hairpin loop:</strong> Always start with ‘h’.</li>
 </ul>
 </div>
 <div class="section" id="a-simple-example">
 <h2>A Simple Example<a class="headerlink" href="#a-simple-example" title="Permalink to this headline">¶</a></h2>
-<p>It&#8217;s use is perhaps best illustrated with an
+<p>The use of forgi is perhaps best illustrated with an
 example.</p>
-<p>Let&#8217;s take an RNA sequence:</p>
+<p>Let’s take an RNA sequence:</p>
 <p><code class="docutils literal"><span class="pre">CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG</span></code></p>
 <p>We can predict its secondary structure using one of a number of tools,
-including the Vienna RNA Package&#8217;s RNAfold program:</p>
-<p><a class="reference external" href="http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi">http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi</a></p>
+including the Vienna RNA Package’s RNAfold program:</p>
+<p><a class="reference external" href="http://rna.tbi.univie.ac.at/cgi-bin/RNAWebSuite/RNAfold.cgi">http://rna.tbi.univie.ac.at/cgi-bin/RNAWebSuite/RNAfold.cgi</a></p>
 <p>This will return a minimum free energy structure which can be represented using
 dot-bracket notation:</p>
 <p><code class="docutils literal"><span class="pre">(((((((((...((((((.........))))))........((((((.......))))))..)))))))))</span></code></p>
@@ -103,7 +112,7 @@ abstract away the sequence information, we can imagine the structure as being
 represented by a graph.</p>
 <p>The forgi package can be used to do just this by using the
 dotbracket_to_bulge_graph.py script:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>[pkerp@plastilin forgi]$ python examples/dotbracket_to_bulge_graph.py examples/input/1y26_ss.dotbracket
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T forgi
 name untitled
 length 71
 define m2 34 41
@@ -120,51 +129,58 @@ connect s0 m1 m0
 </pre></div>
 </div>
 <p>The result is an adjacency list of all the elements. The stems are defined with
-names starting with &#8216;s&#8217;, hairpins with an &#8216;h&#8217;, multiloops with an &#8216;m&#8217;, interior
-loops with an &#8216;i&#8217;, five-prime unpaired regions with an &#8216;f&#8217; and three-prime
-unpaired regions with a &#8216;t&#8217;. The numbers indicate the nucleotides that are
+names starting with ‘s’, hairpins with an ‘h’, multiloops with an ‘m’, interior
+loops with an ‘i’, five-prime unpaired regions with an ‘f’ and three-prime
+unpaired regions with a ‘t’. The numbers indicate the nucleotides that are
 present in each element. So the stem s0 is composed of nucleotides 1 to 9 on
 one strand and 63 to 71 on the other. The other elements are described in a
-similar manner. The hairpin <em>h0</em> includs the nucleotides 19 to 27.</p>
+similar manner. The hairpin <em>h0</em> includes the nucleotides 19 to 27.</p>
 <p>In this case it is difficult to picture which section is which from the text
-representation. To make it easier, another example script will generate a file
+representation. To make it easier, we will generate a file
 readable by graphviz. The <em>neato</em> program can take that as input and create a
 nice visualization of the graph:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>[pkerp@plastilin forgi]$ python examples/graph_to_neato.py examples/input/1y26_ss.dotbracket | neato -Tpng -o 1y26_neato.png
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">rnaConvert</span><span class="o">.</span><span class="n">py</span> <span class="n">examples</span><span class="o">/</span><span class="nb">input</span><span class="o">/</span><span class="mi">1</span><span class="n">y26_ss</span><span class="o">.</span><span class="n">dotbracket</span> <span class="o">-</span><span class="n">T</span> <span class="n">neato</span> <span class="o">|</span> <span class="n">neato</span> <span class="o">-</span><span class="n">Tpng</span> <span class="o">-</span><span class="n">o</span> <span class="mi">1</span><span class="n">y26_neato</span><span class="o">.</span><span class="n">png</span>
 </pre></div>
 </div>
 <p>The result is the following graph representation of the structure.</p>
 <a class="reference internal image-reference" href="_images/1y26_neato.png"><img alt="_images/1y26_neato.png" class="align-center" src="_images/1y26_neato.png" style="width: 200px; height: 200px;" /></a>
+<p>Here square nodes represent stems and round nodes represent other elements.
+The connections in this representation do not contain any nucleotides,
+but simply illustrate which coarse grained elements are connected to each other.</p>
+<p>The label of the nodes are the element names (as described above), so “s0” means stem number 0.
+The numbers in parenthesis below the element names represent the number of nucleotides in the element.
+In case of interior loops (not shown in this example), there can be two numbers, if the RNA has
+unpaired nucleotides on both sides of the bulge.</p>
 <p>Notice the similarity to the original base paired image? The top stem can be
-identified as <em>s0</em>. The two hairpin loops are <em>b0</em> and <em>b1</em>. The regions in the
-multiloop are given their own names. <em>f1</em> and <em>t1</em> should correspond to the 5&#8217;
-and 3&#8217; unpaired regions. In this case, the structure lacks these regions so the
-nodes in the graph are just place-holders.</p>
+identified as <em>s0</em>. The two hairpin loops are <em>h0</em> and <em>h1</em>. The regions in the
+multiloop are given their own names.</p>
+<p>This graph visualization is useful to get an idea of the coarse grained representation
+of the RNA introduced by forgi. However, some information is lost in this picture:
+This graph only shows, which stem is connected to which bulge, but it does not show which
+side of the stem and bulge is involved in the connection.</p>
 <div class="section" id="getting-a-condensed-representation-of-the-element-types">
 <h3>Getting a Condensed Representation of the Element Types<a class="headerlink" href="#getting-a-condensed-representation-of-the-element-types" title="Permalink to this headline">¶</a></h3>
 <p>Mapping nucleotide positions to secondary structure element types (stems,
 hairpins, multiloops) is easily done using an example script:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>[pkerp@plastilin forgi]$ python examples/dotbracket_to_element_string.py -s examples/input/1y26_ss.dotbracket
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T element_string
 (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
 sssssssssmmmsssssshhhhhhhhhssssssmmmmmmmmsssssshhhhhhhssssssmmsssssssss
 </pre></div>
 </div>
 <p>In this example, one can clearly see that the paired regions are stems. Some
-multiloops are present as well as two hairpin regions. The -s option was used
-to print out the dotbracket representation as well as the element type
-representation. Omitting it will only output the latter line.</p>
+multiloops are present as well as two hairpin regions.</p>
 </div>
 <div class="section" id="another-example">
 <h3>Another Example<a class="headerlink" href="#another-example" title="Permalink to this headline">¶</a></h3>
-<p>Here&#8217;s an example with a longer sequence.</p>
-<p>Let&#8217;s take an RNA sequence:</p>
+<p>Here’s an example with a longer sequence.</p>
+<p>Let’s take an RNA sequence:</p>
 <p><code class="docutils literal"><span class="pre">GAAUUGCGGGAAAGGGGUCAACAGCCGUUCAGUACCAAGUCUCAGGGGAAACUUUGAGAUGGCCUUGCAAAGGGUAUGGUAAUAAGCUGACGGACAUGGUCCUAACCACGCAGCCAAGUCCUAAGUCAACAGAUCUUCUGUUGAUAUGGAUGCAGUUC</span></code></p>
 <p>With a secondary structure:</p>
 <p><code class="docutils literal"><span class="pre">....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))........</span></code></p>
 <p>Which looks like this:</p>
 <a class="reference internal image-reference" href="_images/1gid_ss.png"><img alt="_images/1gid_ss.png" class="align-center" src="_images/1gid_ss.png" style="width: 360px; height: 360px;" /></a>
 <p>Can be transformed using the command:</p>
-<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">examples/graph_to_neato.py</span> <span class="pre">examples/input/1gid_ss.dotbracket</span> <span class="pre">|</span> <span class="pre">neato</span> <span class="pre">-Tpng</span> <span class="pre">-o</span> <span class="pre">1gid_neato.png</span></code></p>
+<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">examples/rnaConvert.py</span> <span class="pre">-T</span> <span class="pre">neato</span> <span class="pre">examples/input/1gid_ss.dotbracket</span> <span class="pre">|</span> <span class="pre">neato</span> <span class="pre">-Tpng</span> <span class="pre">-o</span> <span class="pre">1gid_neato.png</span></code></p>
 <p>Into a graph that looks like this:</p>
 <a class="reference internal image-reference" href="_images/1gid_neato.png"><img alt="_images/1gid_neato.png" class="align-center" src="_images/1gid_neato.png" style="width: 500px; height: 500px;" /></a>
 <p>Note that the graph and the secondary structure representation are oriented
@@ -206,7 +222,7 @@ also be used as input to create a skeleton graph in <code class="code docutils l
 <h3>Loading a Structure from a BPSEQ Formatted File:<a class="headerlink" href="#loading-a-structure-from-a-bpseq-formatted-file" title="Permalink to this headline">¶</a></h3>
 <p>A bpseq-formatted file stores the sequence and base-pair content of an RNA
 secondary structure using one line for each nucleotide in the sequence. Each
-line has three columns, the index of the nucleotide being described, it&#8217;s
+line has three columns, the index of the nucleotide being described, it’s
 identity (A, C, G, or U) and the index of its pairing partner (0 if none). We
 can load this file and create graph structure from it using the
 <code class="code docutils literal"><span class="pre">from_bpseq_str</span></code> function:</p>
@@ -318,7 +334,7 @@ integer <strong>j</strong> which is the pairing partner of <strong>i</strong>:</
 <div class="section" id="getting-the-name-of-an-element-from-the-residue-number">
 <h3>Getting the Name of an Element from the Residue Number<a class="headerlink" href="#getting-the-name-of-an-element-from-the-residue-number" title="Permalink to this headline">¶</a></h3>
 <p>Various applictions of <code class="docutils literal"><span class="pre">forgi</span></code> require knowledge of the internal name
-of a particular element. As these names are generated by <code class="docutils literal"><span class="pre">forgi</span></code> itself, it&#8217;s
+of a particular element. As these names are generated by <code class="docutils literal"><span class="pre">forgi</span></code> itself, it’s
 useful to be to retrieve the name of an element given the number of a
 residue which is part of it. To demonstrate how to do this we will first need
 to load a secondary structure:</p>
@@ -347,12 +363,12 @@ to load a secondary structure:</p>
 </pre></div>
 </div>
 <p>This can then be used to in other applications such as <a class="reference internal" href="#loop-dimensions"><span class="std std-ref">Retrieving the Dimensions of a Loop</span></a>,
-<a class="reference internal" href="#dissolving-stems"><span class="std std-ref">Dissolving Stems</span></a>, <a class="reference internal" href="#iloop-iterating"><span class="std std-ref">Iterating Over the Nucleotides of an Interior Loop</span></a>, etc...</p>
+<a class="reference internal" href="#dissolving-stems"><span class="std std-ref">Dissolving Stems</span></a>, <a class="reference internal" href="#iloop-iterating"><span class="std std-ref">Iterating Over the Nucleotides of an Interior Loop</span></a>, etc…</p>
 <div class="section" id="finding-the-length-of-the-longest-stem">
 <h4>Finding the Length of the Longest Stem<a class="headerlink" href="#finding-the-length-of-the-longest-stem" title="Permalink to this headline">¶</a></h4>
 <p>For whatever reason, one may be interested in finding out how long the longest
 stem in a secondary structure is. Initially, one may assume that this can
-easily be done by searching for the longest string of &#8216;(&#8216; or &#8216;)&#8217; in the
+easily be done by searching for the longest string of ‘(‘ or ‘)’ in the
 dot-bracket file. Unfortunately, structures with an interior loop which has an
 unpaired base on only one strand will lead to an erronous result in this
 example. The decomposition provided by forgi will, however, take this into
@@ -382,7 +398,7 @@ appears to be one large stem of length 4, is actually two stems of length 1 and
 <h3>Getting the Sequence of an Element and its Neighbors<a class="headerlink" href="#getting-the-sequence-of-an-element-and-its-neighbors" title="Permalink to this headline">¶</a></h3>
 <p>Suppose we want to find out not only the sequence of an element, but also the
 elements that surround it? This is easily done using the
-<code class="code docutils literal"><span class="pre">get_flanking_sequence</span></code> function. To illustrate, let&#8217;s create a graph from a
+<code class="code docutils literal"><span class="pre">get_flanking_sequence</span></code> function. To illustrate, let’s create a graph from a
 fasta representation:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
 
@@ -397,7 +413,7 @@ fasta representation:</p>
 </div>
 <p>From the structure, we can see that there are two hairpins (<code class="code docutils literal"><span class="pre">h0</span></code> and <code class="code docutils literal"><span class="pre">h1</span></code>), one
 interior loop (<code class="code docutils literal"><span class="pre">i0</span></code>) and one multiloop (<code class="code docutils literal"><span class="pre">m0</span></code>). We can get the sequence for <code class="code docutils literal"><span class="pre">h0</span></code>
-and it&#8217;s neighboring node (<code class="code docutils literal"><span class="pre">s0</span></code>) like so:</p>
+and it’s neighboring node (<code class="code docutils literal"><span class="pre">s0</span></code>) like so:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_flanking_sequence</span><span class="p">(</span><span class="s1">&#39;h0&#39;</span><span class="p">)</span>
 <span class="go">&#39;GGGCCUUU&#39;</span>
 </pre></div>
@@ -409,8 +425,8 @@ and it&#8217;s neighboring node (<code class="code docutils literal"><span class
 </div>
 <p>The interior loop is a little more tricky because it is double stranded. From
 the interior loop, we need to pass in a parameter indicating which side we want
-(0 or 1). The 0&#8217;th strand corresponds to the one with the lower numbered
-nucleotides, whereas the 1&#8217;st strand is the other. The default is the 0&#8217;th
+(0 or 1). The 0’th strand corresponds to the one with the lower numbered
+nucleotides, whereas the 1’st strand is the other. The default is the 0’th
 strand:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_flanking_sequence</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)</span>
 <span class="go">&#39;AAAACCGGG&#39;</span>
@@ -461,7 +477,7 @@ them with the adjacent unpaired regions:</p>
 <h3>Finding Out Which Side of a Stem a Loop Is On<a class="headerlink" href="#finding-out-which-side-of-a-stem-a-loop-is-on" title="Permalink to this headline">¶</a></h3>
 <p>If one imagines a stem as having a direction where its start is the position of
 the lowest numbered nucleotide within it, then a loop adjacent to the stem will
-be on one side of it. Which side it&#8217;s on can be elucidated using the
+be on one side of it. Which side it’s on can be elucidated using the
 <code class="docutils literal"><span class="pre">get_sides</span></code> function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s2">&quot;..((..((..))..))..&quot;</span><span class="p">)</span>
@@ -527,8 +543,8 @@ respectively:</p>
 <span class="go">[&#39;t1&#39;]</span>
 </pre></div>
 </div>
-<p>Notice that <code class="code docutils literal"><span class="pre">floop_iterator()</span></code> doesn&#8217;t yield any values. This is because there
-is no 3&#8217; unpaired region in this structure.</p>
+<p>Notice that <code class="code docutils literal"><span class="pre">floop_iterator()</span></code> doesn’t yield any values. This is because there
+is no 3’ unpaired region in this structure.</p>
 </div>
 </div>
 <div class="section" id="graph-functions">
@@ -545,7 +561,7 @@ tree but simply a representation of the secondary structure with broken
 multiloops.</p>
 <p>As an example, consider the following structure:</p>
 <a class="reference internal image-reference" href="_images/mst_init.png"><img alt="_images/mst_init.png" class="align-center" src="_images/mst_init.png" style="width: 200px;" /></a>
-<p>To break the cycle, we would like to remove the segment &#8216;m0&#8217;. This is easily
+<p>To break the cycle, we would like to remove the segment ‘m0’. This is easily
 done using the <code class="code docutils literal"><span class="pre">get_mst()</span></code> function of the <code class="code docutils literal"><span class="pre">BulgeGraph</span></code> data structure:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s2">&quot;((..((.)).(.).))&quot;</span><span class="p">)</span>
@@ -554,7 +570,7 @@ done using the <code class="code docutils literal"><span class="pre">get_mst()</
 </pre></div>
 </div>
 <p>The result contains all the nodes except the ones removed to break the cycles.
-The implementation uses a slightly modified version of Kruskal&#8217;s algorithm.</p>
+The implementation uses a slightly modified version of Kruskal’s algorithm.</p>
 </div>
 <div class="section" id="traversing-the-graph">
 <h3>Traversing the Graph<a class="headerlink" href="#traversing-the-graph" title="Permalink to this headline">¶</a></h3>
@@ -698,8 +714,8 @@ in the first example) one can run the appropriate example:</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

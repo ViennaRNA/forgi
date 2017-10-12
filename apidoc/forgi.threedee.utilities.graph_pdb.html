@@ -1,47 +1,43 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.threedee.utilities.graph_pdb module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.threedee.utilities.graph_pdb module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.threedee.utilities package" href="forgi.threedee.utilities.html" />
     <link rel="next" title="forgi.threedee.utilities.mcannotate module" href="forgi.threedee.utilities.mcannotate.html" />
-    <link rel="prev" title="forgi.threedee.utilities.cytvec module" href="forgi.threedee.utilities.cytvec.html" /> 
+    <link rel="prev" title="forgi.threedee.utilities package" href="forgi.threedee.utilities.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
         <p>
-        «&#160;&#160;<a href="forgi.threedee.utilities.cytvec.html">forgi.threedee.utilities.cytvec module</a>
+        «&#160;&#160;<a href="forgi.threedee.utilities.html">forgi.threedee.utilities package</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -52,8 +48,975 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-threedee-utilities-graph-pdb-module">
-<h1>forgi.threedee.utilities.graph_pdb module<a class="headerlink" href="#forgi-threedee-utilities-graph-pdb-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.threedee.utilities.graph_pdb">
+<span id="forgi-threedee-utilities-graph-pdb-module"></span><h1>forgi.threedee.utilities.graph_pdb module<a class="headerlink" href="#module-forgi.threedee.utilities.graph_pdb" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.threedee.utilities.graph_pdb.VirtualAtomsLookup">
+<em class="property">class </em><code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">VirtualAtomsLookup</code><span class="sig-paren">(</span><em>cg</em>, <em>given_atom_names=None</em>, <em>sidechain=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#VirtualAtomsLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.VirtualAtomsLookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>An object with a dict-like interface that calculated the virtual atom positions on demand.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cg</strong> – The coarse grain structure, for which the virtual atoms are generated.</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>..note ::</dt>
+<dd>If cg is modified, new virtual atom positions are calculated.</dd>
+</dl>
+<dl class="method">
+<dt id="forgi.threedee.utilities.graph_pdb.VirtualAtomsLookup.keys">
+<code class="descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#VirtualAtomsLookup.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.VirtualAtomsLookup.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.add_bulge_information_from_pdb_chain">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">add_bulge_information_from_pdb_chain</code><span class="sig-paren">(</span><em>bg</em>, <em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#add_bulge_information_from_pdb_chain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.add_bulge_information_from_pdb_chain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the information about the starts and ends of the bulges. The stems
+have to be created beforehand.</p>
+<p>Modifies the structure bg.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bg</strong> – The CoarseGrainRNA.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.add_loop_information_from_pdb_chains">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">add_loop_information_from_pdb_chains</code><span class="sig-paren">(</span><em>bg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#add_loop_information_from_pdb_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.add_loop_information_from_pdb_chains" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.add_stem_information_from_pdb_chains">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">add_stem_information_from_pdb_chains</code><span class="sig-paren">(</span><em>cg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#add_stem_information_from_pdb_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.add_stem_information_from_pdb_chains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the 3D information of the stems.</p>
+<p>Output the mid points of the helices as well as the ‘twist’ vectors
+which describe the projection of the (ca - mids) vectors onto
+the plane perpendicular to the axis of the helix.</p>
+<p>Add all of this information to the BulgeGraph data structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bg</strong> – The BulgeGraph.</li>
+<li><strong>chain</strong> – The Bio.PDB chain representation of the 3D structure.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.add_virtual_residues">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">add_virtual_residues</code><span class="sig-paren">(</span><em>bg</em>, <em>stem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#add_virtual_residues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.add_virtual_residues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all of the virtual residues and the associated
+bases and inverses for the given stem.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is a low-level function used if only the virtual residues of a single
+stems should be added. To add the virtual residues for all stems, use
+<code class="code docutils literal"><span class="pre">cg.add_all_virtual_residues</span></code></p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bg</strong> – The CoarseGrainRNA bulge graph containing the stem</li>
+<li><strong>stem</strong> – The name of the stem to be included</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.base_normals">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">base_normals</code><span class="sig-paren">(</span><em>pdb_filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#base_normals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.base_normals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the normals for each base in the structure.</p>
+<p>As defined by the average of the cross products between the C2-C5
+and C2-C6 vectors and the N3-C6 and N3-C5 vectors. The origin of
+the vector will be the centroid of these four atoms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pdb_filename</strong> – The name of the pdb file containing the structure</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of pairs containing the origin the normal as well as the
+normal itself.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.bg_virtual_residues">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">bg_virtual_residues</code><span class="sig-paren">(</span><em>bg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#bg_virtual_residues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.bg_virtual_residues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.bounding_boxes">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">bounding_boxes</code><span class="sig-paren">(</span><em>bg</em>, <em>chain</em>, <em>s</em>, <em>i</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#bounding_boxes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.bounding_boxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the bounding boxes of the two nucleotides at the
+i’th position on the stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bg</strong> – The BulgeGraph</li>
+<li><strong>chain</strong> – The PDB representation of the chain</li>
+<li><strong>s</strong> – The stem identifier</li>
+<li><strong>i</strong> – The i’th base-pair in the stem</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(origin, bases, [(c1, c2), (c1, c2)]) The bases
+(one for each nucleotide) and the corners defining the bounding box
+of the two nucleotides</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.calc_R">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">calc_R</code><span class="sig-paren">(</span><em>xc</em>, <em>yc</em>, <em>p</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#calc_R"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.calc_R" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the distance of each 2D points from the center (xc, yc)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.circle_error">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">circle_error</code><span class="sig-paren">(</span><em>c</em>, <em>p</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#circle_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.circle_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.circle_fit">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">circle_fit</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#circle_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.circle_fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.cylinder_works">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">cylinder_works</code><span class="sig-paren">(</span><em>cg</em>, <em>cylinders_to_stems</em>, <em>tv</em>, <em>c</em>, <em>r=4.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#cylinder_works"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.cylinder_works" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if all of these points are inside the cylinder.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.element_coord_system">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">element_coord_system</code><span class="sig-paren">(</span><em>cg</em>, <em>d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#element_coord_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.element_coord_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a coordinate system for a particular coarse grain element.</p>
+<p>If an element has an axis vector, a, twist vectors t1 and t2,
+then the coordinate system will be a normalized version
+of the axis a, the second, v2,  will be equal to norm((t1 + t2) / 2.)</p>
+<p>And the third will be equal to a x v2.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.element_distance">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">element_distance</code><span class="sig-paren">(</span><em>cg</em>, <em>l1</em>, <em>l2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#element_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.element_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance between the two closest points of these
+two elements.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.extract_define_residues">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">extract_define_residues</code><span class="sig-paren">(</span><em>define</em>, <em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#extract_define_residues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.extract_define_residues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the residues in the define and return them as a new chain.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.f_2">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">f_2</code><span class="sig-paren">(</span><em>c</em>, <em>p</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#f_2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.f_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the algebraic distance between the data points and the mean
+circle centered at c=(xc, yc)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.f_3">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">f_3</code><span class="sig-paren">(</span><em>vec</em>, <em>points</em>, <em>est</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#f_3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.f_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the optimal circle for the points (p) projected onto
+the plane orthogonal to v</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.fit_circle">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">fit_circle</code><span class="sig-paren">(</span><em>mids</em>, <em>points</em>, <em>start_pos</em>, <em>end_pos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#fit_circle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.fit_circle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the projection of points on the plane normal to
+vec and fit a circle to them.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_angle_stat_geometry">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_angle_stat_geometry</code><span class="sig-paren">(</span><em>stem1_vec</em>, <em>twist1</em>, <em>stem2_vec</em>, <em>twist2</em>, <em>bulge_vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_angle_stat_geometry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_angle_stat_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stem1_vec</strong> – The vector of the first stem, pointing TOWARDS the bulge</li>
+<li><strong>twist1</strong> – The twist vector at the side of stem1 closest to the bulge</li>
+<li><strong>stem2_vec</strong> – The vector of the second stem, pointing AWAY FROM the bulge</li>
+<li><strong>twist2</strong> – The twist vector at the side of stem2 closest to the bulge</li>
+<li><strong>bulge_vec</strong> – The vector from stem1 to stem2</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><dl class="docutils">
+<dt>T 6-tuple: u,v (the orientation parameters),</dt>
+<dd><p class="first last">t (twist parameter) and
+r1, u1, v1 (the seperation parameters)</p>
+</dd>
+<dt>               A</dt>
+<dd><dl class="first last docutils">
+<dt>stem1        /</dt>
+<dd><dl class="first last docutils">
+<dt>           / stem2</dt>
+<dd><dl class="first last docutils">
+<dt>V          /</dt>
+<dd><dl class="first last docutils">
+<dt>———&gt;</dt>
+<dd><p class="first last">bulge</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_basepair_center">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_basepair_center</code><span class="sig-paren">(</span><em>cg</em>, <em>pos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_basepair_center"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_basepair_center" title="Permalink to this definition">¶</a></dt>
+<dd><p>The center of a basepair, as defined in doi: 10.1261/rna.305307</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pos</strong> – The number of one of the two pairing bases</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_basepair_plane">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_basepair_plane</code><span class="sig-paren">(</span><em>cg</em>, <em>pos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_basepair_plane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_basepair_plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>The plane of the basepair, as defined in figure 13 of doi: 10.1261/rna.305307</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pos</strong> – The number of one of the two pairing bases</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_broken_ml_deviation">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_broken_ml_deviation</code><span class="sig-paren">(</span><em>cg</em>, <em>broken_ml_name</em>, <em>fixed_stem_name</em>, <em>virtual_stat</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_broken_ml_deviation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_broken_ml_deviation" title="Permalink to this definition">¶</a></dt>
+<dd><p>If we assgin a stat to a broken ml-segment, how much would the attached
+stem deviate from its true location.</p>
+<p>Calculates the position of a ‘“virtual stem”, which would be
+placed after the broken ml-segment, if it was a true ml-segment
+with the virtual stat assigned.
+Then calculates teh deviation between this virtual stem and the actual stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cg</strong> – The CoarseGrainRNA</li>
+<li><strong>broken_ml_name</strong> – The name of the ml-segment of interest.
+It should not be part of cg.mst.</li>
+<li><strong>fixed_stem_name</strong> – The name of a stem (e.g. “s0”) attached to the
+broken ml segment. This stem will be used as reference,
+For the other stem attached to the broken ml-segment (original_stem),
+the virtual stem position will be calculated.</li>
+<li><strong>virtual_stat</strong> – The stat assigned to the broken ml segment, in the direction
+from fixed_stem_name to the other stem.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A triple: positional_deviation, angular_deviation and twist_deviation.
+positional_deviation measures how far the start of the virtual stem
+is from the start of the true (“original”) stem.
+Angular deviation measures (in radians) the differece in the stem’s orientation.
+twist_deviation measures the angle (in radians) between the two stem’s twist vectors.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_bulge_centroid">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_bulge_centroid</code><span class="sig-paren">(</span><em>chain</em>, <em>define</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_bulge_centroid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_bulge_centroid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_centroid">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_centroid</code><span class="sig-paren">(</span><em>chain</em>, <em>residue_num</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_centroid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_centroid" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>residue_num</strong> – A list of integers</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_encompassing_cylinders">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_encompassing_cylinders</code><span class="sig-paren">(</span><em>cg</em>, <em>radius=6.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_encompassing_cylinders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_encompassing_cylinders" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_furthest_c_alpha">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_furthest_c_alpha</code><span class="sig-paren">(</span><em>cg</em>, <em>chain</em>, <em>stem_end</em>, <em>d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_furthest_c_alpha"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_furthest_c_alpha" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the position of the c-alpha atom furthest from the end of the stem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_incomplete_elements">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_incomplete_elements</code><span class="sig-paren">(</span><em>cg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_incomplete_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_incomplete_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an estimated list of cg-elements which have missing residues in the PDB.</p>
+<p>One of many problems with PDB data are residues, for which no
+coordinates could be determined experimentally. This function gives
+an estimated list of cg-elements, which are affected by missing residues.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_mids">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_mids</code><span class="sig-paren">(</span><em>cg</em>, <em>chains</em>, <em>elem_name</em>, <em>seq_ids=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_mids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_mids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mid points of the abstract cylinder which represents a helix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chain</strong> – The Bio.PDB representation of the 3D structure.</li>
+<li><strong>define</strong> – The define of the helix, as per the BulgeGraph
+definition standard.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An array of two vectors representing the two endpoints of the
+helix.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_residue_type">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_residue_type</code><span class="sig-paren">(</span><em>i</em>, <em>stem_len</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_residue_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_residue_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each nucleotide will be classified according to its position
+within the stem. That way, the distribution of surrounding
+nucleotides will be conditioned on the type of nucleotides.</p>
+<p>This is important due to the fact that nucleotides at the end
+of a stem may have other stem nucleotides in the direction
+of the stem vector. Nucleotides, in the middle shoubulge not due
+to the excluded volume of the stem they occupy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>i</strong> – The position of the nucleotide.</li>
+<li><strong>stem_len</strong> – The length of the stem.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The type of nucleotide position.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_stem_orientation_parameters">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_stem_orientation_parameters</code><span class="sig-paren">(</span><em>stem1_vec</em>, <em>twist1</em>, <em>stem2_vec</em>, <em>twist2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_stem_orientation_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_stem_orientation_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a parameterization of the orientation of stem2 with respect to
+stem1.</p>
+<p>stem1 -&gt; bulge -&gt; stem2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stem1_vec</strong> – The vector representing the axis of stem1</li>
+<li><strong>twist1</strong> – The twist of stem1 closest to the bulge</li>
+<li><strong>stem2_vec</strong> – The vector representing the axis of stem2</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(r,u,v,t) where r,u,v = the stem orientation in polar coordinates
+and t is the twist parameter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_stem_separation_parameters">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_stem_separation_parameters</code><span class="sig-paren">(</span><em>stem</em>, <em>twist</em>, <em>bulge</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_stem_separation_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_stem_separation_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameterize the location of the bulge with respect to the stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem</strong> – The stem vector.</li>
+<li><strong>bulge</strong> – the bulge vector.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_stem_twist_and_bulge_vecs">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_stem_twist_and_bulge_vecs</code><span class="sig-paren">(</span><em>bg</em>, <em>bulge</em>, <em>connections</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_stem_twist_and_bulge_vecs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_stem_twist_and_bulge_vecs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the vectors of the stems and of the twists between which
+we want to calculate angles.</p>
+<p>The two vectors will be defined as follows:</p>
+<p>s1e -&gt; s1b -&gt; b -&gt; s2b -&gt; s2e</p>
+<p>The twists will be the two closest to the bulge.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bulge</strong> – The name of the bulge separating the two helices.</li>
+<li><strong>connections</strong> – The two stems that are connected to this bulge.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(stem1, twist1, stem2, twist2, bulge)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_twist_angle">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_twist_angle</code><span class="sig-paren">(</span><em>coords</em>, <em>twists</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_twist_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_twist_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the angle of the twists with respect to each other.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>coords</strong> – The coordinates of the ends of the stem.</li>
+<li><strong>twists</strong> – The two twist vectors.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return angle:</th><td class="field-body"><p class="first last">The angle between the two twist vectors.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_twist_parameter">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_twist_parameter</code><span class="sig-paren">(</span><em>twist1</em>, <em>twist2</em>, <em>u_v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_twist_parameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_twist_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate how much stem1 must be twisted for its twist vector
+to coincide with that of stem2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>twist1</strong> – The twist notator of stem1</li>
+<li><strong>twist2</strong> – The twist notator of stem2</li>
+<li><strong>u_v</strong> – The parameters u and v for rotating stem2 onto stem1</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.get_twists">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">get_twists</code><span class="sig-paren">(</span><em>cg</em>, <em>chain</em>, <em>elem_name</em>, <em>mids=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#get_twists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.get_twists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the projection of the (ca - mids) vectors onto the helix axis. This,
+in a sense will define how much the helix twists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cg</strong> – The CoarseGrainRNA representation</li>
+<li><strong>chain</strong> – The Bio.PDB representation of the 3D structure.</li>
+<li><strong>define</strong> – The name of the define</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Two vectors which represent the twist of the helix.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.junction_virtual_atom_distance">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">junction_virtual_atom_distance</code><span class="sig-paren">(</span><em>bg</em>, <em>bulge</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#junction_virtual_atom_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.junction_virtual_atom_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the distance between the O3’ atom and P’ atom
+of the two residues that flank the junction segment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bg</strong> – The BulgeGraph containing the bulge.</li>
+<li><strong>bulge</strong> – The name of the bulge</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A single number corresponding to the distance above.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.junction_virtual_res_distance">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">junction_virtual_res_distance</code><span class="sig-paren">(</span><em>bg</em>, <em>bulge</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#junction_virtual_res_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.junction_virtual_res_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the distance between the two virtual residues flanking
+a bulge region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bg</strong> – The BulgeGraph containing the bulge.</li>
+<li><strong>bulge</strong> – The name of the bulge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.numbered_virtual_residues">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">numbered_virtual_residues</code><span class="sig-paren">(</span><em>bg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#numbered_virtual_residues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.numbered_virtual_residues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of virtual residues, along with their
+nucleotide positions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bg</strong> – A coarse grain RNA</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples containing nucleotides numbers and coordinates.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.pos_to_spos">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">pos_to_spos</code><span class="sig-paren">(</span><em>bg</em>, <em>s1</em>, <em>i1</em>, <em>s2</em>, <em>i2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#pos_to_spos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.pos_to_spos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the location of s2, i2 into the coordinate system
+defined by (s1, i1)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bg</strong> – The BulgeGraph containing the stems</li>
+<li><strong>s1</strong> – The basis stem name</li>
+<li><strong>i1</strong> – The basis res position</li>
+<li><strong>s2</strong> – The stem containing the nucleotide to be converted</li>
+<li><strong>i2</strong> – The nucleotide to be converted position</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.profile">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.profile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.receptor_angle">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">receptor_angle</code><span class="sig-paren">(</span><em>bg</em>, <em>l</em>, <em>s</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#receptor_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.receptor_angle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem2_orient_from_stem1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem2_orient_from_stem1</code><span class="sig-paren">(</span><em>stem1</em>, <em>twist1</em>, <em>r_u_v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem2_orient_from_stem1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem2_orient_from_stem1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the orientation of the second stem, given its parameterization
+and the parameterization of stem1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem1</strong> – The vector representing the axis of stem1’s cylinder</li>
+<li><strong>twist1</strong> – The twist factor of stem1.</li>
+<li><strong>r_u_v</strong> – The orientation of stem2 wrt stem1, a triple <code class="code docutils literal"><span class="pre">(r,</span> <span class="pre">u,</span> <span class="pre">v)</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem2_orient_from_stem1_1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem2_orient_from_stem1_1</code><span class="sig-paren">(</span><em>stem1_basis</em>, <em>r_u_v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem2_orient_from_stem1_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem2_orient_from_stem1_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the orientation of the second stem, given its parameterization
+and the parameterization of stem1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem1</strong> – The vector representing the axis of stem1’s cylinder</li>
+<li><strong>twist1</strong> – The twist factor of stem1.</li>
+<li><strong>r_u_v</strong> – The orientation of stem2 wrt stem1, a triple <code class="code docutils literal"><span class="pre">(r,</span> <span class="pre">u,</span> <span class="pre">v)</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem2_pos_from_stem1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem2_pos_from_stem1</code><span class="sig-paren">(</span><em>stem1</em>, <em>twist1</em>, <em>params</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem2_pos_from_stem1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem2_pos_from_stem1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the starting point of a second stem, given the parameters
+about where it’s located with respect to stem1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem1</strong> – The vector representing the axis of stem1’s cylinder</li>
+<li><strong>twist1</strong> – The twist parameter of stem1</li>
+<li><strong>params</strong> – The parameters describing the position of stem2 wrt stem1</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem2_pos_from_stem1_1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem2_pos_from_stem1_1</code><span class="sig-paren">(</span><em>transposed_stem1_basis</em>, <em>params</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem2_pos_from_stem1_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem2_pos_from_stem1_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the starting point of a second stem, given the parameters
+about where it’s located with respect to stem1</p>
+<p>The params of the stat describe the change in the coordinate system of stem1.
+This function converts that to a carthesian vector the standard coordinate system</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>transposed_stem1_basis</strong> – The vtransposed basis of the first stem.</li>
+<li><strong>params</strong> – The parameters describing the position of stem2 wrt stem1
+(i.e. the carthesian vector in standard coordinates pointing from stem1 to stem2)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem_from_chains">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem_from_chains</code><span class="sig-paren">(</span><em>cg</em>, <em>chains</em>, <em>elem_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem_from_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem_from_chains" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function combines get_mids and get_twists into one more efficient routine.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>chains</strong> – A dictionary {chain_id: Biopython_PDB_chain}</li>
+<li><strong>elem_name</strong> – e.g. “s0”</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem_stem_orientation">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem_stem_orientation</code><span class="sig-paren">(</span><em>cg</em>, <em>s1</em>, <em>s2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem_stem_orientation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem_stem_orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the orientation of stem s2 in relation to stem s1
+as described by 3 parameters:</p>
+<ol class="arabic simple">
+<li>The distance between the closest points of the two stems.</li>
+<li>The angle between s1 and s2 in the plane formed by the axis of
+the first stem and the vector between the two points closest
+to each on both stems.</li>
+<li>The angle of s2 out of the plane formed by their axes.</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bg</strong> – The BulgeGraph containing the stems.</li>
+<li><strong>s1</strong> – The name of the first stem</li>
+<li><strong>s2</strong> – The name of the second stem</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(x,y,z) where x,y and z are the parameters described in
+the description above.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.stem_vres_reference_atoms">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">stem_vres_reference_atoms</code><span class="sig-paren">(</span><em>bg</em>, <em>chain</em>, <em>s</em>, <em>i</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#stem_vres_reference_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.stem_vres_reference_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the position of each atom in the reference of the
+stem and virtual residue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bg</strong> – The BulgeGraph</li>
+<li><strong>chain</strong> – The PDB representation of the chain</li>
+<li><strong>s</strong> – The stem identifier</li>
+<li><strong>i</strong> – The i’th base-pair in the stem</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>:return (origin, basis, [dict(atoms), dict(atoms)])</dt>
+<dd>The origin of the coordinate system (vpos)
+The basis of the virtual residue
+Two dictionaries containing the positions of each atom in the coordinate system of the virtual residue</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.total_helix_rotation">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">total_helix_rotation</code><span class="sig-paren">(</span><em>coords</em>, <em>twists</em>, <em>stem_len</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#total_helix_rotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.total_helix_rotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the total rotation of the helix in radians from the twists.</p>
+<p>When we calculate the angle between the two twists, we only know
+the true rotation modulo 2*pi (i.e. a rotation of 45 degrees could
+mean 45 degrees or 405 degrees). Depending on the number of nucleotides and
+knowledge of the ideal helix (which turns roughly 30 degrees per base-pair),
+this function outputs the correct result.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.twist2_from_twist1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">twist2_from_twist1</code><span class="sig-paren">(</span><em>stem_vec</em>, <em>twist1</em>, <em>angle</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#twist2_from_twist1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.twist2_from_twist1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an orientation for the second twist which will place it an
+angle of angle from the first twist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem_vec</strong> – The vector of the stem.</li>
+<li><strong>twist1</strong> – The vector of the first twist.</li>
+<li><strong>angle</strong> – The angular difference between the two twists.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.twist2_orient_from_stem1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">twist2_orient_from_stem1</code><span class="sig-paren">(</span><em>stem1</em>, <em>twist1</em>, <em>u_v_t</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#twist2_orient_from_stem1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.twist2_orient_from_stem1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the position of the twist factor of the 2nd stem from its
+parameters and the first stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem1</strong> – The vector representing the axis of stem1’s cylinder</li>
+<li><strong>twist1</strong> – The twist factor of stem1.</li>
+<li><strong>u_v_t</strong> – The parameters describing how the twist of stem2 is
+oriented with respect to stem1. A triple <code class="code docutils literal"><span class="pre">(u,</span> <span class="pre">v,</span> <span class="pre">t)</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.twist2_orient_from_stem1_1">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">twist2_orient_from_stem1_1</code><span class="sig-paren">(</span><em>stem1_basis</em>, <em>u_v_t</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#twist2_orient_from_stem1_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.twist2_orient_from_stem1_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the position of the twist factor of the 2nd stem from its
+parameters and the first stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>stem1</strong> – The vector representing the axis of stem1’s cylinder</li>
+<li><strong>twist1</strong> – The twist factor of stem1.</li>
+<li><strong>u_v_t</strong> – The parameters describing how the twist of stem2 is
+oriented with respect to stem1. A triple <code class="code docutils literal"><span class="pre">(u,</span> <span class="pre">v,</span> <span class="pre">t)</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.verify_vatom_positions">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">verify_vatom_positions</code><span class="sig-paren">(</span><em>residue_ids</em>, <em>chains</em>, <em>coords</em>, <em>twists</em>, <em>label=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#verify_vatom_positions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.verify_vatom_positions" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> – The coords of ONE stem</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.virtual_atoms">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">virtual_atoms</code><span class="sig-paren">(</span><em>cg</em>, <em>given_atom_names=None</em>, <em>sidechain=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#virtual_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.virtual_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of virtual atoms for this structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cg</strong> – The coarse grain structure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.virtual_res_3d_pos">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">virtual_res_3d_pos</code><span class="sig-paren">(</span><em>bg</em>, <em>stem</em>, <em>i</em>, <em>stem_inv=None</em>, <em>stem_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#virtual_res_3d_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.virtual_res_3d_pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.virtual_res_3d_pos_core">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">virtual_res_3d_pos_core</code><span class="sig-paren">(</span><em>coords</em>, <em>twists</em>, <em>i</em>, <em>stem_len</em>, <em>stem_inv=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#virtual_res_3d_pos_core"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.virtual_res_3d_pos_core" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the virtual position of the i’th nucleotide in the stem.</p>
+<p>The virtual position extrapolates the position of the residues based
+on the twists of the helix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple containing the point located on the axis of the stem
+and a vector away from that point in the direction of the
+residue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.virtual_res_basis">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">virtual_res_basis</code><span class="sig-paren">(</span><em>bg</em>, <em>stem</em>, <em>i</em>, <em>vec=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#virtual_res_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.virtual_res_basis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.virtual_res_basis_core">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">virtual_res_basis_core</code><span class="sig-paren">(</span><em>coords</em>, <em>twists</em>, <em>i</em>, <em>stem_len</em>, <em>vec=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#virtual_res_basis_core"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.virtual_res_basis_core" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define a basis based on the location of a virtual stem residue.</p>
+<p>The basis will be defined by the direction of the stem, the direction
+of the virtual residue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bg</strong> – The BulgeGraph structure</li>
+<li><strong>stem</strong> – The name of the stem</li>
+<li><strong>i</strong> – The i’th residue of the stem</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A 3x3 matrix defining the coordinate system above.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.virtual_residue_atoms">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">virtual_residue_atoms</code><span class="sig-paren">(</span><em>bg</em>, <em>s</em>, <em>i</em>, <em>strand=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#virtual_residue_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.virtual_residue_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the atoms for the virtual residue.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bg</strong> – The BulgeGraph</li>
+<li><strong>s</strong> – The stem</li>
+<li><strong>i</strong> – The virtual residue number</li>
+<li><strong>strand</strong> – The strand for which to get the virtual atoms</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.graph_pdb.vres_to_global_coordinates">
+<code class="descclassname">forgi.threedee.utilities.graph_pdb.</code><code class="descname">vres_to_global_coordinates</code><span class="sig-paren">(</span><em>vres_pos</em>, <em>vres_basis</em>, <em>positions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/graph_pdb.html#vres_to_global_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.graph_pdb.vres_to_global_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
@@ -61,7 +1024,7 @@
       <div class="bottomnav">
       
         <p>
-        «&#160;&#160;<a href="forgi.threedee.utilities.cytvec.html">forgi.threedee.utilities.cytvec module</a>
+        «&#160;&#160;<a href="forgi.threedee.utilities.html">forgi.threedee.utilities package</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -72,8 +1035,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

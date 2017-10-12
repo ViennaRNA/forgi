@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Useful scripts coming with forgi &#8212; forgi 0.4 documentation</title>
-    
+    <title>Useful scripts coming with forgi &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="index.html" />
-    <link rel="up" title="Forgi Tutorial" href="tutorial.html" />
     <link rel="next" title="RNA Secondary Structure Utilities Using the forgi.utilities Submodule" href="utilities_tutorial.html" />
     <link rel="prev" title="Forgi Tutorial" href="tutorial.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -58,7 +54,7 @@
 Here some of the most useful are documented.</p>
 <div class="section" id="visualization-scripts">
 <h2>Visualization scripts<a class="headerlink" href="#visualization-scripts" title="Permalink to this headline">¶</a></h2>
-<p>There are scripts vor visualizing PDB and coarse-grain RNA structures
+<p>There are scripts for visualizing PDB and coarse-grain RNA structures
 (See <a class="reference internal" href="graph_tutorial.html"><span class="doc">RNA Secondary Structure as a Graph Using the forgi Library</span></a> and <a class="reference internal" href="threedee_tutorial.html"><span class="doc">RNA 3D Structure Using forgi.threedee</span></a>
 for more information on Coarse Grain Files).</p>
 <p>To view a pdb file use:</p>
@@ -73,20 +69,31 @@ for more information on Coarse Grain Files).</p>
 <p>Use <code class="code docutils literal"><span class="pre">visualize_cg.py</span> <span class="pre">--virtual-atoms</span> <span class="pre">1y26.cg</span></code> to show virtual atoms for the backbone.</p>
 <p>Use <code class="code docutils literal"><span class="pre">visualize_cg.py</span> <span class="pre">--sidechain-atoms</span> <span class="pre">1y26.cg</span></code> to show all virtual atoms.</p>
 </div>
-<div class="section" id="file-format-conersions">
-<h2>File format conersions<a class="headerlink" href="#file-format-conersions" title="Permalink to this headline">¶</a></h2>
-<p>To convert files between the file formats &#8220;fasta with secondary structure&#8221;, &#8220;dotbracket string&#8221;,
-&#8220;coarse-grain file&#8221;, &#8220;bpseq&#8221; and &#8220;pdb&#8221;, use the corresponding scripts.</p>
+<div class="section" id="file-format-conversions">
+<h2>File format conversions<a class="headerlink" href="#file-format-conversions" title="Permalink to this headline">¶</a></h2>
+<p>To convert files between the file formats “fasta with secondary structure”, “dotbracket string”,
+“coarse-grain file”, “bpseq” and “pdb”, use the <code class="code docutils literal"><span class="pre">rnaConvert.py</span></code> script:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rnaConvert</span><span class="o">.</span><span class="n">py</span> <span class="mi">1</span><span class="n">jj2</span><span class="o">.</span><span class="n">pdb</span> <span class="o">-</span><span class="n">T</span> <span class="n">forgi</span>
+</pre></div>
+</div>
+<p>The <code class="code docutils literal"><span class="pre">-T</span></code> option specifies the output file format.</p>
+<p>Use <code class="code docutils literal"><span class="pre">-T</span> <span class="pre">forgi</span></code> to create a “<em>.bg” or “</em>.cg” file, <code class="code docutils literal"><span class="pre">-T</span> <span class="pre">fasta</span></code> for a
+fasta-file with secondary structure, <code class="code docutils literal"><span class="pre">-T</span> <span class="pre">bpseq</span></code> for a bpseq-file and
+<code class="code docutils literal"><span class="pre">-T</span> <span class="pre">dotbracket</span></code> to only output a dotbracket string.</p>
+<p>You can use <code class="code docutils literal"><span class="pre">--filename</span> <span class="pre">OUTNAME</span></code> to write to a file instead of STDOUT. Note that the file extension
+will be appended automatically.
+If the input-file contains multiple RNA molecules (connected components),
+a file will be created for each of them.</p>
 </div>
 <div class="section" id="view-simulated-electron-microscopy-images-of-a-cg-file">
 <h2>View simulated electron microscopy images of a cg-file<a class="headerlink" href="#view-simulated-electron-microscopy-images-of-a-cg-file" title="Permalink to this headline">¶</a></h2>
-<p>The script <code class="code docutils literal"><span class="pre">investigate_projection.py</span></code> opens a graphica window that lets you generate
+<p>The script <code class="code docutils literal"><span class="pre">investigate_projection.py</span></code> opens a graphical window that lets you generate
 projected images at different projection angles and different resolution.</p>
 </div>
 <div class="section" id="get-a-representation-of-the-coarse-grain-element-names-that-correspond-to-dots-and-brackets">
 <h2>Get a representation of the coarse grain element names that correspond to dots and brackets<a class="headerlink" href="#get-a-representation-of-the-coarse-grain-element-names-that-correspond-to-dots-and-brackets" title="Permalink to this headline">¶</a></h2>
 <p>Use:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dotbracket_to_element_string</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">e</span> <span class="mi">1</span><span class="n">y26_ss</span><span class="o">.</span><span class="n">dotbracket</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rnaConvert</span><span class="o">.</span><span class="n">py</span> <span class="mi">1</span><span class="n">y26_ss</span><span class="o">.</span><span class="n">dotbracket</span> <span class="o">-</span><span class="n">T</span> <span class="n">element_string</span>
 </pre></div>
 </div>
 <p>This will print:</p>
@@ -96,17 +103,36 @@ projected images at different projection angles and different resolution.</p>
 </pre></div>
 </div>
 <p>The numbers indicate the numbers of the coarse grained elements. As expected, the first column
-holds the values &#8216;(&#8216;,&#8217;s&#8217;,&#8216;0&#8217; indicating that this opening bracket belongs to the stem &#8220;s0&#8221;.
+holds the values ‘(‘,’s’,‘0’ indicating that this opening bracket belongs to the stem “s0”.
 This is especially useful when writing tests for the forgi library or code depending on it.</p>
 </div>
 <div class="section" id="render-the-graph-representation-of-a-bulge-graph-as-an-image">
 <h2>Render the graph-representation of a Bulge Graph as an image<a class="headerlink" href="#render-the-graph-representation-of-a-bulge-graph-as-an-image" title="Permalink to this headline">¶</a></h2>
 <p>Run the following command, which requires neato, to generate a png image
 of the graph represenation of the RNA:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">../</span><span class="n">venv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python</span> <span class="n">graph_to_neato</span><span class="o">.</span><span class="n">py</span> <span class="mi">1</span><span class="n">y26</span><span class="o">.</span><span class="n">cg</span> <span class="o">|</span> <span class="n">neato</span> <span class="o">-</span><span class="n">Tpng</span> <span class="o">-</span><span class="n">o</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">png</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rnaConvert</span><span class="o">.</span><span class="n">py</span> <span class="mi">1</span><span class="n">y26</span><span class="o">.</span><span class="n">cg</span> <span class="o">-</span><span class="n">T</span> <span class="n">neato8</span> <span class="o">|</span> <span class="n">neato</span> <span class="o">-</span><span class="n">Tpng</span> <span class="o">-</span><span class="n">o</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">png</span>
 </pre></div>
 </div>
 </div>
+<div class="section" id="update-cg-files-created-with-earlier-versions-of-forgi">
+<h2>Update cg-files created with earlier versions of forgi<a class="headerlink" href="#update-cg-files-created-with-earlier-versions-of-forgi" title="Permalink to this headline">¶</a></h2>
+<p>If you use CoarseGrainRNA files (*.cg/ *.coord files) that were created before release of version 1.0,
+you might get an <code class="code docutils literal"><span class="pre">AssertionError</span></code> saying that the twists are inconsistent. Due to a bug in
+earlier versions of forgi, some twist vectors could sometimes deviate by a few degrees from
+being orthogonal to the stem vector. To use such broken *.cg files with newer versions of forgi,
+you can use the example script: <code class="code docutils literal"><span class="pre">fix_twists.py</span></code></p>
+</div>
+</div>
+<div class="section" id="a-list-of-all-scripts">
+<h1>A list of all scripts<a class="headerlink" href="#a-list-of-all-scripts" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><code class="code docutils literal"><span class="pre">all_atom_positions.py</span></code> and <code class="code docutils literal"><span class="pre">average_atom_positions.py</span></code> were used to generate the file
+<code class="code docutils literal"><span class="pre">forgi/threedee/data/average_atom_positions.json</span></code>, which comes with forgi.</li>
+<li><code class="code docutils literal"><span class="pre">burial.py</span></code>: Characterize a pdb file.</li>
+<li><code class="code docutils literal"><span class="pre">compare_RNA.py</span></code>: Calculate RMSD and ACC between 2 3D structures.</li>
+<li><code class="code docutils literal"><span class="pre">projection_rmsd</span></code>: Calculate the 2D RMSD between two 2D projections of Coarse Grained RNA objects.</li>
+<li><code class="code docutils literal"><span class="pre">coaxial_stacking.py</span></code>: Experimental.</li>
+</ul>
 </div>
 
 
@@ -125,8 +151,8 @@ of the graph represenation of the RNA:</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

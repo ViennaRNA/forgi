@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.projection.projection2d module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.projection.projection2d module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.projection package" href="forgi.projection.html" />
     <link rel="next" title="forgi.threedee package" href="forgi.threedee.html" />
     <link rel="prev" title="forgi.projection.hausdorff module" href="forgi.projection.hausdorff.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -52,8 +48,493 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-projection-projection2d-module">
-<h1>forgi.projection.projection2d module<a class="headerlink" href="#forgi-projection-projection2d-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.projection.projection2d">
+<span id="forgi-projection-projection2d-module"></span><h1>forgi.projection.projection2d module<a class="headerlink" href="#module-forgi.projection.projection2d" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.projection.projection2d.Projection2D">
+<em class="property">class </em><code class="descclassname">forgi.projection.projection2d.</code><code class="descname">Projection2D</code><span class="sig-paren">(</span><em>cg</em>, <em>proj_direction=None</em>, <em>rotation=0</em>, <em>project_virtual_atoms=False</em>, <em>project_virtual_residues=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A 2D Projection of a CoarseGrainRNA unto a 2D-plane</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cg</strong> – <p>a CoarseGrainRNA object with 3D coordinates for every element</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The projection is generated from this cg, but it is not associated
+with it after construction.
+Thus future changes of the cg are not reflected in the projection.</p>
+</div>
+</li>
+<li><strong>proj_direction</strong> – a carthesian vector (in 3D space) in the direction of projection.
+The length of this vector is not used.
+If proj_direction is None, cg.project_from is used.
+If proj_direction and cg.project_from is None, an error is raised.</li>
+<li><strong>rotate</strong> – Degrees. Rotate the projection by this amount.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.condense">
+<code class="descname">condense</code><span class="sig-paren">(</span><em>cutoff</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.condense"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.condense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Condenses points that are within the cutoff of another point or edge (=line segment)
+into a new point. This function modifies this Projection2D object.</p>
+<p>The contraction of two points works like documented in
+<code class="code docutils literal"><span class="pre">self.condense_points(self,</span> <span class="pre">cutoff)</span></code>.
+If a node is close to a line segment, a new point is generated between
+this node and the line segment. Then the original line and the original node
+are deleted and all connections attached to the new point.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The result depends on the ordering of the dictionary holding the nodes and
+might thus be pseudorandomly</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cutoff</strong> – Two point with a distance smaller than cuttoff are contracted.
+A value below 20 is reasonable.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.condense_points">
+<code class="descname">condense_points</code><span class="sig-paren">(</span><em>cutoff=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.condense_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.condense_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Condenses several projection points that are within a range of less than cutoff into
+one point. This function modifies this Projection2D object.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The result depends on the ordering of the dictionary holding
+the nodes and might thus be pseudorandomly</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cutoff</strong> – Two point with a distance smaller than cuttoff are contracted.
+A value below 20 is reasonable.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.projection.projection2d.Projection2D.crossingPoints">
+<code class="descname">crossingPoints</code><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.crossingPoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>All points, where 2 segments intersect</p>
+<p>A list of triples <code class="code docutils literal"><span class="pre">(key1,</span> <span class="pre">key2,</span> <span class="pre">coordinate)</span></code>, where coordinate is a 2D vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_bounding_box">
+<code class="descname">get_bounding_box</code><span class="sig-paren">(</span><em>margin=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_bounding_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_bounding_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the coordinates for a box that contains all points of the 2D projection.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>margin</strong> – increase the bounding box in every direction by this margin.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">left, right, bottom, top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_bounding_square">
+<code class="descname">get_bounding_square</code><span class="sig-paren">(</span><em>margin=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_bounding_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_bounding_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the coordinates for a square that contains all points of the 2D projection.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>margin</strong> – increase the bounding box in every direction by this margin.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">left, right, bottom, top</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_branchpoint_count">
+<code class="descname">get_branchpoint_count</code><span class="sig-paren">(</span><em>degree=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_branchpoint_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_branchpoint_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of branchpoint.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This measure is sensitive to the resolution of a projection.
+In an AFM image, one might not see all branching points.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>degree</strong> – If degree is None, count all points with degree&gt;=3
+Else: only count (branch)points of the given degree</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_cyclebasis_len">
+<code class="descname">get_cyclebasis_len</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_cyclebasis_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_cyclebasis_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of cycles of length&gt;1 in the cycle basis.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_leaf_leaf_distances">
+<code class="descname">get_leaf_leaf_distances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_leaf_leaf_distances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_leaf_leaf_distances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of distances between any pair of leaf nodes.
+The distances are measured in direct line, not along the path</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a list of floats (lengths in Angstrom)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_longest_arm_length">
+<code class="descname">get_longest_arm_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_longest_arm_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_longest_arm_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the length of the longest arm.</p>
+<p>An arm is a simple path from a node of <code class="code docutils literal"><span class="pre">degree!=2</span></code> to a node of <code class="code docutils literal"><span class="pre">degree</span> <span class="pre">1</span></code>,
+if all the other nodes on the path have <code class="code docutils literal"><span class="pre">degree</span> <span class="pre">2</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This measure is sensitive to the resolution of a projection
+the same way the length of a coastline is sensitive to the resolution.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The length and a tuple of points <code class="code docutils literal"><span class="pre">(leaf_node,</span> <span class="pre">corresponding_branch_point)</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_maximal_path_length">
+<code class="descname">get_maximal_path_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_maximal_path_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_maximal_path_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the maximal path length from all simple paths that traverses the projection graph from
+one leave node to another.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This measure is sensitive to the resolution of a projection
+the same way the length of a coastline is sensitive to the resoltuion.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_some_leaf_leaf_distances">
+<code class="descname">get_some_leaf_leaf_distances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_some_leaf_leaf_distances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_some_leaf_leaf_distances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of distances between some pairs of leaf nodes.
+The distances are measured in direct line, not along the path</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a list of floats (lengths in Angstrom)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_total_length">
+<code class="descname">get_total_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_total_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_total_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sum of the lengths of all edges in the projection graph.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This measure is sensitive to the resolution of a projection.
+In an AFM image, one might not see all cycles.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Whether this code will stay in the library or not depends
+on future evaluation of the usefulness of this and similar descriptors.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.get_vres_by_position">
+<code class="descname">get_vres_by_position</code><span class="sig-paren">(</span><em>pos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.get_vres_by_position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.get_vres_by_position" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pos</strong> – The nucleotide position in the sequence</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.projection.projection2d.Projection2D.longest_axis">
+<code class="descname">longest_axis</code><em class="property"> = None</em><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.longest_axis" title="Permalink to this definition">¶</a></dt>
+<dd><p>The longest distance between any two points of the projection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>ax=None</em>, <em>show=False</em>, <em>margin=5</em>, <em>linewidth=None</em>, <em>add_labels=False</em>, <em>line2dproperties={}</em>, <em>xshift=0</em>, <em>yshift=0</em>, <em>show_distances=[]</em>, <em>print_distances=False</em>, <em>virtual_atoms=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the 2D projection.</p>
+<p>This uses modified copy-paste code by Syrtis Major (c)2014-2015
+under the BSD 3-Clause license and code from matplotlib under the PSF license.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ax</strong> – The axes to draw to.
+You can get it by calling <code class="code docutils literal"><span class="pre">fig,</span> <span class="pre">ax=matplotlib.pyplot.subplots()</span></code></li>
+<li><strong>show</strong> – If true, the matplotlib.pyplot.show() will be called at the
+end of this function.</li>
+<li><strong>margin</strong> – A numeric value.
+The margin around the plotted projection inside the (sub-)plot.</li>
+<li><strong>linewidth</strong> – The width of the lines projection.</li>
+<li><strong>add_labels</strong> – Display the name of the corresponding coarse grain element in
+the middle of each segment in the projection.
+Either a bool or a set of labels to display.</li>
+<li><strong>line2dproperties</strong> – A dictionary. Will be passed as <code class="code docutils literal"><span class="pre">**kwargs</span></code> to the constructor of
+<code class="code docutils literal"><span class="pre">matplotlib.lines.Line2D</span></code>.
+See <a class="reference external" href="http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D">http://matplotlib.org/api/lines_api.html#matplotlib.lines.Line2D</a></li>
+<li><strong>yshift</strong> (<em>xshift</em><em>,</em>) – Shift the projection by the given amount inside the canvas.</li>
+<li><strong>show_distances</strong> – A list of tuples of strings, e.g. <code class="code docutils literal"><span class="pre">[(&quot;h1&quot;,&quot;h8&quot;),(&quot;h2&quot;,&quot;m15&quot;)]</span></code>.
+Show the distances between these elements in the plot</li>
+<li><strong>print_distances</strong> – Bool. Print all distances from show_distances at the side of the plot
+instead of directly next to the distance</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.projection.projection2d.Projection2D.points">
+<code class="descname">points</code><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.points" title="Permalink to this definition">¶</a></dt>
+<dd><p>All points that are at the ends of coarse-grain elements.
+This does not include points where coarse grain elements intersect in the projection.</p>
+<p>Some points might be duplicates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A generator yielding all points.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.projection.projection2d.Projection2D.proj_direction">
+<code class="descname">proj_direction</code><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.proj_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>A vector describing the direction of the projection</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.projection.projection2d.Projection2D.proj_graph">
+<code class="descname">proj_graph</code><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.proj_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>A graph describing the projected RNA.</p>
+<p>This graph is stored as a <code class="code docutils literal"><span class="pre">networkx</span></code> graph object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.rasterize">
+<code class="descname">rasterize</code><span class="sig-paren">(</span><em>resolution=50</em>, <em>bounding_square=None</em>, <em>warn=True</em>, <em>virtual_atoms=True</em>, <em>rotate=0</em>, <em>virtual_residues=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.rasterize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.rasterize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rasterize the projection to a square image of the given resolution.
+Uses the Bresenham algorithm for line rasterization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>resolution</strong> – The number of pixels in each direction.</li>
+<li><strong>bounding_square</strong> – Rasterize onto the given square.
+If <code class="code docutils literal"><span class="pre">None</span></code>, automatically get a bounding_square that
+shows the whole projection</li>
+<li><strong>warn</strong> – If True, raise a warning if parts of the projection are not inside
+the given bounding square.</li>
+<li><strong>virtual_atoms</strong> – If True, virtual atoms are also rasterized.</li>
+<li><strong>rot</strong> – The in-plane rotation in degrees, applied before rotation.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple <code class="code docutils literal"><span class="pre">(np.array,</span> <span class="pre">float)</span></code>. The first value is a resolution x resolution
+numpy 2D array.
+The values are floats from 0.0 (black) to 1.0 (white).
+This array can be directly plotted using matplotlib:
+<code class="code docutils literal"><span class="pre">pyplot.imshow(array,</span> <span class="pre">cmap='gray',</span> <span class="pre">interpolation='none')</span></code>
+The second value is the length of one pixle in angstrom.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.projection.projection2d.Projection2D.rotate">
+<code class="descname">rotate</code><span class="sig-paren">(</span><em>angle</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#Projection2D.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate the projection in place around the origin (0,0)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>angle</strong> – Rotation angle in degrees.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.projection.projection2d.Projection2D.vres_iterator">
+<code class="descname">vres_iterator</code><a class="headerlink" href="#forgi.projection.projection2d.Projection2D.vres_iterator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.bresenham">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">bresenham</code><span class="sig-paren">(</span><em>start</em>, <em>end</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#bresenham"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.bresenham" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rasterize a line from start to end onto a grid with grid-width 1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start</strong> – A sequence of length 2, containing the x,y coordinates of the start of the line</li>
+<li><strong>start</strong> – A sequence of length 2, containing the x,y coordinates of the end of the line</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of tuples (x,y), where x and y are integers.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.crop_coordinates_to_bounds">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">crop_coordinates_to_bounds</code><span class="sig-paren">(</span><em>a</em>, <em>num_cells</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#crop_coordinates_to_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.crop_coordinates_to_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">A:</th><td class="field-body">an array of x,y coordinates (modified in place)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.diameter">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">diameter</code><span class="sig-paren">(</span><em>Points</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#diameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.diameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of 2d points, returns the pair that’s farthest apart.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.hulls">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">hulls</code><span class="sig-paren">(</span><em>Points</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#hulls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.hulls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Graham scan to find upper and lower convex hulls of a set of 2d points.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="forgi.projection.projection2d.log">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">log</code><em class="property"> = &lt;logging_exceptions.ExlogLogger object&gt;</em><a class="headerlink" href="#forgi.projection.projection2d.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>This module uses code by David Eppstein
+(<a class="reference external" href="http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/">http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/</a>)
+under the PSF license and code by Syrtis Major
+(c)2014-2015 (<a class="reference external" href="http://stackoverflow.com/a/24567352/5069869">http://stackoverflow.com/a/24567352/5069869</a>) under the BSD 3-Clause license
+and potentially copyrighted code from matplotlib under the PSF license
+(<a class="reference external" href="http://matplotlib.org/examples/api/line_with_text.html">http://matplotlib.org/examples/api/line_with_text.html</a>).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.orientation">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">orientation</code><span class="sig-paren">(</span><em>p</em>, <em>q</em>, <em>r</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#orientation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return positive if p-q-r are clockwise, neg if ccw, zero if colinear.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.profile">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.profile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.rasterized_2d_coordinates">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">rasterized_2d_coordinates</code><span class="sig-paren">(</span><em>points</em>, <em>angstrom_per_cell=10</em>, <em>origin=array([0</em>, <em>0])</em>, <em>rotate=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#rasterized_2d_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.rasterized_2d_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.rotate2D">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">rotate2D</code><span class="sig-paren">(</span><em>vector</em>, <em>cosPhi</em>, <em>sinPhi</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#rotate2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.rotate2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.rotatingCalipers">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">rotatingCalipers</code><span class="sig-paren">(</span><em>Points</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#rotatingCalipers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.rotatingCalipers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of 2d points, finds all ways of sandwiching the points
+between two parallel lines that touch one point each, and yields the sequence
+of pairs of points touched by each pair of lines.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.to_grayscale">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">to_grayscale</code><span class="sig-paren">(</span><em>im</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#to_grayscale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.to_grayscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an np array image from RGB to grayscale</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.projection2d.to_rgb">
+<code class="descclassname">forgi.projection.projection2d.</code><code class="descname">to_rgb</code><span class="sig-paren">(</span><em>im</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/projection2d.html#to_rgb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.projection2d.to_rgb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an np array image from grayscale to RGB</p>
+</dd></dl>
+
 </div>
 
 
@@ -72,8 +553,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

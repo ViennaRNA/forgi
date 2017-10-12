@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.projection.hausdorff module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.projection.hausdorff module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.projection package" href="forgi.projection.html" />
     <link rel="next" title="forgi.projection.projection2d module" href="forgi.projection.projection2d.html" />
     <link rel="prev" title="forgi.projection package" href="forgi.projection.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -52,8 +48,174 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-projection-hausdorff-module">
-<h1>forgi.projection.hausdorff module<a class="headerlink" href="#forgi-projection-hausdorff-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.projection.hausdorff">
+<span id="forgi-projection-hausdorff-module"></span><h1>forgi.projection.hausdorff module<a class="headerlink" href="#module-forgi.projection.hausdorff" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="forgi.projection.hausdorff.offsets">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">offsets</code><span class="sig-paren">(</span><em>skip=0</em>, <em>to_iterate=[]</em>, <em>toskip={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#offsets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.offsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>An iterator over offsets and their length ((dx,dy), norm((dx,dy))) in the order 
+of increasing norm((dx,dy))
+dx and dy are integers, starting at (0,0).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>skip</strong> – A float. The iterator may skip cell up to SKIP away from (0,0) 
+before returning the first value.</li>
+<li><strong>to_iterate</strong> – Do not use this. The mutable default parameter is used as a hack for caching.</li>
+<li><strong>toskip</strong> – Do not use this. The mutable default parameter is used as a hack for caching.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">A tuple ((dx,dy), n) where dx and dy are integers and n=norm((dx,dy)).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.modified_hausdorff_distance">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">modified_hausdorff_distance</code><span class="sig-paren">(</span><em>img</em>, <em>ref_img</em>, <em>_=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#modified_hausdorff_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.modified_hausdorff_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the grid-based Modified Hausdorff distance between two aligned boolean matrices.
+This distance was proposed in the following paper: TODO
+It uses the mean of all distances instead of the max.
+The current implementation is not optimized</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.hausdorff_distance">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">hausdorff_distance</code><span class="sig-paren">(</span><em>img</em>, <em>ref_img</em>, <em>cutoff=inf</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#hausdorff_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.hausdorff_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the grid-based Hausdorff distance between two aligned boolean matrices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ref_img</strong> (<em>img</em><em>,</em>) – Two aligned boolean 2D matrices with the same shape.</li>
+<li><strong>cutoff</strong> – A float. If the distance is greater than cutoff, return float(“inf”).
+(Used to increase execution speed in certain cases)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.locally_minimal_distance">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">locally_minimal_distance</code><span class="sig-paren">(</span><em>ref_img</em>, <em>scale</em>, <em>cg</em>, <em>start_rot=None</em>, <em>offset=None</em>, <em>proj_dir=None</em>, <em>maxiter=50</em>, <em>advanced=False</em>, <em>virtual_atoms=True</em>, <em>distance=&lt;function hausdorff_distance&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#locally_minimal_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.locally_minimal_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Local optimization of the Hausdorff distance between a image and a CoarseGrainRNA</p>
+<p>For a given reference image and a given CoarseGrainRNA, the distance is a function of
+continuouse variables (projection direction, offset and rotation), but is a stepfunction, 
+because it is grid-based. Therefor traditional optimization approaches, 
+which rely on a gradient, fail.
+This implementation tests, whether the distance is increasing or decreasing in 
+different directions, no matter how far one has to walk in that direction before 
+the distance changes. It then follows the deepest decrease (not the steepest decrease!)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref_img</strong> – The reference image. A boolean square matrix.</li>
+<li><strong>scale</strong> – The edge length in Angstrom of the reference image.</li>
+<li><strong>cg</strong> – The coarse grain RNA to match to the projection.</li>
+<li><strong>start_rot</strong> – The in-plane rotation of the projection.</li>
+<li><strong>offset</strong> – The offset that will be applied to the projection in Angstrom. A np.array([x,y]).</li>
+<li><strong>proj_dir</strong> – The starting projection direction in spherical polar coordinates.
+If this is not given: uses cg.project_from.</li>
+<li><strong>maxiter</strong> – Maximal number of iterations. An int.</li>
+<li><strong>distance</strong> – a function with signature like hausdorff_distance</li>
+<li><strong>advanced</strong> – Try steps in more directions (takes longer)</li>
+<li><strong>virtual_atoms</strong> – Whether or not to project the virtual atoms. A boolean.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A triple: (distance, image, parameters)
+Where distance is a float,image a matrix and params is a triple:
+np.array([theta, phi]), degrees, np.array([x_offset, y_offset])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.globally_minimal_distance">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">globally_minimal_distance</code><span class="sig-paren">(</span><em>ref_img</em>, <em>scale</em>, <em>cg</em>, <em>start_points=40</em>, <em>starting_rotations=(0</em>, <em>180)</em>, <em>starting_offsets=(array([0</em>, <em>0])</em>, <em>)</em>, <em>local_maxiter=5</em>, <em>use_heuristic=True</em>, <em>virtual_atoms=True</em>, <em>verbose=False</em>, <em>distance=&lt;function hausdorff_distance&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#globally_minimal_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.globally_minimal_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Global minimization of Hausdorff distance.</p>
+<p>Uses several Heuristics to speed up the process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref_img</strong> – The reference image. A boolean square matrix.</li>
+<li><strong>scale</strong> – The edge length in Angstrom of the reference image.</li>
+<li><strong>cg</strong> – The coarse grain RNA to match to the projection.</li>
+<li><strong>start_points</strong> – Number of starting projection directions. For each, local
+optimization with maxiter steps is performed.</li>
+<li><strong>starting_rotations</strong> – A list of in-plane rotations in degrees.</li>
+<li><strong>starting_offsets</strong> – A list/array of np.arrays of the type np.array([x,y]).</li>
+<li><strong>local_maxiter</strong> – Maximal iteration for each local optimization</li>
+<li><strong>use_heuristic</strong> – A Boolean</li>
+<li><strong>virtual_atoms</strong> – Boolean. If False, do not project virtual atoms (faster)</li>
+<li><strong>verbose</strong> – If True, print a summary at the end.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A triple: (best_distance, best_image, best_parameters)
+Where best_distance is a float, best_image a matrix and best params is a triple:
+np.array([theta, phi]), degrees, np.array([x_offset, y_offset])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.get_box">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">get_box</code><span class="sig-paren">(</span><em>projection</em>, <em>width</em>, <em>offset=array([0</em>, <em>0])</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#get_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.get_box" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.get_longest_img_diameter">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">get_longest_img_diameter</code><span class="sig-paren">(</span><em>img</em>, <em>scale</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#get_longest_img_diameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.get_longest_img_diameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.projection.hausdorff.try_parameters">
+<code class="descclassname">forgi.projection.hausdorff.</code><code class="descname">try_parameters</code><span class="sig-paren">(</span><em>ref_img</em>, <em>scale</em>, <em>cg</em>, <em>rotations=(0</em>, <em>180)</em>, <em>offsets=(array([0</em>, <em>0])</em>, <em>)</em>, <em>proj_directions=None</em>, <em>virtual_atoms=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/projection/hausdorff.html#try_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.projection.hausdorff.try_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try all combinations of the given starting parameters 
+(offset, in-plane rotation and projection direction)
+and find the ones with the shorthest Huasdorff distance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref_img</strong> – The reference image. A boolean square matrix.</li>
+<li><strong>scale</strong> – The edge length in Angstrom of the reference image.</li>
+<li><strong>cg</strong> – The coarse grain RNA to match to the projection.</li>
+<li><strong>rotations</strong> – A list of in-plane rotations in degrees.</li>
+<li><strong>offsets</strong> – A list/array of np.arrays of the type np.array([x,y]).</li>
+<li><strong>proj_directions</strong> – A list of projection_directions (tuples theta, phi) or None.
+If None, uses cg.project_from.</li>
+<li><strong>virtual_atoms</strong> – Boolean. If False, do not project virtual atoms (faster)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A triple: (best_distance, best_image, best_parameters)
+Where best_distance is a float, best_image a matrix and best params is a triple:
+np.array([theta, phi]), degrees, np.array([x_offset, y_offset])</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -72,8 +234,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

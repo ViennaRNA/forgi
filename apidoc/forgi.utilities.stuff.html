@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.utilities.stuff module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.utilities.stuff module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.utilities package" href="forgi.utilities.html" />
     <link rel="next" title="forgi.visual package" href="forgi.visual.html" />
     <link rel="prev" title="forgi.utilities.observedDict module" href="forgi.utilities.observedDict.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -52,8 +48,133 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-utilities-stuff-module">
-<h1>forgi.utilities.stuff module<a class="headerlink" href="#forgi-utilities-stuff-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.utilities.stuff">
+<span id="forgi-utilities-stuff-module"></span><h1>forgi.utilities.stuff module<a class="headerlink" href="#module-forgi.utilities.stuff" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="forgi.utilities.stuff.delete_from_stack">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">delete_from_stack</code><span class="sig-paren">(</span><em>stack</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#delete_from_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.delete_from_stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.dotbracket_to_pairtable">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">dotbracket_to_pairtable</code><span class="sig-paren">(</span><em>struct</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#dotbracket_to_pairtable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.dotbracket_to_pairtable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts arbitrary structure in dot bracket format to pair table (ViennaRNA format).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.gen_random_sequence">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">gen_random_sequence</code><span class="sig-paren">(</span><em>l</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#gen_random_sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.gen_random_sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a random RNA sequence of length l.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.grouped">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">grouped</code><span class="sig-paren">(</span><em>iterable</em>, <em>n</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#grouped"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.grouped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of every n elements in iterable.</p>
+<p><a class="reference external" href="http://stackoverflow.com/questions/5389507/iterating-over-every-two-elements-in-a-list">http://stackoverflow.com/questions/5389507/iterating-over-every-two-elements-in-a-list</a></p>
+<p>s -&gt; (s0,s1,s2,…sn-1), (sn,sn+1,sn+2,…s2n-1), (s2n,s2n+1,s2n+2,…s3n-1), …</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.insert_into_stack">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">insert_into_stack</code><span class="sig-paren">(</span><em>stack</em>, <em>i</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#insert_into_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.insert_into_stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.inverse_brackets">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">inverse_brackets</code><span class="sig-paren">(</span><em>bracket</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#inverse_brackets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.inverse_brackets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.is_string_type">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">is_string_type</code><span class="sig-paren">(</span><em>stri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#is_string_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.is_string_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.make_temp_directory">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">make_temp_directory</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#make_temp_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.make_temp_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yanked from:</p>
+<p><a class="reference external" href="http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class">http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.merge_intervals">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">merge_intervals</code><span class="sig-paren">(</span><em>intervals</em>, <em>diff=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#merge_intervals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.merge_intervals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a set of intervals, and combine them whenever the endpoints
+match.</p>
+<p>I.e. [(42,47), (55,60), (60,63), (1,9), (63,71)]</p>
+<p>Should yield</p>
+<p>[(1,9),(42,47), (55,71)]</p>
+<p>There should be no overlapping intervals.</p>
+<p>&#64;param intervals: A set of tuples indicating intervals
+&#64;return: A list of merged intervals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.pairtable_to_dotbracket">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">pairtable_to_dotbracket</code><span class="sig-paren">(</span><em>pt</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#pairtable_to_dotbracket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.pairtable_to_dotbracket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts arbitrary pair table array (ViennaRNA format) to structure in dot bracket format.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.pairtable_to_elements">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">pairtable_to_elements</code><span class="sig-paren">(</span><em>pt</em>, <em>level</em>, <em>i</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#pairtable_to_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.pairtable_to_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a pair table to a list of secondary structure
+elements:</p>
+<blockquote>
+<div><p>[[‘s’,1,[2,3]]</p>
+<blockquote>
+<div><p>The ‘s’ indicates that an element can be a stem. It can also be
+an interior loop (‘i’), a hairpin loop (‘h’) or a multiloop (‘m’)</p>
+<p>The second number (1 in this case) indicates the depth or
+how many base pairs have to be broken to get to this element.</p>
+</div></blockquote>
+<p>Finally, there is the list of nucleotides which are part of
+of this element.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.pairtable_to_tuples">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">pairtable_to_tuples</code><span class="sig-paren">(</span><em>pt</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#pairtable_to_tuples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.pairtable_to_tuples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a pairtable to a list of base pair tuples.</p>
+<p>i.e. [4,3,4,1,2] -&gt; [(1,3),(2,4),(3,1),(4,2)]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pt</strong> – A pairtable</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list paired tuples</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.tuples_to_pairtable">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">tuples_to_pairtable</code><span class="sig-paren">(</span><em>pair_tuples</em>, <em>seq_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#tuples_to_pairtable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.tuples_to_pairtable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a representation of an RNA consisting of a list of tuples
+to a pair table:</p>
+<p>i.e. [(1,3),(2,4),(3,1),(4,2)] -&gt; [4,3,4,1,2]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tuples</strong> – A list of pair tuples</li>
+<li><strong>seq_length</strong> – How long is the sequence? Only needs to be passed in when
+the unpaired nucleotides aren’t passed in as (x,0) tuples.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A pair table</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -72,8 +193,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>

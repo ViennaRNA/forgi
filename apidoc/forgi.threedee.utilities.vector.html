@@ -1,42 +1,38 @@
 
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>forgi.threedee.utilities.vector module &#8212; forgi 0.4 documentation</title>
-    
+    <title>forgi.threedee.utilities.vector module &#8212; forgi 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="top" title="forgi 0.4 documentation" href="../index.html" />
-    <link rel="up" title="forgi.threedee.utilities package" href="forgi.threedee.utilities.html" />
     <link rel="next" title="forgi.threedee.visual package" href="forgi.threedee.visual.html" />
     <link rel="prev" title="forgi.threedee.utilities.pdb module" href="forgi.threedee.utilities.pdb.html" /> 
   </head>
-  <body role="document">
+  <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 0.4 documentation</span></a></h1>
+          <span>forgi 1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -52,8 +48,622 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-threedee-utilities-vector-module">
-<h1>forgi.threedee.utilities.vector module<a class="headerlink" href="#forgi-threedee-utilities-vector-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-forgi.threedee.utilities.vector">
+<span id="forgi-threedee-utilities-vector-module"></span><h1>forgi.threedee.utilities.vector module<a class="headerlink" href="#module-forgi.threedee.utilities.vector" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.GetPointsEquiAngularlyDistancedOnSphere">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">GetPointsEquiAngularlyDistancedOnSphere</code><span class="sig-paren">(</span><em>numberOfPoints=45</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#GetPointsEquiAngularlyDistancedOnSphere"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.GetPointsEquiAngularlyDistancedOnSphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>each point you get will be of form ‘x, y, z’; in cartesian coordinates
+eg. the ‘l2 distance’ from the origion [0., 0., 0.] for each point will be 1.0
+————
+converted from:  <a class="reference external" href="http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere">http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere</a> )</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.center_on_centroid">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">center_on_centroid</code><span class="sig-paren">(</span><em>crds1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#center_on_centroid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.center_on_centroid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.change_basis">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">change_basis</code><span class="sig-paren">(</span><em>coords</em>, <em>new_basis</em>, <em>old_basis</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#change_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.change_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the basis of coordinates to a new basis. In a regular structure
+we have the coordinates in the regular cartesian coordinate system. For helix-helix
+orientations, however, we want to express the coordinates in a coordinate system
+defined by the first helix.</p>
+<p>The new basis will consist of the axis of the first helix, one of its twist elements
+(the one closest to the second vector) and a third vector orthogonal to the previous
+two.</p>
+<p># <a class="reference external" href="http://tutorial.math.lamar.edu/Classes/LinAlg/ChangeOfBasis.aspx">http://tutorial.math.lamar.edu/Classes/LinAlg/ChangeOfBasis.aspx</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>coords</strong> – The coordinates to transform (array of n elements).</li>
+<li><strong>new_basis</strong> – The new basis vectors (n x n matrix)</li>
+<li><strong>old_basis</strong> – The old basis for the coordinates(n x n matrix)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The new coordinates according to the new basis</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.change_basis_vectorized">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">change_basis_vectorized</code><span class="sig-paren">(</span><em>coords</em>, <em>new_basis</em>, <em>old_basis</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#change_basis_vectorized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.change_basis_vectorized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change an array of vectors (coords) from old_basis to new_basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> – A array of coordinates to transform.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.closest_point_on_seg">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">closest_point_on_seg</code><span class="sig-paren">(</span><em>seg_a</em>, <em>seg_b</em>, <em>circ_pos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#closest_point_on_seg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.closest_point_on_seg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closest point between a line segment and a point.</p>
+<p>Lifted from:</p>
+<p><a class="reference external" href="http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html">http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.create_orthonormal_basis">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">create_orthonormal_basis</code><span class="sig-paren">(</span><em>vec1</em>, <em>vec2=None</em>, <em>vec3=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#create_orthonormal_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.create_orthonormal_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an orthonormal basis using the provided vectors.</p>
+<p>If more than one is provided, it must be orthogonal to
+the others.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.cylinder_line_intersection">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">cylinder_line_intersection</code><span class="sig-paren">(</span><em>cyl</em>, <em>line</em>, <em>r</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#cylinder_line_intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.cylinder_line_intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the points of intersection between a line and a cylinder.</p>
+<p>If they do not intersect, return an empty list. If the line
+touches the cylinder, then return a 2 point list with two identical points.
+If the line crosses the cylinder, then return a list of 2 points.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.det3x3">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">det3x3</code><span class="sig-paren">(</span><em>matrix</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#det3x3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.det3x3" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the determinant of a 3x3 matrix</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.elements_closer_than">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">elements_closer_than</code><span class="sig-paren">(</span><em>s1_p0</em>, <em>s1_p1</em>, <em>s2_p0</em>, <em>s2_p1</em>, <em>distance</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#elements_closer_than"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.elements_closer_than" title="Permalink to this definition">¶</a></dt>
+<dd><p>Code copied from line_segment_distance, but with optimizations for fast comparison to distance.</p>
+<p>Code shamelessly translated from:
+<a class="reference external" href="http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment">http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s1_p0</strong> – The start of the first segment</li>
+<li><strong>s1_p1</strong> – The end of the first segment</li>
+<li><strong>s2_p0</strong> – The start of the second segment</li>
+<li><strong>s2_p1</strong> – The end of the second segment</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple of points (i1,i2) containing the point i1 on s1
+closest to the point i2 on segment s2.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_alignment_matrix">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_alignment_matrix</code><span class="sig-paren">(</span><em>vec1</em>, <em>vec2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_alignment_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_alignment_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a rotation matrix that will align vec1 along vec2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vec1</strong> – The target vector.</li>
+<li><strong>vec2</strong> – The vector to be aligned.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_double_alignment_matrix">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_double_alignment_matrix</code><span class="sig-paren">(</span><em>vp1</em>, <em>vp2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_double_alignment_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_double_alignment_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Align two sets of two vectors onto each other.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vp1</strong> – A pair of two vectors.</li>
+<li><strong>vp2</strong> – Another pair of two vectors.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_inter_distances">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_inter_distances</code><span class="sig-paren">(</span><em>vecs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_inter_distances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_inter_distances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate all of the distances between the points of vecs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vecs</strong> – a list of vectors (=points)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list containing all distances between any two vectors in vecs.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_non_colinear_unit_vector">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_non_colinear_unit_vector</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_non_colinear_unit_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_non_colinear_unit_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a unit vector that does not lie on the line defined by vec.</p>
+<p>This is done by creating a vector along the least represented axis in vec.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> – The vector under consideration.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A vector along an axis.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_orthogonal_unit_vector">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_orthogonal_unit_vector</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_orthogonal_unit_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_orthogonal_unit_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a vector orthogonal to vec.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To create a basis, use create_orthonormal_basis instead!</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_random_vector">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_random_vector</code><span class="sig-paren">(</span><em>mult=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_random_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_random_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a random vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mult</strong> – Stretch the random vector by this value. This is the longest value allowed for the total length.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A random vector</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_standard_basis">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_standard_basis</code><span class="sig-paren">(</span><em>dim</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_standard_basis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_standard_basis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a standard basis for the given dimension.</p>
+<p>For 2D, this equals [[1.,0.],[0.,1.]]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dim</strong> – The dimension of the vector space.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A vector of vectors that constitute the standard basis.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.get_vector_centroid">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">get_vector_centroid</code><span class="sig-paren">(</span><em>crds1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#get_vector_centroid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.get_vector_centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the centroid of a set of vectors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>crds</strong> – A matrix containing all of the vectors.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The centroid of the rows of the matrix crds.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.is_almost_parallel">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">is_almost_parallel</code><span class="sig-paren">(</span><em>vec1</em>, <em>vec2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#is_almost_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.is_almost_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true, if two vectors are almost parallel</p>
+<p>Note that every vector is parallel to the zero vector.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.line_segment_distance">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">line_segment_distance</code><span class="sig-paren">(</span><em>s1_p0</em>, <em>s1_p1</em>, <em>s2_p0</em>, <em>s2_p1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#line_segment_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.line_segment_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the two points on each of the segments that are closest to
+each other. The first segment is defined as p1-&gt;p2 and the second as
+p3-&gt;p4.</p>
+<p>Code shamelessly translated from:
+<a class="reference external" href="http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment">http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s1_p0</strong> – The start of the first segment</li>
+<li><strong>s1_p1</strong> – The end of the first segment</li>
+<li><strong>s2_p0</strong> – The start of the second segment</li>
+<li><strong>s2_p1</strong> – The end of the second segment</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple of points (i1,i2) containing the point i1 on s1
+closest to the point i2 on segment s2.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.line_segments_collinearity">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">line_segments_collinearity</code><span class="sig-paren">(</span><em>segment1</em>, <em>segment2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#line_segments_collinearity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.line_segments_collinearity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quantifies, how collinear (according to some measure) two line segments are.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>segment2</strong> (<em>segment1</em><em>,</em>) – Each a tuple of vectors (start, end)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.magnitude">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">magnitude</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#magnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.magnitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the magnitude of a vector <code class="code docutils literal"><span class="pre">(|V|)</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> – The vector in question.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The magnitude of the vector.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.middlepoint">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">middlepoint</code><span class="sig-paren">(</span><em>vec1</em>, <em>vec2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#middlepoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.middlepoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>The point in the middle between vec1 and vec2.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.normalize">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">normalize</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize a vector so that its magnitude becomes 1.0 while
+its direction remains the same.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> – The vector in question.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A normalized version of the vector.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.pin_fits_two_cyl">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">pin_fits_two_cyl</code><span class="sig-paren">(</span><em>cyl1</em>, <em>cyl2</em>, <em>cyl_width</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#pin_fits_two_cyl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.pin_fits_two_cyl" title="Permalink to this definition">¶</a></dt>
+<dd><p>If we create a cone that starts at one end of cylinder1, does it
+enclose cylinder2?</p>
+<p>This function approximates an answer by projecting a circle on
+the plane normal to the axis of cylinder1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cyl1</strong> – The coordinates of cylinder1</li>
+<li><strong>cyl2</strong> – The coordinates of cylinder2</li>
+<li><strong>cyl_width</strong> – The widths of the two cylinders</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True or False</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.point_in_cylinder">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">point_in_cylinder</code><span class="sig-paren">(</span><em>pt1</em>, <em>pt2</em>, <em>r</em>, <em>testpt</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#point_in_cylinder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.point_in_cylinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if testpt is within a cylinder of radius r.</p>
+<p>Translated from:</p>
+<blockquote>
+<div><a class="reference external" href="http://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml">http://www.flipcode.com/archives/Fast_Point-In-Cylinder_Test.shtml</a></div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pt1</strong> – The start of the cylinder axis.</li>
+<li><strong>pt2</strong> – The end of the cylinder axis.</li>
+<li><strong>r</strong> – The radius of the cylinder.</li>
+<li><strong>testpt</strong> – The point we are testing.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the point is within the cylinder, False otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.point_line_distance">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">point_line_distance</code><span class="sig-paren">(</span><em>point</em>, <em>line_start</em>, <em>line_dir</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#point_line_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.point_line_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance between the point and the line
+through line_point with direction line_dir.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>point</strong> – A point(an array with shape (3,)) or multiple points (shape n,3)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.profile">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.profile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.rotation_matrix">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">rotation_matrix</code><span class="sig-paren">(</span><em>axis</em>, <em>theta</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#rotation_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the rotation matrix for a rotation of theta around axis.</p>
+<p>Thanks to unutbu on StackOverflow</p>
+<p><a class="reference external" href="http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector">http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>axis</strong> – The axis around which to rotate</li>
+<li><strong>theta</strong> – The angle of rotation (in rad)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A matrix which can be used to perform the given rotation. The coordinates
+need only be multiplied by the matrix.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.rotation_matrix_weave">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">rotation_matrix_weave</code><span class="sig-paren">(</span><em>axis</em>, <em>theta</em>, <em>mat=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#rotation_matrix_weave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.rotation_matrix_weave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the rotation matrix for a rotation of theta degrees around axis.</p>
+<p>Implemented in C++ using the weave module. Runs approximately 6x faster than
+the numpy version below if no mat is passed in and around 20x faster if mat is
+passed in.</p>
+<p>Thanks to unutbu on StackOverflow</p>
+<p><a class="reference external" href="http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector">http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>axis</strong> – The axis around which to rotate</li>
+<li><strong>theta</strong> – The angle of rotation in radians!</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A matrix which can be used to perform the given rotation. The coordinates
+need only be multiplied by the matrix.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.seg_intersect">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">seg_intersect</code><span class="sig-paren">(</span><em>line1</em>, <em>line2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#seg_intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.seg_intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Intersection of 2 line segments in 2D space (as lists or numpy array-like).
+:param line1: a tuple/list (a1, a2): The first line segment, from a1 to a2
+:param line2: a tuple/list (b1, b2):The 2nd line segment, from b1 to b2</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.segment_circle">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">segment_circle</code><span class="sig-paren">(</span><em>seg_a</em>, <em>seg_b</em>, <em>circ_pos</em>, <em>circ_rad</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#segment_circle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.segment_circle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Something. Lifted from:</p>
+<p><a class="reference external" href="http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html">http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.sortAlongLine">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">sortAlongLine</code><span class="sig-paren">(</span><em>start</em>, <em>end</em>, <em>points</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#sortAlongLine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.sortAlongLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort all points in points along the line from start to end.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start</strong> – A point</li>
+<li><strong>end</strong> – A point</li>
+<li><strong>points</strong> – A list of points</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list containing start, end and all elements of points, sorted by the distance from start</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.spherical_cartesian_to_polar">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">spherical_cartesian_to_polar</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#spherical_cartesian_to_polar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.spherical_cartesian_to_polar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a parameterization of a vector of 3 coordinates:</p>
+<p>x = r sin u cos v
+y = r sin u sin v
+z = r cos u</p>
+<p>0 &lt;= u &lt;= pi
+-pi &lt;= v &lt;= pi</p>
+<p>Where u is the polar angle and v is the azimuth angle.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vec</strong> – A vector of 3 cartesian coordinates.</li>
+<li><strong>fast</strong> – Do not assert correctnes of result.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(r, u, v)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.spherical_polar_to_cartesian">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">spherical_polar_to_cartesian</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#spherical_polar_to_cartesian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.spherical_polar_to_cartesian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert spherical polar coordinates to cartesian coordinates:</p>
+<p>See the definition of spherical_cartesian_to_polar.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> – A vector of the 3 polar coordinates (r, u, v)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(x, y, z)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.vec_angle">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">vec_angle</code><span class="sig-paren">(</span><em>vec1</em>, <em>vec2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#vec_angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.vec_angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the angle between two vectors using the identity:</p>
+<p><code class="code docutils literal"><span class="pre">A</span> <span class="pre">*</span> <span class="pre">B</span> <span class="pre">=</span> <span class="pre">|A||B|</span> <span class="pre">cos</span> <span class="pre">t</span></code></p>
+<p>Where A and B are two vectors and t is the angle between themath.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vec1</strong> – The first vector (A)</li>
+<li><strong>vec2</strong> – The second vector (B)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The angle between the two vectors.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.vec_distance">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">vec_distance</code><span class="sig-paren">(</span><em>vec1</em>, <em>vec2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#vec_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.vec_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.vec_dot">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">vec_dot</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#vec_dot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.vec_dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vector dot product for vectors of length 3.</p>
+<p>For small vectors of length 3 that are represented as lists and not as np.arary,
+this naive python implementation might be faster than the corresponding numpy implementation.</p>
+<p>If a and b are already numpy arrays, the numpy implementation seems to be faster
+(depending an how numpy was compiled)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.vector_rejection">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">vector_rejection</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#vector_rejection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.vector_rejection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the vector rejection of a from b. In other words, return the orthogonal
+projection of a onto the plane orthogonal to b.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> – The vector to be projected.</li>
+<li><strong>b</strong> – The vector defining the normal of the plane.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The rejection of the vector a from b. (a - (np.dot(a, b) / np.dot(b, b)) * b)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.vector.vector_set_rmsd">
+<code class="descclassname">forgi.threedee.utilities.vector.</code><code class="descname">vector_set_rmsd</code><span class="sig-paren">(</span><em>set1</em>, <em>set2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/vector.html#vector_set_rmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.vector.vector_set_rmsd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the not-centered rmsd between two sets of vectors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>set1</strong> – A matrix</li>
+<li><strong>set2</strong> – Another matrix.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The rmsd between the rows of the matrix.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -72,8 +682,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on May 19, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+      Last updated on Oct 12, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
 </html>
