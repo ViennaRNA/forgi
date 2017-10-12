@@ -3488,7 +3488,7 @@ class BulgeGraph(object):
         pairs = sorted([tuple(sorted(p)) for p in self.to_pair_tuples() if p[1] != 0])
         pairs = list(set(pairs))
 
-        import forgi.aux.k2n_standalone.knots as fakk
+        import forgi._k2n_standalone.knots as fakk
 
         pk_function = fakk.eg
         nested_pairs, removed_pairs = pk_function(pairs, return_removed=True)
