@@ -103,7 +103,7 @@ class TestRMSD(unittest.TestCase):
         a3 = np.array([[2., 2., 2.], [0., 0., 0.], [-2., -2., -2.]])
         self.assertAlmostEqual(ftme.rmsd(a1,a3), math.sqrt(2))
 
-    @unittest.expectedFailure
+    @unittest.expectedFailure # Currently it DOES center!
     def test_rmsd_doesnt_center(self):
         a1 = np.array([[1., 1., 1.], [0., 0., 0.], [-1., -1., -1.]])
         a2 = np.array([[1., 2., 1.], [0., -1., 0.], [-1., -1., -1.]])
