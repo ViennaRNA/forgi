@@ -1014,12 +1014,12 @@ class Projection2D(object):
                 if ftuv.vec_distance(node1, node2)<cutoff:
                     newnode=ftuv.middlepoint(node1, node2)
                     #self.proj_graph.add_node(newnode)
-                    for neighbor in list(self.proj_graph.edge[node1].keys()):
+                    for neighbor in list(self.proj_graph.adj[node1].keys()):
                         self.proj_graph.add_edge(newnode, neighbor,
-                                                attr_dict=self.proj_graph.edge[node1][neighbor])
-                    for neighbor in list(self.proj_graph.edge[node2].keys()):
+                                                attr_dict=self.proj_graph.adj[node1][neighbor])
+                    for neighbor in list(self.proj_graph.adj[node2].keys()):
                         self.proj_graph.add_edge(newnode, neighbor,
-                                                 attr_dict=self.proj_graph.edge[node2][neighbor])
+                                                 attr_dict=self.proj_graph.adj[node2][neighbor])
                     if newnode!=node1: #Equality can happen because of floating point inaccuracy
                         self.proj_graph.remove_node(node1)
                     if newnode!=node2:
@@ -1044,7 +1044,7 @@ class Projection2D(object):
                             continue
                         if (ftuv.vec_distance(nearest, node)<cutoff):
                             newnode=ftuv.middlepoint(node, tuple(nearest))
-                            attr_dict=self.proj_graph.edge[source][target]
+                            attr_dict=self.proj_graph.adj[source][target]
                             self.proj_graph.remove_edge(source, target)
                             if source!=newnode:
                                 self.proj_graph.add_edge(source, newnode, attr_dict=attr_dict)
@@ -1052,8 +1052,8 @@ class Projection2D(object):
                                 self.proj_graph.add_edge(target, newnode,
                                                          attr_dict=attr_dict)
                             if newnode!=node: #Equality possible bcse of floating point inaccuracy
-                                for neighbor in self.proj_graph.edge[node].keys():
-                                    attr_dict=self.proj_graph.edge[node][neighbor]
+                                for neighbor in self.proj_graph.adj[node].keys():
+                                    attr_dict=self.proj_graph.adj[node][neighbor]
                                     self.proj_graph.add_edge(newnode, neighbor,
                                                              attr_dict=attr_dict)
                                 self.proj_graph.remove_node(node)
