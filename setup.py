@@ -1,6 +1,5 @@
-from distutils.core import setup
-
-from distutils.command.build_py import build_py as _build_py
+from setuptools import setup
+from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
 
