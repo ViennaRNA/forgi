@@ -1,11 +1,11 @@
 numpy>=1.10.0
-scipy
+scipy>=0.19.1
 future
-nose2
+nose2>=0.6.5
 networkx==2
-biopython
+biopython>=1.70
 logging_exceptions>=0.1.6
-beautifulsoup4
-matplotlib
+beautifulsoup4>=4.6
+matplotlib==2
 ddt
-pandas
+pandas>=0.20

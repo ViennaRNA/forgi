@@ -1,6 +1,5 @@
-from distutils.core import setup
-
-from distutils.command.build_py import build_py as _build_py
+from setuptools import setup
+from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
 
@@ -66,7 +65,7 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU Affero General Public License v3'
+        'License :: OSI Approved :: GNU Affero General Public License v3',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
