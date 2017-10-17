@@ -1340,6 +1340,8 @@ class BulgeGraph(object):
 
         pt = self.to_pair_tuples()
 
+        to_remove = list(to_remove)
+        
         nt = []
         for p in pt:
             to_add = p
@@ -3327,7 +3329,7 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
                 # If pseudoknots exist, the direction is not always 0!
-                # assert self.get_stem_direction(prev, build_order[-1][2])==0 
+                # assert self.get_stem_direction(prev, build_order[-1][2])==0
 		# does not hold for pseudoknots!
         self.build_order = build_order
         self.ang_type = None
