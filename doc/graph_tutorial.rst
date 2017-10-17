@@ -301,8 +301,8 @@ Finding the Partner of a Base Pair
 Consider the situation where we have a secondary structure and we want to know
 the base-pairing partner of nucleotide *n*. This is easily done with forgi::
 
-    >>> import forgi.graph.bulge_graph as cgb
-    >>> bg = cgb.BulgeGraph()
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph()
     >>> bg.from_dotbracket('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
     >>> bg.pairing_partner(1)
     71
@@ -380,17 +380,9 @@ iterating over the stems and checking their lengths::
         if bg.stem_length(s) > biggest_stem[0]:
             biggest_stem = (bg.stem_length(s), s)
 
-This is best illustrated with two examples::
-
-    echo '..((((..))))..' | python examples/longest_stem.py -
-    4
-    echo '..((((..).)))..' | python examples/longest_stem.py -
-    3
-
-In the first case, the longest stem is the only stem. In the second case, what
-appears to be one large stem of length 4, is actually two stems of length 1 and
-3.
-
+Note that the dotbracket string `..((((..))))..` has one stem of length 4, while
+the dotbracket string `..((((..).)))..` has two stems of length 3 and 1. \
+Thus the longest stem in the second example is only 3 nucleotides long.
 
 Getting the Sequence of an Element and its Neighbors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -445,8 +437,7 @@ thus should have only one dimension (how many unpaired nucleotides are in that
 segment), but in order to maintain consistency with interior loops, we make it
 a tuple by attaching 1000 as the second value::
 
-    import forgi.graph.bulge_graph as fgb
-    >>>
+    >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph(dotbracket_str='((.(.))..((..)))')
     >>> bg.get_bulge_dimensions('i0')
     (1, 0)
@@ -459,21 +450,31 @@ a tuple by attaching 1000 as the second value::
 
 .. _dissolving-stems:
 
-Dissolving Stems
-^^^^^^^^^^^^^^^^
+Removing basepairs and dissolving Stems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To remove a stem from the skeleton graph, use the ``dissolve_stem()`` member
-function. This will remove the base pairs that were part of the stem and merge
-them with the adjacent unpaired regions::
+Basepairs be removed from the skeleton graph using the `remove_base_pairs`
+memberfunction::
 
     >>> import forgi.graph.bulge_graph as fgb
     >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
-    >>> bg.dissolve_stem('s0')
+    >>> bg.remove_base_pairs([(1,6), (9,14)])
     >>> print bg.to_dotbracket_string()
-    ........((..))
-    >>> bg.dissolve_stem('s1')
+    .(..)....(..).
+
+To remove a whole stem, use the `stem_bp_iterator` member function::
+
+    >>> import forgi.graph.bulge_graph as fgb
+    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
+    >>> bg.remove_base_pairs(list(bg.stem_bp_iterator("s0")))
     >>> print bg.to_dotbracket_string()
-    ..............
+    .(..)....(..).
+
+Note::
+
+    In forgi 1.0, you have to explicitly convert the iterator to
+    a list. In future versions, this conversion will be done automatically by
+    `remove_base_pairsremove_base_pairs`.
 
 Finding Out Which Side of a Stem a Loop Is On
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -649,47 +650,6 @@ The first distance requires going over three backbone edges. The second distance
 Requires three backbone, one base pair, and one more backbone. The last distance
 requires three backbone, one base pair, and three more backbone links.
 
-
-Selecting a Random Subgraph
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The `random_subgraph` function picks a random quantity of elements which will
-become part of the subgraph. A random element is chosen as a starting point and
-the graph is traversed in a random manner until at least the chosen number of
-nodes have been added. When that number is exceeded, the traversal stops. In
-cases where an interior loop or a multiloop segment is added, the stem on the
-other end is automatically added as well. Example, using the graph in the
-previous section::
-
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
-    >>> sg = bg.random_subgraph(5)
-    >>> print sg
-    ['s3', 's2', 'm2', 's4', 'm5']
-
-From this we can create a new graph, compete with defines and connections. Only
-the sequence and its related information (length, ids) will not be carried
-over::
-
-    >>> nbg = fgb.bg_from_subgraph(bg, sg)
-    >>> print nbg.to_bg_string()
-    name untitled
-    length 0
-    seq_ids
-    define s3 7 7 9 9
-    define s2 5 5 15 15
-    define s4 11 11 13 13
-    define m5 10 10
-    define m2 6 6
-    connect s3 m5 m2
-    connect s2 m2
-    connect s4 m5
-
-Which, when visualized, looks like this:
-
-.. image:: subgraph.png
-    :height: 200
-    :align: center
 
 
 Applications

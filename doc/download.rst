@@ -23,15 +23,21 @@ Dependencies
 
 Some standard python packages are required:
 
-* numpy + scipy
+* numpy + scipy + pandas
 * the future package
 * networkx
+
+
+Further more logging_exceptions is required, which we published separately on Pypi
+
+    pip install logging_exceptions
+
 
 
 Additional dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The library can be installed with some of the additional dependencies missing, but will 
+The library can be installed with some of the additional dependencies missing, but will
 raise an error, if functions with missing dependencies are called.
 
 These additional dependencies include:
@@ -39,6 +45,7 @@ These additional dependencies include:
 * matplotlib (Needed for `forgi.threedee.visual`, `forgi.visual` and `forgi.projection`)
 * Biopython (Needed for `forgi.threedee`)
 * pylab (Needed for `forgi.visual.mplotlib`, )
+* beautifulsoap4 (Needed for fetching informations about modified residues in pdb files)
 
 MC-Annotate
 ~~~~~~~~~~~
