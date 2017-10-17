@@ -306,8 +306,8 @@ dot-bracket notation can be used to create a BulgeGraph structure:</p>
 <h3>Finding the Partner of a Base Pair<a class="headerlink" href="#finding-the-partner-of-a-base-pair" title="Permalink to this headline">¶</a></h3>
 <p>Consider the situation where we have a secondary structure and we want to know
 the base-pairing partner of nucleotide <em>n</em>. This is easily done with forgi:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">cgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">cgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="s1">&#39;(((((((((...((((((.........))))))........((((((.......))))))..)))))))))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">pairing_partner</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">71</span>
@@ -363,7 +363,7 @@ to load a secondary structure:</p>
 </pre></div>
 </div>
 <p>This can then be used to in other applications such as <a class="reference internal" href="#loop-dimensions"><span class="std std-ref">Retrieving the Dimensions of a Loop</span></a>,
-<a class="reference internal" href="#dissolving-stems"><span class="std std-ref">Dissolving Stems</span></a>, <a class="reference internal" href="#iloop-iterating"><span class="std std-ref">Iterating Over the Nucleotides of an Interior Loop</span></a>, etc…</p>
+<a class="reference internal" href="#dissolving-stems"><span class="std std-ref">Removing basepairs and dissolving Stems</span></a>, <a class="reference internal" href="#iloop-iterating"><span class="std std-ref">Iterating Over the Nucleotides of an Interior Loop</span></a>, etc…</p>
 <div class="section" id="finding-the-length-of-the-longest-stem">
 <h4>Finding the Length of the Longest Stem<a class="headerlink" href="#finding-the-length-of-the-longest-stem" title="Permalink to this headline">¶</a></h4>
 <p>For whatever reason, one may be interested in finding out how long the longest
@@ -382,16 +382,8 @@ iterating over the stems and checking their lengths:</p>
         <span class="n">biggest_stem</span> <span class="o">=</span> <span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This is best illustrated with two examples:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;..((((..))))..&#39;</span> <span class="o">|</span> <span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">longest_stem</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span>
-<span class="mi">4</span>
-<span class="n">echo</span> <span class="s1">&#39;..((((..).)))..&#39;</span> <span class="o">|</span> <span class="n">python</span> <span class="n">examples</span><span class="o">/</span><span class="n">longest_stem</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span>
-<span class="mi">3</span>
-</pre></div>
-</div>
-<p>In the first case, the longest stem is the only stem. In the second case, what
-appears to be one large stem of length 4, is actually two stems of length 1 and
-3.</p>
+<p>Note that the dotbracket string <code class="code docutils literal"><span class="pre">..((((..))))..</span></code> has one stem of length 4, while
+the dotbracket string <code class="code docutils literal"><span class="pre">..((((..).)))..</span></code> has two stems of length 3 and 1. Thus the longest stem in the second example is only 3 nucleotides long.</p>
 </div>
 </div>
 <div class="section" id="getting-the-sequence-of-an-element-and-its-neighbors">
@@ -443,33 +435,42 @@ are on each side. For multiloops each segment is represented individually and
 thus should have only one dimension (how many unpaired nucleotides are in that
 segment), but in order to maintain consistency with interior loops, we make it
 a tuple by attaching 1000 as the second value:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="o">&gt;&gt;&gt;</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((.(.))..((..)))&#39;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m0&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m1&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m2&#39;</span><span class="p">)</span>
-<span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((.(.))..((..)))&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)</span>
+<span class="go">(1, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m0&#39;</span><span class="p">)</span>
+<span class="go">(0, 1000)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m1&#39;</span><span class="p">)</span>
+<span class="go">(0, 1000)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m2&#39;</span><span class="p">)</span>
+<span class="go">(2, 1000)</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="dissolving-stems">
-<span id="id1"></span><h3>Dissolving Stems<a class="headerlink" href="#dissolving-stems" title="Permalink to this headline">¶</a></h3>
-<p>To remove a stem from the skeleton graph, use the <code class="docutils literal"><span class="pre">dissolve_stem()</span></code> member
-function. This will remove the base pairs that were part of the stem and merge
-them with the adjacent unpaired regions:</p>
+<div class="section" id="removing-basepairs-and-dissolving-stems">
+<span id="dissolving-stems"></span><h3>Removing basepairs and dissolving Stems<a class="headerlink" href="#removing-basepairs-and-dissolving-stems" title="Permalink to this headline">¶</a></h3>
+<p>Basepairs be removed from the skeleton graph using the <code class="code docutils literal"><span class="pre">remove_base_pairs</span></code>
+memberfunction:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">dissolve_stem</span><span class="p">(</span><span class="s1">&#39;s0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">remove_base_pairs</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">14</span><span class="p">)])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">()</span>
-<span class="go">........((..))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">dissolve_stem</span><span class="p">(</span><span class="s1">&#39;s1&#39;</span><span class="p">)</span>
+<span class="go">.(..)....(..).</span>
+</pre></div>
+</div>
+<p>To remove a whole stem, use the <code class="code docutils literal"><span class="pre">stem_bp_iterator</span></code> member function:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">remove_base_pairs</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">stem_bp_iterator</span><span class="p">(</span><span class="s2">&quot;s0&quot;</span><span class="p">)))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">()</span>
-<span class="go">..............</span>
+<span class="go">.(..)....(..).</span>
+</pre></div>
+</div>
+<p>Note:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>In forgi 1.0, you have to explicitly convert the iterator to
+a list. In future versions, this conversion will be done automatically by
+`remove_base_pairsremove_base_pairs`.
 </pre></div>
 </div>
 </div>
@@ -619,43 +620,6 @@ Requires three backbone, one base pair, and one more backbone. The last distance
 requires three backbone, one base pair, and three more backbone links.</p>
 </div>
 </div>
-<div class="section" id="selecting-a-random-subgraph">
-<h3>Selecting a Random Subgraph<a class="headerlink" href="#selecting-a-random-subgraph" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="code docutils literal"><span class="pre">random_subgraph</span></code> function picks a random quantity of elements which will
-become part of the subgraph. A random element is chosen as a starting point and
-the graph is traversed in a random manner until at least the chosen number of
-nodes have been added. When that number is exceeded, the traversal stops. In
-cases where an interior loop or a multiloop segment is added, the stem on the
-other end is automatically added as well. Example, using the graph in the
-previous section:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;(.(.(.(.).(.).).(.).))&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sg</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">random_subgraph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">sg</span>
-<span class="go">[&#39;s3&#39;, &#39;s2&#39;, &#39;m2&#39;, &#39;s4&#39;, &#39;m5&#39;]</span>
-</pre></div>
-</div>
-<p>From this we can create a new graph, compete with defines and connections. Only
-the sequence and its related information (length, ids) will not be carried
-over:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">nbg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">bg_from_subgraph</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">sg</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">nbg</span><span class="o">.</span><span class="n">to_bg_string</span><span class="p">()</span>
-<span class="go">name untitled</span>
-<span class="go">length 0</span>
-<span class="go">seq_ids</span>
-<span class="go">define s3 7 7 9 9</span>
-<span class="go">define s2 5 5 15 15</span>
-<span class="go">define s4 11 11 13 13</span>
-<span class="go">define m5 10 10</span>
-<span class="go">define m2 6 6</span>
-<span class="go">connect s3 m5 m2</span>
-<span class="go">connect s2 m2</span>
-<span class="go">connect s4 m5</span>
-</pre></div>
-</div>
-<p>Which, when visualized, looks like this:</p>
-<a class="reference internal image-reference" href="_images/subgraph.png"><img alt="_images/subgraph.png" class="align-center" src="_images/subgraph.png" style="height: 200px;" /></a>
-</div>
 </div>
 <div class="section" id="applications">
 <h2>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h2>
@@ -714,7 +678,7 @@ in the first example) one can run the appropriate example:</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 12, 2017.
+      Last updated on Oct 17, 2017.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>

@@ -1385,6 +1385,8 @@
 
         <span class="n">pt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_pair_tuples</span><span class="p">()</span>
 
+        <span class="n">to_remove</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">to_remove</span><span class="p">)</span>
+        
         <span class="n">nt</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pt</span><span class="p">:</span>
             <span class="n">to_add</span> <span class="o">=</span> <span class="n">p</span>
@@ -3372,7 +3374,7 @@
                                            <span class="nb">set</span><span class="p">([</span><span class="n">prev</span><span class="p">]))</span>
                 <span class="n">build_order</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">prev</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">next_stem</span><span class="p">)[</span><span class="mi">0</span><span class="p">])]</span>
                 <span class="c1"># If pseudoknots exist, the direction is not always 0!</span>
-                <span class="c1"># assert self.get_stem_direction(prev, build_order[-1][2])==0 </span>
+                <span class="c1"># assert self.get_stem_direction(prev, build_order[-1][2])==0</span>
 		<span class="c1"># does not hold for pseudoknots!</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">build_order</span> <span class="o">=</span> <span class="n">build_order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ang_type</span> <span class="o">=</span> <span class="kc">None</span>
@@ -3849,7 +3851,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 12, 2017.
+      Last updated on Oct 17, 2017.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>

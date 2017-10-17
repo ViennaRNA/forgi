@@ -198,6 +198,14 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Basepairs </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> are NOT adjacent.&quot;</span><span class="p">,</span> <span class="n">edge1</span><span class="p">,</span> <span class="n">edge2</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">False</span>
 
+<span class="k">def</span> <span class="nf">_run_mc_annotate</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subprocess_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s1">&#39;MC-Annotate&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">],</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">subprocess_kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">op</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;File </span><span class="si">{}</span><span class="s2"> (created by forgi) no longer exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">strerror</span><span class="o">+=</span><span class="s2">&quot;. Hint: Did you install MC-Annotate?&quot;</span>
+        <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">return</span> <span class="n">out</span>
 
 <div class="viewcode-block" id="connected_cgs_from_pdb"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.connected_cgs_from_pdb">[docs]</a><span class="k">def</span> <span class="nf">connected_cgs_from_pdb</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">,</span> <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">fus</span><span class="o">.</span><span class="n">make_temp_directory</span><span class="p">()</span> <span class="k">as</span> <span class="n">output_dir</span><span class="p">:</span>
@@ -216,7 +224,8 @@
 
         <span class="c1"># first we annotate the 3D structure</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting MC-Annotate for all chains&quot;</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s1">&#39;MC-Annotate&#39;</span><span class="p">,</span> <span class="n">rna_pdb_fn</span><span class="p">],</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">_run_mc_annotate</span><span class="p">(</span><span class="n">rna_pdb_fn</span><span class="p">)</span>
+
         <span class="n">lines</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="c1"># convert the mcannotate output into bpseq format</span>
@@ -370,7 +379,7 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stderr&quot;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">}</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s1">&#39;MC-Annotate&#39;</span><span class="p">,</span> <span class="n">rna_pdb_fn</span><span class="p">],</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">_run_mc_annotate</span><span class="p">(</span><span class="n">rna_pdb_fn</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
 
     <span class="n">lines</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -1701,7 +1710,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 12, 2017.
+      Last updated on Oct 17, 2017.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
     </div>
   </body>
