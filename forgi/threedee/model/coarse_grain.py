@@ -153,6 +153,14 @@ def _are_adjacent_basepairs(cg, edge1, edge2):
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
+def _run_mc_annotate(filename, subprocess_kwargs={}):
+    try:
+        out = sp.check_output(['MC-Annotate', filename], universal_newlines=True, **subprocess_kwargs)
+    except OSError as e:
+        assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
+        e.strerror+=". Hint: Did you install MC-Annotate?"
+        raise e
+    return out
 
 def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_length_one_stems = True):
     with fus.make_temp_directory() as output_dir:
@@ -171,7 +179,8 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
 
         # first we annotate the 3D structure
         log.info("Starting MC-Annotate for all chains")
-        out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True)
+        out = _run_mc_annotate(rna_pdb_fn)
+
         lines = out.strip().split('\n')
 
         # convert the mcannotate output into bpseq format
@@ -325,7 +334,7 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         kwargs = {"stderr":sp.DEVNULL}
     else:
         kwargs = {}
-    out = sp.check_output(['MC-Annotate', rna_pdb_fn], universal_newlines=True, **kwargs)
+    out = _run_mc_annotate(rna_pdb_fn, kwargs)
 
     lines = out.strip().split('\n')
 
