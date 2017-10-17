@@ -1759,6 +1759,7 @@ class VirtualAtomsLookup(object):
                     pass
             return e_coords
     def _getitem_for_stem(self, d, pos):
+        log.debug("getitem_for_stem %s, pos %s", d, pos)
         pos_in_stem, side = self.cg.stem_resn_to_stem_vres_side(d, pos)
         assert pos>=1
         try:
