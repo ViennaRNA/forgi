@@ -1499,7 +1499,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
         edges = sorted(it.chain(self.mloop_iterator(),
                                 self.iloop_iterator()),
-                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)),not x in self.sampled))
+                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)), not x in self.sampled, x))
         return edges
 
     def coords_to_directions(self):

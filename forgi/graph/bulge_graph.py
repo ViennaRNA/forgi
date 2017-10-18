@@ -1341,7 +1341,7 @@ class BulgeGraph(object):
         pt = self.to_pair_tuples()
 
         to_remove = list(to_remove)
-        
+
         nt = []
         for p in pt:
             to_add = p
@@ -3242,7 +3242,7 @@ class BulgeGraph(object):
         priority = {'s': 1, 'i': 2, 'm': 3, 'f': 4, 't': 5}
         edges = sorted(it.chain(self.mloop_iterator(),
                                 self.iloop_iterator()),
-                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x))))
+                       key=lambda x: (priority[x[0]], min(self.get_node_dimensions(x)),x) )
         return edges
     def get_mst(self):
         """
