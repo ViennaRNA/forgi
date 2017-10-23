@@ -492,7 +492,9 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
               twist_deviation measures the angle (in radians) between the two stem's twist vectors.
     """
 
-    log.debug("Getting broken ML deviation")
+    log.error("Getting broken ML deviation for %s attached to %s "
+              "using stat %s", broken_ml_name, fixed_stem_name,
+              virtual_stat.pdb_name)
     import forgi.threedee.model.stats as ftms
     s1, s2 = cg.edges[broken_ml_name]
     if s1 == fixed_stem_name:
@@ -500,8 +502,8 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     elif s2 ==fixed_stem_name:
         orig_stem_name = s1
     else:
-        raise ValueError("fixed stem %s is not attached to ml %s",
-                         fixed_stem_name, broken_ml_name)
+        raise ValueError("fixed stem {} is not attached to ml {} with "
+                         "edges {}".format(fixed_stem_name, broken_ml_name, [s1,s2]))
 
     sides = cg.get_sides(fixed_stem_name, broken_ml_name)
     fixed_s_vec = cg.coords.get_direction(fixed_stem_name)

@@ -3353,7 +3353,8 @@ class BulgeGraph(object):
         would be built using a breadth-first traversal along the minimum
         spanning tree.
 
-        :param allow_broken: Return the angle type for broken ML segments. If this is False, return None instead.
+        :param allow_broken: Return the angle type for broken ML segments.
+                             If this is False, return None instead.
         """
         if self.ang_types is None:
             self.set_angle_types()
