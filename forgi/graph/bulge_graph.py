@@ -3353,8 +3353,15 @@ class BulgeGraph(object):
         would be built using a breadth-first traversal along the minimum
         spanning tree.
 
-        :param allow_broken: Return the angle type for broken ML segments.
-                             If this is False, return None instead.
+        :param allow_broken: How to treat broken multiloop segments.
+                             * False (default): Return None
+                             * The string "bo" or "build_order": Return the
+                               angle type according to the build-order
+                               (i.e. from the first built stem to the last-built stem)
+                             * True: Return the angle_type from the stem with
+                               lower nt number to the stem with higher nt number.
+                               In forgi 2.0 this will be removed and the behavior of "bo"
+                               will be used instead.
         """
         if self.ang_types is None:
             self.set_angle_types()
@@ -3362,11 +3369,34 @@ class BulgeGraph(object):
         if bulge in self.ang_types:
             return self.ang_types[bulge]
         else:
-            if allow_broken:
+            if allow_broken == "bo" or allow_broken ==" build_order":
+                stems = self.connections[bulge]
+                s1, s2 = sorted(stems, key=lambda x: self.buildorder_of(x))
+                return self.connection_type(bulge, [s1, s2])
+            elif allow_broken:
+                warnings.warn("The behavior of 'allow_broken=True' will change "
+                              "to reflect the behavior of 'allow_broken=\"bo\"' "
+                              "with forgi version 2.0", DeprecationWarning)
                 s1, s2 = self.connections(bulge) #Ordered by nucleotide number
                 return self.connection_type(bulge, [s1, s2])
             else:
                 return None
+
+    def buildorder_of(self, element):
+        """
+        Returns the index into build_order where the element FIRST appears.
+
+        :param element: Element name, a string. e.g. "m0" or "s0"
+        :returns: An index into self.build_order or None, if the element is not
+                  part of the build_order (e.g. hairpin loops)
+        """
+        if self.build_order is None:
+            self.traverse_graph()
+        for i, elements in enumerate(self.build_order):
+            if element in elements:
+                return i
+        return None
+
 
     def is_loop_pseudoknot(self, loop):
         """

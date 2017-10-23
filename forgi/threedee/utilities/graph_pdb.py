@@ -492,7 +492,7 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
               twist_deviation measures the angle (in radians) between the two stem's twist vectors.
     """
 
-    log.error("Getting broken ML deviation for %s attached to %s "
+    log.debug("Getting broken ML deviation for %s attached to %s "
               "using stat %s", broken_ml_name, fixed_stem_name,
               virtual_stat.pdb_name)
     import forgi.threedee.model.stats as ftms
