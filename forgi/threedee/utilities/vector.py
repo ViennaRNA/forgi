@@ -512,27 +512,46 @@ def rotation_matrix_weave(axis, theta, mat = None):
 
 def rotation_matrix(axis, theta):
     '''
-    Calculate the rotation matrix for a rotation of theta around axis.
+    Calculate the rotation matrix for a CLOCKWISE rotation of theta around axis.
+    This is in the opposite direction that is usually used.
 
     Thanks to unutbu on StackOverflow
 
     http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
 
-    :param axis: The axis around which to rotate
+    :param axis: The axis around which to rotate. A np-array with length 3 or
+                 one of "x", "y" and "z", where x:=standard_basis[0] etc.
     :param theta: The angle of rotation (in rad)
     :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix.
     '''
     # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
     # The following would be the slower pure-python implementation (for comparison)
-    axis = normalize(axis)
     a = math.cos(theta/2)
-    b, c, d = -axis*math.sin(theta/2)
+    if isinstance(axis, np.ndarray):
+            axis = normalize(axis)
+            b, c, d = -axis*math.sin(theta/2)
 
-    return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
-                  [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
-                  [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
-
+            return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
+                      [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
+                      [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
+    else:
+        s = math.sin(theta)
+        a = math.cos(theta)
+        if axis=="y":
+            return np.array([[ a,  0, -s],
+                             [ 0,  1,  0],
+                             [ s,  0,  a]])
+        elif axis=="z":
+            return np.array([[ a,  s, 0],
+                             [-s,  a, 0],
+                             [ 0,  0, 1]])
+        elif axis=="x":
+            return np.array([[ 1,  0,  0],
+                             [ 0,  a, s],
+                             [ 0, -s,  a]])
+        else:
+            raise TypeError('Axis must be numpy array or one of "x", "y", "z"')
 
 def vector_set_rmsd(set1, set2):
     '''

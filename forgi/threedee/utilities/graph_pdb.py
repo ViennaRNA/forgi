@@ -198,8 +198,8 @@ def get_twist_parameter(twist1, twist2, u_v):
     '''
 
     u,v = u_v
-    rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
+    rot_mat1 = cuv.rotation_matrix("z", v)
+    rot_mat2 = cuv.rotation_matrix("y", u - math.pi / 2.)
 
     twist2_new = np.dot(rot_mat1, twist2)
     twist2_new = np.dot(rot_mat2, twist2_new)
@@ -359,8 +359,8 @@ def twist2_orient_from_stem1(stem1, twist1, u_v_t):
     u, v, t = u_v_t
     twist2_new = np.array([0., math.cos(t), math.sin(t)])
 
-    rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
+    rot_mat1 = cuv.rotation_matrix("z", v)
+    rot_mat2 = cuv.rotation_matrix("y", u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     twist2_new = np.dot(nl.inv(rot_mat), twist2_new)
@@ -390,8 +390,8 @@ def twist2_orient_from_stem1_1(stem1_basis, u_v_t):
     u, v, t = u_v_t
     twist2_new = np.array([0., math.cos(t), math.sin(t)])
 
-    rot_mat1 = cuv.rotation_matrix(cuv.standard_basis[2], v)
-    rot_mat2 = cuv.rotation_matrix(cuv.standard_basis[1], u - math.pi / 2.)
+    rot_mat1 = cuv.rotation_matrix("z", v)
+    rot_mat2 = cuv.rotation_matrix("y", u - math.pi / 2.)
 
     rot_mat = np.dot(rot_mat2, rot_mat1)
     #assert np.allclose(nl.inv(rot_mat), rot_mat.T)

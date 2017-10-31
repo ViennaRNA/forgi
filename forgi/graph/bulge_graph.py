@@ -2121,7 +2121,7 @@ class BulgeGraph(object):
         self.remove_vertex(iloop)
 
 
-    def _zero_length_element_adj_position(self, elem):
+    def _zero_length_element_adj_position(self, elem): #TODO speed-up by caching
         """
         Return the define with adjacent nucleotides for a zero-length element.
 
@@ -2679,32 +2679,16 @@ class BulgeGraph(object):
             bd[0]+=1
             bd[1]-=1
 
-        s1b = None
-        for i in range(4):
-            for k in range(len(bd)):
-                if s1d[i] - bd[k] == 1:
-                    if i == 0:
-                        s1b = 0
-                        break
-                    if i == 2:
-                        s1b = 1
-                        break
-                elif s1d[i] - bd[k] == -1:
-                    if i == 1:
-                        s1b = 1
-                        break
-                    if i == 3:
-                        s1b = 0
-                        break
-
-        if s1b is None:
-            raise ValueError("Stem {} {} is not adjacent to bulge {} {}".format(s1, s1d, b, bd))
-        if s1b == 0:
-            s1e = 1
+        if bd[1]+1==s1d[0]:
+            return (0,1)
+        elif bd[1]+1==s1d[2]:
+            return (1,0)
+        elif s1d[1]+1==bd[0]:
+            return (1,0)
+        elif s1d[3]+1==bd[0]:
+            return (0,1)
         else:
-            s1e = 0
-
-        return (s1b, s1e)
+            raise GraphIntegrityError("Faulty bulge {}:{} connected to {}:{}".format(b, bd, s1, s1d))
 
     def get_sides_plus(self, s1, b):
         """
@@ -2730,19 +2714,18 @@ class BulgeGraph(object):
             bd[0]+=1
             bd[1]-=1
 
-        for k in range(len(bd)):
-            # before the stem on the 5' strand
-            if s1d[0] - bd[k] == 1:
-                return (0, k)
-            # after the stem on the 5' strand
-            elif bd[k] - s1d[1] == 1:
-                return (1, k)
-            # before the stem on the 3' strand
-            elif s1d[2] - bd[k] == 1:
-                return (2, k)
-            # after the stem on the 3' strand
-            elif bd[k] - s1d[3] == 1:
-                return (3, k)
+        # before the stem on the 5' strand
+        if s1d[0] - bd[1] == 1:
+            return (0, 1)
+        # after the stem on the 5' strand
+        elif bd[0] - s1d[1] == 1:
+            return (1, 0)
+        # before the stem on the 3' strand
+        elif s1d[2] - bd[1] == 1:
+            return (2, 1)
+        # after the stem on the 3' strand
+        elif bd[0] - s1d[3] == 1:
+            return (3, 0)
 
         raise GraphIntegrityError("Faulty bulge {}:{} connected to {}:{}".format(b, bd, s1, s1d))
 
@@ -2845,13 +2828,11 @@ class BulgeGraph(object):
         sorted by lowest res number of the connection.
         """
         def sort_key(x):
-            if len(self.defines[x]) > 0:
-                if self.defines[x][0] == 1:
-                    # special case for stems at the beginning since there is no
-                    # adjacent nucleotide 0
-                    return 0
-            return list(self.define_residue_num_iterator(x, adjacent=True))[0]
-
+            if len(self.defines[x]) > 0 and self.defines[x][0] == 1:
+                # special case for stems at the beginning since there is no
+                # adjacent nucleotide 0
+                return 0
+            return self.define_a(x)[0]
 
         connections = list(self.edges[bulge])
         connections.sort(key=sort_key)
