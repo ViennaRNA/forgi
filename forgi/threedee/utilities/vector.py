@@ -528,7 +528,7 @@ def rotation_matrix(axis, theta):
     # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
     # The following would be the slower pure-python implementation (for comparison)
     a = math.cos(theta/2)
-    if isinstance(axis, np.ndarray):
+    if isinstance(axis, (np.ndarray, list)):
             axis = normalize(axis)
             b, c, d = -axis*math.sin(theta/2)
 
