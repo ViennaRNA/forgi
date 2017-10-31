@@ -153,6 +153,37 @@ def _are_adjacent_basepairs(cg, edge1, edge2):
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
+def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
+    """
+    Get the secondary structure of the pdb by using an external tool.
+
+    :param filename: The name of the temporary pdb file
+    :param subprocess_kwargs: Will be passed as keyword arguments to subprocess.call/ subprcess.check_output
+    :param program: A string, one of "MC-Annotate", "DSSR" or None (to use the value from forgi.)
+    """
+    if program is None:
+        raise NotImplementedError("TODO")
+    if program == "MC-Annotate":
+        return _run_mc_annotate(filename, subprocess_kwargs)
+    elif program == "DSSR":
+        return _run_dssr(filename, subprocess_kwargs)
+    else:
+        raise ValueError("Supported programs for annotating the pdb are: 'MC-Annotate' and 'DSSR', not '{}'".format(program))
+
+
+def _run_dssr(filename, subprocess_kwargs={}):
+    # See http://forum.x3dna.org/rna-structures/redirect-auxiliary-file-output/
+    with fus.make_temp_directory() as dssr_output_dir:
+        try:
+            ret_code = sp.call(['x3dna-dssr', "-i="+filename, "--prefix="+os.path.join(dssr_output_dir, "d")], universal_newlines=True, **subprocess_kwargs)
+            with open(os.path.join(dssr_output_dir, "d-2ndstrs.bpseq")) as f:
+                return f.read()
+        except OSError as e:
+            assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
+            e.strerror+=". Hint: Did you install MC-Annotate?"
+            raise e
+
+
 def _run_mc_annotate(filename, subprocess_kwargs={}):
     try:
         out = sp.check_output(['MC-Annotate', filename], universal_newlines=True, **subprocess_kwargs)
