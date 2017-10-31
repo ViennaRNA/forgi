@@ -231,6 +231,10 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
     the others.
 
     '''
+    if vec1 is not None and vec2 is not None and vec3 is None and not USE_ASSERTS:
+        from . import cytvec
+        return cytvec.create_orthonormal_basis(vec1, vec2)
+
     if vec2 is None:
         vec2 = get_non_colinear_unit_vector(vec1)
         vec2 = np.cross(vec1, vec2)
