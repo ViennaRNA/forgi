@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from builtins import str
 from builtins import range
 import sys
@@ -11,7 +11,7 @@ from collections import defaultdict
 from logging_exceptions import log_to_exception, log_exception
 
 import forgi.utilities.debug as fud
-
+import forgi.graph.residue as fgr
 
 log = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ def get_dotplot(lines):
     residues = []
     residue_types = []
     bps = defaultdict(lambda:-1)
-    output_str = ""
+    bpseq_str = ""
 
     for line in iterate_over_residue_list(lines):
         parts = line.split(' ')
@@ -192,6 +192,20 @@ def get_dotplot(lines):
 
 
     for i in range(len(residue_types)):
-        output_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
+        bpseq_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
+    seq_ids = _seqids_from_residue_map(residues)
+    return bpseq_str, seq_ids
 
-    return (output_str, residues)
+
+def _seqids_from_residue_map(residue_map):
+    """
+    Create the list of seq_ids from the list of MC-Annotate identifiers in the
+    residue map.
+    """
+    seq_ids = []
+    for i, r in enumerate(residue_map):
+        (from_chain, from_base) = parse_chain_base(r)
+        seq_ids += [fgr.RESID(from_chain, parse_resid(from_base))]
+    log.debug("Seq_ids are %s", seq_ids)
+    return seq_ids
+

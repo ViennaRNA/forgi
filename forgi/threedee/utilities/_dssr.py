@@ -11,31 +11,33 @@ import json, warnings, sys
 from collections import Counter, defaultdict, namedtuple
 import itertools as it
 
+from forgi.graph.bulge_graph import RESID
+
 class DSSRLookupError(LookupError): pass
 
 class WrongChain(LookupError): pass
 
-def dssr_to_pdb_atom_id(dssr_atomid):
-    if '.' in dssr_atomid:
-        chain, _, atomid = dssr_atomid.partition(".")
+def dssr_to_pdb_resid(dssr_resid):
+    if '.' in dssr_resid:
+        chain, _, resid = dssr_resid.partition(".")
     else:
         chain = None
-        atomid = dssr_atomid
-    if "^" in atomid:
-        atomid, _, letter = atomid.partition("^")
+        resid = dssr_resid
+    if "^" in resid:
+        resid, _, letter = resid.partition("^")
         nat = []
-        for c in reversed(atomid):
+        for c in reversed(resid):
             if c.isdigit(): nat.append(c)
             else: break
-        atomid="".join(reversed(nat))
-        return chain, (" ", int(atomid) , letter)
+        resid="".join(reversed(nat))
+        return RESID(chain, (" ", int(resid) , letter))
     else:
         nat = []
-        for c in reversed(atomid):
+        for c in reversed(resid):
             if c.isdigit(): nat.append(c)
             else: break
-        atomid="".join(reversed(nat))
-        return chain, (" ", int(atomid) ," ")
+        resid="".join(reversed(nat))
+        return RESID(chain, (" ", int(resid) ," "))
 
 
 class DSSRAnnotation(object):
@@ -97,8 +99,8 @@ class DSSRAnnotation(object):
 
         cg_stems=Counter() #See, if the dssr_stems maps to more than 1 cg-stem
         for pair in stem_obj["pairs"]:
-            chain1, nt1=dssr_to_pdb_atom_id(pair["nt1"])
-            chain2, nt2=dssr_to_pdb_atom_id(pair["nt2"])
+            chain1, nt1=dssr_to_pdb_resid(pair["nt1"])
+            chain2, nt2=dssr_to_pdb_resid(pair["nt2"])
             if self._cg.chain and (chain1 != self._cg.chain or chain2 != self._cg.chain):
                 print(chain1, chain2, self._cg.chain, file=sys.stderr)
                 raise WrongChain
@@ -174,8 +176,8 @@ class DSSRAnnotation(object):
         for stem in self._dssr.get("stems", []):
             dssr_helices.append(set())
             for pair in stem["pairs"]:
-                chain1, nt1=dssr_to_pdb_atom_id(pair["nt1"])
-                chain2, nt2=dssr_to_pdb_atom_id(pair["nt2"])
+                chain1, nt1=dssr_to_pdb_resid(pair["nt1"])
+                chain2, nt2=dssr_to_pdb_resid(pair["nt2"])
                 if forgi_chain is None or chain1==forgi_chain:
                     dssr_helices[-1].add(nt1)
                 if forgi_chain is None or chain2==forgi_chain:
@@ -185,7 +187,7 @@ class DSSRAnnotation(object):
         for stack in self._dssr.get("stacks", []):
             dssr_helices.append(set())
             for nt in stack["nts_long"].split(","):
-                chain, nt1 = dssr_to_pdb_atom_id(nt)
+                chain, nt1 = dssr_to_pdb_resid(nt)
                 if forgi_chain is None or chain == forgi_chain:
                     dssr_helices[-1].add(nt1)
             if not dssr_helices[-1]:
