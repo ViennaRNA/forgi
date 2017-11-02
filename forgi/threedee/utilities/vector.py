@@ -523,12 +523,12 @@ def rotation_matrix(axis, theta):
                  one of "x", "y" and "z", where x:=standard_basis[0] etc.
     :param theta: The angle of rotation (in rad)
     :return: A matrix which can be used to perform the given rotation. The coordinates
-             need only be multiplied by the matrix.
+             need only be multiplied by the matrix. (np.dot(matrix, vec))
     '''
     # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
     # The following would be the slower pure-python implementation (for comparison)
     a = math.cos(theta/2)
-    if isinstance(axis, np.ndarray):
+    if isinstance(axis, (np.ndarray, list)):
             axis = normalize(axis)
             b, c, d = -axis*math.sin(theta/2)
 
