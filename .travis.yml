@@ -28,7 +28,7 @@ install:
   - "unzip MC-Annotate.zip"
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
-  - echo '{"PDB_ANNOTATION_TOOL": "MC-Annotate"}' >~/.config/forgi/config.json
+  - "echo '{\"PDB_ANNOTATION_TOOL\": \"MC-Annotate\"}' >~/.config/forgi/config.json"
 
 
 script: nose2 test
