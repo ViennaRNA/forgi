@@ -28,7 +28,6 @@ install:
   - "unzip MC-Annotate.zip"
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
-  - "mkdir ~/.config/"
   - "mkdir ~/.config/forgi/"
   - "echo '{\"PDB_ANNOTATION_TOOL\": \"MC-Annotate\"}' >~/.config/forgi/config.json"
 
