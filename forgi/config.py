@@ -2,7 +2,6 @@ import json
 import os
 import os.path
 import logging
-
 import appdirs
 
 log = logging.getLogger(__name__)
@@ -22,6 +21,7 @@ def read_config():
         else:
             log.debug("Reading configuration from %s", filename)
             config.update(conf)
+
     return config
 
 def set_config(key, value):
