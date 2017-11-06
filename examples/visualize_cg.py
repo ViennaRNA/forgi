@@ -7,6 +7,7 @@ import sys
 import subprocess as sp
 import tempfile as tf
 import time
+import os.path
 
 import forgi.threedee.model.coarse_grain as cmg
 import forgi.utilities.debug as fud
@@ -15,7 +16,7 @@ import forgi.threedee.utilities.pdb as cup
 import forgi.threedee.model.similarity as ftur
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.visual.pymol as cvp
-
+from forgi.utilities.stuff import make_temp_directory
 from optparse import OptionParser
 
 
@@ -96,11 +97,9 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    print("hi")
     if len(args) < num_args:
         parser.print_help()
         sys.exit(1)
-    print("hi1")
 
     pp = cvp.PymolPrinter()
     pp.stem_color = options.stem_color
@@ -195,35 +194,30 @@ def main():
         pp.add_sphere(mid2, 'red', width=2)
 
 
-    with tf.NamedTemporaryFile(mode="w+") as f:
-        with tf.NamedTemporaryFile(mode="w+", suffix='.pml') as f1:
+    with make_temp_directory() as tmpdir:
+        # The file describing the cg-structure as cylinders
+        stru_filename = os.path.join(tmpdir, "structure")
+        with open(stru_filename, "w") as f:
             f.write(pp.pymol_string())
-            f.flush()
-
-            pymol_cmd = 'hide all\n'
-            pymol_cmd += 'run %s\n' % (f.name)
-            pymol_cmd += 'show cartoon, all\n'
-            pymol_cmd += 'bg white\n'
-            pymol_cmd += 'clip slab, 10000\n'
-            pymol_cmd += 'orient\n'
-
-            if options.output is not None:
-                pymol_cmd += 'ray\n'
-                pymol_cmd += 'png %s\n' % (options.output)
-                pymol_cmd += 'quit\n'
-
+        # The file for running pymol
+        pymol_cmd = 'hide all\n'
+        pymol_cmd += 'run %s\n' % (stru_filename)
+        pymol_cmd += 'show cartoon, all\n'
+        pymol_cmd += 'bg white\n'
+        pymol_cmd += 'clip slab, 10000\n'
+        pymol_cmd += 'orient\n'
+        if options.output is not None:
+            pymol_cmd += 'ray\n'
+            pymol_cmd += 'png %s\n' % (options.output)
+            pymol_cmd += 'quit\n'
+        pml_filename = os.path.join(tmpdir, "command.pml")
+        with open(pml_filename, "w") as f1:
             f1.write(pymol_cmd)
-            f1.flush()
-
-            print("f1.name:", f1.name)
-
-            if options.batch:
-                p = sp.Popen(['pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
-            else:
-                p = sp.Popen(['pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
-
-            out, err = p.communicate()
-            print("err:", err, file=sys.stderr)
+        if options.batch:
+            p = sp.Popen(['pymol', '-cq', pml_filename], stdout=sp.PIPE, stderr=sp.PIPE)
+        else:
+            p = sp.Popen(['pymol', pml_filename], stdout=sp.PIPE, stderr=sp.PIPE)
+        out, err = p.communicate()
 
 if __name__ == '__main__':
     main()
