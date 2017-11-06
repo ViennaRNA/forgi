@@ -16,11 +16,11 @@ python setup.py install
 
 * Color elements by name in a gradient and visualize a coarse-grain RNA
 
-  >>> python examples/visualize_cg.py examples/1y26.cg --color-gradual h0,s2,m1,s0,m0,m2,s3,h1 -x --virtual-atoms --sidechain-atoms
+  >>> python examples/visualize_cg.py examples/input/1y26.cg --color-gradual h0,s2,m1,s0,m0,m2,s3,h1 -x --virtual-atoms --sidechain-atoms
 
 * Create HTML code for a fornaContainer with colors according to the order of coarse grain elements provided on the commandline
 
-  >>> python examples/ordered_elements_to_forna_colors.py examples/1y26.cg h0,s2,m1,s0,m0,m2,s3,h1
+  >>> python examples/ordered_elements_to_forna_colors.py examples/input/1y26.cg h0,s2,m1,s0,m0,m2,s3,h1
 
 * Display an rna structure, save it to file, trim it and view it using eog
 

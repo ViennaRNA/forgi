@@ -25,7 +25,7 @@ def align_cgs(cgs):
 
     The points representing each coarse grain RNA molecule
     will be the virtual residues.
-    
+
     @param cgs: A list of CoarseGrainRNA structures.
     @return: Nothing, the cgs are modified in place
     '''
@@ -96,11 +96,9 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    print("hi")
     if len(args) < num_args:
         parser.print_help()
         sys.exit(1)
-    print("hi1")
 
     pp = cvp.PymolPrinter()
     pp.stem_color = options.stem_color
@@ -193,7 +191,7 @@ def main():
 
         pp.add_sphere(mid1, 'green', width=2)
         pp.add_sphere(mid2, 'red', width=2)
-        
+
 
     with tf.NamedTemporaryFile() as f:
         with tf.NamedTemporaryFile(suffix='.pml') as f1:
@@ -218,13 +216,14 @@ def main():
             print("f1.name:", f1.name)
 
             if options.batch:
-                p = sp.Popen(['pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
+                #p = sp.Popen(['pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
+                p = sp.Popen([sys.executable,'pymol', '-cq', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
             else:
-                p = sp.Popen(['pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
+                #p = sp.Popen(['pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
+                p = sp.Popen([sys.executable,'pymol', f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
             out, err = p.communicate()
             print("err:", err, file=sys.stderr)
 
 if __name__ == '__main__':
     main()
-
