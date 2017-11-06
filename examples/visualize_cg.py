@@ -25,7 +25,7 @@ def align_cgs(cgs):
 
     The points representing each coarse grain RNA molecule
     will be the virtual residues.
-    
+
     @param cgs: A list of CoarseGrainRNA structures.
     @return: Nothing, the cgs are modified in place
     '''
@@ -193,10 +193,10 @@ def main():
 
         pp.add_sphere(mid1, 'green', width=2)
         pp.add_sphere(mid2, 'red', width=2)
-        
 
-    with tf.NamedTemporaryFile() as f:
-        with tf.NamedTemporaryFile(suffix='.pml') as f1:
+
+    with tf.NamedTemporaryFile(mode="w+") as f:
+        with tf.NamedTemporaryFile(mode="w+", suffix='.pml') as f1:
             f.write(pp.pymol_string())
             f.flush()
 
@@ -227,4 +227,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
