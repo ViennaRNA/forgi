@@ -172,23 +172,28 @@ def get_dotplot(lines):
            (line.find('Ws/Ww') >= 0 and line.find('U-G') >= 0) or
             (line.find('Ww/Ws') >= 0 and line.find('G-U') >= 0)):
             #if bond_type.find('Ww/Ww') >= 0:
-            parts1 = parts[0].split('-')
             #print line
-
-            if parts1[0] in paired or parts1[1] in paired:
+            chain1, base1, chain2, base2 = parse_base_pair_id(parts[0])
+            res1 = chain1+base1
+            res2 = chain2+base2
+            if res1 in paired or res2 in paired:
                 if log.isEnabledFor(logging.WARNING):
-                    if parts1[0] in bps:
-                        existing = "{} - {}".format(parts1[0], residues[bps[parts1[0]]])
+                    if res1 in bps:
+                        existing = "{} - {}".format(res1, residues[bps[res1]])
                     else:
-                        existing = "{} - {}".format(parts1[1], residues[bps[parts1[1]]])
-                    log.warning("Base-triple encountered: Ignoring basepair %s - %s, because basepair %s exists", parts1[0], parts1[1], existing)
+                        existing = "{} - {}".format(res2, residues[bps[res2]])
+                    log.warning("Base-triple encountered: Ignoring basepair %s - %s, because basepair %s exists", res1, res2, existing)
                 continue
 
-            paired.add(parts1[0])
-            paired.add(parts1[1])
-
-            bps[parts1[0]] = residues.index(parts1[1])
-            bps[parts1[1]] = residues.index(parts1[0])
+            paired.add(res1)
+            paired.add(res2)
+            try:
+                bps[res1] = residues.index(res2)
+                bps[res2] = residues.index(res1)
+            except ValueError as e:
+                with log_to_exception(log, e):
+                    log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
+                raise
 
 
     for i in range(len(residue_types)):
