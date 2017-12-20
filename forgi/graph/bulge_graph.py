@@ -1857,7 +1857,7 @@ class BulgeGraph(object):
         if dissolve_length_one_stems:
             self.dissolve_length_one_stems()
 
-    def to_pair_table(self):
+    def to_pair_table(self, condensed=False):
         """
         Create a pair table from the list of elements.
 
@@ -1866,29 +1866,51 @@ class BulgeGraph(object):
 
         i.e. [5,5,4,0,2,1]
         """
-        pair_tuples = self.to_pair_tuples()
+        pair_tuples = self.to_pair_tuples(condensed)
 
         return fus.tuples_to_pairtable(pair_tuples)
 
-    def to_pair_tuples(self):
+    def to_pair_tuples(self, condensed=False):
         """
         Create a list of tuples corresponding to all of the base pairs in the
         structure. Unpaired bases will be shown as being paired with a
         nucleotide numbered 0.
 
         i.e. [(1,5),(2,4),(3,0),(4,2),(5,1)]
+
+        :param condensed: If True, subsequent nested basepairs will be
+                          represented by a single basepair.
         """
         # iterate over each element
         table = []
 
         for d in self.defines:
             # iterate over each nucleotide in each element
-            for b in self.define_residue_num_iterator(d):
+            if not condensed:
+                # e.g. if the define is [1,3,7,9] this yields from [1,2,3,7,8,9]
+                nts = self.define_residue_num_iterator(d)
+            else:
+                # e.g. if the define is [1,3,7,9], this gives [1,9]\
+                if self.defines[d]:
+                    nts = [self.defines[d][0]]
+                else:
+                    nts=[]
+            for b in nts:
                 p = self.pairing_partner(b)
                 if p is None:
                     p = 0
                 table += [(b, p)]
-
+        if condensed:
+            all_numbers = sorted(set(pos for pair in table for pos in pair)-{0})
+            renumber = { n:i+1 for i, n in enumerate(all_numbers)}
+            renumber[0]=0
+            new_table = []
+            for pair in table:
+                log.debug(pair)
+                new_table.append((renumber[pair[0]], renumber[pair[1]]))
+                if pair[1]!=0:
+                    new_table.append((renumber[pair[1]], renumber[pair[0]]))
+            table=new_table
         return table
 
     def to_bpseq_string(self):
@@ -2334,15 +2356,21 @@ class BulgeGraph(object):
         if not self._is_connected():
             raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not connected by any "
                              " base-pair.")
-    def to_dotbracket_string(self):
+    def to_dotbracket_string(self, condensed=False):
         """
         Convert the BulgeGraph representation to a dot-bracket string
         and return it.
 
+        :param condensed: Represent subsequent pairs of identical nested
+                          brackets by a single pair of brackets and use
+                          only one dot instead of subsequent dots.
+                          E.g. return '(.(.))' instead of '((..(((....)))))'
         :return: A dot-bracket representation of this BulgeGraph
         """
-        pt = self.to_pair_table()
+        pt = self.to_pair_table(condensed)
         db_string = fus.pairtable_to_dotbracket(pt)
+        if self.backbone_breaks_after and condensed:
+            raise NotImplementedError("Condensed representation does not yet support cofold structures.")
         for breakpoint in reversed(sorted(self.backbone_breaks_after)):
             db_string = db_string[:breakpoint]+"&"+db_string[breakpoint:]
         return db_string
@@ -3327,7 +3355,7 @@ class BulgeGraph(object):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
                 # If pseudoknots exist, the direction is not always 0!
-                # assert self.get_stem_direction(prev, build_order[-1][2])==0 
+                # assert self.get_stem_direction(prev, build_order[-1][2])==0
 		# does not hold for pseudoknots!
         self.build_order = build_order
         self.ang_type = None
