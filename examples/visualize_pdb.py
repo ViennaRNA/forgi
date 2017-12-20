@@ -4,6 +4,7 @@ from __future__ import print_function
 import sys
 import os.path as op
 import subprocess as sp
+import sys
 import tempfile as tf
 import logging
 
@@ -164,7 +165,7 @@ def main():
                 #if options.batch:
                 #    p = sp.Popen(['pymol', '-cq', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
                 if True: #else:
-                    p = sp.Popen(['pymol', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
+                    p = sp.Popen([sys.executable,'pymol', f2.name, f1.name], stdout=sp.PIPE, stderr=sp.PIPE)
 
                 out, err = p.communicate()
 
