@@ -62,7 +62,7 @@ def parse_chain_base(chain_base):
             # no chain identifier
             chain = ''
             base = chain_base
-
+    log.debug("base is %s", base)
     return (chain, base)
 
 def parse_base_pair_id(base_pair_id):
@@ -196,7 +196,6 @@ def get_dotplot(lines):
     seq_ids = _seqids_from_residue_map(residues)
     return bpseq_str, seq_ids
 
-
 def _seqids_from_residue_map(residue_map):
     """
     Create the list of seq_ids from the list of MC-Annotate identifiers in the
@@ -208,4 +207,3 @@ def _seqids_from_residue_map(residue_map):
         seq_ids += [fgr.RESID(from_chain, parse_resid(from_base))]
     log.debug("Seq_ids are %s", seq_ids)
     return seq_ids
-

@@ -1541,7 +1541,6 @@ class BulgeGraph(object):
                   =   ======================================================================
 
         """
-
         if define[0] == 'i':
             # interior loop, we just have to check if
             # connections[0] < connections[1]
