@@ -1,3 +1,4 @@
+from builtins import str
 import collections
 import logging
 
@@ -15,14 +16,14 @@ def resid_to_str(resid):
     return out
 
 def resid_from_str(resstr):
+    resstr = str(resstr) # Make sure we use future's newstring on python2
     if ":" in resstr:
         chain, resid = resstr.split(":")
     else:
         resid=resstr
         log.debug("No chain given in string {!r}".format(resstr))
-        chain='A'
+        chain=str('A')
     idparts=resid.split(".")
     if len(idparts)==1:
         idparts.append(" ")
     return RESID(chain, (' ', int(idparts[0]), idparts[1]))
-
