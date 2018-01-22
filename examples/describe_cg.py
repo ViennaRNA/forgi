@@ -47,6 +47,9 @@ def describe_rna(cg, file_num, dist_pais, angle_pairs):
     descriptors = []
     junct3 = 0
     junct4 = 0
+    reg=0
+    pk=0
+    op=0
     for ml in multiloops:
         descriptors = cg.describe_multiloop(ml)
         if "regular_multiloop" in descriptors:
@@ -54,14 +57,19 @@ def describe_rna(cg, file_num, dist_pais, angle_pairs):
                 junct3+=1
             elif len(ml)==4:
                 junct4+=1
+            reg+=1
+        if "pseudoknot" in descriptors:
+            pk+=1
+        if "open" in descriptors:
+            op+=1
     data["3-way-junctions"] = junct3
     data["4-way-junctions"] = junct4
 
     #print (descriptors)
-    data["open_mls"] = len([d for d in descriptors if "open" in d])
+    data["open_mls"] = op
     #print(data["open_mls"][-1])
-    data["pseudoknots"] = len([d for d in descriptors if "pseudoknot" in d])
-    data["regular_mls"] = len([d for d in descriptors if "regular_multiloop" in d])
+    data["pseudoknots"] = pk
+    data["regular_mls"] = reg
     data["total_mls"] = len(multiloops)
     try:
         data["longest_ml"] = max(len(x) for x in multiloops)
