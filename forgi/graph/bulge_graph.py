@@ -408,7 +408,10 @@ class Sequence(str):
                 #log.debug("i is {}, out is now {}".format(i, out))
             return out
         elif isinstance(key, int):
-            key-=1 #From 1-based to 0 based indexing.
+            if key==0:
+                raise IndexError("Index 0 not allowed in 1-based indexing")
+            elif key>0:
+                key=key-1 #From 1-based to 0 based indexing.
             seq = self.replace("&", "") #seq is a string, not a sequence object
             return seq[key]
         else:
