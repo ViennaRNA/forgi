@@ -178,9 +178,10 @@ def describe_ml_segments(cg):
             data["j3_family3D"].append(j3_family3D)
             data["j3_familyPerp"].append(j3_familyPerp)
             data["j3_Delta_j23_j31"].append(j3_Delta)
-    data["pk_number"]=number_by(data, "loop_start_after", "is_pseudoknotted_multiloop")
-    data["loop_number"]=number_by(data, "loop_start_after", None)
-    data["reguler_multiloop_number"]=number_by(data, "loop_start_after", "is_regular_multiloop")
+    if data:
+        data["pk_number"]=number_by(data, "loop_start_after", "is_pseudoknotted_multiloop")
+        data["loop_number"]=number_by(data, "loop_start_after", None)
+        data["reguler_multiloop_number"]=number_by(data, "loop_start_after", "is_regular_multiloop")
     return data
 
 def number_by(data, sorting_column = "loop_start_after", only_for_col = "is_pseudoknotted_multiloop"):
