@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from . import residue as fgr
 
-logger = logging.getLogger()
+log = logging.getLogger()
 
 class _Smallest(object):
     """
@@ -19,7 +19,7 @@ class _Biggest(object):
         return True
 
 def to_0_based(key):
-    logger.debug("Converting key %s", key)
+    log.debug("Converting key %s", key)
     if isinstance(key, slice):
         # Step
         step = key.step
@@ -53,7 +53,7 @@ def to_0_based(key):
             key=key-1
     else:
         raise TypeError("Invalid index type {}".format(type(key).__name__))
-    logger.debug("Returning key %s", key)
+    log.debug("Returning key %s", key)
     return key
 
 
@@ -102,7 +102,18 @@ class Sequence(object):
         :param missing_residues: A list of dictionaries with the following keys:
                 "res_name", "chain", "ssseq", "insertion"
         """
-        self._seq = seq # A simple, 0-based string
+        # Uses 0-based indexing
+        i=0
+        self._breaks_after = []
+        remaining = seq
+        while remaining:
+            c, remaining = remaining[0], remaining[1:]
+            if c=='&':
+                self._breaks_after.append(i-1)
+            else:
+                i+=1
+        log.debug("Break-points for seq %s are: %s", seq, self._breaks_after)
+        self._seq = seq.replace('&', '')
         self._seqids = seqids
         mr, mnts = _sorted_missing_residues(missing_residues)
         self._missing_residues = mr
@@ -115,6 +126,7 @@ class Sequence(object):
         return self._getitem(key, False)
 
     def _getitem(self, key, include_missing):
+        log.debug("_getitem called for %s, include_missing=%s", key, include_missing)
         if isinstance(key, int):
             key=to_0_based(key)
             return self._seq[key]
@@ -153,6 +165,31 @@ class Sequence(object):
             return self._resid_slice(key, include_missing)
         return self._integer_slice(to_0_based(key), include_missing)
 
+    def _insert_breakpoints_simple(self, seq, start=0, reverse = False):
+        """
+        :param seq: A sequence without any missing residues
+        :param stop: The coordinate "on the forward strand",
+                     i.e. the lower number of start and stop.
+        """
+        log.debug("Inserting breakpoints into %s", seq)
+        if not self._breaks_after:
+            return seq
+        if start is None:
+            start = 0
+        out = []
+        if reverse:
+            seq=seq[::-1]
+        old_bp = 0
+        for bp in self._breaks_after:
+            bp-=start
+            out.append(seq[oldbp:bp])
+        out.append(seq[bp:])
+        seq = "&".join(out)
+        if reverse:
+            seq=seq[::-1]
+        log.debug("seq with break points: %s", seq)
+        return seq
+
     def _integer_slice(self, key, include_missing):
         """
         This provides an implementation for include_missing=False
@@ -161,7 +198,12 @@ class Sequence(object):
         :param key: Already 0-based, no None in slice
         """
         if include_missing==False or not self._missing_nts:
-            return self._seq[key]
+            seq = self._seq[key]
+            if key.step==-1:
+                start=key.stop
+            else:
+                start=key.start
+            return self._insert_breakpoints_simple(seq, start, key.step==-1)
         if key.start is None:
             startRES=None
         else:
@@ -169,8 +211,50 @@ class Sequence(object):
         if key.stop is None:
             stopRES =  None
         else:
-            stopRES  = self._seqids[key.stop]
-        return self._resid_slice(slice(startRES, stopRES, key.step),  include_missing)
+            if key.step==-1:
+                stopRES  = self._seqids[key.stop+1]
+            else:
+                if key.stop>0:
+                    stopRES  = self._seqids[key.stop-1]
+                else:
+                    stopRES  = self._seqids[key.stop]
+        key2 = slice(startRES, stopRES, key.step)
+        log.debug("Converted integer_slice %s to resid-slice %s", key, key2)
+        return self._resid_slice_with_missing(key2)
+
+    def _resid_slice_without_missing(self, key):
+        if key.step==-1:
+            default_start = len(self._seqids)
+            default_stop = None
+        else:
+            default_start = 0
+            default_stop = len(self._seqids)
+        start_i, _ = self._resid_to_index(key.start, default_start, False)
+        stop_i, _ = self._resid_to_index(key.stop, default_stop, False)
+        if key.step==-1:
+            if stop_i is not None:
+                stop_i-=1
+        else:
+            stop_i+=1
+        key=slice(start_i, stop_i, key.step)
+        log.debug("Resid-slice mapped to integer-slice {}".format(key))
+        return self._integer_slice(key, False)
+
+    def _resid_to_index(self, resid, default, default_on_error=False):
+        """
+        :returns: a tuple index, error_raised
+        """
+        if resid is None:
+            return default, False
+        try:
+            return self._seqids.index(resid), False
+        except ValueError:
+            if default_on_error:
+                return default, True
+            else:
+                raise IndexError("RESID {} is not present or no structure"
+                                 "is available for it.".format(resid))
+
 
     def _resid_slice(self, key, include_missing):
         """
@@ -179,94 +263,98 @@ class Sequence(object):
 
         :param key: A validated resid slice.
         """
-        left_res = None
-        # Flag used later if missing_residues === True
-        found_start=True
-        if key.start is not None:
-            try:
-                start_i = self._seqids.index(key.start)
-            except ValueError:
-                if not include_missing:
-                    raise IndexError("RESID {} is not present or no structure"
-                                     "is available for it.".format(key.start))
-                else:
-                    start_i = None
-                    if key.step!=-1:
-                        found_start = False
-        if key.start is None or start_i is None:
-            if key.step==-1:
-                start_i = len(self._seqids)
-            else:
-                start_i=0
-        if key.stop is not None:
-            try:
-                stop_i = self._seqids.index(key.stop)
-            except ValueError:
-                if not include_missing:
-                    raise IndexError("RESID {} is not present or no structure"
-                                     "is available for it.".format(key.start))
-                else:
-                    stop_i = None
-                    if key.step==-1:
-                        found_start=False
-        if key.stop is None or stop_i is None:
-            if key.step==-1:
-                stop_i=0
-            else:
-                stop_i = len(self._seqids)
-        if not include_missing:
-            # Convert to integers and return faster integer slice
-            if key.step!=-1:
-                stop_i+=1
-            else:
-                stop_i-=1
-                if stop_i==-1:
-                    stop_i=None
-            key=slice(start_i, stop_i, key.step)
-            logger.debug("Resid-slice mapped to integer-slice {}".format(key))
-            return self._integer_slice(key, include_missing)
+        if include_missing:
+            return self._resid_slice_with_missing(key)
         else:
-            seq = ""
-            left_res = None
+            return self._resid_slice_without_missing(key)
+
+    def _resid_slice_with_missing(self, key):
+        left_res = None
+        if key.step==-1:
+            start, stop = key.stop, key.start
+        else:
             start, stop = key.start, key.stop
-            if key.step==-1:
-                start_i, stop_i = stop_i, start_i
-                start, stop = stop,start
-            if start_i>0:
-                left_res = self._seqids[start_i-1]
-            logger.debug("Range is %s-%s", start_i, stop_i)
-            for i in range(start_i, stop_i+1):
-                try:
-                    right_res = self._seqids[i]
-                except IndexError:
-                    right_res = None
-                mr, mr_keys = self._missing_residues_between(left_res, right_res)
-                for j,r in enumerate(mr_keys):
-                    if not found_start and r==start:
-                        logger.debug("Found start for i=%d, %s", i, r)
-                        found_start=True
-                    if found_start:
-                        seq+=mr[j]
-                    logger.debug("Comparing %s and %s", r, stop)
-                    if r==stop:
-                        logger.debug("Stop found! Seq=%s, step=%s", seq, key.step)
-                        if key.step==-1:
-                            seq="".join(reversed(seq))
-                            logger.debug("Reversed to %s", seq)
-                        return seq
-                # If key.start and key.stop resp. are not modified residues,
-                # start_i and stop_i are already accurrate, making
-                # additional checks here unneccessary.
-                if found_start and i<len(self._seq):
-                    seq+=self._seq[i]
-                left_res = right_res
-                logger.debug("seq now is %s", seq)
-            if key.step==-1:
-                seq="".join(reversed(seq))
-                logger.debug("Reversed to %s", seq)
-            return seq
+        start_i, start_is_missing= self._resid_to_index(start, 0, True)
+        stop_i, stop_is_missing = self._resid_to_index(stop, len(self._seqids), True)
+        if not start_is_missing and start is not None:
+            left_res = start
+
+        # Flag used later if missing_residues === True
+        found_start=not start_is_missing
+        seq = ""
+        if left_res is not None:
+            seq+=self._seq[self._seqids.index(left_res)]
+            log.debug("Added first residue %s: %s", left_res, seq)
+            start_i+=1
+        log.debug("Iterating over sequence %s-%s", start_i, stop_i+1)
+        for i in range(start_i, stop_i+1):
+            try:
+                right_res = self._seqids[i]
+            except IndexError:
+                right_res = None
+            # Some consistency checks:
+            if left_res is not None and right_res is not None and left_res.chain!=right_res.chain:
+                if i-1 not in self._breaks_after:
+                    raise ValueError("Inconsist break-points discovered."
+                                     "Missing breakpoint at position {} "
+                                     "between chain {} and chain {}".format(i-1,
+                                     left_res.chain,right_res.chain))
+            if i-1 in self._breaks_after:
+                if left_res is not None and right_res is not None and left_res.chain==right_res.chain:
+                    raise ValueError("Inconsist break-points discovered."
+                                     "Breakpoint at position {} "
+                                     "in the middle of chain {}".format(i-1,
+                                      left_res.chain))
+            mr, mr_keys = self._missing_residues_between(left_res, right_res)
+            old_r = left_res
+            for j,r in enumerate(mr_keys):
+                if not found_start and r==start:
+                    log.debug("Found start for i=%d, %s", i, r)
+                    found_start=True
+                    old_r = None
+                log.debug("Now processing missing residue %s", r)
+                if found_start:
+                    if old_r is not None and old_r.chain != r.chain:
+                        seq+="&"
+                        log.debug("Breakpoint inserted!")
+                    log.debug("Adding missing residue %s", mr[j])
+                    seq+=mr[j]
+                log.debug("Comparing %s and stop=%s", r, stop)
+                if r==stop:
+                    log.debug("Stop found! Seq=%s, step=%s", seq, key.step)
+                    if key.step==-1:
+                        seq="".join(reversed(seq))
+                        log.debug("Reversed to %s", seq)
+                    return seq
+                old_r = r
+            # If key.start and key.stop resp. are not modified residues,
+            # start_i and stop_i are already accurrate, making
+            # additional checks here unneccessary.
+            if found_start and i<len(self._seq):
+                log.debug("Adding regular residue %s", self._seq[i])
+                if mr_keys: #No missing residues
+                    if r.chain!=right_res.chain:
+                        seq+="&"
+                        log.debug("Breakpoint inserted!")
+                else:
+                    if left_res is not None and right_res is not None and left_res.chain!=right_res.chain:
+                        seq+="&"
+                        log.debug("Breakpoint inserted!")
+                seq+=self._seq[i]
+            left_res = right_res
+            log.debug("seq now is %s", seq)
+        if key.step==-1:
+            seq="".join(reversed(seq))
+            log.debug("Reversed to %s", seq)
+        # If start or stop are not part of sequence,
+        # make sure they were seen in missing residues
+        if not found_start or stop_is_missing:
+            raise IndexError("At least one of the residues {} and {} "
+                             "is not part of this RNA".format(key.start, key.stop))
+        return seq
 
     def _missing_residues_between(self, from_resid, to_resid):
+        log.debug("Searching missing residues between %s  and %s", from_resid, to_resid)
         if from_resid is not None and to_resid is not None:
             if from_resid.chain != to_resid.chain:
                 left = self._missing_residues_between(from_resid, None)

@@ -70,6 +70,9 @@ class TestIndexingWithoutMissing(unittest.TestCase):
 
 class TestIndexingWithMissing(unittest.TestCase):
     def setUp(self):
+        # Full seq:
+        # GGCAUACAUUCGUCCGG
+        #   **** ***  ****
         self.seq1 = fgs.Sequence("CAUAAUUUCCG",
                                 list(map(fgr.resid_from_str,
                                      "14,15,15.A,16,18,19,20,21,22,23,A:24".split(","))),
@@ -79,7 +82,7 @@ class TestIndexingWithMissing(unittest.TestCase):
                                  {"ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
                                  {"ssseq":20, "res_name":"G", "chain":"A", "insertion":"B"},
                                  {"ssseq":25, "res_name":"G", "chain":"A", "insertion":None}])
-        self.seq2 = fgs.Sequence("AAAGGG",
+        self.seq2 = fgs.Sequence("AAA&GGG",
                                  list(map(fgr.resid_from_str,
                                      "A:14,A:15,A:15.A,B:12,B:13,B:200.A".split(","))),
                                  [{"ssseq":13, "res_name":"G", "chain":"A", "insertion":None},
@@ -100,35 +103,35 @@ class TestIndexingWithMissing(unittest.TestCase):
         self.assertEqual(self.seq1.with_missing[2:5], "AUACA")
         self.assertEqual(self.seq1.with_missing[:5], "GGCAUACA")
         self.assertEqual(self.seq1.with_missing[2:], "AUACAUUCGUCCGG")
-        self.assertEqual(self.seq2.with_missing[:], "GAAAGCGGGC") # TODO: implement '&'
+        self.assertEqual(self.seq2.with_missing[:], "GAAAG&CGGGC")
 
 
     def test_integer_slice_with_negative_stop(self):
         # Negative stop is allowed for positive steps
-        self.assertEqual(self.seq2.with_missing[:-3], "GAAAGCG")
+        self.assertEqual(self.seq2.with_missing[:-3], "GAAAG&CG")
 
     def test_integer_slice_neg_step(self):
         self.assertEqual(self.seq1.with_missing[7:3:-1], "UUACAU")
-        self.assertEqual(self.seq1.with_missing[8::-1], "UUUACAUACGG")
-        self.assertEqual(self.seq[:5:-1], "GGCCUGCUUA")
+        self.assertEqual(self.seq1.with_missing[8::-1], "UGCUUACAUACGG")
+        self.assertEqual(self.seq1.with_missing[:5:-1], "GGCCUGCUUA")
         with self.assertRaises(IndexError):
-            self.seq[:-5:-1]
+            self.seq1.with_missing[:-5:-1]
 
     def test_resid_slice_forward_key_in_seq(self):
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("A:15"):fgr.resid_from_str("B:13")],
-                         "AAGCGG")
+                         "AAG&CGG")
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("A:15"):],
-                                                                    "AAGCGGGC")
+                                                                    "AAG&CGGGC")
         self.assertEqual(self.seq2.with_missing[:fgr.resid_from_str("B:13")],
-                                                                    "GAAAGCGG")
+                                                                    "GAAAG&CGG")
 
     def test_resid_slice_backward_key_in_seq(self):
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("B:13"):fgr.resid_from_str("A:15"):-1],
-                         "GGCGAA")
+                         "GGC&GAA")
         self.assertEqual(self.seq2.with_missing[:fgr.resid_from_str("A:15"):-1],
-                                                                    "CGGGCGAA")
+                                                                    "CGGGC&GAA")
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("B:13")::-1],
-                                                                    "GGCGAAAG")
+                                                                    "GGC&GAAAG")
     def test_resid_slice_key_not_in_seq(self):
         # Forward
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("A:13"):fgr.resid_from_str("A:16.D")],
@@ -136,11 +139,11 @@ class TestIndexingWithMissing(unittest.TestCase):
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("B:11"):],
                                                                     "CGGGC")
         self.assertEqual(self.seq2.with_missing[:fgr.resid_from_str("B:11")],
-                                                                    "GAAAGC")
+                                                                    "GAAAG&C")
         # Backwards
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("A:16.D"):fgr.resid_from_str("A:13"):-1],
                          "GAAAG")
         self.assertEqual(self.seq2.with_missing[:fgr.resid_from_str("B:11"):-1],
                                                                     "CGGGC")
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("B:11")::-1],
-                                                                    "CGAAAG")
+                                                                    "C&GAAAG")
