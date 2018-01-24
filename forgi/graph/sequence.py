@@ -84,6 +84,8 @@ class _WMIndexer(object):
         self.parent = parent
     def __getitem__(self, key):
         return self.parent._getitem(key, True)
+    def __len__(self):
+        return len(self.parent)+len(self.parent._missing_nts)
 
 class Sequence(object):
     """
@@ -97,7 +99,7 @@ class Sequence(object):
        PDB-Style indices may address missing residues (Reidues for which only sequence
        but no structure information is present).
     """
-    def __init__(self, seq, seqids, missing_residues):
+    def __init__(self, seq, seqids, missing_residues=[]):
         """
         :param missing_residues: A list of dictionaries with the following keys:
                 "res_name", "chain", "ssseq", "insertion"
@@ -119,11 +121,28 @@ class Sequence(object):
         self._missing_residues = mr
         self._missing_nts =  mnts
 
+    @property
+    def backbone_breaks_after(self):
+        """
+        Breakpoints as 1-based indices
+        """
+        return [ bp+1 for bp in self._breaks_after ]
+
+    def is_valid(self):
+        wrong_chars = set(self.seq)-set("AUGCaugc")
+        if wrong_chars:
+            log.info("Illegal characters are {}".format(wrong_chars))
+            return False
+        return True
+
     def __getitem__(self, key):
         """
         Never return missing residues!
         """
         return self._getitem(key, False)
+
+    def __len__(self):
+        return len(self._seq)
 
     def _getitem(self, key, include_missing):
         log.debug("_getitem called for %s, include_missing=%s", key, include_missing)

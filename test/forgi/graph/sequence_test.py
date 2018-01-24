@@ -147,3 +147,9 @@ class TestIndexingWithMissing(unittest.TestCase):
                                                                     "CGGGC")
         self.assertEqual(self.seq2.with_missing[fgr.resid_from_str("B:11")::-1],
                                                                     "C&GAAAG")
+
+    def test_len(self):
+        self.assertEqual(len(self.seq1), 11)
+        self.assertEqual(len(self.seq2), 6)
+        self.assertEqual(len(self.seq1.with_missing), 17)
+        self.assertEqual(len(self.seq2.with_missing), 10)        
