@@ -134,9 +134,15 @@ def describe_ml_segments(cg):
             j3_familyFlat = None
             j3_familyPerp = None
             j3_Delta = None
+        loop_start = float("inf")
+        for segment in loop:
+            if cg.define_a(segment)[0]<loop_start:
+                loop_start = cg.define_a(segment)[0]
         for segment in loop:
             if segment[0] !="m":
                 continue
+            data["loop_start_after"].append(loop_start)
+            data["segment_start_after"].append(cg.define_a(segment)[0])
             data["segment"].append(segment)
             data["junction_length"].append(len(loop))
             data["segment_length"].append(cg.get_length(segment))
@@ -172,8 +178,25 @@ def describe_ml_segments(cg):
             data["j3_family3D"].append(j3_family3D)
             data["j3_familyPerp"].append(j3_familyPerp)
             data["j3_Delta_j23_j31"].append(j3_Delta)
-
+    data["pk_number"]=number_by(data, "loop_start_after", "is_pseudoknotted_multiloop")
+    data["loop_number"]=number_by(data, "loop_start_after", None)
+    data["reguler_multiloop_number"]=number_by(data, "loop_start_after", "is_regular_multiloop")
     return data
+
+def number_by(data, sorting_column = "loop_start_after", only_for_col = "is_pseudoknotted_multiloop"):
+    log.debug(list((key, len(data[key])) for key in data))
+    df = pd.DataFrame(data)
+    if only_for_col is not None:
+        df = df[df[only_for_col]==True]
+    sorted_vals = list(sorted(set(df[sorting_column])))
+    out_column = []
+    for i in range(len(data[sorting_column])):
+        if only_for_col is None or data[only_for_col][i]:
+            out_column.append(sorted_vals.index(data[sorting_column][i])+1)
+        else:
+            out_column.append(0)
+    log.info("number_by column is %s, len(data[%s])=%s)", out_column, sorting_column, len(data[sorting_column]))
+    return out_column
 
 parser = generateParser()
 if __name__=="__main__":
