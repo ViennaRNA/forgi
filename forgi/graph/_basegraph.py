@@ -1,6 +1,7 @@
 from collections import defaultdict
 from pprint import pformat
 import logging
+import itertools as it
 
 log = logging.getLogger(__name__)
 
@@ -39,11 +40,56 @@ class BaseGraph(object):
 
     def _define_a_nonzero(self, elem):
         define = self.defines[elem]
+        log.debug("Define_a nonzero of BaseGraph called for %s with define %s", elem, define)
         new_def = []
         for i in range(0,len(define),2):
             new_def.append(max(define[i]-1, 1))
-            new_def.append(define[i+1])
+            new_def.append(define[i+1]+1)
+        log.debug("Define_a nonzero returning %s", new_def)
         return new_def
+
+    def stem_bp_iterator(self, stem):
+        """
+        Iterate over all the base pairs in the stem.
+        """
+        assert stem[0]=="s"
+        d = self.defines[stem]
+        stem_length = self.stem_length(stem)
+
+        for i in range(stem_length):
+            yield (d[0] + i, d[3] - i)
+
+    def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
+        """
+        Iterate over the residue numbers that belong to this node.
+
+        :param node: The name of the node
+        """
+        visited=set()
+
+        for r in self.define_range_iterator(node, adjacent):
+            for i in range(r[0], r[1] + 1):
+                if seq_ids:
+                    if self.seq_ids[i-1] not in visited:
+                        visited.add(self.seq_ids[i-1])
+                        yield self.seq_ids[i - 1]
+                else:
+                    if i not in visited:
+                        visited.add(i)
+                        yield i
+
+    def flanking_nucleotides(self, d):
+        '''
+        Return the nucleotides directly flanking an element.
+
+        :param d: the name of the element
+        :return: a list of nucleotides
+        '''
+        set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
+        set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
+        flanking = list(sorted(set_adjacent - set_not_adjacent))
+        log.debug("Flanking nts are %s - %s = %s", set_adjacent, set_not_adjacent, flanking)
+        return flanking
 
     def _define_a_zerolength(self, elem): #TODO speed-up by caching
         """
@@ -177,3 +223,30 @@ class BaseGraph(object):
             yield [ define[0], define[1] ]
             if len(define)>2:
                 yield [ define[2], define[3] ]
+
+    def stem_iterator(self):
+        """
+        Iterator over all of the stems in the structure.
+        """
+        for d in self.defines.keys():
+            assert d[0] in "ftsmih", "stem_iterator should only be called after relabelling of nodes during GraphConstruction"
+            if d[0] == 's':
+                yield d
+
+    def pairing_partner(self, nucleotide_number):
+        """
+        Return the base pairing partner of the nucleotide at position
+        nucleotide_number. If this nucleotide is unpaired, return None.
+
+        :param nucleotide_number: The position of the query nucleotide in the
+                                  sequence.
+        :return: The number of the nucleotide base paired with the one at
+                 position nucleotide_number.
+        """
+        for d in self.stem_iterator():
+            for (r1, r2) in self.stem_bp_iterator(d):
+                if r1 == nucleotide_number:
+                    return r2
+                elif r2 == nucleotide_number:
+                    return r1
+        return None

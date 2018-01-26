@@ -121,6 +121,10 @@ class Sequence(object):
         self._missing_residues = mr
         self._missing_nts =  mnts
 
+    def __bool__(self):
+        return bool(self._seq)
+    __nonzero__ = __bool__
+    
     @property
     def backbone_breaks_after(self):
         """

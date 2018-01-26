@@ -1,12 +1,35 @@
+import sys
+import logging
+import itertools as it
 from collections import defaultdict
 from pprint import pformat
-import logging
 
+from logging_exceptions import log_to_exception, log_at_caller
+
+from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ._basegraph import BaseGraph
 
 log = logging.getLogger(__name__)
 
 
+def any_difference_of_one(stem, bulge):
+    """
+    See if there's any difference of one between the two
+    ends of the stem [(a,b),(c,d)] and a bulge (e,f)
+
+    :param stem: A couple of couples (2 x 2-tuple) indicating the start and end
+                 nucleotides of the stem in the form ((s1, e1), (s2, e2))
+    :param bulge: A couple (2-tuple) indicating the first and last position
+                  of the bulge.
+    :return: True if there is an overlap between the stem nucleotides and the
+                  bulge nucleotides. False otherwise
+    """
+    for stem_part in stem:
+        for part in stem_part:
+            for bulge_part in bulge:
+                if abs(bulge_part - part) == 1:
+                    return True
+    return False
 
 class _BulgeGraphConstruction(BaseGraph):
     """
@@ -16,9 +39,80 @@ class _BulgeGraphConstruction(BaseGraph):
     """
     def __init__(self):
         self.defines = {}
-        self.edges = col.defaultdict(set)
-        self.weights = {)
+        self.edges = defaultdict(set)
+        self.weights = {}
         self._name_counter = 0
+
+    def from_tuples(self, tuples, cutpoints=[]):
+        """
+        Create a bulge_graph from a list of pair tuples. Unpaired
+        nucleotides have a pairing partner of 0.
+        """
+        stems = []
+        bulges = []
+
+        tuples.sort() #We move along the backbone
+        tuples = iter(tuples)
+        (t1, t2) = next(tuples)
+
+        prev_from = t1
+        prev_to = t2
+
+        start_from = prev_from
+        start_to = prev_to
+        last_paired = prev_from
+
+        for t1, t2 in tuples:
+            (from_bp, to_bp) = (t1, t2)
+
+            if abs(to_bp - prev_to) == 1 and prev_to != 0: #adjacent basepairs on 3' strand
+                # stem
+                if (((prev_to - prev_from > 0 and to_bp - from_bp > 0) or
+                         (prev_to - prev_from < 0 and to_bp - from_bp < 0)) and
+                            (to_bp - prev_to) == -(from_bp - prev_from)):
+                    (prev_from, prev_to) = (from_bp, to_bp)
+                    last_paired = from_bp
+                    continue
+
+            if to_bp == 0 and prev_to == 0:
+                # bulge
+                (prev_from, prev_to) = (from_bp, to_bp)
+                continue
+            else:
+                if prev_to != 0:
+                    new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])),
+                                             tuple(sorted([prev_from - 1, prev_to - 1]))]))
+                    if new_stem not in stems:
+                        stems += [new_stem]
+
+                    last_paired = from_bp
+                    start_from = from_bp
+                    start_to = to_bp
+                else:
+                    new_bulge = ((last_paired - 1, prev_from - 1))
+                    bulges += [new_bulge]
+
+                    start_from = from_bp
+                    start_to = to_bp
+
+            prev_from = from_bp
+            prev_to = to_bp
+
+        # Take care of the last element
+        if prev_to != 0:
+            new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])),
+                                     tuple(sorted([prev_from - 1, prev_to - 1]))]))
+            if new_stem not in stems:
+                stems += [new_stem]
+        if prev_to == 0:
+            new_bulge = ((last_paired - 1, prev_from - 1))
+            bulges += [new_bulge]
+
+        log.debug("from_tuples: stems %s, bulges %s", stems, bulges)
+        self.from_stems_and_bulges(stems, bulges)
+        log.debug("from_tuples: cutpoints are: %s", cutpoints)
+        if cutpoints:
+            self.split_at_cofold_cutpoints(cutpoints)
 
     def from_stems_and_bulges(self, stems, bulges):
         """
@@ -31,7 +125,7 @@ class _BulgeGraphConstruction(BaseGraph):
         :return: Nothing, just make the bulgegraph
         """
         assert self.defines == {}
-        assert self.edges == col.defaultdict(set)
+        assert self.edges == defaultdict(set)
         for i in range(len(stems)):
             # one is added to each coordinate to make up for the fact that residues are 1-based
             ss1 = stems[i][0][0] + 1
@@ -156,6 +250,11 @@ class _BulgeGraphConstruction(BaseGraph):
                     new_edges.add(e)
             self.edges[k] = new_edges
 
+    def stem_length(self, key):
+        d = self.defines[key]
+        assert key[0] == 's'
+        return (d[1] - d[0]) + 1
+
     def relabel_nodes(self):
         """
         Change the labels of the nodes to be more indicative of their nature.
@@ -174,6 +273,11 @@ class _BulgeGraphConstruction(BaseGraph):
         fiveprimes = []
         threeprimes = []
 
+        seq_length = 0
+        for d in self.defines:
+            for r in self.define_range_iterator(d):
+                seq_length += r[1]-r[0]+1
+
         for d in self.defines.keys():
             if d[0] == 'y' or d[0] == 's':
                 stems += [d]
@@ -191,20 +295,20 @@ class _BulgeGraphConstruction(BaseGraph):
                 fiveprimes += [d]
                 continue
 
-            if len(self.edges[d]) == 1 and self.defines[d][1] == self.seq_length:
+            if len(self.edges[d]) == 1 and self.defines[d][1] == seq_length:
                 threeprimes += [d]
                 continue
 
             if (len(self.edges[d]) == 1 and
                         self.defines[d][0] != 1 and
-                        self.defines[d][1] != self.seq_length):
+                        self.defines[d][1] != seq_length):
                 hairpins += [d]
                 continue
 
             if d[0] == 'm' or (d[0] != 'i' and len(self.edges[d]) == 2 and
                                        self.weights[d] == 1 and
                                        self.defines[d][0] != 1 and
-                                       self.defines[d][1] != self.seq_length):
+                                       self.defines[d][1] != seq_length):
                 multiloops += [d]
                 continue
 
@@ -231,6 +335,25 @@ class _BulgeGraphConstruction(BaseGraph):
         for i, d in enumerate(hairpins):
             self.relabel_node(d, 'h%d' % (i))
 
+    def compare_stems(self, b):
+        """
+        A function that can be passed in as the key to a sort.
+        """
+        return (self.defines[b][0], 0)
+
+    def compare_bulges(self, b, flank_nucs = False):
+        """
+        A function that can be passed in as the key to a sort.
+
+        Compares based on the nucleotide number
+        (using define_a to allow for sorting 0-length MLs)
+        """
+        return self.define_a(b)
+
+    def compare_hairpins(self, b):
+        connections = self.connections(b)
+
+        return (self.defines[connections[0]][1], sys.maxsize)
 
     def sort_defines(self):
         """
@@ -489,76 +612,6 @@ class _BulgeGraphConstruction(BaseGraph):
                     self.edges['y{}'.format(i)].add('b{}'.format(j))
                     self.edges['b{}'.format(j)].add('y{}'.format(i))
 
-    def from_tuples(self, tuples, cutpoints):
-        """
-        Create a bulge_graph from a list of pair tuples. Unpaired
-        nucleotides have a pairing partner of 0.
-        """
-        stems = []
-        bulges = []
-
-        tuples.sort() #We move along the backbone
-        tuples = iter(tuples)
-        (t1, t2) = next(tuples)
-
-        prev_from = t1
-        prev_to = t2
-
-        start_from = prev_from
-        start_to = prev_to
-        last_paired = prev_from
-
-        for t1, t2 in tuples:
-            (from_bp, to_bp) = (t1, t2)
-
-            if abs(to_bp - prev_to) == 1 and prev_to != 0: #adjacent basepairs on 3' strand
-                # stem
-                if (((prev_to - prev_from > 0 and to_bp - from_bp > 0) or
-                         (prev_to - prev_from < 0 and to_bp - from_bp < 0)) and
-                            (to_bp - prev_to) == -(from_bp - prev_from)):
-                    (prev_from, prev_to) = (from_bp, to_bp)
-                    last_paired = from_bp
-                    continue
-
-            if to_bp == 0 and prev_to == 0:
-                # bulge
-                (prev_from, prev_to) = (from_bp, to_bp)
-                continue
-            else:
-                if prev_to != 0:
-                    new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])),
-                                             tuple(sorted([prev_from - 1, prev_to - 1]))]))
-                    if new_stem not in stems:
-                        stems += [new_stem]
-
-                    last_paired = from_bp
-                    start_from = from_bp
-                    start_to = to_bp
-                else:
-                    new_bulge = ((last_paired - 1, prev_from - 1))
-                    bulges += [new_bulge]
-
-                    start_from = from_bp
-                    start_to = to_bp
-
-            prev_from = from_bp
-            prev_to = to_bp
-
-        # Take care of the last element
-        if prev_to != 0:
-            new_stem = tuple(sorted([tuple(sorted([start_from - 1, start_to - 1])),
-                                     tuple(sorted([prev_from - 1, prev_to - 1]))]))
-            if new_stem not in stems:
-                stems += [new_stem]
-        if prev_to == 0:
-            new_bulge = ((last_paired - 1, prev_from - 1))
-            bulges += [new_bulge]
-
-        log.debug("from_tuples: stems %s, bulges %s", stems, bulges)
-        self.from_stems_and_bulges(stems, bulges)
-        if cutpoints:
-            self.split_at_cofold_cutpoints(cutpoints)
-
 
     def _split_between_elements(self, splitpoint, element_left, element_right):
         if element_left[0] in "mh":
@@ -582,7 +635,7 @@ class _BulgeGraphConstruction(BaseGraph):
                     if connection[0]=="i":
                         break
                     if not self.defines[connection]:
-                        ad_define = self._zero_length_element_adj_position(connection)
+                        ad_define = self.define_a(connection)
                         if ad_define[0]==splitpoint:
                             break
                 else:
@@ -615,27 +668,33 @@ class _BulgeGraphConstruction(BaseGraph):
 
     def _split_inside_stem(self, splitpoint, element):
         assert element[0]=="s"
+        log.debug("Split inside stem %s at %s", element, splitpoint)
         if splitpoint == self.defines[element][1]:
             #Nothing needs to be done. 2 strands split at end
+            log.debug("Nothing to do")
             return
         elif splitpoint<self.defines[element][1]:
             # Splitpoint in forward strand:
             define1 = [self.defines[element][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element][3]]
             define2 = [ splitpoint+1, self.defines[element][1], self.defines[element][2], self.pairing_partner(splitpoint+1)]
+            log.debug("Split in forward strand")
         else:
             # Splitpoint in backwards strand:
             define1 = [self.defines[element][0], self.pairing_partner(splitpoint+1), splitpoint+1, self.defines[element][3]]
             define2 = [ self.pairing_partner(splitpoint), self.defines[element][1], self.defines[element][2], splitpoint]
+            log.debug("Split in backwards strand")
         edges1=[]
         edges2=[]
 
         for edge in self.edges[element]:
+            log.debug("Checking edge %s with define %s connected to %s", edge, self.defines[edge], self.edges[edge])
             if max(self.flanking_nucleotides(edge))==define1[0] or min(self.flanking_nucleotides(edge))==define1[3]:
                 edges1.append(edge)
             elif max(self.flanking_nucleotides(edge))==define2[2] or min(self.flanking_nucleotides(edge))==define2[1]:
                 edges2.append(edge)
             else:
-                print("Edge {}, with flanking nts {}, define1 {}, define2 {}".format(edge, self.flanking_nucleotides(edge), define1, define2))
+                log.error("For stem %s with define %s and cutpoint %s:", element, self.defines[element], splitpoint)
+                log.error("Edge {}, with flanking nts {}, define1 {}, define2 {}".format(edge, self.flanking_nucleotides(edge), define1, define2))
                 assert False
         self.remove_vertex(element)
         nextS1 = self._next_available_element_name("s")

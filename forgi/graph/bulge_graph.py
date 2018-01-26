@@ -75,14 +75,9 @@ def from_id_seq_struct(id_str, seq, struct):
     """
     if seq is not None and len(seq)!=len(struct):
         raise GraphConstructionError("Sequence and structure length are not equal for id {}".format(id_str))
-    bg = BulgeGraph()
-    bg.from_dotbracket(struct)
+    bg = BulgeGraph(seq=seq, dotbracket_str=struct )
     if id_str is not None:
         bg.name = id_str
-    if seq is not None:
-        bg.seq = seq
-    bg.seq_ids_from_seq()
-
     return bg
 
 
@@ -128,9 +123,9 @@ def from_fasta_text(fasta_text, dissolve_length_one_stems=False):
             if prev_struct is None:
                 raise GraphConstructionError("No structure for id: {}", prev_id)
 
-            bg = from_id_seq_struct(prev_id, prev_seq, prev_struct)
-            if dissolve_length_one_stems:
-                bg.dissolve_length_one_stems()
+            bg = BulgeGraph(seq = prev_seq)
+            bg._from_dotbracket(prev_struct, dissolve_length_one_stems)
+            bg.name = prev_id
             bgs.append(bg)
 
             prev_seq = None
@@ -160,9 +155,9 @@ def from_fasta_text(fasta_text, dissolve_length_one_stems=False):
     if prev_struct is None:
         raise GraphConstructionError("Error during parsing of fasta file. No structure found for id {} and sequence {}".format(prev_id, prev_seq))
 
-    bg = from_id_seq_struct(curr_id, prev_seq, prev_struct)
-    if dissolve_length_one_stems:
-        bg.dissolve_length_one_stems()
+    bg = BulgeGraph(seq = prev_seq)
+    bg._from_dotbracket(prev_struct, dissolve_length_one_stems)
+    bg.name = curr_id
     bgs.append(bg)
 
     if len(bgs) == 1:
@@ -174,25 +169,6 @@ def from_fasta(filename, dissolve_length_one_stems=False):
     with open(filename) as f:
         fasta_text = f.read()
     return from_fasta_text(fasta_text, dissolve_length_one_stems)
-
-def any_difference_of_one(stem, bulge):
-    """
-    See if there's any difference of one between the two
-    ends of the stem [(a,b),(c,d)] and a bulge (e,f)
-
-    :param stem: A couple of couples (2 x 2-tuple) indicating the start and end
-                 nucleotides of the stem in the form ((s1, e1), (s2, e2))
-    :param bulge: A couple (2-tuple) indicating the first and last position
-                  of the bulge.
-    :return: True if there is an overlap between the stem nucleotides and the
-                  bulge nucleotides. False otherwise
-    """
-    for stem_part in stem:
-        for part in stem_part:
-            for bulge_part in bulge:
-                if abs(bulge_part - part) == 1:
-                    return True
-    return False
 
 
 def print_bulges(bulges):
@@ -349,6 +325,20 @@ def find_bulges_and_stems(brackets):
 
     return finished_bulges, stems
 
+def seq_of_Ns_from_db(dotbracket):
+    seq = []
+    for substr in dotbracket.split('&'):
+        seq.append("N"*len(substr))
+    return "&".join(seq)
+
+def seq_ids_from_seq_str(seq):
+    seq_strs = seq.split('&')
+    seq_ids = []
+    for i, seq_str in enumerate(seq_strs):
+        for j, s in enumerate(seq):
+            seq_ids += [resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
+    return seq_ids
+
 class BulgeGraph(BaseGraph):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
         """
@@ -375,7 +365,8 @@ class BulgeGraph(BaseGraph):
         # Additional infos as key-value pairs are stored here.
         self.infos = col.defaultdict(list)
 
-
+        if seq is None:
+            seq=""
         #Consistency check, only if both dotbracket and sequence are present.
         if dotbracket_str and seq:
             db_strs = dotbracket_str.split('&')
@@ -384,16 +375,10 @@ class BulgeGraph(BaseGraph):
                                                       for i in range(len(db_strs))):
                 raise GraphConstructionError("Sequence and dotbracket string are not consistent!")
         elif dotbracket_str:
-            seq = []
-            for substr in dotbracket_str.split('&'):
-                seq.append("N"*len(substr))
-            seq="&".join(seq)
+            seq = seq_of_Ns_from_db(dotbracket_str)
 
-        seq_strs = seq.split('&')
-        seq_ids = []
-        for i, seq_str in enumerate(seq_strs):
-            for j, s in enumerate(seq):
-                seq_ids += [resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
+
+        seq_ids = seq_ids_from_seq_str(seq)
 
         self._seq = Sequence(seq, seq_ids)
 
@@ -530,7 +515,7 @@ class BulgeGraph(BaseGraph):
         seq_ids 1 2 2.A 17
         """
         out_str = "seq_ids "
-        out_str += " ".join(map(resid_to_str, self.seq_ids))
+        out_str += " ".join(map(resid_to_str, self.seq._seqids))
         out_str += "\n"
 
         return out_str
@@ -673,7 +658,7 @@ class BulgeGraph(BaseGraph):
             s1 = self.defines[conns[0]]
             s2 = self.defines[conns[1]]
             return [s1[1] , s2[0], s2[3] , s1[2]]
-        elif:
+        else:
             # The following may call this classes
             # _define_a_nonzero implementation.
             return super(BulgeGraph, self).define_a(elem)
@@ -682,37 +667,22 @@ class BulgeGraph(BaseGraph):
         """
         Get a define including the adjacent nucleotides.
         """
+        log.debug("define_a nonzero of BulgeGraph called for %s", elem)
         define = self.defines[elem]
         new_def = []
         for i in range(0,len(define),2):
-            if define[i]-1 in self.backbone_breaks_after:
+            if define[i]-1 in self.seq.backbone_breaks_after:
+                log.debug("Left-side adjacent nt is in "
+                          "backbone-breaks: %s in %s", define[i]-1, self.seq.backbone_breaks_after)
                 new_def.append(define[i])
             else:
                 new_def.append(max(define[i]-1, 1))
-            if define[i+1] in self.backbone_breaks_after:
+            if define[i+1] in self.seq.backbone_breaks_after:
                 new_def.append(define[i+1])
             else:
                 new_def.append(min(define[i+1]+1, self.seq_length))
         return new_def
 
-    def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
-        """
-        Iterate over the residue numbers that belong to this node.
-
-        :param node: The name of the node
-        """
-        visited=set()
-
-        for r in self.define_range_iterator(node, adjacent):
-            for i in range(r[0], r[1] + 1):
-                if seq_ids:
-                    if self.seq_ids[i-1] not in visited:
-                        visited.add(self.seq_ids[i-1])
-                        yield self.seq_ids[i - 1]
-                else:
-                    if i not in visited:
-                        visited.add(i)
-                        yield i
 
     def iterate_over_seqid_range(self, start_id, end_id):
         """
@@ -980,34 +950,13 @@ class BulgeGraph(BaseGraph):
         # dissolve all stems which have a length of one
         stems_to_dissolve = [ s for s in self.stem_iterator() if self.stem_length(s)==1 ]
         if log.isEnabledFor(logging.WARNING):
-            if len(stems_to_dissolve) == len(list(self.stem_iterator))!=0:
+            if len(stems_to_dissolve) == len(list(self.stem_iterator()))!=0:
                 log.warning("All stems of the structure have length 1!")
         log.info("Stems with length 1: %s", stems_to_dissolve)
         bps_to_dissolve = []
         for s in stems_to_dissolve:
             bps_to_dissolve.extend(self.stem_bp_iterator(s))
         return bps_to_dissolve
-
-    def compare_stems(self, b):
-        """
-        A function that can be passed in as the key to a sort.
-        """
-        return (self.defines[b][0], 0)
-
-
-    def compare_bulges(self, b, flank_nucs = False):
-        """
-        A function that can be passed in as the key to a sort.
-
-        Compares based on the nucleotide number
-        (using define_a to allow for sorting 0-length MLs)
-        """
-        return self.define_a(b)
-
-    def compare_hairpins(self, b):
-        connections = self.connections(b)
-
-        return (self.defines[connections[0]][1], sys.maxsize)
 
 
     def has_connection(self, v1, v2):
@@ -1252,23 +1201,33 @@ class BulgeGraph(BaseGraph):
             descriptors.add("pseudoknot")
         return descriptors
 
+    def from_dotbracket(self, dotbracket_str, dissolve_length_one_stems=False, remove_pseudoknots=False):
+        self.__init__()
+        self._from_dotbracket(dotbracket_str, dissolve_length_one_stems,
+                              remove_pseudoknots)
+
     def _from_dotbracket(self, dotbracket_str, dissolve_length_one_stems=False, remove_pseudoknots=False):
         """
         Called from the BulgeGraphs __init__ function.
         """
         pt = fus.dotbracket_to_pairtable(dotbracket_str)
         tuples = fus.pairtable_to_tuples(pt)
+        if not self.seq:
+            seq = seq_of_Ns_from_db(dotbracket_str)
+            seq_ids = seq_ids_from_seq_str(seq)
+            self._seq = Sequence(seq, seq_ids)
         self._from_tuples(tuples, dissolve_length_one_stems, remove_pseudoknots)
 
     def _from_tuples(self, tuples, dissolve_length_one_stems=False,
                     remove_pseudoknots=False):
+        log.debug("Starting _from_tuples")
         c = _BulgeGraphConstruction()
         c.from_tuples(tuples, self.seq.backbone_breaks_after)
         self._from_graph_construction(c)
         bps_to_remove = []
         if dissolve_length_one_stems:
             bps_to_remove.extend(self.length_one_stem_basepairs())
-        if remove_pseudoknot:
+        if remove_pseudoknots:
             bps_to_remove.extend(self.pseudoknotted_basepairs(ignore_basepairs=bps_to_remove))
         if bps_to_remove:
             log.info("Recreating without the following "
@@ -1276,15 +1235,16 @@ class BulgeGraph(BaseGraph):
             new_tuples = self.to_pair_tuples(bps_to_remove)
             self._from_tuples(new_tuples, False, False)
 
-    def _from_graph_construction(self, c):
+    def _from_graph_construction(self, constr):
         """
         Copies defines and edges from A BulgeGraphConstruction instance
         to this graph.
 
-        :param c: A BulgeGraphConstruction object after completed calculation.
+        :param constr: A BulgeGraphConstruction object after completed calculation.
         """
-        self.defines = c.defines
-        self.edges = d.edges
+        log.debug("Copying defines and edges from GraphConstruction")
+        self.defines = constr.defines
+        self.edges = constr.edges
 
     def to_pair_table(self):
         """
@@ -1413,17 +1373,22 @@ class BulgeGraph(BaseGraph):
         self.seq_ids_from_seq()
 
     def  _zerolen_defines_a_between(self, stem1, stem2):
+        log.debug("Searching for zerolen-coordinates")
         zl_coordinates = set()
         for k, l in it.product(range(4), repeat=2):
             if abs(self.defines[stem1][k]-self.defines[stem2][l])==1:
                 d = [self.defines[stem1][k], self.defines[stem2][l]]
                 d.sort()
                 log.debug("Zero-length element found: %s", d)
-                if d[0] not in self.backbone_breaks_after:
+                if d[0] not in self.seq.backbone_breaks_after:
                     zl_coordinates.add(tuple(d))
                 else:
                     log.debug("But backbone-break encountered!")
         return zl_coordinates
+
+    @property
+    def backbone_breaks_after(self):
+        return self.seq.backbone_breaks_after
 
     def to_dotbracket_string(self):
         """
@@ -1487,6 +1452,9 @@ class BulgeGraph(BaseGraph):
         :param bg_str: The string representation of this BugleGraph.
         """
         lines = bg_str.split('\n')
+        seq = None
+        seqids = None
+        length = None
         for line in lines:
             line = line.strip()
             parts = line.split()
@@ -1494,7 +1462,7 @@ class BulgeGraph(BaseGraph):
                 # blank line
                 continue
             if parts[0] == 'length':
-                self.seq_length = int(parts[1])
+                length = int(parts[1])
             elif parts[0] == 'define':
                 self.defines[parts[1]] = list(map(int, parts[2:]))
             elif parts[0] == 'connect':
@@ -1502,19 +1470,17 @@ class BulgeGraph(BaseGraph):
                     self.edges[parts[1]].add(p)
                     self.edges[p].add(parts[1])
             elif parts[0] == 'seq':
-                self.seq = parts[1]
-                log.debug("from_bg_string: seq {}, breakpoints {}".format(self.seq, self.seq.backbone_breaks_after))
-                self.backbone_breaks_after = self.seq.backbone_breaks_after
+                seq = parts[1]
             elif parts[0] == 'seq_ids':
-                self.seq_ids = list(map(resid_from_str, parts[1:]))
-                self.chain_ids = []
-                for res in self.seq_ids:
-                    if res.chain not in self.chain_ids:
-                        self.chain_ids.append(res.chain)
+                seq_ids = list(map(resid_from_str, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
             elif parts[0] == 'info':
                 self.infos[parts[1]].append(" ".join(parts[2:]))
+        if not seq and not seq_ids:
+            raise NotImplementedError("TODO")
+
+
         if not self.seq_ids:
             self.seq_ids_from_seq()
 
@@ -1596,15 +1562,7 @@ class BulgeGraph(BaseGraph):
                 if edges[0][0] == 's' and edges[1][0] == 's':
                     yield (edges[0], d, edges[1])
 
-    def stem_bp_iterator(self, stem):
-        """
-        Iterate over all the base pairs in the stem.
-        """
-        d = self.defines[stem]
-        stem_length = self.stem_length(stem)
 
-        for i in range(stem_length):
-            yield (d[0] + i, d[3] - i)
 
     def get_connected_residues(self, s1, s2, bulge=None):
         """
@@ -1764,7 +1722,7 @@ class BulgeGraph(BaseGraph):
 
         # Special case if the bulge is a length 0 multiloop
         if len(bd) == 0:
-            bd = self._zero_length_element_adj_position(b)
+            bd = self.define_a(b)
             bd[0]+=1
             bd[1]-=1
 
@@ -1806,13 +1764,7 @@ class BulgeGraph(BaseGraph):
         else:
             return d[3] - vres
 
-    def stem_iterator(self):
-        """
-        Iterator over all of the stems in the structure.
-        """
-        for d in self.defines.keys():
-            if d[0] == 's':
-                yield d
+
 
     def hloop_iterator(self):
         """
@@ -1855,23 +1807,7 @@ class BulgeGraph(BaseGraph):
         for d in self.defines.keys():
             if d[0] == 't':
                 yield d
-    def pairing_partner(self, nucleotide_number):
-        """
-        Return the base pairing partner of the nucleotide at position
-        nucleotide_number. If this nucleotide is unpaired, return None.
 
-        :param nucleotide_number: The position of the query nucleotide in the
-                                  sequence.
-        :return: The number of the nucleotide base paired with the one at
-                 position nucleotide_number.
-        """
-        for d in self.stem_iterator():
-            for (r1, r2) in self.stem_bp_iterator(d):
-                if r1 == nucleotide_number:
-                    return r2
-                elif r2 == nucleotide_number:
-                    return r1
-        return None
 
     def get_define_seq_str(self, elem, adjacent=False):
         """
@@ -2704,17 +2640,7 @@ class BulgeGraph(BaseGraph):
 
         return False
 
-    def flanking_nucleotides(self, d):
-        '''
-        Return the nucleotides directly flanking an element.
 
-        :param d: the name of the element
-        :return: a list of nucleotides
-        '''
-        set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
-        set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
-
-        return list(sorted(set_adjacent - set_not_adjacent))
 
     def min_max_bp_distance(self, e1, e2):
         '''

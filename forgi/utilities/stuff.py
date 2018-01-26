@@ -144,6 +144,8 @@ def dotbracket_to_pairtable(struct):
 
 
     """
+    if len(struct)==0:
+        raise ValueError("Cannot convert empty structure to pairtable")
     pt = [0] * ((len(struct)+1)-struct.count("&"))
     pt[0] = len(struct)-struct.count("&")
 
