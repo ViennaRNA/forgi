@@ -48,38 +48,6 @@ except:
   def profile(x):
     return x
 
-def add_bulge(bulges, bulge, context, message):
-    """
-    A wrapper for a simple dictionary addition
-    Added so that debugging can be made easier
-
-    :param bulges:
-    :param bulge:
-    :param context:
-    :param message:
-    :return:
-    """
-    # bulge = (context, bulge)
-    bulges[context] = bulges.get(context, []) + [bulge]
-    return bulges
-
-
-def from_id_seq_struct(id_str, seq, struct):
-    """
-    Return a new BulgeGraph with the given id,
-    sequence and structure.
-
-    :param id_str: The id (i.e. >1y26)
-    :param seq: the sequence (i.e. 'ACCGGG')
-    :param struct: The dotplot secondary structure (i.e. '((..))')
-    """
-    if seq is not None and len(seq)!=len(struct):
-        raise GraphConstructionError("Sequence and structure length are not equal for id {}".format(id_str))
-    bg = BulgeGraph(seq=seq, dotbracket_str=struct )
-    if id_str is not None:
-        bg.name = id_str
-    return bg
-
 
 def from_fasta_text(fasta_text, dissolve_length_one_stems=False):
     """
@@ -165,61 +133,11 @@ def from_fasta_text(fasta_text, dissolve_length_one_stems=False):
     else:
         return bgs
 
+
 def from_fasta(filename, dissolve_length_one_stems=False):
     with open(filename) as f:
         fasta_text = f.read()
     return from_fasta_text(fasta_text, dissolve_length_one_stems)
-
-
-def print_bulges(bulges):
-    """
-    Print the names and definitions of the bulges.
-
-    :param bulges: A list of tuples of the form [(s, e)] where s and e are the
-                   numbers of the nucleotides at the start and end of the bulge.
-    """
-    for i in range(len(bulges)):
-        # print "bulge:", bulge
-        bulge_str = "define b{} 1".format(i)
-        bulge = bulges[i]
-        bulge_str += " {} {}".format(bulge[0] + 1, bulge[1] + 1)
-        print (bulge_str)
-
-
-def condense_stem_pairs(stem_pairs):
-    """
-    Given a list of stem pairs, condense them into stem definitions
-
-    I.e. the pairs (0,10),(1,9),(2,8),(3,7) can be condensed into
-    just the ends of the stem: [(0,10),(3,7)]
-
-    :param stem_pairs: A list of tuples containing paired base numbers.
-
-    :returns: A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
-                  where s1 and e1 are the nucleotides at one end of the stem
-                  and s2 and e2 are the nucleotides at the other.
-    """
-    stem_pairs.sort()
-
-    prev_pair = (-10, -10)
-
-    stems = []
-    start_pair = None
-
-    for pair in stem_pairs:
-        # There's a potential bug here since we don't check the direction
-        # but hopefully it won't bite us in the ass later
-        if abs(pair[0] - prev_pair[0]) != 1 or abs(pair[1] - prev_pair[1]) != 1:
-            if start_pair is not None:
-                stems += [(start_pair, prev_pair)]
-            start_pair = pair
-
-        prev_pair = pair
-
-    if start_pair is not None:
-        stems += [(start_pair, prev_pair)]
-
-    return stems
 
 
 def print_brackets(brackets):
@@ -232,99 +150,9 @@ def print_brackets(brackets):
     tens = [chr(ord('0') + i // 10) for i in range(len(brackets))]
     print ("brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers))
 
-# @Coverage: Seems to be unused. If this is removed, condense_stem_pairs can be removed as well.
-def find_bulges_and_stems(brackets):
-    """
-    Iterate through the structure and enumerate the bulges and the stems that are
-    present.
-
-    The returned stems are of the form [[(s1, s2), (e1,e2)], [(s1,s2),(e1,e2)],...]
-    where (s1,s2) are the residue numbers of one end of the stem and (e1,e2) are the
-    residue numbers at the other end of the stem
-    (see condense_stem_pairs)
-
-    The returned bulges are of the form [(s,e), (s,e),...] where s is the start of a bulge
-    and e is the end of a bulge
-
-    :param brackets: A string with the dotbracket passed as input to this script.
-    """
-    prev = 'x'
-    context = 0
-
-    bulges = dict()
-    finished_bulges = []
-    context_depths = dict()
-
-    opens = []
-    stem_pairs = []
-
-    dots_start = 0
-    context_depths[0] = 0
-
-    i = 0
-    for i in range(len(brackets)):
-        if brackets[i] == '(':
-            opens.append(i)
-
-            if prev == '(':
-                context_depths[context] = context_depths.get(context, 0) + 1
-                continue
-            else:
-                context += 1
-                context_depths[context] = 1
-
-            if prev == '.':
-                dots_end = i - 1
-                bulges = add_bulge(bulges, (dots_start, dots_end), context, "4")
-
-        if brackets[i] == ')':
-            if len(opens) == 0:
-                raise Exception("Unmatched close bracket")
-
-            stem_pairs.append((opens.pop(), i))
-
-            context_depths[context] -= 1
-
-            if context_depths[context] == 0:
-                if context in bulges:
-                    finished_bulges += bulges[context]
-                bulges[context] = []
-                context -= 1
-
-            if prev == '.':
-                dots_end = i - 1
-                bulges = add_bulge(bulges, (dots_start, dots_end), context, "2")
-
-        if brackets[i] == '.':
-            if prev == '.':
-                continue
-
-            dots_start = i
-
-        prev = brackets[i]
-
-    if prev == '.':
-        dots_end = i
-        bulges = add_bulge(bulges, (dots_start, dots_end), context, "7")
-    elif prev == '(':
-        print ("Unmatched bracket at the end", file=sys.stderr)
-        sys.exit(1)
-    """
-    elif prev == ')':
-        bulges = add_bulge(bulges, (i+1, i+1), context, "8")
     """
 
-    if context in bulges.keys():
-        finished_bulges += bulges[context]
-
-    if len(opens) > 0:
-        raise Exception("Unmatched open bracket")
-
-    stem_pairs.sort()
-    stems = condense_stem_pairs(stem_pairs)
-
-    return finished_bulges, stems
-
+    """
 def seq_of_Ns_from_db(dotbracket):
     seq = []
     for substr in dotbracket.split('&'):
@@ -338,6 +166,7 @@ def seq_ids_from_seq_str(seq):
         for j, s in enumerate(seq_str):
             seq_ids += [resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
     return seq_ids
+
 
 class BulgeGraph(BaseGraph):
     def __init__(self, bg_file=None, dotbracket_str='', seq=''):
