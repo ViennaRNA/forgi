@@ -335,7 +335,7 @@ def seq_ids_from_seq_str(seq):
     seq_strs = seq.split('&')
     seq_ids = []
     for i, seq_str in enumerate(seq_strs):
-        for j, s in enumerate(seq):
+        for j, s in enumerate(seq_str):
             seq_ids += [resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
     return seq_ids
 
@@ -1477,12 +1477,21 @@ class BulgeGraph(BaseGraph):
                 self.name = parts[1].strip()
             elif parts[0] == 'info':
                 self.infos[parts[1]].append(" ".join(parts[2:]))
+        # The breakpoints are only persisted at the seq and seq_id level.
         if not seq and not seq_ids:
-            raise NotImplementedError("TODO")
-
-
-        if not self.seq_ids:
-            self.seq_ids_from_seq()
+            raise ValueError("One of seq_ids or seq is mandatory.")
+        if not seq:
+            old_chain = None
+            seq=""
+            for resid in seq_ids:
+                if old_chain is not None and resid.chain!=old_chain:
+                    seq+="&"
+                seq+="N"
+                old_chain = resid.chain
+        if not seq_ids:
+            seq_ids = seq_ids_from_seq_str(seq)
+        log.debug("seq is %s", seq)
+        self._seq = Sequence(seq, seq_ids)
 
     def sorted_stem_iterator(self):
         """

@@ -224,6 +224,24 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         bg = fgb.from_fasta_text(db)
         self.assertEqual(bg.to_dotbracket_string(), db)
 
+    def test_dotbracket_only_to_bgstring(self):
+        """
+        Test needed due to a bug where cutpoints were not saved,
+        if no sequence was present.
+        """
+        db = "(((&)))"
+        bg = fgb.from_fasta_text(db)
+        self.assertEqual(bg.backbone_breaks_after, [3])
+        log.debug("Now exporting to bg_string")
+        bgstri = bg.to_bg_string()
+        log.debug("bg_string is %s", bgstri)
+        log.debug("Initializing empty bg")
+        bg = fgb.BulgeGraph()
+        log.debug("Now reading bg_string")
+        bg.from_bg_string(bgstri)
+        self.assertEqual(bg.backbone_breaks_after, [3])
+
+
 class BulgeGraphZeroLengthTest(GraphVerification):
     def test__define_a_zerolength_single_ml(self):
         db="(((...)))(((...)))"

@@ -104,6 +104,7 @@ class Sequence(object):
         :param missing_residues: A list of dictionaries with the following keys:
                 "res_name", "chain", "ssseq", "insertion"
         """
+        log.debug("Sequence initialized with %s, %s, %s", seq, list(map(fgr.resid_to_str, seqids)), missing_residues)
         # Uses 0-based indexing
         i=0
         self._breaks_after = []
@@ -121,10 +122,13 @@ class Sequence(object):
         self._missing_residues = mr
         self._missing_nts =  mnts
 
+    def __str__(self):
+        return self[:]
+
     def __bool__(self):
         return bool(self._seq)
     __nonzero__ = __bool__
-    
+
     @property
     def backbone_breaks_after(self):
         """
@@ -202,11 +206,11 @@ class Sequence(object):
         out = []
         if reverse:
             seq=seq[::-1]
-        old_bp = 0
+        oldbp = 0
         for bp in self._breaks_after:
             bp-=start
-            out.append(seq[oldbp:bp])
-        out.append(seq[bp:])
+            out.append(seq[oldbp:bp+1])
+        out.append(seq[bp+1:])
         seq = "&".join(out)
         if reverse:
             seq=seq[::-1]

@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import textwrap
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.pdb as ftup
@@ -57,3 +58,36 @@ class TestMCAnnotate(unittest.TestCase):
         self.assertEqual(ftum.parse_chain_base("'9'12.R"), ("9", "12.R"))
         self.assertEqual(ftum.parse_chain_base("A46.Q"), ("A", "46.Q"))
         self.assertEqual(ftum.parse_chain_base("F-65.S"), ("F", "-65.S"))
+
+    def test_get_dotplot_neg_residuenumbers(self):
+        dotplot_negative_residues = textwrap.dedent("""\
+                Residue conformations -------------------------------------------
+                R-40 : C C3p_endo anti
+                R-39 : C C3p_endo anti
+                R-38 : C C2p_endo anti
+                R-37 : C C3p_endo anti
+                R-36 : G C4p_exo anti
+                R-35 : A C2p_endo syn
+                R-34 : A C2p_endo syn
+                R-33 : G C3p_endo anti
+                R-32 : G C3p_endo anti
+                R-31 : G C2p_endo anti
+                Adjacent stackings ----------------------------------------------
+                R-40-R-39 : adjacent_5p upward
+                R-36-R-35 : adjacent_5p inward
+                R-34-R-33 : adjacent_5p outward
+                R-33-R-32 : adjacent_5p upward
+                Non-Adjacent stackings ------------------------------------------
+                Number of stackings = 4
+                Number of adjacent stackings = 4
+                Number of non adjacent stackings = 0
+                Base-pairs ------------------------------------------------------
+                R-40-R-30 : C-G Wh/Bh pairing parallel cis one_hbond 124
+                R-39-R-31 : C-G Wh/Wh pairing parallel cis one_hbond 124
+                R-38-R-37 : C-C O2'/Hh adjacent_5p pairing
+                R-38-R-33 : C-G Ww/Ww pairing antiparallel cis one_hbond 130
+                R-32-R-31 : G-G Ww/Hw adjacent_5p pairing antiparallel cis one_hbond
+                """)
+        dp = ftum.get_dotplot(dotplot_negative_residues.splitlines())
+        self.assertEqual(dp[1][0], "R-40")
+        self.assertEqual(dp[0], "1 C 0\n2 C 0\n3 C 8\n4 C 0\n5 G 0\n6 A 0\n7 A 0\n8 G 3\n9 G 0\n10 G 0\n")
