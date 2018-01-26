@@ -33,7 +33,7 @@ from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ..threedee.utilities import mcannotate as ftum
-from .sequence import Sequence
+from .sequence import Sequence, _insert_breakpoints_simple
 from .residue import RESID, resid_to_str, resid_from_str
 from ._basegraph import BaseGraph
 from ._graph_construction import _BulgeGraphConstruction
@@ -555,7 +555,8 @@ class BulgeGraph(BaseGraph):
         for i in range(0,len(define),2):
             if define[i]-1 in self.seq.backbone_breaks_after:
                 log.debug("Left-side adjacent nt is in "
-                          "backbone-breaks: %s in %s", define[i]-1, self.seq.backbone_breaks_after)
+                          "backbone-breaks: %s in %s", define[i]-1,
+                          self.seq.backbone_breaks_after)
                 new_def.append(define[i])
             else:
                 new_def.append(max(define[i]-1, 1))
@@ -1178,11 +1179,11 @@ class BulgeGraph(BaseGraph):
         Create a bpseq string from this structure.
         """
         out_str = ''
-        for i in range(1, self.seq_length + 1):
+        for i in range(1, self.seq_length+1):
             pp = self.pairing_partner(i)
             if pp is None:
                 pp = 0
-            out_str += "{} {} {}\n".format(i, self.seq[i - 1], pp)
+            out_str += "{} {} {}\n".format(i, self.seq[i], pp)
 
         return out_str
 
@@ -1241,18 +1242,13 @@ class BulgeGraph(BaseGraph):
         """
         self.__init__()
         log.debug(bpseq_str)
-        #: This stores backbone breaks before they have been implemented!
-        self._backbone_will_break_after = breakpoints
         tuples, seq = self.bpseq_to_tuples_and_seq(bpseq_str)
-
-        self.seq = seq
-        self.from_tuples(tuples)
-
-        log.info("From bpseq_str: Secondary structure: %s", self.to_dotbracket_string())
-        if dissolve_length_one_stems:
-            self.dissolve_length_one_stems()
-
-        self.seq_ids_from_seq()
+        seq = _insert_breakpoints_simple(seq, breakpoints, 1)
+        seq_ids = _seq_ids_from_seq_str(seq)
+        self._seq = Sequence(seq, seq_ids)
+        self._from_tuples(tuples, dissolve_length_one_stems)
+        if log.isEnabledFor(logging.INFO):
+            log.info("From bpseq_str: Secondary structure: %s", self.to_dotbracket_string())
 
     def  _zerolen_defines_a_between(self, stem1, stem2):
         log.debug("Searching for zerolen-coordinates")
@@ -1354,26 +1350,26 @@ class BulgeGraph(BaseGraph):
             elif parts[0] == 'seq':
                 seq = parts[1]
             elif parts[0] == 'seq_ids':
-                seq_ids = list(map(resid_from_str, parts[1:]))
+                seqids = list(map(resid_from_str, parts[1:]))
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
             elif parts[0] == 'info':
                 self.infos[parts[1]].append(" ".join(parts[2:]))
         # The breakpoints are only persisted at the seq and seq_id level.
-        if not seq and not seq_ids:
+        if not seq and not seqids:
             raise ValueError("One of seq_ids or seq is mandatory.")
         if not seq:
             old_chain = None
             seq=""
-            for resid in seq_ids:
+            for resid in seqids:
                 if old_chain is not None and resid.chain!=old_chain:
                     seq+="&"
                 seq+="N"
                 old_chain = resid.chain
-        if not seq_ids:
-            seq_ids = _seq_ids_from_seq_str(seq)
+        if not seqids:
+            seqids = _seq_ids_from_seq_str(seq)
         log.debug("seq is %s", seq)
-        self._seq = Sequence(seq, seq_ids)
+        self._seq = Sequence(seq, seqids)
 
     def sorted_stem_iterator(self):
         """
@@ -1714,7 +1710,7 @@ class BulgeGraph(BaseGraph):
             define = self.defines[elem]
         seqs=[]
         for i in range(0,len(define), 2):
-            seqs.append(self.seq[define[i]:define[i+1]+1]) #seq is 1-based!
+            seqs.append(self.seq[define[i]:define[i+1]])
             if elem[0]=="i" and not adjacent:
                 def_a = self.define_a(elem)
                 if define[0]<def_a[1]:
@@ -1902,7 +1898,7 @@ class BulgeGraph(BaseGraph):
             raise ValueError("No sequence present in the bulge_graph: %s" % (self.name))
 
         (m1, m2) = self.get_flanking_region(bulge_name, side)
-        return self.seq[m1:m2+1] #1 based indexing
+        return self.seq[m1:m2] #1 based indexing
 
     def get_flanking_handles(self, bulge_name, side=0):
         """
@@ -2408,6 +2404,26 @@ class BulgeGraph(BaseGraph):
                 return min(path_lengths) + 1
 
         return min(path_lengths) + 2
+
+
+    def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
+        """
+        Iterate over the residue numbers that belong to this node.
+
+        :param node: The name of the node
+        """
+        visited=set()
+
+        for r in self.define_range_iterator(node, adjacent):
+            for i in range(r[0], r[1] + 1):
+                if seq_ids:
+                    if self.seq.to_resid(i) not in visited:
+                        visited.add(self.seq.to_resid(i))
+                        yield self.seq.to_resid(i)
+                else:
+                    if i not in visited:
+                        visited.add(i)
+                        yield i
 
     def shortest_path(self, e1, e2):
         '''

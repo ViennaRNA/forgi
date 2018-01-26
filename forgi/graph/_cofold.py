@@ -2,7 +2,14 @@
 Take a BulgeGraph and return a copy of it with cofold splitpoints inserted.
 """
 import logging
-from ._graph_construction import remove_vertex
+
+from logging_exceptions import log_to_exception, log_at_caller
+
+
+from ._graph_construction import remove_vertex, relabel_node
+from._basegraph import BaseGraph
+from ..utilities.exceptions import GraphConstructionError
+
 
 log = logging.getLogger(__name__)
 
@@ -31,13 +38,13 @@ def split_at_cofold_cutpoints(bg, cutpoints):
                 raise e
             return
         elif element_left[0]=="i" or element_right[0]=="i":
-            bg._split_interior_loop(splitpoint, element_left, element_right)
+            _split_interior_loop(bg, splitpoint, element_left, element_right)
         elif element_left != element_right:
-            bg._split_between_elements(splitpoint, element_left, element_right)
+            _split_between_elements(bg, splitpoint, element_left, element_right)
         elif element_left[0]=="s":
-            bg._split_inside_stem(splitpoint, element_left)
+            _split_inside_stem(bg, splitpoint, element_left)
         else:
-            bg._split_inside_loop(splitpoint, element_left)
+            _split_inside_loop(bg, splitpoint, element_left)
 
     if not _is_connected(bg):
         raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not connected by any "
@@ -63,30 +70,34 @@ def stem_length(bg, key):
     return (d[1] - d[0]) + 1
 
 def _split_between_elements(bg, splitpoint, element_left, element_right):
+    log.debug("Before splitting between %s and %s at %s: %s", element_left,
+              element_right, splitpoint,bg.defines)
     if element_left[0] in "mh":
         next3 = _next_available_element_name(bg, "t")
-        bg.relabel_node(element_left, next3)
+        relabel_node(bg, element_left, next3)
         if element_left[0]!="h":
-            bg._remove_edge(next3, element_right)
+            _remove_edge(bg, next3, element_right)
     elif element_right[0] in "mh":
         next5 = _next_available_element_name(bg, "f")
-        bg.relabel_node(element_right, next5)
+        relabel_node(bg, element_right, next5)
         if element_right[0]!="h":
-            bg._remove_edge(next5, element_left)
+            _remove_edge(bg, next5, element_left)
     else:
         assert element_left[0]=="s" and element_right[0]=="s"
         #Zero-length i or m element!
         connections = bg.edges[element_left] & bg.edges[element_right]
         if len(connections)==0:
-            raise GraphConstructionError("Cannot split at cofold cutpoint. Missing connection between {} and {}.".format(element_left, element_right))
+            raise GraphConstructionError("Cannot split at cofold cutpoint. "
+                                         "Missing connection between "
+                                         "{} and {}.".format(element_left, element_right))
         else:
-            for connection in connections:
+            #If multiple connections exist, find the one which is 0-len
+            for connection in reversed(sorted(connections)): # Remove the highest numbered element first
                 if connection[0]=="i":
                     break
                 if not bg.defines[connection]:
-                    ad_define = bg.define_a(connection)
-                    if ad_define[0]==splitpoint:
-                        break
+                    assert splitpoint in bg.defines[element_left]
+                    break
             else:
                 raise GraphConstructionError("Cannot split at cofold cutpoint. No suitable connection between {} and {}.".format(element_left, element_right))
         if connection[0] == "m":
@@ -97,7 +108,7 @@ def _split_between_elements(bg, splitpoint, element_left, element_right):
             #Replace i by ml (this is then located on the other strand than the splitpoint)
             nextML = _next_available_element_name(bg, "m")
             assert nextML not in bg.defines
-            bg.relabel_node(connection, nextML)
+            relabel_node(bg, connection, nextML)
 
 def _split_inside_loop(bg, splitpoint, element):
     if element[0] in "hm":
@@ -184,7 +195,7 @@ def _add_edge(bg, from_element, to_element):
 
 def _split_interior_loop_at_side(bg, splitpoint, strand, other_strand, stems):
     """
-    Called by bg._split_at_cofold_cutpoints
+    Called by _split_at_cofold_cutpoints
     """
     nextML = _next_available_element_name(bg, "m")
     nextA = _next_available_element_name(bg, "t")
@@ -218,9 +229,9 @@ def _split_interior_loop(bg, splitpoint, element_left, element_right):
     back_strand = [ s2[3]+1, s1[2]-1 ]
     if forward_strand[0]-1 <= splitpoint <= forward_strand[1]:
         #Split forward strand, relabel backwards strand to multiloop.
-        bg._split_interior_loop_at_side(splitpoint, forward_strand, back_strand, c)
+        _split_interior_loop_at_side(bg, splitpoint, forward_strand, back_strand, c)
     elif back_strand[0] -1 <= splitpoint <= back_strand[1]:
-        bg._split_interior_loop_at_side(splitpoint, back_strand, forward_strand, [c[1], c[0]])
+        _split_interior_loop_at_side(bg, splitpoint, back_strand, forward_strand, [c[1], c[0]])
     else:
         assert False
     remove_vertex(bg, iloop)

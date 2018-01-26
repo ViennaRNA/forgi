@@ -3,6 +3,8 @@ from pprint import pformat
 import logging
 import itertools as it
 
+from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
+
 log = logging.getLogger(__name__)
 
 class BaseGraph(object):
@@ -51,26 +53,6 @@ class BaseGraph(object):
         return new_def
 
 
-
-    def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
-        """
-        Iterate over the residue numbers that belong to this node.
-
-        :param node: The name of the node
-        """
-        visited=set()
-
-        for r in self.define_range_iterator(node, adjacent):
-            for i in range(r[0], r[1] + 1):
-                if seq_ids:
-                    if self.seq_ids[i-1] not in visited:
-                        visited.add(self.seq_ids[i-1])
-                        yield self.seq_ids[i - 1]
-                else:
-                    if i not in visited:
-                        visited.add(i)
-                        yield i
-
     def flanking_nucleotides(self, d):
         '''
         Return the nucleotides directly flanking an element.
@@ -78,8 +60,8 @@ class BaseGraph(object):
         :param d: the name of the element
         :return: a list of nucleotides
         '''
-        set_adjacent = set(self.define_residue_num_iterator(d, adjacent=True))
-        set_not_adjacent = set(self.define_residue_num_iterator(d, adjacent=False))
+        set_adjacent = set(self.define_a(d))
+        set_not_adjacent = set(self.defines[d])
         flanking = list(sorted(set_adjacent - set_not_adjacent))
         log.debug("Flanking nts are %s - %s = %s", set_adjacent, set_not_adjacent, flanking)
         return flanking

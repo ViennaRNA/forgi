@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 import logging
 from collections import defaultdict
 from . import residue as fgr
@@ -57,6 +60,38 @@ def to_0_based(key):
     return key
 
 
+def _insert_breakpoints_simple(seq, breakpoints, start=0, reverse = False):
+    """
+    :param seq: A sequence without any missing residues
+    :param breakpoints: 0-based break points
+    :param stop: The coordinate "on the forward strand",
+                 i.e. the lower number of start and stop.
+    """
+    log.debug("Inserting breakpoints into %s", seq)
+    breakpoints = sorted(breakpoints)
+    if not breakpoints:
+        return seq
+    if start is None:
+        start = 0
+    out = []
+    if reverse:
+        seq=seq[::-1]
+    log.debug("Inserting breakpoints into %s, start=%s, "
+              "reversed=%s", seq, start, reverse)
+    oldbp = 0
+    for bp in breakpoints:
+        log.debug("BP=%s", bp)
+        bp-=start
+        log.debug("bp-=start-->>>%s", bp)
+        out.append(seq[oldbp:bp+1])
+        oldbp=bp+1
+    out.append(seq[bp+1:])
+    out = [o for o in out if o]
+    seq = "&".join(out)
+    if reverse:
+        seq=seq[::-1]
+    log.debug("seq with break points: %s", seq)
+    return seq
 
 def _resid_key(x):
     if x.resid[2] is None:
@@ -125,6 +160,13 @@ class Sequence(object):
     def __str__(self):
         return self[:]
 
+    def __repr__(self):
+        try:
+            qname = type(self).__qualname__
+        except AttributeError:
+            qname = type(self).__name__
+        return "<{} object with ._seq={}>".format(qname, str(self))
+
     def __bool__(self):
         return bool(self._seq)
     __nonzero__ = __bool__
@@ -151,6 +193,19 @@ class Sequence(object):
 
     def __len__(self):
         return len(self._seq)
+
+    def __eq__(self, other):
+        log.debug("{} =?= {}".format(repr(self), repr(other)))
+        log.debug("type of other=%s, type of string literal in this module is %s", type(other).__name__, type("").__name__)
+        if isinstance(other, type(self)):
+            return (self._seq == other._seq and
+                    self._seqids == other._seqids and
+                    self._missing_nts == other._missing_nts and
+                    self._breaks_after == other._breaks_after)
+        elif isinstance(other, type("")):
+            return str(self)==other
+        else:
+            return NotImplemented
 
     def _getitem(self, key, include_missing):
         log.debug("_getitem called for %s, include_missing=%s", key, include_missing)
@@ -192,30 +247,7 @@ class Sequence(object):
             return self._resid_slice(key, include_missing)
         return self._integer_slice(to_0_based(key), include_missing)
 
-    def _insert_breakpoints_simple(self, seq, start=0, reverse = False):
-        """
-        :param seq: A sequence without any missing residues
-        :param stop: The coordinate "on the forward strand",
-                     i.e. the lower number of start and stop.
-        """
-        log.debug("Inserting breakpoints into %s", seq)
-        if not self._breaks_after:
-            return seq
-        if start is None:
-            start = 0
-        out = []
-        if reverse:
-            seq=seq[::-1]
-        oldbp = 0
-        for bp in self._breaks_after:
-            bp-=start
-            out.append(seq[oldbp:bp+1])
-        out.append(seq[bp+1:])
-        seq = "&".join(out)
-        if reverse:
-            seq=seq[::-1]
-        log.debug("seq with break points: %s", seq)
-        return seq
+
 
     def _integer_slice(self, key, include_missing):
         """
@@ -228,9 +260,11 @@ class Sequence(object):
             seq = self._seq[key]
             if key.step==-1:
                 start=key.stop
+                if start is not None:
+                    start+=1
             else:
                 start=key.start
-            return self._insert_breakpoints_simple(seq, start, key.step==-1)
+            return _insert_breakpoints_simple(seq, self._breaks_after, start, key.step==-1)
         if key.start is None:
             startRES=None
         else:

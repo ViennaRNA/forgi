@@ -6,48 +6,11 @@ from pprint import pformat
 
 from logging_exceptions import log_to_exception, log_at_caller
 
-from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
+from ..utilities.exceptions import GraphConstructionError
 from ._basegraph import BaseGraph
 
 log = logging.getLogger(__name__)
 
-
-def any_difference_of_one(stem, bulge):
-    """
-    See if there's any difference of one between the two
-    ends of the stem [(a,b),(c,d)] and a bulge (e,f)
-
-    :param stem: A couple of couples (2 x 2-tuple) indicating the start and end
-                 nucleotides of the stem in the form ((s1, e1), (s2, e2))
-    :param bulge: A couple (2-tuple) indicating the first and last position
-                  of the bulge.
-    :return: True if there is an overlap between the stem nucleotides and the
-                  bulge nucleotides. False otherwise
-    """
-    for stem_part in stem:
-        for part in stem_part:
-            for bulge_part in bulge:
-                if abs(bulge_part - part) == 1:
-                    return True
-    return False
-
-def remove_vertex(bg, v):
-    """
-    Delete a node after merging it with another
-
-    :param v: The name of the node
-    """
-    # delete all edges to this node
-    for key in bg.edges[v]:
-        bg.edges[key].remove(v)
-
-    for edge in bg.edges:
-        if v in bg.edges[edge]:
-            bg.edges[edge].remove(v)
-
-    # delete all edges from this node
-    del bg.edges[v]
-    del bg.defines[v]
 
 class _BulgeGraphConstruction(BaseGraph):
     """
@@ -475,18 +438,18 @@ class _BulgeGraphConstruction(BaseGraph):
 
         if fiveprimes:
             d, = fiveprimes
-            self.relabel_node(d, 'f0')
+            relabel_node(self, d, 'f0')
         if threeprimes:
             d, = threeprimes
-            self.relabel_node(d, 't0')
+            relabel_node(self, d, 't0')
         for i, d in enumerate(stems):
-            self.relabel_node(d, 's%d' % (i))
+            relabel_node(self,d, 's%d' % (i))
         for i, d in enumerate(interior_loops):
-            self.relabel_node(d, 'i%d' % (i))
+            relabel_node(self,d, 'i%d' % (i))
         for i, d in enumerate(multiloops):
-            self.relabel_node(d, 'm%d' % (i))
+            relabel_node(self,d, 'm%d' % (i))
         for i, d in enumerate(hairpins):
-            self.relabel_node(d, 'h%d' % (i))
+            relabel_node(self,d, 'h%d' % (i))
 
 
     def compare_stems(self, b):
@@ -509,35 +472,6 @@ class _BulgeGraphConstruction(BaseGraph):
 
         return (self.defines[connections[0]][1], sys.maxsize)
 
-    def relabel_node(self, old_name, new_name):
-        """
-        Change the name of a node.
-
-        param old_name: The previous name of the node
-        param new_name: The new name of the node
-        """
-        #log.debug("Relabelling node {} to {}".format(old_name, new_name))
-        # replace the define name
-        define = self.defines[old_name]
-
-        del self.defines[old_name]
-        self.defines[new_name] = define
-
-        # replace the index into the edges array
-        edge = self.edges[old_name]
-        del self.edges[old_name]
-        self.edges[new_name] = edge
-
-        #replace the name of any edge that pointed to old_name
-        for k in self.edges.keys():
-            new_edges = set()
-            for e in self.edges[k]:
-                if e == old_name:
-                    new_edges.add(new_name)
-                else:
-                    new_edges.add(e)
-            self.edges[k] = new_edges
-
     def create_bulge_graph(self, stems, bulges):
         """
         Find out which stems connect to which bulges
@@ -558,3 +492,71 @@ class _BulgeGraphConstruction(BaseGraph):
                 if any_difference_of_one(stem, bulge):
                     self.edges['y{}'.format(i)].add('b{}'.format(j))
                     self.edges['b{}'.format(j)].add('y{}'.format(i))
+
+
+
+def any_difference_of_one(stem, bulge):
+    """
+    See if there's any difference of one between the two
+    ends of the stem [(a,b),(c,d)] and a bulge (e,f)
+
+    :param stem: A couple of couples (2 x 2-tuple) indicating the start and end
+                 nucleotides of the stem in the form ((s1, e1), (s2, e2))
+    :param bulge: A couple (2-tuple) indicating the first and last position
+                  of the bulge.
+    :return: True if there is an overlap between the stem nucleotides and the
+                  bulge nucleotides. False otherwise
+    """
+    for stem_part in stem:
+        for part in stem_part:
+            for bulge_part in bulge:
+                if abs(bulge_part - part) == 1:
+                    return True
+    return False
+
+def remove_vertex(bg, v):
+    """
+    Delete a node after merging it with another
+
+    :param v: The name of the node
+    """
+    # delete all edges to this node
+    for key in bg.edges[v]:
+        bg.edges[key].remove(v)
+
+    for edge in bg.edges:
+        if v in bg.edges[edge]:
+            bg.edges[edge].remove(v)
+
+    # delete all edges from this node
+    del bg.edges[v]
+    del bg.defines[v]
+
+def relabel_node(bg, old_name, new_name):
+    """
+    Change the name of a node.
+
+    param old_name: The previous name of the node
+    param new_name: The new name of the node
+    """
+    #log.debug("Relabelling node {} to {}".format(old_name, new_name))
+    # replace the define name
+    define = bg.defines[old_name]
+
+    del bg.defines[old_name]
+    bg.defines[new_name] = define
+
+    # replace the index into the edges array
+    edge = bg.edges[old_name]
+    del bg.edges[old_name]
+    bg.edges[new_name] = edge
+
+    #replace the name of any edge that pointed to old_name
+    for k in bg.edges.keys():
+        new_edges = set()
+        for e in bg.edges[k]:
+            if e == old_name:
+                new_edges.add(new_name)
+            else:
+                new_edges.add(e)
+        bg.edges[k] = new_edges

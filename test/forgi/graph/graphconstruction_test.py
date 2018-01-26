@@ -35,3 +35,18 @@ class ConstructionZeroLength(unittest.TestCase):
                                      "m2":[], "h0":[4,4], "h1":[8,8],
                                      "t0":[11,12]})
         self.assertEqual(c.edges["m0"], {"s0", "s1"})
+
+class PrivateMemberTests(unittest.TestCase):
+    def test_get_sides_plus(self):
+        db = ".((.).(.)).."
+        tuples = fus.pairtable_to_tuples(fus.dotbracket_to_pairtable(db))
+        c = _BulgeGraphConstruction(tuples)
+
+        p1 = c._get_sides_plus('s0', 'm0')
+        self.assertEquals(p1[0], 1)
+
+        p1 = c._get_sides_plus('s0', 'm2')
+        self.assertEquals(p1[0], 2)
+
+        p1 = c._get_sides_plus('s1', 'm0')
+        self.assertEquals(p1[0], 0)
