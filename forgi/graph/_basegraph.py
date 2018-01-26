@@ -13,6 +13,8 @@ class BaseGraph(object):
     on the nodes.
 
     It does not support backbone breaks!
+
+    It has no sequence.
     """
     def __init__(self):
         self.defines = []
@@ -48,16 +50,7 @@ class BaseGraph(object):
         log.debug("Define_a nonzero returning %s", new_def)
         return new_def
 
-    def stem_bp_iterator(self, stem):
-        """
-        Iterate over all the base pairs in the stem.
-        """
-        assert stem[0]=="s"
-        d = self.defines[stem]
-        stem_length = self.stem_length(stem)
 
-        for i in range(stem_length):
-            yield (d[0] + i, d[3] - i)
 
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
         """
@@ -223,30 +216,3 @@ class BaseGraph(object):
             yield [ define[0], define[1] ]
             if len(define)>2:
                 yield [ define[2], define[3] ]
-
-    def stem_iterator(self):
-        """
-        Iterator over all of the stems in the structure.
-        """
-        for d in self.defines.keys():
-            assert d[0] in "ftsmih", "stem_iterator should only be called after relabelling of nodes during GraphConstruction"
-            if d[0] == 's':
-                yield d
-
-    def pairing_partner(self, nucleotide_number):
-        """
-        Return the base pairing partner of the nucleotide at position
-        nucleotide_number. If this nucleotide is unpaired, return None.
-
-        :param nucleotide_number: The position of the query nucleotide in the
-                                  sequence.
-        :return: The number of the nucleotide base paired with the one at
-                 position nucleotide_number.
-        """
-        for d in self.stem_iterator():
-            for (r1, r2) in self.stem_bp_iterator(d):
-                if r1 == nucleotide_number:
-                    return r2
-                elif r2 == nucleotide_number:
-                    return r1
-        return None

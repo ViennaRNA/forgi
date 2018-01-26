@@ -309,6 +309,7 @@ class BulgeGraphZeroLengthTest(GraphVerification):
         bg.from_dotbracket(db, dissolve_length_one_stems=True)
         self.assertEqual(len(bg.defines), 4)
         self.assertEqual(bg.to_dotbracket_string(), "((([[[.......)))&]]]")
+
 class BulgeGraphTest(GraphVerification):
     """
     Simple tests for the BulgeGraph data structure.

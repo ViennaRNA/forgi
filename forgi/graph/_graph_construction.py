@@ -31,19 +31,38 @@ def any_difference_of_one(stem, bulge):
                     return True
     return False
 
+def remove_vertex(bg, v):
+    """
+    Delete a node after merging it with another
+
+    :param v: The name of the node
+    """
+    # delete all edges to this node
+    for key in bg.edges[v]:
+        bg.edges[key].remove(v)
+
+    for edge in bg.edges:
+        if v in bg.edges[edge]:
+            bg.edges[edge].remove(v)
+
+    # delete all edges from this node
+    del bg.edges[v]
+    del bg.defines[v]
+
 class _BulgeGraphConstruction(BaseGraph):
     """
     An intermediate object that is used during BulgeGraphConstruction.
     It is responsible ONLY for the structure without cofold cutpoints,
-    and holds no sequence information!
+    holds no sequence information and uses arbitrary graph labels during
+    it's nitialization!
     """
-    def __init__(self):
+    def __init__(self, tuples):
         self.defines = {}
         self.edges = defaultdict(set)
         self.weights = {}
         self._name_counter = 0
-
-    def from_tuples(self, tuples, cutpoints=[]):
+        self.from_tuples(tuples)
+    def from_tuples(self, tuples):
         """
         Create a bulge_graph from a list of pair tuples. Unpaired
         nucleotides have a pairing partner of 0.
@@ -110,9 +129,6 @@ class _BulgeGraphConstruction(BaseGraph):
 
         log.debug("from_tuples: stems %s, bulges %s", stems, bulges)
         self.from_stems_and_bulges(stems, bulges)
-        log.debug("from_tuples: cutpoints are: %s", cutpoints)
-        if cutpoints:
-            self.split_at_cofold_cutpoints(cutpoints)
 
     def from_stems_and_bulges(self, stems, bulges):
         """
@@ -159,55 +175,6 @@ class _BulgeGraphConstruction(BaseGraph):
         self.remove_degenerate_nodes()
 
 
-    def split_at_cofold_cutpoints(self, cutpoints):
-        """
-        Multiple sequences should not be connected along the backbone.
-
-        We have constructed the bulge graph, as if they were connected along the backbone, so
-        now we have to split it.
-        """
-
-        for splitpoint in cutpoints:
-            element_left = self.get_node_from_residue_num(splitpoint)
-            element_right = self.get_node_from_residue_num(splitpoint+1)
-            if element_left[0] in "ft" or element_right[0] in "ft":
-                if element_left[0]=="t" and element_left[0]!="t":
-                    continue # Splitpoint already implemented
-                elif element_right[0]=="f" and element_left[0]!="f":
-                    continue # Splitpoint already implemented
-                else:
-                    #No cofold structure. First sequence is disconnected from rest
-                    e = GraphConstructionError("Cannot create BulgeGraph. Found two sequences not "
-                            "connected by any base-pair.")
-                    with log_to_exception(log, e):
-                        log.error("Trying to split between %s and %s", element_left, element_right)
-                    raise e
-                return
-            elif element_left[0]=="i" or element_right[0]=="i":
-                self._split_interior_loop(splitpoint, element_left, element_right)
-            elif element_left != element_right:
-                self._split_between_elements(splitpoint, element_left, element_right)
-            elif element_left[0]=="s":
-                self._split_inside_stem(splitpoint, element_left)
-            else:
-                self._split_inside_loop(splitpoint, element_left)
-
-        if not self._is_connected():
-            raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not connected by any "
-                             " base-pair.")
-
-    def _is_connected(self):
-        start_node = list(self.defines.keys())[0]
-        known_nodes = set([start_node])
-        pending = list(self.edges[start_node])
-        while pending:
-            next_node = pending.pop()
-            if next_node in known_nodes:
-                continue
-            pending.extend(self.edges[next_node])
-            known_nodes.add(next_node)
-        log.info("Testing connectivity: connected component =?= all nodes:\n{} =?= {}".format(list(sorted(known_nodes)), list(sorted(set(self.defines.keys())))))
-        return known_nodes == set(self.defines.keys())
 
     def remove_degenerate_nodes(self):
         """
@@ -219,141 +186,8 @@ class _BulgeGraphConstruction(BaseGraph):
                 to_remove += [d]
 
         for r in to_remove:
-            self.remove_vertex(r)
+            remove_vertex(self, r)
 
-    def relabel_node(self, old_name, new_name):
-        """
-        Change the name of a node.
-
-        param old_name: The previous name of the node
-        param new_name: The new name of the node
-        """
-        #log.debug("Relabelling node {} to {}".format(old_name, new_name))
-        # replace the define name
-        define = self.defines[old_name]
-
-        del self.defines[old_name]
-        self.defines[new_name] = define
-
-        # replace the index into the edges array
-        edge = self.edges[old_name]
-        del self.edges[old_name]
-        self.edges[new_name] = edge
-
-        #replace the name of any edge that pointed to old_name
-        for k in self.edges.keys():
-            new_edges = set()
-            for e in self.edges[k]:
-                if e == old_name:
-                    new_edges.add(new_name)
-                else:
-                    new_edges.add(e)
-            self.edges[k] = new_edges
-
-    def stem_length(self, key):
-        d = self.defines[key]
-        assert key[0] == 's'
-        return (d[1] - d[0]) + 1
-
-    def relabel_nodes(self):
-        """
-        Change the labels of the nodes to be more indicative of their nature.
-
-        s: stem
-        h: hairpin
-        i: interior loop
-        m: multiloop
-        f: five-prime unpaired
-        t: three-prime unpaired
-        """
-        stems = []
-        hairpins = []
-        interior_loops = []
-        multiloops = []
-        fiveprimes = []
-        threeprimes = []
-
-        seq_length = 0
-        for d in self.defines:
-            for r in self.define_range_iterator(d):
-                seq_length += r[1]-r[0]+1
-
-        for d in self.defines.keys():
-            if d[0] == 'y' or d[0] == 's':
-                stems += [d]
-                continue
-
-            if len(self.defines[d]) == 0 and len(self.edges[d]) == 1:
-                hairpins += [d]
-                continue
-
-            if len(self.defines[d]) == 0 and len(self.edges[d]) == 2:
-                multiloops += [d]
-                continue
-
-            if len(self.edges[d]) <= 1 and self.defines[d][0] == 1:
-                fiveprimes += [d]
-                continue
-
-            if len(self.edges[d]) == 1 and self.defines[d][1] == seq_length:
-                threeprimes += [d]
-                continue
-
-            if (len(self.edges[d]) == 1 and
-                        self.defines[d][0] != 1 and
-                        self.defines[d][1] != seq_length):
-                hairpins += [d]
-                continue
-
-            if d[0] == 'm' or (d[0] != 'i' and len(self.edges[d]) == 2 and
-                                       self.weights[d] == 1 and
-                                       self.defines[d][0] != 1 and
-                                       self.defines[d][1] != seq_length):
-                multiloops += [d]
-                continue
-
-            if d[0] == 'i' or self.weights[d] == 2:
-                interior_loops += [d]
-
-        stems.sort(key=self.compare_stems)
-        hairpins.sort(key=self.compare_hairpins)
-        multiloops.sort(key=self.compare_bulges)
-        interior_loops.sort(key=self.compare_stems)
-
-        if fiveprimes:
-            d, = fiveprimes
-            self.relabel_node(d, 'f0')
-        if threeprimes:
-            d, = threeprimes
-            self.relabel_node(d, 't0')
-        for i, d in enumerate(stems):
-            self.relabel_node(d, 's%d' % (i))
-        for i, d in enumerate(interior_loops):
-            self.relabel_node(d, 'i%d' % (i))
-        for i, d in enumerate(multiloops):
-            self.relabel_node(d, 'm%d' % (i))
-        for i, d in enumerate(hairpins):
-            self.relabel_node(d, 'h%d' % (i))
-
-    def compare_stems(self, b):
-        """
-        A function that can be passed in as the key to a sort.
-        """
-        return (self.defines[b][0], 0)
-
-    def compare_bulges(self, b, flank_nucs = False):
-        """
-        A function that can be passed in as the key to a sort.
-
-        Compares based on the nucleotide number
-        (using define_a to allow for sorting 0-length MLs)
-        """
-        return self.define_a(b)
-
-    def compare_hairpins(self, b):
-        connections = self.connections(b)
-
-        return (self.defines[connections[0]][1], sys.maxsize)
 
     def sort_defines(self):
         """
@@ -368,23 +202,6 @@ class _BulgeGraphConstruction(BaseGraph):
                     new_d = [d[2], d[3], d[0], d[1]]
                     self.defines[k] = new_d
 
-    def remove_vertex(self, v):
-        """
-        Delete a node after merging it with another
-
-        :param v: The name of the node
-        """
-        # delete all edges to this node
-        for key in self.edges[v]:
-            self.edges[key].remove(v)
-
-        for edge in self.edges:
-            if v in self.edges[edge]:
-                self.edges[edge].remove(v)
-
-        # delete all edges from this node
-        del self.edges[v]
-        del self.defines[v]
 
     def reduce_defines(self):
         """
@@ -480,7 +297,7 @@ class _BulgeGraphConstruction(BaseGraph):
             self.weights[new_vertex] += 1
 
             # remove the old vertex, since it's been replaced by new_vertex
-            self.remove_vertex(v)
+            remove_vertex(self, v)
             self.reduce_defines()
 
         # self.weights[new_vertex] = 2
@@ -591,6 +408,136 @@ class _BulgeGraphConstruction(BaseGraph):
 
         return
 
+    def relabel_nodes(self):
+        """
+        Change the labels of the nodes to be more indicative of their nature.
+
+        s: stem
+        h: hairpin
+        i: interior loop
+        m: multiloop
+        f: five-prime unpaired
+        t: three-prime unpaired
+        """
+        stems = []
+        hairpins = []
+        interior_loops = []
+        multiloops = []
+        fiveprimes = []
+        threeprimes = []
+
+        seq_length = 0
+        for d in self.defines:
+            for r in self.define_range_iterator(d):
+                seq_length += r[1]-r[0]+1
+
+        for d in self.defines.keys():
+            if d[0] == 'y' or d[0] == 's':
+                stems += [d]
+                continue
+
+            if len(self.defines[d]) == 0 and len(self.edges[d]) == 1:
+                hairpins += [d]
+                continue
+
+            if len(self.defines[d]) == 0 and len(self.edges[d]) == 2:
+                multiloops += [d]
+                continue
+
+            if len(self.edges[d]) <= 1 and self.defines[d][0] == 1:
+                fiveprimes += [d]
+                continue
+
+            if len(self.edges[d]) == 1 and self.defines[d][1] == seq_length:
+                threeprimes += [d]
+                continue
+
+            if (len(self.edges[d]) == 1 and
+                        self.defines[d][0] != 1 and
+                        self.defines[d][1] != seq_length):
+                hairpins += [d]
+                continue
+
+            if d[0] == 'm' or (d[0] != 'i' and len(self.edges[d]) == 2 and
+                                       self.weights[d] == 1 and
+                                       self.defines[d][0] != 1 and
+                                       self.defines[d][1] != seq_length):
+                multiloops += [d]
+                continue
+
+            if d[0] == 'i' or self.weights[d] == 2:
+                interior_loops += [d]
+
+        stems.sort(key=self.compare_stems)
+        hairpins.sort(key=self.compare_hairpins)
+        multiloops.sort(key=self.compare_bulges)
+        interior_loops.sort(key=self.compare_stems)
+
+        if fiveprimes:
+            d, = fiveprimes
+            self.relabel_node(d, 'f0')
+        if threeprimes:
+            d, = threeprimes
+            self.relabel_node(d, 't0')
+        for i, d in enumerate(stems):
+            self.relabel_node(d, 's%d' % (i))
+        for i, d in enumerate(interior_loops):
+            self.relabel_node(d, 'i%d' % (i))
+        for i, d in enumerate(multiloops):
+            self.relabel_node(d, 'm%d' % (i))
+        for i, d in enumerate(hairpins):
+            self.relabel_node(d, 'h%d' % (i))
+
+
+    def compare_stems(self, b):
+        """
+        A function that can be passed in as the key to a sort.
+        """
+        return (self.defines[b][0], 0)
+
+    def compare_bulges(self, b, flank_nucs = False):
+        """
+        A function that can be passed in as the key to a sort.
+
+        Compares based on the nucleotide number
+        (using define_a to allow for sorting 0-length MLs)
+        """
+        return self.define_a(b)
+
+    def compare_hairpins(self, b):
+        connections = self.connections(b)
+
+        return (self.defines[connections[0]][1], sys.maxsize)
+
+    def relabel_node(self, old_name, new_name):
+        """
+        Change the name of a node.
+
+        param old_name: The previous name of the node
+        param new_name: The new name of the node
+        """
+        #log.debug("Relabelling node {} to {}".format(old_name, new_name))
+        # replace the define name
+        define = self.defines[old_name]
+
+        del self.defines[old_name]
+        self.defines[new_name] = define
+
+        # replace the index into the edges array
+        edge = self.edges[old_name]
+        del self.edges[old_name]
+        self.edges[new_name] = edge
+
+        #replace the name of any edge that pointed to old_name
+        for k in self.edges.keys():
+            new_edges = set()
+            for e in self.edges[k]:
+                if e == old_name:
+                    new_edges.add(new_name)
+                else:
+                    new_edges.add(e)
+            self.edges[k] = new_edges
+
     def create_bulge_graph(self, stems, bulges):
         """
         Find out which stems connect to which bulges
@@ -611,167 +558,3 @@ class _BulgeGraphConstruction(BaseGraph):
                 if any_difference_of_one(stem, bulge):
                     self.edges['y{}'.format(i)].add('b{}'.format(j))
                     self.edges['b{}'.format(j)].add('y{}'.format(i))
-
-
-    def _split_between_elements(self, splitpoint, element_left, element_right):
-        if element_left[0] in "mh":
-            next3 = self._next_available_element_name("t")
-            self.relabel_node(element_left, next3)
-            if element_left[0]!="h":
-                self._remove_edge(next3, element_right)
-        elif element_right[0] in "mh":
-            next5 = self._next_available_element_name("f")
-            self.relabel_node(element_right, next5)
-            if element_right[0]!="h":
-                self._remove_edge(next5, element_left)
-        else:
-            assert element_left[0]=="s" and element_right[0]=="s"
-            #Zero-length i or m element!
-            connections = self.edges[element_left] & self.edges[element_right]
-            if len(connections)==0:
-                raise GraphConstructionError("Cannot split at cofold cutpoint. Missing connection between {} and {}.".format(element_left, element_right))
-            else:
-                for connection in connections:
-                    if connection[0]=="i":
-                        break
-                    if not self.defines[connection]:
-                        ad_define = self.define_a(connection)
-                        if ad_define[0]==splitpoint:
-                            break
-                else:
-                    raise GraphConstructionError("Cannot split at cofold cutpoint. No suitable connection between {} and {}.".format(element_left, element_right))
-            if connection[0] == "m":
-                #Just remove it without replacement
-                self.remove_vertex(connection)
-            else:
-                assert connection[0]=="i"
-                #Replace i by ml (this is then located on the other strand than the splitpoint)
-                nextML = self._next_available_element_name("m")
-                assert nextML not in self.defines
-                self.relabel_node(connection, nextML)
-
-    def _split_inside_loop(self, splitpoint, element):
-        if element[0] in "hm":
-            from_, to_ = self.defines[element]
-            stem_left = self.get_node_from_residue_num(from_-1)
-            stem_right = self.get_node_from_residue_num(to_+1)
-
-            next3 = self._next_available_element_name("t")
-            next5 = self._next_available_element_name("f")
-            self.defines[next3]=[from_, splitpoint]
-            self.defines[next5]=[splitpoint+1, to_]
-            self._add_edge(stem_left, next3)
-            self._add_edge(next5, stem_right)
-            self.remove_vertex(element)
-        else:
-            assert False
-
-    def _split_inside_stem(self, splitpoint, element):
-        assert element[0]=="s"
-        log.debug("Split inside stem %s at %s", element, splitpoint)
-        if splitpoint == self.defines[element][1]:
-            #Nothing needs to be done. 2 strands split at end
-            log.debug("Nothing to do")
-            return
-        elif splitpoint<self.defines[element][1]:
-            # Splitpoint in forward strand:
-            define1 = [self.defines[element][0], splitpoint, self.pairing_partner(splitpoint), self.defines[element][3]]
-            define2 = [ splitpoint+1, self.defines[element][1], self.defines[element][2], self.pairing_partner(splitpoint+1)]
-            log.debug("Split in forward strand")
-        else:
-            # Splitpoint in backwards strand:
-            define1 = [self.defines[element][0], self.pairing_partner(splitpoint+1), splitpoint+1, self.defines[element][3]]
-            define2 = [ self.pairing_partner(splitpoint), self.defines[element][1], self.defines[element][2], splitpoint]
-            log.debug("Split in backwards strand")
-        edges1=[]
-        edges2=[]
-
-        for edge in self.edges[element]:
-            log.debug("Checking edge %s with define %s connected to %s", edge, self.defines[edge], self.edges[edge])
-            if max(self.flanking_nucleotides(edge))==define1[0] or min(self.flanking_nucleotides(edge))==define1[3]:
-                edges1.append(edge)
-            elif max(self.flanking_nucleotides(edge))==define2[2] or min(self.flanking_nucleotides(edge))==define2[1]:
-                edges2.append(edge)
-            else:
-                log.error("For stem %s with define %s and cutpoint %s:", element, self.defines[element], splitpoint)
-                log.error("Edge {}, with flanking nts {}, define1 {}, define2 {}".format(edge, self.flanking_nucleotides(edge), define1, define2))
-                assert False
-        self.remove_vertex(element)
-        nextS1 = self._next_available_element_name("s")
-        self.defines[nextS1]=define1
-        nextM = self._next_available_element_name("m")
-        self.defines[nextM]=[]
-        nextS2 = self._next_available_element_name("s")
-        self.defines[nextS2]=define2
-
-        for e1 in edges1:
-            self.edges[e1].add(nextS1)
-        for e2 in edges2:
-            self.edges[e2].add(nextS2)
-        edges1.append(nextM)
-        edges2.append(nextM)
-        self.edges[nextS1]=set(edges1)
-        self.edges[nextS2]=set(edges2)
-        self.edges[nextM]=set([nextS1, nextS2])
-
-    def _next_available_element_name(self, element_type):
-        """
-        :param element_type: A single letter ("t", "f", "s"...)
-        """
-        i=0
-        while True:
-            name="{}{}".format(element_type, i)
-            if name not in self.defines:
-                return name
-            i+=1
-
-    def _remove_edge(self, from_element, to_element):
-        self.edges[from_element].remove(to_element)
-        self.edges[to_element].remove(from_element)
-
-    def _add_edge(self, from_element, to_element):
-        self.edges[from_element].add(to_element)
-        self.edges[to_element].add(from_element)
-
-    def _split_interior_loop_at_side(self, splitpoint, strand, other_strand, stems):
-        """
-        Called by self._split_at_cofold_cutpoints
-        """
-        nextML = self._next_available_element_name("m")
-        nextA = self._next_available_element_name("t")
-        nextB = self._next_available_element_name("f")
-
-        if other_strand[0]>other_strand[1]:
-            self.defines[nextML] = []
-        else:
-            self.defines[nextML] = other_strand
-        self._add_edge(nextML, stems[0])
-        self._add_edge(nextML, stems[1])
-
-        if splitpoint >= strand[0]:
-            self.defines[nextA]=[strand[0], splitpoint]
-            self._add_edge(nextA,stems[0])
-        if splitpoint < strand[1]:
-            self.defines[nextB]=[splitpoint+1, strand[1]]
-            self._add_edge(nextB, stems[1])
-
-    def _split_interior_loop(self, splitpoint, element_left, element_right):
-        if element_left[0]=="i":
-            iloop = element_left
-        elif element_right[0]=="i":
-            iloop=element_right
-        else:
-            assert False
-        c = self.connections(iloop)
-        s1 = self.defines[c[0]]
-        s2 = self.defines[c[1]]
-        forward_strand = [ s1[1]+1, s2[0]-1 ]
-        back_strand = [ s2[3]+1, s1[2]-1 ]
-        if forward_strand[0]-1 <= splitpoint <= forward_strand[1]:
-            #Split forward strand, relabel backwards strand to multiloop.
-            self._split_interior_loop_at_side(splitpoint, forward_strand, back_strand, c)
-        elif back_strand[0] -1 <= splitpoint <= back_strand[1]:
-            self._split_interior_loop_at_side(splitpoint, back_strand, forward_strand, [c[1], c[0]])
-        else:
-            assert False
-        self.remove_vertex(iloop)

@@ -37,6 +37,7 @@ from .sequence import Sequence
 from .residue import RESID, resid_to_str, resid_from_str
 from ._basegraph import BaseGraph
 from ._graph_construction import _BulgeGraphConstruction
+from . import _cofold as fgc
 
 log = logging.getLogger(__name__)
 
@@ -150,16 +151,29 @@ def print_brackets(brackets):
     tens = [chr(ord('0') + i // 10) for i in range(len(brackets))]
     print ("brackets:\n", brackets, "\n", "".join(tens), "\n", "".join(numbers))
 
+def _seq_of_Ns_from_db(dotbracket):
     """
+    Get a sequence containing only 'N'-characters with the same length and
+    the same position of cutpoints as the dotbracketstring.
 
+    :param dotbracket: A string, optionally containing '&' to indicate
+                       seperate cofolded structures.
     """
-def seq_of_Ns_from_db(dotbracket):
     seq = []
     for substr in dotbracket.split('&'):
         seq.append("N"*len(substr))
     return "&".join(seq)
 
-def seq_ids_from_seq_str(seq):
+def _seq_ids_from_seq_str(seq):
+    """
+    Get a list of seq_ids with the same length as the sequence,
+    respecting cutpoints.
+
+    We start with seq_id A:1. If a '&' is encountered in the sequence,
+    a new chain-letter is used.
+
+    :param seq: A string, optionally containing '&' characters.
+    """
     seq_strs = seq.split('&')
     seq_ids = []
     for i, seq_str in enumerate(seq_strs):
@@ -204,10 +218,10 @@ class BulgeGraph(BaseGraph):
                                                       for i in range(len(db_strs))):
                 raise GraphConstructionError("Sequence and dotbracket string are not consistent!")
         elif dotbracket_str:
-            seq = seq_of_Ns_from_db(dotbracket_str)
+            seq = _seq_of_Ns_from_db(dotbracket_str)
 
 
-        seq_ids = seq_ids_from_seq_str(seq)
+        seq_ids = _seq_ids_from_seq_str(seq)
 
         self._seq = Sequence(seq, seq_ids)
 
@@ -417,6 +431,45 @@ class BulgeGraph(BaseGraph):
             return "".join(output_str).strip()+"\n"+"".join(output_nr).strip()
         else:
             return "".join(output_str).strip()
+
+    def stem_bp_iterator(self, stem):
+        """
+        Iterate over all the base pairs in the stem.
+        """
+        assert stem[0]=="s"
+        d = self.defines[stem]
+        stem_length = self.stem_length(stem)
+
+        for i in range(stem_length):
+            yield (d[0] + i, d[3] - i)
+
+    def stem_iterator(self):
+        """
+        Iterator over all of the stems in the structure.
+        """
+        for d in self.defines.keys():
+            assert d[0] in "ftsmih", "stem_iterator should only be called after relabelling of nodes during GraphConstruction"
+            if d[0] == 's':
+                yield d
+
+    def pairing_partner(self, nucleotide_number):
+        """
+        Return the base pairing partner of the nucleotide at position
+        nucleotide_number. If this nucleotide is unpaired, return None.
+
+        :param nucleotide_number: The position of the query nucleotide in the
+                                  sequence.
+        :return: The number of the nucleotide base paired with the one at
+                 position nucleotide_number.
+        """
+        for d in self.stem_iterator():
+            for (r1, r2) in self.stem_bp_iterator(d):
+                if r1 == nucleotide_number:
+                    return r2
+                elif r2 == nucleotide_number:
+                    return r1
+        return None
+
     def to_neato_string(bg):
 
         # The different nodes for different types of bulges
@@ -1042,17 +1095,17 @@ class BulgeGraph(BaseGraph):
         pt = fus.dotbracket_to_pairtable(dotbracket_str)
         tuples = fus.pairtable_to_tuples(pt)
         if not self.seq:
-            seq = seq_of_Ns_from_db(dotbracket_str)
-            seq_ids = seq_ids_from_seq_str(seq)
+            seq = _seq_of_Ns_from_db(dotbracket_str)
+            seq_ids = _seq_ids_from_seq_str(seq)
             self._seq = Sequence(seq, seq_ids)
         self._from_tuples(tuples, dissolve_length_one_stems, remove_pseudoknots)
 
     def _from_tuples(self, tuples, dissolve_length_one_stems=False,
                     remove_pseudoknots=False):
         log.debug("Starting _from_tuples")
-        c = _BulgeGraphConstruction()
-        c.from_tuples(tuples, self.seq.backbone_breaks_after)
+        c = _BulgeGraphConstruction(tuples)
         self._from_graph_construction(c)
+        fgc.split_at_cofold_cutpoints(self, self.seq.backbone_breaks_after)
         bps_to_remove = []
         if dissolve_length_one_stems:
             bps_to_remove.extend(self.length_one_stem_basepairs())
@@ -1318,7 +1371,7 @@ class BulgeGraph(BaseGraph):
                 seq+="N"
                 old_chain = resid.chain
         if not seq_ids:
-            seq_ids = seq_ids_from_seq_str(seq)
+            seq_ids = _seq_ids_from_seq_str(seq)
         log.debug("seq is %s", seq)
         self._seq = Sequence(seq, seq_ids)
 
