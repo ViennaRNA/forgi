@@ -1761,8 +1761,12 @@ class BulgeGraph(object):
 
         # when provided with just a sequence, we presume that the
         # residue ids are numbered from 1-up
+        chainnr = 0
         for i in range(self.seq_length):
-            self.seq_ids.append(resid_from_str(str(i+1)))
+            self.seq_ids.append(resid_from_str("{}:{}".format(VALID_CHAINIDS[chainnr], i+1)))
+            if (i+1) in self.backbone_breaks_after:
+                chainnr+=1
+
 
     def remove_degenerate_nodes(self):
         """
@@ -2422,10 +2426,21 @@ class BulgeGraph(object):
                 for res in self.seq_ids:
                     if res.chain not in self.chain_ids:
                         self.chain_ids.append(res.chain)
+                log.debug("SeqIds set to %s", self.seq_ids)
             elif parts[0] == 'name':
                 self.name = parts[1].strip()
             elif parts[0] == 'info':
                 self.infos[parts[1]].append(" ".join(parts[2:]))
+        # The breakpoints are only persisted at the seq and seq_id level.
+        if not self.seq and not self.seq_ids:
+            raise ValueError("One of seq_ids or seq is mandatory.")
+        if not self.seq:
+            old_chain = None
+            self.backbone_breaks_after = []
+            for i, resid in enumerate(self.seq_ids):
+                if old_chain is not None and resid.chain!=old_chain:
+                    self.backbone_breaks_after.append(i)
+                old_chain = resid.chain
         if not self.seq_ids:
             self.seq_ids_from_seq()
 
