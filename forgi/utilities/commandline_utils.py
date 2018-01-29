@@ -135,18 +135,25 @@ def sniff_filetype(file):
             pass
         return "other"
 
-def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remove_pk=True, pdb_dotbracket="", dissolve_length_one_stems = True):
+def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
+             pbd_remove_pk=True, pdb_dotbracket="",
+             dissolve_length_one_stems = True):
     """
     :param rna_type: One of "any", "cg" and "3d" and "pdb"
-                     "any": Return either BulgeGraph or CoarseGrainRNA objekte, depending on the input format
-                     "cg":  Always convert to CoarseGrainRNA objects, even if they have no 3D information
+                     "any": Return either BulgeGraph or CoarseGrainRNA objekte,
+                            depending on the input format
+                     "cg":  Always convert to CoarseGrainRNA objects,
+                            even if they have no 3D information
                      "only_cg": Only accept cg-files.
-                     "3d":  Return CoarseGrainRNA objects, if the file contains 3D information, raise an error otherwise
+                     "3d":  Return CoarseGrainRNA objects,
+                            if the file contains 3D information,
+                            raise an error otherwise
                      "pdb": only accept pdb files
     :param allow_many: If True, return a list. If False raise an error, if more than one RNA is present.
-    :param pdb_chain: Extract the given chain from the file. Only applicable if filename corresponds to a pdb file
+    :param pdb_chain: Extract the given chain from the file.
+                      Only applicable if filename corresponds to a pdb file
     :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.
-    :param odb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
+    :param pdb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
     :param dissolve_length_one_stems: Ignored if input is in forgi bg/cg format.
 
     :retuns: A list of RNAs or a single RNA
@@ -187,6 +194,8 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
                 for cg in cgs:
                     cg.dissolve_length_one_stems()
         else:
+            if pdb_dotbracket:
+                raise ValueError("pdb_dotbracket requires a chain ti be given to avioid ambiguity.")
             cgs = ftmc.connected_cgs_from_pdb(filename, remove_pseudoknots = pbd_remove_pk,
                                               dissolve_length_one_stems=dissolve_length_one_stems)
         if allow_many:
