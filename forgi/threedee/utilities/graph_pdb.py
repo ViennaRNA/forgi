@@ -1098,8 +1098,8 @@ def junction_virtual_atom_distance(bg, bulge):
     :return: A single number corresponding to the distance above.
     '''
     connecting_stems = bg.connections(bulge)
-    (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
-    (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
+    (i1, k1) = bg._get_sides_plus(connecting_stems[0], bulge)
+    (i2, k2) = bg._get_sides_plus(connecting_stems[1], bulge)
     pos1=bg.defines[connecting_stems[0]][i1]
     pos2=bg.defines[connecting_stems[1]][i2]
     if bulge[0]=="m":
