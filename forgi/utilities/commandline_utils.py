@@ -188,11 +188,9 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
     elif filetype=="pdb":
         if pdb_chain:
             cgs = [ftmc.load_cg_from_pdb(filename, chain_id=pdb_chain,
-                                                 remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
-                                                 secondary_structure=pdb_dotbracket, dissolve_length_one_stems=dissolve_length_one_stems)]
-            if dissolve_length_one_stems:
-                for cg in cgs:
-                    cg.dissolve_length_one_stems()
+                                         remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
+                                         secondary_structure=pdb_dotbracket,
+                                         dissolve_length_one_stems=dissolve_length_one_stems)]
         else:
             if pdb_dotbracket:
                 raise ValueError("pdb_dotbracket requires a chain ti be given to avioid ambiguity.")
@@ -237,9 +235,6 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             raise
         if isinstance(bgs, fgb.BulgeGraph):
             bgs = [bgs]
-        if dissolve_length_one_stems:
-            for bg in bgs:
-                bg.dissolve_length_one_stems()
         if rna_type=="cg":
             bgs = list(map(ftmc.from_bulge_graph, bgs))
         if allow_many:
