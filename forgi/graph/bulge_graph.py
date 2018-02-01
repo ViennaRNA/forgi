@@ -486,7 +486,7 @@ class BulgeGraph(object):
 
         if bg_file is not None:
             self.from_bg_file(bg_file)
-
+        
     @property
     def seq(self):
         return self._seq
@@ -2337,7 +2337,7 @@ class BulgeGraph(object):
             log.log(level, "DEFINES: %s", pformat(self.defines))
             log.log(level, "EDGES: %s", pformat(self.edges))
 
-    def to_fasta_string(self):
+    def to_fasta_string(self, include_missing=False):
         """
         Output the BulgeGraph representation as a fast string of the
         format::
@@ -2346,14 +2346,14 @@ class BulgeGraph(object):
             AACCCAA
             ((...))
 
+        :param include_missing: Whether or not residues for which no structure
+                                information is present should be included in the output.
         """
-        output_string = ''
-
-        output_string += ">%s\n" % (self.name)
-        output_string += "%s\n" % (self.seq)
-        output_string += "%s" % (self.to_dotbracket_string())
-
-        return output_string
+        if include_missing:
+            seq = self.complete_seq
+        else:
+            seq = self.seq
+        return "{}\n{}\n{}".format(self.name, seq, self.to_dotbracket_string(include_missing))
 
     def from_bg_file(self, bg_file):
         """
