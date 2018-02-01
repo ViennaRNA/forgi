@@ -3,7 +3,6 @@ from __future__ import print_function
 from __future__ import division
 
 from builtins import range
-from past.utils import old_div
 
 import unittest
 import sys
@@ -154,7 +153,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cg.seq_length, sum(x.seq_length for x in single_chain_cgs))
         #There might be stems spanning multiple chains.
         self.assertGreaterEqual(len([s for s in cg.defines if s[0]=="s"]), len([s for c in single_chain_cgs for s in c.defines if s[0]=="s"]))
-        self.assertEqual(cg.seq, "&".join(x.seq for x in single_chain_cgs))
+        self.assertEqual(cg.seq, "&".join(str(x.seq) for x in single_chain_cgs))
 
     def test_from_pdb_f_in_second_chain(self):
         cg = ftmc.from_pdb('test/forgi/threedee/data/4GV9.pdb', chain_id='all')
@@ -168,8 +167,8 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(len(cg.backbone_breaks_after), 1)
         bp = cg.backbone_breaks_after[0]
         self.assertEqual(bp, 3)
-        self.assertEqual(cg.seq[:bp+1], cgE.seq)
-        self.assertEqual(cg.seq[1:bp+1], cgE.seq)
+        self.assertEqual(cg.seq[:bp], cgE.seq)
+        self.assertEqual(cg.seq[1:bp], cgE.seq)
         self.assertEqual(cg.seq[bp+1:], cgF.seq)
         self.verify_multiple_chains(cg, [cgE, cgF])
 
@@ -177,7 +176,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cgB = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='B')
         cgC = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb', chain_id='C')
         cg = ftmc.from_pdb('test/forgi/threedee/data/3CQS.pdb',  chain_id='all')
-        log.warning("cg now has %s cutpoints: %s",cg.seq.count('&'),cg.backbone_breaks_after )
+        log.warning("cg now has %s cutpoints: %s", len(cg.seq._breaks_after),cg.backbone_breaks_after )
         self.verify_multiple_chains(cg, [cgA, cgB, cgC])
 
     def test_multiple_chain_to_cg(self):
@@ -354,6 +353,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg.coords["f0"]=[0,0,0.],[12.,1,1]
         self.assertTrue(math.isnan(cg.radius_of_gyration()))
 
+    @unittest.skip("Deprecated")
     def test_get_coordinates_list(self):
         cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)

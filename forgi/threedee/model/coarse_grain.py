@@ -221,7 +221,7 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
     lines = out.strip().split('\n')
 
     # convert the mcannotate output into bpseq format
-  
+
     try:
         return ftum.get_dotplot(lines)
     except Exception as e:
@@ -308,14 +308,14 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
             #print(component, type(component))
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             try:
-                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+                cgs.append(load_cg_from_pdb(pdb_filename,
+                                            remove_pseudoknots=remove_pseudoknots,
+                                            chain_id = list(component),
+                                            dissolve_length_one_stems=dissolve_length_one_stems))
             except GraphConstructionError as e:
                 log_exception(e, logging.ERROR, with_stacktrace=False)
                 log.error("Could not load chains %s, due to the above mentioned error.", list(component))
         cgs.sort(key=lambda x: x.name)
-        if dissolve_length_one_stems:
-            for cg in cgs:
-                cg.dissolve_length_one_stems()
         return cgs
 
 def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
@@ -432,7 +432,6 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     ftug.add_stem_information_from_pdb_chains(cg)
     cg.add_bulge_coords_from_stems()
     ftug.add_loop_information_from_pdb_chains(cg)
-    cg.incomplete_elements = ftug.get_incomplete_elements(cg)
 
     assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
     #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
@@ -523,6 +522,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if self.defines:
             self._init_coords()
 
+        #: A dictionary storing the stem-bases (not the vres basis)
+        self.bases = {}
+        self.stem_invs = {}
+
+
         #:The following 5 defaultdicts are cleared when coords or twists change.
         #: Global (carthesian) position of the virtual residue
         #: (=offset of the residue's coordinate-system)
@@ -545,8 +549,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         self.longrange = c.defaultdict( set )
         self.chains = {} #the PDB chain if loaded from a PDB file
-
-        self.incomplete_elements = [] # An estimated list of cg-elements with missing residues.
 
         if cg_file is not None:
             self.from_file(cg_file)
@@ -1184,7 +1186,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if parts[0] == 'project':
                 self.project_from=np.array(parts[1:], dtype=float)
         self.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
-        self.incomplete_elements = ftug.get_incomplete_elements(self)
+
+    @property
+    def incomplete_elements(self):
+        return ftug.get_incomplete_elements(self)
 
 
     def to_cg_file(self, filename):
@@ -1639,7 +1644,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         #Delete virtual residues
         try: del self.vposs[key]
-        except KeyError: pass
+        except KeyError: pas
         try: del self.vbases[key]
         except KeyError: pass
         try: del self.vvecs[key]
