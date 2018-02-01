@@ -63,35 +63,6 @@ except:
   def profile(x):
     return x
 
-def remove_hetatm(lines):
-    '''
-    Go through the lines of a pdb file and remove any which refer to a
-    HETATM.
-
-    :param lines: A an array of lines of text from a pdb file.
-    '''
-    new_lines = []
-
-    for line in lines:
-        if line.find('HETATM') == 0:
-            if line.find('5MU') > 0:
-                line = line.replace('5MU', '  U')
-            elif line.find('PSU') > 0:
-                line = line.replace('PSU', '  U')
-            elif line.find('5MC') > 0:
-                line = line.replace('5MC', '  C')
-            elif line.find('1MG') > 0:
-                line = line.replace('1MG', '  G')
-            elif line.find('H2U') > 0:
-                line = line.replace('H2U', '  G')
-            else:
-                continue
-
-        line = line.replace('HETATM', 'ATOM  ')
-        new_lines += [line]
-
-    return new_lines
-
 
 def add_longrange_interactions(cg, lines):
     '''
@@ -230,7 +201,7 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
 
 def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_length_one_stems = True):
     with fus.make_temp_directory() as output_dir:
-        chains = ftup.get_all_chains(pdb_filename)
+        chains, missing_res = ftup.get_all_chains(pdb_filename)
         new_chains = []
         for chain in chains:
             log.debug("Loaded Chain %s", chain.id)
@@ -341,13 +312,13 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
     #chain = ftup.load_structure(pdb_filename)
     chains = []
     if chain_id == "all":
-        chains = ftup.get_all_chains(pdb_filename, parser=parser)
+        chains, missing_res = ftup.get_all_chains(pdb_filename, parser=parser)
     elif chain_id is None:
-        chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
+        chains, missing_res = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
     elif is_string_type(chain_id):
-        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
+        chains, missing_res = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
     else:
-        chains = ftup.get_all_chains(pdb_filename, parser=parser)
+        chains, missing_res = ftup.get_all_chains(pdb_filename, parser=parser)
         chains = [ chain for chain in chains if chain.id in chain_id ]
         if len(chain_id) != len(chains):
             raise CgConstructionError("Bad chain-id given. "
