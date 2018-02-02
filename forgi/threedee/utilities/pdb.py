@@ -443,17 +443,9 @@ def get_particular_chain(in_filename, chain_id, parser=None):
     :param chain_id: The id of the chain.
     :return: A Bio.PDB.Chain object containing that particular chain.
     '''
-    if parser is None:
-        parser = bpdb.PDBParser()
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        s = parser.get_structure('temp', in_filename)
-
-    # always take the first model
-    m = s.get_list()[0]
-
-    return m[chain_id]
+    chains, mr = get_all_chains(in_filename, parser)
+    chain, = [c for c in chains if c.id==chain_id]
+    return chain, mr
 
 def get_biggest_chain(in_filename, parser=None):
     '''
@@ -464,14 +456,7 @@ def get_biggest_chain(in_filename, parser=None):
     :return: A Bio.PDB chain structure corresponding to the longest
              chain in the structure stored in in_filename
     '''
-    if parser is None:
-        parser = bpdb.PDBParser()
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        s = parser.get_structure('temp', in_filename)
-
-    chains = list(s.get_chains())
+    chains, mr = get_all_chains(in_filename, parser)
     biggest = 0
     biggest_len = 0
 
@@ -495,7 +480,7 @@ def get_biggest_chain(in_filename, parser=None):
     #sys.exit(1)
 
     orig_chain = chains[biggest]
-    return orig_chain
+    return orig_chain, mr
 
 def get_all_chains(in_filename, parser=None):
     '''
@@ -529,11 +514,17 @@ def get_all_chains(in_filename, parser=None):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
-
+        try:
+            mr = parser.header[]
+        except KeyError:
+            mr = []
+            warnings.warn("Could not get information about missing residues.""
+                          "Try updating you biopython installation.")
+        assert False
     if len(s)>1:
         warnings.warn("Multiple models in file. Using only the first model")
     chains = list(chain for chain in s[0] if contains_rna(chain))
-    return chains
+    return chains, mr
 
 
 
