@@ -51,6 +51,8 @@ def split_at_cofold_cutpoints(bg, cutpoints):
                          " base-pair.")
 
 def _is_connected(bg):
+    if not(bg.defines):
+        return True # We define an empty Graph as connected.
     start_node = list(bg.defines.keys())[0]
     known_nodes = set([start_node])
     pending = list(bg.edges[start_node])

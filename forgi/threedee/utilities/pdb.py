@@ -514,13 +514,19 @@ def get_all_chains(in_filename, parser=None):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
+        log.debug("PDB header %s", parser.header)
         try:
-            mr = parser.header[]
+            mr = parser.header["missing_residues"]
         except KeyError:
             mr = []
-            warnings.warn("Could not get information about missing residues.""
+            log.warning("Old biopython version. No missing residues")
+            warnings.warn("Could not get information about missing residues."
                           "Try updating you biopython installation.")
-        assert False
+        else:
+            if mr:
+                log.info("This PDB has missing residues")
+            else:
+                log.info("This PDB has no missing residues")
     if len(s)>1:
         warnings.warn("Multiple models in file. Using only the first model")
     chains = list(chain for chain in s[0] if contains_rna(chain))

@@ -207,7 +207,6 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
     elif filetype=="bpseq":
         if rna_type=="3d":
             raise WrongFileFormat("bpseq file {} is not supported. We need 3D coordinates!".format(filename))
-        bg = fgb.BulgeGraph()
         with open(filename, 'r') as f:
             text = f.read()
             try:
@@ -215,9 +214,11 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             except ValueError:
                 i=text.find("\n1 ")
                 text=text[i+1:]
-        bg.from_bpseq_str(text, dissolve_length_one_stems=dissolve_length_one_stems)
-        if rna_type=="cg":
-            bg = ftmc.from_bulge_graph(bg)
+        if rna_type == "cg":
+            cls = ftmc.CoarseGrainRNA
+        else:
+            cls = fgb.BulgeGraph
+        bg = cls.from_bpseq_str(text, dissolve_length_one_stems=dissolve_length_one_stems)
         if allow_many:
             return [bg]
         else:
@@ -233,8 +234,6 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
                 if filetype=="other":
                     log.critical("We assumed file %r to be some fasta-variant or dotbracket file, but an error occurred during parsing.", filename)
             raise
-        if isinstance(bgs, fgb.BulgeGraph):
-            bgs = [bgs]
         if rna_type=="cg":
             bgs = list(map(ftmc.from_bulge_graph, bgs))
         if allow_many:

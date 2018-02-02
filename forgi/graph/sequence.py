@@ -121,6 +121,14 @@ class _WMIndexer(object):
         return self.parent._getitem(key, True)
     def __len__(self):
         return len(self.parent)+len(self.parent._missing_nts)
+    def update_dotbracket(self, struct):
+        """
+        Given a dotbracket_string of the same length as the sequence,
+        update it with '-' for missing residues and '&' for breakpoints.
+
+        :returns: A string
+        """
+        return self.parent._missing_into_db(struct)
 
 class Sequence(object):
     """
@@ -155,7 +163,7 @@ class Sequence(object):
         self._seqids = seqids
         mr, mnts = _sorted_missing_residues(missing_residues)
         self._missing_residues = mr
-        self._missing_nts =  mnts
+        self._missing_nts =  mnts # A dict seq_id:nt
 
     def __str__(self):
         return self[:]
@@ -301,6 +309,7 @@ class Sequence(object):
         log.debug("Resid-slice mapped to integer-slice {}".format(key))
         return self._integer_slice(key, False)
 
+
     def _resid_to_index(self, resid, default, default_on_error=False):
         """
         :returns: a tuple index, error_raised
@@ -330,22 +339,56 @@ class Sequence(object):
             return self._resid_slice_without_missing(key)
 
     def _resid_slice_with_missing(self, key):
-        left_res = None
         if key.step==-1:
             start, stop = key.stop, key.start
         else:
             start, stop = key.start, key.stop
-        start_i, start_is_missing= self._resid_to_index(start, 0, True)
-        stop_i, stop_is_missing = self._resid_to_index(stop, len(self._seqids), True)
+        seqids = list(self._iter_resids_with_missing(start, stop))
+        if key.step==-1:
+            seqids.reverse()
+        seq = ""
+        for seqid in seqids:
+            if seqid == "&":
+                seq+="&"
+            else:
+                try:
+                    seq+=self._seq[self._seqids.index(seqid)]
+                except ValueError:
+                    seq+=self._missing_nts[seqid]
+        return "".join(seq)
+
+    def _missing_into_db(self, dotbracket):
+        db = ""
+        check_i = 0
+        for seqid in self._iter_resids_with_missing(None, None):
+            if seqid == "&":
+                db+="&"
+            else:
+                try:
+                    i = self._seqids.index(seqid)
+                    assert i==check_i
+                except ValueError:
+                    db+="-"
+                else:
+                    db+=dotbracket[i]
+                    check_i+=1
+        return "".join(db)
+
+
+    def _iter_resids_with_missing(self, start, stop):
+        left_res = None
+        start_i, start_is_missing = self._resid_to_index(start, 0, True)
+        stop_i, stop_is_missing   = self._resid_to_index(stop, len(self._seqids), True)
         if not start_is_missing and start is not None:
             left_res = start
 
-        # Flag used later if missing_residues === True
+        # Flag used later if missing_residues == True
         found_start=not start_is_missing
         seq = ""
         if left_res is not None:
-            seq+=self._seq[self._seqids.index(left_res)]
-            log.debug("Added first residue %s: %s", left_res, seq)
+            yield left_res
+            #seq+=self._seq[self._seqids.index(left_res)]
+            #log.debug("Added first residue %s: %s", left_res, seq)
             start_i+=1
         log.debug("Iterating over sequence %s-%s", start_i, stop_i+1)
         for i in range(start_i, stop_i+1):
@@ -376,17 +419,14 @@ class Sequence(object):
                 log.debug("Now processing missing residue %s", r)
                 if found_start:
                     if old_r is not None and old_r.chain != r.chain:
-                        seq+="&"
+                        yield "&"
                         log.debug("Breakpoint inserted!")
                     log.debug("Adding missing residue %s", mr[j])
-                    seq+=mr[j]
+                    yield r
                 log.debug("Comparing %s and stop=%s", r, stop)
                 if r==stop:
-                    log.debug("Stop found! Seq=%s, step=%s", seq, key.step)
-                    if key.step==-1:
-                        seq="".join(reversed(seq))
-                        log.debug("Reversed to %s", seq)
-                    return seq
+                    log.debug("Stop found! Seq=%s", seq)
+                    return
                 old_r = r
             # If key.start and key.stop resp. are not modified residues,
             # start_i and stop_i are already accurrate, making
@@ -395,24 +435,21 @@ class Sequence(object):
                 log.debug("Adding regular residue %s", self._seq[i])
                 if mr_keys: #No missing residues
                     if r.chain!=right_res.chain:
-                        seq+="&"
+                        yield "&"
                         log.debug("Breakpoint inserted!")
                 else:
                     if left_res is not None and right_res is not None and left_res.chain!=right_res.chain:
-                        seq+="&"
+                        yield "&"
                         log.debug("Breakpoint inserted!")
-                seq+=self._seq[i]
+                yield right_res
             left_res = right_res
             log.debug("seq now is %s", seq)
-        if key.step==-1:
-            seq="".join(reversed(seq))
-            log.debug("Reversed to %s", seq)
         # If start or stop are not part of sequence,
         # make sure they were seen in missing residues
         if not found_start or stop_is_missing:
             raise IndexError("At least one of the residues {} and {} "
                              "is not part of this RNA".format(key.start, key.stop))
-        return seq
+        return
 
     def _missing_residues_between(self, from_resid, to_resid):
         log.debug("Searching missing residues between %s  and %s", from_resid, to_resid)
