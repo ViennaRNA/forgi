@@ -182,7 +182,7 @@ class BulgeGraph(BaseGraph):
             defines = {}
             edges   = {}
         log.debug("Creating empty BG")
-        bg = BulgeGraph(DummyGraphConstr(), Sequence("", []))
+        bg = cls(DummyGraphConstr(), Sequence("", []))
         log.debug("Now loading BG")
         lines = bg_str.split('\n')
         seq = None
@@ -311,7 +311,7 @@ class BulgeGraph(BaseGraph):
         return bgs
 
     @classmethod
-    def from_fasta(filename, dissolve_length_one_stems=False,
+    def from_fasta(cls, filename, dissolve_length_one_stems=False,
                    remove_pseudoknots=False):
         """
         Return a list of BulgeGraphs from a fasta file.
@@ -2619,6 +2619,7 @@ def _cleaned_bg(bg, dissolve_length_one_stems=False,
                                conflicting basepairs.
     :returns: A modified copy of or a reference to the original BulgeGraph
     """
+    log.debug("Cleaning BG with type %s", type(bg).__name__)
     bps_to_remove = []
     if dissolve_length_one_stems:
         bps_to_remove.extend(bg.length_one_stem_basepairs())

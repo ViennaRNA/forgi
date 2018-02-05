@@ -201,16 +201,6 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
         log.exception("Could not convert MC-Annotate output to dotplot")
         raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
 
-def from_bulge_graph(bulge_graph):
-    """
-    Create a CoarseGrainRNA from a BulgeGraph
-    """
-    if not bulge_graph.seq:
-        raise CgConstructionError("Sequence missing in BulgeGraph. Cannot create CoarseGrainRNA.")
-    bg_str = bulge_graph.to_bg_string()
-    cg = CoarseGrainRNA()
-    cg.from_cg_string(bg_str)
-    return  cg
 
 class RnaMissing3dError(LookupError):
     pass
@@ -224,11 +214,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     and two twist vetors pointing towards the centers of the base
     pairs at each end of the helix.
     '''
-    def __init__(self, graph_construction, sequence, name=None):
+    def __init__(self, graph_construction, sequence, name=None, infos=None):
         '''
         Initialize the new structure.
         '''
-        super(CoarseGrainRNA, self).__init__(graph_construction, sequence, name)
+        super(CoarseGrainRNA, self).__init__(graph_construction, sequence, name, infos)
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
@@ -325,10 +315,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
 
         with fus.make_temp_directory() as output_dir:
-            chains, missing_res = ftup.get_all_chains(pdb_filename)
+            if load_chains=="biggest":
+                chain, missing_res = ftup.get_biggest_chain(pdb_filename)
+                chains=[chain]
+            else:
+                chains, missing_res = ftup.get_all_chains(pdb_filename)
             new_chains = []
             for chain in chains:
-                if load_chains is None or chain.id in load_chains:
+                if load_chains in [None, "biggest"] or chain.id in load_chains:
                     log.debug("Loaded Chain %s", chain.id)
                     chain = ftup.clean_chain(chain)
                     new_chains.append(chain)
@@ -402,18 +396,20 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             try:
                 cgs.append(cls._load_pdb_component(bpseq_lines, pdb_base, new_chains,
                                                    component, missing_res,
-                                                   seq_ids, secondary_structure))
+                                                   seq_ids, secondary_structure,
+                                                   dissolve_length_one_stems))
             except GraphConstructionError as e:
                 log_exception(e, logging.ERROR, with_stacktrace=False)
                 log.error("Could not load chains %s, due to the above mentioned error.", list(component))
                 raise
 
         cgs.sort(key=lambda x: x.name)
+        log.debug("Returning %s", cgs)
         return cgs
 
     @classmethod
     def _load_pdb_component(cls, original_bpseq_lines, name, chains, chain_ids,
-                            missing_res, seq_ids, secondary_structure=""):
+                            missing_res, seq_ids, secondary_structure="", dissolve_length_one_stems=False):
         """
         :param original_bpseq_lines: List of strings. Will be filtered for chains.
         """
@@ -457,6 +453,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         name = name + "_" + "-".join(c for c in sorted(chain_ids))
         graph_constr = _BulgeGraphConstruction(tuples)
         cg = cls(graph_constr, sequence, name)
+        cg = fgb._cleaned_bg(cg, dissolve_length_one_stems)
         cg.chains = { chain.id : chain for chain in chains if chain.id in chain_ids }
 
         ftug.add_stem_information_from_pdb_chains(cg)
@@ -586,7 +583,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         points = []
         for s in self.sorted_stem_iterator():
             points += list(self.coords[s])
-        return np.array(points)
+        points = np.array(points)
+        if np.any(np.isnan(points)):
+            raise RnaMissing3dError("No 3D coordinates present.")
+        return points
 
     def get_ordered_virtual_residue_poss(self, return_elements = False):
         """

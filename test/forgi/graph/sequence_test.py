@@ -99,19 +99,19 @@ class TestIndexingWithMissing(unittest.TestCase):
         self.seq1 = fgs.Sequence("CAUAAUUUCCG",
                                 list(map(fgr.resid_from_str,
                                      "14,15,15.A,16,18,19,20,21,22,23,A:24".split(","))),
-                                [{"ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
-                                 {"ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
-                                 {"ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
-                                 {"ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
-                                 {"ssseq":20, "res_name":"G", "chain":"A", "insertion":"B"},
-                                 {"ssseq":25, "res_name":"G", "chain":"A", "insertion":None}])
+                                [{"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
+                                 {"model":None, "ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
+                                 {"model":None, "ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
+                                 {"model":None, "ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
+                                 {"model":None, "ssseq":20, "res_name":"G", "chain":"A", "insertion":"B"},
+                                 {"model":None, "ssseq":25, "res_name":"G", "chain":"A", "insertion":None}])
         self.seq2 = fgs.Sequence("AAA&GGG",
                                  list(map(fgr.resid_from_str,
                                      "A:14,A:15,A:15.A,B:12,B:13,B:200.A".split(","))),
-                                 [{"ssseq":13, "res_name":"G", "chain":"A", "insertion":None},
-                                  {"ssseq":16, "res_name":"G", "chain":"A", "insertion":"D"},
-                                  {"ssseq":11, "res_name":"C", "chain":"B", "insertion":None},
-                                  {"ssseq":202, "res_name":"C", "chain":"B", "insertion":"A"}])
+                                 [{"model":None, "ssseq":13, "res_name":"G", "chain":"A", "insertion":None},
+                                  {"model":None, "ssseq":16, "res_name":"G", "chain":"A", "insertion":"D"},
+                                  {"model":None, "ssseq":11, "res_name":"C", "chain":"B", "insertion":None},
+                                  {"model":None, "ssseq":202, "res_name":"C", "chain":"B", "insertion":"A"}])
 
     def test_indexing_with_resid_without_missing(self):
         self.assertEqual(self.seq1[fgr.resid_from_str("14")],"C")
@@ -180,19 +180,19 @@ class NonIndexingTests(unittest.TestCase):
         self.seq1 = fgs.Sequence("CAUAAUUUCCG",
                                 list(map(fgr.resid_from_str,
                                      "14,15,15.A,16,18,19,20,21,22,23,A:24".split(","))),
-                                [{"ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
-                                 {"ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
-                                 {"ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
-                                 {"ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
-                                 {"ssseq":20, "res_name":"G", "chain":"A", "insertion":"B"},
-                                 {"ssseq":25, "res_name":"G", "chain":"A", "insertion":None}])
+                                [{"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
+                                 {"model":None, "ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
+                                 {"model":None, "ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
+                                 {"model":None, "ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
+                                 {"model":None, "ssseq":20, "res_name":"G", "chain":"A", "insertion":"B"},
+                                 {"model":None, "ssseq":25, "res_name":"G", "chain":"A", "insertion":None}])
         self.seq2 = fgs.Sequence("AAA&GGG",
                                  list(map(fgr.resid_from_str,
                                      "A:14,A:15,A:15.A,B:12,B:13,B:200.A".split(","))),
-                                 [{"ssseq":13, "res_name":"G", "chain":"A", "insertion":None},
-                                  {"ssseq":16, "res_name":"G", "chain":"A", "insertion":"D"},
-                                  {"ssseq":11, "res_name":"C", "chain":"B", "insertion":None},
-                                  {"ssseq":202, "res_name":"C", "chain":"B", "insertion":"A"}])
+                                 [{"model":None, "ssseq":13, "res_name":"G", "chain":"A", "insertion":None},
+                                  {"model":None, "ssseq":16, "res_name":"G", "chain":"A", "insertion":"D"},
+                                  {"model":None, "ssseq":11, "res_name":"C", "chain":"B", "insertion":None},
+                                  {"model":None, "ssseq":202, "res_name":"C", "chain":"B", "insertion":"A"}])
     def test_len(self):
         self.assertEqual(len(self.seq1), 11)
         self.assertEqual(len(self.seq2), 6)

@@ -135,9 +135,9 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
     def test_file_with_numeric_chain_id(self):
         # Numeric chain ids
-        cg = ftmc.from_pdb('test/forgi/threedee/data/3J7A.pdb', chain_id="7")
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/3J7A.pdb', load_chains=["7"])
         self.check_cg_integrity(cg)
-        self.assertEqual(cg.seq_ids[-1].chain, '7')
+        self.assertEqual(cg.seq._seqids[0].chain, '7')
 
 
     def test_from_pdb_cofold(self):
@@ -267,16 +267,17 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     def test_get_node_from_residue_num(self):
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1X8W.pdb',
-                                            load_chains='A')
+                                            load_chains='A', dissolve_length_one_stems=True)
         self.check_cg_integrity(cg)
-        elem_name = cg.get_node_from_residue_num(10)
+        elem_name = cg.get_node_from_residue_num(1)
+        cg.log()
         self.assertEqual(elem_name, "f0")
 
 
 
 
     def test_from_cg(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
 
@@ -285,10 +286,10 @@ class CoarseGrainTest(tfgb.GraphVerification):
             self.assertTrue(key in cg.coords)
 
     def test_from_and_to_cgstring(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         cg1.project_from=np.array([1,2,3.5])
         stri=cg1.to_cg_string()
-        cg2=ftmc.CoarseGrainRNA.from_cg_string(stri)
+        cg2=ftmc.CoarseGrainRNA.from_bg_string(stri)
 
         for key in set(cg1.defines):
             self.assertTrue(key in cg2.defines)
@@ -305,24 +306,24 @@ class CoarseGrainTest(tfgb.GraphVerification):
         nptest.assert_allclose(cg1.project_from, cg2.project_from)
 
     def test_get_bulge_angle_stats_core(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
 
         for d in cg.mloop_iterator():
             cg.get_bulge_angle_stats(d)
 
     def test_get_bulge_angle_stats_for_start(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         s1, s2 = cg.get_bulge_angle_stats("start")
 
     def test_read_longrange_interactions(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
 
         self.assertGreater(len(cg.longrange), 0)
 
     def test_radius_of_gyration(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
 
         rog = cg.radius_of_gyration()
@@ -334,7 +335,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.assertLess(rog, estimated_radius_circum_cricle*0.77)
 
     def test_radius_of_gyration_different_methods(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
 
         rog_fast = cg.radius_of_gyration(method = "fast")
         rog_vres = cg.radius_of_gyration(method = "vres")
@@ -345,21 +346,20 @@ class CoarseGrainTest(tfgb.GraphVerification):
                                                       "should produce roughly the same result.")
 
     def test_radius_of_gyration_no_stems(self):
-        bg = fgb.from_fasta_text("AUCG\n....")
-        cg = ftmc.from_bulge_graph(bg)
+        cg, = ftmc.CoarseGrainRNA.from_fasta_text("AUCG\n....")
         cg.coords["f0"]=[0,0,0.],[12.,1,1]
         self.assertTrue(math.isnan(cg.radius_of_gyration()))
 
     @unittest.skip("Deprecated")
     def test_get_coordinates_list(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.check_graph_integrity(cg)
 
         cl = cg.get_coordinates_list()
         self.assertEqual(len(cl), len(cg.defines) * 2)
 
     def test_get_sides(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1gid.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1gid.cg')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
         log.info(cg.to_dotbracket_string())
@@ -412,7 +412,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/2mis.pdb')
         cg.get_loop_stat("h0")
 
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/4GXY_A.cg') #Contains a loop with r=0
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/4GXY_A.cg') #Contains a loop with r=0
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
         cg.get_loop_stat('h3')
@@ -433,7 +433,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         #self.check_graph_integrity(cg)
         #self.check_cg_integrity(cg)
 
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/3D0U_A.cg')
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
 
@@ -448,7 +448,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.assertTrue('f0' in cg.coords)
 
     def test_longrange_iterator(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
 
         interactions = list(cg.longrange_iterator())
 
@@ -456,14 +456,14 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.assertTrue(('i0', 's0') in interactions)
 
     def test_longrange_distance(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
 
         dist = cg.element_physical_distance('h0', 'h1')
 
         self.assertTrue(dist < 10)
 
     def test_total_length(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.assertEqual(cg.total_length(), cg.seq_length)
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/2X1F.pdb')
         self.assertEqual(cg.total_length(), cg.seq_length)
@@ -472,7 +472,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         self.assertEqual(cg.total_length(),27)
 
     def test_get_load_coordinates(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         coords = cg.get_coordinates_array()
         new_cg = copy.deepcopy(cg)
         for key in new_cg.coords:
@@ -485,19 +485,19 @@ class CoarseGrainTest(tfgb.GraphVerification):
                                             cg.coords[key][i])
     """
     def test_is_stacking(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3way.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/3way.cg')
         self.assertFalse(cg.is_stacking("m0")) #Distance
         self.assertFalse(cg.is_stacking("m1")) #distance
         self.assertFalse(cg.is_stacking("m2")) #shear angle
     def test_is_stacking2(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1I9V_noPK.cg')
         self.assertFalse(cg.is_stacking("m0"))
         self.assertFalse(cg.is_stacking("m2"))
         self.assertTrue(cg.is_stacking("m1"))
     """
     def test_coords_from_direction(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
-        cg_old = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1I9V_noPK.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1I9V_noPK.cg')
+        cg_old = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1I9V_noPK.cg')
         coords = cg.get_coordinates_array()
         directions = coords[1::2]-coords[0::2]
         cg._init_coords()
@@ -511,7 +511,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     def test_coords_from_direction_with_pseudoknot(self):
         #This tests the case where the link is inserted from reverse direction.
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/3D0U_A.cg')
         cg_old = copy.deepcopy(cg)
 
         coords = cg.get_coordinates_array()
@@ -528,7 +528,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         assert np.allclose(offset,offset[0])
     @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
     def test_cg_from_sg_invalid_subgraph_breaking_m(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/3D0U_A.cg')
         """
              /s3 --h1
            m1  |
@@ -544,7 +544,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
     def test_cg_from_sg_breaking_after_i(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/3D0U_A.cg')
         """
              /s3 --h1
            m1  |
@@ -561,7 +561,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
     @unittest.skip("It is hard to do the subgraph thing correctly in a way consistent with the RNA model. Thus it has been disabled in the current release!")
     def test_cg_from_sg_breaking_after_s(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/3D0U_A.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/3D0U_A.cg')
         """
              /s3 --h1
            m1  |
@@ -586,21 +586,21 @@ class TestVirtualAtoms(unittest.TestCase):
         self.assertIn("C1'", va )# C1' should be always present
 
     def test_virtual_atoms_stem_distance_to_pairing_partner(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         va1 = cg.virtual_atoms(1)
         va2 = cg.virtual_atoms(cg.pairing_partner(1))
         self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 25, msg = "Virtual atoms too far apart")
         self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 8, msg = "Virtual atoms too close")
 
     def test_virtual_atoms_stem_distance_to_stacked_base(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         va1 = cg.virtual_atoms(1)
         va2 = cg.virtual_atoms(2)
         self.assertLess(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 10, msg = "Virtual atoms too far apart")
         self.assertGreater(ftuv.vec_distance(va1["C1'"], va2["C1'"]), 2, msg = "Virtual atoms too close")
 
     def test_virtuel_atom_caching_is_reset(self):
-        cg = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         va_old = cg.virtual_atoms(1)["C1'"]
         cg.coords["s0"] = cg.coords["s0"][0] + (cg.coords["s0"][1]-cg.coords["s0"][0])*0.5, cg.coords["s0"][1] #Stay orthogonal to twists
         va_new = cg.virtual_atoms(1)["C1'"]
@@ -608,7 +608,7 @@ class TestVirtualAtoms(unittest.TestCase):
 
 class RotationTranslationTest(unittest.TestCase):
     def setUp(self):
-        self.cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.cg2, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
 
     def test_rotate_keeps_RMSD_zero(self):
@@ -622,7 +622,7 @@ class RotationTranslationTest(unittest.TestCase):
 
 class StericValueTest(unittest.TestCase):
     def setUp(self):
-        self.cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1y26.cg')
+        self.cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         self.cg2, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
 
 

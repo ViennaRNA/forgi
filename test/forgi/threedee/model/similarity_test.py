@@ -15,8 +15,8 @@ import itertools as it
 
 class OldConfisionMatrixTest(unittest.TestCase):
     def test_confusion_matrix(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
 
         cm = confusion_matrix(cg1, cg2)
         cm = confusion_matrix(cg2, cg2)
@@ -37,8 +37,8 @@ class CompareTest(unittest.TestCase):
         self.assertTrue(np.isnan(ftme.ppv(0,0)))
 
     def test_mcc(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
 
         cm = confusion_matrix(cg1, cg2)
         mcc = ftme.mcc(cm)
@@ -53,8 +53,8 @@ class CompareTest(unittest.TestCase):
         pass
 
     def test_new_confusionmatrix_is_like_old(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
 
         cm = confusion_matrix(cg1, cg2)
         mcc = ftme.mcc(cm)
@@ -71,21 +71,21 @@ class CompareTest(unittest.TestCase):
         self.assertAlmostEqual(mcc_n, 1.0)
 
     def test_cg_rmsd(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
         residues1 = ftug.bg_virtual_residues(cg1)
         residues2 = ftug.bg_virtual_residues(cg2)
         self.assertAlmostEqual(ftme.rmsd(residues1, residues2), ftme.cg_rmsd(cg1,cg2))
 
     def test_cg_rmsd2(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
         self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg1), 0)
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
         self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 7.684377397812648)
 
     def test_cg_rmsd3(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
         cg2.coords.rotate(ftuv.rotation_matrix([1.,2.,3.], 22))
         cg2.twists.rotate(ftuv.rotation_matrix([1.,2.,3.], 22))
 

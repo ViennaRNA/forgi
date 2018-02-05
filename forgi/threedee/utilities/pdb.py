@@ -120,36 +120,6 @@ def trim_chain_between(chain, start_res, end_res):
     for res in to_detach:
         chain.detach_child(res.id)
 
-def extract_subchain(chain, start_res, end_res):
-    '''
-    Extract a portion of a particular chain. The new chain
-    will contain residues copied from the original chain.
-
-    :param chain: The source chain.
-    :param start_res: The number of the first nucleotide to extract
-    :param last_res: The number of the last nucleotide to extract
-    '''
-    new_chain = bpdb.Chain.Chain(' ')
-    for r in chain:
-        if start_res <= r.id and r.id <= end_res:
-            new_chain.add(r.copy())
-
-    return new_chain
-
-def extract_subchain_from_res_list(chain, res_list):
-    '''
-    Extract a portion of a particular chain. The new chain
-    will contain residues copied from the original chain.
-
-    :param chain: The source chain.
-    :param res_list: The list of residue identifiers of the nucleotides
-                     to extract
-    '''
-    new_chain = bpdb.Chain.Chain(' ')
-    for r in res_list:
-        new_chain.add(chain[r].copy())
-
-    return new_chain
 
 def extract_subchains_from_seq_ids(all_chains, seq_ids):
     '''
@@ -346,8 +316,8 @@ def pdb_file_rmsd(fn1, fn2):
         s1= bpdb.PDBParser().get_structure('t', fn1)
         s2= bpdb.PDBParser().get_structure('t', fn2)
 
-    c1 = get_biggest_chain(fn1)
-    c2 = get_biggest_chain(fn2)
+    c1,_ = get_biggest_chain(fn1)
+    c2,_ = get_biggest_chain(fn2)
 
     rmsd = pdb_rmsd(c1, c2)
 
@@ -514,9 +484,26 @@ def get_all_chains(in_filename, parser=None):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
-        log.debug("PDB header %s", parser.header)
         try:
+            log.debug("PDB header %s", parser.header)
             mr = parser.header["missing_residues"]
+        except AttributeError: # A mmCIF parser
+            cifdict = bpdb.MMCIF2Dict.MMCIF2Dict(in_filename)
+            mask=np.array(cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str)=="?"
+            int_seq_ids = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=str)[mask]
+            chains = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
+            insertions = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
+            symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
+            models = np.array(cifdict["_pdbx_poly_seq_scheme.asym_id"], dtype=str)[mask]
+            mr = []
+            for i,sseq in enumerate(int_seq_ids):
+                mr.append({
+                            "model":models[i],
+                            "res_name":symbol[i],
+                            "chain":chains[i],
+                            "ssseq":sseq,
+                            "insertion":insertions[i]
+                            })
         except KeyError:
             mr = []
             log.warning("Old biopython version. No missing residues")
@@ -569,7 +556,7 @@ def load_structure(pdb_filename):
     This chain will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, etc...
     '''
-    chain = get_biggest_chain(pdb_filename)
+    chain, mr = get_biggest_chain(pdb_filename)
     return clean_chain(chain)
 
 def clean_chain(chain):

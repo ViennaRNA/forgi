@@ -153,12 +153,12 @@ class CoordinateStorageEqualityTests(unittest.TestCase):
         cs2["s5"]=[1,2,3],[3,4,1]
         self.assertNotEqual(cs1, cs2)
     def test_eq_for_cgs(self):
-        cg1 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg1_a = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A.cg')
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
-        cg2_a = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
-        cg3 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1J1U.cg')
-        cg3_a = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1J1U.cg')
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg1_a = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg2_a = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg3 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1J1U.cg')
+        cg3_a = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1J1U.cg')
         self.assertEqual(cg1.coords, cg1.coords)
         self.assertEqual(cg1.coords, cg1_a.coords)
         self.assertEqual(cg2.coords, cg2_a.coords)
@@ -247,7 +247,7 @@ class LineSegmentStorageTests(unittest.TestCase):
     def test_elements_closer_than_like_old_confusion_matrix(self):
         BP_DIST = 16
         CUTOFF_DIST = 25.
-        cg2 = ftmc.CoarseGrainRNA('test/forgi/threedee/data/1GID_A_sampled.cg')
+        cg2 = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1GID_A_sampled.cg')
         ignore = set()
         for n1, n2 in it.combinations(cg2.defines.keys(), r=2):
             if cg2.connected(n1, n2):

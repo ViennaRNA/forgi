@@ -73,7 +73,7 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
         logging_exceptions.update_parser(verbosity_group)
     return parser
 
-def cgs_from_args(args, nargs = 1, rna_type="cg", enable_logging=True, return_filenames = False):
+def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_filenames = False):
     if enable_logging:
         logging.basicConfig(format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
         logging_exceptions.config_from_args(args)
@@ -139,11 +139,9 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
              pbd_remove_pk=True, pdb_dotbracket="",
              dissolve_length_one_stems = True):
     """
-    :param rna_type: One of "any", "cg" and "3d" and "pdb"
+    :param rna_type: One of "any", and "3d" and "pdb"
                      "any": Return either BulgeGraph or CoarseGrainRNA objekte,
                             depending on the input format
-                     "cg":  Always convert to CoarseGrainRNA objects,
-                            even if they have no 3D information
                      "only_cg": Only accept cg-files.
                      "3d":  Return CoarseGrainRNA objects,
                             if the file contains 3D information,
@@ -166,7 +164,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
                           "Trying to treat it as a filename instead...".format(filename))
         else:
             log.info("Assuming RNA %s is a dotbracketstring and not a file.", filename)
-            bg = fgb.from_fasta_text(filename, dissolve_length_one_stems=dissolve_length_one_stems)
+            bg = fgb.BulgeGraph.from_dotbracket(filename, dissolve_length_one_stems=dissolve_length_one_stems)
             if allow_many:
                 return [bg]
             else:
@@ -178,7 +176,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
     if rna_type=="only_cg" and filetype!="forgi":
         raise WrongFileFormat("Only forgi cg files are accepted, but file {} has type {}.".format(filename, filetype))
     if filetype=="forgi":
-        cg = ftmc.CoarseGrainRNA(filename)
+        cg = ftmc.CoarseGrainRNA.from_bg_file(filename)
         if rna_type in ["3d", "only_cg"] and not cg.coords.is_filled:
             raise WrongFileFormat("File {} does not contain all 3D coordinates!".format(filename))
         if allow_many:
@@ -187,14 +185,14 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             return cg
     elif filetype=="pdb":
         if pdb_chain:
-            cgs = [ftmc.load_cg_from_pdb(filename, chain_id=pdb_chain,
+            cgs = ftmc.CoarseGrainRNA.from_pdb(filename, load_chains=pdb_chain,
                                          remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
                                          secondary_structure=pdb_dotbracket,
-                                         dissolve_length_one_stems=dissolve_length_one_stems)]
+                                         dissolve_length_one_stems=dissolve_length_one_stems)
         else:
             if pdb_dotbracket:
-                raise ValueError("pdb_dotbracket requires a chain ti be given to avioid ambiguity.")
-            cgs = ftmc.connected_cgs_from_pdb(filename, remove_pseudoknots = pbd_remove_pk,
+                raise ValueError("pdb_dotbracket requires a chain to be given to avoid ambiguity.")
+            cgs = ftmc.CoarseGrainRNA.from_pdb(filename, remove_pseudoknots = pbd_remove_pk,
                                               dissolve_length_one_stems=dissolve_length_one_stems)
         if allow_many:
             return cgs
@@ -214,11 +212,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             except ValueError:
                 i=text.find("\n1 ")
                 text=text[i+1:]
-        if rna_type == "cg":
-            cls = ftmc.CoarseGrainRNA
-        else:
-            cls = fgb.BulgeGraph
-        bg = cls.from_bpseq_str(text, dissolve_length_one_stems=dissolve_length_one_stems)
+        bg = ftmc.CoarseGrainRNA.from_bpseq_str(text, dissolve_length_one_stems=dissolve_length_one_stems)
         if allow_many:
             return [bg]
         else:
@@ -227,15 +221,13 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
         if rna_type=="3d":
             raise WrongFileFormat("Fasta(like) file {} is not supported. We need 3D coordinates!".format(filename))
         try:
-            bgs = fgb.from_fasta(filename, dissolve_length_one_stems=dissolve_length_one_stems)
+            bgs = ftmc.CoarseGrainRNA.from_fasta(filename, dissolve_length_one_stems=dissolve_length_one_stems)
         except Exception as e:
             with log_to_exception(log, e):
                 log.critical("Could not parse file %r.", filename)
                 if filetype=="other":
                     log.critical("We assumed file %r to be some fasta-variant or dotbracket file, but an error occurred during parsing.", filename)
             raise
-        if rna_type=="cg":
-            bgs = list(map(ftmc.from_bulge_graph, bgs))
         if allow_many:
             return bgs
         else:

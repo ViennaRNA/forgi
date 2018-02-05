@@ -58,10 +58,8 @@ class TestCommanldineUtils(unittest.TestCase):
     def test_load_fasta_types(self):
         with self.assertRaises(fuc.WrongFileFormat):
             fuc.load_rna("test/forgi/data/pk.fa", "3d", False)
-        bg = fuc.load_rna("test/forgi/data/pk.fa", "bg", False)
         cg = fuc.load_rna("test/forgi/data/pk.fa", "cg", False)
         self.assertIsInstance(cg, ftmc.CoarseGrainRNA)
-        self.assertEqual(type(bg), fgb.BulgeGraph)
     def test_load_fasta_cleaning_sec_stru(self):
         bg = fuc.load_rna("test/forgi/data/pk.fa", "bg", False, dissolve_length_one_stems=False )
         bg2 = fuc.load_rna("test/forgi/data/pk.fa", "bg", False, dissolve_length_one_stems=True )

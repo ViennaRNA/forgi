@@ -103,6 +103,8 @@ def _sorted_missing_residues(list_of_dicts):
     chain_to_residues = defaultdict(list)
     resid_to_nucleotide = {}
     for res_dict in list_of_dicts:
+        if res_dict["model"] not in [None, 1, "A"]:
+            continue
         if res_dict["insertion"] is None:
             insertion=" "
         else:
