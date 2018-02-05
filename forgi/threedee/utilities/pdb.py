@@ -490,9 +490,10 @@ def get_all_chains(in_filename, parser=None):
         except AttributeError: # A mmCIF parser
             cifdict = bpdb.MMCIF2Dict.MMCIF2Dict(in_filename)
             mask=np.array(cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str)=="?"
-            int_seq_ids = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=str)[mask]
+            int_seq_ids = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=int)[mask]
             chains = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
             insertions = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
+            insertions[insertions=="."]=" "
             symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
             models = np.array(cifdict["_pdbx_poly_seq_scheme.asym_id"], dtype=str)[mask]
             mr = []
@@ -557,7 +558,7 @@ def load_structure(pdb_filename):
     residues will be renamed to regular residues, etc...
     '''
     chain, mr = get_biggest_chain(pdb_filename)
-    return clean_chain(chain)
+    return clean_chain(chain)[0]
 
 def clean_chain(chain):
     """
@@ -569,9 +570,9 @@ def clean_chain(chain):
     :param chaion: A Bio.PDB.Chain object
     :returns: A modified version of this chain
     """
-    chain = to_4_letter_alphabeth(chain)
+    chain, modifications = to_4_letter_alphabeth(chain)
     chain = rename_rosetta_atoms(chain)
-    return chain
+    return chain, modifications
 
 def interchain_contacts(struct):
     all_atoms = bpdb.Selection.unfold_entities(struct, 'A')

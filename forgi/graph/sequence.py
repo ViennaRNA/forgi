@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 from collections import defaultdict
 from . import residue as fgr
-
 log = logging.getLogger()
 
 class _Smallest(object):
@@ -116,11 +115,22 @@ def _sorted_missing_residues(list_of_dicts):
         reslist.sort(key=_resid_key)
     return chain_to_residues, resid_to_nucleotide
 
-class _WMIndexer(object):
+class _IndexHelper(object):
+    @property
+    def flag(self):
+        raise NotImplementedError("Must be set in subclass")
     def __init__(self, parent):
         self.parent = parent
     def __getitem__(self, key):
-        return self.parent._getitem(key, True)
+        log.debug("%s.__getitem__ called. %s=True", type(self).__name__, self.flag)
+        return self.parent._getitem(key, **{self.flag:True})
+    def _getitem(self, key, include_missing=False, show_modifications=False):
+        kwargs = {"include_missing":include_missing, "show_modifications": show_modifications}
+        kwargs.update({self.flag:True})
+        log.debug("%s._getitem called. flags: %s", type(self).__name__, kwargs)
+        return self.parent._getitem(key, **kwargs)
+class _WMIndexer(_IndexHelper):
+    flag = "include_missing"
     def __len__(self):
         return len(self.parent)+len(self.parent._missing_nts)
     def update_dotbracket(self, struct):
@@ -131,6 +141,15 @@ class _WMIndexer(object):
         :returns: A string
         """
         return self.parent._missing_into_db(struct)
+    @property
+    def with_modifications(self):
+        return _MODIndexer(self)
+
+class _MODIndexer(_IndexHelper):
+    flag = "show_modifications"
+    @property
+    def with_missing(self):
+        return _WMIndexer(self)
 
 class Sequence(object):
     """
@@ -144,7 +163,7 @@ class Sequence(object):
        PDB-Style indices may address missing residues (Reidues for which only sequence
        but no structure information is present).
     """
-    def __init__(self, seq, seqids, missing_residues=[]):
+    def __init__(self, seq, seqids, missing_residues=[], modifications=None):
         """
         :param missing_residues: A list of dictionaries with the following keys:
                 "res_name", "chain", "ssseq", "insertion"
@@ -166,7 +185,10 @@ class Sequence(object):
         mr, mnts = _sorted_missing_residues(missing_residues)
         self._missing_residues = mr
         self._missing_nts =  mnts # A dict seq_id:nt
-
+        # resid : modified res_name
+        self._modifications={}
+        if modifications:
+            self._modifications.update(modifications)
     def __str__(self):
         return self[:]
 
@@ -208,20 +230,41 @@ class Sequence(object):
         log.debug("{} =?= {}".format(repr(self), repr(other)))
         log.debug("type of other=%s, type of string literal in this module is %s", type(other).__name__, type("").__name__)
         if isinstance(other, type(self)):
-            return (self._seq == other._seq and
-                    self._seqids == other._seqids and
-                    self._missing_nts == other._missing_nts and
-                    self._breaks_after == other._breaks_after)
+            if self._seq != other._seq:
+                log.debug("Sequence different!")
+                return False
+            if self._breaks_after != other._breaks_after:
+                log.debug("Breakpoints different!")
+                return False
+            if self._seqids != other._seqids:
+                log.debug("seq_ids different: %s != %s", self._seqids, other._seqids)
+                return False
+            if self._missing_nts != other._missing_nts:
+                if log.isEnabledFor(logging.DEBUG):
+                    for key, val in self._missing_nts.items():
+                        if key in other._missing_nts:
+                            if self._missing_nts[key]!=other._missing_nts[key]:
+                                log.debug("nt changed for %s from %s to %s", key, self._missing_nts[key], other._missing_nts[key])
+                        else:
+                            log.debug("%s missing in other", key)
+                    for key in other._missing_nts:
+                        if key not in self._missing_nts:
+                            log.debug("%s extra in other", key)
+                return False
+            return True
         elif isinstance(other, type("")):
             return str(self)==other
         else:
             return NotImplemented
 
-    def _getitem(self, key, include_missing):
-        log.debug("_getitem called for %s, include_missing=%s", key, include_missing)
+    def _getitem(self, key, include_missing=False, show_modifications=False):
+        log.debug("_getitem called for %s, include_missing=%s, show_modifications=%s", key, include_missing, show_modifications)
         if isinstance(key, int):
             key=to_0_based(key)
-            return self._seq[key]
+            if show_modifications and self._seqids[key] in self._modifications:
+                return self._modifications[self._seqids[key]]
+            else:
+                return self._seq[key]
         elif isinstance(key, fgr.RESID):
             try:
                 i = self._seqids.index(key)
@@ -232,16 +275,20 @@ class Sequence(object):
                         raise IndexError("No structure available for nucleotide '{}'."
                                          "For look-up including missing residues, use"
                                          "`.with_missing[key]`".format(key))
+                    if show_modifications and key in self._modifications:
+                        return self._modifications[key]
                     return nt
                 raise IndexError("Nucleotide {} is not part of this RNA".format(key))
             else:
+                if show_modifications and key in self._modifications:
+                    return self._modifications[key]
                 return self._seq[i]
         elif isinstance(key, slice):
-            return self._getslice(key, include_missing)
+            return self._getslice(key, include_missing, show_modifications)
         else:
             raise TypeError("Wrong index type: {}".format(type(key).__name__))
 
-    def _getslice(self, key, include_missing):
+    def _getslice(self, key, include_missing=False, show_modifications=False):
         """
         Do type checks and delegate to self._resid_slice or self._integer_slice
         """
@@ -254,19 +301,18 @@ class Sequence(object):
         if isinstance(key.start, fgr.RESID) or (key.start is None and isinstance(key.stop, fgr.RESID)):
             if not isinstance(key.stop, (fgr.RESID, type(None))):
                 raise TypeError("Mixing integers and RESID for slicing is not allowed")
-            return self._resid_slice(key, include_missing)
-        return self._integer_slice(to_0_based(key), include_missing)
+            return self._resid_slice(key, include_missing, show_modifications)
+        return self._integer_slice(to_0_based(key), include_missing, show_modifications)
 
-
-
-    def _integer_slice(self, key, include_missing):
+    def _integer_slice(self, key, include_missing=False, show_modifications=False):
         """
         This provides an implementation for include_missing=False
         and delegates to resid_slice otherwise.
 
         :param key: Already 0-based, no None in slice
         """
-        if include_missing==False or not self._missing_nts:
+        if ((include_missing==False or not self._missing_nts) and
+                    (show_modifications==False or not self._modifications)):
             seq = self._seq[key]
             if key.step==-1:
                 start=key.stop
@@ -291,9 +337,9 @@ class Sequence(object):
                     stopRES  = self._seqids[key.stop]
         key2 = slice(startRES, stopRES, key.step)
         log.debug("Converted integer_slice %s to resid-slice %s", key, key2)
-        return self._resid_slice_with_missing(key2)
+        return self._resid_slice(key2, include_missing, show_modifications)
 
-    def _resid_slice_without_missing(self, key):
+    def _resid_slice_to_int_slice(self, key):
         if key.step==-1:
             default_start = len(self._seqids)
             default_stop = None
@@ -328,41 +374,52 @@ class Sequence(object):
                                  "is available for it.".format(resid))
 
 
-    def _resid_slice(self, key, include_missing):
+    def _resid_slice(self, key, include_missing, show_modifications):
         """
         This provides an implementation for inclue_missing=True
         and delegates to integer_slice otherwise.
 
         :param key: A validated resid slice.
         """
-        if include_missing:
-            return self._resid_slice_with_missing(key)
+        if include_missing or show_modifications:
+            return self._resid_slice_main(key, include_missing, show_modifications)
         else:
-            return self._resid_slice_without_missing(key)
+            return self._resid_slice_to_int_slice(key)
 
-    def _resid_slice_with_missing(self, key):
+    def _resid_slice_main(self, key, with_missing, show_modifications):
         if key.step==-1:
             start, stop = key.stop, key.start
         else:
             start, stop = key.start, key.stop
-        seqids = list(self._iter_resids_with_missing(start, stop))
+        seqids = list(self._iter_resids(start, stop, with_missing))
         if key.step==-1:
             seqids.reverse()
-        seq = ""
+        seqs = [[]]
+        seq=seqs[-1] # a reference
         for seqid in seqids:
             if seqid == "&":
-                seq+="&"
+                if show_modifications:
+                    seqs.append([])
+                    seq=seqs[-1]
+                else:
+                    seq.append("&")
             else:
-                try:
-                    seq+=self._seq[self._seqids.index(seqid)]
-                except ValueError:
-                    seq+=self._missing_nts[seqid]
-        return "".join(seq)
+                if show_modifications and seqid in self._modifications:
+                    seq.append(self._modifications[seqid])
+                else:
+                    try:
+                        seq.append(self._seq[self._seqids.index(seqid)])
+                    except ValueError:
+                        seq.append(self._missing_nts[seqid])
+        if not show_modifications:
+            assert seqs==[seq]
+            seqs="".join(seq)
+        return seqs
 
     def _missing_into_db(self, dotbracket):
         db = ""
         check_i = 0
-        for seqid in self._iter_resids_with_missing(None, None):
+        for seqid in self._iter_resids(None, None, True):
             if seqid == "&":
                 db+="&"
             else:
@@ -377,10 +434,13 @@ class Sequence(object):
         return "".join(db)
 
 
-    def _iter_resids_with_missing(self, start, stop):
+    def _iter_resids(self, start, stop, with_missing):
         left_res = None
         start_i, start_is_missing = self._resid_to_index(start, 0, True)
         stop_i, stop_is_missing   = self._resid_to_index(stop, len(self._seqids), True)
+        if (start_is_missing or stop_is_missing) and not with_missing:
+            raise IndexError("Start or stop are missing residues, but indexing without missing residues was requested.")
+
         if not start_is_missing and start is not None:
             left_res = start
 
@@ -393,6 +453,7 @@ class Sequence(object):
             #log.debug("Added first residue %s: %s", left_res, seq)
             start_i+=1
         log.debug("Iterating over sequence %s-%s", start_i, stop_i+1)
+        mr_keys = None
         for i in range(start_i, stop_i+1):
             try:
                 right_res = self._seqids[i]
@@ -411,25 +472,26 @@ class Sequence(object):
                                      "Breakpoint at position {} "
                                      "in the middle of chain {}".format(i-1,
                                       left_res.chain))
-            mr, mr_keys = self._missing_residues_between(left_res, right_res)
-            old_r = left_res
-            for j,r in enumerate(mr_keys):
-                if not found_start and r==start:
-                    log.debug("Found start for i=%d, %s", i, r)
-                    found_start=True
-                    old_r = None
-                log.debug("Now processing missing residue %s", r)
-                if found_start:
-                    if old_r is not None and old_r.chain != r.chain:
-                        yield "&"
-                        log.debug("Breakpoint inserted!")
-                    log.debug("Adding missing residue %s", mr[j])
-                    yield r
-                log.debug("Comparing %s and stop=%s", r, stop)
-                if r==stop:
-                    log.debug("Stop found! Seq=%s", seq)
-                    return
-                old_r = r
+            if with_missing:
+                mr, mr_keys = self._missing_residues_between(left_res, right_res)
+                old_r = left_res
+                for j,r in enumerate(mr_keys):
+                    if not found_start and r==start:
+                        log.debug("Found start for i=%d, %s", i, r)
+                        found_start=True
+                        old_r = None
+                    log.debug("Now processing missing residue %s", r)
+                    if found_start:
+                        if old_r is not None and old_r.chain != r.chain:
+                            yield "&"
+                            log.debug("Breakpoint inserted!")
+                        log.debug("Adding missing residue %s", mr[j])
+                        yield r
+                    log.debug("Comparing %s and stop=%s", r, stop)
+                    if r==stop:
+                        log.debug("Stop found! Seq=%s", seq)
+                        return
+                    old_r = r
             # If key.start and key.stop resp. are not modified residues,
             # start_i and stop_i are already accurrate, making
             # additional checks here unneccessary.
@@ -484,6 +546,13 @@ class Sequence(object):
     def to_integer(self, resid):
         return self._seqids.index(resid)+1
 
+    def iter_modifications(self):
+        """
+        Iter over tuples seq_id, modified residue code
+        """
+        for k in sorted(self._modifications.keys()):
+            yield self.k, self._modifications[k]
+
     @property
     def with_missing(self):
         """
@@ -492,4 +561,11 @@ class Sequence(object):
         if self._seqids:
             return _WMIndexer(self)
         else: # For performance reasons
+            return self
+
+    @property
+    def with_modifications(self):
+        if self._modifications:
+            return _MODIndexer(self)
+        else:
             return self

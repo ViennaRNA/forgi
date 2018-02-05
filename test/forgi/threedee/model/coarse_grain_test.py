@@ -100,6 +100,15 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         for d in cg.defines:
             nptest.assert_almost_equal(cg.coords[d], cg2.coords[d])
 
+    def test_from_mmcif_missing_residues(self):
+        import Bio.PDB as bpdb
+
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/2VQE.cif', load_chains="A")
+        cg2, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/2VQE.pdb', load_chains="A")
+
+        self.assertEqual(cg.seq, cg2.seq)
+        self.assertGreater(len(cg.seq._missing_nts), 3)
+
 
     def test_from_pdb(self):
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/4GV9.pdb', load_chains='E')

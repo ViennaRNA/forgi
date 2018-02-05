@@ -324,7 +324,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             for chain in chains:
                 if load_chains in [None, "biggest"] or chain.id in load_chains:
                     log.debug("Loaded Chain %s", chain.id)
-                    chain = ftup.clean_chain(chain)
+                    chain, modifications = ftup.clean_chain(chain)
                     new_chains.append(chain)
 
             rna_pdb_fn = op.join(output_dir, 'temp.pdb')
@@ -395,7 +395,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         for component in nx.connected_components(chain_connections):
             try:
                 cgs.append(cls._load_pdb_component(bpseq_lines, pdb_base, new_chains,
-                                                   component, missing_res,
+                                                   component, missing_res, modifications
                                                    seq_ids, secondary_structure,
                                                    dissolve_length_one_stems))
             except GraphConstructionError as e:
@@ -409,7 +409,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     @classmethod
     def _load_pdb_component(cls, original_bpseq_lines, name, chains, chain_ids,
-                            missing_res, seq_ids, secondary_structure="", dissolve_length_one_stems=False):
+                            missing_res, modifications, seq_ids,
+                            secondary_structure="", dissolve_length_one_stems=False):
         """
         :param original_bpseq_lines: List of strings. Will be filtered for chains.
         """
@@ -447,8 +448,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if list(map(len, stru_fragments))!=seq_lengths:
                 raise ValueError("The given secondary structure is inconsistent "
                                  "with the pdb-chain-lengths of %s", seq_lengths)
-        sequence = Sequence(seq_str, new_seqids, [r for r in missing_res
-                                                  if r["chain"] in chain_ids])
+        sequence = Sequence(seq_str, new_seqids,
+                            [r for r in missing_res if r["chain"] in chain_ids],
+                            {k:v for k,v in modifications.items() if k.chain in chain_ids})
 
         name = name + "_" + "-".join(c for c in sorted(chain_ids))
         graph_constr = _BulgeGraphConstruction(tuples)
