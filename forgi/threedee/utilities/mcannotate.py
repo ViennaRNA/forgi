@@ -157,7 +157,7 @@ def get_dotplot(lines):
 
     for line in iterate_over_residue_list(lines):
         parts = line.split(' ')
-        residues += [parts[0]]
+        residues.append(parse_chain_base(parts[0])) # A tuple chain, id
         residue_types += [parts[2]]
 
     paired = set()
@@ -174,8 +174,8 @@ def get_dotplot(lines):
             #if bond_type.find('Ww/Ww') >= 0:
             #print line
             chain1, base1, chain2, base2 = parse_base_pair_id(parts[0])
-            res1 = chain1+base1
-            res2 = chain2+base2
+            res1 = (chain1, base1)
+            res2 = (chain2, base2)
             if res1 in paired or res2 in paired:
                 if log.isEnabledFor(logging.WARNING):
                     if res1 in bps:
@@ -191,6 +191,7 @@ def get_dotplot(lines):
                 bps[res1] = residues.index(res2)
                 bps[res2] = residues.index(res1)
             except ValueError as e:
+                log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
                 with log_to_exception(log, e):
                     log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
                 raise
@@ -208,7 +209,8 @@ def _seqids_from_residue_map(residue_map):
     """
     seq_ids = []
     for i, r in enumerate(residue_map):
-        (from_chain, from_base) = parse_chain_base(r)
+        log.debug("Residue %r", r)
+        (from_chain, from_base) = r
         seq_ids += [fgr.RESID(from_chain, parse_resid(from_base))]
     log.debug("Seq_ids are %s", seq_ids)
     return seq_ids
