@@ -6,6 +6,7 @@ import textwrap
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.mcannotate as ftum
+import forgi.graph.residue as fgr
 
 class TestMCAnnotate(unittest.TestCase):
     '''
@@ -89,5 +90,5 @@ class TestMCAnnotate(unittest.TestCase):
                 R-32-R-31 : G-G Ww/Hw adjacent_5p pairing antiparallel cis one_hbond
                 """)
         dp = ftum.get_dotplot(dotplot_negative_residues.splitlines())
-        self.assertEqual(dp[1][0], "R-40")
+        self.assertEqual(dp[1][0], fgr.RESID("R", (" ", -40, " ")))
         self.assertEqual(dp[0], "1 C 0\n2 C 0\n3 C 8\n4 C 0\n5 G 0\n6 A 0\n7 A 0\n8 G 3\n9 G 0\n10 G 0\n")
