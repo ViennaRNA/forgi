@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.utilities.stuff &#8212; forgi 1.0 documentation</title>
+    <title>forgi.utilities.stuff &#8212; forgi 1.1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../index.html">
-          <span>forgi 1.0 documentation</span></a></h1>
+          <span>forgi 1.1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -133,8 +133,10 @@
 <span class="sd">    http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">temp_dir</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
-    <span class="k">yield</span> <span class="n">temp_dir</span>
-    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span></div>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">temp_dir</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="insert_into_stack"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.stuff.html#forgi.utilities.stuff.insert_into_stack">[docs]</a><span class="k">def</span> <span class="nf">insert_into_stack</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
     <span class="c1">#print &quot;add&quot;, i,j</span>
@@ -388,8 +390,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 17, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

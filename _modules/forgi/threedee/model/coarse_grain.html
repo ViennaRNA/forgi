@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.model.coarse_grain &#8212; forgi 1.0 documentation</title>
+    <title>forgi.threedee.model.coarse_grain &#8212; forgi 1.1.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.0 documentation</span></a></h1>
+          <span>forgi 1.1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -62,10 +62,12 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">io</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span> <span class="c1">#Python 2</span>
     <span class="kn">import</span> <span class="nn">StringIO</span> <span class="k">as</span> <span class="nn">io</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="nb">open</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
 
@@ -79,7 +81,6 @@
 
 <span class="kn">from</span> <span class="nn">logging_exceptions</span> <span class="k">import</span> <span class="n">log_to_exception</span><span class="p">,</span> <span class="n">log_exception</span>
 
-
 <span class="kn">from</span> <span class="nn">...graph</span> <span class="k">import</span> <span class="n">bulge_graph</span> <span class="k">as</span> <span class="n">fgb</span>
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">graph_pdb</span> <span class="k">as</span> <span class="n">ftug</span>
 <span class="kn">from</span> <span class="nn">..model</span> <span class="k">import</span> <span class="n">stats</span> <span class="k">as</span> <span class="n">ftms</span>
@@ -87,7 +88,8 @@
 <span class="kn">from</span> <span class="nn">..._k2n_standalone</span> <span class="k">import</span> <span class="n">knotted2nested</span> <span class="k">as</span> <span class="n">cak</span>
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">mcannotate</span> <span class="k">as</span> <span class="n">ftum</span>
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">pdb</span> <span class="k">as</span> <span class="n">ftup</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">descriptors</span> <span class="k">as</span> <span class="n">ftud</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">descriptors</span> <span class="k">as</span> <span class="n">ftmd</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">_dssr</span> <span class="k">as</span> <span class="n">ftud</span>
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">vector</span> <span class="k">as</span> <span class="n">ftuv</span>
 <span class="kn">from</span> <span class="nn">...utilities</span> <span class="k">import</span> <span class="n">debug</span> <span class="k">as</span> <span class="n">fud</span>
 <span class="kn">from</span> <span class="nn">...utilities</span> <span class="k">import</span> <span class="n">stuff</span> <span class="k">as</span> <span class="n">fus</span>
@@ -95,7 +97,7 @@
 <span class="kn">from</span> <span class="nn">...utilities.exceptions</span> <span class="k">import</span> <span class="n">CgConstructionError</span><span class="p">,</span> <span class="n">CgIntegrityError</span><span class="p">,</span> <span class="n">GraphConstructionError</span>
 <span class="kn">from</span> <span class="nn">.linecloud</span> <span class="k">import</span> <span class="n">CoordinateStorage</span><span class="p">,</span> <span class="n">LineSegmentStorage</span>
 <span class="kn">from</span> <span class="nn">...utilities.stuff</span> <span class="k">import</span> <span class="n">is_string_type</span>
-
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">config</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -161,19 +163,16 @@
             <span class="n">cg</span><span class="o">.</span><span class="n">longrange</span><span class="p">[</span><span class="n">node1</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node2</span><span class="p">)</span>
             <span class="n">cg</span><span class="o">.</span><span class="n">longrange</span><span class="p">[</span><span class="n">node2</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="breakpoints_from_residuemap"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.breakpoints_from_residuemap">[docs]</a><span class="k">def</span> <span class="nf">breakpoints_from_residuemap</span><span class="p">(</span><span class="n">residue_map</span><span class="p">):</span>
+<div class="viewcode-block" id="breakpoints_from_seqids"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.breakpoints_from_seqids">[docs]</a><span class="k">def</span> <span class="nf">breakpoints_from_seqids</span><span class="p">(</span><span class="n">seqids</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create the list of cofold cutpoints from the list of MC-Annotate identifiers in the</span>
-<span class="sd">    residue map.</span>
+<span class="sd">    Create the list of cofold cutpoints from the seq_ids.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">breakpoints</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">old_chain</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">residue_map</span><span class="p">):</span>
-        <span class="p">(</span><span class="n">from_chain</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">ftum</span><span class="o">.</span><span class="n">parse_chain_base</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">old_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">from_chain</span> <span class="o">!=</span> <span class="n">old_chain</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seqid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seqids</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">old_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seqid</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">old_chain</span><span class="p">:</span>
             <span class="n">breakpoints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-        <span class="n">old_chain</span> <span class="o">=</span> <span class="n">from_chain</span>
+        <span class="n">old_chain</span> <span class="o">=</span> <span class="n">seqid</span><span class="o">.</span><span class="n">chain</span>
     <span class="k">return</span> <span class="n">breakpoints</span></div>
 
 <span class="k">def</span> <span class="nf">_are_adjacent_basepairs</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">edge1</span><span class="p">,</span> <span class="n">edge2</span><span class="p">):</span>
@@ -198,14 +197,73 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Basepairs </span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2"> are NOT adjacent.&quot;</span><span class="p">,</span> <span class="n">edge1</span><span class="p">,</span> <span class="n">edge2</span><span class="p">)</span>
     <span class="k">return</span> <span class="kc">False</span>
 
+<span class="k">def</span> <span class="nf">_annotate_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subprocess_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">program</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the secondary structure of the pdb by using an external tool.</span>
+
+<span class="sd">    :param filename: The name of the temporary pdb file</span>
+<span class="sd">    :param subprocess_kwargs: Will be passed as keyword arguments to subprocess.call/ subprcess.check_output</span>
+<span class="sd">    :param program: A string, one of &quot;MC-Annotate&quot;, &quot;DSSR&quot; or None (to use the value from forgi.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">program</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">read_config</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;PDB_ANNOTATION_TOOL&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+            <span class="n">program</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;PDB_ANNOTATION_TOOL&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">program</span> <span class="o">=</span> <span class="s2">&quot;MC-Annotate&quot;</span>
+    <span class="k">if</span> <span class="n">program</span> <span class="o">==</span> <span class="s2">&quot;MC-Annotate&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_run_mc_annotate</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subprocess_kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">program</span> <span class="o">==</span> <span class="s2">&quot;DSSR&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_run_dssr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subprocess_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Supported programs for annotating the pdb are: &#39;MC-Annotate&#39; and &#39;DSSR&#39;, not &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">program</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_run_dssr</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subprocess_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="c1"># See http://forum.x3dna.org/rna-structures/redirect-auxiliary-file-output/</span>
+    <span class="k">with</span> <span class="n">fus</span><span class="o">.</span><span class="n">make_temp_directory</span><span class="p">()</span> <span class="k">as</span> <span class="n">dssr_output_dir</span><span class="p">:</span>
+        <span class="n">dssr_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dssr_output_dir</span><span class="p">,</span> <span class="s2">&quot;out&quot;</span><span class="p">)</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x3dna-dssr&#39;</span><span class="p">,</span> <span class="s2">&quot;-i=&quot;</span><span class="o">+</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;--prefix=&quot;</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dssr_output_dir</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">),</span> <span class="s2">&quot;-o=&quot;</span><span class="o">+</span><span class="n">dssr_out</span><span class="p">,</span> <span class="s2">&quot;--json&quot;</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running DSSR: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">list2cmdline</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span> <span class="c1">#https://stackoverflow.com/a/14837250/5069869</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret_code</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">arguments</span><span class="p">,</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">subprocess_kwargs</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dssr_output_dir</span><span class="p">,</span> <span class="s2">&quot;d-2ndstrs.bpseq&quot;</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">bpseq</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dssr_out</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">nts</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="s2">&quot;nts&quot;</span><span class="p">]</span>
+                    <span class="n">seq_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">ftud</span><span class="o">.</span><span class="n">dssr_to_pdb_resid</span><span class="p">,</span> <span class="p">[</span><span class="n">nt</span><span class="p">[</span><span class="s2">&quot;nt_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">nt</span> <span class="ow">in</span> <span class="n">nts</span><span class="p">]))</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">log_to_exception</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Comtent of </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dssr_output_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dssr_output_dir</span><span class="p">))</span>
+                <span class="k">raise</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">op</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;File </span><span class="si">{}</span><span class="s2"> (created by forgi) no longer exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">strerror</span><span class="o">+=</span><span class="s2">&quot;. Hint: Did you install x3dna-dssr?&quot;</span>
+            <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">return</span> <span class="n">bpseq</span><span class="p">,</span> <span class="n">seq_ids</span>
+
 <span class="k">def</span> <span class="nf">_run_mc_annotate</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">subprocess_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns: A tuple (bpseq, seq_ids`)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running MC-Annotate&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s1">&#39;MC-Annotate&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">],</span> <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">subprocess_kwargs</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">op</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;File </span><span class="si">{}</span><span class="s2"> (created by forgi) no longer exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="n">e</span><span class="o">.</span><span class="n">strerror</span><span class="o">+=</span><span class="s2">&quot;. Hint: Did you install MC-Annotate?&quot;</span>
         <span class="k">raise</span> <span class="n">e</span>
-    <span class="k">return</span> <span class="n">out</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># convert the mcannotate output into bpseq format</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ftum</span><span class="o">.</span><span class="n">get_dotplot</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Could not convert MC-Annotate output to dotplot&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">CgConstructionError</span><span class="p">(</span><span class="s2">&quot;Could not convert MC-Annotate output to dotplot&quot;</span><span class="p">)</span> <span class="c1">#from e</span>
 
 <div class="viewcode-block" id="connected_cgs_from_pdb"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.connected_cgs_from_pdb">[docs]</a><span class="k">def</span> <span class="nf">connected_cgs_from_pdb</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">,</span> <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">fus</span><span class="o">.</span><span class="n">make_temp_directory</span><span class="p">()</span> <span class="k">as</span> <span class="n">output_dir</span><span class="p">:</span>
@@ -223,51 +281,39 @@
             <span class="n">f</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
         <span class="c1"># first we annotate the 3D structure</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting MC-Annotate for all chains&quot;</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">_run_mc_annotate</span><span class="p">(</span><span class="n">rna_pdb_fn</span><span class="p">)</span>
-
-        <span class="n">lines</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="c1"># convert the mcannotate output into bpseq format</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">dotplot</span><span class="p">,</span> <span class="n">residue_map</span><span class="p">)</span> <span class="o">=</span> <span class="n">ftum</span><span class="o">.</span><span class="n">get_dotplot</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-            <span class="k">return</span> <span class="p">[]</span>
-
-        <span class="c1"># f2 will store the dotbracket notation</span>
-        <span class="c1">#with open(op.join(output_dir, &#39;temp.bpseq&#39;), &#39;w&#39;) as f2:</span>
-        <span class="c1">#    f2.write(dotplot)</span>
-        <span class="c1">#    f2.flush()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting annotation program for all chains&quot;</span><span class="p">)</span>
+        <span class="n">bpseq</span><span class="p">,</span> <span class="n">seq_ids</span> <span class="o">=</span> <span class="n">_annotate_pdb</span><span class="p">(</span><span class="n">rna_pdb_fn</span><span class="p">)</span>
+        <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints_from_seqids</span><span class="p">(</span><span class="n">seq_ids</span><span class="p">)</span>
 
         <span class="c1"># remove pseudoknots</span>
         <span class="k">if</span> <span class="n">remove_pseudoknots</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removing pseudoknots&quot;</span><span class="p">)</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">k2n_main</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">dotplot</span><span class="p">),</span> <span class="n">input_format</span><span class="o">=</span><span class="s1">&#39;bpseq&#39;</span><span class="p">,</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">bpseq</span><span class="p">)</span>
+            <span class="n">bpseq</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">k2n_main</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">bpseq</span><span class="p">),</span> <span class="n">input_format</span><span class="o">=</span><span class="s1">&#39;bpseq&#39;</span><span class="p">,</span>
                                <span class="c1">#output_format = &#39;vienna&#39;,</span>
                                <span class="n">output_format</span> <span class="o">=</span> <span class="s1">&#39;bpseq&#39;</span><span class="p">,</span>
                                <span class="n">method</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_METHOD</span><span class="p">,</span>
                                <span class="n">opt_method</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_OPT_METHOD</span><span class="p">,</span>
                                <span class="n">verbose</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_VERBOSE</span><span class="p">,</span>
                                <span class="n">removed</span><span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_REMOVED</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">dotplot</span>
-        <span class="c1">#(out, residue_map) = add_missing_nucleotides(out, residue_map)</span>
 
-        <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints_from_residuemap</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
 
 
         <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
         <span class="n">chain_connections_multigraph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
         <span class="n">cg</span> <span class="o">=</span> <span class="n">CoarseGrainRNA</span><span class="p">()</span>
-        <span class="n">cg</span><span class="o">.</span><span class="n">seqids_from_residue_map</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="n">cg</span><span class="o">.</span><span class="n">seq_ids</span> <span class="o">=</span> <span class="n">seq_ids</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">bpseq</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">from_</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">to_</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">from_seqid</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">from_</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">from_seqid</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">from_</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">log_to_exception</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Index error occurred for index </span><span class="si">%s</span><span class="s2">. Seq-ids are </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">from_</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cg</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">)</span>
+                <span class="k">raise</span>
             <span class="n">from_chain</span> <span class="o">=</span> <span class="n">from_seqid</span><span class="o">.</span><span class="n">chain</span>
             <span class="n">chain_connections_multigraph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">from_chain</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">to_</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">to_</span><span class="p">)</span><span class="o">&gt;</span><span class="nb">int</span><span class="p">(</span><span class="n">from_</span><span class="p">):</span>
@@ -299,7 +345,7 @@
             <span class="c1">#print(component, type(component))</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading PDB: Connected component with chains </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">component</span><span class="p">)))</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">cgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load_cg_from_pdb</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">,</span> <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="n">remove_pseudoknots</span><span class="p">,</span> <span class="n">chain_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">component</span><span class="p">)))</span>
+                <span class="n">cgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load_cg_from_pdb</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">,</span> <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="n">remove_pseudoknots</span><span class="p">,</span> <span class="n">chain_id</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">component</span><span class="p">),</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">GraphConstructionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">log_exception</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">with_stacktrace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not load chains </span><span class="si">%s</span><span class="s2">, due to the above mentioned error.&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">component</span><span class="p">))</span>
@@ -374,26 +420,15 @@
         <span class="n">f</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
     <span class="c1"># first we annotate the 3D structure</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting MC-Annotate for chain(s) </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">chain_id</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting annotation program for chain(s) </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">chain_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="s2">&quot;DEVNULL&quot;</span><span class="p">):</span> <span class="c1">#python&gt;=3.3</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stderr&quot;</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">}</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">_run_mc_annotate</span><span class="p">(</span><span class="n">rna_pdb_fn</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">bpseq</span><span class="p">,</span> <span class="n">seq_ids</span> <span class="o">=</span> <span class="n">_annotate_pdb</span><span class="p">(</span><span class="n">rna_pdb_fn</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints_from_seqids</span><span class="p">(</span><span class="n">seq_ids</span><span class="p">)</span>
 
-    <span class="n">lines</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="c1"># convert the mcannotate output into bpseq format</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="p">(</span><span class="n">dotplot</span><span class="p">,</span> <span class="n">residue_map</span><span class="p">)</span> <span class="o">=</span> <span class="n">ftum</span><span class="o">.</span><span class="n">get_dotplot</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Could not convert MC-Annotate output to dotplot&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">CgConstructionError</span><span class="p">(</span><span class="s2">&quot;Could not convert MC-Annotate output to dotplot&quot;</span><span class="p">)</span> <span class="c1">#from e</span>
-
-    <span class="c1"># f2 will store the dotbracket notation</span>
-    <span class="c1">#with open(op.join(output_dir, &#39;temp.bpseq&#39;), &#39;w&#39;) as f2:</span>
-    <span class="c1">#    f2.write(dotplot)</span>
-    <span class="c1">#    f2.flush()</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">bpseq</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
 
     <span class="k">if</span> <span class="n">secondary_structure</span><span class="p">:</span>
@@ -401,13 +436,14 @@
         <span class="k">if</span> <span class="n">remove_pseudoknots</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Option &#39;remove_pseudoknots ignored, because secondary structure is given.&quot;</span><span class="p">)</span>
         <span class="n">cg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="n">secondary_structure</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
-        <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints_from_residuemap</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
-        <span class="n">cg</span><span class="o">.</span><span class="n">seqids_from_residue_map</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
-
+        <span class="n">cg</span><span class="o">.</span><span class="n">seq_ids</span> <span class="o">=</span> <span class="n">seq_ids</span>
+        <span class="k">if</span> <span class="n">cg</span><span class="o">.</span><span class="n">backbone_breaks_after</span><span class="o">!=</span><span class="n">breakpoints</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CgIntegrityError</span><span class="p">(</span><span class="s2">&quot;Breakpoints in provided secondary structure (</span><span class="si">{}</span><span class="s2">) &quot;</span>
+                                   <span class="s2">&quot;are not consistent with PDB (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">backbone_breaks_after</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">remove_pseudoknots</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Removing pseudoknots&quot;</span><span class="p">)</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">k2n_main</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">dotplot</span><span class="p">),</span> <span class="n">input_format</span><span class="o">=</span><span class="s1">&#39;bpseq&#39;</span><span class="p">,</span>
+            <span class="n">bpseq</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">k2n_main</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">bpseq</span><span class="p">),</span> <span class="n">input_format</span><span class="o">=</span><span class="s1">&#39;bpseq&#39;</span><span class="p">,</span>
                                <span class="c1">#output_format = &#39;vienna&#39;,</span>
                                <span class="n">output_format</span> <span class="o">=</span> <span class="s1">&#39;bpseq&#39;</span><span class="p">,</span>
                                <span class="n">method</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_METHOD</span><span class="p">,</span>
@@ -415,13 +451,9 @@
                                <span class="n">verbose</span> <span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_VERBOSE</span><span class="p">,</span>
                                <span class="n">removed</span><span class="o">=</span> <span class="n">cak</span><span class="o">.</span><span class="n">DEFAULT_REMOVED</span><span class="p">)</span>
 
-            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; Nested structure&#39;</span><span class="p">,</span> <span class="n">pdb_base</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">out</span> <span class="o">=</span> <span class="n">dotplot</span>
-        <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints_from_residuemap</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Breakpoints in </span><span class="si">%s</span><span class="s2"> are </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">pdb_base</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">)</span>
-        <span class="n">cg</span><span class="o">.</span><span class="n">from_bpseq_str</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span> <span class="c1">#Sets the seq without cutpoints</span>
-        <span class="n">cg</span><span class="o">.</span><span class="n">seqids_from_residue_map</span><span class="p">(</span><span class="n">residue_map</span><span class="p">)</span>
+            <span class="n">bpseq</span> <span class="o">=</span> <span class="n">bpseq</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; Nested structure&#39;</span><span class="p">,</span> <span class="n">pdb_base</span><span class="p">)</span>
+        <span class="n">cg</span><span class="o">.</span><span class="n">from_bpseq_str</span><span class="p">(</span><span class="n">bpseq</span><span class="p">,</span> <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">breakpoints</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span> <span class="c1">#Sets the seq without cutpoints</span>
+        <span class="n">cg</span><span class="o">.</span><span class="n">seq_ids</span> <span class="o">=</span> <span class="n">seq_ids</span>
         <span class="n">add_longrange_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
 
 
@@ -1224,7 +1256,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Wrong method </span><span class="si">{}</span><span class="s2">. Choose one of &#39;fast&#39; and &#39;vres&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
 
-        <span class="n">rog</span> <span class="o">=</span> <span class="n">ftud</span><span class="o">.</span><span class="n">radius_of_gyration</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">rog</span> <span class="o">=</span> <span class="n">ftmd</span><span class="o">.</span><span class="n">radius_of_gyration</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">rog</span></div>
 
 
@@ -1544,7 +1576,7 @@
         <span class="n">priority</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}</span>
         <span class="n">edges</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mloop_iterator</span><span class="p">(),</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">iloop_iterator</span><span class="p">()),</span>
-                       <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">priority</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_node_dimensions</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span><span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="p">))</span>
+                       <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">priority</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_node_dimensions</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">edges</span></div>
 
 <div class="viewcode-block" id="CoarseGrainRNA.coords_to_directions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.coords_to_directions">[docs]</a>    <span class="k">def</span> <span class="nf">coords_to_directions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1710,8 +1742,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 17, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

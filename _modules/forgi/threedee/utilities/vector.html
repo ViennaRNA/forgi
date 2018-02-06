@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.vector &#8212; forgi 1.0 documentation</title>
+    <title>forgi.threedee.utilities.vector &#8212; forgi 1.1.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.0 documentation</span></a></h1>
+          <span>forgi 1.1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -557,27 +557,46 @@
 
 <div class="viewcode-block" id="rotation_matrix"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate the rotation matrix for a rotation of theta around axis.</span>
+<span class="sd">    Calculate the rotation matrix for a CLOCKWISE rotation of theta around axis.</span>
+<span class="sd">    This is in the opposite direction that is usually used.</span>
 
 <span class="sd">    Thanks to unutbu on StackOverflow</span>
 
 <span class="sd">    http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector</span>
 
-<span class="sd">    :param axis: The axis around which to rotate</span>
+<span class="sd">    :param axis: The axis around which to rotate. A np-array with length 3 or</span>
+<span class="sd">                 one of &quot;x&quot;, &quot;y&quot; and &quot;z&quot;, where x:=standard_basis[0] etc.</span>
 <span class="sd">    :param theta: The angle of rotation (in rad)</span>
 <span class="sd">    :return: A matrix which can be used to perform the given rotation. The coordinates</span>
-<span class="sd">             need only be multiplied by the matrix.</span>
+<span class="sd">             need only be multiplied by the matrix. (np.dot(matrix, vec))</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated</span>
     <span class="c1"># The following would be the slower pure-python implementation (for comparison)</span>
-    <span class="n">axis</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">axis</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+            <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">axis</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">)],</span>
-                  <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">)],</span>
-                  <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="p">]])</span></div>
-
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">)],</span>
+                      <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">)],</span>
+                      <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;y&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="n">a</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span>
+                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>
+                             <span class="p">[</span> <span class="n">s</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="n">a</span><span class="p">]])</span>
+        <span class="k">elif</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;z&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="n">a</span><span class="p">,</span>  <span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                             <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+        <span class="k">elif</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;x&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>
+                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span>
+                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="n">a</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Axis must be numpy array or one of &quot;x&quot;, &quot;y&quot;, &quot;z&quot;&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="vector_set_rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.vector_set_rmsd">[docs]</a><span class="k">def</span> <span class="nf">vector_set_rmsd</span><span class="p">(</span><span class="n">set1</span><span class="p">,</span> <span class="n">set2</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -1265,8 +1284,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 17, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

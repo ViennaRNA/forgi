@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.graph_pdb &#8212; forgi 1.0 documentation</title>
+    <title>forgi.threedee.utilities.graph_pdb &#8212; forgi 1.1.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.0 documentation</span></a></h1>
+          <span>forgi 1.1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -75,8 +75,6 @@
 
 <span class="kn">from</span> <span class="nn">logging_exceptions</span> <span class="k">import</span> <span class="n">log_to_exception</span>
 
-
-<span class="kn">import</span> <span class="nn">forgi.config</span> <span class="k">as</span> <span class="nn">cc</span>
 <span class="kn">import</span> <span class="nn">forgi.threedee.utilities.average_stem_vres_atom_positions</span> <span class="k">as</span> <span class="nn">ftus</span>
 <span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="k">as</span> <span class="nn">fud</span>
 <span class="kn">import</span> <span class="nn">forgi.threedee.utilities.my_math</span> <span class="k">as</span> <span class="nn">ftum</span>
@@ -243,8 +241,8 @@
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">u</span><span class="p">,</span><span class="n">v</span> <span class="o">=</span> <span class="n">u_v</span>
-    <span class="n">rot_mat1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
-    <span class="n">rot_mat2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">u</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">rot_mat1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="n">rot_mat2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
 
     <span class="n">twist2_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot_mat1</span><span class="p">,</span> <span class="n">twist2</span><span class="p">)</span>
     <span class="n">twist2_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot_mat2</span><span class="p">,</span> <span class="n">twist2_new</span><span class="p">)</span>
@@ -404,8 +402,8 @@
     <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">u_v_t</span>
     <span class="n">twist2_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)])</span>
 
-    <span class="n">rot_mat1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
-    <span class="n">rot_mat2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">u</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">rot_mat1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="n">rot_mat2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
 
     <span class="n">rot_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot_mat2</span><span class="p">,</span> <span class="n">rot_mat1</span><span class="p">)</span>
     <span class="n">twist2_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">nl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">rot_mat</span><span class="p">),</span> <span class="n">twist2_new</span><span class="p">)</span>
@@ -435,8 +433,8 @@
     <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">u_v_t</span>
     <span class="n">twist2_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)])</span>
 
-    <span class="n">rot_mat1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
-    <span class="n">rot_mat2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">cuv</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">u</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="n">rot_mat1</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="n">rot_mat2</span> <span class="o">=</span> <span class="n">cuv</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
 
     <span class="n">rot_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot_mat2</span><span class="p">,</span> <span class="n">rot_mat1</span><span class="p">)</span>
     <span class="c1">#assert np.allclose(nl.inv(rot_mat), rot_mat.T)</span>
@@ -537,7 +535,9 @@
 <span class="sd">              twist_deviation measures the angle (in radians) between the two stem&#39;s twist vectors.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting broken ML deviation&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting broken ML deviation for </span><span class="si">%s</span><span class="s2"> attached to </span><span class="si">%s</span><span class="s2"> &quot;</span>
+              <span class="s2">&quot;using stat </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">broken_ml_name</span><span class="p">,</span> <span class="n">fixed_stem_name</span><span class="p">,</span>
+              <span class="n">virtual_stat</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">)</span>
     <span class="kn">import</span> <span class="nn">forgi.threedee.model.stats</span> <span class="k">as</span> <span class="nn">ftms</span>
     <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">broken_ml_name</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">s1</span> <span class="o">==</span> <span class="n">fixed_stem_name</span><span class="p">:</span>
@@ -545,8 +545,8 @@
     <span class="k">elif</span> <span class="n">s2</span> <span class="o">==</span><span class="n">fixed_stem_name</span><span class="p">:</span>
         <span class="n">orig_stem_name</span> <span class="o">=</span> <span class="n">s1</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fixed stem </span><span class="si">%s</span><span class="s2"> is not attached to ml </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-                         <span class="n">fixed_stem_name</span><span class="p">,</span> <span class="n">broken_ml_name</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fixed stem </span><span class="si">{}</span><span class="s2"> is not attached to ml </span><span class="si">{}</span><span class="s2"> with &quot;</span>
+                         <span class="s2">&quot;edges </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fixed_stem_name</span><span class="p">,</span> <span class="n">broken_ml_name</span><span class="p">,</span> <span class="p">[</span><span class="n">s1</span><span class="p">,</span><span class="n">s2</span><span class="p">]))</span>
 
     <span class="n">sides</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_sides</span><span class="p">(</span><span class="n">fixed_stem_name</span><span class="p">,</span> <span class="n">broken_ml_name</span><span class="p">)</span>
     <span class="n">fixed_s_vec</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">get_direction</span><span class="p">(</span><span class="n">fixed_stem_name</span><span class="p">)</span>
@@ -1950,8 +1950,8 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 17, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

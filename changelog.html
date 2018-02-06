@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Changelog &#8212; forgi 1.0 documentation</title>
+    <title>Changelog &#8212; forgi 1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 1.0 documentation</span></a></h1>
+          <span>forgi 1.1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -50,6 +50,24 @@
         
   <div class="section" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="changes-in-version-1-1">
+<h2>Changes in Version 1.1<a class="headerlink" href="#changes-in-version-1-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>We now support <strong>DSSR</strong> as an alternative to <strong>MC-Annotate</strong>.
+See the <a class="reference internal" href="download.html#installation"><span class="std std-ref">Installation</span></a> for more information</li>
+<li>RESID for pdb-derived residue ids in now moved into a seperate module.</li>
+<li><code class="code docutils literal"><span class="pre">describe_cg.py</span></code> now adds the number of the multiloop in the sequence to the generated csv.</li>
+<li><strong>Bugfixes</strong>:<ul>
+<li>python3 compatibility of <code class="code docutils literal"><span class="pre">visualize_cg.py</span></code></li>
+<li>windows-compatibility of <code class="code docutils literal"><span class="pre">visualize_cg.py</span></code></li>
+<li>fix count of multiloop-types in <code class="code docutils literal"><span class="pre">describe_cg.py</span></code></li>
+<li>persist cofold-breakpoints in cg-files, even if no sequence was given.</li>
+<li>fix bugs in parsing of MC-Annotate output. Forgi should now be able to load most pdb-files.</li>
+<li>properly propagate the <code class="code docutils literal"><span class="pre">--keep-length-one-stems</span></code> option.</li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="section" id="changes-in-version-1-0">
 <h2>Changes in Version 1.0<a class="headerlink" href="#changes-in-version-1-0" title="Permalink to this headline">¶</a></h2>
 <p>With version 1.0, we introduce support for <strong>cofold</strong> and multifold structures.
@@ -298,8 +316,8 @@ repeated comparisons to the same reference.</li>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 17, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

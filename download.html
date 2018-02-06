@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Installation &#8212; forgi 1.0 documentation</title>
+    <title>Installation &#8212; forgi 1.1.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 1.0 documentation</span></a></h1>
+          <span>forgi 1.1.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -84,12 +84,26 @@ raise an error, if functions with missing dependencies are called.</p>
 <li>Biopython (Needed for <code class="code docutils literal"><span class="pre">forgi.threedee</span></code>)</li>
 <li>pylab (Needed for <code class="code docutils literal"><span class="pre">forgi.visual.mplotlib</span></code>, )</li>
 <li>beautifulsoap4 (Needed for fetching informations about modified residues in pdb files)</li>
+<li>appdirs (Needed for <code class="code docutils literal"><span class="pre">forgi.threedee</span></code>)</li>
 </ul>
 </div>
-<div class="section" id="mc-annotate">
-<h3>MC-Annotate<a class="headerlink" href="#mc-annotate" title="Permalink to this headline">¶</a></h3>
-<p>To convert PDB files into CoarseGrainRNA objects, MC-Annotate is required.
-It is available at <a class="reference external" href="http://major.iric.ca/MajorLabEn/MC-Tools.html">http://major.iric.ca/MajorLabEn/MC-Tools.html</a></p>
+<div class="section" id="either-mc-annotate-or-dssr">
+<h3>Either MC-Annotate or DSSR<a class="headerlink" href="#either-mc-annotate-or-dssr" title="Permalink to this headline">¶</a></h3>
+<p>To convert PDB files into CoarseGrainRNA objects, either MC-Annotate or DSSR is required.</p>
+<p>MC-Annotate is available at <a class="reference external" href="http://major.iric.ca/MajorLabEn/MC-Tools.html">http://major.iric.ca/MajorLabEn/MC-Tools.html</a></p>
+<p>DSSR is available at <a class="reference external" href="http://home.x3dna.org/">http://home.x3dna.org/</a></p>
+<p>You can create a configuration file to decide which of the two programs you want to use.
+If no configuration file exists, MC-Annotate will be used.</p>
+<p>We use the appdirs package to define the system specific location of the
+configuration file. Under Linux it would default to ~/.config/forgi.
+Under Linux, you can create the configuration file like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;{&quot;PDB_ANNOTATION_TOOL&quot;: &quot;MC-Annotate&quot;}&#39;</span> <span class="o">&gt;</span>  <span class="o">~/.</span><span class="n">config</span><span class="o">/</span><span class="n">forgi</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;{&quot;PDB_ANNOTATION_TOOL&quot;: &quot;DSSR&quot;}&#39;</span> <span class="o">&gt;</span>  <span class="o">~/.</span><span class="n">config</span><span class="o">/</span><span class="n">forgi</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -110,8 +124,8 @@ It is available at <a class="reference external" href="http://major.iric.ca/Majo
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Oct 17, 2017.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.4.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>
