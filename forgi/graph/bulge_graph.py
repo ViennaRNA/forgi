@@ -35,35 +35,14 @@ from pprint import pprint, pformat
 
 from logging_exceptions import log_to_exception, log_at_caller
 
+from .residue import RESID, resid_to_str, resid_from_str
+
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
 except:
   def profile(x):
     return x
 
-
-RESID = col.namedtuple("complete_resid", ["chain", "resid"])
-
-def resid_to_str(resid):
-    if resid.chain is not None:
-        out="{}:{}".format(resid.chain, resid.resid[1])
-    else:
-        out=str(resid.resid[1])
-    if resid.resid[2]!=" ":
-        out+=".{}".format(resid.resid[2])
-    return out
-
-def resid_from_str(resstr):
-    if ":" in resstr:
-        chain, resid = resstr.split(":")
-    else:
-        resid=resstr
-        log.debug("No chain given in string {!r}".format(resstr))
-        chain='A'
-    idparts=resid.split(".")
-    if len(idparts)==1:
-        idparts.append(" ")
-    return RESID(chain, (' ', int(idparts[0]), idparts[1]))
 
 
 def add_bulge(bulges, bulge, context, message):
@@ -1562,7 +1541,6 @@ class BulgeGraph(object):
                   =   ======================================================================
 
         """
-
         if define[0] == 'i':
             # interior loop, we just have to check if
             # connections[0] < connections[1]
@@ -3211,15 +3189,6 @@ class BulgeGraph(object):
                 log.info("seq now has {} cutpoints".format(self.seq.count('&')))
 
 
-    def seqids_from_residue_map(self, residue_map):
-        """
-        Create the list of seq_ids from the list of MC-Annotate identifiers in the
-        residue map.
-        """
-        self.seq_ids = []
-        for i, r in enumerate(residue_map):
-            (from_chain, from_base) = ftum.parse_chain_base(r)
-            self.seq_ids += [RESID(from_chain, ftum.parse_resid(from_base))]
 
     # This function seems to be dead code, but might be useful in the future.
     # Consider adding this to whitelist.py

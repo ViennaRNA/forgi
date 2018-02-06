@@ -17,10 +17,12 @@ import time
 import math
 import warnings
 import itertools as it
+import json
 try:
     import io
 except ImportError: #Python 2
     import StringIO as io
+from io import open
 import logging
 from pprint import pprint
 
@@ -34,7 +36,6 @@ import Bio.PDB as bpdb
 
 from logging_exceptions import log_to_exception, log_exception
 
-
 from ...graph import bulge_graph as fgb
 from ..utilities import graph_pdb as ftug
 from ..model import stats as ftms
@@ -42,7 +43,8 @@ from ..model import stats as ftms
 from ..._k2n_standalone import knotted2nested as cak
 from ..utilities import mcannotate as ftum
 from ..utilities import pdb as ftup
-from . import descriptors as ftud
+from . import descriptors as ftmd
+from ..utilities import _dssr as ftud
 from ..utilities import vector as ftuv
 from ...utilities import debug as fud
 from ...utilities import stuff as fus
@@ -50,7 +52,7 @@ from ...utilities.observedDict import observedDict
 from ...utilities.exceptions import CgConstructionError, CgIntegrityError, GraphConstructionError
 from .linecloud import CoordinateStorage, LineSegmentStorage
 from ...utilities.stuff import is_string_type
-
+from ... import config
 
 log = logging.getLogger(__name__)
 
@@ -116,19 +118,16 @@ def add_longrange_interactions(cg, lines):
             cg.longrange[node1].add(node2)
             cg.longrange[node2].add(node1)
 
-def breakpoints_from_residuemap(residue_map):
+def breakpoints_from_seqids(seqids):
     """
-    Create the list of cofold cutpoints from the list of MC-Annotate identifiers in the
-    residue map.
+    Create the list of cofold cutpoints from the seq_ids.
     """
     breakpoints = []
     old_chain = None
-    log.debug(residue_map)
-    for i, r in enumerate(residue_map):
-        (from_chain, _) = ftum.parse_chain_base(r)
-        if old_chain is not None and from_chain != old_chain:
+    for i, seqid in enumerate(seqids):
+        if old_chain is not None and seqid.chain != old_chain:
             breakpoints.append(i)
-        old_chain = from_chain
+        old_chain = seqid.chain
     return breakpoints
 
 def _are_adjacent_basepairs(cg, edge1, edge2):
@@ -153,14 +152,73 @@ def _are_adjacent_basepairs(cg, edge1, edge2):
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
+def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
+    """
+    Get the secondary structure of the pdb by using an external tool.
+
+    :param filename: The name of the temporary pdb file
+    :param subprocess_kwargs: Will be passed as keyword arguments to subprocess.call/ subprcess.check_output
+    :param program: A string, one of "MC-Annotate", "DSSR" or None (to use the value from forgi.)
+    """
+    if program is None:
+        c = config.read_config()
+        if "PDB_ANNOTATION_TOOL" in c:
+            program = c["PDB_ANNOTATION_TOOL"]
+        else:
+            program = "MC-Annotate"
+    if program == "MC-Annotate":
+        return _run_mc_annotate(filename, subprocess_kwargs)
+    elif program == "DSSR":
+        return _run_dssr(filename, subprocess_kwargs)
+    else:
+        raise ValueError("Supported programs for annotating the pdb are: 'MC-Annotate' and 'DSSR', not '{}'".format(program))
+
+
+def _run_dssr(filename, subprocess_kwargs={}):
+    # See http://forum.x3dna.org/rna-structures/redirect-auxiliary-file-output/
+    with fus.make_temp_directory() as dssr_output_dir:
+        dssr_out = os.path.join(dssr_output_dir, "out")
+        arguments = ['x3dna-dssr', "-i="+filename, "--prefix="+os.path.join(dssr_output_dir, "d"), "-o="+dssr_out, "--json"]
+        log.info("Running DSSR: %s", sp.list2cmdline(arguments)) #https://stackoverflow.com/a/14837250/5069869
+        try:
+            ret_code = sp.call(arguments, universal_newlines=True, **subprocess_kwargs)
+            try:
+                with open(os.path.join(dssr_output_dir, "d-2ndstrs.bpseq"), encoding='ascii') as f:
+                    bpseq=f.read()
+                with open(dssr_out) as f:
+                    nts = json.load(f)["nts"]
+                    seq_ids = list(map(ftud.dssr_to_pdb_resid, [nt["nt_id"] for nt in nts]))
+            except (OSError, IOError) as e:
+                with log_to_exception(log, e):
+                    log.error("Comtent of %s is %s", dssr_output_dir, os.listdir(dssr_output_dir))
+                raise
+        except OSError as e:
+            assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
+            e.strerror+=". Hint: Did you install x3dna-dssr?"
+            raise e
+    return bpseq, seq_ids
+
 def _run_mc_annotate(filename, subprocess_kwargs={}):
+    """
+    Returns: A tuple (bpseq, seq_ids`)
+    """
+    log.info("Running MC-Annotate")
     try:
         out = sp.check_output(['MC-Annotate', filename], universal_newlines=True, **subprocess_kwargs)
     except OSError as e:
         assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
         e.strerror+=". Hint: Did you install MC-Annotate?"
         raise e
-    return out
+
+    lines = out.strip().split('\n')
+
+    # convert the mcannotate output into bpseq format
+
+    try:
+        return ftum.get_dotplot(lines)
+    except Exception as e:
+        log.exception("Could not convert MC-Annotate output to dotplot")
+        raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
 
 def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_length_one_stems = True):
     with fus.make_temp_directory() as output_dir:
@@ -178,51 +236,39 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
             f.flush()
 
         # first we annotate the 3D structure
-        log.info("Starting MC-Annotate for all chains")
-        out = _run_mc_annotate(rna_pdb_fn)
-
-        lines = out.strip().split('\n')
-
-        # convert the mcannotate output into bpseq format
-        try:
-            (dotplot, residue_map) = ftum.get_dotplot(lines)
-        except Exception as e:
-            print (e, file=sys.stderr)
-            return []
-
-        # f2 will store the dotbracket notation
-        #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-        #    f2.write(dotplot)
-        #    f2.flush()
+        log.info("Starting annotation program for all chains")
+        bpseq, seq_ids = _annotate_pdb(rna_pdb_fn)
+        breakpoints = breakpoints_from_seqids(seq_ids)
 
         # remove pseudoknots
         if remove_pseudoknots:
             log.info("Removing pseudoknots")
-            out = cak.k2n_main(io.StringIO(dotplot), input_format='bpseq',
+            log.info(bpseq)
+            bpseq = cak.k2n_main(io.StringIO(bpseq), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
                                method = cak.DEFAULT_METHOD,
                                opt_method = cak.DEFAULT_OPT_METHOD,
                                verbose = cak.DEFAULT_VERBOSE,
                                removed= cak.DEFAULT_REMOVED)
-        else:
-            out = dotplot
-        #(out, residue_map) = add_missing_nucleotides(out, residue_map)
 
-        breakpoints = breakpoints_from_residuemap(residue_map)
 
 
         import networkx as nx
         chain_connections_multigraph = nx.MultiGraph()
         cg = CoarseGrainRNA()
-        cg.seqids_from_residue_map(residue_map)
-
-        for line in out.splitlines():
+        cg.seq_ids = seq_ids
+        for line in bpseq.splitlines():
             try:
                 from_, res, to_ = line.split()
             except:
                 continue
-            from_seqid = cg.seq_ids[int(from_)-1]
+            try:
+                from_seqid = cg.seq_ids[int(from_)-1]
+            except IndexError as e:
+                with log_to_exception(log, e):
+                    log.error("Index error occurred for index %s. Seq-ids are %s", int(from_)-1, cg.seq_ids)
+                raise
             from_chain = from_seqid.chain
             chain_connections_multigraph.add_node(from_chain)
             if int(to_) != 0 and int(to_)>int(from_):
@@ -254,7 +300,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
             #print(component, type(component))
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             try:
-                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component), dissolve_length_one_stems=dissolve_length_one_stems))
             except GraphConstructionError as e:
                 log_exception(e, logging.ERROR, with_stacktrace=False)
                 log.error("Could not load chains %s, due to the above mentioned error.", list(component))
@@ -329,26 +375,15 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         f.flush()
 
     # first we annotate the 3D structure
-    log.info("Starting MC-Annotate for chain(s) %s", chain_id)
+    log.info("Starting annotation program for chain(s) %s", chain_id)
     if hasattr(sp, "DEVNULL"): #python>=3.3
         kwargs = {"stderr":sp.DEVNULL}
     else:
         kwargs = {}
-    out = _run_mc_annotate(rna_pdb_fn, kwargs)
+    bpseq, seq_ids = _annotate_pdb(rna_pdb_fn, kwargs)
+    breakpoints = breakpoints_from_seqids(seq_ids)
 
-    lines = out.strip().split('\n')
-
-    # convert the mcannotate output into bpseq format
-    try:
-        (dotplot, residue_map) = ftum.get_dotplot(lines)
-    except Exception as e:
-        log.exception("Could not convert MC-Annotate output to dotplot")
-        raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
-
-    # f2 will store the dotbracket notation
-    #with open(op.join(output_dir, 'temp.bpseq'), 'w') as f2:
-    #    f2.write(dotplot)
-    #    f2.flush()
+    lines = bpseq.strip().split('\n')
 
 
     if secondary_structure:
@@ -356,13 +391,14 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
         if remove_pseudoknots:
             warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
         cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=dissolve_length_one_stems)
-        breakpoints = breakpoints_from_residuemap(residue_map)
-        cg.seqids_from_residue_map(residue_map)
-
+        cg.seq_ids = seq_ids
+        if cg.backbone_breaks_after!=breakpoints:
+            raise CgIntegrityError("Breakpoints in provided secondary structure ({}) "
+                                   "are not consistent with PDB ({})".format(cg.backbone_breaks_after, breakpoints))
     else:
         if remove_pseudoknots:
             log.info("Removing pseudoknots")
-            out = cak.k2n_main(io.StringIO(dotplot), input_format='bpseq',
+            bpseq = cak.k2n_main(io.StringIO(bpseq), input_format='bpseq',
                                #output_format = 'vienna',
                                output_format = 'bpseq',
                                method = cak.DEFAULT_METHOD,
@@ -370,13 +406,9 @@ def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
                                verbose = cak.DEFAULT_VERBOSE,
                                removed= cak.DEFAULT_REMOVED)
 
-            out = out.replace(' Nested structure', pdb_base)
-        else:
-            out = dotplot
-        breakpoints = breakpoints_from_residuemap(residue_map)
-        log.info("Breakpoints in %s are %s",pdb_base, breakpoints)
-        cg.from_bpseq_str(out, breakpoints = breakpoints, dissolve_length_one_stems=dissolve_length_one_stems) #Sets the seq without cutpoints
-        cg.seqids_from_residue_map(residue_map)
+            bpseq = bpseq.replace(' Nested structure', pdb_base)
+        cg.from_bpseq_str(bpseq, breakpoints = breakpoints, dissolve_length_one_stems=dissolve_length_one_stems) #Sets the seq without cutpoints
+        cg.seq_ids = seq_ids
         add_longrange_interactions(cg, lines)
 
 
@@ -1179,7 +1211,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         else:
             raise ValueError("Wrong method {}. Choose one of 'fast' and 'vres'".format(method))
 
-        rog = ftud.radius_of_gyration(coords)
+        rog = ftmd.radius_of_gyration(coords)
         return rog
 
 

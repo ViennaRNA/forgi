@@ -46,9 +46,20 @@ These additional dependencies include:
 * Biopython (Needed for `forgi.threedee`)
 * pylab (Needed for `forgi.visual.mplotlib`, )
 * beautifulsoap4 (Needed for fetching informations about modified residues in pdb files)
+* appdirs (Needed for `forgi.threedee`)
 
-MC-Annotate
-~~~~~~~~~~~
+Either MC-Annotate or DSSR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To convert PDB files into CoarseGrainRNA objects, MC-Annotate is required.
-It is available at http://major.iric.ca/MajorLabEn/MC-Tools.html
+To convert PDB files into CoarseGrainRNA objects, either MC-Annotate or DSSR is required.
+
+MC-Annotate is available at http://major.iric.ca/MajorLabEn/MC-Tools.html
+
+DSSR is available at http://home.x3dna.org/
+
+You can create a configuration file to decide which of the two programs you want to use.
+If no configuration file exists, you will be prompted to choose the program the first time you
+convert a PDB file. Your choice will be recorded in a newly generated configuration file.
+
+We use the appdirs package to define the system specific location of the
+configuration file. Under Linux it would default to ~/.config/forgi.

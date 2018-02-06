@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from builtins import str
 from builtins import range
 import sys
@@ -11,7 +11,7 @@ from collections import defaultdict
 from logging_exceptions import log_to_exception, log_exception
 
 import forgi.utilities.debug as fud
-
+import forgi.graph.residue as fgr
 
 log = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def parse_chain_base(chain_base):
             # no chain identifier
             chain = ''
             base = chain_base
-
+    log.debug("base is %s", base)
     return (chain, base)
 
 def parse_base_pair_id(base_pair_id):
@@ -153,11 +153,11 @@ def get_dotplot(lines):
     residues = []
     residue_types = []
     bps = defaultdict(lambda:-1)
-    output_str = ""
+    bpseq_str = ""
 
     for line in iterate_over_residue_list(lines):
         parts = line.split(' ')
-        residues += [parts[0]]
+        residues.append(parse_chain_base(parts[0])) # A tuple chain, id
         residue_types += [parts[2]]
 
     paired = set()
@@ -174,8 +174,8 @@ def get_dotplot(lines):
             #if bond_type.find('Ww/Ww') >= 0:
             #print line
             chain1, base1, chain2, base2 = parse_base_pair_id(parts[0])
-            res1 = chain1+base1
-            res2 = chain2+base2
+            res1 = (chain1, base1)
+            res2 = (chain2, base2)
             if res1 in paired or res2 in paired:
                 if log.isEnabledFor(logging.WARNING):
                     if res1 in bps:
@@ -191,12 +191,26 @@ def get_dotplot(lines):
                 bps[res1] = residues.index(res2)
                 bps[res2] = residues.index(res1)
             except ValueError as e:
+                log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
                 with log_to_exception(log, e):
                     log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
                 raise
 
 
     for i in range(len(residue_types)):
-        output_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
+        bpseq_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
+    seq_ids = _seqids_from_residue_map(residues)
+    return bpseq_str, seq_ids
 
-    return (output_str, residues)
+def _seqids_from_residue_map(residue_map):
+    """
+    Create the list of seq_ids from the list of MC-Annotate identifiers in the
+    residue map.
+    """
+    seq_ids = []
+    for i, r in enumerate(residue_map):
+        log.debug("Residue %r", r)
+        (from_chain, from_base) = r
+        seq_ids += [fgr.RESID(from_chain, parse_resid(from_base))]
+    log.debug("Seq_ids are %s", seq_ids)
+    return seq_ids

@@ -30,8 +30,6 @@ import Bio.PDB.PDBExceptions
 
 from logging_exceptions import log_to_exception
 
-
-import forgi.config as cc
 import forgi.threedee.utilities.average_stem_vres_atom_positions as ftus
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.my_math as ftum

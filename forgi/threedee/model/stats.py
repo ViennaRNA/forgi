@@ -21,8 +21,6 @@ import math
 import logging
 log = logging.getLogger(__name__)
 
-#import fess.builder.config as cbc
-import forgi.config as cbc
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug

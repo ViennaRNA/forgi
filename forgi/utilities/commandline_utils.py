@@ -6,6 +6,7 @@ import logging
 import os.path
 import contextlib
 import warnings
+import textwrap
 
 import numpy as np
 
@@ -46,22 +47,26 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
     if rna_type=="any":
         fileformats.append("dotbracketfiles")
     n = len(fileformats)
-    helptext+=("Supported Filetypes are:" +'{}, '*(n-2) + '{} and '*(n>1) + '{}\n').format(*fileformats)
+    helptext+="\n".join(textwrap.wrap("Supported Filetypes are: {}".format(", ".join(fileformats)), 55))
     if rna_type=="any":
         helptext+=("Alternatively you can supply a dotbracket-string\n "
                    "(containing only the characters '.()[]{}&') from the commandline.\n")
     parser.add_argument("rna", nargs = nargs, type=str, help=helptext)
-    parser.add_argument("--keep-length-one-stems", action="store_true", help="For all input formats except forgi bg/cg files, "
-                                "this controlls whether stems of length one are dissolved to unpaired regions (default) or kept (if this option is present)."
-                                "In  the case of input in forgi-format, the RNA from the file is not modified.")
+    parser.add_argument("--keep-length-one-stems", action="store_true",
+                        help="For all input formats except forgi bg/cg files,\n"
+                             "this controlls whether stems of length one are \n"
+                             "dissolved to unpaired regions (default) \n"
+                             "or kept (if this option is present).\n"
+                             "In  the case of input in forgi-format,\n"
+                             "the RNA from the file is not modified.")
     pdb_input_group = parser.add_argument_group("Options for loading of PDB files",
                                     description="These options only take effect, "
                                                  "if the input RNA is in pdb file format.")
-    pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure from PDB files.")
+    pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure\nfrom PDB files.")
     pdb_input_group.add_argument("--chain", type=str,
                         help="When reading pdb-files: Only extract the given chain.")
     pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
-                        help="When reading a single chain from a pdb-files: \nEnforce the given secondary structure (as dotbracket string).\n (This only works, if --chain is given!)")
+                        help="When reading a single chain from a pdb-files: \nEnforce the secondary structure given as dotbracket\n string. (This only works, if --chain is given!)")
 
     if enable_logging:
         verbosity_group = parser.add_argument_group("Control verbosity of logging output")
@@ -130,18 +135,25 @@ def sniff_filetype(file):
             pass
         return "other"
 
-def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remove_pk=True, pdb_dotbracket="", dissolve_length_one_stems = True):
+def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
+             pbd_remove_pk=True, pdb_dotbracket="",
+             dissolve_length_one_stems = True):
     """
     :param rna_type: One of "any", "cg" and "3d" and "pdb"
-                     "any": Return either BulgeGraph or CoarseGrainRNA objekte, depending on the input format
-                     "cg":  Always convert to CoarseGrainRNA objects, even if they have no 3D information
+                     "any": Return either BulgeGraph or CoarseGrainRNA objekte,
+                            depending on the input format
+                     "cg":  Always convert to CoarseGrainRNA objects,
+                            even if they have no 3D information
                      "only_cg": Only accept cg-files.
-                     "3d":  Return CoarseGrainRNA objects, if the file contains 3D information, raise an error otherwise
+                     "3d":  Return CoarseGrainRNA objects,
+                            if the file contains 3D information,
+                            raise an error otherwise
                      "pdb": only accept pdb files
     :param allow_many: If True, return a list. If False raise an error, if more than one RNA is present.
-    :param pdb_chain: Extract the given chain from the file. Only applicable if filename corresponds to a pdb file
+    :param pdb_chain: Extract the given chain from the file.
+                      Only applicable if filename corresponds to a pdb file
     :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.
-    :param odb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
+    :param pdb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
     :param dissolve_length_one_stems: Ignored if input is in forgi bg/cg format.
 
     :retuns: A list of RNAs or a single RNA
@@ -149,12 +161,12 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
     # Is filename a dotbracket string and not a filename?
     if all( c in ".()[]{}&" for c in filename):
         # A dotbracket-string was provided via the commandline
-        log.info("Assuming RNA %s is a dotbracketstring and not a file.", filename)
-        bg = fgb.from_fasta_text(filename, dissolve_length_one_stems=dissolve_length_one_stems)
         if not rna_type=="any":
             warnings.warn("Cannot treat '{}' as dotbracket string, since we need a sequence. "
                           "Trying to treat it as a filename instead...".format(filename))
         else:
+            log.info("Assuming RNA %s is a dotbracketstring and not a file.", filename)
+            bg = fgb.from_fasta_text(filename, dissolve_length_one_stems=dissolve_length_one_stems)
             if allow_many:
                 return [bg]
             else:
@@ -182,6 +194,8 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None, pbd_remo
                 for cg in cgs:
                     cg.dissolve_length_one_stems()
         else:
+            if pdb_dotbracket:
+                raise ValueError("pdb_dotbracket requires a chain ti be given to avioid ambiguity.")
             cgs = ftmc.connected_cgs_from_pdb(filename, remove_pseudoknots = pbd_remove_pk,
                                               dissolve_length_one_stems=dissolve_length_one_stems)
         if allow_many:

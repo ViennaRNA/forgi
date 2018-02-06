@@ -88,8 +88,10 @@ def make_temp_directory():
     http://stackoverflow.com/questions/13379742/right-way-to-clean-up-a-temporary-folder-in-python-class
     '''
     temp_dir = tf.mkdtemp()
-    yield temp_dir
-    shutil.rmtree(temp_dir)
+    try:
+        yield temp_dir
+    finally:
+        shutil.rmtree(temp_dir)
 
 def insert_into_stack(stack, i, j):
     #print "add", i,j

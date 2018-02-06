@@ -14,6 +14,11 @@ import math
 import logging
 import tempfile as tf
 
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
 import numpy as np
 import numpy.testing as nptest
 
@@ -55,8 +60,11 @@ def cg_from_sg(cg, sg):
 
     return new_cg
 
-class CoarseGrainIoTest(tfgb.GraphVerification):
+def mocked_read_config():
+    return {"PDB_ANNOTATION_TOOL":"MC-Annotate"}
 
+@patch('forgi.config.read_config', mocked_read_config)
+class CoarseGrainIoTest(tfgb.GraphVerification):
     def check_cg_integrity(self, cg):
         self.assertGreater(len(list(cg.stem_iterator())), 0)
         for s in cg.stem_iterator():
@@ -133,6 +141,13 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
                 # make sure all the seq_ids are there
                 print (cg.seq_ids[r - 1])
 
+    def test_file_with_numeric_chain_id(self):
+        # Numeric chain ids
+        cg = ftmc.from_pdb('test/forgi/threedee/data/3J7A.pdb', chain_id="7")
+        self.check_cg_integrity(cg)
+        self.assertEqual(cg.seq_ids[-1].chain, '7')
+
+
     def test_from_pdb_cofold(self):
         # 1FUF triggers the if fromA.chain != fromB.chain clause in _are_adjacent_basepairs
         cg, = ftmc.connected_cgs_from_pdb('test/forgi/threedee/data/1FUF.pdb',
@@ -208,6 +223,10 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
     def test_multiple_models_in_file(self):
         cgs = ftmc.connected_cgs_from_pdb('test/forgi/threedee/data/1byj.pdb')
         self.assertEqual(len(cgs), 1) #Only look at first model!
+
+    def test_annotating_with_dssr(self):
+        pass
+
 
 class CoarseGrainTest(tfgb.GraphVerification):
     '''

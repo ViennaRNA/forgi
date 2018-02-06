@@ -18,7 +18,7 @@ before_install:
   - "sudo apt-get install -y graphviz"
 
 install:
-  - "pip install --upgrade pip wheel" 
+  - "pip install --upgrade pip wheel"
   - "pip install --only-binary=numpy,scipy numpy>1.10.0 scipy"
   - "pip install -r requirements.txt"
   - "mkdir mctools"
@@ -28,6 +28,8 @@ install:
   - "unzip MC-Annotate.zip"
   - "mv MC-Annotate mctools/"
   - "export PATH=$PATH:$PWD/mctools/"
+  - "mkdir ~/.config/forgi/"
+  - "echo '{\"PDB_ANNOTATION_TOOL\": \"MC-Annotate\"}' >~/.config/forgi/config.json"
+
 
 script: nose2 test
-

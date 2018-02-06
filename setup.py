@@ -48,6 +48,7 @@ setup(
       package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json']},
       scripts=['examples/rnaConvert.py',
                'examples/describe_cg.py',
+               'examples/compare_RNA.py',
                'examples/visualize_cg.py',
                'examples/visualize_pdb.py'],
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers

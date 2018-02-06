@@ -1,20 +1,41 @@
-from builtins import object
+import json
 import os
-import forgi
+import os.path
+import logging
+import appdirs
 
-class Configuration(object):
-    mids_method="template"
-    #mids_method="basenormals"
-    base_dir = os.path.expanduser('.')
-    #data_base_dir = os.path.expanduser('~/data/ernwin/processed')
-    #pdb_base_dir = os.path.expanduser('~/data/ernwin/pdb')
-    stem_fragment_dir = os.path.join(base_dir, 'forgi/data')
-    #lric_stats_fn = os.path.join(base_dir, 'fess/stats/temp.energy')
-    #template_residue_fn = os.path.join(base_dir, 'fess/stats/residue_template.pdb')
-    #longrange_contact_stats_fn = os.path.join(base_dir, 'fess/stats/temp.longrange.contact')
+log = logging.getLogger(__name__)
 
-    #test_input_dir = os.path.expanduser('~/data/ernwin/processed/')
-    #test_output_dir = os.path.join(base_dir, "test_output")
-    #sampling_output_dir = 'best'
-    #barnacle_dir = '/scr/plastilin/pkerp/apps/Barnacle'
-    #stem_library = dict()
+dirs = appdirs.AppDirs("forgi", "TBI")
+
+def read_config():
+    config = {}
+    for directory in [dirs.site_config_dir, dirs.user_config_dir]:
+        filename = os.path.join(directory, "config.json")
+        try:
+            with open(filename) as f:
+                conf = json.load(f)
+        except (OSError, IOError):
+            log.debug("No configuration file present at %s", filename)
+            pass
+        else:
+            log.debug("Reading configuration from %s", filename)
+            config.update(conf)
+
+    return config
+
+def set_config(key, value):
+    filename = os.path.join(dirs.user_config_dir, "config.json")
+    try:
+        with open(filename) as f:
+            config = json.load(f)
+    except (OSError, IOError):
+        config = {}
+    config[key]=value
+    try:
+        os.makedirs(dirs.user_config_dir)
+    except OSError:
+        pass
+    with open(filename, "w") as f:
+        json.dump(config, f)
+        log.info("Configuration file %s updated", filename)

@@ -32,7 +32,7 @@ def gyration_tensor(coords, diagonalize = True):
     '''
     Calculate the gyration tensor, given a list of 3D coordinates.
 
-    The gyration tensor is defiens as in doi:10.1063/1.4788616, eq. 4
+    The gyration tensor is defiend as in doi:10.1063/1.4788616, eq. 4
 
     :param diagonalize: Diagonalize the tensor to diag(lambda1, lambda2, lambda3)
     '''

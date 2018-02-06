@@ -132,7 +132,20 @@ class TestLineSegmentCollinearity(unittest.TestCase):
         plt.show()
 
 
-
+class TestRotationMatrix(unittest.TestCase):
+    def setUp(self):
+        pass
+    def test_around_xyz(self):
+        vec = np.array([1.,2.,3.])
+        nptest.assert_allclose(np.dot(ftuv.rotation_matrix("x", math.radians(90)), vec), [1., 3., -2.])
+        nptest.assert_allclose(np.dot(ftuv.rotation_matrix("y", math.radians(90)), vec), [-3., 2., 1.])
+        nptest.assert_allclose(np.dot(ftuv.rotation_matrix("z", math.radians(90)), vec), [2., -1., 3.])
+    def test_shortcut_works(self):
+        nptest.assert_allclose(ftuv.rotation_matrix("x", 1.3), ftuv.rotation_matrix(ftuv.standard_basis[0], 1.3))
+        nptest.assert_allclose(ftuv.rotation_matrix("y", -2.3), ftuv.rotation_matrix(ftuv.standard_basis[1], -2.3))
+        nptest.assert_allclose(ftuv.rotation_matrix("z", 0.23), ftuv.rotation_matrix(ftuv.standard_basis[2], 0.23))
+    def test_list_or_array_works(self):
+        nptest.assert_allclose(ftuv.rotation_matrix([2,3.,4.], 1.43), ftuv.rotation_matrix(np.array([2,3.,4.]), 1.43))
 class TestVector(unittest.TestCase):
     """Tests for the threedee.utilities.vector module"""
     def setUp(self):
