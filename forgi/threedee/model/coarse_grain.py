@@ -221,7 +221,7 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
     lines = out.strip().split('\n')
 
     # convert the mcannotate output into bpseq format
-  
+
     try:
         return ftum.get_dotplot(lines)
     except Exception as e:
@@ -308,7 +308,7 @@ def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_leng
             #print(component, type(component))
             log.info("Loading PDB: Connected component with chains %s", str(list(component)))
             try:
-                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component)))
+                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component), dissolve_length_one_stems=dissolve_length_one_stems))
             except GraphConstructionError as e:
                 log_exception(e, logging.ERROR, with_stacktrace=False)
                 log.error("Could not load chains %s, due to the above mentioned error.", list(component))
