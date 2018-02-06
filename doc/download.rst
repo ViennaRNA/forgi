@@ -8,18 +8,19 @@ Download
 
 The source code for the forgi module can be found at github:
 
-https://github.com/pkerpedjiev/forgi
+https://github.com/ViennaRNA/forgi
 
 To install, just run the usual::
 
-    sudo python setup.py install
+    python setup.py install
 
-Or install to a particular directory::
-
-    python setup.py install --prefix=/home/pete/local
 
 Dependencies
 ------------
+
+The easiest way to install all dependencies is by using::
+
+    pip install -r requirenments.txt
 
 Some standard python packages are required:
 
