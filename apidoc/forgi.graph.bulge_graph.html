@@ -1,0 +1,1805 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.graph.bulge_graph module &#8212; forgi 1.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.graph.residue module" href="forgi.graph.residue.html" />
+    <link rel="prev" title="forgi.graph package" href="forgi.graph.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 1.1.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.graph.html">forgi.graph package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.graph.residue.html">forgi.graph.residue module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.graph.bulge_graph">
+<span id="forgi-graph-bulge-graph-module"></span><h1>forgi.graph.bulge_graph module<a class="headerlink" href="#module-forgi.graph.bulge_graph" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.graph.bulge_graph.BulgeGraph">
+<em class="property">class </em><code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">BulgeGraph</code><span class="sig-paren">(</span><em>bg_file=None</em>, <em>dotbracket_str=u''</em>, <em>seq=u''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
+<p>A bulge graph object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>self.defines</strong> – The coarse grain element definitions: Keys are for example ‘s1’/ ‘m2’/ ‘h3’/ ‘f1’/ ‘t1’
+Values are the positions in the sequence (1D-coordinate) of start , end, …</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.add_info">
+<code class="descname">add_info</code><span class="sig-paren">(</span><em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.add_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.add_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.add_node">
+<code class="descname">add_node</code><span class="sig-paren">(</span><em>name</em>, <em>edges</em>, <em>define</em>, <em>weight=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.add_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.add_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.adjacent_stem_pairs_iterator">
+<code class="descname">adjacent_stem_pairs_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.adjacent_stem_pairs_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.adjacent_stem_pairs_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all pairs of stems which are separated by some element.</p>
+<p>This will always yield triples of the form (s1, e1, s2) where s1 and
+s2 are the stem identifiers and e1 denotes the element that separates
+them.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.all_connections">
+<code class="descname">all_connections</code><span class="sig-paren">(</span><em>elem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.all_connections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.all_connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the connected elements in order along the backbone.</p>
+<p>The difference to self.connections is that the returned list
+always contains as many elements, as the define of elem has numbers.
+If there is no connected element at this side,the returned list contains None.
+If elem is a stem connected to a hairpin or interior loop,
+this loop will be contained twice in the resulting output list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.are_adjacent_stems">
+<code class="descname">are_adjacent_stems</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em>, <em>multiloops_count=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.are_adjacent_stems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.are_adjacent_stems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are two stems separated by only one element. If multiloops should not
+count as edges, then the appropriate parameter should be set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s1</strong> – The name of the first stem</li>
+<li><strong>s2</strong> – The name of the second stem</li>
+<li><strong>multiloops_count</strong> – Whether to count multiloops as an edge linking
+two stems</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.bpseq_to_tuples_and_seq">
+<code class="descname">bpseq_to_tuples_and_seq</code><span class="sig-paren">(</span><em>bpseq_str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.bpseq_to_tuples_and_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.bpseq_to_tuples_and_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a bpseq string to a list of pair tuples and a sequence
+dictionary. The return value is a tuple of the list of pair tuples
+and a sequence string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bpseq_str</strong> – The bpseq string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">([(1,5),(2,4),(3,0),(4,2),(5,1)], ‘ACCAA’)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.buildorder_of">
+<code class="descname">buildorder_of</code><span class="sig-paren">(</span><em>element</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.buildorder_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.buildorder_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index into build_order where the element FIRST appears.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>element</strong> – Element name, a string. e.g. “m0” or “s0”</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">An index into self.build_order or None, if the element is not
+part of the build_order (e.g. hairpin loops)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.compare_bulges">
+<code class="descname">compare_bulges</code><span class="sig-paren">(</span><em>b</em>, <em>flank_nucs=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.compare_bulges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.compare_bulges" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that can be passed in as the key to a sort.</p>
+<p>Compares based on the nucleotide number
+(using define_a to allow for sorting 0-length MLs)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.compare_hairpins">
+<code class="descname">compare_hairpins</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.compare_hairpins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.compare_hairpins" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.compare_stems">
+<code class="descname">compare_stems</code><span class="sig-paren">(</span><em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.compare_stems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.compare_stems" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that can be passed in as the key to a sort.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.connected">
+<code class="descname">connected</code><span class="sig-paren">(</span><em>n1</em>, <em>n2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Are the nucleotides n1 and n2 connected?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>n1</strong> – A node in the BulgeGraph</li>
+<li><strong>n2</strong> – Another node in the BulgeGraph</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True or False indicating whether they are connected.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.connected_stem_iterator">
+<code class="descname">connected_stem_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.connected_stem_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.connected_stem_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all pairs of connected stems.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.connection_ends">
+<code class="descname">connection_ends</code><span class="sig-paren">(</span><em>connection_type</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.connection_ends"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.connection_ends" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find out which ends of the stems are connected by a particular angle
+type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>connection_type</strong> – The angle type, as determined by which corners
+of a stem are connected</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(s1e, s2b) 0 means the side of the stem with the lowest nucleotide, 1 the other side</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.connection_type">
+<code class="descname">connection_type</code><span class="sig-paren">(</span><em>define</em>, <em>connections</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.connection_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.connection_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify the way that two stems are connected according to the type
+of bulge that separates them.</p>
+<p>Potential angle types for single stranded segments, and the ends of
+the stems they connect:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="5%" />
+<col width="5%" />
+<col width="32%" />
+<col width="58%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>1</td>
+<td>2</td>
+<td>(1, 1)</td>
+<td>#pseudoknot</td>
+</tr>
+<tr class="row-even"><td>1</td>
+<td>0</td>
+<td>(1, 0)</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>2</td>
+<td>(0, 1)</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>3</td>
+<td>0</td>
+<td>(0, 0)</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>define</strong> – The name of the bulge separating the two stems</li>
+<li><strong>connections</strong> – The two stems and their separation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>INT connection type</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="1%" />
+<col width="99%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>positive values mean forward (from the connected stem starting at the
+lower nucleotide number to the one starting at the higher nuc. number)</td>
+</tr>
+<tr class="row-even"><td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>negative values mean backwards.</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>interior loop</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>first multi-loop segment of normal multiloops and most pseudoknots</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>middle segment of a normal multiloop</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>last segment of normal multiloops and most pseudoknots</td>
+</tr>
+<tr class="row-odd"><td>5</td>
+<td>middle segments of pseudoknots</td>
+</tr>
+</tbody>
+</table>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.connections">
+<code class="descname">connections</code><span class="sig-paren">(</span><em>bulge</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.connections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the edges that connect to a bulge in a list form,
+sorted by lowest res number of the connection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.define_a">
+<code class="descname">define_a</code><span class="sig-paren">(</span><em>elem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.define_a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.define_a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a define including the adjacent nucleotides.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.define_range_iterator">
+<code class="descname">define_range_iterator</code><span class="sig-paren">(</span><em>node</em>, <em>adjacent=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.define_range_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.define_range_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the ranges of the nucleotides in the define.</p>
+<p>In other words, if a define contains the following: [1,2,7,8]
+The ranges will be [1,2] and [7,8].</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>adjacent</strong> – Use the nucleotides in the neighboring element which
+connect to this element as the range starts and ends.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of two-element lists</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.define_residue_num_iterator">
+<code class="descname">define_residue_num_iterator</code><span class="sig-paren">(</span><em>node</em>, <em>adjacent=False</em>, <em>seq_ids=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.define_residue_num_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.define_residue_num_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over the residue numbers that belong to this node.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> – The name of the node</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.describe_multiloop">
+<code class="descname">describe_multiloop</code><span class="sig-paren">(</span><em>multiloop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.describe_multiloop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.describe_multiloop" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>multiloop</strong> – An iterable of nodes (only “m”, “t” and “f” elements)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.dissolve_length_one_stems">
+<code class="descname">dissolve_length_one_stems</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.dissolve_length_one_stems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.dissolve_length_one_stems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.element_length">
+<code class="descname">element_length</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.element_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.element_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of residues that are contained within this element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – The name of the element.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.elements_to_nucleotides">
+<code class="descname">elements_to_nucleotides</code><span class="sig-paren">(</span><em>elements</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.elements_to_nucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.elements_to_nucleotides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a list of element names to a list of nucleotide numbers.</p>
+<p>Remove redundant entries.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.find_bulge_loop">
+<code class="descname">find_bulge_loop</code><span class="sig-paren">(</span><em>vertex</em>, <em>max_length=4</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.find_bulge_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.find_bulge_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a set of nodes that form a loop containing the
+given vertex and being no greater than max_length nodes long.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vertex</strong> – The vertex to start the search from.</li>
+<li><strong>max_length</strong> – Only fond loops that contain no more then this many elements</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of the nodes in the loop.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.find_external_loops">
+<code class="descname">find_external_loops</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.find_external_loops"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.find_external_loops" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all of the elements which are part of
+an external loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list containing the external loops in this molecule
+(i.e. [‘f0, m3, m5, t0’])</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.find_mlonly_multiloops">
+<code class="descname">find_mlonly_multiloops</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.find_mlonly_multiloops"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.find_mlonly_multiloops" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.flanking_nuc_at_stem_side">
+<code class="descname">flanking_nuc_at_stem_side</code><span class="sig-paren">(</span><em>s</em>, <em>side</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.flanking_nuc_at_stem_side"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.flanking_nuc_at_stem_side" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nucleotide number that is next to the stem at the given stem side.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>side</strong> – 0, 1, 2 or 3, as returned by self.get_sides_plus</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The nucleotide position. If the stem has no neighbor at that side,
+0 or self.seq_length+1 is returned instead.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.flanking_nucleotides">
+<code class="descname">flanking_nucleotides</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.flanking_nucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.flanking_nucleotides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nucleotides directly flanking an element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> – the name of the element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list of nucleotides</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.floop_iterator">
+<code class="descname">floop_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.floop_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.floop_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield the name of the 5’ prime unpaired region if it is
+present in the structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.from_bg_file">
+<code class="descname">from_bg_file</code><span class="sig-paren">(</span><em>bg_file</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.from_bg_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.from_bg_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load from a file containing a text-based representation
+of this BulgeGraph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bg_file</strong> – The filename.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">No return value since the current structure is the one
+being loaded.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.from_bg_string">
+<code class="descname">from_bg_string</code><span class="sig-paren">(</span><em>bg_str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.from_bg_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.from_bg_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate this BulgeGraph from the string created by the method
+to_bg_string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bg_str</strong> – The string representation of this BugleGraph.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.from_bpseq_str">
+<code class="descname">from_bpseq_str</code><span class="sig-paren">(</span><em>bpseq_str</em>, <em>dissolve_length_one_stems=False</em>, <em>breakpoints=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.from_bpseq_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.from_bpseq_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the graph from a string listing the base pairs.</p>
+<p>The string should be formatted like so:</p>
+<blockquote>
+<div>1 G 115
+2 A 0
+3 A 0
+4 U 0
+5 U 112
+6 G 111</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bpseq_str</strong> – The string, containing newline characters.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Nothing, but fill out this structure.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.from_dotbracket">
+<code class="descname">from_dotbracket</code><span class="sig-paren">(</span><em>dotbracket_str</em>, <em>dissolve_length_one_stems=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.from_dotbracket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.from_dotbracket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the BulgeGraph structure and repopulate it from a dotbracket representation.
+Note that the sequence information is lost.</p>
+<p>ie: ..((..))..</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dotbracket_str</strong> – A string containing the dotbracket representation
+of the structure</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.from_stems_and_bulges">
+<code class="descname">from_stems_and_bulges</code><span class="sig-paren">(</span><em>stems</em>, <em>bulges</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.from_stems_and_bulges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.from_stems_and_bulges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the graph from the list of stems and bulges.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stems</strong> – A list of tuples of two two-tuples, each containing the start
+and end nucleotides of each strand of the stem.</li>
+<li><strong>bulges</strong> – A list of tuples containing the starts and ends of the
+of the bulge regions.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing, just make the bulgegraph</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.from_tuples">
+<code class="descname">from_tuples</code><span class="sig-paren">(</span><em>tuples</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.from_tuples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.from_tuples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a bulge_graph from a list of pair tuples. Unpaired
+nucleotides have a pairing partner of 0.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_angle_type">
+<code class="descname">get_angle_type</code><span class="sig-paren">(</span><em>bulge</em>, <em>allow_broken=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_angle_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_angle_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return what type of angle this bulge is, based on the way this
+would be built using a breadth-first traversal along the minimum
+spanning tree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>allow_broken</strong> – <p>How to treat broken multiloop segments.</p>
+<ul class="simple">
+<li>False (default): Return None</li>
+<li>The string “bo” or “build_order”: Return the
+angle type according to the build-order
+(i.e. from the first built stem to the last-built stem)</li>
+<li>True: Return the angle_type from the stem with
+lower nt number to the stem with higher nt number.
+In forgi 2.0 this will be removed and the behavior of “bo”
+will be used instead.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_any_sides">
+<code class="descname">get_any_sides</code><span class="sig-paren">(</span><em>e1</em>, <em>e2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_any_sides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_any_sides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the side of e1 that e2 is on. The only difference from the get_sides
+method is the fact that e1 does not have to be a stem.</p>
+<p>0 indicates that e2 is on the side with lower numbered
+nucleotides and 1 indicates that e2 is on the side with
+greater nucleotide numbers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>e1</strong> – The name of the first element.</li>
+<li><strong>e2</strong> – The name of the second element.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple indicating the side of e1 adjacent to e2 and the side of e2
+adjacent to e1</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_bulge_dimensions">
+<code class="descname">get_bulge_dimensions</code><span class="sig-paren">(</span><em>bulge</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_bulge_dimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_bulge_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the dimensions of the bulge.</p>
+<p>If it is single stranded it will be (x, -1) for h,t,f or (x, 1000) for m.
+Otherwise it will be (x, y).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bulge</strong> – The name of the bulge.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A pair containing its dimensions</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_connect_str">
+<code class="descname">get_connect_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_connect_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_connect_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the connections of the bulges in the graph.</p>
+<p>Format:</p>
+<p>connect [from] [to1] [to2] [to3]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_connected_residues">
+<code class="descname">get_connected_residues</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em>, <em>bulge=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_connected_residues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_connected_residues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the nucleotides which are connected by the element separating
+s1 and s2. They should be adjacent stems.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s2</strong> (<em>s1</em><em>,</em>) – 2 adjacent stems</li>
+<li><strong>bulge</strong> – Optional: The bulge seperating the two stems.
+If s1 and s2 are connected by more than one element,
+this has to be given, or a ValueError will be raised.
+(useful for pseudoknots)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The connected nucleotides are those which are spanned by a single
+interior loop or multiloop. In the case of an interior loop, this
+function will return a list of two tuples and in the case of multiloops
+if it will be a list of one tuple.</p>
+<p>If the two stems are not separated by a single element, then return
+an empty list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_define_seq_str">
+<code class="descname">get_define_seq_str</code><span class="sig-paren">(</span><em>elem</em>, <em>adjacent=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_define_seq_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_define_seq_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list containing the sequences for the given define.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>d</strong> – The element name for which to get the sequences</li>
+<li><strong>adjacent</strong> – Boolean. Include adjacent nucleotides (for single stranded RNA only)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list containing the sequence(s) corresponding to the defines</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_define_str">
+<code class="descname">get_define_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_define_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_define_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the defines into a string.</p>
+<p>Format:</p>
+<p>define [name] [start_res1] [end_res1] [start_res2] [end_res2]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_domains">
+<code class="descname">get_domains</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_domains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_domains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get secondary structure domains.</p>
+<dl class="docutils">
+<dt>Currently domains found are:</dt>
+<dd><ul class="first last simple">
+<li>multiloops (without any connected stems)</li>
+<li>rods: stretches of stems + interior loops (without branching), with trailing hairpins</li>
+<li>pseudoknots</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_flanking_handles">
+<code class="descname">get_flanking_handles</code><span class="sig-paren">(</span><em>bulge_name</em>, <em>side=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_flanking_handles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_flanking_handles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the indices of the residues for fitting bulge regions.</p>
+<p>So if there is a loop like so (between residues 7 and 16):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(((</span><span class="o">...</span><span class="p">))))</span>
+<span class="mi">7890123456</span>
+  <span class="o">^</span>   <span class="o">^</span>
+</pre></div>
+</div>
+<p>Then residues 9 and 13 will be used as the handles against which
+to align the fitted region.</p>
+<p>In the fitted region, the residues (2,6) will be the ones that will
+be aligned to the handles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(orig_chain_res1, orig_chain_res1, flanking_res1, flanking_res2)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_flanking_region">
+<code class="descname">get_flanking_region</code><span class="sig-paren">(</span><em>bulge_name</em>, <em>side=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_flanking_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_flanking_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>If a bulge is flanked by stems, return the lowest residue number
+of the previous stem and the highest residue number of the next
+stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bulge_name</strong> – The name of the bulge</li>
+<li><strong>side</strong> – The side of the bulge (indicating the strand)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_flanking_sequence">
+<code class="descname">get_flanking_sequence</code><span class="sig-paren">(</span><em>bulge_name</em>, <em>side=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_flanking_sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_flanking_sequence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_info_str">
+<code class="descname">get_info_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_info_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_info_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_length">
+<code class="descname">get_length</code><span class="sig-paren">(</span><em>vertex</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the minimum length of a vertex.</p>
+<p>If it’s a stem, then the result is its length (in base pairs).</p>
+<p>If it’s a bulge, then the length is the smaller of it’s dimensions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vertex</strong> – The name of the vertex.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_length_str">
+<code class="descname">get_length_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_length_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_length_str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_link_direction">
+<code class="descname">get_link_direction</code><span class="sig-paren">(</span><em>stem1</em>, <em>stem2</em>, <em>bulge=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_link_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_link_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the direction in which stem1 and stem2 are linked (by the bulge)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">1 if the bulge connects stem1 with stem2 in forward direction (5’ to 3’)
+-1 otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_mst">
+<code class="descname">get_mst</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_mst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_mst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a minimum spanning tree from this BulgeGraph. This is useful
+for constructing a structure where each section of a multiloop is
+sampled independently and we want to introduce a break at the largest
+multiloop section.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_multiloop_nucleotides">
+<code class="descname">get_multiloop_nucleotides</code><span class="sig-paren">(</span><em>multiloop_loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_multiloop_nucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_multiloop_nucleotides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of nucleotides which make up a particular
+multiloop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>multiloop_loop</strong> – The elements which make up this multiloop</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of nucleotides</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_multiloop_side">
+<code class="descname">get_multiloop_side</code><span class="sig-paren">(</span><em>m</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_multiloop_side"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_multiloop_side" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find out which strand a multiloop is on. An example of a situation in
+which the loop can be on both sides can be seen in the three-stemmed
+structure below:</p>
+<blockquote>
+<div>(.().().)</div></blockquote>
+<p>In this case, the first multiloop section comes off of the 5’ strand of
+the first stem (the prior stem is always the one with a lower numbered
+first residue). The second multiloop section comess of the 3’ strand of
+the second stem and the third loop comes off the 3’ strand of the third
+stem.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_name_str">
+<code class="descname">get_name_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_name_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_name_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of this structure along with its keyword:</p>
+<blockquote>
+<div>name 1y26</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_next_ml_segment">
+<code class="descname">get_next_ml_segment</code><span class="sig-paren">(</span><em>ml_segment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_next_ml_segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_next_ml_segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the adjacent multiloop-segment (or 3’ loop) next to the 3’ side of ml_segment.</p>
+<p>If there is no other single stranded RNA after the stem, the backbone must end there.
+In that case return None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_node_dimensions">
+<code class="descname">get_node_dimensions</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_node_dimensions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_node_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the dimensions of a node.</p>
+<p>If the node is a stem, then the dimensions will be l where l is
+the length of the stem.</p>
+<p>Otherwise, see get_bulge_dimensions(node)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> – The name of the node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A pair containing its dimensions</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_node_from_residue_num">
+<code class="descname">get_node_from_residue_num</code><span class="sig-paren">(</span><em>base_num</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_node_from_residue_num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_node_from_residue_num" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over the defines and see which one encompasses this base.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_position_in_element">
+<code class="descname">get_position_in_element</code><span class="sig-paren">(</span><em>resnum</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_position_in_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_position_in_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the position of the residue in the cg-element and the length of the element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>resnum</strong> – An integer. The 1-based position in the total sequence.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple (p,l) where p is the position of the residue in the cg-element
+(0-based for stems, 1-based for loops) and p/l gives a measure for the position
+of the residue along the cg-element’s axis (0 means at cg.coords[elem][0],
+1 at cg.coords[elem][1] and 0.5 exactely in the middle of these two. )</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_resseqs">
+<code class="descname">get_resseqs</code><span class="sig-paren">(</span><em>define</em>, <em>seq_ids=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_resseqs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_resseqs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the pdb ids of the nucleotides in this define.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>define</strong> – The name of this element.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">Return a tuple of two arrays containing the residue ids
+on each strand</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_seq_ids_str">
+<code class="descname">get_seq_ids_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_seq_ids_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_seq_ids_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sequence id string</p>
+<p>seq_ids 1 2 2.A 17</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_sequence_str">
+<code class="descname">get_sequence_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_sequence_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_sequence_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sequence along with its keyword. I.e.</p>
+<blockquote>
+<div>seq ACGGGCC</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_side_nucleotides">
+<code class="descname">get_side_nucleotides</code><span class="sig-paren">(</span><em>stem</em>, <em>side</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_side_nucleotides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_side_nucleotides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the nucleotide numbers on the given side of
+them stem. Side 0 corresponds to the 5’ end of the
+stem whereas as side 1 corresponds to the 3’ side
+of the stem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stem</strong> – The name of the stem</li>
+<li><strong>side</strong> – Either 0 or 1, indicating the 5’ or 3’ end of the stem</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple of the nucleotide numbers on the given side of
+the stem.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_sides">
+<code class="descname">get_sides</code><span class="sig-paren">(</span><em>s1</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_sides"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_sides" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the side of s1 that is next to b.</p>
+<p>s1e -&gt; s1b -&gt; b</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s1</strong> – The stem.</li>
+<li><strong>b</strong> – The bulge.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple indicating which side is the one next to the bulge
+and which is away from the bulge.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_sides_plus">
+<code class="descname">get_sides_plus</code><span class="sig-paren">(</span><em>s1</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_sides_plus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_sides_plus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the side of s1 that is next to b.</p>
+<p>s1e -&gt; s1b -&gt; b</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s1</strong> – The stem.</li>
+<li><strong>b</strong> – The bulge.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple indicating the corner of the stem that connects
+to the bulge as well as the corner of the bulge that connects
+to the stem.
+These sides are equivalent to the indices of the define.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_single_define_str">
+<code class="descname">get_single_define_str</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_single_define_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_single_define_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a define string for a single key.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_stem_direction">
+<code class="descname">get_stem_direction</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_stem_direction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_stem_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 0 if the lowest numbered residue in s1
+is lower than the lowest numbered residue in s2.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_stem_edge">
+<code class="descname">get_stem_edge</code><span class="sig-paren">(</span><em>stem</em>, <em>pos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_stem_edge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_stem_edge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the side of the stem that position is on.
+Side 0 corresponds to the 5’ pairing residues in the
+stem whereas as side 1 corresponds to the 3’ pairing
+residues in the stem.
+:param stem: The name of the stem
+:param pos: A position in the stem
+:return: 0 if pos on 5’ edge of stem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_strand">
+<code class="descname">get_strand</code><span class="sig-paren">(</span><em>multiloop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_strand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_strand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the strand on which this multiloop is located.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>multiloop</strong> – The name of the multiloop</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0 for being on the lower numbered strand and 1 for
+being on the higher numbered strand.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.get_vertex">
+<code class="descname">get_vertex</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.get_vertex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.get_vertex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new unique vertex name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.has_connection">
+<code class="descname">has_connection</code><span class="sig-paren">(</span><em>v1</em>, <em>v2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.has_connection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.has_connection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is there an edge between these two nodes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.hloop_iterator">
+<code class="descname">hloop_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.hloop_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.hloop_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over all of the hairpin in the structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.iloop_iterator">
+<code class="descname">iloop_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.iloop_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.iloop_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over all of the interior loops in the structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.is_loop_pseudoknot">
+<code class="descname">is_loop_pseudoknot</code><span class="sig-paren">(</span><em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.is_loop_pseudoknot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.is_loop_pseudoknot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is a particular loop a pseudoknot?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loop</strong> – A list of elements that are part of the loop (only m,f and t elements).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Either True or false</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.is_single_stranded">
+<code class="descname">is_single_stranded</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.is_single_stranded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.is_single_stranded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does this node represent a single-stranded region?</p>
+<p>Single stranded regions are five-prime and three-prime unpaired
+regions, multiloops, and hairpins</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Interior loops are never considered single stranded by this function.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> – The name of the node</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if yes, False if no</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.iter_elements_along_backbone">
+<code class="descname">iter_elements_along_backbone</code><span class="sig-paren">(</span><em>startpos=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.iter_elements_along_backbone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.iter_elements_along_backbone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate all coarse grained elements along the backbone.</p>
+<p>Note that stems are yielded twice (for forward and backward strand).
+Interior loops may be yielded twice or once (if one side has no nucleotide)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>startpos</strong> – The nucleotide position at which tio start</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body">Coarse grained element names, like “s0”, “i0”</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.iterate_over_seqid_range">
+<code class="descname">iterate_over_seqid_range</code><span class="sig-paren">(</span><em>start_id</em>, <em>end_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.iterate_over_seqid_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.iterate_over_seqid_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over the seq_ids between the start_id and end_id.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>level=10</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.min_max_bp_distance">
+<code class="descname">min_max_bp_distance</code><span class="sig-paren">(</span><em>e1</em>, <em>e2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.min_max_bp_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.min_max_bp_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the minimum and maximum base pair distance between
+these two elements.</p>
+<p>If they are connected, the minimum distance will be 1.
+The maximum will be 1 + length(e1) + length(e1)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>e1</strong> – The name of the first element</li>
+<li><strong>e2</strong> – The name of the second element</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple containing the minimum and maximum distance between
+the two elements.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.mloop_iterator">
+<code class="descname">mloop_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.mloop_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.mloop_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over all of the multiloops in the structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.nd_define_iterator">
+<code class="descname">nd_define_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.nd_define_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.nd_define_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over defines which contain some nucleotides.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator over all defines which contain some
+nucleotides.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.nucleotides_to_elements">
+<code class="descname">nucleotides_to_elements</code><span class="sig-paren">(</span><em>nucleotides</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.nucleotides_to_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.nucleotides_to_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a list of nucleotides (nucleotide numbers) to element names.</p>
+<p>Remove redundant entries and return a set.</p>
+<dl class="docutils">
+<dt>..note::</dt>
+<dd>Use <code class="code docutils literal"><span class="pre">self.get_node_from_residue_num</span></code> if you have only a single nucleotide number.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.pairing_partner">
+<code class="descname">pairing_partner</code><span class="sig-paren">(</span><em>nucleotide_number</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.pairing_partner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.pairing_partner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the base pairing partner of the nucleotide at position
+nucleotide_number. If this nucleotide is unpaired, return None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nucleotide_number</strong> – The position of the query nucleotide in the
+sequence.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The number of the nucleotide base paired with the one at
+position nucleotide_number.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.random_subgraph">
+<code class="descname">random_subgraph</code><span class="sig-paren">(</span><em>subgraph_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.random_subgraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.random_subgraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random subgraph of this graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list containing a the nodes comprising a random subgraph</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.relabel_node">
+<code class="descname">relabel_node</code><span class="sig-paren">(</span><em>old_name</em>, <em>new_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.relabel_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.relabel_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the name of a node.</p>
+<p>param old_name: The previous name of the node
+param new_name: The new name of the node</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.remove_base_pairs">
+<code class="descname">remove_base_pairs</code><span class="sig-paren">(</span><em>to_remove</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.remove_base_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.remove_base_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all of the base pairs which are in pair_list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>to_remove</strong> – A list of tuples containing the names of the base pairs.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.remove_degenerate_nodes">
+<code class="descname">remove_degenerate_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.remove_degenerate_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.remove_degenerate_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>For now just remove all hairpins that have no length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.remove_pseudoknots">
+<code class="descname">remove_pseudoknots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.remove_pseudoknots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.remove_pseudoknots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all of the pseudoknots using the knotted2nested.py script.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of base-pairs that were removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.remove_vertex">
+<code class="descname">remove_vertex</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.remove_vertex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.remove_vertex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a node after merging it with another</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>v</strong> – The name of the node</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.seq">
+<code class="descname">seq</code><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.seq" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.seq_id_to_pos">
+<code class="descname">seq_id_to_pos</code><span class="sig-paren">(</span><em>seq_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.seq_id_to_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.seq_id_to_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a pdb seq_id to a 1-based nucleotide position</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seq_id</strong> – An instance of RESID</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.seq_ids_from_seq">
+<code class="descname">seq_ids_from_seq</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.seq_ids_from_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.seq_ids_from_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sequence ids of the string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.set_angle_types">
+<code class="descname">set_angle_types</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.set_angle_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.set_angle_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill in the angle types based on the build order</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.shortest_bg_loop">
+<code class="descname">shortest_bg_loop</code><span class="sig-paren">(</span><em>vertex</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.shortest_bg_loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.shortest_bg_loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a shortest loop containing this node. The vertex should
+be a multiloop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vertex</strong> – The name of the vertex to find the loop.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list containing the elements in the shortest cycle.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.shortest_mlonly_multiloop">
+<code class="descname">shortest_mlonly_multiloop</code><span class="sig-paren">(</span><em>ml_segment</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.shortest_mlonly_multiloop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.shortest_mlonly_multiloop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.shortest_path">
+<code class="descname">shortest_path</code><span class="sig-paren">(</span><em>e1</em>, <em>e2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.shortest_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.shortest_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the shortest path between two elements (e1, e2)
+along the secondary structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>e1</strong> – The name of the first element</li>
+<li><strong>e2</strong> – The name of the second element</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of the element names along the shortest path</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.sorted_edges_for_mst">
+<code class="descname">sorted_edges_for_mst</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.sorted_edges_for_mst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.sorted_edges_for_mst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep track of all linked nodes. Used for the generation of the minimal spanning tree.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.sorted_element_iterator">
+<code class="descname">sorted_element_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.sorted_element_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.sorted_element_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over a list of the coarse grained elements sorted by the lowest numbered
+nucleotide in each stem. Multiloops with no nucleotide coordinates come last.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.sorted_stem_iterator">
+<code class="descname">sorted_stem_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.sorted_stem_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.sorted_stem_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over a list of the stems sorted by the lowest numbered
+nucleotide in each stem.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.ss_distance">
+<code class="descname">ss_distance</code><span class="sig-paren">(</span><em>e1</em>, <em>e2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.ss_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.ss_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the distance between two elements (e1, e2)
+along the secondary structure. The distance only starts
+at the edge of each element, and is the closest distance
+between the two elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>e1</strong> – The name of the first element</li>
+<li><strong>e2</strong> – The name of the second element</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The integer distance between the two along the secondary
+structure.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.stem_bp_iterator">
+<code class="descname">stem_bp_iterator</code><span class="sig-paren">(</span><em>stem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.stem_bp_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.stem_bp_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all the base pairs in the stem.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.stem_iterator">
+<code class="descname">stem_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.stem_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.stem_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over all of the stems in the structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.stem_length">
+<code class="descname">stem_length</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.stem_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.stem_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the length of a particular element. If it’s a stem, it’s equal to
+the number of paired bases. If it’s an interior loop, it’s equal to the
+number of unpaired bases on the strand with less unpaired bases. If
+it’s a multiloop, then it’s the number of unpaired bases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.stem_resn_to_stem_vres_side">
+<code class="descname">stem_resn_to_stem_vres_side</code><span class="sig-paren">(</span><em>stem</em>, <em>res</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.stem_resn_to_stem_vres_side"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.stem_resn_to_stem_vres_side" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.stem_side_vres_to_resn">
+<code class="descname">stem_side_vres_to_resn</code><span class="sig-paren">(</span><em>stem</em>, <em>side</em>, <em>vres</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.stem_side_vres_to_resn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.stem_side_vres_to_resn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the residue number given the stem name, the strand (side) it’s on
+and the virtual residue number.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.tloop_iterator">
+<code class="descname">tloop_iterator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.tloop_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.tloop_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield the name of the 3’ prime unpaired region if it is
+present in the structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_bg_string">
+<code class="descname">to_bg_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_bg_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_bg_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output a string representation that can be stored and reloaded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_bpseq_string">
+<code class="descname">to_bpseq_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_bpseq_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_bpseq_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a bpseq string from this structure.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_dotbracket_string">
+<code class="descname">to_dotbracket_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_dotbracket_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_dotbracket_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the BulgeGraph representation to a dot-bracket string
+and return it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dot-bracket representation of this BulgeGraph</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_element_string">
+<code class="descname">to_element_string</code><span class="sig-paren">(</span><em>with_numbers=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_element_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_element_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a string similar to dotbracket notation that identifies what
+type of element is present at each location.</p>
+<p>For example the following dotbracket:</p>
+<p>..((..))..</p>
+<p>Should yield the following element string:</p>
+<p>ffsshhsstt</p>
+<p>Indicating that it begins with a fiveprime region, continues with a
+stem, has a hairpin after the stem, the stem continues and it is terminated
+by a threeprime region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>with_numbers</strong> – <p>show the last digit of the element id in a second line.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">(((</span><span class="o">.</span><span class="p">(((</span><span class="o">...</span><span class="p">))))))</span>
+</pre></div>
+</div>
+<p>Could result in:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sssissshhhssssss</span>
+<span class="mi">0000111000111000</span>
+</pre></div>
+</div>
+<p>Indicating that the first stem is named ‘s0’, followed by ‘i0’,’
+s1’, ‘h0’, the second strand of ‘s1’ and the second strand of ‘s0’</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_fasta_string">
+<code class="descname">to_fasta_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_fasta_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_fasta_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output the BulgeGraph representation as a fast string of the
+format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&gt;</span><span class="nb">id</span>
+<span class="n">AACCCAA</span>
+<span class="p">((</span><span class="o">...</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_file">
+<code class="descname">to_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_neato_string">
+<code class="descname">to_neato_string</code><span class="sig-paren">(</span><em>bg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_neato_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_neato_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_networkx">
+<code class="descname">to_networkx</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_networkx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_networkx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert this graph to a networkx representation. This representation
+will contain all of the nucleotides as nodes and all of the base pairs
+as edges as well as the adjacent nucleotides.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_pair_table">
+<code class="descname">to_pair_table</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_pair_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_pair_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a pair table from the list of elements.</p>
+<p>The first element in the returned list indicates the number of
+nucleotides in the structure.</p>
+<p>i.e. [5,5,4,0,2,1]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.to_pair_tuples">
+<code class="descname">to_pair_tuples</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.to_pair_tuples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.to_pair_tuples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a list of tuples corresponding to all of the base pairs in the
+structure. Unpaired bases will be shown as being paired with a
+nucleotide numbered 0.</p>
+<p>i.e. [(1,5),(2,4),(3,0),(4,2),(5,1)]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.BulgeGraph.traverse_graph">
+<code class="descname">traverse_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#BulgeGraph.traverse_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.BulgeGraph.traverse_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traverse the graph to get the angle types. The angle type depends on
+which corners of the stem are connected by the multiloop or internal
+loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of triples (stem, loop, stem)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.graph.bulge_graph.Sequence">
+<em class="property">class </em><code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">Sequence</code><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newstr.newstr</span></code></p>
+<p>From the Py3 str docstring:</p>
+<blockquote>
+<div><p>str(object=’‘) -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.__str__() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to ‘strict’.</p>
+</div></blockquote>
+<dl class="attribute">
+<dt id="forgi.graph.bulge_graph.Sequence.backbone_breaks_after">
+<code class="descname">backbone_breaks_after</code><a class="headerlink" href="#forgi.graph.bulge_graph.Sequence.backbone_breaks_after" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.Sequence.is_valid">
+<code class="descname">is_valid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#Sequence.is_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.Sequence.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.bulge_graph.Sequence.subseq_with_cutpoints">
+<code class="descname">subseq_with_cutpoints</code><span class="sig-paren">(</span><em>start</em>, <em>stop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#Sequence.subseq_with_cutpoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.Sequence.subseq_with_cutpoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.add_bulge">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">add_bulge</code><span class="sig-paren">(</span><em>bulges</em>, <em>bulge</em>, <em>context</em>, <em>message</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#add_bulge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.add_bulge" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper for a simple dictionary addition
+Added so that debugging can be made easier</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bulges</strong> – </li>
+<li><strong>bulge</strong> – </li>
+<li><strong>context</strong> – </li>
+<li><strong>message</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.any_difference_of_one">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">any_difference_of_one</code><span class="sig-paren">(</span><em>stem</em>, <em>bulge</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#any_difference_of_one"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.any_difference_of_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>See if there’s any difference of one between the two
+ends of the stem [(a,b),(c,d)] and a bulge (e,f)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stem</strong> – A couple of couples (2 x 2-tuple) indicating the start and end
+nucleotides of the stem in the form ((s1, e1), (s2, e2))</li>
+<li><strong>bulge</strong> – A couple (2-tuple) indicating the first and last position
+of the bulge.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if there is an overlap between the stem nucleotides and the
+bulge nucleotides. False otherwise</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.condense_stem_pairs">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">condense_stem_pairs</code><span class="sig-paren">(</span><em>stem_pairs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#condense_stem_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.condense_stem_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of stem pairs, condense them into stem definitions</p>
+<p>I.e. the pairs (0,10),(1,9),(2,8),(3,7) can be condensed into
+just the ends of the stem: [(0,10),(3,7)]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stem_pairs</strong> – A list of tuples containing paired base numbers.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of tuples of the form [((s1, e1), (s2, e2))]
+where s1 and e1 are the nucleotides at one end of the stem
+and s2 and e2 are the nucleotides at the other.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.find_bulges_and_stems">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">find_bulges_and_stems</code><span class="sig-paren">(</span><em>brackets</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#find_bulges_and_stems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.find_bulges_and_stems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through the structure and enumerate the bulges and the stems that are
+present.</p>
+<p>The returned stems are of the form [[(s1, s2), (e1,e2)], [(s1,s2),(e1,e2)],…]
+where (s1,s2) are the residue numbers of one end of the stem and (e1,e2) are the
+residue numbers at the other end of the stem
+(see condense_stem_pairs)</p>
+<p>The returned bulges are of the form [(s,e), (s,e),…] where s is the start of a bulge
+and e is the end of a bulge</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>brackets</strong> – A string with the dotbracket passed as input to this script.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.from_fasta">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">from_fasta</code><span class="sig-paren">(</span><em>filename</em>, <em>dissolve_length_one_stems=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#from_fasta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.from_fasta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.from_fasta_text">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">from_fasta_text</code><span class="sig-paren">(</span><em>fasta_text</em>, <em>dissolve_length_one_stems=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#from_fasta_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.from_fasta_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a bulge graph or multiple bulge
+graphs from some fasta text.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.from_id_seq_struct">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">from_id_seq_struct</code><span class="sig-paren">(</span><em>id_str</em>, <em>seq</em>, <em>struct</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#from_id_seq_struct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.from_id_seq_struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new BulgeGraph with the given id,
+sequence and structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>id_str</strong> – The id (i.e. &gt;1y26)</li>
+<li><strong>seq</strong> – the sequence (i.e. ‘ACCGGG’)</li>
+<li><strong>struct</strong> – The dotplot secondary structure (i.e. ‘((..))’)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.print_brackets">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">print_brackets</code><span class="sig-paren">(</span><em>brackets</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#print_brackets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.print_brackets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the brackets and a numbering, for debugging purposes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>brackets</strong> – A string with the dotplot passed as input to this script.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.print_bulges">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">print_bulges</code><span class="sig-paren">(</span><em>bulges</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#print_bulges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.print_bulges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the names and definitions of the bulges.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bulges</strong> – A list of tuples of the form [(s, e)] where s and e are the
+numbers of the nucleotides at the start and end of the bulge.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.bulge_graph.profile">
+<code class="descclassname">forgi.graph.bulge_graph.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/bulge_graph.html#profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.bulge_graph.profile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.graph.html">forgi.graph package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.graph.residue.html">forgi.graph.residue module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 06, 2018.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>
