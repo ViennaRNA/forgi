@@ -140,15 +140,16 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
              dissolve_length_one_stems = True):
     """
     :param rna_type: One of "any", "cg" and "3d" and "pdb"
-                     "any": Return either BulgeGraph or CoarseGrainRNA objekte,
+
+                     *  "any": Return either BulgeGraph or CoarseGrainRNA objekte,
                             depending on the input format
-                     "cg":  Always convert to CoarseGrainRNA objects,
+                     *  "cg":  Always convert to CoarseGrainRNA objects,
                             even if they have no 3D information
-                     "only_cg": Only accept cg-files.
-                     "3d":  Return CoarseGrainRNA objects,
+                     *  "only_cg": Only accept cg-files.
+                     *  "3d":  Return CoarseGrainRNA objects,
                             if the file contains 3D information,
                             raise an error otherwise
-                     "pdb": only accept pdb files
+                     *  "pdb": only accept pdb files
     :param allow_many: If True, return a list. If False raise an error, if more than one RNA is present.
     :param pdb_chain: Extract the given chain from the file.
                       Only applicable if filename corresponds to a pdb file

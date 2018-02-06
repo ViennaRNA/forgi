@@ -58,8 +58,14 @@ MC-Annotate is available at http://major.iric.ca/MajorLabEn/MC-Tools.html
 DSSR is available at http://home.x3dna.org/
 
 You can create a configuration file to decide which of the two programs you want to use.
-If no configuration file exists, you will be prompted to choose the program the first time you
-convert a PDB file. Your choice will be recorded in a newly generated configuration file.
+If no configuration file exists, MC-Annotate will be used.
 
 We use the appdirs package to define the system specific location of the
 configuration file. Under Linux it would default to ~/.config/forgi.
+Under Linux, you can create the configuration file like this::
+
+  echo '{"PDB_ANNOTATION_TOOL": "MC-Annotate"}' >  ~/.config/forgi/config.json
+
+or::
+
+  echo '{"PDB_ANNOTATION_TOOL": "DSSR"}' >  ~/.config/forgi/config.json

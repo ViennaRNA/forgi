@@ -1,13 +1,18 @@
-The package forgi\.graph
-========================
+forgi\.graph package
+====================
 
-This only contains the module forgi.graph.bulge_graph.
-It contains the BulgeGraph datastructure for storing an RNA.
+Submodules
+----------
 
-forgi\.graph\.bulge_graph module
---------------------------------
+.. toctree::
 
-.. automodule:: forgi.graph.bulge_graph
+   forgi.graph.bulge_graph
+   forgi.graph.residue
+
+Module contents
+---------------
+
+.. automodule:: forgi.graph
     :members:
     :undoc-members:
     :show-inheritance:

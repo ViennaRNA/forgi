@@ -3319,14 +3319,15 @@ class BulgeGraph(object):
         spanning tree.
 
         :param allow_broken: How to treat broken multiloop segments.
-                             * False (default): Return None
-                             * The string "bo" or "build_order": Return the
-                               angle type according to the build-order
-                               (i.e. from the first built stem to the last-built stem)
-                             * True: Return the angle_type from the stem with
-                               lower nt number to the stem with higher nt number.
-                               In forgi 2.0 this will be removed and the behavior of "bo"
-                               will be used instead.
+        
+                             *  False (default): Return None
+                             *  The string "bo" or "build_order": Return the
+                                angle type according to the build-order
+                                (i.e. from the first built stem to the last-built stem)
+                             *  True: Return the angle_type from the stem with
+                                lower nt number to the stem with higher nt number.
+                                In forgi 2.0 this will be removed and the behavior of "bo"
+                                will be used instead.
         """
         if self.ang_types is None:
             self.set_angle_types()

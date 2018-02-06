@@ -12,9 +12,9 @@ well as creating a coarse grain representation of 3D RNA structures.
 Requirements
 ~~~~~~~~~~~~
 
-MC_Annotate_ is required for annotating the nucleotide interactions.
+MC_Annotate or DSSR is required for annotating the nucleotide interactions.
+See :ref:`installation`
 
-.. _MC_Annotate: http://www.major.iric.ca/MajorLabEn/MC-Tools.html
 
 Extracting 2D structure from a 3D structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
