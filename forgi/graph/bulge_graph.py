@@ -667,6 +667,9 @@ class BulgeGraph(BaseGraph):
         """
         return "name {}\n".format(self.name)
 
+    ############################################################################
+    # Descriptors of the BulgeGraph as a whole
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @property
     def seq_length(self):
         return len(self.seq)
@@ -675,6 +678,65 @@ class BulgeGraph(BaseGraph):
     def seq(self):
         return self._seq
 
+    @property
+    def backbone_breaks_after(self):
+        return self.seq.backbone_breaks_after
+
+    def get_domains(self):
+        """
+        Get secondary structure domains.
+
+        Currently domains found are:
+          * multiloops (without any connected stems)
+          * rods: stretches of stems + interior loops (without branching), with trailing hairpins
+          * pseudoknots
+        """
+        domains = col.defaultdict(list)
+        multiloops = self.find_mlonly_multiloops()
+        for ml in multiloops:
+            ml = sorted(ml)
+            if self.is_loop_pseudoknot(ml):
+                domains["pseudoknots"].append(ml)
+            else:
+                domains["multiloops"].append(ml)
+
+        doublestr = []
+        for s in self.stem_iterator():
+            neighbors = self.edges[s]
+            for region in doublestr:
+                if s in region or any(n in region for n in neighbors):
+                    curr_region = region
+                    curr_region.add(s)
+                    break
+            else:
+                doublestr.append(set([s]))
+                curr_region = doublestr[-1]
+
+            for n in neighbors:
+                if n[0] in "sih":
+                    curr_region.add(n)
+        #print(doublestr)
+        while True:
+            for reg1, reg2 in it.combinations(doublestr,2):
+                if reg1 & reg2:
+                    doublestr.remove(reg1)
+                    doublestr.remove(reg2)
+                    doublestr.append(reg1|reg2)
+                    break
+            else:
+                break
+
+        for region in doublestr:
+            domains["rods"].append(sorted(region))
+        domains["pseudoknots"].sort()
+        domains["multiloops"].sort()
+        domains["rods"].sort()
+        #print(domains)
+        return domains
+
+    ############################################################################
+    # Descriptors of individual elements
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def element_length(self, key):
         """
         Get the number of residues that are contained within this element.
@@ -708,9 +770,181 @@ class BulgeGraph(BaseGraph):
         else:
             return min(self.get_bulge_dimensions(key))
 
+    def define_a(self, elem):
+        # Special case, because interior loops can have
+        # defines of length 2 or 4
+        if elem[0]=="i":
+            conns = self.connections(elem)
+            s1 = self.defines[conns[0]]
+            s2 = self.defines[conns[1]]
+            return [s1[1] , s2[0], s2[3] , s1[2]]
+        else:
+            # The following may call this classes
+            # _define_a_nonzero implementation.
+            return super(BulgeGraph, self).define_a(elem)
+
+    def is_single_stranded(self, node):
+        """
+        Does this node represent a single-stranded region?
+
+        Single stranded regions are five-prime and three-prime unpaired
+        regions, multiloops, and hairpins
+
+        .. warning::
+            Interior loops are never considered single stranded by this function.
+
+        :param node: The name of the node
+        :return: True if yes, False if no
+        """
+        if node[0] == 'f' or node[0] == 't' or node[0] == 'm' or node[0] == 'h':
+            return True
+        else:
+            return False
+
+    def get_node_dimensions(self, node):
+        """
+        Return the dimensions of a node.
+
+        If the node is a stem, then the dimensions will be l where l is
+        the length of the stem.
+
+        Otherwise, see get_bulge_dimensions(node)
+
+        :param node: The name of the node
+        :return: A pair containing its dimensions
+        """
+        if node not in self.defines:
+            self.log()
+        if node[0] == 's':
+            return (self.stem_length(node), self.stem_length(node))
+            """
+            return (self.defines[node][1] - self.defines[node][0] + 1,
+                    self.defines[node][1] - self.defines[node][0] + 1)
+            """
+        else:
+            return self.get_bulge_dimensions(node)
+
+    def get_bulge_dimensions(self, bulge):
+        """
+        Return the dimensions of the bulge.
+
+        If it is single stranded it will be (x, -1) for h,t,f or (x, 1000) for m.
+        Otherwise it will be (x, y).
+
+        :param bulge: The name of the bulge.
+        :return: A pair containing its dimensions
+        """
+
+        bd = self.defines[bulge]
+        c = self.connections(bulge)
+
+        if bulge[0] == 'i':
+            # if this interior loop only has one unpaired region
+            # then we have to find out if it's on the 5' strand or
+            # the 3' strand
+            # Example:
+            # s1 1 3
+            # 23 25
+            # s2 5 10
+            # 15 20
+            s1 = self.defines[c[0]]
+            s2 = self.defines[c[1]]
+
+            dims = (s2[0] - s1[1] - 1, s1[2] - s2[3] - 1)
+
+        if bulge[0] == 'm':
+            # Multiloops are also pretty easy
+            if len(bd) == 2:
+                dims = (bd[1] - bd[0] + 1, 1000)
+            else:
+                dims = (0, 1000)
+        if bulge[0] == 'f' or bulge[0] == 't':
+            dims = (bd[1] - bd[0] + 1, -1)
+
+        if bulge[0] == 'h':
+            dims = (bd[1] - bd[0] + 1, -1)
+
+        return dims
+
+    def get_length(self, vertex):
+        """
+        Get the minimum length of a vertex.
+
+        If it's a stem, then the result is its length (in base pairs).
+
+        If it's a bulge, then the length is the smaller of it's dimensions.
+
+        :param vertex: The name of the vertex.
+        """
+        if vertex[0] == 's':
+            return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
+        else:
+            if len(self.edges[vertex]) == 1:
+                return self.defines[vertex][1] - self.defines[vertex][0] + 1
+            else:
+                dims = list(self.get_bulge_dimensions(vertex))
+                dims.sort()
+
+                if vertex[0] == 'i':
+                    return sum(dims) / float(len(dims))
+
+                else:
+                    return min(dims)
+
+    ############################################################################
+    # Private functions related to descriptors
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def _define_a_nonzero(self, elem):
+        """
+        Get a define including the adjacent nucleotides.
+        """
+        log.debug("define_a nonzero of BulgeGraph called for %s", elem)
+        define = self.defines[elem]
+        new_def = []
+        for i in range(0,len(define),2):
+            if define[i]-1 in self.seq.backbone_breaks_after:
+                log.debug("Left-side adjacent nt is in "
+                          "backbone-breaks: %s in %s", define[i]-1,
+                          self.seq.backbone_breaks_after)
+                new_def.append(define[i])
+            else:
+                new_def.append(max(define[i]-1, 1))
+            if define[i+1] in self.seq.backbone_breaks_after:
+                new_def.append(define[i+1])
+            else:
+                new_def.append(min(define[i+1]+1, self.seq_length))
+        return new_def
+
+    def _all_connections(self, elem):
+        """
+        Return the connected elements in order along the backbone.
+
+        The difference to self.connections is that the returned list
+        always contains as many elements, as the define of elem has numbers.
+        If there is no connected element at this side,the returned list contains None.
+        If elem is a stem connected to a hairpin or interior loop,
+        this loop will be contained twice in the resulting output list.
+        """
+        connections = []
+        # To correctly account for 0-length elements, we have to treat stems seperately.
+        if elem[0]!="s":
+            for nt in self.define_a(elem):
+                neighbor = self.get_node_from_residue_num(nt)
+                if neighbor == elem:
+                    connections.append(None)
+                else:
+                    connections.append(neighbor)
+        else:
+            connections = [ None, None, None, None ]
+            for neighbor in self.edges[elem]:
+                for side in [0,1,2,3]:
+                    if any(x==self.defines[elem][side] for x in self.define_a(neighbor)):
+                        connections[side]=neighbor
+        return connections
+    ############################################################################
+
     def add_info(self, key, value):
         self.infos[key].append(value)
-
 
     def stem_bp_iterator(self, stem):
         """
@@ -750,39 +984,6 @@ class BulgeGraph(BaseGraph):
                     return r1
         return None
 
-    def define_a(self, elem):
-        # Special case, because interior loops can have
-        # defines of length 2 or 4
-        if elem[0]=="i":
-            conns = self.connections(elem)
-            s1 = self.defines[conns[0]]
-            s2 = self.defines[conns[1]]
-            return [s1[1] , s2[0], s2[3] , s1[2]]
-        else:
-            # The following may call this classes
-            # _define_a_nonzero implementation.
-            return super(BulgeGraph, self).define_a(elem)
-
-    def _define_a_nonzero(self, elem):
-        """
-        Get a define including the adjacent nucleotides.
-        """
-        log.debug("define_a nonzero of BulgeGraph called for %s", elem)
-        define = self.defines[elem]
-        new_def = []
-        for i in range(0,len(define),2):
-            if define[i]-1 in self.seq.backbone_breaks_after:
-                log.debug("Left-side adjacent nt is in "
-                          "backbone-breaks: %s in %s", define[i]-1,
-                          self.seq.backbone_breaks_after)
-                new_def.append(define[i])
-            else:
-                new_def.append(max(define[i]-1, 1))
-            if define[i+1] in self.seq.backbone_breaks_after:
-                new_def.append(define[i+1])
-            else:
-                new_def.append(min(define[i+1]+1, self.seq_length))
-        return new_def
 
     def iterate_over_seqid_range(self, start_id, end_id):
         """
@@ -852,6 +1053,7 @@ class BulgeGraph(BaseGraph):
           return 1
         else:
           return self.backbone_breaks_after[i-1]+1
+
     @profile
     def get_next_ml_segment(self, ml_segment):
         """
@@ -930,33 +1132,6 @@ class BulgeGraph(BaseGraph):
         else:
             return stem_nuc + 1
 
-    def all_connections(self, elem):
-        """
-        Return the connected elements in order along the backbone.
-
-        The difference to self.connections is that the returned list
-        always contains as many elements, as the define of elem has numbers.
-        If there is no connected element at this side,the returned list contains None.
-        If elem is a stem connected to a hairpin or interior loop,
-        this loop will be contained twice in the resulting output list.
-        """
-        connections = []
-        # To correctly account for 0-length elements, we have to treat stems seperately.
-        if elem[0]!="s":
-            for nt in self.define_a(elem):
-                neighbor = self.get_node_from_residue_num(nt)
-                if neighbor == elem:
-                    connections.append(None)
-                else:
-                    connections.append(neighbor)
-        else:
-            connections = [ None, None, None, None ]
-            for neighbor in self.edges[elem]:
-                for side in [0,1,2,3]:
-                    if any(x==self.defines[elem][side] for x in self.define_a(neighbor)):
-                        connections[side]=neighbor
-        return connections
-
     def nucleotides_to_elements(self, nucleotides):
         """
         Convert a list of nucleotides (nucleotide numbers) to element names.
@@ -967,8 +1142,6 @@ class BulgeGraph(BaseGraph):
             Use `self.get_node_from_residue_num` if you have only a single nucleotide number.
         """
         return set([self.get_node_from_residue_num(n) for n in nucleotides])
-
-
 
     def elements_to_nucleotides(self, elements):
         """
@@ -983,6 +1156,7 @@ class BulgeGraph(BaseGraph):
                 for nuc in range(def_range[0], def_range[1]+1):
                     nucs.add(nuc)
         return sorted(nucs)
+
     def find_bulge_loop(self, vertex, max_length=4):
         """
         Find a set of nodes that form a loop containing the
@@ -1051,7 +1225,6 @@ class BulgeGraph(BaseGraph):
         for s in stems_to_dissolve:
             bps_to_dissolve.extend(self.stem_bp_iterator(s))
         return bps_to_dissolve
-
 
     def has_connection(self, v1, v2):
         """ Is there an edge between these two nodes """
@@ -1291,9 +1464,7 @@ class BulgeGraph(BaseGraph):
                     log.debug("But backbone-break encountered!")
         return zl_coordinates
 
-    @property
-    def backbone_breaks_after(self):
-        return self.seq.backbone_breaks_after
+
 
     def log(self, level=logging.DEBUG):
         with log_at_caller(log):
@@ -1328,46 +1499,7 @@ class BulgeGraph(BaseGraph):
         for e in elements:
             yield e
 
-    def is_single_stranded(self, node):
-        """
-        Does this node represent a single-stranded region?
 
-        Single stranded regions are five-prime and three-prime unpaired
-        regions, multiloops, and hairpins
-
-        .. warning::
-            Interior loops are never considered single stranded by this function.
-
-        :param node: The name of the node
-        :return: True if yes, False if no
-        """
-        if node[0] == 'f' or node[0] == 't' or node[0] == 'm' or node[0] == 'h':
-            return True
-        else:
-            return False
-
-    def get_node_dimensions(self, node):
-        """
-        Return the dimensions of a node.
-
-        If the node is a stem, then the dimensions will be l where l is
-        the length of the stem.
-
-        Otherwise, see get_bulge_dimensions(node)
-
-        :param node: The name of the node
-        :return: A pair containing its dimensions
-        """
-        if node not in self.defines:
-            self.log()
-        if node[0] == 's':
-            return (self.stem_length(node), self.stem_length(node))
-            """
-            return (self.defines[node][1] - self.defines[node][0] + 1,
-                    self.defines[node][1] - self.defines[node][0] + 1)
-            """
-        else:
-            return self.get_bulge_dimensions(node)
 
     def adjacent_stem_pairs_iterator(self):
         """
@@ -1705,74 +1837,6 @@ class BulgeGraph(BaseGraph):
         else:
             return 2
         pass
-
-    def get_bulge_dimensions(self, bulge):
-        """
-        Return the dimensions of the bulge.
-
-        If it is single stranded it will be (x, -1) for h,t,f or (x, 1000) for m.
-        Otherwise it will be (x, y).
-
-        :param bulge: The name of the bulge.
-        :return: A pair containing its dimensions
-        """
-
-        bd = self.defines[bulge]
-        c = self.connections(bulge)
-
-        if bulge[0] == 'i':
-            # if this interior loop only has one unpaired region
-            # then we have to find out if it's on the 5' strand or
-            # the 3' strand
-            # Example:
-            # s1 1 3
-            # 23 25
-            # s2 5 10
-            # 15 20
-            s1 = self.defines[c[0]]
-            s2 = self.defines[c[1]]
-
-            dims = (s2[0] - s1[1] - 1, s1[2] - s2[3] - 1)
-
-        if bulge[0] == 'm':
-            # Multiloops are also pretty easy
-            if len(bd) == 2:
-                dims = (bd[1] - bd[0] + 1, 1000)
-            else:
-                dims = (0, 1000)
-        if bulge[0] == 'f' or bulge[0] == 't':
-            dims = (bd[1] - bd[0] + 1, -1)
-
-        if bulge[0] == 'h':
-            dims = (bd[1] - bd[0] + 1, -1)
-
-        return dims
-
-
-    def get_length(self, vertex):
-        """
-        Get the minimum length of a vertex.
-
-        If it's a stem, then the result is its length (in base pairs).
-
-        If it's a bulge, then the length is the smaller of it's dimensions.
-
-        :param vertex: The name of the vertex.
-        """
-        if vertex[0] == 's':
-            return abs(self.defines[vertex][1] - self.defines[vertex][0]) + 1
-        else:
-            if len(self.edges[vertex]) == 1:
-                return self.defines[vertex][1] - self.defines[vertex][0] + 1
-            else:
-                dims = list(self.get_bulge_dimensions(vertex))
-                dims.sort()
-
-                if vertex[0] == 'i':
-                    return sum(dims) / float(len(dims))
-
-                else:
-                    return min(dims)
 
     def get_flanking_region(self, bulge_name, side=0):
         """
@@ -2508,57 +2572,6 @@ class BulgeGraph(BaseGraph):
             if len(self.defines[d]) > 0:
                 yield d
 
-    def get_domains(self):
-        """
-        Get secondary structure domains.
-
-        Currently domains found are:
-          * multiloops (without any connected stems)
-          * rods: stretches of stems + interior loops (without branching), with trailing hairpins
-          * pseudoknots
-        """
-        domains = col.defaultdict(list)
-        multiloops = self.find_mlonly_multiloops()
-        for ml in multiloops:
-            ml = sorted(ml)
-            if self.is_loop_pseudoknot(ml):
-                domains["pseudoknots"].append(ml)
-            else:
-                domains["multiloops"].append(ml)
-
-        doublestr = []
-        for s in self.stem_iterator():
-            neighbors = self.edges[s]
-            for region in doublestr:
-                if s in region or any(n in region for n in neighbors):
-                    curr_region = region
-                    curr_region.add(s)
-                    break
-            else:
-                doublestr.append(set([s]))
-                curr_region = doublestr[-1]
-
-            for n in neighbors:
-                if n[0] in "sih":
-                    curr_region.add(n)
-        #print(doublestr)
-        while True:
-            for reg1, reg2 in it.combinations(doublestr,2):
-                if reg1 & reg2:
-                    doublestr.remove(reg1)
-                    doublestr.remove(reg2)
-                    doublestr.append(reg1|reg2)
-                    break
-            else:
-                break
-
-        for region in doublestr:
-            domains["rods"].append(sorted(region))
-        domains["pseudoknots"].sort()
-        domains["multiloops"].sort()
-        domains["rods"].sort()
-        #print(domains)
-        return domains
 
 
 # Free functions

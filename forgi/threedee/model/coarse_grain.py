@@ -395,7 +395,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         for component in nx.connected_components(chain_connections):
             try:
                 cgs.append(cls._load_pdb_component(bpseq_lines, pdb_base, new_chains,
-                                                   component, missing_res, modifications
+                                                   component, missing_res, modifications,
                                                    seq_ids, secondary_structure,
                                                    dissolve_length_one_stems))
             except GraphConstructionError as e:
