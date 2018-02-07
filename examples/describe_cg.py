@@ -10,7 +10,7 @@ import argparse
 from collections import defaultdict
 import logging
 import os.path
-
+import math
 import pandas as pd
 
 from logging_exceptions import log_to_exception
@@ -178,6 +178,24 @@ def describe_ml_segments(cg):
             data["j3_family3D"].append(j3_family3D)
             data["j3_familyPerp"].append(j3_familyPerp)
             data["j3_Delta_j23_j31"].append(j3_Delta)
+            kh_stem_angle = float("nan")
+            if abs(cg.get_angle_type(segment, allow_broken = True))==5:
+                next_ml = cg.get_next_ml_segment(segment)
+                if isinstance(next_ml, str) and next_ml[0]=="m" and abs(cg.get_angle_type(next_ml, allow_broken = True))==5:
+                    stems1 = cg.edges[segment]
+                    stems2 = cg.edges[next_ml]
+                    try:
+                        s1,s2 = (stems1|stems2)-(stems1&stems2)
+                    except ValueError:
+                        pass
+                    else:
+                        vec1 = cg.coords.get_direction(s1)
+                        vec2 = cg.coords.get_direction(s2)
+                        angle = ftuv.vec_angle(vec1, vec2)
+                        if angle>math.pi/4:
+                            angle=math.pi/2-angle
+                        kh_stem_angle = angle
+            data["kh_stem_angle"].append( kh_stem_angle )
     if data:
         data["pk_number"]=number_by(data, "loop_start_after", "is_pseudoknotted_multiloop")
         data["loop_number"]=number_by(data, "loop_start_after", None)
