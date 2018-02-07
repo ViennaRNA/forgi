@@ -2561,16 +2561,7 @@ class BulgeGraph(BaseGraph):
         self._elem_bp_dists[(e2,e1)] = (min_bp, max_bp)
         return (min_bp, max_bp)
 
-    def nd_define_iterator(self):
-        '''
-        Iterate over defines which contain some nucleotides.
 
-        :return: An iterator over all defines which contain some
-                 nucleotides.
-        '''
-        for d in self.defines:
-            if len(self.defines[d]) > 0:
-                yield d
 
 
 
