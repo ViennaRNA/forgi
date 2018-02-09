@@ -625,7 +625,7 @@ class Sequence(object):
         Used during bg-file creation
         """
         out = []
-        out.append("seq {}".format(self._seq))
+        out.append("seq {}".format(str(self)))
         out.append("seq_ids {}".format(" ".join(map(fgr.resid_to_str, self._seqids))))
         for resid, nt in self._missing_nts:
             out.append(MissingResidue(resid, nt).to_bg_string())
@@ -688,8 +688,9 @@ class SequenceLoader:
                     seq+="&"
                 seq+="N"
                 old_chain = resid.chain
+            self.seq=seq
         elif not self.seq_ids:
-            self.seq_ids = _seq_ids_from_seq_str(seq)
+            self.seq_ids = _seq_ids_from_seq_str(self.seq)
         return Sequence(self.seq, self.seq_ids, self.mr, self.mod)
 
 
