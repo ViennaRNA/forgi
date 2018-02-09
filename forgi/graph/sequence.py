@@ -9,6 +9,25 @@ log = logging.getLogger()
 
 VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
+class MissingResidue(object):
+    def __init__(self, resid, res_name):
+        self.resid = resid
+        self.res_name = res_name
+    def to_bg_string(self):
+        return "missing {} {}".format(fgr.resid_to_str(self.resid), self.res_name)
+    @classmethod
+    def from_bg_fields(cls, parts):
+        """
+        Used during loading of the bg_file.
+
+        :param parts: A list of strings. If the first is not "missing",
+                      None is returned
+        :returns: Either a MissingResidue instance or None
+        """
+        if parts[0]!="missing":
+            return None
+        return cls(fgr.resid_from_str(parts[1]), parts[2])
+
 class _Smallest(object):
     """
     Smaller than everything, regardless of type
@@ -109,7 +128,11 @@ def _sorted_missing_residues(list_of_dicts):
     chain_to_residues = defaultdict(list)
     resid_to_nucleotide = {}
     for res_dict in list_of_dicts:
-        if "RESID" in res_dict:
+        if isinstance(res_dict, MissingResidue):
+            resid = res_dict.resid
+            chain = res_dict.resid.chain
+            res_name = res_dict.res_name
+        elif "RESID" in res_dict:
             resid=res_dict["RESID"]
             if not isinstance(resid, fgr.RESID):
                 resid = fgr.resid_from_str(resid)
@@ -157,6 +180,12 @@ class _WMIndexer(_IndexHelper):
         :returns: A string
         """
         return self.parent._missing_into_db(struct)
+    def export_missing(self):
+        """
+        Return the missing residues in a format which can be
+        passed to the constructor of a new Sequence object.
+        """
+        return self.parent._export_missing()
     @property
     def with_modifications(self):
         return _MODIndexer(self)
@@ -198,13 +227,18 @@ class Sequence(object):
         log.debug("Break-points for seq %s are: %s", seq, self._breaks_after)
         self._seq = seq.replace('&', '')
         self._seqids = seqids
-        mr, mnts = _sorted_missing_residues(missing_residues)
-        self._missing_residues = mr
-        self._missing_nts =  mnts # A dict seq_id:nt
+        self._missing_residues = None
+        self._missing_nts =  None
+        self._set_missing_residues(missing_residues) # A dict seq_id:nt
         # resid : modified res_name
         self._modifications={}
         if modifications:
             self._modifications.update(modifications)
+    def _set_missing_residues(self, missing_residues):
+        mr, mnts = _sorted_missing_residues(missing_residues)
+        self._missing_residues = mr
+        self._missing_nts =  mnts # A dict seq_id:nt
+
     def __str__(self):
         return self[:]
 
@@ -599,6 +633,14 @@ class Sequence(object):
             out.append("modification {} {}".format(gr.resid_to_str(resid), label))
         return "\n".join(out)
 
+    def _export_missing(self):
+        """
+        Implementation for Sequence().with_missing.export_missing
+        """
+        out=[]
+        for resid, nt in self._missing_nts:
+            out.append({"RESID":resid, "res_name":nt})
+        return out
 
 class SequenceLoader:
     """
@@ -615,8 +657,9 @@ class SequenceLoader:
 
         Returns True, if the line was used/ understood, False otherwise
         """
-        if parts[0]=="missing":
-            self.mr.append({"RESID":fgr.resid_from_str(parts[1]), "res_name":parts[2]})
+        mr = MissingResidue.from_bg_fields(parts)
+        if mr is not None:
+            self.mr.append(mr)
             return True
         elif parts[0]=="seq":
             if self.seq is not None:
