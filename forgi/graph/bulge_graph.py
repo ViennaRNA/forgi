@@ -21,7 +21,6 @@ import operator as oper
 import functools
 import traceback
 import math
-from string import ascii_lowercase, ascii_uppercase
 import logging
 from pprint import pprint, pformat
 
@@ -33,7 +32,7 @@ from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ..threedee.utilities import mcannotate as ftum
-from .sequence import Sequence, _insert_breakpoints_simple
+from .sequence import Sequence, _insert_breakpoints_simple, SequenceLoader, _seq_ids_from_seq_str
 from .residue import RESID, resid_to_str, resid_from_str
 from ._basegraph import BaseGraph
 from ._graph_construction import _BulgeGraphConstruction
@@ -41,7 +40,6 @@ from . import _cofold as fgc
 
 log = logging.getLogger(__name__)
 
-VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
 try:
   profile  #The @profile decorator from line_profiler (kernprof)
@@ -185,14 +183,15 @@ class BulgeGraph(BaseGraph):
         bg = cls(DummyGraphConstr(), Sequence("", []))
         log.debug("Now loading BG")
         lines = bg_str.split('\n')
-        seq = None
-        seqids = None
         length = None
+        seq_loader = SequenceLoader()
         for line in lines:
             line = line.strip()
             parts = line.split()
             if len(parts) == 0:
                 # blank line
+                continue
+            if seq_loader.consume_fields(parts):
                 continue
             if parts[0] == 'length':
                 length = int(parts[1])
@@ -202,29 +201,11 @@ class BulgeGraph(BaseGraph):
                 for p in parts[2:]:
                     bg.edges[parts[1]].add(p)
                     bg.edges[p].add(parts[1])
-            elif parts[0] == 'seq':
-                seq = parts[1]
-            elif parts[0] == 'seq_ids':
-                seqids = list(map(resid_from_str, parts[1:]))
             elif parts[0] == 'name':
                 bg.name = parts[1].strip()
             elif parts[0] == 'info':
                 bg.infos[parts[1]].append(" ".join(parts[2:]))
-        # The breakpoints are only persisted at the seq and seq_id level.
-        if not seq and not seqids:
-            raise ValueError("One of seq_ids or seq is mandatory.")
-        if not seq:
-            old_chain = None
-            seq=""
-            for resid in seqids:
-                if old_chain is not None and resid.chain!=old_chain:
-                    seq+="&"
-                seq+="N"
-                old_chain = resid.chain
-        if not seqids:
-            seqids = _seq_ids_from_seq_str(seq)
-        log.debug("seq is %s", seq)
-        bg._seq = Sequence(seq, seqids)
+        bg._seq = seq_loader.sequence
         return bg
 
     @classmethod
@@ -332,8 +313,7 @@ class BulgeGraph(BaseGraph):
         out_str = ''
         out_str += self._get_name_str()
         out_str += self._get_length_str()
-        out_str += self._get_sequence_str()
-        out_str += self._get_seq_ids_str()
+        out_str += self.seq.get_bg_str()
         out_str += self._get_define_str()
         out_str += self._get_connect_str()
         out_str += self._get_info_str()
@@ -512,7 +492,7 @@ class BulgeGraph(BaseGraph):
         pt = self.to_pair_table()
         db_string = fus.pairtable_to_dotbracket(pt)
         if include_missing:
-            db_string = self.seq.with_missing.update_dotbracket(struct)
+            db_string = self.seq.with_missing.update_dotbracket(db_string)
         else:
             for breakpoint in reversed(sorted(self.backbone_breaks_after)):
                 db_string = db_string[:breakpoint]+"&"+db_string[breakpoint:]
@@ -635,29 +615,6 @@ class BulgeGraph(BaseGraph):
                 whole_str += '\n'
 
         return whole_str
-
-    def _get_sequence_str(self):
-        """
-        Return the sequence along with its keyword. I.e.
-
-            seq ACGGGCC
-        """
-        if len(self.seq) > 0:
-            return "seq {}\n".format(self.seq)
-        else:
-            return ""
-
-    def _get_seq_ids_str(self):
-        """
-        Return the sequence id string
-
-        seq_ids 1 2 2.A 17
-        """
-        out_str = "seq_ids "
-        out_str += " ".join(map(resid_to_str, self.seq._seqids))
-        out_str += "\n"
-
-        return out_str
 
     def _get_name_str(self):
         """
@@ -2514,8 +2471,6 @@ class BulgeGraph(BaseGraph):
 
         return False
 
-
-
     def min_max_bp_distance(self, e1, e2):
         '''
         Get the minimum and maximum base pair distance between
@@ -2561,10 +2516,6 @@ class BulgeGraph(BaseGraph):
         self._elem_bp_dists[(e2,e1)] = (min_bp, max_bp)
         return (min_bp, max_bp)
 
-
-
-
-
 # Free functions
 
 def print_brackets(brackets):
@@ -2590,22 +2541,7 @@ def _seq_of_Ns_from_db(dotbracket):
         seq.append("N"*len(substr))
     return "&".join(seq)
 
-def _seq_ids_from_seq_str(seq):
-    """
-    Get a list of seq_ids with the same length as the sequence,
-    respecting cutpoints.
 
-    We start with seq_id A:1. If a '&' is encountered in the sequence,
-    a new chain-letter is used.
-
-    :param seq: A string, optionally containing '&' characters.
-    """
-    seq_strs = seq.split('&')
-    seq_ids = []
-    for i, seq_str in enumerate(seq_strs):
-        for j, s in enumerate(seq_str):
-            seq_ids += [resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
-    return seq_ids
 
 def _cleaned_bg(bg, dissolve_length_one_stems=False,
                 remove_pseudoknots=False):

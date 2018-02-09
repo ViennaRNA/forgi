@@ -3,8 +3,11 @@ from __future__ import unicode_literals
 
 import logging
 from collections import defaultdict
+from string import ascii_lowercase, ascii_uppercase
 from . import residue as fgr
 log = logging.getLogger()
+
+VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
 class _Smallest(object):
     """
@@ -99,18 +102,31 @@ def _resid_key(x):
         return (x.resid[1], x.resid[2])
 
 def _sorted_missing_residues(list_of_dicts):
+    """
+    :param list_of_dicts: A list of dicts, as in my PR to biopython
+                          or with the two keys "RESID" and "res_name",
+    """
     chain_to_residues = defaultdict(list)
     resid_to_nucleotide = {}
     for res_dict in list_of_dicts:
-        if res_dict["model"] not in [None, 1, "A"]:
-            continue
-        if res_dict["insertion"] is None:
-            insertion=" "
+        if "RESID" in res_dict:
+            resid=res_dict["RESID"]
+            if not isinstance(resid, fgr.RESID):
+                resid = fgr.resid_from_str(resid)
+            chain = resid.chain
+            res_name = res_dict["res_name"]
         else:
-            insertion = res_dict["insertion"]
-        resid = fgr.RESID(res_dict["chain"], (' ', res_dict["ssseq"], insertion))
-        chain_to_residues[res_dict["chain"]].append(resid)
-        resid_to_nucleotide[resid] = res_dict["res_name"]
+            if res_dict["model"] not in [None, 1, "A"]:
+                continue
+            if res_dict["insertion"] is None:
+                insertion=" "
+            else:
+                insertion = res_dict["insertion"]
+            chain = res_dict["chain"]
+            resid = fgr.RESID(chain, (' ', res_dict["ssseq"], insertion))
+            res_name = res_dict["res_name"]
+        chain_to_residues[chain].append(resid)
+        resid_to_nucleotide[resid] = res_name
     for reslist in chain_to_residues.values():
         reslist.sort(key=_resid_key)
     return chain_to_residues, resid_to_nucleotide
@@ -569,3 +585,84 @@ class Sequence(object):
             return _MODIndexer(self)
         else:
             return self
+
+    def get_bg_str(self):
+        """
+        Used during bg-file creation
+        """
+        out = []
+        out.append("seq {}".format(self._seq))
+        out.append("seq_ids {}".format(" ".join(map(fgr.resid_to_str, self._seqids))))
+        for resid, nt in self._missing_nts:
+            out.append(MissingResidue(resid, nt).to_bg_string())
+        for resid, label in self._modifications:
+            out.append("modification {} {}".format(gr.resid_to_str(resid), label))
+        return "\n".join(out)
+
+
+class SequenceLoader:
+    """
+    Load the sequence-related part during loading of bg-files
+    """
+    def __init__(self):
+        self.mod = {}
+        self.mr = []
+        self.seq = None
+        self.seq_ids = []
+    def consume_fields(self, parts):
+        """
+        Read one line from the forgi file.
+
+        Returns True, if the line was used/ understood, False otherwise
+        """
+        if parts[0]=="missing":
+            self.mr.append({"RESID":fgr.resid_from_str(parts[1]), "res_name":parts[2]})
+            return True
+        elif parts[0]=="seq":
+            if self.seq is not None:
+                raise ValueError("More than one seq-line encountered.")
+            self.seq=parts[1]
+            return True
+        elif parts[0]=="seq_ids":
+            if self.seq_ids:
+                raise ValueError("More than one seq-ids line encountered.")
+            self.seq_ids = list(map(fgr.resid_from_str, parts[1:]))
+            return True
+        elif parts[0]=="modification":
+            self.mod[parts[1]]=" ".join(parts[2:])
+            return True
+        return False
+    @property
+    def sequence(self):
+        if self.seq is None and not self.seq_ids:
+            # The breakpoints are only persisted at the seq and seq_id level.
+            raise ValueError("Parsing incomplete: No seq found.")
+        elif self.seq is None:
+            old_chain = None
+            seq=""
+            for resid in self.seq_ids:
+                if old_chain is not None and resid.chain!=old_chain:
+                    seq+="&"
+                seq+="N"
+                old_chain = resid.chain
+        elif not self.seq_ids:
+            self.seq_ids = _seq_ids_from_seq_str(seq)
+        return Sequence(self.seq, self.seq_ids, self.mr, self.mod)
+
+
+def _seq_ids_from_seq_str(seq):
+    """
+    Get a list of seq_ids with the same length as the sequence,
+    respecting cutpoints.
+
+    We start with seq_id A:1. If a '&' is encountered in the sequence,
+    a new chain-letter is used.
+
+    :param seq: A string, optionally containing '&' characters.
+    """
+    seq_strs = seq.split('&')
+    seq_ids = []
+    for i, seq_str in enumerate(seq_strs):
+        for j, s in enumerate(seq_str):
+            seq_ids += [fgr.resid_from_str("{}:{}".format(VALID_CHAINIDS[i], j+1))]
+    return seq_ids

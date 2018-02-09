@@ -229,8 +229,8 @@ class NonIndexingTests(unittest.TestCase):
                                  list(map(fgr.resid_from_str,
                                      "A:14,A:15,A:15.A,B:12,B:13,B:200.A".split(","))),
                                  [{"model":None, "ssseq":13, "res_name":"G", "chain":"A", "insertion":None},
-                                  {"model":None, "ssseq":16, "res_name":"G", "chain":"A", "insertion":"D"},
-                                  {"model":None, "ssseq":11, "res_name":"C", "chain":"B", "insertion":None},
+                                  {"RESID":"A:16.D", "res_name":"G"},
+                                  {"RESID":fgr.resid_from_str("B:11"), "res_name":"G"},
                                   {"model":None, "ssseq":202, "res_name":"C", "chain":"B", "insertion":"A"}])
     def test_len(self):
         self.assertEqual(len(self.seq1), 11)
@@ -241,3 +241,11 @@ class NonIndexingTests(unittest.TestCase):
     def test_breakpoint(self):
         self.assertEqual(self.seq1._breaks_after, [])
         self.assertEqual(self.seq2._breaks_after, [2])
+
+    def test_update_dotbracket(self):
+        self.assertEqual(
+                    self.seq1.with_missing.update_dotbracket("((..))..(.)"),
+                    "--((..-)).--.(.)-")
+        self.assertEqual(
+                    self.seq2.with_missing.update_dotbracket("((()))"),
+                    "-(((-&-)))-")

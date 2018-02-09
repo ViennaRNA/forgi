@@ -45,7 +45,6 @@ for v in side_chain_atoms.values():
 all_rna_atoms = set(all_rna_atoms)
 
 RNA_RESIDUES = [ "A", "U", "G", "C", 'rA', 'rC', 'rG', 'rU', 'DU']
-RNA_HETERO = ['H_PSU', 'H_5MU', 'H_5MC','H_1MG','H_H2U']
 
 interactions = [('P', 'O5*'),
                 ('P', "O5'"),
