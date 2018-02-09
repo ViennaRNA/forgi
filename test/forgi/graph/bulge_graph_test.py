@@ -2042,74 +2042,11 @@ class WalkBackboneTests(unittest.TestCase):
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
         self.assertEqual(l, ["s0", "i0", "s1", "h0", "s1", "s0"])
-
-    '''
-    def test_walk_backbone_pseudoknot_free(self):
-        db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
-            #"fffsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt"
-            #"111000000111222222000222555333111333333111444444222444666555333555111000111"
+    def test_iter_elements_along_backbones_zero_len_ml(self):
+        db = "((.((...))((...))))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
-        bg.walk_backbone()
-        self.assertEqual(bg.multiloops["pseudoknots"],[])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
-        self.assertEqual(bg.multiloops["multiloops"],[[ "m2", "m5", "m3"],["m0", "m4", "m6", "m1" ]])
-
-    def test_walk_backbone_pseudoknot_free_0lengthML(self):
-        db = "...(((((((((...)))(((...))))))(((...)))(((...))))))..."
-        bg = fgb.BulgeGraph.from_dotbracket(db)
-        print("\n".join(map(str,sorted(bg.edges.items()))))
-        bg.walk_backbone()
-        self.assertEqual(bg.multiloops["pseudoknots"],[])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
-        self.assertEqual(bg.multiloops["multiloops"],[[ "m1", "m2", "m4"],["m5", "m0", "m3", "m6" ]])
-    def test_walk_backbone_pseudoknot_free_someML0length(self):
-        db = "...(((...((((((...)))...(((...)))...)))(((...)))...(((...))))))..."
-        bg = fgb.BulgeGraph.from_dotbracket(db)
-        bg.walk_backbone()
-        self.assertEqual(bg.multiloops["pseudoknots"],[])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
-        self.assertEqual(bg.multiloops["multiloops"],[[ "m2", "m5", "m3"],["m0", "m4", "m6", "m1" ]])
-    def test_walk_backbone_254_pk(self):
-        db = "(((..[[[..)))..]]].."
-             #sssmmsssmmsssmmssstt
-             #00000111110002211111'
-        bg = fgb.BulgeGraph.from_dotbracket(db)
-        bg.walk_backbone()
-        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2"]])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
-        self.assertEqual(bg.multiloops["multiloops"],[])
-    def test_walk_backbone_2534_pk(self):
-        db = "(((..[[[..)))(((...)))..]]].."
-            # sssmmsssmmsssssshhhsssmmssstt
-            # 00000111110002220002223311111
-        bg = fgb.BulgeGraph.from_dotbracket(db)
-        bg.walk_backbone()
-        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"]])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[])
-        self.assertEqual(bg.multiloops["multiloops"],[])
-    def test_walk_backbone_combined(self):
-        db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..]]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
-             #fffsssmmsssmmsssssshhhsssmmsssmmmsssmmmsssmmmsssmsssmmsssmmsssmmsssmmmsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt
-             #1110000011111000222000222331114443335554447775550666337774466655777111555222888111888888444999999222999666000333000666333111
-        bg = fgb.BulgeGraph.from_dotbracket(db)
-        bg.walk_backbone()
-        pprint(bg.multiloops)
-        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"], ["m13", "m14", "m15"]])
-        self.assertEqual(bg.multiloops["pk_context"],[["m10", "m11"]])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[["m4"]])
-        self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])
-
-    def test_walk_backbone_combined_with_il(self):
-        db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..].]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
-        bg = fgb.BulgeGraph.from_dotbracket(db)
-        bg.walk_backbone()
-        pprint(bg.multiloops)
-        self.assertEqual(bg.multiloops["pseudoknots"],[["m0", "m1", "m2", "m3"], ["m13", "m14", "m15"]])
-        self.assertEqual(bg.multiloops["pk_context"],[["m10", "m11"]])
-        self.assertEqual(bg.multiloops["pseudo_multiloop"],[["m4"]])
-        self.assertEqual(bg.multiloops["multiloops"],[["m7", "m12", "m8"], ["m5", "m9", "m16", "m6"]])\
-    '''
-
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, ["s0", "m0", "s1", "h0", "s1", "m1","s2", "h1","s2","m2","s0"])
 
 
 

@@ -2188,7 +2188,9 @@ class BulgeGraph(BaseGraph):
         Note that stems are yielded twice (for forward and backward strand).
         Interior loops may be yielded twice or once (if one side has no nucleotide)
 
-        :param startpos: The nucleotide position at which tio start
+        0-length multiloop-segments are correctly yielded.
+
+        :param startpos: The nucleotide position at which to start
         :yields: Coarse grained element names, like "s0", "i0"
         """
         nuc = startpos
