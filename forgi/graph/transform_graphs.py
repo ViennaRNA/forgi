@@ -6,8 +6,12 @@ This is implemented as a class which is accessible as
 BulgeGraph.transformed. This way we can properly inherit in CoarseGrainRNA
 """
 import copy
+import logging
+
 from .sequence import MissingResidue, Sequence
 
+
+log = logging.getLogger(__name__)
 
 class _GCDummy(object):
     """
@@ -36,6 +40,7 @@ class BGTransformer(object):
         only the first nucleotide or base-pair is retained, and the other
         nts/ base-pairs are converted to missing residues.
         """
+        log.debug("Condensing BG with break-points %s", self.bg.backbone_breaks_after)
         new_defines = {}
         new_seqids = []
         new_seq = ""
@@ -69,6 +74,12 @@ class BGTransformer(object):
                     if i != keep_i:
                         seq_id = self.bg.seq.to_resid(i)
                         new_missing.append(MissingResidue(seq_id, self.bg.seq[i]))
+                    if i in self.bg.backbone_breaks_after:
+                        if i>keep_i:
+                            new_seq+="&"
+                        else:
+                            new_seq=new_seq[:-1]+"&"+new_seq[-1]
+        log.info("Condensing iteration done. Now creating condensed BG")
         graph_constr = _GCDummy(new_defines, copy.deepcopy(self.bg.edges))
         seq = Sequence(new_seq, new_seqids, new_missing, self.bg.seq._modifications)
-        return type(self.bg)(graph_constr, seq, name=self.bg.name+"_condensed")
+        return type(self.bg)(graph_constr, seq, name=self.bg.name+"_condensed", _dont_split=True)

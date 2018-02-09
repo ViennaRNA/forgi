@@ -11,6 +11,9 @@ VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
 class MissingResidue(object):
     def __init__(self, resid, res_name):
+        if not isinstance(resid, fgr.RESID):
+            log.error("Type of %s is %s", resid, type(resid).__name__)
+            resid = fgr.resid_from_str(resid)
         self.resid = resid
         self.res_name = res_name
     def to_bg_string(self):
@@ -88,7 +91,7 @@ def _insert_breakpoints_simple(seq, breakpoints, start=0, reverse = False):
     :param stop: The coordinate "on the forward strand",
                  i.e. the lower number of start and stop.
     """
-    log.debug("Inserting breakpoints into %s", seq)
+    log.debug("Inserting breakpoints %s into %s", seq, breakpoints)
     breakpoints = sorted(breakpoints)
     if not breakpoints:
         return seq
@@ -303,7 +306,9 @@ class Sequence(object):
                 return False
             return True
         elif isinstance(other, type("")):
-            return str(self)==other
+            s = str(self)
+            log.debug("comparing %s and %s", s, other)
+            return s==other
         else:
             return NotImplemented
 
@@ -627,10 +632,10 @@ class Sequence(object):
         out = []
         out.append("seq {}".format(str(self)))
         out.append("seq_ids {}".format(" ".join(map(fgr.resid_to_str, self._seqids))))
-        for resid, nt in self._missing_nts:
+        for resid, nt in self._missing_nts.items():
             out.append(MissingResidue(resid, nt).to_bg_string())
-        for resid, label in self._modifications:
-            out.append("modification {} {}".format(gr.resid_to_str(resid), label))
+        for resid, label in self._modifications.items():
+            out.append("modification {} {}".format(fgr.resid_to_str(resid), label))
         return "\n".join(out)+"\n"
 
     def _export_missing(self):

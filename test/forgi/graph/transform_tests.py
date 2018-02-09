@@ -1,9 +1,12 @@
 import unittest
+import logging
 
 import forgi.graph.bulge_graph as fgb
 import forgi.graph.transform_graphs as fgt
 import forgi.graph.sequence as fgs
 import forgi.graph.residue as fgr
+
+log=logging.getLogger(__name__)
 
 fasta = """
 >graph1
@@ -12,12 +15,16 @@ GCAGGCUAUGCCGGGUCCCGC
 >graph1_condensed
 GAGUCGUCC
 (.(.)(.))
+>graph2
+GCAGGCUAUGCC&GGGUCCCGC
+((.(((...)))&(((.)))))
 """
 
 class TestBulgeGraphCondensed(unittest.TestCase):
     def setUp(self):
         bgs = fgb.BulgeGraph.from_fasta_text(fasta)
         self.trafo1 = fgt.BGTransformer(bgs[0])
+        self.trafo2 = fgt.BGTransformer(bgs[2])
         self.bg1_condensed = bgs[1]
 
         missing_residues = list(map(
@@ -44,3 +51,7 @@ class TestBulgeGraphCondensed(unittest.TestCase):
                          self.bg1_condensed.defines)
         self.assertEqual(self.trafo1.condensed().edges,
                          self.bg1_condensed.edges)
+    def test_condense_cofold(self):
+        s = self.trafo2.condensed().seq
+        log.error("Comparing now")
+        self.assertEqual(s, "GAGU&CGUCC")

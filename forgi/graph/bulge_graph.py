@@ -50,7 +50,7 @@ except:
 
 class BulgeGraph(BaseGraph):
 
-    def __init__(self, graph_construction, seq_obj, name=None, infos=None):
+    def __init__(self, graph_construction, seq_obj, name=None, infos=None, _dont_split=False):
         """
         A bulge graph object.
 
@@ -63,6 +63,12 @@ class BulgeGraph(BaseGraph):
         :param name: A string
         :param infos: A dict of lists
         """
+        # :param _dont_split: Internal, used if the graph-construction is already splitted
+        #                     e.g. for graph transformations.
+        #                     TODO: It would be better to move split_at_cofold_cutpoints
+        #                     Somewhere out of BulgeGraph.
+
+
         self.ang_types = None
         self.mst = None
         self.build_order = None
@@ -92,7 +98,8 @@ class BulgeGraph(BaseGraph):
 
         self._seq = seq_obj
 
-        fgc.split_at_cofold_cutpoints(self, self.seq.backbone_breaks_after)
+        if not _dont_split:
+            fgc.split_at_cofold_cutpoints(self, self.seq.backbone_breaks_after)
 
     ############################################################################
     # Factory functions.
