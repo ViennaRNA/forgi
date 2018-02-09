@@ -631,7 +631,7 @@ class Sequence(object):
             out.append(MissingResidue(resid, nt).to_bg_string())
         for resid, label in self._modifications:
             out.append("modification {} {}".format(gr.resid_to_str(resid), label))
-        return "\n".join(out)
+        return "\n".join(out)+"\n"
 
     def _export_missing(self):
         """
