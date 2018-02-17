@@ -1435,7 +1435,6 @@ def add_bulge_information_from_pdb_chain(bg, chain):
 
 #The following code should replace get_incomplete_elements in the future,
 # once the Sequence object's missing residues are actually populated.
-'''
 def get_incomplete_elements(cg):
     """
     Get an estimated list of cg-elements which have missing residues in the PDB.
@@ -1450,6 +1449,7 @@ def get_incomplete_elements(cg):
             if cg.seq[r[0]:r[1]]!=cg.seq.with_missing[r[0]:r[1]]:
                 incomplete.add(elem)
     return incomplete
+
 '''
 def get_incomplete_elements(cg):
     """
@@ -1490,7 +1490,7 @@ def _is_incomplete_element(cg, elem):
                     return True
             prev_seq_id = seq_id
     return False
-
+'''
 
 def add_loop_information_from_pdb_chains(bg):
     seq_ids=True
