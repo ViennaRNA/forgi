@@ -33,6 +33,7 @@ from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ..threedee.utilities import mcannotate as ftum
 from .sequence import Sequence, _insert_breakpoints_simple, SequenceLoader, _seq_ids_from_seq_str
+from . import transform_graphs as fgt
 from .residue import RESID, resid_to_str, resid_from_str
 from ._basegraph import BaseGraph
 from ._graph_construction import _BulgeGraphConstruction
@@ -906,6 +907,10 @@ class BulgeGraph(BaseGraph):
                         connections[side]=neighbor
         return connections
     ############################################################################
+
+    @property
+    def transformed(self):
+        return fgt.BGTransformer(self)
 
     def add_info(self, key, value):
         self.infos[key].append(value)

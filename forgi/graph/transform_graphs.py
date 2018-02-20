@@ -36,9 +36,11 @@ class BGTransformer(object):
 
     def condensed(self):
         """
-        Return a copy of the bulge Graph, where for each CoarseGrained Element,
-        only the first nucleotide or base-pair is retained, and the other
-        nts/ base-pairs are converted to missing residues.
+        Return a condensed copy of the BulgeGraph.
+
+        In the condensed BulgeGraph only the first nucleotide or base-pair of
+        each element is retained, and the other nts/ base-pairs are
+        converted to missing residues.
         """
         log.debug("Condensing BG with break-points %s", self.bg.backbone_breaks_after)
         new_defines = {}

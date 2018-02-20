@@ -40,8 +40,8 @@ from ...graph import bulge_graph as fgb
 from ...graph.sequence import Sequence, _insert_breakpoints_simple
 from ...graph._graph_construction import _BulgeGraphConstruction
 from ..utilities import graph_pdb as ftug
-from ..model import stats as ftms
-
+from . import stats as ftms
+from . import transform_cg as ftmt
 from ..._k2n_standalone import knotted2nested as cak
 from ..utilities import mcannotate as ftum
 from ..utilities import pdb as ftup
@@ -214,11 +214,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     and two twist vetors pointing towards the centers of the base
     pairs at each end of the helix.
     '''
-    def __init__(self, graph_construction, sequence, name=None, infos=None):
+    def __init__(self, graph_construction, sequence, name=None, infos=None, _dont_split=False):
         '''
         Initialize the new structure.
         '''
-        super(CoarseGrainRNA, self).__init__(graph_construction, sequence, name, infos)
+        super(CoarseGrainRNA, self).__init__(graph_construction, sequence, name, infos, _dont_split)
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
@@ -465,6 +465,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         return cg
 
     ############################################################################
+
+    @property
+    def transformed(self):
+        return ftmt.CGTransformer(self)
 
     def get_coord_str(self):
         '''
