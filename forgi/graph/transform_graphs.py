@@ -43,6 +43,7 @@ class BGTransformer(object):
         converted to missing residues.
         """
         log.debug("Condensing BG with break-points %s", self.bg.backbone_breaks_after)
+        log.info("Condensing Graph %s", self.bg.to_dotbracket_string())
         new_defines = {}
         new_seqids = []
         new_seq = ""
@@ -53,7 +54,9 @@ class BGTransformer(object):
                 new_defines[elem]=[]
             else:
                 if elem in new_defines: # Backwards strand for stems:
-                    assert len(new_defines[elem])==2
+                    if len(new_defines[elem])!=2:
+                        log.error("%s", self.bg.edges[elem])
+                    assert len(new_defines[elem])==2, "{} doesn't have len 2".format(new_defines[elem])
                     assert elem[0] in "si"
                     fr, to = self.bg.defines[elem][2:]
                     if elem[0]=="s":
@@ -65,10 +68,12 @@ class BGTransformer(object):
                         # it is only at the second strand, keep the first nt here
                         keep_i = fr
                     new_defines[elem].extend([new_i, new_i])
+                    log.debug("Extended new_defines for %s to %s", elem, new_defines[elem])
                 else:
                     fr, to = self.bg.defines[elem][:2]
                     keep_i = fr
                     new_defines[elem]=[new_i, new_i]
+                    log.debug("Set new_defines for %s to %s", elem, new_defines[elem])
                 new_i+=1
                 new_seq+=self.bg.seq[keep_i]
                 new_seqids.append(self.bg.seq.to_resid(keep_i))
