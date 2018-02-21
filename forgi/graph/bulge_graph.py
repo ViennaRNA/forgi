@@ -2245,7 +2245,7 @@ class BulgeGraph(BaseGraph):
                             #In case of this structuire ([)], there are 2 0-length multiloops between the two stems.
                             prev_nuc = min(self.flanking_nucleotides(el))
                             log.debug("prev_nuc = %s", prev_nuc)
-                            if self.get_node_from_residue_num(prev_nuc) == node:
+                            if nuc-1 == prev_nuc:
                                 node = el
                                 break
                     else:
