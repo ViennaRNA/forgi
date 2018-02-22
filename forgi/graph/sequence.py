@@ -1,5 +1,9 @@
-from __future__ import unicode_literals
-
+from __future__ import absolute_import, unicode_literals
+from __future__ import print_function
+from __future__ import division
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,
+                      map, next, oct, pow, range, round,
+                      str, super, zip)
 
 import logging
 from collections import defaultdict
@@ -121,7 +125,7 @@ def _resid_key(x):
     if x.resid[2] is None:
         return (x.resid[1], " ")
     else:
-        return (x.resid[1], x.resid[2])
+        return (x.resid[1], str(x.resid[2])) # Convert to newstring on python2 See: https://github.com/PythonCharmers/python-future/issues/110
 
 def _sorted_missing_residues(list_of_dicts):
     """
@@ -154,6 +158,7 @@ def _sorted_missing_residues(list_of_dicts):
         chain_to_residues[chain].append(resid)
         resid_to_nucleotide[resid] = res_name
     for reslist in chain_to_residues.values():
+        log.debug("Sorting %s", reslist)
         reslist.sort(key=_resid_key)
     return chain_to_residues, resid_to_nucleotide
 
