@@ -1403,11 +1403,11 @@ class BulgeGraph(BaseGraph):
         if sum(v % 2 for v in all_stems.values())==2: #Odd number of occurrences for 2 stems.
             descriptors.add("open")
         elif "open" not in descriptors:
-            if any(v!=2 for v in all_stems.values()):
-                print(all_stems)
-                print(multiloop)
-                print(self.to_dotbracket_string())
-                print (self.to_element_string(True))
+            #if any(v!=2 for v in all_stems.values()):
+            #    print(all_stems)
+            #    print(multiloop)
+            #    print(self.to_dotbracket_string())
+            #    print (self.to_element_string(True))
             assert sum(v % 2 for v in all_stems.values())==0
         if angle_types[2]==1 and angle_types[4]==1 and "pseudoknot" not in descriptors:
             descriptors.add("regular_multiloop")
