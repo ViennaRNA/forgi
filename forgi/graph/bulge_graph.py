@@ -766,7 +766,7 @@ class BulgeGraph(BaseGraph):
         else:
             return False
 
-    def get_node_dimensions(self, node):
+    def get_node_dimensions(self, node, with_missing=False):
         """
         Return the dimensions of a node.
 
@@ -778,18 +778,18 @@ class BulgeGraph(BaseGraph):
         :param node: The name of the node
         :return: A pair containing its dimensions
         """
-        if node not in self.defines:
-            self.log()
         if node[0] == 's':
+            if with_missing:
+                warnings.warn("get_node_dimensions: 'with_missing'-flag is currently ignored for stems!")
             return (self.stem_length(node), self.stem_length(node))
             """
             return (self.defines[node][1] - self.defines[node][0] + 1,
                     self.defines[node][1] - self.defines[node][0] + 1)
             """
         else:
-            return self.get_bulge_dimensions(node)
+            return self.get_bulge_dimensions(node, with_missing)
 
-    def get_bulge_dimensions(self, bulge):
+    def get_bulge_dimensions(self, bulge, with_missing=False):
         """
         Return the dimensions of the bulge.
 
@@ -799,9 +799,15 @@ class BulgeGraph(BaseGraph):
         :param bulge: The name of the bulge.
         :return: A pair containing its dimensions
         """
-
+        if bulge[0]=="s":
+            raise ValueError("Stems are not allowed in get_bulge_dimensions")
         bd = self.defines[bulge]
         c = self.connections(bulge)
+
+        if with_missing:
+            get_define_len = self.seq.with_missing.define_length
+        else:
+            get_define_len = self.seq.define_length
 
         if bulge[0] == 'i':
             # if this interior loop only has one unpaired region
@@ -815,21 +821,14 @@ class BulgeGraph(BaseGraph):
             s1 = self.defines[c[0]]
             s2 = self.defines[c[1]]
 
-            dims = (s2[0] - s1[1] - 1, s1[2] - s2[3] - 1)
-
-        if bulge[0] == 'm':
-            # Multiloops are also pretty easy
-            if len(bd) == 2:
-                dims = (bd[1] - bd[0] + 1, 1000)
+            return get_define_len(s1[1]+1, s2[0]-1), get_define_len(s2[3]+1, s1[2]-1)
+        else:
+            dim0 = get_define_len(bd[0], bd[1])
+            if bulge[0]=="m":
+                dim1 = 1000
             else:
-                dims = (0, 1000)
-        if bulge[0] == 'f' or bulge[0] == 't':
-            dims = (bd[1] - bd[0] + 1, -1)
-
-        if bulge[0] == 'h':
-            dims = (bd[1] - bd[0] + 1, -1)
-
-        return dims
+                dim1 = -1
+            return dim0, dim1
 
     def get_length(self, vertex):
         """

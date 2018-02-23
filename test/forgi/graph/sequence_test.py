@@ -79,7 +79,6 @@ class TestIndexingWithoutMissing(unittest.TestCase):
         self.assertEqual(self.seq2[:4:-1], "GGG")
         self.assertEqual(self.seq2[::-1], "GGG&AAA")
 
-
 class TestHelperFunction(unittest.TestCase):
     def test_insert_breakpoints_simple(self):
         self.assertEqual(fgs._insert_breakpoints_simple("01234", [2], 0, False), "012&34")
@@ -112,6 +111,8 @@ class TestIndexingWithMissing(unittest.TestCase):
                                   {"model":None, "ssseq":16, "res_name":"G", "chain":"A", "insertion":"D"},
                                   {"model":None, "ssseq":11, "res_name":"C", "chain":"B", "insertion":None},
                                   {"model":None, "ssseq":202, "res_name":"C", "chain":"B", "insertion":"A"}])
+
+
 
     def test_indexing_with_resid_without_missing(self):
         self.assertEqual(self.seq1[fgr.resid_from_str("14")],"C")
@@ -249,3 +250,11 @@ class NonIndexingTests(unittest.TestCase):
         self.assertEqual(
                     self.seq2.with_missing.update_dotbracket("((()))"),
                     "-(((-&-)))-")
+
+    def test_define_length(self):
+        self.assertEqual(self.seq1.define_length([4,5]), 2)
+        self.assertEqual(self.seq1.define_length([4,5,7,7]), 3)
+        self.assertEqual(self.seq1.define_length([]), 0)
+        self.assertEqual(self.seq1.with_missing.define_length([4,5]), 3)
+        self.assertEqual(self.seq1.with_missing.define_length([4,5,7,7]), 4)
+        self.assertEqual(self.seq1.with_missing.define_length([]), 0)

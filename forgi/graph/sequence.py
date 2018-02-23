@@ -8,6 +8,9 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
 import logging
 from collections import defaultdict
 from string import ascii_lowercase, ascii_uppercase
+from functools import partial
+import inspect
+
 from . import residue as fgr
 log = logging.getLogger()
 
@@ -176,6 +179,18 @@ class _IndexHelper(object):
         kwargs.update({self.flag:True})
         log.debug("%s._getitem called. flags: %s", type(self).__name__, kwargs)
         return self.parent._getitem(key, **kwargs)
+    def __getattr__(self, attr):
+        log.debug("Getattr called for %s", attr)
+        f = getattr(self.parent, attr)
+        if callable(f):
+            argspec = inspect.getargspec(f)
+            log.debug("For function %s: args are %s", f, argspec.args)
+            if argspec.keywords or self.flag in argspec.args:
+                log.debug("setting flag %s", self.flag)
+                kwargs = {self.flag:True}
+                f = partial(f, **kwargs)
+        return f
+
 class _WMIndexer(_IndexHelper):
     flag = "include_missing"
     def __len__(self):
@@ -197,6 +212,12 @@ class _WMIndexer(_IndexHelper):
     @property
     def with_modifications(self):
         return _MODIndexer(self)
+
+    def define_length(self, d):
+        val = 0
+        for i in range(0,len(d),2):
+            val+= sum(1 for _ in self._iter_resids(self.to_resid(d[i]), self.to_resid(d[i+1])))
+        return val
 
 class _MODIndexer(_IndexHelper):
     flag = "show_modifications"
@@ -494,11 +515,11 @@ class Sequence(object):
         return "".join(db)
 
 
-    def _iter_resids(self, start, stop, with_missing):
+    def _iter_resids(self, start, stop, include_missing):
         left_res = None
         start_i, start_is_missing = self._resid_to_index(start, 0, True)
         stop_i, stop_is_missing   = self._resid_to_index(stop, len(self._seqids), True)
-        if (start_is_missing or stop_is_missing) and not with_missing:
+        if (start_is_missing or stop_is_missing) and not include_missing:
             raise IndexError("Start or stop are missing residues, but indexing without missing residues was requested.")
 
         if not start_is_missing and start is not None:
@@ -532,7 +553,7 @@ class Sequence(object):
                                      "Breakpoint at position {} "
                                      "in the middle of chain {}".format(i-1,
                                       left_res.chain))
-            if with_missing:
+            if include_missing:
                 mr, mr_keys = self._missing_residues_between(left_res, right_res)
                 old_r = left_res
                 for j,r in enumerate(mr_keys):
@@ -642,6 +663,12 @@ class Sequence(object):
         for resid, label in self._modifications.items():
             out.append("modification {} {}".format(fgr.resid_to_str(resid), label))
         return "\n".join(out)+"\n"
+
+    def define_length(self, d):
+        val=0
+        for i in range(0,len(d),2):
+            val+=d[i+1]-d[i]+1
+        return val
 
     def _export_missing(self):
         """
