@@ -2212,6 +2212,7 @@ class BulgeGraph(BaseGraph):
             assert len(self.defines)==0
             raise StopIteration("Empty Graph")
         while True:
+            log.debug("Yielding node %s with edges %s", node, self.edges[node])
             yield node
             if node[0] in "si": #The strand matters
                 if node[0]=="s":
@@ -2237,9 +2238,14 @@ class BulgeGraph(BaseGraph):
                     intersect = self.edges[node] & self.edges[next_node]
                     for el in intersect:
                         if el[0]=="m" and self.defines[el]==[]:
+                            log.debug("ML %s between %s and %s: %s", el,
+                                      node, next_node, self.define_a(el))
+                    for el in intersect:
+                        if el[0]=="m" and self.defines[el]==[]:
                             #In case of this structuire ([)], there are 2 0-length multiloops between the two stems.
                             prev_nuc = min(self.flanking_nucleotides(el))
-                            if self.get_node_from_residue_num(prev_nuc) == node:
+                            log.debug("prev_nuc = %s", prev_nuc)
+                            if nuc-1 == prev_nuc:
                                 node = el
                                 break
                     else:
