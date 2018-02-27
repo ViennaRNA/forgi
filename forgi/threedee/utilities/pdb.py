@@ -45,7 +45,6 @@ for v in side_chain_atoms.values():
 all_rna_atoms = set(all_rna_atoms)
 
 RNA_RESIDUES = [ "A", "U", "G", "C", 'rA', 'rC', 'rG', 'rU', 'DU']
-RNA_HETERO = ['H_PSU', 'H_5MU', 'H_5MC','H_1MG','H_H2U']
 
 interactions = [('P', 'O5*'),
                 ('P', "O5'"),
@@ -120,36 +119,6 @@ def trim_chain_between(chain, start_res, end_res):
     for res in to_detach:
         chain.detach_child(res.id)
 
-def extract_subchain(chain, start_res, end_res):
-    '''
-    Extract a portion of a particular chain. The new chain
-    will contain residues copied from the original chain.
-
-    :param chain: The source chain.
-    :param start_res: The number of the first nucleotide to extract
-    :param last_res: The number of the last nucleotide to extract
-    '''
-    new_chain = bpdb.Chain.Chain(' ')
-    for r in chain:
-        if start_res <= r.id and r.id <= end_res:
-            new_chain.add(r.copy())
-
-    return new_chain
-
-def extract_subchain_from_res_list(chain, res_list):
-    '''
-    Extract a portion of a particular chain. The new chain
-    will contain residues copied from the original chain.
-
-    :param chain: The source chain.
-    :param res_list: The list of residue identifiers of the nucleotides
-                     to extract
-    '''
-    new_chain = bpdb.Chain.Chain(' ')
-    for r in res_list:
-        new_chain.add(chain[r].copy())
-
-    return new_chain
 
 def extract_subchains_from_seq_ids(all_chains, seq_ids):
     '''
@@ -346,8 +315,8 @@ def pdb_file_rmsd(fn1, fn2):
         s1= bpdb.PDBParser().get_structure('t', fn1)
         s2= bpdb.PDBParser().get_structure('t', fn2)
 
-    c1 = get_biggest_chain(fn1)
-    c2 = get_biggest_chain(fn2)
+    c1,_ = get_biggest_chain(fn1)
+    c2,_ = get_biggest_chain(fn2)
 
     rmsd = pdb_rmsd(c1, c2)
 
@@ -443,17 +412,9 @@ def get_particular_chain(in_filename, chain_id, parser=None):
     :param chain_id: The id of the chain.
     :return: A Bio.PDB.Chain object containing that particular chain.
     '''
-    if parser is None:
-        parser = bpdb.PDBParser()
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        s = parser.get_structure('temp', in_filename)
-
-    # always take the first model
-    m = s.get_list()[0]
-
-    return m[chain_id]
+    chains, mr = get_all_chains(in_filename, parser)
+    chain, = [c for c in chains if c.id==chain_id]
+    return chain, mr
 
 def get_biggest_chain(in_filename, parser=None):
     '''
@@ -464,14 +425,7 @@ def get_biggest_chain(in_filename, parser=None):
     :return: A Bio.PDB chain structure corresponding to the longest
              chain in the structure stored in in_filename
     '''
-    if parser is None:
-        parser = bpdb.PDBParser()
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        s = parser.get_structure('temp', in_filename)
-
-    chains = list(s.get_chains())
+    chains, mr = get_all_chains(in_filename, parser)
     biggest = 0
     biggest_len = 0
 
@@ -495,7 +449,7 @@ def get_biggest_chain(in_filename, parser=None):
     #sys.exit(1)
 
     orig_chain = chains[biggest]
-    return orig_chain
+    return orig_chain, mr
 
 def get_all_chains(in_filename, parser=None):
     '''
@@ -529,11 +483,41 @@ def get_all_chains(in_filename, parser=None):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
-
+        try:
+            log.debug("PDB header %s", parser.header)
+            mr = parser.header["missing_residues"]
+        except AttributeError: # A mmCIF parser
+            cifdict = bpdb.MMCIF2Dict.MMCIF2Dict(in_filename)
+            mask=np.array(cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str)=="?"
+            int_seq_ids = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=int)[mask]
+            chains = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
+            insertions = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
+            insertions[insertions=="."]=" "
+            symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
+            models = np.array(cifdict["_pdbx_poly_seq_scheme.asym_id"], dtype=str)[mask]
+            mr = []
+            for i,sseq in enumerate(int_seq_ids):
+                mr.append({
+                            "model":models[i],
+                            "res_name":symbol[i],
+                            "chain":chains[i],
+                            "ssseq":sseq,
+                            "insertion":insertions[i]
+                            })
+        except KeyError:
+            mr = []
+            log.warning("Old biopython version. No missing residues")
+            warnings.warn("Could not get information about missing residues."
+                          "Try updating you biopython installation.")
+        else:
+            if mr:
+                log.info("This PDB has missing residues")
+            else:
+                log.info("This PDB has no missing residues")
     if len(s)>1:
         warnings.warn("Multiple models in file. Using only the first model")
     chains = list(chain for chain in s[0] if contains_rna(chain))
-    return chains
+    return chains, mr
 
 
 
@@ -572,8 +556,8 @@ def load_structure(pdb_filename):
     This chain will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, etc...
     '''
-    chain = get_biggest_chain(pdb_filename)
-    return clean_chain(chain)
+    chain, mr = get_biggest_chain(pdb_filename)
+    return clean_chain(chain)[0]
 
 def clean_chain(chain):
     """
@@ -585,9 +569,9 @@ def clean_chain(chain):
     :param chaion: A Bio.PDB.Chain object
     :returns: A modified version of this chain
     """
-    chain = to_4_letter_alphabeth(chain)
+    chain, modifications = to_4_letter_alphabeth(chain)
     chain = rename_rosetta_atoms(chain)
-    return chain
+    return chain, modifications
 
 def interchain_contacts(struct):
     all_atoms = bpdb.Selection.unfold_entities(struct, 'A')

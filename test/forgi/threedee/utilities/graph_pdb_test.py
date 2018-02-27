@@ -45,36 +45,36 @@ class TestGraphPDB(unittest.TestCase):
 
     def test_get_incomplete_elements(self):
         db = "(((...(((...).)))))"
-        cg = ftmc.CoarseGrainRNA(dotbracket_str=db)
+        cg = ftmc.CoarseGrainRNA.from_dotbracket(db)
         # Residue number 3 is missing. Probably bulged out from stem 0
         seq_ids = map(str, [1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
-        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["s0"]))
         # Residue number 4 is missing between s0 and i0
         seq_ids = map(str, [1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
-        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["i0"]))
         # Residue number 5 is missing inside i0
         seq_ids = map(str, [1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
-        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["i0"]))
         # Residue number 17 is missing between s0 and s1, ==> i0
         seq_ids = map(str, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20])
-        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["i0"]))
         # Residue number 10 is missing  ==> h0
         seq_ids = map(str, [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19,20])
-        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["h0"]))
         # Multiple residues are missing
         seq_ids = map(str, [1,2,4,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22])
-        cg.seq_ids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["h0", "s0", "i0"]))
 
 
 
     def test_add_loop_information_from_pdb_chain(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1A34.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1A34.pdb')
 
     """
     def test_add_stem_information_from_pdb_chains(self):
@@ -107,12 +107,12 @@ class TestGraphPDB(unittest.TestCase):
             prev_vec = vec
 
     def test_first_virtual_res_basis(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         basis = ftug.virtual_res_basis(cg, "s0", 0)
         nptest.assert_array_equal(basis, ftuv.create_orthonormal_basis(cg.coords["s0"][1]-cg.coords["s0"][0], cg.twists["s0"][0]))
 
     def test_angle_between_twists(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb', dissolve_length_one_stems=False)
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb', dissolve_length_one_stems=False)
 
         self.verify_virtual_twist_angles(cg, 's0')
         self.verify_virtual_twist_angles(cg, 's1')
@@ -120,7 +120,7 @@ class TestGraphPDB(unittest.TestCase):
         self.verify_virtual_twist_angles(cg, 's3')
 
     def test_coordinates_for_add_virtual_residues(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         ftug.add_virtual_residues(cg, 's0')
         #XYZ coordinate for first residue are ok:
         self.assertAlmostEqual(cg.vposs["s0"][0][0], 2.3, delta=3,
@@ -138,7 +138,7 @@ class TestGraphPDB(unittest.TestCase):
                   msg="Wrong z-position for virtual residue {} of stem s0: {}".format(last_residue,cg.vposs["s0"][last_residue][2]))
 
     def test_basis_transformation_for_virtual_residues(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         ftug.add_virtual_residues(cg, 's0')
         offset=cg.vposs["s0"][0]
         vbasis=cg.vbases["s0"][0]
@@ -154,7 +154,7 @@ class TestGraphPDB(unittest.TestCase):
                                                   vbasis[2], offset, vbasis[2]+offset, global_pos))
 
     def test_virtual_residue_atoms(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
         ftug.add_virtual_residues(cg, 's0')
         ftug.add_virtual_residues(cg, 's1')
@@ -179,7 +179,7 @@ class TestGraphPDB(unittest.TestCase):
     def test_virtual_residue_atom_exact_match(self):
         #This test serves to detect unwanted changes in the virtual atom calculation algorithm.
         #It is allowed to fail, if the virtual atom calculation changes.
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         ftug.add_virtual_residues(cg, 's0')
         vres= ftug.virtual_residue_atoms(cg, 's0', 1, 0)
         nptest.assert_allclose(vres['C8'], np.array([ 5.23455929, -2.9606417 , -2.18156476]))
@@ -187,7 +187,7 @@ class TestGraphPDB(unittest.TestCase):
 
 
     """def test_numbered_virtual_residues(self): #Not USED (?)
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
 
         nres = ftug.numbered_virtual_residues(cg)
         #fud.pv('nres')
@@ -234,12 +234,11 @@ class TestOrientation(unittest.TestCase):
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
-        self.rs_random_281=ftmc.from_pdb('test/forgi/threedee/data/RS_random_281_S_0.pdb')
+        self.rs_random_281, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/RS_random_281_S_0.pdb')
         for key in self.rs_random_281.defines.keys():
           if key[0] =="s":
             ftug.add_virtual_residues(self.rs_random_281, key)
-        self.minimal_multiloop = ftmc.CoarseGrainRNA()
-        self.minimal_multiloop.from_file('test/forgi/threedee/data/minimal_multiloop.cg')
+        self.minimal_multiloop = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/minimal_multiloop.cg')
         for key in self.minimal_multiloop.defines.keys():
           if key[0] =="s":
             ftug.add_virtual_residues(self.minimal_multiloop, key)
@@ -257,7 +256,7 @@ class TestDistanceCalculation(unittest.TestCase):
 
 class TestAtomPosition_VirtualAtoms(unittest.TestCase):
     def setUp(self):
-        cg = ftmc.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         # cg.defines['s0']==[1,9,63,71]
         self.va1=ftug.virtual_atoms(cg, sidechain=False)
         self.va2=ftug.virtual_atoms(cg, sidechain=True)

@@ -20,6 +20,8 @@ from pprint import pprint
 
 from bs4 import BeautifulSoup
 
+
+from ...graph import residue as fgr
 #from .modified_res_lookup import RESIDUE_DICT
 
 log = logging.getLogger(__name__)
@@ -90,11 +92,12 @@ def to_4_letter_alphabeth(chain):
 
     If it is a modified ribonucleotde, replace it by the unmodified "standard parent"
 
-    TODO: What to do with I (INOSINIC ACID)
+    TODO: What to do with I (INOSINE)
 
     :param chain: A Bio.PDB.Chain structure
     :return: The same chain, but with only AUGC residues.
     '''
+    modifications = {}
     i = 0
     while i<len(chain):
         r = chain.child_list[i]
@@ -112,27 +115,27 @@ def to_4_letter_alphabeth(chain):
         # Non-standard residues
         if r.resname.strip() == "I":
             # "I" has no standart parent (AUGC) to replace it with.
-            # So we just completely remove it.
-            chain.detach_child(r.id)
-            warnings.warn("Inosinic acid not supported. Residue {} removed".format(r))
-            continue #Continue with same i (now different residue)
-        if r.resname.strip() not in "AUGC":
-            res_info = ModifiedResidueLookup()[r.resname]
-            if not res_info:
-                #Unknown code. Remove residue
-                chain.detach_child(r.id)
-                continue #Continue with same i (now different residue)
-            if res_info["Polymer type"] != "Ribonucleotide":
-                #DNA/ Amino Acid. Remove residue
-                chain.detach_child(r.id)
-                continue #Continue with same i (now different residue)
-            if res_info["Type description"] == "NON-POLYMER":
-                #e.g. GTP in 3DIR
-                log.warning("Detaching %s, because %s is classified as non-polymeric.", r, r.resname)
-                chain.detach_child(r.id)
-                continue #Continue with same i (now different residue)
-
-            r.resname = res_info["Standard parent"]
+            warnings.warn("Inosine will be replaced by G")
+            r.resname = "G"
+            modifications[fgr.RESID(chain=chain.id,resid=(" ", r.id[1], r.id[2]))]=r.resname.strip()
+        else:
+            if r.resname.strip() not in "AUGC":
+                res_info = ModifiedResidueLookup()[r.resname]
+                if not res_info:
+                    #Unknown code. Remove residue
+                    chain.detach_child(r.id)
+                    continue #Continue with same i (now different residue)
+                if res_info["Polymer type"] != "Ribonucleotide":
+                    #DNA/ Amino Acid. Remove residue
+                    chain.detach_child(r.id)
+                    continue #Continue with same i (now different residue)
+                if res_info["Type description"] == "NON-POLYMER":
+                    #e.g. GTP in 3DIR
+                    log.warning("Detaching %s, because %s is classified as non-polymeric.", r, r.resname)
+                    chain.detach_child(r.id)
+                    continue #Continue with same i (now different residue)
+                modifications[fgr.RESID(chain=chain.id,resid=(" ", r.id[1], r.id[2]))]=r.resname.strip()
+                r.resname = res_info["Standard parent"]
 
         # rename modified residues
         if r.id[0].strip():
@@ -149,7 +152,7 @@ def to_4_letter_alphabeth(chain):
             change_residue_id(r, (' ', r.id[1], r.id[2]))
 
         i+=1 #Go to next residue.
-    return chain
+    return chain, modifications
 
 class ModifiedResidueLookup(object):
     """

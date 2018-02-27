@@ -13,6 +13,8 @@ import logging
 log = logging.getLogger(__name__)
 
 import forgi.utilities.debug as cud
+from .exceptions import GraphConstructionError
+
 
 bracket_left =  "([{<ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 bracket_right = ")]}>abcdefghijklmnopqrstuvwxyz"
@@ -144,6 +146,8 @@ def dotbracket_to_pairtable(struct):
 
 
     """
+    if len(struct)==0:
+        raise ValueError("Cannot convert empty structure to pairtable")
     pt = [0] * ((len(struct)+1)-struct.count("&"))
     pt[0] = len(struct)-struct.count("&")
 
@@ -332,3 +336,58 @@ def pairtable_to_elements(pt, level, i, j):
     elements.append(['s', level, sorted(s)])
 
     return elements + pairtable_to_elements(pt, level, i, j)
+
+
+
+def bpseq_to_tuples_and_seq(bpseq_str):
+    """
+    Convert a bpseq string to a list of pair tuples and a sequence
+    dictionary. The return value is a tuple of the list of pair tuples
+    and a sequence string.
+
+    :param bpseq_str: The bpseq string
+    :return: ([(1,5),(2,4),(3,0),(4,2),(5,1)], 'ACCAA')
+    """
+    lines = bpseq_str.split('\n')
+    seq = []
+    tuples = []
+    pairing_partner={}
+    for line in lines:
+        parts = line.split()
+
+        if len(parts) == 0:
+            continue
+
+        (t1, s, t2) = (int(parts[0]), parts[1], int(parts[2]))
+        if t2 in pairing_partner and t1!=pairing_partner[t2]:
+            raise GraphConstructionError("Faulty bpseq string. {} pairs with {}, "
+                             "but {} pairs with {}".format(t2, pairing_partner[t2], t1, t2))
+        if t1 in pairing_partner and t2!=pairing_partner[t1]:
+            raise GraphConstructionError("Faulty bpseq string. {} pairs with {}, "
+                             "but {} pairs with {}".format(pairing_partner[t1], t1,  t1, t2))
+
+        pairing_partner[t1]=t2
+        if t2!=0:
+            pairing_partner[t2]=t1
+        tuples += [(t1, t2)]
+        seq += [s]
+
+    seq = "".join(seq).upper().replace('T', 'U')
+
+    return (tuples, seq)
+
+def renumber_bpseq(bpseq_triples):
+    """
+    :param bpseq_triples: A list of triples (from, res, to)
+    """
+    out = []
+    mapping = {}
+    for i, triple in enumerate(bpseq_triples):
+        mapping[triple[0]]=i+1
+    for triple in bpseq_triples:
+        from_, res, to_ = triple
+        if to_ not in [0, '0']:
+            to_ = mapping[to_]
+        from_ = mapping[from_]
+        out.append("{} {} {}".format(from_, res, to_))
+    return "\n".join(out)

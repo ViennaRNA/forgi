@@ -46,11 +46,20 @@ class TestCommanldineUtils(unittest.TestCase):
                                        "s2":[9,13,14, 18], "i0":[6,6],
                                        "i1":[8,8], "t0":[25,26]})
         self.assertEqual(len(cg2.defines), 4)
+
+    def test_load_rna_pdb_dissolve_length_one_stems(self):
+        cg1 = fuc.load_rna("test/forgi/threedee/data/1FUF.pdb", "pdb", False,
+                           dissolve_length_one_stems=False)
+        cg2 = fuc.load_rna("test/forgi/threedee/data/1FUF.pdb", "pdb", False,
+                           dissolve_length_one_stems=True)
+        self.assertGreater(len(list(cg1.stem_iterator())),
+                           len(list(cg2.stem_iterator())))
+
     def test_load_fasta_types(self):
         with self.assertRaises(fuc.WrongFileFormat):
             fuc.load_rna("test/forgi/data/pk.fa", "3d", False)
-        bg = fuc.load_rna("test/forgi/data/pk.fa", "bg", False)
-        self.assertEqual(type(bg), fgb.BulgeGraph)
+        cg = fuc.load_rna("test/forgi/data/pk.fa", "cg", False)
+        self.assertIsInstance(cg, ftmc.CoarseGrainRNA)
     def test_load_fasta_cleaning_sec_stru(self):
         bg = fuc.load_rna("test/forgi/data/pk.fa", "bg", False, dissolve_length_one_stems=False )
         bg2 = fuc.load_rna("test/forgi/data/pk.fa", "bg", False, dissolve_length_one_stems=True )

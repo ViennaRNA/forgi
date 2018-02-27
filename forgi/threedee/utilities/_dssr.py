@@ -4,7 +4,6 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip)
 
-from past.builtins import basestring
 from pprint import pprint
 
 import json, warnings, sys
@@ -46,16 +45,16 @@ class DSSRAnnotation(object):
         Store annotation from dssr associated with a coarse grained RNA.
 
         For DSSR, see: doi: 10.1093/nar/gkv716
-        
+
         .. note::
             This class is currently compatible with v1.5.7-2016jun16 of dssr.
 
         :param dssr: A *.json file returned by `x3dna-dssr --json`, or a string holding the json
                      or a dictionary containing the parsed json.
-        :param cg: The CoarseGrainedRNA that corresponds to 
+        :param cg: The CoarseGrainedRNA that corresponds to
                    the same pdb file x3dna-dssr was run on.
         """
-        if isinstance(dssr, basestring):
+        if isinstance(dssr, type("")):
             if dssr[0]!="{":
                 with open(dssr) as f:
                     dssr = f.read()
@@ -130,7 +129,7 @@ class DSSRAnnotation(object):
             if mc[0][0]=="s":
                 return mc[0]
         raise RuntimeError("No stem matching dssr_stem {}, only single stranded region: {}.".format(dssr_stem, list(cg_stems.keys())))
-    
+
     def compare_coaxial_stack_annotation(self, forgi_method="Tyagi", allow_single_bp=False):
         """
         Compare the coaxial stack annotation between the DSSR method and the forgi method.
@@ -164,7 +163,7 @@ class DSSRAnnotation(object):
                 if [s1,s2] not in dssr_stacks and [s2,s1] not in dssr_stacks:
                     stacks_forgi.add(Stack((s1,s2), "stacking", "not stacking"))
         return stacks_forgi, stacks_dssr
-    
+
     def basepair_stacking(self, forgi_method="Tyagi"):
         if "_" in self._cg.name:
             chainname="chain_"+self._cg.name.split("_")[-1]
@@ -201,7 +200,7 @@ class DSSRAnnotation(object):
                     stack_bag1|=stack_bag2
                     del dssr_helices[j]
                     break
-            else: 
+            else:
                 break
         element_helices = self._cg.get_stacking_helices(forgi_method)
         forgi_helices=[]
@@ -237,7 +236,7 @@ class DSSRAnnotation(object):
                     if chrid>93:
                         chrid=chrid%(93)
                     chrid=chrid+33
-                    
+
                     helixstri+=chr(chrid)
                     break
             else:
@@ -259,14 +258,14 @@ class DSSRAnnotation(object):
                     if chrid>93:
                         chrid=chrid%(93)
                     chrid=chrid+33
-                    
+
                     helixstri+=chr(chrid)
                     break
             else:
                 helixstri+=" "
         print(helixstri)
-        
-    def compare_dotbracket(self):        
+
+    def compare_dotbracket(self):
         if "_" in self._cg.name:
             chainname="chain_"+self._cg.name.split("_")[-1]
         else:
@@ -274,4 +273,3 @@ class DSSRAnnotation(object):
         print ("seq   " + self._cg.seq)
         print ("forgi " + self._cg.to_dotbracket_string())
         print ("DSSR  " + self._dssr["dbn"][chainname]["sstr"])
-

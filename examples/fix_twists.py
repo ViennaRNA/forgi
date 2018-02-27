@@ -17,7 +17,7 @@ parser.add_argument('rna', help="The *.cg/*.coord file holding the coarse graine
 
 
 def main(args):
-    cg = ftmc.CoarseGrainRNA(args.rna)
+    cg = ftmc.CoarseGrainRNA.from_bg_file(args.rna)
     for stem in cg.stem_iterator():
         stem_vec = cg.coords.get_direction(stem)
         twist_vec = cg.twists[stem][0]

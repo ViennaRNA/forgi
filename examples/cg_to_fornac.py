@@ -149,22 +149,33 @@ def get_residue_num_list(cg, d):
 
     return nucleotide_list
 
+def nd_define_iterator(cg):
+    '''
+    Iterate over defines which contain some nucleotides.
+
+    :return: An iterator over all defines which contain some
+             nucleotides.
+    '''
+    for d in cg.defines:
+        if len(cg.defines[d]) > 0:
+            yield d
+
 def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxsize,
                        correct_links = None):
     '''
-    Get a list of extra_links that are within a certain distance of each 
+    Get a list of extra_links that are within a certain distance of each
     other.
 
     @param cg: The coarse grain RNA structure in question.
     @param dist: The distance.
-    @return: A tuple of (links, pairs) where the links contains tuples of 
-             the #s of the linked nucleotides and pairs is a bitmap 
+    @return: A tuple of (links, pairs) where the links contains tuples of
+             the #s of the linked nucleotides and pairs is a bitmap
              indicating whether a particular pair is linked.
     '''
     links = []
     pair_bitmap = []
 
-    for e1, e2 in it.combinations(cg.nd_define_iterator(), r=2):
+    for e1, e2 in it.combinations(nd_define_iterator(cg), r=2):
         if (e1[0] == 's' and cg.stem_length(e1) == 1) or (e2[0] == 's' and cg.stem_length(e2) == 1):
             continue
 
@@ -259,7 +270,7 @@ def main():
 
     if options.sort_by == 'pca':
         print("Sorting by pca", file=sys.stderr)
-        ix = reorder_structs(pair_bitmaps) 
+        ix = reorder_structs(pair_bitmaps)
     else:
         print("Sorting by mcc", file=sys.stderr)
         ix = np.argsort(-np.array(mccs))
@@ -272,4 +283,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

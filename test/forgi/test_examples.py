@@ -163,7 +163,7 @@ class TestOtherScripts(unittest.TestCase):
         shutil.rmtree(out_dir)
 
     def test_fix_twists(self):
-        cg1 = ftmc.CoarseGrainRNA("test/forgi/threedee/data/unfixed_twists.cg")
+        cg1 = ftmc.CoarseGrainRNA.from_bg_file("test/forgi/threedee/data/unfixed_twists.cg")
         try:
             cg1.add_all_virtual_residues()
         except AssertionError:
@@ -174,6 +174,5 @@ class TestOtherScripts(unittest.TestCase):
         fixed_cg_str = sp.check_output([sys.executable, "examples/fix_twists.py",
                                    "test/forgi/threedee/data/unfixed_twists.cg"],
                                    universal_newlines=True, env = subprocess_env)
-        cg2 = ftmc.CoarseGrainRNA()
-        cg2.from_cg_string(fixed_cg_str)
+        cg2 = ftmc.CoarseGrainRNA.from_bg_string(fixed_cg_str)
         cg2.add_all_virtual_residues() #Raises AssertionError, if twists were not fixed

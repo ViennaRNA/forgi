@@ -29,9 +29,9 @@ def realatom_vatom_rmsd(cg):
             for a, coords in vas.items():
                 try:
                     rp = cg.chains[chainPdb][posPdb][a].get_vector().get_array()
-                except KeyError: 
+                except KeyError:
                     pass
-                else:                    
+                else:
                     rposs.append(rp)
                     vposs.append(coords)
     assert len(vposs)==len(rposs)
@@ -40,32 +40,30 @@ def realatom_vatom_rmsd(cg):
 class VirtualAtomsTest(unittest.TestCase):
     def setUp(self):
         pdbfile1 = "test/forgi/threedee/data/3FU2.pdb"
-        self.cg1  = ftmc.from_pdb(pdbfile1)
+        self.cg1,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile1, load_chains="biggest")
 
         pdbfile2 = "test/forgi/threedee/data/3V2F.pdb"  #Takes some time. Big structure
-        self.cg2  = ftmc.from_pdb(pdbfile2)
+        self.cg2,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile2, load_chains="biggest")
 
         pdbfile3 = "test/forgi/threedee/data/1X8W.pdb"
-        self.cg3  = ftmc.from_pdb(pdbfile3)
+        self.cg3,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile3, load_chains="biggest")
 
-        pdbfile4 = "test/forgi/threedee/data/2QBZ.pdb" 
-        self.cg4  = ftmc.from_pdb(pdbfile4)
+        pdbfile4 = "test/forgi/threedee/data/2QBZ.pdb"
+        self.cg4,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile4, load_chains="biggest")
 
     def test_virtualatoms_close_to_pdb(self):
         rmsd = realatom_vatom_rmsd(self.cg1)
         print(rmsd)
         self.assertLess(rmsd, 0.94) # 1.32 using average atoms (no vres)
-        
+
         rmsd = realatom_vatom_rmsd(self.cg3)
         print(rmsd)
         self.assertLess(rmsd, 0.94) # 1.33
-        
+
         rmsd = realatom_vatom_rmsd(self.cg4)
         print(rmsd)
         self.assertLess(rmsd, 0.95) # 1.16
-        
+
         rmsd = realatom_vatom_rmsd(self.cg2)
         print(rmsd)
         self.assertLess(rmsd, 1.04) # 1.30
-
-

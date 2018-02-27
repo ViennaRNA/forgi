@@ -37,9 +37,11 @@ import Bio.PDB as bpdb
 from logging_exceptions import log_to_exception, log_exception
 
 from ...graph import bulge_graph as fgb
+from ...graph.sequence import Sequence, _insert_breakpoints_simple
+from ...graph._graph_construction import _BulgeGraphConstruction
 from ..utilities import graph_pdb as ftug
-from ..model import stats as ftms
-
+from . import stats as ftms
+from . import transform_cg as ftmt
 from ..._k2n_standalone import knotted2nested as cak
 from ..utilities import mcannotate as ftum
 from ..utilities import pdb as ftup
@@ -62,35 +64,6 @@ try:
 except:
   def profile(x):
     return x
-
-def remove_hetatm(lines):
-    '''
-    Go through the lines of a pdb file and remove any which refer to a
-    HETATM.
-
-    :param lines: A an array of lines of text from a pdb file.
-    '''
-    new_lines = []
-
-    for line in lines:
-        if line.find('HETATM') == 0:
-            if line.find('5MU') > 0:
-                line = line.replace('5MU', '  U')
-            elif line.find('PSU') > 0:
-                line = line.replace('PSU', '  U')
-            elif line.find('5MC') > 0:
-                line = line.replace('5MC', '  C')
-            elif line.find('1MG') > 0:
-                line = line.replace('1MG', '  G')
-            elif line.find('H2U') > 0:
-                line = line.replace('H2U', '  G')
-            else:
-                continue
-
-        line = line.replace('HETATM', 'ATOM  ')
-        new_lines += [line]
-
-    return new_lines
 
 
 def add_longrange_interactions(cg, lines):
@@ -130,7 +103,7 @@ def breakpoints_from_seqids(seqids):
         old_chain = seqid.chain
     return breakpoints
 
-def _are_adjacent_basepairs(cg, edge1, edge2):
+def _are_adjacent_basepairs(seq_ids, edge1, edge2):
     """
     Helper function used by connected_cgs_from_pdb.
 
@@ -145,8 +118,8 @@ def _are_adjacent_basepairs(cg, edge1, edge2):
             assert toA.chain==toB.chain
         else:
             assert False
-    if (abs(cg.seq_ids.index(fromA)-cg.seq_ids.index(fromB))==1 and
-        abs(cg.seq_ids.index(toA)-cg.seq_ids.index(toB))==1):
+    if (abs(seq_ids.index(fromA)-seq_ids.index(fromB))==1 and
+        abs(seq_ids.index(toA)-seq_ids.index(toB))==1):
         log.debug("Basepairs %s and %s are adjacent. No length 1 stem", edge1, edge2)
         return True
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
@@ -228,268 +201,6 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
         log.exception("Could not convert MC-Annotate output to dotplot")
         raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
 
-def connected_cgs_from_pdb(pdb_filename, remove_pseudoknots=False, dissolve_length_one_stems = True):
-    with fus.make_temp_directory() as output_dir:
-        chains = ftup.get_all_chains(pdb_filename)
-        new_chains = []
-        for chain in chains:
-            log.debug("Loaded Chain %s", chain.id)
-            chain = ftup.clean_chain(chain)
-            new_chains.append(chain)
-
-        rna_pdb_fn = op.join(output_dir, 'temp.pdb')
-        with open(rna_pdb_fn, 'w') as f:
-            #We need to output in pdb format for MC-Annotate
-            ftup.output_multiple_chains(new_chains, f.name)
-            f.flush()
-
-        # first we annotate the 3D structure
-        log.info("Starting annotation program for all chains")
-        bpseq, seq_ids = _annotate_pdb(rna_pdb_fn)
-        breakpoints = breakpoints_from_seqids(seq_ids)
-
-        # remove pseudoknots
-        if remove_pseudoknots:
-            log.info("Removing pseudoknots")
-            log.info(bpseq)
-            bpseq = cak.k2n_main(io.StringIO(bpseq), input_format='bpseq',
-                               #output_format = 'vienna',
-                               output_format = 'bpseq',
-                               method = cak.DEFAULT_METHOD,
-                               opt_method = cak.DEFAULT_OPT_METHOD,
-                               verbose = cak.DEFAULT_VERBOSE,
-                               removed= cak.DEFAULT_REMOVED)
-
-
-
-        import networkx as nx
-        chain_connections_multigraph = nx.MultiGraph()
-        cg = CoarseGrainRNA()
-        cg.seq_ids = seq_ids
-        for line in bpseq.splitlines():
-            try:
-                from_, res, to_ = line.split()
-            except:
-                continue
-            try:
-                from_seqid = cg.seq_ids[int(from_)-1]
-            except IndexError as e:
-                with log_to_exception(log, e):
-                    log.error("Index error occurred for index %s. Seq-ids are %s", int(from_)-1, cg.seq_ids)
-                raise
-            from_chain = from_seqid.chain
-            chain_connections_multigraph.add_node(from_chain)
-            if int(to_) != 0 and int(to_)>int(from_):
-                to_seqid = cg.seq_ids[int(to_)-1]
-                from_seqid = cg.seq_ids[int(from_)-1]
-                to_seqid = cg.seq_ids[int(to_)-1]
-                from_chain = from_seqid.chain
-                to_chain   = to_seqid.chain
-                if from_chain != to_chain:
-                    log.debug("Adding {} - {}".format(from_chain, to_chain))
-                    chain_connections_multigraph.add_edge(from_chain, to_chain, basepair=(from_seqid, to_seqid))
-        chain_connections = nx.Graph(chain_connections_multigraph)
-        if dissolve_length_one_stems:
-            for chain1, chain2 in it.combinations(chain_connections_multigraph.nodes(), 2):
-                if chain2 in chain_connections_multigraph.adj[chain1]:
-                    for edge1, edge2 in it.combinations(chain_connections_multigraph.adj[chain1][chain2].values(), 2):
-                        if _are_adjacent_basepairs(cg, edge1, edge2):
-                            break
-                    else: #break NOT encountered.
-                        log.debug("No connection remaining between chains %s and %s", chain1, chain2)
-                        chain_connections.remove_edge(chain1, chain2)
-
-        # Now remove multiple edges. We don't care what nx does with the edge attributes.
-
-        log.debug("CONNECTIONS: {}, nodes {}".format(chain_connections, chain_connections.nodes()))
-        log.debug("Edges {}".format(chain_connections.edges()))
-        cgs = []
-        for component in nx.connected_components(chain_connections):
-            #print(component, type(component))
-            log.info("Loading PDB: Connected component with chains %s", str(list(component)))
-            try:
-                cgs.append(load_cg_from_pdb(pdb_filename, remove_pseudoknots=remove_pseudoknots, chain_id = list(component), dissolve_length_one_stems=dissolve_length_one_stems))
-            except GraphConstructionError as e:
-                log_exception(e, logging.ERROR, with_stacktrace=False)
-                log.error("Could not load chains %s, due to the above mentioned error.", list(component))
-        cgs.sort(key=lambda x: x.name)
-        if dissolve_length_one_stems:
-            for cg in cgs:
-                cg.dissolve_length_one_stems()
-        return cgs
-
-def load_cg_from_pdb_in_dir(pdb_filename, output_dir, secondary_structure='',
-                            chain_id=None, remove_pseudoknots=True, parser=None,
-                            dissolve_length_one_stems=True):
-    '''
-    Create the coarse grain model from a pdb file and store all
-    of the intermediate files in the given directory.
-
-    :param pdb_filename: The name of the pdb file to be coarseified
-    :param output_dir: The name of the output directory
-    :param secondary_structure: Specify a particular secondary structure
-                                for this coarsification.
-    :param chain_id: The id of the chain to create the CG model from.
-                    This can be one of the following:
-
-                    * The string "all" in lowercase, to extract all chains.
-                    * None, to extract the biggest chain
-                    * A (single-letter) string containing the chain id
-                    * A list of chain-ids. In that case only chains that match this id will be extracted.
-    '''
-
-    #chain = ftup.load_structure(pdb_filename)
-    chains = []
-    if chain_id == "all":
-        chains = ftup.get_all_chains(pdb_filename, parser=parser)
-    elif chain_id is None:
-        chains = [ftup.get_biggest_chain(pdb_filename, parser=parser)]
-    elif is_string_type(chain_id):
-        chains = [ftup.get_particular_chain(pdb_filename, chain_id, parser=parser)]
-    else:
-        chains = ftup.get_all_chains(pdb_filename, parser=parser)
-        chains = [ chain for chain in chains if chain.id in chain_id ]
-        if len(chain_id) != len(chains):
-            raise CgConstructionError("Bad chain-id given. "
-                                      "{} not present (or not an RNA)".format( set(chain_id) -
-                                                                                       set([chain.id for chain in chains])))
-    log.debug("Before cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in chains})
-    new_chains = []
-    for chain in chains:
-        chain = ftup.clean_chain(chain)
-        new_chains.append(chain)
-    log.debug("After cleanup: chains-> residues: %s", {chain.id:len(chain) for chain in new_chains})
-
-    pdb_base = op.splitext(op.basename(pdb_filename))[0]
-
-    if len(new_chains)==1:
-        pdb_base += "_" + new_chains[-1].id
-    else:
-        pdb_base += "_" + "-".join(chain.id for chain in new_chains)
-
-    cg = CoarseGrainRNA()
-    if sum(len(chain.get_list()) for chain in new_chains) == 0:
-        return cg
-
-    # output a pdb with RNA only (for MCAnnotate):
-    output_dir = op.join(output_dir, pdb_base )
-
-    if not op.exists(output_dir):
-        os.makedirs(output_dir)
-    rna_pdb_fn = op.join(output_dir, 'temp.pdb')
-    with open(rna_pdb_fn, 'w') as f:
-        #We need to output in pdb format for MC-Annotate
-        ftup.output_multiple_chains(new_chains, f.name)
-        f.flush()
-
-    # first we annotate the 3D structure
-    log.info("Starting annotation program for chain(s) %s", chain_id)
-    if hasattr(sp, "DEVNULL"): #python>=3.3
-        kwargs = {"stderr":sp.DEVNULL}
-    else:
-        kwargs = {}
-    bpseq, seq_ids = _annotate_pdb(rna_pdb_fn, kwargs)
-    breakpoints = breakpoints_from_seqids(seq_ids)
-
-    lines = bpseq.strip().split('\n')
-
-
-    if secondary_structure:
-        warnings.warn("Not adding any longrange interactions because secondary structure is given.")
-        if remove_pseudoknots:
-            warnings.warn("Option 'remove_pseudoknots ignored, because secondary structure is given.")
-        cg.from_dotbracket(secondary_structure, dissolve_length_one_stems=dissolve_length_one_stems)
-        cg.seq_ids = seq_ids
-        if cg.backbone_breaks_after!=breakpoints:
-            raise CgIntegrityError("Breakpoints in provided secondary structure ({}) "
-                                   "are not consistent with PDB ({})".format(cg.backbone_breaks_after, breakpoints))
-    else:
-        if remove_pseudoknots:
-            log.info("Removing pseudoknots")
-            bpseq = cak.k2n_main(io.StringIO(bpseq), input_format='bpseq',
-                               #output_format = 'vienna',
-                               output_format = 'bpseq',
-                               method = cak.DEFAULT_METHOD,
-                               opt_method = cak.DEFAULT_OPT_METHOD,
-                               verbose = cak.DEFAULT_VERBOSE,
-                               removed= cak.DEFAULT_REMOVED)
-
-            bpseq = bpseq.replace(' Nested structure', pdb_base)
-        cg.from_bpseq_str(bpseq, breakpoints = breakpoints, dissolve_length_one_stems=dissolve_length_one_stems) #Sets the seq without cutpoints
-        cg.seq_ids = seq_ids
-        add_longrange_interactions(cg, lines)
-
-
-    cg.name = pdb_base
-    # Add the 3D information about the starts and ends of the stems
-    # and loops
-    cg.chains = { chain.id : chain for chain in new_chains }
-    cg.chain_ids = [ chain.id for chain in new_chains ]
-
-    log.debug("First 10 seq-IDs of loaded structure are %s", cg.seq_ids[:10])
-    log.debug("Elements %s", cg.defines.keys())
-    #Stems can span 2 chains.
-    ftug.add_stem_information_from_pdb_chains(cg)
-    cg.add_bulge_coords_from_stems()
-    ftug.add_loop_information_from_pdb_chains(cg)
-    cg.incomplete_elements = ftug.get_incomplete_elements(cg)
-
-    assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
-    #with open(op.join(output_dir, 'temp.cg'), 'w') as f3:
-    #    f3.write(cg.to_cg_string())
-    #    f3.flush()
-
-    log.debug("Sequence {}".format(cg.seq))
-
-    return cg
-
-def load_cg_from_pdb(pdb_filename, secondary_structure='',
-                     intermediate_file_dir=None, chain_id=None,
-                    remove_pseudoknots=True, parser=None,
-                    dissolve_length_one_stems=True):
-    '''
-    Load a coarse grain model from a PDB file, by extracing
-    the bulge graph.
-
-    :param pdb_filename: The filename of the 3D model
-    :param secondary_structure: A dot-bracket string encoding the secondary
-                                structure of this molecule
-    '''
-
-    if intermediate_file_dir is not None:
-        output_dir = intermediate_file_dir
-
-        cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
-                                     secondary_structure, chain_id=chain_id,
-                                    remove_pseudoknots=remove_pseudoknots, parser=parser,
-                                    dissolve_length_one_stems=dissolve_length_one_stems)
-    else:
-        with fus.make_temp_directory() as output_dir:
-            cg = load_cg_from_pdb_in_dir(pdb_filename, output_dir,
-                                         secondary_structure, chain_id = chain_id,
-                                        remove_pseudoknots=remove_pseudoknots, parser=parser,
-                                        dissolve_length_one_stems=dissolve_length_one_stems)
-
-    return cg
-
-def from_pdb(pdb_filename, secondary_structure='', intermediate_file_dir=None,
-             chain_id=None, remove_pseudoknots=True, parser=None, dissolve_length_one_stems=True):
-    cg = load_cg_from_pdb(pdb_filename, secondary_structure,
-                          intermediate_file_dir, chain_id=chain_id,
-                         remove_pseudoknots=remove_pseudoknots, parser=parser,
-                         dissolve_length_one_stems=dissolve_length_one_stems)
-    return cg
-
-def from_bulge_graph(bulge_graph):
-    """
-    Create a CoarseGrainRNA from a BulgeGraph
-    """
-    if not bulge_graph.seq:
-        raise CgConstructionError("Sequence missing in BulgeGraph. Cannot create CoarseGrainRNA.")
-    bg_str = bulge_graph.to_bg_string()
-    cg = CoarseGrainRNA()
-    cg.from_cg_string(bg_str)
-    return  cg
 
 class RnaMissing3dError(LookupError):
     pass
@@ -503,11 +214,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     and two twist vetors pointing towards the centers of the base
     pairs at each end of the helix.
     '''
-    def __init__(self, cg_file=None, dotbracket_str='', seq=''):
+    def __init__(self, graph_construction, sequence, name=None, infos=None, _dont_split=False):
         '''
         Initialize the new structure.
         '''
-        super(CoarseGrainRNA, self).__init__(cg_file, dotbracket_str, seq)
+        super(CoarseGrainRNA, self).__init__(graph_construction, sequence, name, infos, _dont_split)
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
@@ -522,6 +233,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         if self.defines:
             self._init_coords()
+
+        #: A dictionary storing the stem-bases (not the vres basis)
+        self.bases = {}
+        self.stem_invs = {}
+
 
         #:The following 5 defaultdicts are cleared when coords or twists change.
         #: Global (carthesian) position of the virtual residue
@@ -544,14 +260,215 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.project_from = None
 
         self.longrange = c.defaultdict( set )
-        self.chains = {} #the PDB chain if loaded from a PDB file
+        self.chains = {} #the PDB chains if loaded from a PDB file
 
-        self.incomplete_elements = [] # An estimated list of cg-elements with missing residues.
+    ############################################################################
+    # Factory functions
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        if cg_file is not None:
-            self.from_file(cg_file)
-            if not self.defines:
-                raise CgConstructionError("Empty CoarseGrainRNA created. Was '{}' in *.cg/ *.coord file format?".format(cg_file))
+    @classmethod
+    def from_bg_string(cls, cg_string):
+        '''
+        Populate this structure from the string
+        representation of a graph.
+        '''
+        # Reading the bulge_graph-part of the file
+        cg = super(CoarseGrainRNA, cls).from_bg_string(cg_string)
+        cg._init_coords()
+        log.debug("BG read. Now reading 3D information")
+        #Reading the part of the file responsible for 3D information
+        lines = cg_string.split('\n')
+        for line in lines:
+            line = line.strip()
+            parts = line.split()
+            if len(parts) == 0:
+                continue
+            if parts[0] == 'coord':
+                name = parts[1]
+                cg.coords[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
+            if parts[0] == 'twist':
+                name = parts[1]
+                cg.twists[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
+            if parts[0] == 'longrange':
+                cg.longrange[parts[1]].add(parts[2])
+                cg.longrange[parts[2]].add(parts[1])
+
+            if parts[0] == 'sampled':
+                cg.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
+            if parts[0] == 'project':
+                cg.project_from=np.array(parts[1:], dtype=float)
+        cg.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
+        return cg
+
+    @classmethod
+    def from_pdb(cls, pdb_filename, load_chains=None, remove_pseudoknots=False,
+                 dissolve_length_one_stems = True, secondary_structure = None):
+        """
+        :param load_chains: A list of chain_ids or None (all chains)
+        :param secondary_structure: Only useful if we load only 1 component
+        """
+        warnings.warn("We currently do not load any long-range interactions")
+        # We need to create files, so we can interface with
+        # the annotation program.
+        if remove_pseudoknots and secondary_structure:
+            warnings.warn("Option 'remove_pseudoknots ignored for user-supplied secondary structure.")
+
+
+        with fus.make_temp_directory() as output_dir:
+            if load_chains=="biggest":
+                chain, missing_res = ftup.get_biggest_chain(pdb_filename)
+                chains=[chain]
+            else:
+                chains, missing_res = ftup.get_all_chains(pdb_filename)
+            new_chains = []
+            for chain in chains:
+                if load_chains in [None, "biggest"] or chain.id in load_chains:
+                    log.debug("Loaded Chain %s", chain.id)
+                    chain, modifications = ftup.clean_chain(chain)
+                    new_chains.append(chain)
+
+            rna_pdb_fn = op.join(output_dir, 'temp.pdb')
+            with open(rna_pdb_fn, 'w') as f:
+                #We need to output in pdb format for MC-Annotate
+                ftup.output_multiple_chains(new_chains, f.name)
+                f.flush()
+
+            # first we annotate the 3D structure
+            log.info("Starting annotation program for all chains")
+            bpseq, seq_ids = _annotate_pdb(rna_pdb_fn)
+            breakpoints = breakpoints_from_seqids(seq_ids)
+
+        # Here, we remove Pseudoknots on the bp-seq level. not the BulgeGraph
+        # level, because there may be multiple components, so we cannot create
+        # a BulgeGraph.
+        if remove_pseudoknots:
+            log.info("Removing pseudoknots")
+            log.info(bpseq)
+            bpseq = cak.k2n_main(io.StringIO(bpseq), input_format='bpseq',
+                               #output_format = 'vienna',
+                               output_format = 'bpseq',
+                               method = cak.DEFAULT_METHOD,
+                               opt_method = cak.DEFAULT_OPT_METHOD,
+                               verbose = cak.DEFAULT_VERBOSE,
+                               removed= cak.DEFAULT_REMOVED)
+
+
+        import networkx as nx
+        chain_connections_multigraph = nx.MultiGraph()
+        bpseq_lines = bpseq.splitlines()
+        for line in bpseq_lines:
+            try:
+                from_, res, to_ = line.split()
+            except:
+                continue
+            from_seqid = seq_ids[int(from_)-1]
+            from_chain = from_seqid.chain
+            chain_connections_multigraph.add_node(from_chain)
+            if int(to_) != 0 and int(to_)>int(from_):
+                to_seqid = seq_ids[int(to_)-1]
+                to_chain   = to_seqid.chain
+                if from_chain != to_chain:
+                    log.debug("Adding {} - {}".format(from_chain, to_chain))
+                    chain_connections_multigraph.add_edge(from_chain, to_chain, basepair=(from_seqid, to_seqid))
+        chain_connections = nx.Graph(chain_connections_multigraph)
+        if dissolve_length_one_stems:
+            for chain1, chain2 in it.combinations(chain_connections_multigraph.nodes(), 2):
+                if chain2 in chain_connections_multigraph.adj[chain1]:
+                    for edge1, edge2 in it.combinations(chain_connections_multigraph.adj[chain1][chain2].values(), 2):
+                        if _are_adjacent_basepairs(seq_ids, edge1, edge2):
+                            break
+                    else: #break NOT encountered.
+                        log.debug("No connection remaining between chains %s and %s", chain1, chain2)
+                        chain_connections.remove_edge(chain1, chain2)
+
+        log.debug("CONNECTIONS: {}, nodes {}".format(chain_connections, chain_connections.nodes()))
+        log.debug("Edges {}".format(chain_connections.edges()))
+
+        pdb_base = op.splitext(op.basename(pdb_filename))[0]
+
+        components = list(nx.connected_components(chain_connections))
+        cgs = []
+        if len(components)!=1 and secondary_structure:
+            raise GraphConstructionError("User-provided secondary structure is "
+                                         "ambigouse if more than 1 connected "
+                                         "component loaded.")
+        for component in nx.connected_components(chain_connections):
+            try:
+                cgs.append(cls._load_pdb_component(bpseq_lines, pdb_base, new_chains,
+                                                   component, missing_res, modifications,
+                                                   seq_ids, secondary_structure,
+                                                   dissolve_length_one_stems))
+            except GraphConstructionError as e:
+                log_exception(e, logging.ERROR, with_stacktrace=False)
+                log.error("Could not load chains %s, due to the above mentioned error.", list(component))
+                raise
+
+        cgs.sort(key=lambda x: x.name)
+        log.debug("Returning %s", cgs)
+        return cgs
+
+    @classmethod
+    def _load_pdb_component(cls, original_bpseq_lines, name, chains, chain_ids,
+                            missing_res, modifications, seq_ids,
+                            secondary_structure="", dissolve_length_one_stems=False):
+        """
+        :param original_bpseq_lines: List of strings. Will be filtered for chains.
+        """
+        #print(component, type(component))
+        log.info("Loading PDB: Connected component with chains %s", str(list(chain_ids)))
+        # Since the external annotation program can take some time,
+        # we do not re-annotate, but filter the bpseq_string instead.
+        new_bpseq = []
+        new_seqids = []
+
+        #Filter the bpseq_lines
+        for line in original_bpseq_lines:
+            from_, res, to_ = line.split()
+            from_seqid = seq_ids[int(from_)-1]
+            if from_seqid.chain in chain_ids:
+                new_seqids.append(from_seqid)
+                if to_ !='0':
+                    to_seqid = seq_ids[int(to_)-1]
+                    if to_seqid.chain not in chain_ids: # Because of length-1-basepair
+                        to_ = 0
+                new_bpseq.append((from_, res, to_))
+
+        new_bpseq_str = fus.renumber_bpseq(new_bpseq)
+        tuples, seq_str = fus.bpseq_to_tuples_and_seq(new_bpseq_str)
+        breakpoints = breakpoints_from_seqids(new_seqids)
+        seq_str = _insert_breakpoints_simple(seq_str, breakpoints, 1)
+
+        if secondary_structure:
+            pt = fus.dotbracket_to_pairtable(secondary_structure)
+            # Overwrite tuples!
+            tuples = fus.pairtable_to_tuples(pt)
+            stru_fragments = secondary_structure.split("&")
+            seq_fragments  = seq_str.split("&")
+            seq_lengths = list(map(len, seq_fragments))
+            if list(map(len, stru_fragments))!=seq_lengths:
+                raise ValueError("The given secondary structure is inconsistent "
+                                 "with the pdb-chain-lengths of %s", seq_lengths)
+        sequence = Sequence(seq_str, new_seqids,
+                            [r for r in missing_res if r["chain"] in chain_ids],
+                            {k:v for k,v in modifications.items() if k.chain in chain_ids})
+
+        name = name + "_" + "-".join(c for c in sorted(chain_ids))
+        graph_constr = _BulgeGraphConstruction(tuples)
+        cg = cls(graph_constr, sequence, name)
+        cg = fgb._cleaned_bg(cg, dissolve_length_one_stems)
+        cg.chains = { chain.id : chain for chain in chains if chain.id in chain_ids }
+
+        ftug.add_stem_information_from_pdb_chains(cg)
+        cg.add_bulge_coords_from_stems()
+        ftug.add_loop_information_from_pdb_chains(cg)
+        assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
+        return cg
+
+    ############################################################################
+
+    @property
+    def transformed(self):
+        return ftmt.CGTransformer(self)
 
     def get_coord_str(self):
         '''
@@ -672,7 +589,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         points = []
         for s in self.sorted_stem_iterator():
             points += list(self.coords[s])
-        return np.array(points)
+        points = np.array(points)
+        if np.any(np.isnan(points)):
+            raise RnaMissing3dError("No 3D coordinates present.")
+        return points
 
     def get_ordered_virtual_residue_poss(self, return_elements = False):
         """
@@ -1137,54 +1057,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def _init_coords(self):
         self.coords = LineSegmentStorage(self.defines.keys(), on_change = self.reset_vatom_cache)
         self.twists = CoordinateStorage([x for x in self.defines if x[0] =="s"], on_change = self.reset_vatom_cache)
-    def from_bpseq_str(self, bpseq_str, dissolve_length_one_stems=False, breakpoints = []):
-        super(CoarseGrainRNA, self).from_bpseq_str(bpseq_str, dissolve_length_one_stems, breakpoints)
-        self._init_coords()
-    def from_dotbracket(self,  dotbracket_str, dissolve_length_one_stems=False):
-        super(CoarseGrainRNA, self).from_dotbracket(dotbracket_str, dissolve_length_one_stems)
-        self._init_coords()
-    def from_file(self, cg_filename):
-        '''
-        Load this data structure from a file.
-        '''
-        with open(cg_filename, 'r') as f:
-            lines = "".join(f.readlines())
 
-            self.from_cg_string(lines)
-
-    def from_cg_string(self, cg_string):
-        '''
-        Populate this structure from the string
-        representation of a graph.
-        '''
-        # Reading the bulge_graph-part of the file
-        self.from_bg_string(cg_string)
-        self._init_coords()
-        log.debug("BG read. Now reading 3D information")
-        #Reading the part of the file responsible for 3D information
-        lines = cg_string.split('\n')
-        for line in lines:
-            line = line.strip()
-            parts = line.split()
-            if len(parts) == 0:
-                continue
-            if parts[0] == 'coord':
-                name = parts[1]
-
-                self.coords[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
-            if parts[0] == 'twist':
-                name = parts[1]
-                self.twists[name] = np.array([list(map(float, parts[2:5])), list(map(float, parts[5:8]))])
-            if parts[0] == 'longrange':
-                self.longrange[parts[1]].add(parts[2])
-                self.longrange[parts[2]].add(parts[1])
-
-            if parts[0] == 'sampled':
-                self.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
-            if parts[0] == 'project':
-                self.project_from=np.array(parts[1:], dtype=float)
-        self.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
-        self.incomplete_elements = ftug.get_incomplete_elements(self)
+    @property
+    def incomplete_elements(self):
+        return ftug.get_incomplete_elements(self)
 
 
     def to_cg_file(self, filename):
@@ -1639,7 +1515,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         #Delete virtual residues
         try: del self.vposs[key]
-        except KeyError: pass
+        except KeyError: pas
         try: del self.vbases[key]
         except KeyError: pass
         try: del self.vvecs[key]

@@ -114,8 +114,7 @@ class TestStats(unittest.TestCase):
         (((..(((...)))..)))
         """
 
-        bg = fgb.from_fasta_text(fa_text)
-        cg = ftmc.from_bulge_graph(bg)
+        cg, = ftmc.CoarseGrainRNA.from_fasta_text(fa_text)
 
         cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])
         cg.twists["s0"]=np.array([0.,-1.,0]), np.array([0.,1.,0.])
@@ -147,8 +146,7 @@ class TestStats(unittest.TestCase):
         (((..(((...)))..)))
         """
 
-        bg = fgb.from_fasta_text(fa_text)
-        cg = ftmc.from_bulge_graph(bg)
+        cg, = ftmc.CoarseGrainRNA.from_fasta_text(fa_text)
 
         cg.coords["s0"]=np.array([0.,0.,0.]), np.array([0.,0.,1.])
         cg.twists["s0"]=np.array([0.,-1.,0]), np.array([0.,1.,0.])

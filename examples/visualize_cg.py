@@ -120,7 +120,7 @@ def main():
 
     cgs = []
     for a in args:
-        cgs += [cmg.CoarseGrainRNA(a)]
+        cgs.append(cmg.CoarseGrainRNA.from_bg_file(a))
 
     if options.align:
         align_cgs(cgs)

@@ -1098,8 +1098,8 @@ def junction_virtual_atom_distance(bg, bulge):
     :return: A single number corresponding to the distance above.
     '''
     connecting_stems = bg.connections(bulge)
-    (i1, k1) = bg.get_sides_plus(connecting_stems[0], bulge)
-    (i2, k2) = bg.get_sides_plus(connecting_stems[1], bulge)
+    (i1, k1) = bg._get_sides_plus(connecting_stems[0], bulge)
+    (i2, k2) = bg._get_sides_plus(connecting_stems[1], bulge)
     pos1=bg.defines[connecting_stems[0]][i1]
     pos2=bg.defines[connecting_stems[1]][i2]
     if bulge[0]=="m":
@@ -1433,6 +1433,24 @@ def add_bulge_information_from_pdb_chain(bg, chain):
                   " Use cg.add_bulge_coords_from_stems instead!")
     bg.add_bulge_coords_from_stems()
 
+#The following code should replace get_incomplete_elements in the future,
+# once the Sequence object's missing residues are actually populated.
+'''
+def get_incomplete_elements(cg):
+    """
+    Get an estimated list of cg-elements which have missing residues in the PDB.
+
+    One of many problems with PDB data are residues, for which no
+    coordinates could be determined experimentally. This function gives
+    an estimated list of cg-elements, which are affected by missing residues.
+    """
+    incomplete = set()
+    for elem in cg.defines:
+        for r in cg.define_range_iterator(elem, adjacent=elem[0]!="s"):
+            if cg.seq[r[0]:r[1]]!=cg.seq.with_missing[r[0]:r[1]]:
+                incomplete.add(elem)
+    return incomplete
+'''
 def get_incomplete_elements(cg):
     """
     Get an estimated list of cg-elements which have missing residues in the PDB.
@@ -1461,7 +1479,7 @@ def _is_incomplete_element(cg, elem):
         prev_seq_id = None
         for pos in range(side[0], side[1]+1):
             try:
-                seq_id = cg.seq_ids[pos-1]
+                seq_id = cg.seq.to_resid(pos)
             except IndexError as e:
                 with log_to_exception(log, e):
                     log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
