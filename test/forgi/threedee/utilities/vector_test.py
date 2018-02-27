@@ -292,7 +292,6 @@ class TestVector(unittest.TestCase):
         self.assertTrue(((mp==np.array([1,1,-4])).all()), msg="Middlepoint for np arrays: {} "
                                                       "is not {}".format(mp, np.array([1,1,-4])))
     def test_create_orthonormal_basis(self):
-        #Note: If the input vectors are not orthogonal, the result are 3 vectors that might not form a basis.
         basis1=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]))
         self.assertTrue( ftuv.is_almost_parallel(basis1[0], np.array([0.,0.,2.])) )
         basis2=ftuv.create_orthonormal_basis(np.array([0.0,0.0,2.0]), np.array([0.0, 3.6, 0.]))
@@ -361,3 +360,18 @@ class TestVector(unittest.TestCase):
         nptest.assert_almost_equal(ftuv.center_on_centroid(np.array(coords)),
                     [[0,0.,0],[1,0,0],[-1,1,2],[3,-1,-1],[-3,0,-1]])
         nptest.assert_equal(ftuv.get_vector_centroid(ftuv.center_on_centroid(coords)), [0,0.,0])
+
+class TestRotationMatrix(unittest.TestCase):
+    def test_special_cases_xyz(self):
+        nptest.assert_almost_equal(ftuv.rotation_matrix("x", 0.4),
+                                   ftuv.rotation_matrix(ftuv.standard_basis[0], 0.4))
+        nptest.assert_almost_equal(ftuv.rotation_matrix("y", 0.7),
+                                   ftuv.rotation_matrix(ftuv.standard_basis[1], 0.7))
+        nptest.assert_almost_equal(ftuv.rotation_matrix("z", 0.9),
+                                   ftuv.rotation_matrix(ftuv.standard_basis[2], 0.9))
+        nptest.assert_almost_equal(ftuv.rotation_matrix("x", 1.84),
+                                   ftuv.rotation_matrix(ftuv.standard_basis[0], 1.84))
+        nptest.assert_almost_equal(ftuv.rotation_matrix("y", 2.7),
+                                   ftuv.rotation_matrix(ftuv.standard_basis[1], 2.7))
+        nptest.assert_almost_equal(ftuv.rotation_matrix("z", 3.9),
+                                   ftuv.rotation_matrix(ftuv.standard_basis[2], 3.9))
