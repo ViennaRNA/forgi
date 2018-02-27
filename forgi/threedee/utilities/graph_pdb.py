@@ -471,7 +471,7 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     Calculates the position of a '"virtual stem", which would be
     placed after the broken ml-segment, if it was a true ml-segment
     with the virtual stat assigned.
-    Then calculates teh deviation between this virtual stem and the actual stem.
+    Then calculates the deviation between this virtual stem and the actual stem.
 
     :param cg: The CoarseGrainRNA
     :param broken_ml_name: The name of the ml-segment of interest.
@@ -521,7 +521,7 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
 
     pos_dev = ( ftuv.vec_distance(cg.coords[orig_stem_name][sides2[0]], vstem_coords0) )
     ang_dev = ftuv.vec_angle(vstem_vec, orig_stem_vec)
-    twist_dev = ftuv.vec_angle(cg.coords[fixed_stem_name][sides[0]], vstem_twist)
+    twist_dev = ftuv.vec_angle(cg.twists[orig_stem_name][sides2[0]], vstem_twist)
     log.debug("Deviation: pos %s, orient %s, twist: %s", pos_dev,
              math.degrees(ang_dev), math.degrees(twist_dev))
 

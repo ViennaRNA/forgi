@@ -22,6 +22,20 @@ import logging
 log=logging.getLogger(__name__)
 
 
+class TestBrokenMlDeviation(unittest.TestCase):
+    def setUp(self):
+        self.cg = ftmc.CoarseGrainRNA.from_bg_file("test/forgi/threedee/data/1GID_A.cg")
+    def test_zero_deviation(self):
+        # m2 is broken
+        stats = self.cg.get_stats("m2")
+        dev = ftug.get_broken_ml_deviation(self.cg, "m2", "s6", stats[0])
+        dev2 = ftug.get_broken_ml_deviation(self.cg, "m2", "s6", stats[1])
+        print(dev)
+        print(dev2)
+        self.assertLess(dev[0], 10**-3)
+        self.assertLess(dev[1], 10**-3)
+        self.assertLess(dev[2], 10**-3)
+
 class TestGraphPDB(unittest.TestCase):
     '''
     Test some of the rmsd-type functions.
