@@ -821,9 +821,12 @@ class BulgeGraph(BaseGraph):
             s1 = self.defines[c[0]]
             s2 = self.defines[c[1]]
 
-            return get_define_len(s1[1]+1, s2[0]-1), get_define_len(s2[3]+1, s1[2]-1)
+            return get_define_len([s1[1]+1, s2[0]-1]), get_define_len([s2[3]+1, s1[2]-1])
         else:
-            dim0 = get_define_len(bd[0], bd[1])
+            if bd:
+                dim0 = get_define_len([bd[0], bd[1]])
+            else:
+                dim0 = 0
             if bulge[0]=="m":
                 dim1 = 1000
             else:

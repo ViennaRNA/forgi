@@ -260,7 +260,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.project_from = None
 
         self.longrange = c.defaultdict( set )
-        self.chains = {} #the PDB chain if loaded from a PDB file
+        self.chains = {} #the PDB chains if loaded from a PDB file
 
     ############################################################################
     # Factory functions
