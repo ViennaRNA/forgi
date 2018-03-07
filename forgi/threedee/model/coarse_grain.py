@@ -1515,7 +1515,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         #Delete virtual residues
         try: del self.vposs[key]
-        except KeyError: pas
+        except KeyError: pass
         try: del self.vbases[key]
         except KeyError: pass
         try: del self.vvecs[key]

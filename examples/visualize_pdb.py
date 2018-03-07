@@ -64,8 +64,8 @@ def main():
         chain_id=options.chain
     else:
         chain_id=None
-    cg = ftmc.from_pdb(args[0], options.secondary_structure.strip("\"'"),
-                      remove_pseudoknots=not options.pseudoknots, chain_id=chain_id)
+    cg, = ftmc.CoarseGrainRNA.from_pdb(args[0], secondary_structure = options.secondary_structure.strip("\"'"),
+                      remove_pseudoknots=not options.pseudoknots, load_chains=chain_id)
     pp = ftvp.PymolPrinter()
     pp.display_virtual_residues = options.virtual_residues
     pp.virtual_atoms = options.virtual_atoms
@@ -96,7 +96,7 @@ def main():
                 # extract just the biggest chain and renumber it so
                 # the nucleotides start at 1
                 if chain_id is None:
-                    chain = ftup.get_biggest_chain(args[0])
+                    chain, _ = ftup.get_biggest_chain(args[0])
                 else:
                     chains = ftup.get_all_chains(args[0])
                     chain, = [ chain for chain in chains if chain.id == chain_id ]

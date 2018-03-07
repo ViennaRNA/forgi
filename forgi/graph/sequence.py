@@ -709,7 +709,7 @@ class SequenceLoader:
             self.seq_ids = list(map(fgr.resid_from_str, parts[1:]))
             return True
         elif parts[0]=="modification":
-            self.mod[parts[1]]=" ".join(parts[2:])
+            self.mod[fgr.resid_from_str(parts[1])]=" ".join(parts[2:])
             return True
         return False
     @property
