@@ -6,6 +6,7 @@ log = logging.getLogger(__name__)
 
 RESID = collections.namedtuple("complete_resid", ["chain", "resid"])
 
+
 def resid_to_str(resid):
     if resid.chain is not None:
         out="{}:{}".format(resid.chain, resid.resid[1])
@@ -27,3 +28,5 @@ def resid_from_str(resstr):
     if len(idparts)==1:
         idparts.append(" ")
     return RESID(chain, (' ', int(idparts[0]), idparts[1]))
+
+RESID.__repr__ = lambda x: "res"+resid_to_str(x)

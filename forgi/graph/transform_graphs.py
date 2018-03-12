@@ -82,7 +82,7 @@ class BGTransformer(object):
                         seq_id = self.bg.seq.to_resid(i)
                         new_missing.append(MissingResidue(seq_id, self.bg.seq[i]))
                     if i in self.bg.backbone_breaks_after:
-                        if i>keep_i:
+                        if i>=keep_i:
                             new_seq+="&"
                         else:
                             new_seq=new_seq[:-1]+"&"+new_seq[-1]

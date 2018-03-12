@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 from string import ascii_lowercase, ascii_uppercase
 from . import residue as fgr
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
@@ -519,8 +519,9 @@ class Sequence(object):
                 if i-1 not in self._breaks_after:
                     raise ValueError("Inconsist break-points discovered."
                                      "Missing breakpoint at position {} "
-                                     "between chain {} and chain {}".format(i-1,
-                                     left_res.chain,right_res.chain))
+                                     "between chain {} and chain {}. "
+                                     "Break points are {}".format(i-1,
+                                     left_res.chain,right_res.chain, self._breaks_after))
             if i-1 in self._breaks_after:
                 if left_res is not None and right_res is not None and left_res.chain==right_res.chain:
                     raise ValueError("Inconsist break-points discovered."

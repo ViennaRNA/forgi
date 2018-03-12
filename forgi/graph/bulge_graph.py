@@ -692,7 +692,7 @@ class BulgeGraph(BaseGraph):
                 break
 
         for region in doublestr:
-            domains["rods"].append(sorted(region))
+            domains["rods"].append(sorted(region, key=lambda x: self.define_a(x)))
         domains["pseudoknots"].sort()
         domains["multiloops"].sort()
         domains["rods"].sort()
@@ -1404,11 +1404,11 @@ class BulgeGraph(BaseGraph):
         if sum(v % 2 for v in all_stems.values())==2: #Odd number of occurrences for 2 stems.
             descriptors.add("open")
         elif "open" not in descriptors:
-            if any(v!=2 for v in all_stems.values()):
-                print(all_stems)
-                print(multiloop)
-                print(self.to_dotbracket_string())
-                print (self.to_element_string(True))
+            #if any(v!=2 for v in all_stems.values()):
+                #print(all_stems)
+                #print(multiloop)
+                #print(self.to_dotbracket_string())
+                #print (self.to_element_string(True))
             assert sum(v % 2 for v in all_stems.values())==0
         if angle_types[2]==1 and angle_types[4]==1 and "pseudoknot" not in descriptors:
             descriptors.add("regular_multiloop")
@@ -1586,7 +1586,8 @@ class BulgeGraph(BaseGraph):
 
     def get_stem_edge(self, stem, pos):
         """
-        Returns the side of the stem that position is on.
+        Returns the side (strand) of the stem that position is on.
+
         Side 0 corresponds to the 5' pairing residues in the
         stem whereas as side 1 corresponds to the 3' pairing
         residues in the stem.
