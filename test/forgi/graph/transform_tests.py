@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import unittest
 import logging
 
@@ -18,6 +19,9 @@ GAGUCGUCC
 >graph2
 GCAGGCUAUGCC&GGGUCCCGC
 ((.(((...)))&(((.)))))
+>graph3
+AAAAAAAAAAAAAAAA&AAAAAA
+((((([[[[[[)))))&]]]]]]
 """
 
 class TestBulgeGraphCondensed(unittest.TestCase):
@@ -25,6 +29,8 @@ class TestBulgeGraphCondensed(unittest.TestCase):
         bgs = fgb.BulgeGraph.from_fasta_text(fasta)
         self.trafo1 = fgt.BGTransformer(bgs[0])
         self.trafo2 = fgt.BGTransformer(bgs[2])
+        self.trafo3 = fgt.BGTransformer(bgs[3])
+
         self.bg1_condensed = bgs[1]
 
         missing_residues = list(map(
@@ -54,4 +60,7 @@ class TestBulgeGraphCondensed(unittest.TestCase):
     def test_condense_cofold(self):
         s = self.trafo2.condensed().seq
         log.error("Comparing now")
-        self.assertEqual(s, "GAGU&CGUCC")
+        self.assertEqual(s, "GAGUC&GUCC")
+    def test_condense_cofold2(self):
+        db = self.trafo3.condensed().to_dotbracket_string()
+        self.assertEqual(db, "([)&]")
