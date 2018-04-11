@@ -330,12 +330,14 @@ class Sequence(object):
                         if key not in self._missing_nts:
                             log.debug("%s extra in other", key)
                 return False
+            log.debug("They are equal")
             return True
         elif isinstance(other, type("")):
             s = str(self)
-            log.debug("comparing %s and %s", s, other)
+            log.debug("comparing %s and %s -> %s", s, other, s==other)
             return s==other
         else:
+            log.debug("Returning NotImplemented")
             return NotImplemented
 
     def _getitem(self, key, include_missing=False, show_modifications=False):

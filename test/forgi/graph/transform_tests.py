@@ -5,7 +5,7 @@ import forgi.graph.bulge_graph as fgb
 import forgi.graph.transform_graphs as fgt
 import forgi.graph.sequence as fgs
 import forgi.graph.residue as fgr
-
+logging.basicConfig(level=logging.DEBUG)
 log=logging.getLogger(__name__)
 
 fasta = """

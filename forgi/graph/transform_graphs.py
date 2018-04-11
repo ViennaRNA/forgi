@@ -86,6 +86,7 @@ class BGTransformer(object):
                             new_seq+="&"
                         else:
                             new_seq=new_seq[:-1]+"&"+new_seq[-1]
+                        log.debug("Breakpoint %s: new_seq now %s", i, new_seq)
         log.info("Condensing iteration done. Now creating condensed BG")
         graph_constr = _GCDummy(new_defines, copy.deepcopy(self.bg.edges))
         seq = Sequence(new_seq, new_seqids, new_missing, self.bg.seq._modifications)
