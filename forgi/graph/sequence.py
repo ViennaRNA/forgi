@@ -331,12 +331,7 @@ class Sequence(object):
                             log.debug("%s extra in other", key)
                 return False
             return True
-        elif isinstance(other, type("")):
-            s = str(self)
-            log.debug("comparing %s and %s", s, other)
-            return s==other
-        else:
-            return NotImplemented
+        return str(self)==other
 
     def _getitem(self, key, include_missing=False, show_modifications=False):
         log.debug("_getitem called for %s, include_missing=%s, show_modifications=%s", key, include_missing, show_modifications)
