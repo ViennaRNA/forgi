@@ -82,10 +82,11 @@ class BGTransformer(object):
                         seq_id = self.bg.seq.to_resid(i)
                         new_missing.append(MissingResidue(seq_id, self.bg.seq[i]))
                     if i in self.bg.backbone_breaks_after:
-                        if i>keep_i:
+                        if i>=keep_i:
                             new_seq+="&"
                         else:
                             new_seq=new_seq[:-1]+"&"+new_seq[-1]
+                        log.debug("Breakpoint %s: new_seq now %s", i, new_seq)
         log.info("Condensing iteration done. Now creating condensed BG")
         graph_constr = _GCDummy(new_defines, copy.deepcopy(self.bg.edges))
         seq = Sequence(new_seq, new_seqids, new_missing, self.bg.seq._modifications)

@@ -330,6 +330,7 @@ class Sequence(object):
                         if key not in self._missing_nts:
                             log.debug("%s extra in other", key)
                 return False
+            log.debug("They are equal")
             return True
         return str(self)==other
 
