@@ -506,9 +506,10 @@ def get_all_chains(in_filename, parser=None):
                             })
         except KeyError:
             mr = []
-            log.warning("Old biopython version. No missing residues")
+            log.info("Header fields are: %s", parser.header)
+            log.warning("Old biopython version %s. No missing residues", Bio.__version__)
             warnings.warn("Could not get information about missing residues."
-                          "Try updating you biopython installation.")
+                          "Try updating your biopython installation.")
         else:
             if mr:
                 log.info("This PDB has missing residues")

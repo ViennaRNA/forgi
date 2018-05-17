@@ -10,6 +10,7 @@ import textwrap
 
 import numpy as np
 
+from .exceptions import GraphConstructionError
 from logging_exceptions import log_to_exception
 import logging_exceptions
 
@@ -73,7 +74,7 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
         logging_exceptions.update_parser(verbosity_group)
     return parser
 
-def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_filenames = False):
+def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_filenames = False, skip_errors=False):
     if enable_logging:
         logging.basicConfig(format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
         logging_exceptions.config_from_args(args)
@@ -85,9 +86,15 @@ def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_f
             allow_many = False
         else:
             allow_many = True
-        cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many, pdb_chain=args.chain,
+        try:
+            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many, pdb_chain=args.chain,
                              pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
                              dissolve_length_one_stems = not args.keep_length_one_stems)
+        except GraphConstructionError:
+            if not skip_errors:
+                raise
+            else:
+                log.exception("The following PDB was skipped")
         if allow_many:
             cg_rnas.extend(cg_or_cgs)
             filenames.extend([rna]*len(cg_or_cgs))
