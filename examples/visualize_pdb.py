@@ -98,7 +98,8 @@ def main():
                 if chain_id is None:
                     chain, _ = ftup.get_biggest_chain(args[0])
                 else:
-                    chains = ftup.get_all_chains(args[0])
+                    chains, _ = ftup.get_all_chains(args[0])
+                    print(chains)
                     chain, = [ chain for chain in chains if chain.id == chain_id ]
                 #chain = ftup.renumber_chain(chain)
                 ftup.output_chain(chain, f2.name)
