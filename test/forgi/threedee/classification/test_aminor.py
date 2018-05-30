@@ -17,10 +17,9 @@ class TestJustClassifyFunctions(unittest.TestCase):
     def test_all_interactions(self):
         interactions=ftca.all_interactions(self.cg)
         self.assertGreaterEqual(len(interactions), 5)
-        self.assertLessEqual(len(interactions), 25) # We have 23 annotated Fr3d interactions, but some may be directly connected.        
+        self.assertLessEqual(len(interactions), 25) # We have 23 annotated Fr3d interactions, but some may be directly connected.
         self.assertEqual(interactions.shape[1], 2)
         self.assertEqual(interactions[0,1][0], "s") # second element is stem
-        assert len(interactions)==10000
     def test_classify_interaction(self):
         pass
 
