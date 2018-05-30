@@ -11,3 +11,4 @@ ddt
 pandas>=0.20
 appdirs==1.4
 cython
+scikit-learn

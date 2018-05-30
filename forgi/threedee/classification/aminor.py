@@ -324,13 +324,17 @@ class _DefaultClf(object):
             cls._clfs[loop_type]=clf
         return cls._clfs[loop_type]
     @classmethod
-    def _get_data(cls, loop_type):
+    def get_dataframe(cls):
         if cls._geo_df is None:
             rawdata = pkgutil.get_data('forgi', 'threedee/data/aminor_geometries.csv')
             cls._geo_df = pd.read_csv(StringIO(rawdata.decode("ascii")), comment="#", sep=" ")
-        df = cls._geo_df
+        return cls._geo_df
+
+    @classmethod
+    def _get_data(cls, loop_type):
+        df = cls.get_dataframe()
         print(df.columns.values)
-        df = df[df.loop_type==loop_type]
+        df=df[df.loop_type==loop_type]
         df=df[df.dist<CUTOFFDIST]
         positive = df[df["is_interaction"]]
         negative = df[(df["is_interaction"]==False)&(~df["loop_sequence"].str.contains("A").astype(bool))]
