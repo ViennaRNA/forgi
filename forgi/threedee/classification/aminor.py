@@ -1,3 +1,5 @@
+from __future__ import print_function, division, absolute_import
+
 import pkgutil
 import logging
 import warnings
@@ -236,7 +238,8 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
         specificity =  tn/(tn+fp)
         sensitivity = tp/(tp+fn)
-        return 0.5*specificity + 0.5*sensitivity
+        # We give a stronger weight to sensitivity.
+        return 0.3*specificity + 0.7*sensitivity
         #precision = tp/(tp+fp)
         return f1_score(y, y_pred)
     def predict_proba(self, X):
@@ -248,7 +251,6 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         numerator = np.exp(self.ame_kde_(X))*self.p_I
         denom = numerator+np.exp(self.non_ame_kde_(X))*(1-self.p_I)
         #print(np.exp(self.non_ame_kde_(X)))
-        log.info("%s/%s=%s", numerator, denom, np.nan_to_num(numerator/denom))
         with warnings.catch_warnings(): # division by 0
             warnings.simplefilter("ignore", RuntimeWarning)
             return np.nan_to_num(numerator/denom)
@@ -333,17 +335,7 @@ class _DefaultClf(object):
     @classmethod
     def _get_data(cls, loop_type):
         df = cls.get_dataframe()
-        print(df.columns.values)
-        df=df[df.loop_type==loop_type]
-        df=df[df.dist<CUTOFFDIST]
-        positive = df[df["is_interaction"]]
-        negative = df[(df["is_interaction"]==False)&(~df["loop_sequence"].str.contains("A").astype(bool))]
-        data = np.concatenate( [
-                [[ x.dist, x.angle1, x.angle2 ]
-                          for x in positive.itertuples()],
-                [[ x.dist, x.angle1, x.angle2 ]
-                          for x in negative.itertuples()]])
-        return data, np.array([1]*len(positive)+[0]*len(negative))
+        return df_to_data_labels(df, loop_type)
 
 def _get_default_clf(loop):
     """
@@ -351,3 +343,19 @@ def _get_default_clf(loop):
     """
     loop_type=loop[0]
     return _DefaultClf.get_default_clf(loop_type)
+
+def df_to_data_labels(df, loop_type):
+    """
+    Create the trainings data as two arrays X and y (or data and labels)
+    from the initial dataframe
+    """
+    df=df[df.loop_type==loop_type]
+    df=df[df.dist<CUTOFFDIST]
+    positive = df[df["is_interaction"]]
+    negative = df[(df["is_interaction"]==False)&(~df["loop_sequence"].str.contains("A").astype(bool))]
+    data = np.concatenate( [
+            [[ x.dist, x.angle1, x.angle2 ]
+                      for x in positive.itertuples()],
+            [[ x.dist, x.angle1, x.angle2 ]
+                      for x in negative.itertuples()]])
+    return data, np.array([1]*len(positive)+[0]*len(negative))

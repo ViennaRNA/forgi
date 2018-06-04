@@ -1,3 +1,5 @@
+from __future__ import division
+
 import unittest
 import logging
 
@@ -10,6 +12,33 @@ import forgi.threedee.model.coarse_grain as ftmc
 
 
 log=logging.getLogger(__name__)
+
+class TestRelativeOrientation(unittest.TestCase):
+    def test_get_relative_orientation(self):
+        cg = ftmc.CoarseGrainRNA.from_dotbracket("...(((...)))...", seq="AAAGGGAAACCCAAA")
+        cg.coords["s0"] = [0,0,0.], [0,0,10.]
+        cg.twists["s0"] = [0,1,0.], [0, -1., 0]
+        cg.coords["f0"] = [5.,0,0], [10.,0,0]
+        cg.coords["t0"] = [5.,0,5], [10., 0, 5]
+        cg.coords["h0"] = [5.,0,10],[10.,0,10]
+        d, a1, a2 = ftca.get_relative_orientation(cg, "f0", "s0")
+        self.assertAlmostEqual(d, 5)
+        self.assertAlmostEqual(a1, math.pi/2)
+        self.assertAlmostEqual(a2, math.pi/2)
+        d, a1, a2 = ftca.get_relative_orientation(cg, "h0", "s0")
+        self.assertAlmostEqual(d, 5)
+        self.assertAlmostEqual(a1, math.pi/2)
+        self.assertAlmostEqual(a2, math.pi/2)
+        d, a1, a2 = ftca.get_relative_orientation(cg, "t0", "s0")
+        self.assertAlmostEqual(d, 5)
+        self.assertAlmostEqual(a1, math.pi/2)
+        self.assertAlmostEqual(a2, math.pi)
+        # Now take an example with a non 90 degrees angle a1
+        cg.coords["h0"] = [5.,0,15],[10.,0.,15]
+        d, a1, a2 = ftca.get_relative_orientation(cg, "h0", "s0")
+        self.assertAlmostEqual(d, math.sqrt(50))
+        self.assertAlmostEqual(a1, math.pi/4)
+        self.assertAlmostEqual(a2, math.pi/2)
 
 class TestJustClassifyFunctions(unittest.TestCase):
     def setUp(self):

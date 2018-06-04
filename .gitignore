@@ -13,3 +13,4 @@ pages/**
 venv/
 tmp/
 builtdoc/
+__pycache__/

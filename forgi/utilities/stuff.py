@@ -12,6 +12,7 @@ import sys
 import logging
 log = logging.getLogger(__name__)
 
+import forgi
 import forgi.utilities.debug as cud
 from .exceptions import GraphConstructionError
 
@@ -26,6 +27,27 @@ def is_string_type(stri):
     else:
         return isinstance(stri, str)
 
+def get_version_string():
+    """
+    If installed from github, print the version obtained by `git describe`
+    On my local machine, when run within a git directory, get the commit
+    hash directly using `git describe`
+    """
+    try:
+        #Installed with setup.py from a gitrepo
+        label = "forgi {}".format(forgi.__complete_version__)
+    except:
+        try:
+            #On my local machine, run from git directory.
+            repo = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+            if "forgi" not in repo:
+                raise OSError("")
+            label = subprocess.check_output(["git", "describe", "--dirty", ""])
+            label="forgi {}".format(label)
+        except OSError:
+            #In production, use the version variable
+            label = "forgi {}".format(forgi.__version__)
+    return label
 
 #COVERAGE: Not used
 def grouped(iterable, n):
