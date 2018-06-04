@@ -17,7 +17,7 @@ except:
 import numpy as np
 import numpy.testing as nptest
 
-import forgi.threedee.classification._training.aminor as ftcta
+import forgi.threedee.classification._training.aminor_training as ftcta
 import forgi.threedee.classification.aminor as ftca
 
 import forgi.threedee.model.coarse_grain as ftmc
