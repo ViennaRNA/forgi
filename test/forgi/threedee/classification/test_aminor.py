@@ -2,6 +2,7 @@ from __future__ import division
 
 import unittest
 import logging
+import math
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
