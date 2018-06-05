@@ -99,6 +99,8 @@ def all_interactions(cg, clfs=None):
                     continue
                 geos.append(get_relative_orientation(cg, loop, stem))
                 labels.append([loop, stem])
+        if len(geos)==0:
+            return np.array([])
         y = clf.predict(geos)
         log.info("Classifying %s", labels)
         log.info("# hits=%s", sum(y))

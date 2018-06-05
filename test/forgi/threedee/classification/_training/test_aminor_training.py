@@ -38,7 +38,7 @@ Filename Discrepancy       1       2       3 Cha   1-2   1-3   2-3 Con   1-2   1
     1S72      0.4119  A  187  C  154  G  182 000 ----  ----   cWW  AAA    33     5    28                                                                             -     -     -
     1S72      0.4247  A 1476  G 1867  C 1862 000  ---- ----   cWW  AAA   390   385     5                                     n2BR                                    -     -     -
     1S72      0.4416  A  395  A  216  U  224 000 ----  ----   cWW  AAA   179   171     8                                                                             -     -     -
-    1S72      0.4487  A 2840  C 2047  G 1728 000 ----  ----   cWW  AAA   682   989   307                                                                             -     -     -
+    1S72      0.4487  A 2840  C 2047  G 1728 000 ----  ----   cWW  AAA   682   ./5AN9_N_relax/simulation_01989   307                                                                             -     -     -
 """)
 
 FR3D_ADJACENT = StringIO("""
