@@ -14,6 +14,9 @@ try:
 except ImportError:
     from colelctions import Mapping
 
+import numpy as np
+
+
 log=logging.getLogger(__name__)
 
 class _DomainSupportingDictionary(Mapping):
@@ -41,7 +44,7 @@ class _DomainSupportingDictionary(Mapping):
         log.debug("Getitem called for %s", key)
         try:
             return self._dict[key]
-        except KeyError:
+        except (KeyError, TypeError): # TypeError for unhashable types like list
             log.debug("%s not in %s", key, self._dict)
             if isinstance(key, list):
                 return self.lookup(key)
@@ -86,7 +89,7 @@ class _DefineDictionary(_DomainSupportingDictionary):
         """
         Return whether or not the elements are a helix or a continuous sub-helix.
         """
-        if any(elem[0] not in "si" for elem in elemets):
+        if any(elem[0] not in "si" for elem in elements):
             return False
         # Add one element to connected component and try to extend it.
         connected_component = [elements[0]]
@@ -100,6 +103,7 @@ class _DefineDictionary(_DomainSupportingDictionary):
             for n in neighbors:
                 if n in elements and n not in connected_component:
                     connected_component.append(n)
+            i+=1
         return set(connected_component)==set(elements)
 
     def _helix_lookup(self, elements):
@@ -109,10 +113,11 @@ class _DefineDictionary(_DomainSupportingDictionary):
         Has undefined bahaviour if elements are not a helix.
         """
         stems = [e for e in elements if e[0]=="s"]
-        defines = np.nans((4, len(stems)))
-        for i in range(3):
-            defines[i,:] = [self[s][0] for s in stems]
-        return min(defines[0,:]),max(defines[1,:]), min(defines[2,:]),max(defines[3,:])
+        defines = np.zeros((4, len(stems)))
+        defines.fill(np.nan) #nan is neither the min, nor the max of any series
+        for i in range(4):
+            defines[i,:] = [self[s][i] for s in stems]
+        return list(map(int, [min(defines[0,:]),max(defines[1,:]), min(defines[2,:]),max(defines[3,:])]))
 
 class _EdgeDictionary(_DomainSupportingDictionary):
     def lookup(self, elements, _type=None):

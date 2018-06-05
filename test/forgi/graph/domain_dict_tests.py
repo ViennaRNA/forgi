@@ -34,6 +34,12 @@ class BaseClassTest(unittest.TestCase):
         self.assertIn("s3", a)
 
 
-class TestDefineDIctionary(unittest.TestCase):
-    db = "(.(.((...))..))"
-    bg = fgb.BulgeGraph.from_dotbracket(db)
+class TestDefineDictionary(unittest.TestCase):
+    def test_helix_define(self):
+        db = "(.(.((...))..))"
+        bg = fgb.BulgeGraph.from_dotbracket(db)
+        self.assertEqual(bg.defines["s0"], [1,1,15,15])
+        self.assertEqual(bg.defines[["s0", "i0", "s1"]], [1,3,14,15])        
+        self.assertEqual(bg.defines[["s0", "i0"]], [1,2,15,15])
+        with self.assertRaises(ValueError):
+            bg.defines[["s0", "s1"]] # Missing i0. No helix
