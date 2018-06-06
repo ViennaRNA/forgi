@@ -63,6 +63,54 @@ def classify_interaction(cg, stem, loop, clf=None):
     y,=clf.predict(geo)
     return y
 
+
+def loop_potential_interactions(cg, loop, domain=None):
+    """
+    Iterate over all stems and return those loop-stem pairs that will be passed
+    to the AMinor classification and are not ruled out beforehand.
+    """
+    geos=[]
+    labels=[]
+    if domain is not None:
+        stems = (s for s in domain if s[0]=="s")
+    else:
+        stems = cg.stem_iterator()
+    for stem in stems:
+        if stem in cg.edges[loop]:
+            continue
+        # To save computation time
+        if not ftuv.elements_closer_than(cg.coords[loop][0],
+                                         cg.coords[loop][1],
+                                         cg.coords[stem][0],
+                                         cg.coords[stem][1],
+                                         CUTOFFDIST):
+            continue
+        geos.append(get_relative_orientation(cg, loop, stem))
+        labels.append([loop, stem])
+    return geos, labels
+
+def potential_interactions(cg, loop_type, domain=None):
+    """
+    :returns: A tuple `geos`, `labels`.
+              `geos` is an Nx3 array, where N is the number of
+              potential interactions and the inner dimension is dist, angle1, angle2.
+              `geos` can be passed to the AMinor classifier.
+              `labels` is an Nx2 array, where the inner dimension is loopname, stemname
+    """
+    labels=[]
+    geos=[]
+    for loop in cg.defines:
+        if domain is not None and loop not in domain:
+            continue
+        if loop[0]!=loop_type:
+            continue
+        if 'A' not in "".join(cg.get_define_seq_str(loop)):
+            continue
+        loop_geos, loop_labels = loop_potential_interactions(cg, loop, domain)
+        geos.extend(loop_geos)
+        labels.extend(loop_labels)
+    return np.array(geos), np.array(labels)
+
 def all_interactions(cg, clfs=None):
     """
     Get a list of all predicted A-Minor interactions in a cg-object.
@@ -75,39 +123,18 @@ def all_interactions(cg, clfs=None):
                  pretrained classifier.
     """
     interactions=[]
-    for loop_type in ["m", "i", "h"]:
+    for loop_type in ["i", "h"]:
+        if clfs is not None and loop_type not in clfs:
+            warnings.warn("No classifier specified for loop type %s (only for %s), "
+                          "using default classifier.", loop_type, ",".join(clfs.keys()))
         if clfs is None or loop_type not in clfs:
             clf=_get_default_clf(loop_type)
         else:
             clf=clfs[loop_type]
-        labels=[]
-        geos=[]
-        for stem in cg.stem_iterator():
-            for loop in cg.defines:
-                if 'A' not in "".join(cg.get_define_seq_str(loop)):
-                    continue
-                if stem in cg.edges[loop]:
-                    continue
-                if loop[0]!=loop_type:
-                    continue
-                # To save computation time
-                if not ftuv.elements_closer_than(cg.coords[loop][0],
-                                                 cg.coords[loop][1],
-                                                 cg.coords[stem][0],
-                                                 cg.coords[stem][1],
-                                                 CUTOFFDIST):
-                    continue
-                geos.append(get_relative_orientation(cg, loop, stem))
-                labels.append([loop, stem])
-        if len(geos)==0:
-            return np.array([])
+        geos, labels=potential_interactions(cg, loop_type)
         y = clf.predict(geos)
         log.info("Classifying %s", labels)
         log.info("# hits=%s", sum(y))
-        if sum(y)==0:
-            log.info("geos=%s", geos)
-            log.info("probas=%s", clf.predict_proba(geos))
-        labels=np.array(labels)
         interactions.extend(labels[y])
     return np.array(interactions)
 
@@ -154,7 +181,7 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
     a loop with A is in an A-minor interaction, over the number of all
     loop-stem pairs with less than 30 angstrom distance and an A in the sequence.
     """
-    def __init__(self, kernel="linear", bandwidth=0.09, symmetric=True, p_I=P_INTERACTION):
+    def __init__(self, kernel="linear", bandwidth=0.3, symmetric=True, p_I=P_INTERACTION):
         self.p_I = p_I
         self.symmetric=symmetric
         self.kernel = kernel
