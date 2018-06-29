@@ -54,6 +54,20 @@ setup(
                'examples/compare_RNA.py',
                'examples/visualize_cg.py',
                'examples/visualize_pdb.py'],
+      install_requires=[
+                'numpy>=1.10.0',
+                'scipy>=0.19.1',
+                'future',
+                'networkx==2',
+                'biopython',
+                'logging_exceptions>=1.6',
+                'beautifulsoup4>=4.6',
+                'pandas>=0.20',
+                'appdirs==1.4',
+                'cython',
+                'scikit-learn'
+
+      ],
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are
