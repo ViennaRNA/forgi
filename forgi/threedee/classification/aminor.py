@@ -287,6 +287,21 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
 
 ############## get orientation #########################
 
+def get_loop_flexibility(cg, loop):
+    assert loop[0]=="i"
+    d = cg.define_a(loop)
+    nt1,nt2 = d[1]-d[0], d[3]-d[2]
+    max_nts = max(nt1, nt2)
+    loop_length=ftuv.magnitude(cg.coords.get_direction(loop))
+    # As number of nucleotide-links (or phosphate groups) per Angstrom
+    # 9.2 is the sum of average bond lengths for bonds in the nucleotide linkage.
+    # Bond lengths taken from: DOI: 10.1021/ja9528846
+    # A value of 1 means, all bonds are stretched.
+    # Ideal helices have a value of: 4.41
+    # A value below 1 should be rare.
+    # Higher values mean higher flexibility.
+    return (max_nts)/loop_length*9.2
+
 def get_relative_orientation(cg, loop, stem):
     '''
     Return how loop is related to stem in terms of three parameters.
@@ -342,6 +357,17 @@ def get_relative_orientation(cg, loop, stem):
     return dist, angle1, angle2
 
 ############# Private ##########################################
+def _get_masks(df, loop_type):
+    lt_mask=df.loop_type==loop_type
+    cutoff_mask=df.dist<CUTOFFDIST
+    in_support=lt_mask&cutoff_mask
+    has_a = df.loop_sequence.str.contains("A")
+    is_i = df.is_interaction
+    mask_ame = in_support & is_i & has_a
+    mask_non_ame  = in_support & np.invert(is_i|has_a)
+    mask_non_fred = in_support & np.invert(is_i) & has_a
+    return mask_ame, mask_non_ame, mask_non_fred
+
 class _DefaultClf(object):
     """Just to put global (cached) variables into a seperate scope."""
     _clfs={} # The pretrained classifiers, lazily loaded.
@@ -354,6 +380,7 @@ class _DefaultClf(object):
             clf.fit(X, y)
             cls._clfs[loop_type]=clf
         return cls._clfs[loop_type]
+
     @classmethod
     def get_dataframe(cls):
         if cls._geo_df is None:

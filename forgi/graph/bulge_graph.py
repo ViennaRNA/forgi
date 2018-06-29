@@ -2297,7 +2297,6 @@ class BulgeGraph(BaseGraph):
 
         return removed_pairs
 
-    #Seems to be unused...
     def ss_distance(self, e1, e2):
         '''
         Calculate the distance between two elements (e1, e2)

@@ -7,7 +7,7 @@ import shutil
 import tempfile as tf
 import collections as col
 import sys
-
+import subprocess
 
 import logging
 log = logging.getLogger(__name__)
@@ -39,10 +39,10 @@ def get_version_string():
     except:
         try:
             #On my local machine, run from git directory.
-            repo = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
+            repo = subprocess.check_output(["git", "rev-parse", "--show-toplevel"]).decode('ascii')
             if "forgi" not in repo:
                 raise OSError("")
-            label = subprocess.check_output(["git", "describe", "--dirty", ""])
+            label = subprocess.check_output(["git", "describe", "--dirty"]).decode('ascii')
             label="forgi {}".format(label)
         except OSError:
             #In production, use the version variable

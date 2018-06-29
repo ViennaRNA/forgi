@@ -68,25 +68,25 @@ def main():
         print("# cutoff_dist = {} A".format(ftca.CUTOFFDIST), file=file_)
         # HEADER
         print ("pdb_id loop_type dist angle1 angle2 is_interaction "
-              "loop_sequence interaction score annotation", file=file_)
+              "loop_sequence interaction score annotation loop_flexibility", file=file_)
         for entry in ame:
             print("{pdb_id} {loop_type} {dist} {angle1} "
                   "{angle2} {is_interaction} {loop_sequence} "
                   "{loop_name}-{stem_name} {score} "
-                  "\"{annotation}\"".format(is_interaction = True,
+                  "\"{annotation}\" {loop_flexibility}".format(is_interaction = True,
                                             **entry._asdict()), file = file_)
         for entry in non_ame:
             print("{pdb_id} {loop_type} {dist} {angle1} "
                   "{angle2} {is_interaction} {loop_sequence} "
                   "{loop_name}-{stem_name} {score} "
-                  "\"{annotation}\"".format(is_interaction = False,
+                  "\"{annotation}\" {loop_flexibility}".format(is_interaction = False,
                                             **entry._asdict()), file = file_)
     # Now read the same file into a dataframe
     df = pd.read_csv(args.trainingsdata_out, comment="#", sep=" ")
     all_params = {}
     for loop_type in "imh":
         # Now find the hyperparameters using cross-validation for this file.
-        data, labels = df_to_data_labels(df, loop_type)
+        data, labels = ftca.df_to_data_labels(df, loop_type)
         all_params[loop_type] = find_hyperparameters(loop_type, data, labels)
     json.dump(all_params, args.model_params_out)
 
@@ -97,7 +97,7 @@ def main():
 def calculate_pI(loop_type):
     df = ftca._DefaultClf.get_dataframe()
     df = df[df.loop_type==loop_type]
-    df=df[df.dist<CUTOFFDIST]
+    df=df[df.dist<ftca.CUTOFFDIST]
     positive = df[df["is_interaction"]]
     negative = df[(df["is_interaction"]==False)&(df["loop_sequence"].str.contains("A").astype(bool))]
     return len(positive)/(len(negative)+len(positive))
@@ -137,7 +137,8 @@ def find_hyperparameters(loop_type, data, labels):
 ################################################################################
 _AMGeometry = namedtuple("AMGeometry",
                         ["pdb_id", "loop_name", "stem_name", "dist", "angle1",
-                         "angle2", "loop_sequence", "score", "annotation"])
+                         "angle2", "loop_sequence", "score", "annotation",
+                         "loop_flexibility"])
 
 class AMGeometry(_AMGeometry):
     def _asdict(self):
@@ -275,7 +276,14 @@ def _parse_fred_line(line, all_cgs, current_annotation, mapping_directory):
     if np.isnan(angle1+angle2+dist):
         warnings.warn("Cannot get relative orientation. Zero-length element {}".format(nodes[0]))
         return
-    return (AMGeometry(cg.name, nodes[0], nodes[1], dist, angle1, angle2, "&".join(cg.get_define_seq_str(nodes[0])),float(parts[1]), current_annotation))
+    if nodes[0][0]=="i":
+        flexibility=ftca.get_loop_flexibility(cg, nodes[0])
+    else:
+        flexibility=1
+    return (AMGeometry(cg.name, nodes[0], nodes[1], dist, angle1, angle2,
+                       "&".join(cg.get_define_seq_str(nodes[0])),
+                       float(parts[1]), current_annotation,
+                       flexibility))
 
 
 def _safe_resid_from_chain_res(chain, residue):
@@ -394,11 +402,16 @@ def _enumerate_background_geometries(all_cgs, cutoff_dist, aminor_geometries):
                     if stem in cg.incomplete_elements:
                         continue
                     dist, angle1, angle2 = ftca.get_relative_orientation(cg, loop, stem)
+                    if loop[0]=="i":
+                        flexibility=ftca.get_loop_flexibility(cg, loop)
+                    else:
+                        flexibility=1
                     if not np.isnan(dist+angle1+angle2) and dist<=cutoff_dist:
-                        geometry = AMGeometry(pdb_id, loop, stem, dist,
+                        geometry = AMGeometry(cg.name, loop, stem, dist,
                                                   angle1, angle2,
                                                   "&".join(cg.get_define_seq_str(loop)),
-                                                  1000, "no_interaction")
+                                                  1000, "no_interaction",
+                                                  flexibility)
                         if geometry in aminor_geometries:
                             log.info("Geometry %s is in aminor_geometries", geometry)
                         else:
