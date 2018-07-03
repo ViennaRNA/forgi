@@ -2,8 +2,14 @@ from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
-from Cython.Build import cythonize
+import warnings
 
+def try_cythonize(arg):
+  try:
+    from Cython.Build import cythonize
+    cythonize(arg)
+  except Exception as e:
+    warnings.warn("Could not use cython. Exception of type {} occurred: {}".format(type(e), e))
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -42,7 +48,7 @@ setup(
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      ext_modules = cythonize("forgi/threedee/utilities/cytvec.pyx"),
+      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec.pyx"),
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
