@@ -36,11 +36,14 @@ class BGTransformer(object):
 
     def condensed(self):
         """
-        Return a copy of the bulge Graph, where for each CoarseGrained Element,
-        only the first nucleotide or base-pair is retained, and the other
-        nts/ base-pairs are converted to missing residues.
+        Return a condensed copy of the BulgeGraph.
+
+        In the condensed BulgeGraph only the first nucleotide or base-pair of
+        each element is retained, and the other nts/ base-pairs are
+        converted to missing residues.
         """
         log.debug("Condensing BG with break-points %s", self.bg.backbone_breaks_after)
+        log.info("Condensing Graph %s", self.bg.to_dotbracket_string())
         new_defines = {}
         new_seqids = []
         new_seq = ""
@@ -51,7 +54,9 @@ class BGTransformer(object):
                 new_defines[elem]=[]
             else:
                 if elem in new_defines: # Backwards strand for stems:
-                    assert len(new_defines[elem])==2
+                    if len(new_defines[elem])!=2:
+                        log.error("%s", self.bg.edges[elem])
+                    assert len(new_defines[elem])==2, "{} doesn't have len 2".format(new_defines[elem])
                     assert elem[0] in "si"
                     fr, to = self.bg.defines[elem][2:]
                     if elem[0]=="s":
@@ -63,10 +68,12 @@ class BGTransformer(object):
                         # it is only at the second strand, keep the first nt here
                         keep_i = fr
                     new_defines[elem].extend([new_i, new_i])
+                    log.debug("Extended new_defines for %s to %s", elem, new_defines[elem])
                 else:
                     fr, to = self.bg.defines[elem][:2]
                     keep_i = fr
                     new_defines[elem]=[new_i, new_i]
+                    log.debug("Set new_defines for %s to %s", elem, new_defines[elem])
                 new_i+=1
                 new_seq+=self.bg.seq[keep_i]
                 new_seqids.append(self.bg.seq.to_resid(keep_i))
@@ -75,7 +82,7 @@ class BGTransformer(object):
                         seq_id = self.bg.seq.to_resid(i)
                         new_missing.append(MissingResidue(seq_id, self.bg.seq[i]))
                     if i in self.bg.backbone_breaks_after:
-                        if i>keep_i:
+                        if i>=keep_i:
                             new_seq+="&"
                         else:
                             new_seq=new_seq[:-1]+"&"+new_seq[-1]

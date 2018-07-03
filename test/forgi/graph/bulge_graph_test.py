@@ -2047,8 +2047,18 @@ class WalkBackboneTests(unittest.TestCase):
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
         self.assertEqual(l, ["s0", "m0", "s1", "h0", "s1", "m1","s2", "h1","s2","m2","s0"])
-
-
+    def test_iter_elements_along_backbones_strange_pseudoknot(self):
+        # Obscure bug with dot-free structutre of 1VQO_0
+        # This did not cause the bug:
+        db = "(((..[[..((..(((....)))..]]..))..)))"
+        bg = fgb.BulgeGraph.from_dotbracket(db)
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, ["s0", "m0", "s1", "m1", "s2", "m2","s3", "h0","s3","m3","s1", "m4", "s2", "m5", "s0"])
+        # This caused the bug
+        db = "((([[((((()))]])))))"
+        bg = fgb.BulgeGraph.from_dotbracket(db)
+        l = list(bg.iter_elements_along_backbone())
+        self.assertEqual(l, ["s0", "m0", "s1", "m1", "s2", "m2","s3","s3","m3","s1", "m4", "s2", "m5", "s0"])
 
 class BulgeGraphElementNucleotideTests(GraphVerification):
     def test_define_a_s(self):

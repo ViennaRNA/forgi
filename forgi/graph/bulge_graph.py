@@ -33,6 +33,7 @@ from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ..threedee.utilities import mcannotate as ftum
 from .sequence import Sequence, _insert_breakpoints_simple, SequenceLoader, _seq_ids_from_seq_str
+from . import transform_graphs as fgt
 from .residue import RESID, resid_to_str, resid_from_str
 from ._basegraph import BaseGraph
 from ._graph_construction import _BulgeGraphConstruction
@@ -691,7 +692,7 @@ class BulgeGraph(BaseGraph):
                 break
 
         for region in doublestr:
-            domains["rods"].append(sorted(region))
+            domains["rods"].append(sorted(region, key=lambda x: self.define_a(x)))
         domains["pseudoknots"].sort()
         domains["multiloops"].sort()
         domains["rods"].sort()
@@ -906,6 +907,10 @@ class BulgeGraph(BaseGraph):
                         connections[side]=neighbor
         return connections
     ############################################################################
+
+    @property
+    def transformed(self):
+        return fgt.BGTransformer(self)
 
     def add_info(self, key, value):
         self.infos[key].append(value)
@@ -1399,11 +1404,11 @@ class BulgeGraph(BaseGraph):
         if sum(v % 2 for v in all_stems.values())==2: #Odd number of occurrences for 2 stems.
             descriptors.add("open")
         elif "open" not in descriptors:
-            if any(v!=2 for v in all_stems.values()):
-                print(all_stems)
-                print(multiloop)
-                print(self.to_dotbracket_string())
-                print (self.to_element_string(True))
+            #if any(v!=2 for v in all_stems.values()):
+                #print(all_stems)
+                #print(multiloop)
+                #print(self.to_dotbracket_string())
+                #print (self.to_element_string(True))
             assert sum(v % 2 for v in all_stems.values())==0
         if angle_types[2]==1 and angle_types[4]==1 and "pseudoknot" not in descriptors:
             descriptors.add("regular_multiloop")
@@ -1581,7 +1586,8 @@ class BulgeGraph(BaseGraph):
 
     def get_stem_edge(self, stem, pos):
         """
-        Returns the side of the stem that position is on.
+        Returns the side (strand) of the stem that position is on.
+
         Side 0 corresponds to the 5' pairing residues in the
         stem whereas as side 1 corresponds to the 3' pairing
         residues in the stem.
@@ -2207,6 +2213,7 @@ class BulgeGraph(BaseGraph):
             assert len(self.defines)==0
             raise StopIteration("Empty Graph")
         while True:
+            log.debug("Yielding node %s with edges %s", node, self.edges[node])
             yield node
             if node[0] in "si": #The strand matters
                 if node[0]=="s":
@@ -2232,9 +2239,14 @@ class BulgeGraph(BaseGraph):
                     intersect = self.edges[node] & self.edges[next_node]
                     for el in intersect:
                         if el[0]=="m" and self.defines[el]==[]:
+                            log.debug("ML %s between %s and %s: %s", el,
+                                      node, next_node, self.define_a(el))
+                    for el in intersect:
+                        if el[0]=="m" and self.defines[el]==[]:
                             #In case of this structuire ([)], there are 2 0-length multiloops between the two stems.
                             prev_nuc = min(self.flanking_nucleotides(el))
-                            if self.get_node_from_residue_num(prev_nuc) == node:
+                            log.debug("prev_nuc = %s", prev_nuc)
+                            if nuc-1 == prev_nuc:
                                 node = el
                                 break
                     else:
