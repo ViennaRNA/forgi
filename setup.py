@@ -60,6 +60,21 @@ setup(
                'examples/compare_RNA.py',
                'examples/visualize_cg.py',
                'examples/visualize_pdb.py'],
+      install_requires=[
+		'numpy>=1.10.0',
+                'scipy>=0.19.1',
+                'networkx>=2.0',
+                'future',
+                'biopython',
+                'pandas>=0.20',
+                'appdirs>=1.4',
+                'logging_exceptions>=0.1.8',
+                'beautifulsoup4'>=4.6
+	],
+      extras_require={
+        'forgi.visual': ["matplotlib>=2.0"],
+        'faster vector': ["cython"]
+      },
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are
