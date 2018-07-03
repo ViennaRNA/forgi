@@ -69,7 +69,7 @@ setup(
                 'pandas>=0.20',
                 'appdirs>=1.4',
                 'logging_exceptions>=0.1.8',
-                'beautifulsoup4'>=4.6
+                'beautifulsoup4>=4.6'
 	],
       extras_require={
         'forgi.visual': ["matplotlib>=2.0"],
