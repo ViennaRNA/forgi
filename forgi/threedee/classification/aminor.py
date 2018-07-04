@@ -51,19 +51,6 @@ P_INTERACTION=0.05 #0.03644949066213922
 
 ################# Just classify my structure ############################
 
-def classify_interaction(cg, stem, loop, clf=None):
-    """
-    :param clf: A fitted AMinorClassifier instance. If not given,
-                the default pretrained classifier is used.
-    """
-    if clf in None:
-        clf=_get_default_clf(loop)
-    geo = np.array(get_relative_orientation(cg, loop, stem))
-    geo.reshape(1, -1)
-    y,=clf.predict(geo)
-    return y
-
-
 def loop_potential_interactions(cg, loop, domain=None):
     """
     Iterate over all stems and return those loop-stem pairs that will be passed
@@ -405,13 +392,12 @@ def df_to_data_labels(df, loop_type):
     Create the trainings data as two arrays X and y (or data and labels)
     from the initial dataframe
     """
-    df=df[df.loop_type==loop_type]
-    df=df[df.dist<CUTOFFDIST]
-    positive = df[df["is_interaction"]]
-    negative = df[(df["is_interaction"]==False)&(~df["loop_sequence"].str.contains("A").astype(bool))]
-    data = np.concatenate( [
-            [[ x.dist, x.angle1, x.angle2 ]
-                      for x in positive.itertuples()],
-            [[ x.dist, x.angle1, x.angle2 ]
-                      for x in negative.itertuples()]])
-    return data, np.array([1]*len(positive)+[0]*len(negative))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        df["loop_name"]=df.pdb_id+df.interaction.str.split("-").apply(lambda x: x[0])
+    mask_ame, mask_non_ame, mask_non_fred = _get_masks(df, loop_type)
+    data = pd.concat([ df[mask_ame].drop_duplicates(["loop_name"]),
+                       df[mask_non_ame] ])
+    data = np.array([[ x.dist/10, x.angle1, x.angle2, x.is_interaction ]
+                      for x in data.itertuples()])
+    return data[:,:3], data[:,3]

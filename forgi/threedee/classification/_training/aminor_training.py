@@ -51,18 +51,26 @@ def main():
     args = parser.parse_args()
     cgs, cg_filenames = fuc.cgs_from_args(args, "+", rna_type="only_cg",
                                           return_filenames=True)
-    ame, non_ame = from_fr3d_to_orientation(cgs, args.fr3d_result, args.chain_id_mapping_dir)
+    create_geometry_file(args.trainingsdata_out, cgs, cg_filenames,
+                         args.fr3d_result, args.chain_id_mapping_dir,
+                         args.fr3d_query)
+    hyper_params = tune_model(args.trainingsdata_out)
+    json.dump(hyper_params, args.model_params_out)
+
+def create_geometry_file(outfile, cgs, cg_filenames, fr3d_result,
+                         chain_id_mapping_dir, fr3d_query=""):
+    ame, non_ame = from_fr3d_to_orientation(cgs, fr3d_result, chain_id_mapping_dir)
     # First of all, print the ame_geometries.csv file!
-    with open(args.trainingsdata_out, "w") as file_:
+    with open(outfile, "w") as file_:
         print("# Generated on "+ time.strftime("%d %b %Y %H:%M:%S %Z"), file=file_)
         print("# Generated from the following files: ", file=file_)
         for fn in cg_filenames:
             print("#   {}".format(fn), file=file_)
         print("# Version: {}".format(fus.get_version_string().strip()), file=file_)
-        print("# fr3d_result = {}".format(args.fr3d_result), file=file_)
-        if args.fr3d_query:
+        print("# fr3d_result = {}".format(fr3d_result), file=file_)
+        if fr3d_query:
             print("# fr3d_query:", file=file_)
-            for line in args.fr3d_query.splitlines():
+            for line in fr3d_query.splitlines():
                 line=line.strip()
                 print("#    "+line, file = file_)
         print("# cutoff_dist = {} A".format(ftca.CUTOFFDIST), file=file_)
@@ -81,14 +89,17 @@ def main():
                   "{loop_name}-{stem_name} {score} "
                   "\"{annotation}\" {loop_flexibility}".format(is_interaction = False,
                                             **entry._asdict()), file = file_)
-    # Now read the same file into a dataframe
-    df = pd.read_csv(args.trainingsdata_out, comment="#", sep=" ")
+
+def tune_model(geometry_file):
+    df = pd.read_csv(geometry_file, comment="#", sep=" ")
     all_params = {}
     for loop_type in "imh":
-        # Now find the hyperparameters using cross-validation for this file.
+        mask_ame, mask_non_ame, mask_non_fred = ftca._get_masks(df, loop_type)
         data, labels = ftca.df_to_data_labels(df, loop_type)
-        all_params[loop_type] = find_hyperparameters(loop_type, data, labels)
-    json.dump(all_params, args.model_params_out)
+        print(sum(mask_non_fred), len(df[mask_non_fred]), mask_non_fred )
+        pI = sum(labels)/(sum(labels)+len(df[mask_non_fred]))
+        all_params[loop_type] = find_hyperparameters(loop_type, data, labels, pI)
+    return all_params
 
 ################################################################################
 ### Validate Model
@@ -102,19 +113,13 @@ def calculate_pI(loop_type):
     negative = df[(df["is_interaction"]==False)&(df["loop_sequence"].str.contains("A").astype(bool))]
     return len(positive)/(len(negative)+len(positive))
 
-def find_hyperparameters(loop_type, data, labels):
-    # We stick to a linear kernel for performance reasons.
+def find_hyperparameters(loop_type, data, labels, pI):
     # We use the symmetric approach due to geometric reasoning.
 
-    # For now, we stick to the estimated P(I), but we keep in mind that we
-    # might underestimate it (if FR3D misses many true interactions) or
-    # overestimate it (unlikely. If FR3D has many false positives)
     param_grid = [{'symmetric': [True],
-                   'kernel':["linear"],
-                   'bandwidth':[0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09,
-                                0.1, 0.125, 0.15, 0.175, 0.2, 0.25, 0.3,
-                                0.4, 0.5, 0.6],
-                   'p_I':[calculate_pI(loop_type)] }]
+                   'kernel':["gaussian"],
+                   'bandwidth':[ 0.1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.6, 0.75, 1.0, 1.5, 2.0],
+                   'p_I':pI }]
     X_train, X_test, y_train, y_test = train_test_split(
                 data, labels, test_size=0.5, train_size=0.5, stratify=labels)
 
