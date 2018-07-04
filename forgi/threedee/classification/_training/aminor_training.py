@@ -26,7 +26,7 @@ import forgi.graph.bulge_graph as fgb
 log=logging.getLogger(__name__)
 ################################################################################
 ### Lets use this as a script
-### Run as python -m forgi.threedee.classification._training.aminor
+### Run as python -m forgi.threedee.classification._training.aminor_training
 ################################################################################
 def main():
     parser = fuc.get_rna_input_parser("Train a classifier for A-Minior interactions.",
