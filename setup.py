@@ -2,8 +2,14 @@ from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
-from Cython.Build import cythonize
+import warnings
 
+def try_cythonize(arg):
+  try:
+    from Cython.Build import cythonize
+    cythonize(arg)
+  except Exception as e:
+    warnings.warn("Could not use cython. Exception of type {} occurred: {}".format(type(e), e))
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -29,7 +35,7 @@ try: #If we are in a git-repo, get git-describe version.
             # Apped the version number to init.py
             with open(outfile, "a") as of:
                 of.write('\n__complete_version__ = "{}"'.format(forgi_version))
-except OSError as e: #Outside of a git repo, do nothing.
+except: #Outside of a git repo, do nothing.
     build_py = _build_py
 
 
@@ -42,7 +48,7 @@ setup(
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      ext_modules = cythonize("forgi/threedee/utilities/cytvec.pyx"),
+      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec.pyx"),
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
@@ -55,19 +61,20 @@ setup(
                'examples/visualize_cg.py',
                'examples/visualize_pdb.py'],
       install_requires=[
-                'numpy>=1.10.0',
+		'numpy>=1.10.0',
                 'scipy>=0.19.1',
+                'networkx>=2.0',
                 'future',
-                'networkx==2',
                 'biopython',
-                'logging_exceptions>=1.6',
-                'beautifulsoup4>=4.6',
                 'pandas>=0.20',
-                'appdirs==1.4',
-                'cython',
-                'scikit-learn'
-
-      ],
+                'appdirs>=1.4',
+                'logging_exceptions>=0.1.8',
+                'beautifulsoup4>=4.6'
+	],
+      extras_require={
+        'forgi.visual': ["matplotlib>=2.0"],
+        'faster vector': ["cython"]
+      },
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are

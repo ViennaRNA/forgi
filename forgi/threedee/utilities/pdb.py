@@ -510,6 +510,7 @@ def get_all_chains(in_filename, parser=None):
                             "insertion":insertions[i]
                             })
         except KeyError:
+            import Bio
             mr = []
             log.info("Header fields are: %s", parser.header)
             log.warning("Old biopython version %s. No missing residues", Bio.__version__)
