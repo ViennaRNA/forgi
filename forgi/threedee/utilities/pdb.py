@@ -2,7 +2,9 @@ from __future__ import print_function
 
 from builtins import zip
 from builtins import range
-import sys, warnings
+import sys
+import warnings
+import itertools
 import numpy as np
 import Bio.PDB as bpdb
 from collections import defaultdict
@@ -315,8 +317,8 @@ def pdb_file_rmsd(fn1, fn2):
         s1= bpdb.PDBParser().get_structure('t', fn1)
         s2= bpdb.PDBParser().get_structure('t', fn2)
 
-    c1,_ = get_biggest_chain(fn1)
-    c2,_ = get_biggest_chain(fn2)
+    c1,_,_ = get_biggest_chain(fn1)
+    c2,_,_ = get_biggest_chain(fn2)
 
     rmsd = pdb_rmsd(c1, c2)
 
@@ -412,9 +414,9 @@ def get_particular_chain(in_filename, chain_id, parser=None):
     :param chain_id: The id of the chain.
     :return: A Bio.PDB.Chain object containing that particular chain.
     '''
-    chains, mr = get_all_chains(in_filename, parser)
+    chains, mr, ir = get_all_chains(in_filename, parser)
     chain, = [c for c in chains if c.id==chain_id]
-    return chain, mr
+    return chain, mr, ir
 
 def get_biggest_chain(in_filename, parser=None):
     '''
@@ -425,7 +427,7 @@ def get_biggest_chain(in_filename, parser=None):
     :return: A Bio.PDB chain structure corresponding to the longest
              chain in the structure stored in in_filename
     '''
-    chains, mr = get_all_chains(in_filename, parser)
+    chains, mr, ir = get_all_chains(in_filename, parser)
     biggest = 0
     biggest_len = 0
 
@@ -449,16 +451,19 @@ def get_biggest_chain(in_filename, parser=None):
     #sys.exit(1)
 
     orig_chain = chains[biggest]
-    return orig_chain, mr
+    return orig_chain, mr, ir
 
 def get_all_chains(in_filename, parser=None):
     '''
-    Load the PDB file located at filename, select the longest
-    chain and return it.
+    Load the PDB file located at filename, read all chains and return them.
 
     :param in_filename: The location of the original file.
-    :return: A list of Bio.PDB chain structures corresponding to all
-             RNA structures stored in in_filename
+    :return: a tuple chains, missing_residues
+
+             * chains: A list of Bio.PDB chain structures corresponding to all
+                       RNA structures stored in in_filename
+             * missing_residues: A list of dictionaries, describing the missing residues.
+             * interacting residues: A list of residues
     '''
     if parser is None:
         #print("in_filename is {}".format(in_filename), file=sys.stderr)
@@ -518,10 +523,39 @@ def get_all_chains(in_filename, parser=None):
     if len(s)>1:
         warnings.warn("Multiple models in file. Using only the first model")
     chains = list(chain for chain in s[0] if contains_rna(chain))
-    return chains, mr
+    # Now search for protein interactions. # TODO implement efficiently using kdtree
+    interacting_residues=set()
+    for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
+        rna_res=None
+        other_res=None
+        if res1.resname.strip() in RNA_RESIDUES:
+            rna_res=res1
+        else:
+            other_res=res1
+        if res2.resname.strip() in RNA_RESIDUES:
+            rna_res=res2
+        else:
+            other_res=res2
+        if rna_res is None or other_res is None:
+            continue
+        if other_res.resname.strip()=="HOH":
+            continue
+        if residues_interact(rna_res, other_res):
+            log.error("%s and %s interact", rna_res, other_res)
+            interacting_residues.add(rna_res)
+    log.error(interacting_residues)
+    return chains, mr, interacting_residues
 
-
-
+def residues_interact(rna_res, other_res):
+    for rna_atom in rna_res:
+        if rna_atom.get_name() in all_side_chains:
+            for other_atom in other_res:
+                atom_symbol="".join(s for s in other_atom.get_name() if not s.isdigit())
+                if atom_symbol in ["C", "N"]: #Only consider C and N. So no ions etc
+                    d=ftuv.vec_distance(rna_atom.coord, other_atom.coord)
+                    if d<6:
+                        return True
+    return False
 
 def rename_rosetta_atoms(chain):
     '''
@@ -557,7 +591,7 @@ def load_structure(pdb_filename):
     This chain will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, etc...
     '''
-    chain, mr = get_biggest_chain(pdb_filename)
+    chain, mr, ir = get_biggest_chain(pdb_filename)
     return clean_chain(chain)[0]
 
 def clean_chain(chain):

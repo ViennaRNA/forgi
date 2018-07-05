@@ -96,9 +96,9 @@ def main():
                 # extract just the biggest chain and renumber it so
                 # the nucleotides start at 1
                 if chain_id is None:
-                    chain, _ = ftup.get_biggest_chain(args[0])
+                    chain, _,_ = ftup.get_biggest_chain(args[0])
                 else:
-                    chains, _ = ftup.get_all_chains(args[0])
+                    chains, _,_ = ftup.get_all_chains(args[0])
                     print(chains)
                     chain, = [ chain for chain in chains if chain.id == chain_id ]
                 #chain = ftup.renumber_chain(chain)
