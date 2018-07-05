@@ -20,7 +20,10 @@ before_install:
 install:
   - "pip install --upgrade pip wheel"
   - "pip install --only-binary=numpy,scipy numpy>1.10.0 scipy"
-  - "pip install -r requirements.txt"
+  - "pip install cython"
+  - "pip install matplotlib"
+  - "pip install nose2"
+  - "pip install ."
   - "mkdir mctools"
   - "wget http://major.iric.ca/MajorLabEn/MC-Tools_files/libmccore.dylib.1.6.2"
   - "mv libmccore.dylib.1.6.2 mctools/"
@@ -32,4 +35,6 @@ install:
   - "echo '{\"PDB_ANNOTATION_TOOL\": \"MC-Annotate\"}' >~/.config/forgi/config.json"
 
 
-script: nose2 test
+script:
+  - "pip install ."
+  - "nose2 test"

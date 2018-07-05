@@ -27,3 +27,6 @@ def resid_from_str(resstr):
     if len(idparts)==1:
         idparts.append(" ")
     return RESID(chain, (' ', int(idparts[0]), idparts[1]))
+
+def resid_from_biopython(residue):
+    return  RESID(residue.parent.id, residue.id)

@@ -37,6 +37,7 @@ import Bio.PDB as bpdb
 from logging_exceptions import log_to_exception, log_exception
 
 from ...graph import bulge_graph as fgb
+import forgi.graph.residue as fgr
 from ...graph.sequence import Sequence, _insert_breakpoints_simple
 from ...graph._graph_construction import _BulgeGraphConstruction
 from ..utilities import graph_pdb as ftug
@@ -77,12 +78,12 @@ def add_longrange_interactions(cg, lines):
     for line in ftum.iterate_over_interactions(lines):
         (from_chain, from_base, to_chain, to_base) =  ftum.get_interacting_base_pairs(line)
         try:
-            seq_id1 = cg.seq_ids.index(fgb.RESID(from_chain, ftum.parse_resid(from_base))) + 1
+            seq_id1 = cg.seq_ids.index(fgr.RESID(from_chain, ftum.parse_resid(from_base))) + 1
         except ValueError as e:
             with log_to_exception(log, e):
                 log.error("seq_ids are {}".format(cg.seq_ids))
             raise
-        seq_id2 = cg.seq_ids.index(fgb.RESID(to_chain, ftum.parse_resid(to_base))) + 1
+        seq_id2 = cg.seq_ids.index(fgr.RESID(to_chain, ftum.parse_resid(to_base))) + 1
 
         node1 = cg.get_node_from_residue_num(seq_id1)
         node2 = cg.get_node_from_residue_num(seq_id2)
@@ -262,6 +263,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.longrange = c.defaultdict( set )
         self.chains = {} #the PDB chains if loaded from a PDB file
 
+        self.interacting_residues=[]
     ############################################################################
     # Factory functions
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -316,10 +318,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         with fus.make_temp_directory() as output_dir:
             if load_chains=="biggest":
-                chain, missing_res = ftup.get_biggest_chain(pdb_filename)
+                chain, missing_res, ir = ftup.get_biggest_chain(pdb_filename)
                 chains=[chain]
             else:
-                chains, missing_res = ftup.get_all_chains(pdb_filename)
+                chains, missing_res, ir = ftup.get_all_chains(pdb_filename)
             new_chains = []
             for chain in chains:
                 if load_chains in [None, "biggest"] or chain.id in load_chains:
@@ -397,7 +399,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 cgs.append(cls._load_pdb_component(bpseq_lines, pdb_base, new_chains,
                                                    component, missing_res, modifications,
                                                    seq_ids, secondary_structure,
-                                                   dissolve_length_one_stems))
+                                                   dissolve_length_one_stems,
+                                                   ir))
             except GraphConstructionError as e:
                 log_exception(e, logging.ERROR, with_stacktrace=False)
                 log.error("Could not load chains %s, due to the above mentioned error.", list(component))
@@ -410,7 +413,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     @classmethod
     def _load_pdb_component(cls, original_bpseq_lines, name, chains, chain_ids,
                             missing_res, modifications, seq_ids,
-                            secondary_structure="", dissolve_length_one_stems=False):
+                            secondary_structure="", dissolve_length_one_stems=False,
+                            interacting_residues=[]):
         """
         :param original_bpseq_lines: List of strings. Will be filtered for chains.
         """
@@ -462,6 +466,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         cg.add_bulge_coords_from_stems()
         ftug.add_loop_information_from_pdb_chains(cg)
         assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
+        cg.interacting_residues=list(r for r in map(fgr.resid_from_biopython, interacting_residues)
+                                     if r.chain in chain_ids)
         return cg
 
     ############################################################################
@@ -1062,6 +1068,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def incomplete_elements(self):
         return ftug.get_incomplete_elements(self)
 
+    @property
+    def interacting_elements(self):
+        interacting_nts=map(self.seq_id_to_pos, self.interacting_residues)
+        return set(self.nucleotides_to_elements(interacting_nts))
 
     def to_cg_file(self, filename):
         '''

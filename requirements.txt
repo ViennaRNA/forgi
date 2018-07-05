@@ -6,7 +6,7 @@ networkx==2
 git+git://github.com/Bernhard10/biopython.git@master#egg=biopython
 logging_exceptions>=0.1.8
 beautifulsoup4>=4.6
-matplotlib==2
+matplotlib==2.2
 ddt
 pandas>=0.20
 appdirs==1.4

@@ -258,8 +258,12 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
 
     '''
     if vec1 is not None and vec2 is not None and vec3 is None and not USE_ASSERTS:
-        from . import cytvec
-        return cytvec.create_orthonormal_basis(vec1, vec2)
+        try:
+            from . import cytvec
+        except ImportError as e:
+            warnings.warn("Extention modules (cython code) not installed, using slower python version")
+        else:
+            return cytvec.create_orthonormal_basis(vec1, vec2)
 
     if vec2 is None:
         vec2 = get_non_colinear_unit_vector(vec1)
