@@ -453,7 +453,7 @@ def get_biggest_chain(in_filename, parser=None):
     orig_chain = chains[biggest]
     return orig_chain, mr, ir
 
-def get_all_chains(in_filename, parser=None):
+def get_all_chains(in_filename, parser=None, no_annotation=False):
     '''
     Load the PDB file located at filename, read all chains and return them.
 
@@ -526,26 +526,27 @@ def get_all_chains(in_filename, parser=None):
     chains = list(chain for chain in s[0] if contains_rna(chain))
     # Now search for protein interactions. # TODO implement efficiently using kdtree
     interacting_residues=set()
-    for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
-        rna_res=None
-        other_res=None
-        # TODO: Currently we do not consider modified residues for interactions.
-        if res1.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
-            rna_res=res1
-        else:
-            other_res=res1
-        if res2.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
-            rna_res=res2
-        else:
-            other_res=res2
-        if rna_res is None or other_res is None:
-            continue
-        if other_res.resname.strip()=="HOH":
-            continue
-        if residues_interact(rna_res, other_res):
-            log.error("%s and %s interact", rna_res, other_res)
-            interacting_residues.add(rna_res)
-    log.error(interacting_residues)
+    if not no_annotation:
+        for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
+            rna_res=None
+            other_res=None
+            # TODO: Currently we do not consider modified residues for interactions.
+            if res1.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
+                rna_res=res1
+            else:
+                other_res=res1
+            if res2.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
+                rna_res=res2
+            else:
+                other_res=res2
+            if rna_res is None or other_res is None:
+                continue
+            if other_res.resname.strip()=="HOH":
+                continue
+            if residues_interact(rna_res, other_res):
+                log.debug("%s and %s interact", rna_res, other_res)
+                interacting_residues.add(rna_res)
+        log.debug(interacting_residues)
     return chains, mr, interacting_residues
 
 def residues_interact(rna_res, other_res):

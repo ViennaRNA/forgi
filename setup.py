@@ -40,7 +40,8 @@ except: #Outside of a git repo, do nothing.
     build_py = _build_py
 
 
-extras = {"forgi.visual":["matplotlib>=2.0"]}
+extras = {"forgi.visual":["matplotlib>=2.0"],
+          "faster vector":["cython"]}
 extras["all"]=list(itertools.chain(extras.values()))
 
 setup(
