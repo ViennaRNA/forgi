@@ -22,6 +22,7 @@ install:
   - "pip install --only-binary=numpy,scipy numpy>1.10.0 scipy"
   - "pip install cython"
   - "pip install matplotlib"
+  - "pip install nose2"
   - "pip install ."
   - "mkdir mctools"
   - "wget http://major.iric.ca/MajorLabEn/MC-Tools_files/libmccore.dylib.1.6.2"
