@@ -159,15 +159,17 @@ def is_almost_parallel(vec1, vec2):
     CUTOFF=10**-9
     vec2_clean=[]
     for c in vec2:
-        if c<CUTOFF:
+        if abs(c)<CUTOFF:
             vec2_clean.append(float("nan"))
         else:
             vec2_clean.append(c)
-    factors=np.asarray(vec1)/np.asarray(vec2)
+    factors=np.asarray(vec1)/np.asarray(vec2_clean)
     factors = [f for f in factors if not np.isnan(f)]
+    log.error("vec1 %s, vec2 %s, fac %s", vec1, vec2, factors)
     if not factors:
         return 0 # vec2~[0,0,0]
-    elif all(abs(f-factors[0])<CUTOFF for f in factors):
+    elif all(np.sign(factors)==np.sign(factors[0])) and all(abs(f-factors[0])<CUTOFF for f in factors):
+        log.error("Signs: %s", np.sign(factors))
         return np.sign(factors[0]) # returns 0, if vec1==[0,0,0]
     else:
         return 0 # Not (anti-)parallel

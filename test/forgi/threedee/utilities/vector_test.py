@@ -269,6 +269,8 @@ class TestVector(unittest.TestCase):
         self.assertTrue(ftuv.is_almost_parallel(np.array([2, 10**-10,2]), np.array([1,0,1])))
         self.assertTrue(ftuv.is_almost_parallel(np.array([2,2,10**-10]), np.array([1,1,0])))
 
+        self.assertTrue(ftuv.is_almost_parallel( [6.13714577e-16, 3.68203114, 1.66697272e-15] , [ 0. ,   15.302 , 0.   ]))
+
         #Colinear
         self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,2]),np.array([0.,0.,3.])))
         self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,7]),np.array([9.,18.,21.])))

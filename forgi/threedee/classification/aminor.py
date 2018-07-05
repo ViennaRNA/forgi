@@ -3,6 +3,8 @@ from __future__ import print_function, division, absolute_import
 import pkgutil
 import logging
 import warnings
+import json
+
 try:
     from io import StringIO
 except ImportError:
@@ -261,7 +263,7 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
             return np.nan_to_num(numerator/denom)
 
     def set_params(self, **kwargs):
-        super().set_params(**kwargs)
+        super(AMinorClassifier, self).set_params(**kwargs)
         # If it was fitted, we must propagate the parameter changes
         # to the child-KDEs by refitting to the same data
         if hasattr(self, "X_"):
@@ -343,7 +345,7 @@ def get_relative_orientation(cg, loop, stem):
             # has the same sign as the stem vector and a negative angle otherwise
             cr = np.cross(virt_twist, conn_proj)
             sign=ftuv.is_almost_parallel(cr,  cg.coords.get_direction(stem))
-            assert sign!=0
+            assert sign!=0, "{} vs {} not (anti) parallel".format(cr, cg.coords.get_direction(stem))
             angle2*=sign
 
     return dist, angle1, angle2
@@ -368,6 +370,9 @@ class _DefaultClf(object):
     def get_default_clf(cls, loop_type):
         if loop_type not in cls._clfs:
             clf = AMinorClassifier()
+            rawdata = pkgutil.get_data('forgi', 'threedee/data/aminor_params.json')
+            params=json.load(StringIO(rawdata.decode("ascii")))
+            clf.set_params(**params[loop_type])
             X, y = cls._get_data(loop_type)
             clf.fit(X, y)
             cls._clfs[loop_type]=clf

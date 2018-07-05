@@ -55,7 +55,7 @@ setup(
                 'forgi.threedee.classification',
                 'forgi._k2n_standalone', 'forgi.threedee.visual',
                 'forgi.visual', 'forgi.projection'],
-      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv']},
+      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv', 'data/aminor_params.json']},
       scripts=['examples/rnaConvert.py',
                'examples/describe_cg.py',
                'examples/compare_RNA.py',

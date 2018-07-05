@@ -444,12 +444,12 @@ def _enumerate_background_geometries(all_cgs, cutoff_dist, aminor_geometries):
             for loop in cg.defines:
                 if loop[0]=="s":
                     continue
-                if loop in cg.incomplete_elements:
+                if loop in cg.incomplete_elements or loop in cg.interacting_elements:
                     continue
                 for stem in cg.stem_iterator():
                     if loop in cg.edges[stem]:
                         continue
-                    if stem in cg.incomplete_elements:
+                    if stem in cg.incomplete_elements or stem in cg.interacting_elements:
                         continue
                     dist, angle1, angle2 = ftca.get_relative_orientation(cg, loop, stem)
                     if loop[0]=="i":
