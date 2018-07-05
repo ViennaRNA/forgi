@@ -529,11 +529,12 @@ def get_all_chains(in_filename, parser=None):
     for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
         rna_res=None
         other_res=None
-        if res1.resname.strip() in RNA_RESIDUES:
+        # TODO: Currently we do not consider modified residues for interactions.
+        if res1.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
             rna_res=res1
         else:
             other_res=res1
-        if res2.resname.strip() in RNA_RESIDUES:
+        if res2.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
             rna_res=res2
         else:
             other_res=res2

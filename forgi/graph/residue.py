@@ -29,4 +29,7 @@ def resid_from_str(resstr):
     return RESID(chain, (' ', int(idparts[0]), idparts[1]))
 
 def resid_from_biopython(residue):
-    return  RESID(residue.parent.id, residue.id)
+    if residue.parent is not None:
+        return  RESID(residue.parent.id, residue.id)
+    else:
+        return RESID(None, residue.id)
