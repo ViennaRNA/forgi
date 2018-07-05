@@ -47,7 +47,7 @@ extras["all"]=list(itertools.chain(extras.values()))
 setup(
       cmdclass={'build_py': build_py},
       name='forgi',
-      version='2.0.0-alpha',
+      version='2.0.1-alpha',
       description='RNA Graph Library',
       author='Peter Kerpedjiev, Bernhard Thiel',
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
