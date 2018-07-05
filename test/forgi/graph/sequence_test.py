@@ -98,7 +98,7 @@ class TestIndexingWithMissing(unittest.TestCase):
         self.seq1 = fgs.Sequence("CAUAAUUUCCG",
                                 list(map(fgr.resid_from_str,
                                      "14,15,15.A,16,18,19,20,21,22,23,A:24".split(","))),
-                                [{"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
+                                missing_residues=[{"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
                                  {"model":None, "ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
                                  {"model":None, "ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
                                  {"model":None, "ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
