@@ -19,16 +19,16 @@ class TestPDBUtilities(unittest.TestCase):
         '''
         Test loading a specific chain from a pdb file.
         '''
-        chain, mr = ftup.get_particular_chain('test/forgi/threedee/data/1y26_two_chains.pdb', 'Y')
+        chain, mr, ir = ftup.get_particular_chain('test/forgi/threedee/data/1y26_two_chains.pdb', 'Y')
         self.assertEqual(chain.id, 'Y')
 
     def test_get_biggest_chain(self):
-        chain, mr = ftup.get_biggest_chain('test/forgi/threedee/data/1y26_two_chains.pdb')
+        chain, mr, ir = ftup.get_biggest_chain('test/forgi/threedee/data/1y26_two_chains.pdb')
         self.assertEqual(chain.id, 'X')
 
 
     def test_trim_chain_between(self):
-        chain, mr = ftup.get_biggest_chain('test/forgi/threedee/data/1y26_two_chains.pdb')
+        chain, mr, ir = ftup.get_biggest_chain('test/forgi/threedee/data/1y26_two_chains.pdb')
 
         self.assertTrue(15 in chain)
         self.assertTrue(16 in chain)
@@ -42,7 +42,7 @@ class TestPDBUtilities(unittest.TestCase):
 
 
     def test_is_covalent(self):
-        c, mr = ftup.get_biggest_chain('test/forgi/threedee/data/2mis.pdb')
+        c, mr, ir = ftup.get_biggest_chain('test/forgi/threedee/data/2mis.pdb')
 
         self.assertTrue(ftup.is_covalent([c[10]["C3'"], c[10]["C4'"]]))
         self.assertFalse(ftup.is_covalent([c[10]["C3'"], c[10]["C5'"]]))
