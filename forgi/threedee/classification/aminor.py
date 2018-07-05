@@ -203,24 +203,18 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
             raise TypeError("Expect exactly 3 features, found {}".format(X.shape[1]))
         if not all(yi in [0,1] for yi in y):
             raise ValueError("y should only contain the values 1 and 0")
-        X[:,0]/=ANGLEWEIGHT
-        #print("First datapoint", X[0], y[0])
         ame = X[np.where(y)]
         non_ame=X[np.where(y==0)]
         if self.symmetric:
             ame=self._make_symmetric(ame)
             non_ame = self._make_symmetric(non_ame)
-        #print(ame)
-        log.info("Fitting\n%s", X[np.where(y)])
+        log.info("Fitting. First positive sample: %s", X[np.where(y)][0])
         self.ame_kde_ = KernelDensity(kernel=self.kernel,
                                       bandwidth=self.bandwidth).fit(ame).score_samples
         self.non_ame_kde_ = KernelDensity(kernel=self.kernel,
                                           bandwidth=self.bandwidth).fit(non_ame).score_samples
-        #fig,ax = plt.subplots()
-        #plt.plot(np.linspace(0, np.pi/2, 200), self.ame_kde_(np.array([[1.0,a1,1.5] for a1 in np.linspace(0, np.pi/2, 200)])))
-        #plt.plot(np.linspace(0, np.pi/2, 200), self.non_ame_kde_(np.array([[1.0,a1,1.5] for a1 in np.linspace(0, np.pi/2, 200)])))
-        #plt.plot(np.linspace(0, np.pi/2, 200), self.predict_proba(np.array([[1.0,a1,1.5] for a1 in np.linspace(0, np.pi/2, 200)])))
-        #plt.show()
+        self.X_=X
+        self.y_=y
     @staticmethod
     def _make_symmetric(geos):
         """
@@ -239,8 +233,9 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         """
         geos = np.concatenate([geos,
                                [(d, np.pi-a1, a2) for d, a1, a2 in geos]])
-        geos = np.concatenate([geos,
-                               [(d, a1, -a2) for d, a1, a2 in geos]])
+        # We allow negative angles for angle2, so there is no need to make it symmetric.
+        #geos = np.concatenate([geos,
+        #                       [(d, a1, -a2) for d, a1, a2 in geos]])
         return geos
 
     def predict(self, X):
@@ -254,22 +249,24 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
         specificity =  tn/(tn+fp)
         sensitivity = tp/(tp+fn)
-        # We give a stronger weight to sensitivity.
-        return 0.3*specificity + 0.7*sensitivity
-        #precision = tp/(tp+fp)
-        return f1_score(y, y_pred)
+        return (0.8*sensitivity+0.2*specificity)
+
     def predict_proba(self, X):
         check_is_fitted(self, ['ame_kde_', 'non_ame_kde_'])
         X = check_array(X)
-        #print("PI", self.p_I, "bw", self.bandwidth)
-        #print()
-        X[:,0] /= ANGLEWEIGHT
         numerator = np.exp(self.ame_kde_(X))*self.p_I
         denom = numerator+np.exp(self.non_ame_kde_(X))*(1-self.p_I)
-        #print(np.exp(self.non_ame_kde_(X)))
         with warnings.catch_warnings(): # division by 0
             warnings.simplefilter("ignore", RuntimeWarning)
             return np.nan_to_num(numerator/denom)
+
+    def set_params(self, **kwargs):
+        super().set_params(**kwargs)
+        # If it was fitted, we must propagate the parameter changes
+        # to the child-KDEs by refitting to the same data
+        if hasattr(self, "X_"):
+            self.fit(self.X_, self.y_)
+        return self
 
 
 ############## get orientation #########################
@@ -341,6 +338,14 @@ def get_relative_orientation(cg, loop, stem):
                     angle2=float("nan")
                 else:
                     raise
+            # Furthermore, the direction of the second angle is meaningful.
+            # We call use a positive angle, if the cross-product of the two vectors
+            # has the same sign as the stem vector and a negative angle otherwise
+            cr = np.cross(virt_twist, conn_proj)
+            sign=ftuv.is_almost_parallel(cr,  cg.coords.get_direction(stem))
+            assert sign!=0
+            angle2*=sign
+
     return dist, angle1, angle2
 
 ############# Private ##########################################
@@ -391,6 +396,8 @@ def df_to_data_labels(df, loop_type):
     """
     Create the trainings data as two arrays X and y (or data and labels)
     from the initial dataframe
+
+    :returns: X, y
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -398,6 +405,6 @@ def df_to_data_labels(df, loop_type):
     mask_ame, mask_non_ame, mask_non_fred = _get_masks(df, loop_type)
     data = pd.concat([ df[mask_ame].drop_duplicates(["loop_name"]),
                        df[mask_non_ame] ])
-    data = np.array([[ x.dist/10, x.angle1, x.angle2, x.is_interaction ]
+    data = np.array([[ x.dist/ANGLEWEIGHT, x.angle1, x.angle2, x.is_interaction ]
                       for x in data.itertuples()])
     return data[:,:3], data[:,3]

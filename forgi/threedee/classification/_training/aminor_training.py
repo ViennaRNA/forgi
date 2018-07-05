@@ -14,6 +14,8 @@ import subprocess
 
 import numpy as np
 from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.metrics import confusion_matrix, f1_score
+
 import pandas as pd
 
 from .. import aminor as ftca
@@ -24,6 +26,14 @@ import forgi.graph.residue as fgr
 import forgi.graph.bulge_graph as fgb
 
 log=logging.getLogger(__name__)
+
+
+PDBIDS_LRSU=["1HC8", "1MMS", "1MZP", "1VQO", "3jbu", "4IOA", "4LGT", "4QVI", "4v9p",
+      "4w2g", "4wt8", "5D8H", "5imq", "5MMI", "5O60", "5V7Q", "3J79", "3J7Q", "5T2C"]
+PDBIDS_SRSU=["1G1X", "1I6U", "1KUQ", "2VQE", "4V19", "4v9o", "5lzd", "5mmm",
+             "5o61", "5OOL", "5v93","3J7A", "3J7P", "4UG0", "3JAM", "4P8Z",
+             "4UG0", "4V5O", "4V88", "5FLX", "5LZS","5OPT", "5XXU", "5XYI", "6AZ1"]
+
 ################################################################################
 ### Lets use this as a script
 ### Run as python -m forgi.threedee.classification._training.aminor_training
@@ -47,6 +57,12 @@ def main():
                         default="forgi/threedee/data/aminor_params.json",
                         help="File that will be written for the "
                              "model's hyper-parameters.")
+    parser.add_argument("--test-set", type=str, help="':'-separated PDB-ids"
+                                                     " for the test-set.")
+    parser.add_argument("--train-set", type=str,
+                        help="':'-separated PDB-ids for the train-set."
+                             "Note: This is only used for cross-validation."
+                             "The final model will be trained on all the data.")
 
     args = parser.parse_args()
     cgs, cg_filenames = fuc.cgs_from_args(args, "+", rna_type="only_cg",
@@ -54,8 +70,9 @@ def main():
     create_geometry_file(args.trainingsdata_out, cgs, cg_filenames,
                          args.fr3d_result, args.chain_id_mapping_dir,
                          args.fr3d_query)
-    hyper_params = tune_model(args.trainingsdata_out)
-    json.dump(hyper_params, args.model_params_out)
+    hyper_params = tune_model(args.trainingsdata_out, args.train_set, args.test_set)
+    with open("forgi/threedee/data/aminor_params.json", "w") as f:
+        json.dump(hyper_params,f)
 
 def create_geometry_file(outfile, cgs, cg_filenames, fr3d_result,
                          chain_id_mapping_dir, fr3d_query=""):
@@ -90,51 +107,79 @@ def create_geometry_file(outfile, cgs, cg_filenames, fr3d_result,
                   "\"{annotation}\" {loop_flexibility}".format(is_interaction = False,
                                             **entry._asdict()), file = file_)
 
-def tune_model(geometry_file):
+def tune_model(geometry_file, trainset, testset):
+    if not trainset:
+        trainset=PDBIDS_LRSU
+    if not testset:
+        testset=PDBIDS_SRSU
     df = pd.read_csv(geometry_file, comment="#", sep=" ")
     all_params = {}
-    for loop_type in "imh":
-        mask_ame, mask_non_ame, mask_non_fred = ftca._get_masks(df, loop_type)
-        data, labels = ftca.df_to_data_labels(df, loop_type)
-        print(sum(mask_non_fred), len(df[mask_non_fred]), mask_non_fred )
-        pI = sum(labels)/(sum(labels)+len(df[mask_non_fred]))
-        all_params[loop_type] = find_hyperparameters(loop_type, data, labels, pI)
+    for loop_type in "hi":
+        pI = calculate_pI(df, loop_type)
+        #sum(labels)/(sum(labels)+len(df[mask_non_fred]))
+        log.info("PI %s", pI)
+        all_params[loop_type] = find_hyperparameters(loop_type, df,
+                                                     pI, trainset, testset)
     return all_params
 
 ################################################################################
 ### Validate Model
 ################################################################################
 
-def calculate_pI(loop_type):
-    df = ftca._DefaultClf.get_dataframe()
-    df = df[df.loop_type==loop_type]
-    df=df[df.dist<ftca.CUTOFFDIST]
-    positive = df[df["is_interaction"]]
-    negative = df[(df["is_interaction"]==False)&(df["loop_sequence"].str.contains("A").astype(bool))]
-    return len(positive)/(len(negative)+len(positive))
+def calculate_pI(df, loop_type):
+    mask_ame, mask_non_ame, mask_non_fred = ftca._get_masks(df, loop_type)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        df["loop_name"]=df.pdb_id+df.interaction.str.split("-").apply(lambda x: x[0])
+    negative = len(df[mask_non_fred].drop_duplicates(["loop_name"]))
+    positive=len(df[mask_ame].drop_duplicates("loop_name"))
+    return positive/(negative+positive)
 
-def find_hyperparameters(loop_type, data, labels, pI):
-    # We use the symmetric approach due to geometric reasoning.
+def mask_data(df, pdbids):
+    mask=df.pdb_id.str.upper().str.contains("testestest")
+    for pdb_id in pdbids:
+        mask |=  df.pdb_id.str.upper().str.contains(pdb_id.upper())
+    return df[mask]
 
-    param_grid = [{'symmetric': [True],
-                   'kernel':["gaussian"],
-                   'bandwidth':[ 0.1, 0.2, 0.3, 0.4, 0.45, 0.5, 0.6, 0.75, 1.0, 1.5, 2.0],
-                   'p_I':pI }]
-    X_train, X_test, y_train, y_test = train_test_split(
-                data, labels, test_size=0.5, train_size=0.5, stratify=labels)
+def find_hyperparameters(loop_type, df, pI, trainset, testset):
+    log.info("Now searching for bandwidth")
+    df_train=mask_data(df, trainset)
+    df_test=mask_data(df, testset)
+    if len(df_train)==0 or len(df_test)==0:
+        raise ValueError("Either trainings- or testset are empty.")
+    X_train, y_train = ftca.df_to_data_labels(df_train, loop_type)
+    X_test, y_test   = ftca.df_to_data_labels(df_test, loop_type)
+    log.info("Length trainingsset: %s, length testset: %s", len(X_train), len(X_test))
 
-    clf = GridSearchCV(ftca.AMinorClassifier(), param_grid, cv=5)
-    #clf.fit(X_train, y_train)
+    # We use the gaussian kernel to avoid certain artefacts of the linear
+    # one and symmetric due to geometric considerations.
+    clf = ftca.AMinorClassifier(p_I=pI, kernel="gaussian", symmetric=True)
+    clf.fit(X_train , y_train)
+    scores=[]
+    bandwidths= np.linspace(0.01, 1.0, 25)
+    for bandwidth in bandwidths:
+        log.debug("bandwidth %s", bandwidth)
+        clf.set_params(bandwidth=bandwidth)
+        score = clf.score(X_test, y_test)
+        log.debug("score is %s", score)
+        scores.append(score)
+    best_i = scores.index(max(scores))
+    best_bandwidth=bandwidths[best_i]
+    clf.set_params(bandwidth=best_bandwidth)
     y_pred = clf.predict(X_test)
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     specificity =  tn/(tn+fp)
     sensitivity = tp/(tp+fn)
-    if sensitifity<0.5 or specificity<0.8:
+    log.info("Classification report for loop type %s (using CV, bw=%s)\n:"
+             "tp: %s, fp: %s, tn: %s, fn: %s, sens: %s, spec; %s",
+              loop_type, best_bandwidth, tp, fp, tn, fn, sensitivity, specificity)
+
+    if sensitivity<0.5 or specificity<0.8:
         raise RuntimeError("Something went wrong with the training of the "
-                           "classifier. The crossvalidation score is terrible.")
-    log.info("Classification report for loop type %s (using CV)\n:"
-             "%s", loop_type, classification_report(y_test, y_pred))
-    return clf.best_params_
+                           "classifier. The crossvalidation score is "
+                           "terrible: sensitivity: {},"
+                           " specificity: {}.".format(sensitivity, specificity))
+    return clf.get_params()
 
 
 ################################################################################

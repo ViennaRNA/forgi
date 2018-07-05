@@ -256,10 +256,10 @@ class TestVector(unittest.TestCase):
         with self.assertRaises(ValueError):
             ftuv.seg_intersect(([0.3, 5.2], [0.3, 5.2]), ([0.,1.], [-5.,7.]))
     def test_is_almost_parallel(self):
-        #Zero-vector is colinear to everything
-        self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,0]),np.array([0.,0.,0.])))
-        self.assertTrue(ftuv.is_almost_parallel(np.array([0.4,0,0]),np.array([0.,0.,0.])))
-        self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,0]),np.array([0,20,0])))
+        #Zero-vector is colinear to nothing
+        self.assertFalse(ftuv.is_almost_parallel(np.array([0,0,0]),np.array([0.,0.,0.])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([0.4,0,0]),np.array([0.,0.,0.])))
+        self.assertFalse(ftuv.is_almost_parallel(np.array([0,0,0]),np.array([0,20,10])))
 
         #10*-9 is treated as zero
         self.assertTrue(ftuv.is_almost_parallel(np.array([0,1,1]),np.array([10**-10,2,2])))
@@ -273,7 +273,7 @@ class TestVector(unittest.TestCase):
         self.assertTrue(ftuv.is_almost_parallel(np.array([0,0,2]),np.array([0.,0.,3.])))
         self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,7]),np.array([9.,18.,21.])))
         self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,0]),np.array([9.,18.,0.])))
-        self.assertTrue(ftuv.is_almost_parallel(np.array([3,0,8]),np.array([9.,0.,24.])))
+        self.assertTrue(ftuv.is_almost_parallel(np.array([3,0,8]),np.array([9.,0.,24.+10**-12])))
 
         #Not colinear
         self.assertFalse(ftuv.is_almost_parallel(np.array([0,0,3.]),np.array([2.,0,0])))
@@ -281,6 +281,12 @@ class TestVector(unittest.TestCase):
         self.assertFalse(ftuv.is_almost_parallel(np.array([1,2,3]),np.array([2.,4.,-6.])))
         self.assertFalse(ftuv.is_almost_parallel(np.array([1,2,3]),np.array([3.,4.,6.])))
         self.assertFalse(ftuv.is_almost_parallel(np.array([1,2,3]),np.array([2.,5.,6.])))
+
+    def test_is_almost_parallel_vs_antiparallel(self):
+        self.assertEqual(ftuv.is_almost_parallel(np.array([0,0,2]),np.array([0.,0.,3.])), 1)
+        self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,7]),np.array([-9.,-18.,-21.])), -1)
+        self.assertTrue(ftuv.is_almost_parallel(np.array([3,6,0]),np.array([9.,18.,0.])), 1)
+        self.assertTrue(ftuv.is_almost_parallel(np.array([-3,0,-8]),np.array([-9.,0.,-24.])), -1)
 
     def test_middlepoint(self):
         self.assertIsInstance(ftuv.middlepoint((1,2,3),(4,5,6)), tuple)

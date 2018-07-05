@@ -149,6 +149,32 @@ def get_non_colinear_unit_vector(vec):
 
 def is_almost_parallel(vec1, vec2):
     """
+    Are vec1 and vec2 almost parallel?
+    Nothing is parallel to the zero vector!
+
+    :returns: 1 if vec1 and vec2 are parallel,
+             -1 if they are antiparallel,
+             0 if they are neither.
+    """
+    CUTOFF=10**-9
+    vec2_clean=[]
+    for c in vec2:
+        if c<CUTOFF:
+            vec2_clean.append(float("nan"))
+        else:
+            vec2_clean.append(c)
+    factors=np.asarray(vec1)/np.asarray(vec2)
+    factors = [f for f in factors if not np.isnan(f)]
+    if not factors:
+        return 0 # vec2~[0,0,0]
+    elif all(abs(f-factors[0])<CUTOFF for f in factors):
+        return np.sign(factors[0]) # returns 0, if vec1==[0,0,0]
+    else:
+        return 0 # Not (anti-)parallel
+'''
+# OLD:
+def is_almost_parallel(vec1, vec2):
+    """
     Returns true, if two vectors are almost parallel
 
     Note that every vector is parallel to the zero vector.
@@ -166,7 +192,7 @@ def is_almost_parallel(vec1, vec2):
         warnings.simplefilter("ignore")
         log.debug("vec1/vec2 = %s", [abs(vec1[i]/vec2[i]) for i in range(len(vec1))])
     return all((abs(vec1[i])<CUTOFF and abs(vec2[i])<CUTOFF) or (abs(vec2[i])>CUTOFF and abs(vec1[i]/vec2[i]-factor)<CUTOFF) for i in range(len(vec1)))
-
+'''
 
 def line_segments_collinearity(segment1, segment2):
     """
