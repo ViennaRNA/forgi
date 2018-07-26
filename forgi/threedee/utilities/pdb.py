@@ -523,42 +523,71 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
                 log.info("This PDB has no missing residues")
     if len(s)>1:
         warnings.warn("Multiple models in file. Using only the first model")
+    # Let's detach all H2O, to speed up processing.
+    for chain in s[0]:
+        for r in chain:
+            if r.resname.strip()=="HOH":
+                chain.detach_child(r.id)
+    # The chains containing RNA
     chains = list(chain for chain in s[0] if contains_rna(chain))
-    # Now search for protein interactions. # TODO implement efficiently using kdtree
-    interacting_residues=set()
-    if not no_annotation:
-        for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
-            rna_res=None
-            other_res=None
-            # TODO: Currently we do not consider modified residues for interactions.
-            if res1.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
-                rna_res=res1
-            else:
-                other_res=res1
-            if res2.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
-                rna_res=res2
-            else:
-                other_res=res2
-            if rna_res is None or other_res is None:
-                continue
-            if other_res.resname.strip()=="HOH":
-                continue
-            if residues_interact(rna_res, other_res):
-                log.debug("%s and %s interact", rna_res, other_res)
-                interacting_residues.add(rna_res)
-        log.debug(interacting_residues)
+    # Now search for protein interactions.
+    interacting_residues=enumerate_interactions_kdtree(s[0])
+    '''for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
+        rna_res=None
+        other_res=None
+        if res1.resname.strip() in RNA_RESIDUES:
+            rna_res=res1
+        else:
+            other_res=res1
+        if res2.resname.strip() in RNA_RESIDUES:
+            rna_res=res2
+        else:
+            other_res=res2
+        if rna_res is None or other_res is None:
+            continue
+        if other_res.resname.strip()=="HOH":
+            continue
+        if residues_interact(rna_res, other_res):
+            log.error("%s and %s interact", rna_res, other_res)
+            interacting_residues.add(rna_res)'''
+    log.error("LOADING DONE: chains %s.20, mr %s.20, ir: %s.20",chains, mr, interacting_residues)
     return chains, mr, interacting_residues
 
-def residues_interact(rna_res, other_res):
+
+def enumerate_interactions_kdtree(model):
+    kdtree = bpdb.NeighborSearch(list(model.get_atoms()))
+    pairs = kdtree.search_all(6, "R")
+    interacting_residues=set()
+    for res1, res2 in pairs:
+        rna_res=None
+        other_res=None
+        if res1.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
+            rna_res=res1
+        else:
+            other_res=res1
+        if res2.resname.strip() in RNA_RESIDUES  and not res2.id[0].startswith("H_"):
+            rna_res=res2
+        else:
+            other_res=res2
+        if rna_res is None or other_res is None:
+            continue
+        #Only consider C and N. So no ions etc
+        if any(a in ["C", "H"] for a in other_res.get_atoms()):
+            interacting_residues.add(rna_res)
+    log.error(interacting_residues)
+    return interacting_residues
+
+
+"""def residues_interact(rna_res, other_res):
     for rna_atom in rna_res:
         if rna_atom.get_name() in all_side_chains:
             for other_atom in other_res:
                 atom_symbol="".join(s for s in other_atom.get_name() if not s.isdigit())
-                if atom_symbol in ["C", "N"]: #Only consider C and N. So no ions etc
+                if atom_symbol in ["C", "N"]:
                     d=ftuv.vec_distance(rna_atom.coord, other_atom.coord)
                     if d<6:
                         return True
-    return False
+    return False"""
 
 def rename_rosetta_atoms(chain):
     '''
@@ -622,7 +651,6 @@ def interchain_contacts(struct):
     for (a1, a2) in pairs:
         if a1.parent.parent != a2.parent.parent:
             ic_pairs += [(a1,a2)]
-
     return ic_pairs
 
 def contains_rna(chain):

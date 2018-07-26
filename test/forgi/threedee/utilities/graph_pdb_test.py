@@ -43,6 +43,7 @@ class TestGraphPDB(unittest.TestCase):
     def setUp(self):
         pass
 
+    @unittest.skip("Old version of incomplete elements")
     def test_get_incomplete_elements(self):
         db = "(((...(((...).)))))"
         cg = ftmc.CoarseGrainRNA.from_dotbracket(db)
