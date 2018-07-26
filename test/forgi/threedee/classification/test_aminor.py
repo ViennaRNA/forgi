@@ -25,7 +25,7 @@ class TestRelativeOrientation(unittest.TestCase):
         d, a1, a2 = ftca.get_relative_orientation(cg, "f0", "s0")
         self.assertAlmostEqual(d, 5)
         self.assertAlmostEqual(a1, math.pi/2)
-        self.assertAlmostEqual(a2, math.pi/2)
+        self.assertAlmostEqual(a2, -math.pi/2)
         d, a1, a2 = ftca.get_relative_orientation(cg, "h0", "s0")
         self.assertAlmostEqual(d, 5)
         self.assertAlmostEqual(a1, math.pi/2)
@@ -33,7 +33,7 @@ class TestRelativeOrientation(unittest.TestCase):
         d, a1, a2 = ftca.get_relative_orientation(cg, "t0", "s0")
         self.assertAlmostEqual(d, 5)
         self.assertAlmostEqual(a1, math.pi/2)
-        self.assertAlmostEqual(a2, math.pi)
+        self.assertIn(a2, [math.pi, -math.pi])
         # Now take an example with a non 90 degrees angle a1
         cg.coords["h0"] = [5.,0,15],[10.,0.,15]
         d, a1, a2 = ftca.get_relative_orientation(cg, "h0", "s0")

@@ -24,6 +24,11 @@ from ._parse_utils import ChainIdMappingParser
 import forgi.graph.residue as fgr
 import forgi.graph.bulge_graph as fgb
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError=IOError
+
 log=logging.getLogger(__name__)
 
 
