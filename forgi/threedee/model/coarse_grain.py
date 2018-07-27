@@ -299,6 +299,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 cg.sampled[parts[1]] = [parts[2]] + list(map(int, parts[3:]))
             if parts[0] == 'project':
                 cg.project_from=np.array(parts[1:], dtype=float)
+            if parts[0] == "interacting":
+                self.interacting_residues.append(fgr.resid_from_str(parts[1]))
+
         cg.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
         return cg
 
@@ -737,6 +740,12 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return out_str
 
+    def get_interacting_str(self):
+        out=[]
+        for seqid in self.interacting_residues:
+            out.append("interacting\t{}".format(fgr.resid_to_str(seqid)))
+        return "\n".join(out)
+
     def get_sampled_stems_str(self):
         out_str = ''
         for key in self.sampled.keys():
@@ -752,6 +761,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         curr_str += self.get_twist_str()
         curr_str += self.get_sampled_stems_str()
         curr_str += self.get_long_range_str()
+        curr_str += self.get_interacting_str()
         if self.project_from is not None:
             curr_str+="project {} {} {}\n".format(*self.project_from)
         return curr_str
