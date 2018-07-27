@@ -264,6 +264,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.chains = {} #the PDB chains if loaded from a PDB file
 
         self.interacting_residues=[]
+        
+        # Lazily loaded:
+        self._incomplete_elements=None
     ############################################################################
     # Factory functions
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1066,7 +1069,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     @property
     def incomplete_elements(self):
-        return ftug.get_incomplete_elements(self)
+        if self._incomplete_elements is None:
+            self._incomplete_elements = ftug.get_incomplete_elements(self)
+        return self._incomplete_elements[:]
 
     @property
     def interacting_elements(self):
