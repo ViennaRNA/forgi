@@ -2,6 +2,7 @@ from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
+import itertools
 import warnings
 
 def try_cythonize(arg):
@@ -39,16 +40,19 @@ except: #Outside of a git repo, do nothing.
     build_py = _build_py
 
 
+extras = {"forgi.visual":["matplotlib>=2.0"],
+          "faster vector":["cython"]}
+extras["all"]=list(itertools.chain(extras.values()))
+
 setup(
       cmdclass={'build_py': build_py},
       name='forgi',
-      version='2.0-alpha',
+      version='2.0.1-alpha',
       description='RNA Graph Library',
       author='Peter Kerpedjiev, Bernhard Thiel',
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec.pyx"),
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
@@ -72,10 +76,7 @@ setup(
                 'logging_exceptions>=0.1.8',
                 'beautifulsoup4>=4.6'
 	],
-      extras_require={
-        'forgi.visual': ["matplotlib>=2.0"],
-        'faster vector': ["cython"]
-      },
+      extras_require=extras,
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are

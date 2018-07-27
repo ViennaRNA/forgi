@@ -43,32 +43,43 @@ class TestGraphPDB(unittest.TestCase):
     def setUp(self):
         pass
 
+    @unittest.skip("Old version of incomplete elements")
     def test_get_incomplete_elements(self):
         db = "(((...(((...).)))))"
         cg = ftmc.CoarseGrainRNA.from_dotbracket(db)
         # Residue number 3 is missing. Probably bulged out from stem 0
         seq_ids = map(str, [1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
         cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._set_missing_residues([{"model":None, "ssseq":3, "res_name":"G", "chain":"A", "insertion":""}])
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["s0"]))
         # Residue number 4 is missing between s0 and i0
         seq_ids = map(str, [1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
+        cg.seq._set_missing_residues([{"model":None, "ssseq":4, "res_name":"G", "chain":"A", "insertion":""}])
         cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["i0"]))
         # Residue number 5 is missing inside i0
         seq_ids = map(str, [1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
         cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._set_missing_residues([{"model":None, "ssseq":5, "res_name":"G", "chain":"A", "insertion":""}])
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["i0"]))
         # Residue number 17 is missing between s0 and s1, ==> i0
         seq_ids = map(str, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20])
         cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._set_missing_residues([{"model":None, "ssseq":17, "res_name":"G", "chain":"A", "insertion":""}])
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["i0"]))
         # Residue number 10 is missing  ==> h0
         seq_ids = map(str, [1,2,3,4,5,6,7,8,9,11,12,13,14,15,16,17,18,19,20])
         cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._set_missing_residues([{"model":None, "ssseq":10, "res_name":"G", "chain":"A", "insertion":""}])
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["h0"]))
         # Multiple residues are missing
         seq_ids = map(str, [1,2,4,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22])
         cg.seq._seqids = list(map(fgb.resid_from_str, seq_ids))
+        cg.seq._set_missing_residues([
+            {"model":None, "ssseq":3, "res_name":"G", "chain":"A", "insertion":""},
+            {"model":None, "ssseq":5, "res_name":"G", "chain":"A", "insertion":""},
+            {"model":None, "ssseq":12, "res_name":"G", "chain":"A", "insertion":""}
+        ])
         self.assertEqual(ftug.get_incomplete_elements(cg), set(["h0", "s0", "i0"]))
 
 
