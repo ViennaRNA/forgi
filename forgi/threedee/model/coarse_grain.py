@@ -303,7 +303,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             if parts[0] == 'project':
                 cg.project_from=np.array(parts[1:], dtype=float)
             if parts[0] == "interacting":
-                self.interacting_residues.append(fgr.resid_from_str(parts[1]))
+                cg.interacting_residues.append(fgr.resid_from_str(parts[1]))
 
         cg.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
         return cg
