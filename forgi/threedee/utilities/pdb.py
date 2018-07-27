@@ -554,13 +554,14 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
         if residues_interact(rna_res, other_res):
             log.error("%s and %s interact", rna_res, other_res)
             interacting_residues.add(rna_res)'''
-    log.error("LOADING DONE: chains %s.20, mr %s.20, ir: %s.20",chains, mr, interacting_residues)
+    log.info("LOADING DONE: chains %s, mr %s, ir: %s",chains, mr, interacting_residues)
     return chains, mr, interacting_residues
 
 
 def enumerate_interactions_kdtree(model):
     kdtree = bpdb.NeighborSearch(list(model.get_atoms()))
     pairs = kdtree.search_all(6, "R")
+    log.debug("Interaction_pairs: %s", pairs)
     interacting_residues=set()
     for res1, res2 in pairs:
         rna_res=None
@@ -575,10 +576,11 @@ def enumerate_interactions_kdtree(model):
             other_res=res2
         if rna_res is None or other_res is None:
             continue
+        log.debug("%s and %s are close", rna_res, other_res)
         #Only consider C and N. So no ions etc
         if any(a.name in ["CA", "C", "H"] for a in other_res.get_atoms()):
             interacting_residues.add(rna_res)
-    log.error(interacting_residues)
+    log.info("Interacting: %s", interacting_residues)
     return interacting_residues
 
 
