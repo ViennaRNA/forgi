@@ -501,14 +501,15 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
             symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
             models = np.array(cifdict["_pdbx_poly_seq_scheme.asym_id"], dtype=str)[mask]
             mr = []
-            for i,sseq in enumerate(int_seq_ids):
-                mr.append({
-                            "model":models[i],
-                            "res_name":symbol[i],
-                            "chain":chains[i],
-                            "ssseq":sseq,
-                            "insertion":insertions[i]
-                            })
+            if not no_annotation:
+                for i,sseq in enumerate(int_seq_ids):
+                    mr.append({
+                                "model":models[i],
+                                "res_name":symbol[i],
+                                "chain":chains[i],
+                                "ssseq":sseq,
+                                "insertion":insertions[i]
+                                })
         except KeyError:
             import Bio
             mr = []
@@ -519,7 +520,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
         else:
             if mr:
                 log.info("This PDB has missing residues")
-            else:
+            elif not no_annotation:
                 log.info("This PDB has no missing residues")
     if len(s)>1:
         warnings.warn("Multiple models in file. Using only the first model")
@@ -531,7 +532,10 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
     # The chains containing RNA
     chains = list(chain for chain in s[0] if contains_rna(chain))
     # Now search for protein interactions.
-    interacting_residues=enumerate_interactions_kdtree(s[0])
+    if not no_annotation:
+        interacting_residues=enumerate_interactions_kdtree(s[0])
+    else:
+        interacting_residues=set()
     '''for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
         rna_res=None
         other_res=None
