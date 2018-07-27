@@ -576,7 +576,7 @@ def enumerate_interactions_kdtree(model):
         if rna_res is None or other_res is None:
             continue
         #Only consider C and N. So no ions etc
-        if any(a in ["C", "H"] for a in other_res.get_atoms()):
+        if any(a.name in ["CA", "C", "H"] for a in other_res.get_atoms()):
             interacting_residues.add(rna_res)
     log.error(interacting_residues)
     return interacting_residues
