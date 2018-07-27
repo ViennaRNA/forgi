@@ -5,6 +5,11 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       map, next, oct, pow, range, round,
                       str, super, zip)
 
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
+
 import logging
 from collections import defaultdict
 from string import ascii_lowercase, ascii_uppercase
@@ -225,6 +230,25 @@ class _MODIndexer(_IndexHelper):
     def with_missing(self):
         return _WMIndexer(self)
 
+
+class SeqidList(Sequence):
+    def __init__(self, *args):
+        self._list=list(*args)
+        self._lookup={resid:i for i, resid in enumerate(self._list)}
+        assert len(self._lookup)==len(self._list) # No duplicate seqids
+    def __getitem__(self, i):
+        return self._list[i]
+    def __len__(self):
+        return len(self._list)
+    def index(self, elem):
+        try:
+            return self._lookup[elem]
+        except KeyError:
+            raise ValueError("{} not in list".format(elem))
+    def __eq__(self, other):
+        return self._list==other._list
+
+
 class Sequence(object):
     """
     There are two indexing conventions:
@@ -255,7 +279,7 @@ class Sequence(object):
                 i+=1
         log.debug("Break-points for seq %s are: %s", seq, self._breaks_after)
         self._seq = seq.replace('&', '')
-        self._seqids = seqids
+        self._seqids = SeqidList(seqids)
         self._missing_residues = None
         self._missing_nts =  None
         self._set_missing_residues(missing_residues) # A dict seq_id:nt
