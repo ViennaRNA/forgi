@@ -7,7 +7,7 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
 
 
 import argparse
-from collections import defaultdict
+from collections import defaultdict, Counter
 import logging
 import os.path
 import math
@@ -112,6 +112,38 @@ def describe_rna(cg, file_num, dist_pais, angle_pairs):
                         {1:"st", 2:"nd", 3:"rd"}.get(file_num%10*(file_num%100 not in [11,12,13]), "th"),
                         cg.name, elem1, elem2, type(e).__name__, e)
         data["angle_{}_{}".format(elem1, elem2)] = angle
+    data["missing_residues_5prime"] =  (len(cg.seq.with_missing[:1])-1)
+    data["missing_residues_3prime"] =  (len(cg.seq.with_missing[cg.seq_length:])-1)
+    data["missing_residues_middle"] =  (len(cg.seq.with_missing[1:cg.seq_length])-len(cg.seq[1:cg.seq_length]))
+    data["missing_residues_total"]  =  (len(cg.seq.with_missing[:])-len(cg.seq[:]))
+    fp = len(cg.seq.with_missing[:1])-1
+    tp = 0
+    old_bp = None
+    bp = None
+    for bp in cg.backbone_breaks_after:
+        fp+=len(cg.seq.with_missing[bp:bp+1].split('&')[1])-1
+        tp+=len(cg.seq.with_missing[bp:bp+1].split('&')[0])-1
+    tp+=len(cg.seq.with_missing[cg.seq_length:])-1
+    data["missing_residues_5prime_chain"] = (fp)
+    data["missing_residues_3prime_chain"] = (tp)
+    data["missing_residues_middle_chain"] = (data["missing_residues_total"]  - fp -tp)
+    incomplete_elem_types = Counter(x[0] for x in cg.incomplete_elements)
+    data["s_with_missing"] = incomplete_elem_types["s"]
+    data["i_with_missing"] = incomplete_elem_types["i"]
+    data["m_with_missing"] = incomplete_elem_types["m"]
+    data["h_with_missing"] = incomplete_elem_types["h"]
+    mp = ""
+    if incomplete_elem_types["s"]:
+        for elem in cg.incomplete_elements:
+            if elem[0]!="s":
+                continue
+            for i in range(cg.defines[elem][0], cg.defines[elem][1]):
+                left_s = cg.seq.with_missing[i:i+1]
+                if len(left_s)>2:
+                    right_s = cg.seq.with_missing[cg.pairing_partner(i+1):cg.pairing_partner(i)]
+                    if len(right_s)>2:
+                        mp+="{}&{};".format(left_s, right_s)
+    data["missing_basepairs"] = mp
     return data
 
 def describe_ml_segments(cg):
