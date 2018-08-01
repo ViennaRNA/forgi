@@ -1433,7 +1433,6 @@ def add_bulge_information_from_pdb_chain(bg, chain):
                   " Use cg.add_bulge_coords_from_stems instead!")
     bg.add_bulge_coords_from_stems()
 
-
 def get_incomplete_elements(cg):
     """
     Get an estimated list of cg-elements which have missing residues in the PDB.
@@ -1448,6 +1447,7 @@ def get_incomplete_elements(cg):
             if cg.seq[r[0]:r[1]]!=cg.seq.with_missing[r[0]:r[1]]:
                 incomplete.add(elem)
     return incomplete
+
 '''
 # Code not relying on the sequence classes missing residues being populated:
 def get_incomplete_elements(cg):

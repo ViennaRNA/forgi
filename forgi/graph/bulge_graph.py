@@ -692,7 +692,7 @@ class BulgeGraph(BaseGraph):
                 break
 
         for region in doublestr:
-            domains["rods"].append(sorted(region))
+            domains["rods"].append(sorted(region, key=lambda x: self.define_a(x)))
         domains["pseudoknots"].sort()
         domains["multiloops"].sort()
         domains["rods"].sort()
@@ -1588,7 +1588,8 @@ class BulgeGraph(BaseGraph):
 
     def get_stem_edge(self, stem, pos):
         """
-        Returns the side of the stem that position is on.
+        Returns the side (strand) of the stem that position is on.
+
         Side 0 corresponds to the 5' pairing residues in the
         stem whereas as side 1 corresponds to the 3' pairing
         residues in the stem.

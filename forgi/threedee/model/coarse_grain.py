@@ -95,12 +95,14 @@ def add_longrange_interactions(cg, lines):
 def breakpoints_from_seqids(seqids):
     """
     Create the list of cofold cutpoints from the seq_ids.
+    Return 1-based breakpoints
     """
     breakpoints = []
     old_chain = None
     for i, seqid in enumerate(seqids):
         if old_chain is not None and seqid.chain != old_chain:
-            breakpoints.append(i)
+            assert i>=1
+            breakpoints.append(i) # Breakpoint BEFORE current seqid!
         old_chain = seqid.chain
     return breakpoints
 

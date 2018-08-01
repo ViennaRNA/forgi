@@ -99,8 +99,9 @@ class BaseGraph(object):
             assert elem in zl_connections
             #We DEFINE the 0-length connections to be sorted alphabetically by position
             zl_connections.sort()
+            log.debug("Getting zl-coordinates")
             zl_coordinates = self._zerolen_defines_a_between(stem1, stem2)
-
+            log.debug("Comparing zl-coordinates %s with connections %s", zl_coordinates, zl_connections)
             if len(zl_connections)!=len(zl_coordinates):
                 raise GraphIntegrityError("Expecting stems {} and {} to have {} zero-length "
                                           "connections at nucleotide positions {}, however, "
@@ -125,6 +126,7 @@ class BaseGraph(object):
                 d.sort()
                 log.debug("Zero-length element found: %s", d)
                 zl_coordinates.add(tuple(d))
+        log.debug("Returning zl-coordinates: %s", zl_coordinates)
         return zl_coordinates
 
 
