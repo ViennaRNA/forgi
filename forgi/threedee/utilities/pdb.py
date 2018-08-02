@@ -578,8 +578,10 @@ def enumerate_interactions_kdtree(model):
             continue
         log.debug("%s and %s are close", rna_res, other_res)
         #Only consider C and N. So no ions etc
-        if any(a.name in ["CA", "C", "N"] for a in other_res.get_atoms()):
+        if any(a.name in ["CA", "C", "N", "C1"] for a in other_res.get_atoms()):
             interacting_residues.add(rna_res)
+        else:
+            log.debug("but %s has wrong atoms %s", other_res, list(a.name for a in other_res.get_atoms()))
     log.info("Interacting: %s", interacting_residues)
     return interacting_residues
 
