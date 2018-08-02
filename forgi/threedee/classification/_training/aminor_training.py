@@ -232,7 +232,7 @@ def _parse_fred_line(line, all_cgs, current_annotation, mapping_directory):
                 return
             pdb_name = chains[0][0].split(".")[0]
             chains = [c[1] for c in chains]
-            log.debug("For bundle: pdb_name = %s, chains = %s", pdb_name, chains)
+            log.debug("For bundle: pdb_name = %s, converted-chains = %s", pdb_name, chains)
         else:
             pdb_name = parts[0]
         cgs = all_cgs[parts[0]]
@@ -241,7 +241,7 @@ def _parse_fred_line(line, all_cgs, current_annotation, mapping_directory):
         else:
             # First, filter by pdb-bundle file.
             cgs = [cg for cg in cgs if pdb_name in cg.name ]
-            log.debug("cgs for pbd-name %s are %s", pdb_name, cgs)
+            log.debug("cgs for pbd-name %s are %s", pdb_name, [c.name for c in cgs])
             # Then for multiple chains, search based on resid.
             a_res = _safe_resid_from_chain_res(chain = chains[0], residue = parts[3])
             if a_res is None:
@@ -269,8 +269,8 @@ def _parse_fred_line(line, all_cgs, current_annotation, mapping_directory):
             nums.append(cg.seq_id_to_pos(seq_id))
         except ValueError:
             if seq_id.chain not in cg.chains:
-                warnings.warn("Chain {!r} is not part of the cg {}. Available "
-                              "cgs: {}".format(seq_id.chain, cg.name,
+                warnings.warn("Chain {!r} is not part of the cg {}. Required chains: {}. Available "
+                              "cgs: {}".format(seq_id.chain, cg.name, chains,
                                                list(map(lambda x: x.name, all_cgs[parts[0]]))))
                 return
             else:
