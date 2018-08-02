@@ -1793,14 +1793,15 @@ GCGCGGCACCGUCCGCGGAACAAACGG
                     sorted(['m3', 'm4', 'm5'])
                     ])
         rods = sorted([
-                        sorted(['s0', 'i0', 's1']),
-                        sorted(['s2', 'i2', 's3', 'i1', 's4', 'h0']),
-                        sorted(['s5', 'h1']),
-                        sorted(['s6', 'i3', 's7', 'i4', 's8']),
-                        sorted(['s9', 'h2']),
-                        sorted(['s10', 'h3'])
+                        sorted(['s0', 'i0', 's1'], key=lambda x: bg.define_a(x)),
+                        sorted(['s2', 'i2', 's3', 'i1', 's4', 'h0'], key=lambda x: bg.define_a(x)),
+                        sorted(['s5', 'h1'], key=lambda x: bg.define_a(x)),
+                        sorted(['s6', 'i3', 's7', 'i4', 's8'], key=lambda x: bg.define_a(x)),
+                        sorted(['s9', 'h2'], key=lambda x: bg.define_a(x)),
+                        sorted(['s10', 'h3'], key=lambda x: bg.define_a(x))
         ])
         self.assertEqual(dom["multiloops"], mls)
+        log.debug("Comparing rods %s and %s", dom["rods"], rods)
         self.assertEqual(dom["rods"], rods)
         self.assertEqual(dom["pseudoknots"], [])
 
