@@ -375,3 +375,23 @@ class TestRotationMatrix(unittest.TestCase):
                                    ftuv.rotation_matrix(ftuv.standard_basis[1], 2.7))
         nptest.assert_almost_equal(ftuv.rotation_matrix("z", 3.9),
                                    ftuv.rotation_matrix(ftuv.standard_basis[2], 3.9))
+
+class Test_PairDistanceDistribution(unittest.TestCase):
+    def test_pdd(self):
+        points=[[0,0,4], [0,0,-4], [3,0,0]]
+        x,y=ftuv.pair_distance_distribution(points)
+        nptest.assert_array_equal(x, np.array([0,1,2,3,4,5,6,7,8]))
+        nptest.assert_array_equal(y, np.array([0,0,0,0,0,2,0,0,1]))
+    def test_pdd_smaller_step(self):
+        points=[[0,0,4], [0,0,-4], [3,0,0]]
+        x,y=ftuv.pair_distance_distribution(points,0.5)
+        nptest.assert_array_equal(x, np.array([0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8]))
+        nptest.assert_array_equal(y, np.array([0,0  ,0,  0,0,  0,0,0  ,0,0  ,2,0,  0,0  ,0,0  ,1]))
+    def test_pdd_rounding_down(self):
+        points=[[0,0,2], [0,0,2.4]]
+        x,y=ftuv.pair_distance_distribution(points,0.3)
+        nptest.assert_array_equal(x, np.array([0,0.3]))
+        nptest.assert_array_equal(y, np.array([0,1]))
+        x,y=ftuv.pair_distance_distribution(points,0.06)
+        nptest.assert_array_equal(x, np.array([0,0.06, 0.12, 0.18, 0.24, 0.3, 0.36]))
+        nptest.assert_array_equal(y, np.array([0,0,    0,    0,    0,    0,   1   ]))

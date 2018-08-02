@@ -3,6 +3,8 @@ from __future__ import division
 from builtins import map
 from builtins import range
 import timeit, sys
+import itertools
+from collections import Counter
 
 import forgi.utilities.debug as fud
 import numpy as np
@@ -1234,3 +1236,12 @@ def middlepoint(vec1, vec2):
     if typ==np.ndarray:
         return np.fromiter(generator, float, len(vec1))
     return typ(generator)
+
+def pair_distance_distribution(points, stepsize=1):
+    dists=Counter()
+    for p1, p2 in itertools.combinations(points, r=2):
+        d = vec_distance(p1, p2)
+        dists[d//stepsize]+=1
+    m=max(dists.keys())
+    x = np.arange(0,m+1)
+    return x*stepsize, np.array([dists[xi] for xi in x])
