@@ -436,7 +436,7 @@ def _enumerate_background_geometries(all_cgs, cutoff_dist, aminor_geometries):
                                 non_ame_geometries.add(geometry)
             except BaseException as e:
                 with log_to_exception(log, e):
-                    log.error("An Error occurred during processing of cg: %s", cg.name")
+                    log.error("An Error occurred during processing of cg: %s", cg.name)
                 raise
     log.error("%s non_ame geometries found", len(non_ame_geometries))
     return non_ame_geometries
