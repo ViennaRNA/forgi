@@ -430,6 +430,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         #print(component, type(component))
         log.info("Loading PDB: Connected component with chains %s", str(list(chain_ids)))
+        log.debug("missing residues %s", missing_res)
         # Since the external annotation program can take some time,
         # we do not re-annotate, but filter the bpseq_string instead.
         new_bpseq = []

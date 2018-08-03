@@ -42,7 +42,7 @@ class Projection2DBasicTest(unittest.TestCase):
                                       projRot._coords[define][1]- projRot._coords[define][0]),
                                0., msg = "Rotating the projection by 90 degrees does not make "
                                          "corresponding coord-vectors orthogonal!")
-
+    @unittest.skip("Skipping projection tests that take long (~1min)")
     def test_init_with_rotate_for_virtual_atoms(self):
         cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
         proj=fpp.Projection2D(cg, [1.,1.,1.], project_virtual_atoms=True)

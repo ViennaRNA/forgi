@@ -143,6 +143,7 @@ def _sorted_missing_residues(list_of_dicts):
     chain_to_residues = defaultdict(list)
     resid_to_nucleotide = {}
     for res_dict in list_of_dicts:
+        log.debug("Processing %s", res_dict)
         if isinstance(res_dict, MissingResidue):
             resid = res_dict.resid
             chain = res_dict.resid.chain
@@ -155,6 +156,7 @@ def _sorted_missing_residues(list_of_dicts):
             res_name = res_dict["res_name"]
         else:
             if res_dict["model"] not in [None, 1, "A"]:
+                log.info("Invalid missing residue %s", res_dict)
                 continue
             if res_dict["insertion"] is None:
                 insertion=" "
@@ -289,6 +291,7 @@ class Sequence(object):
             self._modifications.update(modifications)
     def _set_missing_residues(self, missing_residues):
         mr, mnts = _sorted_missing_residues(missing_residues)
+        log.debug("Setting missing residues to: %s, %s", mr, mnts)
         self._missing_residues = mr
         self._missing_nts =  mnts # A dict seq_id:nt
 
