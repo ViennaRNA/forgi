@@ -1684,9 +1684,11 @@ def virtual_atoms(cg, given_atom_names=None, sidechain=True):
     '''
     return VirtualAtomsLookup(cg, given_atom_names, sidechain)
 
+# Module-level var used for caching.
+_average_atom_positions = None
 class VirtualAtomsLookup(object):
     """
-    An object with a dict-like interface that calculated the virtual atom positions on demand.
+    An object with a dict-like interface that calculates the virtual atom positions on demand.
     """
     def __init__(self, cg, given_atom_names=None, sidechain=True):
         """
@@ -1732,11 +1734,16 @@ class VirtualAtomsLookup(object):
         :param d: The coarse grained element (e.g. "s1")
         :param pos: The position of the residue. It has to be in the element d!
         """
+        global _average_atom_positions
         if d[0]=="s":
             return self._getitem_for_stem(d, pos) #Use virtual residues for stems.
-        import pkgutil
-        data = pkgutil.get_data('forgi', 'threedee/data/average_atom_positions.json')
-        avg_atom_poss = json.loads(data.decode("ascii"))
+        if _average_atom_positions is None:
+            log.info("LOADING AV_ATOM_POS")
+            import pkgutil
+            data = pkgutil.get_data('forgi', 'threedee/data/average_atom_positions.json')
+            _average_atom_positions = json.loads(data.decode("ascii"))
+        log.debug("Using loaded av_atom_pos")
+
         e_coords=dict()
         try:
             origin, basis = element_coord_system(self.cg, d)
@@ -1770,7 +1777,7 @@ class VirtualAtomsLookup(object):
                 if "." in aname:
                     _,_,aname=aname.partition(".")
                 try:
-                    e_coords[aname] = origin + ftuv.change_basis(np.array(avg_atom_poss[identifier]), ftuv.standard_basis, basis )
+                    e_coords[aname] = origin + ftuv.change_basis(np.array(_average_atom_positions[identifier]), ftuv.standard_basis, basis )
                 except KeyError as ke:
                     #warnings.warn("KeyError in virtual_atoms. No coordinates found for: {}".format(ke))
                     pass

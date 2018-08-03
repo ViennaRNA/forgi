@@ -6,6 +6,7 @@ import os.path as op
 import subprocess as sp
 import tempfile as tf
 import logging
+import warnings
 
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.utilities.debug as fud
@@ -64,8 +65,11 @@ def main():
         chain_id=options.chain
     else:
         chain_id=None
-    cg, = ftmc.CoarseGrainRNA.from_pdb(args[0], secondary_structure = options.secondary_structure.strip("\"'"),
+    cgs = ftmc.CoarseGrainRNA.from_pdb(args[0], secondary_structure = options.secondary_structure.strip("\"'"),
                       remove_pseudoknots=not options.pseudoknots, load_chains=chain_id)
+    cg = cgs[0]
+    if len(cgs)>1:
+        warnings.warn("The pdb has multiple connected components: {}. Showing the first".format([c.name for c in cgs]))
     pp = ftvp.PymolPrinter()
     pp.display_virtual_residues = options.virtual_residues
     pp.virtual_atoms = options.virtual_atoms
