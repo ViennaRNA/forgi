@@ -151,7 +151,12 @@ def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
                     print("Please choose either 'M' or 'D'. Press Ctrl+C to cancel.")
             config.set_config("PDB_ANNOTATION_TOOL", program)
     if program == "MC-Annotate":
-        return _run_mc_annotate(filename, subprocess_kwargs)
+        lines= _run_mc_annotate(filename, subprocess_kwargs)
+        try:
+            return ftum.get_dotplot(lines)
+        except Exception as e:
+            log.exception("Could not convert MC-Annotate output to dotplot")
+            raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
     elif program == "DSSR":
         return _run_dssr(filename, subprocess_kwargs)
     else:
@@ -198,12 +203,7 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
 
     # convert the mcannotate output into bpseq format
 
-    try:
-        return ftum.get_dotplot(lines)
-    except Exception as e:
-        log.exception("Could not convert MC-Annotate output to dotplot")
-        raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
-
+    return lines
 
 class RnaMissing3dError(LookupError):
     pass
@@ -339,7 +339,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     chain, modifications = ftup.clean_chain(chain)
                     new_chains.append(chain)
 
-            rna_pdb_fn = op.join(output_dir, 'temp.pdb')
+            log.debug("%s, %s", pdb_filename, os.path.split(pdb_filename))
+            fn_basename = os.path.split(pdb_filename)[1]
+            if load_chains is None:
+                chain_string="None"
+            else:
+                chain_string = "-".join(map(str,load_chains))
+            rna_pdb_fn = op.join(output_dir, fn_basename+"_"+chain_string+'.temp.pdb')
             with open(rna_pdb_fn, 'w') as f:
                 #We need to output in pdb format for MC-Annotate
                 ftup.output_multiple_chains(new_chains, f.name)

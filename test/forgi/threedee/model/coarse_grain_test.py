@@ -12,6 +12,7 @@ import time
 import math
 import logging
 import tempfile as tf
+import os.path
 
 try:
     from unittest.mock import patch
@@ -59,10 +60,28 @@ def cg_from_sg(cg, sg):
 
     return new_cg
 
+def mock_run_mc_annotate(original_function):
+    def mocked_run_mc_annotate(filename, subprocess_kwargs):
+        new_fn=os.path.split(filename)[1]
+        new_fn+=".mcAnnotate.out"
+        try:
+            with open(os.path.join("test", "forgi", "threedee", "data", new_fn)) as f:
+                lines=f.readlines()
+            log.error("Using cached MC-Annotate output")
+        except OSError:
+            lines=original_function(filename, subprocess_kwargs)
+            with open(os.path.join("test", "forgi", "threedee", "data", new_fn), "w") as f:
+                print("\n".join(lines), file=f)
+        log.info("Returning lines: %s", lines)
+        return lines
+    return mocked_run_mc_annotate
+
 def mocked_read_config():
     return {"PDB_ANNOTATION_TOOL":"MC-Annotate"}
 
 @patch('forgi.config.read_config', mocked_read_config)
+@patch('forgi.threedee.model.coarse_grain._run_mc_annotate',
+       mock_run_mc_annotate(ftmc._run_mc_annotate))
 class CoarseGrainIoTest(tfgb.GraphVerification):
     def check_cg_integrity(self, cg):
         self.assertGreater(len(list(cg.stem_iterator())), 0)
