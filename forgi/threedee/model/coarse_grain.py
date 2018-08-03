@@ -1089,11 +1089,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def interacting_elements(self):
         interacting_nts=[]
         for r in self.interacting_residues:
-        try:
-            interacting_nts.append(self.seq_id_to_pos(r))
-        except ValueError as e: # interacting missing residue
-            assert "not in list" in str(e)
-            pass
+            try:
+                interacting_nts.append(self.seq_id_to_pos(r))
+            except ValueError as e: # interacting missing residue
+                assert "not in list" in str(e)
+                pass
         return set(self.nucleotides_to_elements(interacting_nts))
 
     def to_cg_file(self, filename):
