@@ -111,37 +111,54 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
 
     def test_from_pdb(self):
+        import time
+        now=time.time()
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/4GV9.pdb', load_chains='E')
-
+        log.error (time.time()-now); now=time.time()
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/RS_363_S_5.pdb')
+        log.error (time.time()-now); now=time.time()
         self.check_cg_integrity(cg)
+        log.error (time.time()-now); now=time.time()
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/RS_118_S_0.pdb')
+        log.error (time.time()-now); now=time.time()
+
         self.check_cg_integrity(cg)
+        log.error (time.time()-now); now=time.time()
 
         self.assertTrue(len(cg.defines) > 1)
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb')
         self.check_cg_integrity(cg)
+        log.error (time.time()-now); now=time.time()
+
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/ideal_1_4_5_8.pdb')
+        log.error (time.time()-now); now=time.time()
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26_missing.pdb')
         self.check_cg_integrity(cg)
+        log.error (time.time()-now); now=time.time()
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26_two_chains.pdb',
                             load_chains='Y')
         self.assertEqual(len(cg.defines), 1)
         self.assertIn("f0", cg.defines)
         self.assertEqual(cg.seq, "U")
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1X8W.pdb',
-                            load_chains='A')
-        self.check_cg_integrity(cg)
+        log.error (time.time()-now); now=time.time()
+
+        # commented out for 3 ec speedup
+        #cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1X8W.pdb',
+        #                    load_chains='A')
+        #self.check_cg_integrity(cg)
+        #log.error (time.time()-now); now=time.time()
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1FJG_reduced.pdb')
         self.check_cg_integrity(cg)
+        log.error (time.time()-now); now=time.time()
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
-
+        log.error (time.time()-now); now=time.time()
+        assert False
     def test_file_with_numeric_chain_id(self):
         # Numeric chain ids
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/3J7A_part.pdb', load_chains=["7"])
