@@ -113,7 +113,7 @@ class TestFr3dParsing(unittest.TestCase):
         for geo1, geo2 in it.combinations(a, 2):
             self.assertLess(abs(geo1.dist - geo2.dist), 20, msg = "Different FR3D hits should have similar coarse-grained geometry: dist. {}, {}".format(geo1, geo2))
             self.assertLess(abs(geo1.angle1 - geo2.angle1), 2., msg = "Different FR3D hits should have similar coarse-grained geometry: angle1. {}, {}".format(geo1, geo2))
-            self.assertLess(abs(geo1.angle2 - geo2.angle2), 2., msg = "Different FR3D hits should have similar coarse-grained geometry: angle2. {}, {}".format(geo1, geo2))
+            self.assertLess(abs(geo1.angle2 - geo2.angle2), 3., msg = "Different FR3D hits should have similar coarse-grained geometry: angle2. {}, {}".format(geo1, geo2))
 
 
     def test_parse_fred_missing_chain(self):

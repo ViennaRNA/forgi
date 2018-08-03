@@ -144,7 +144,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
     def test_file_with_numeric_chain_id(self):
         # Numeric chain ids
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/3J7A.pdb', load_chains=["7"])
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/3J7A_part.pdb', load_chains=["7"])
         self.check_cg_integrity(cg)
         self.assertEqual(cg.seq._seqids[0].chain, '7')
 
