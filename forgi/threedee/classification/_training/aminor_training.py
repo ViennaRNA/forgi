@@ -18,11 +18,13 @@ from sklearn.metrics import confusion_matrix, f1_score
 
 import pandas as pd
 
+from logging_exceptions import log_to_exception
 from .. import aminor as ftca
 import forgi.utilities.stuff as fus
 from ._parse_utils import ChainIdMappingParser
 import forgi.graph.residue as fgr
 import forgi.graph.bulge_graph as fgb
+
 
 try:
     FileNotFoundError
@@ -406,30 +408,35 @@ def _enumerate_background_geometries(all_cgs, cutoff_dist, aminor_geometries):
     non_ame_geometries = set()
     for pdb_id, curr_cgs in all_cgs.items():
         for cg in curr_cgs:
-            for loop in cg.defines:
-                if loop[0]=="s":
-                    continue
-                if loop in cg.incomplete_elements or loop in cg.interacting_elements:
-                    continue
-                for stem in cg.stem_iterator():
-                    if loop in cg.edges[stem]:
+            try:
+                for loop in cg.defines:
+                    if loop[0]=="s":
                         continue
-                    if stem in cg.incomplete_elements or stem in cg.interacting_elements:
+                    if loop in cg.incomplete_elements or loop in cg.interacting_elements:
                         continue
-                    dist, angle1, angle2 = ftca.get_relative_orientation(cg, loop, stem)
-                    if loop[0]=="i":
-                        flexibility=ftca.get_loop_flexibility(cg, loop)
-                    else:
-                        flexibility=1
-                    if not np.isnan(dist+angle1+angle2) and dist<=cutoff_dist:
-                        geometry = AMGeometry(cg.name, loop, stem, dist,
-                                                  angle1, angle2,
-                                                  "&".join(cg.get_define_seq_str(loop)),
-                                                  1000, "no_interaction",
-                                                  flexibility)
-                        if geometry in aminor_geometries:
-                            log.info("Geometry %s is in aminor_geometries", geometry)
+                    for stem in cg.stem_iterator():
+                        if loop in cg.edges[stem]:
+                            continue
+                        if stem in cg.incomplete_elements or stem in cg.interacting_elements:
+                            continue
+                        dist, angle1, angle2 = ftca.get_relative_orientation(cg, loop, stem)
+                        if loop[0]=="i":
+                            flexibility=ftca.get_loop_flexibility(cg, loop)
                         else:
-                            non_ame_geometries.add(geometry)
+                            flexibility=1
+                        if not np.isnan(dist+angle1+angle2) and dist<=cutoff_dist:
+                            geometry = AMGeometry(cg.name, loop, stem, dist,
+                                                      angle1, angle2,
+                                                      "&".join(cg.get_define_seq_str(loop)),
+                                                      1000, "no_interaction",
+                                                      flexibility)
+                            if geometry in aminor_geometries:
+                                log.info("Geometry %s is in aminor_geometries", geometry)
+                            else:
+                                non_ame_geometries.add(geometry)
+            except BaseException as e:
+                with log_to_exception(log, e):
+                    log.error("An Error occurred during processing of cg: %s", cg.name")
+                raise
     log.error("%s non_ame geometries found", len(non_ame_geometries))
     return non_ame_geometries
