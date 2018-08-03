@@ -269,6 +269,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         # Lazily loaded:
         self._incomplete_elements=None
+        # Lazily calculated from interacting_residues
+        self._interacting_elements=None
     ############################################################################
     # Factory functions
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1087,14 +1089,16 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     @property
     def interacting_elements(self):
-        interacting_nts=[]
-        for r in self.interacting_residues:
-            try:
-                interacting_nts.append(self.seq_id_to_pos(r))
-            except ValueError as e: # interacting missing residue
-                assert "not in list" in str(e)
-                pass
-        return set(self.nucleotides_to_elements(interacting_nts))
+        if self._interacting_elements is None:
+            interacting_nts=[]
+            for r in self.interacting_residues:
+                try:
+                    interacting_nts.append(self.seq_id_to_pos(r))
+                except ValueError as e: # interacting missing residue
+                    assert "not in list" in str(e)
+                    pass
+            self._interacting_elements = set(self.nucleotides_to_elements(interacting_nts))
+        return self._interacting_elements
 
     def to_cg_file(self, filename):
         '''
