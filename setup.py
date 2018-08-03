@@ -41,7 +41,9 @@ except: #Outside of a git repo, do nothing.
 
 
 extras = {"forgi.visual":["matplotlib>=2.0"],
-          "faster vector":["cython"]}
+          "faster vector":["cython"],
+          "classification":["scikit-learn"]
+         }
 extras["all"]=list(itertools.chain(extras.values()))
 
 setup(
