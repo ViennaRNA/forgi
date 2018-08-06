@@ -34,12 +34,12 @@ ANGLEWEIGHT=10
 This module contains code for classifying a coarse-grained geometry as A-Minor
 interaction.
 
-:warning: This is intended for low-resolution data , as it does not take the
-          orientation of individual bases into account. If you have all-atom
-          data, dedicated tools like FR3D will be more accurate.
+.. warning:: This is intended for low-resolution data , as it does not take the
+             orientation of individual bases into account. If you have all-atom
+             data, dedicated tools like FR3D will be more accurate.
 
 If you just want to classify interactions in a given structure, you only need
-the functions `classify_interaction` or `all_interactions`lassify_interaction`.
+the functions `classify_interaction` or `all_interactions`.
 
 To train your own version of the classifier, modify its parameters or perform
 cross-validation, use the AMinorClassifier.
@@ -76,6 +76,8 @@ def loop_potential_interactions(cg, loop, domain=None):
             continue
         geos.append(get_relative_orientation(cg, loop, stem))
         labels.append([loop, stem])
+    geos=np.array(geos)
+    geos[:,0]/=ANGLEWEIGHT
     return geos, labels
 
 def potential_interactions(cg, loop_type, domain=None):
@@ -110,6 +112,8 @@ def all_interactions(cg, clfs=None):
                  loop_type is one of "i", "h", "m".
                  If clfs is None or a key is missing, uses the default
                  pretrained classifier.
+
+    :returns: A list of  tuples (loop, stem)
     """
     interactions=[]
     for loop_type in ["i", "h"]:
@@ -121,11 +125,42 @@ def all_interactions(cg, clfs=None):
         else:
             clf=clfs[loop_type]
         geos, labels=potential_interactions(cg, loop_type)
-        y = clf.predict(geos)
-        log.info("Classifying %s", labels)
-        log.info("# hits=%s", sum(y))
-        interactions.extend(labels[y])
-    return np.array(interactions)
+        interactions.extend(_classify_potential_interactions(clf, geos, labels))
+    return interactions
+
+def classify_interaction(cg, loop, stem=None, clf=None):
+    """
+    Returns the interaction pair loop, stem as a tuple or False if no interaction exists.
+
+    :param cg: The CoarseGrainRNA
+    :param loop: The loop name, e.g. "i0"
+    :param stem: A stem name, e.g. "s0" to consider interactions of loop with another stem as False
+                 and only an interaction with this stem as True.
+
+                ..warning:: Our statistical modelling allows for at most 1 interaction per loop.
+                            This means that we have calculate the interaction probability of this
+                            loop with all stems, even if stem is given. If another stem has a
+                            higher interaction probability than the given stem,
+                            this function will return False, regardless of the interaction
+                            probability stem-loop.
+
+    :param clf: A trained AMinorClassifier or None (use default classifier for loop type)
+
+
+    ..note:: `all_interactions` is more efficient, if you are interested in all loop-stem pairs.
+
+    :returns: A tuple (loop, stem) or False
+    """
+    if clf is None:
+        clf = _get_default_clf(loop[0])
+    geos, labels = loop_potential_interactions(cg, loop)
+    interactions = _classify_potential_interactions(clf, geos, labels)
+    if not interactions:
+        return False
+    if stem is not None and interactions != [(loop, stem)]:
+        return False
+    interaction, = interactions
+    return interaction
 
 ############# Roll your own classifier ###########################
 def get_trainings_data( loop):
@@ -256,6 +291,7 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
     def predict_proba(self, X):
         check_is_fitted(self, ['ame_kde_', 'non_ame_kde_'])
         X = check_array(X)
+        log.debug("Predicting for %s", X)
         numerator = np.exp(self.ame_kde_(X))*self.p_I
         denom = numerator+np.exp(self.non_ame_kde_(X))*(1-self.p_I)
         with warnings.catch_warnings(): # division by 0
@@ -274,6 +310,9 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
 ############## get orientation #########################
 
 def get_loop_flexibility(cg, loop):
+    """
+    Unused. We tried to see if the length of the loop vs # bases had an effect on ointeraction probability.
+    """
     assert loop[0]=="i"
     d = cg.define_a(loop)
     nt1,nt2 = d[1]-d[0], d[3]-d[2]
@@ -361,6 +400,26 @@ def _get_masks(df, loop_type):
     mask_non_ame  = in_support & np.invert(is_i|has_a)
     mask_non_fred = in_support & np.invert(is_i) & has_a
     return mask_ame, mask_non_ame, mask_non_fred
+
+def _classify_potential_interactions(clf, geos, labels):
+    score = clf.predict_proba(geos)
+    y=score>0.5
+    log.info("Classifying %s", labels)
+    log.info("score %s", score)
+    log.info("# hits (not unique)=%s", sum(y))
+    # We modelled the probabilities in a way that each loop can have only 1 interaction.
+    # So for multiple interactions, use only the best one.
+    best_interactions={}
+    for i, label in enumerate(labels):
+        loop=label[0]
+        if score[i]<0.5:
+            continue
+        if loop not in best_interactions or score[i]>best_interactions[loop][0]:
+            best_interactions[loop]=(score[i],label)
+    log.info("%s unique interacting loops.", len(best_interactions))
+    log.debug(best_interactions)
+    return [ best_i[1] for best_i in best_interactions.values()]
+
 
 class _DefaultClf(object):
     """Just to put global (cached) variables into a seperate scope."""
