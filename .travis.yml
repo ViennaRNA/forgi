@@ -25,7 +25,7 @@ install:
   - "pip install nose2"
   - "pip install ddt"
   - "pip install git+git://github.com/Bernhard10/biopython.git@master#egg=biopython"
-  - "pip install ."
+  - "pip install .[all]"
   - "mkdir mctools"
   - "wget http://major.iric.ca/MajorLabEn/MC-Tools_files/libmccore.dylib.1.6.2"
   - "mv libmccore.dylib.1.6.2 mctools/"

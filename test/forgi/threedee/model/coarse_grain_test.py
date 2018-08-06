@@ -177,7 +177,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
 
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         log.error (time.time()-now); now=time.time()
-        assert False
+
     def test_file_with_numeric_chain_id(self):
         # Numeric chain ids
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/3J7A_part.pdb', load_chains=["7"])
