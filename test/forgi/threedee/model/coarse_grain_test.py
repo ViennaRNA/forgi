@@ -68,7 +68,7 @@ def mock_run_mc_annotate(original_function):
             with open(os.path.join("test", "forgi", "threedee", "data", new_fn)) as f:
                 lines=f.readlines()
             log.error("Using cached MC-Annotate output")
-        except OSError:
+        except IOError: #on py3 this is an alias of oserror
             lines=original_function(filename, subprocess_kwargs)
             with open(os.path.join("test", "forgi", "threedee", "data", new_fn), "w") as f:
                 print("\n".join(lines), file=f)
