@@ -8,6 +8,8 @@ try:
 except ImportError:
     from mock import patch
 
+import numpy as np
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
@@ -84,7 +86,15 @@ class TestClassifier(unittest.TestCase):
         for i,s in enumerate(sens):
             assert sensitivity>0.5, "Sensitivity({})={} <0.7".format(loops[i], sensitivity)
 
-class TestClassifyPotentialInteractions(unittest.TestCase):
+class TestClassifyCoreImplementation(unittest.TestCase):
     def test_no_interactions(self):
         clf=ftca._get_default_clf("h")
         self.assertEqual(ftca._classify_potential_interactions(clf, [],[]), [])
+    def test_no_loop(self):
+        cg = ftmc.CoarseGrainRNA.from_dotbracket("(((...)))")
+        cg.coords["s0"]=[0,0,0],[0,0,1]
+        cg.twists["s0"]=[0,1,0],[0,-1,0]
+        cg.coords["h0"]=[0,0,1],[0,1,1]
+        geos, labels = ftca.potential_interactions(cg, "h")
+        self.assertEqual(len(geos), 0)
+        self.assertEqual(len(labels), 0)

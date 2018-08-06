@@ -77,7 +77,8 @@ def loop_potential_interactions(cg, loop, domain=None):
         geos.append(get_relative_orientation(cg, loop, stem))
         labels.append([loop, stem])
     geos=np.array(geos)
-    geos[:,0]/=ANGLEWEIGHT
+    if len(geos)>0:
+        geos[:,0]/=ANGLEWEIGHT
     return geos, labels
 
 def potential_interactions(cg, loop_type, domain=None):
