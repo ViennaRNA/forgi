@@ -402,6 +402,8 @@ def _get_masks(df, loop_type):
     return mask_ame, mask_non_ame, mask_non_fred
 
 def _classify_potential_interactions(clf, geos, labels):
+    if len(geos)==0:
+        return []
     score = clf.predict_proba(geos)
     y=score>0.5
     log.info("Classifying %s", labels)
