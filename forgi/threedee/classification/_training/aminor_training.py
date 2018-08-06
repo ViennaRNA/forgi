@@ -140,8 +140,11 @@ def find_hyperparameters(loop_type, df, pI, trainset, testset):
     log.info("Classification report for loop type %s (using CV, bw=%s)\n:"
              "tp: %s, fp: %s, tn: %s, fn: %s, sens: %s, spec; %s",
               loop_type, best_bandwidth, tp, fp, tn, fn, sensitivity, specificity)
-
-    if sensitivity<0.5 or specificity<0.8:
+    if sensitivity<0.8 or specificity<0.8:
+        warnings.warn("The crossvalidation score for loop tpype {} is "
+                      "worse than expected: sensitivity: {},"
+                      " specificity: {}.".format(loop_type, sensitivity, specificity))
+    if sensitivity<0.5 or specificity<0.7:
         raise RuntimeError("Something went wrong with the training of the "
                            "classifier. The crossvalidation score is "
                            "terrible: sensitivity: {},"

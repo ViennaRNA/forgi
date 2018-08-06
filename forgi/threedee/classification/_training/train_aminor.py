@@ -4,6 +4,7 @@ import os
 import argparse
 import warnings
 import logging
+import json
 
 import forgi.utilities.commandline_utils as fuc
 import forgi.threedee.classification._training.aminor_training as ftcta
@@ -53,7 +54,7 @@ def main():
                          args.fr3d_result, args.chain_id_mapping_dir,
                          args.fr3d_query)
     hyper_params = ftcta.tune_model(args.trainingsdata_out, args.train_set, args.test_set)
-    with open("forgi/threedee/data/aminor_params.json", "w") as f:
+    with open(args.model_params_out, "w") as f:
         json.dump(hyper_params,f)
 
 if __name__ == "__main__":
