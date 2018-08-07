@@ -652,8 +652,19 @@ def stem_from_chains(cg, chains, elem_name):
     :param chains: A dictionary {chain_id: Biopython_PDB_chain}
     :param elem_name: e.g. "s0"
     """
+    for chain in chains.values():
+        if ftup.is_spqr_pdb(chain):
+            spqr=True
+        else:
+            spqr=False
+        break
+
     stem_length = cg.stem_length(elem_name)
-    template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
+    if spqr:
+        template_filename = 'ideal_1_%d_%d_%d.spqr.pdb' % (stem_length, stem_length + 1,
+                                                          stem_length * 2)
+    else:
+        template_filename = 'ideal_1_%d_%d_%d.pdb' % (stem_length, stem_length + 1,
                                                   stem_length * 2)
     filename = forgi.threedee.data_file(op.join('data', template_filename))
     try:
@@ -692,10 +703,15 @@ def stem_from_chains(cg, chains, elem_name):
 
     # the first nucleotide of the first strand
     # and the last nucleotide of the second strand
+    if spqr:
+        ref_atom="SUGR"
+    else:
+        ref_atom=REFERENCE_CATOM
+
     first_res = residue_ids[0][0]
-    start_vec1 = chains[first_res.chain][first_res.resid][REFERENCE_CATOM].coord - coords[0]
+    start_vec1 = chains[first_res.chain][first_res.resid][ref_atom].coord - coords[0]
     last_res = residue_ids[0][-1]
-    end_vec1 = chains[last_res.chain][last_res.resid][REFERENCE_CATOM].coord - coords[1]
+    end_vec1 = chains[last_res.chain][last_res.resid][ref_atom].coord - coords[1]
 
     # the last nucleotide of the first strand
     # and the first nucleotide of the second strand
@@ -773,41 +789,13 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     plt.show()
     #assert False
 
-#Should be deprecated in future
-def get_mids(cg, chains, elem_name, seq_ids=True):
-    '''
-    Get the mid points of the abstract cylinder which represents a helix.
-
-    :param chain: The Bio.PDB representation of the 3D structure.
-    :param define: The define of the helix, as per the BulgeGraph
-                   definition standard.
-    :return: An array of two vectors representing the two endpoints of the
-             helix.
-    '''
-    coords, twists = stem_from_chains(cg, chains, elem_name)
-    return coords
-
-#Should be deprecated in future
-def get_twists(cg, chain, elem_name, mids=None):
-    '''
-    Get the projection of the (ca - mids) vectors onto the helix axis. This,
-    in a sense will define how much the helix twists.
-
-    :param cg: The CoarseGrainRNA representation
-    :param chain: The Bio.PDB representation of the 3D structure.
-    :param define: The name of the define
-    :return: Two vectors which represent the twist of the helix.
-    '''
-    coords, twists = stem_from_chains(cg, chain, elem_name)
-    return twists
-
 def total_helix_rotation(coords, twists, stem_len):
     """
     Calculate the total rotation of the helix in radians from the twists.
 
     When we calculate the angle between the two twists, we only know
     the true rotation modulo 2*pi (i.e. a rotation of 45 degrees could
-    mean 45 degrees or 405 degrees). Depending on the number of nucleotides and
+    mean 45 degrees or 405 degrees). Depending on the number off nucleotides and
     knowledge of the ideal helix (which turns roughly 30 degrees per base-pair),
     this function outputs the correct result.
     """

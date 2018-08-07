@@ -205,6 +205,18 @@ def noncovalent_distances(chain, cutoff=0.3):
 
     return [ftuv.magnitude(c[1] - c[0]) for c in contacts if not is_covalent(c)]
 
+def is_spqr_pdb(chain):
+    """
+    Is a chain in the SPQR -PDB format or in the regular PDB format?
+
+    :param chain: A Biopython PDB.Chain object
+    """
+    for residue in chain:
+        if "SUGR" in residue:
+            return True
+        else:
+            return False
+
 def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     '''
     Calculate the all-atom rmsd between two RNA chains.
@@ -221,19 +233,29 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
         #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
         raise Exception("Chains of different length. (Maybe an RNA-DNA hybrid?)")
 
-    #c1_list.sort(key=lambda x: x.id[1])
-    #c2_list.sort(key=lambda x: x.id[1])
+    spqr=False # Are we dealing with the SPQR pdb format or with normal pdbs?
+    spqr_sum = is_spqr_pdb(c1)+is_spqr_pdb(c2) # Bools are integers, so sum works
+    if spqr_sum==2:
+        spqr=True
+    elif spqr_sum==1:
+        raise ValueError("Cannot calculate RMSD between SPQR-PDB and normal PDB.")
+
+    if spqr and sidechains:
+        raise ValueError("RMSD with sidechains is not supported for PDBs of the SPQR format.")
+
     to_residues=[]
     crds1 = []
     crds2 = []
     all_atoms1 = []
     all_atoms2 = []
     for r1,r2 in zip(c1_list, c2_list):
-        if sidechains:
-            anames = nonsidechain_atoms + side_chain_atoms[c1[i].resname.strip()]
+        if spqr:
+            anames = ["SUGR", "PHOS"]
         else:
-            anames = nonsidechain_atoms
-        #anames = a_5_names + a_3_names
+            if sidechains:
+                anames = nonsidechain_atoms + side_chain_atoms[c1[i].resname.strip()]
+            else:
+                anames = nonsidechain_atoms
 
         for a in anames:
             try:
