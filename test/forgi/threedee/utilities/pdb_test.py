@@ -7,6 +7,23 @@ import unittest
 import forgi.threedee.utilities.pdb as ftup
 import forgi.utilities.debug as fud
 
+class TestatomName(unittest.TestCase):
+    """
+    A string that treats a trailing "*" as equal to a trailing "'".
+    """
+    def test_equality_atomnames(self):
+        self.longMessage = True
+        for rn, rn2 in [(ftup.AtomName, ftup.AtomName), (ftup.AtomName, str), (str, ftup.AtomName)]:
+            self.assertEqual(rn("C1'"), rn2("C1*"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+            self.assertEqual(rn("C1"), rn2("C1"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+            self.assertEqual(rn("C1*"), rn2("C1*"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+            self.assertEqual(rn("C1'"), rn2("C1'"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+            self.assertNotEqual(rn("C1'"), rn2("C2*"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+            self.assertNotEqual(rn("C1"), rn2("C2"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+            self.assertNotEqual(rn("O2*"), rn2("C2*"), msg="comparing types {} and {}".format(rn.__name__, rn2.__name__))
+    def test_ishashable(self):
+        self.assertEqual(len(set([ftup.AtomName("C1'"), ftup.AtomName("C1*")])), 1)
+
 class TestPDBUtilities(unittest.TestCase):
     '''
     Tests for the pdb loading utility functions.
