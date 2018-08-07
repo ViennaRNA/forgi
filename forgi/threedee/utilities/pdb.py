@@ -32,7 +32,7 @@ class AtomName(str):
         if self.endswith("*"):
             self=self[:-1]+"'"
         return hash(str(self))
-        
+
 backbone_atoms = list(map(AtomName, ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]))
 ring_atoms = list(map(AtomName,["C4'", "C3'", "C2'", "C1'", "O4'"]))
 
@@ -295,7 +295,7 @@ def get_first_chain(filename):
     '''
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        s = bpdb.PDBParser(PERMISSIVE=False).get_structure('t', filename)
+        s = bpdb.PDBParser(PERMISSIVE=True).get_structure('t', filename)
         return list(s.get_chains())[0]
 
 def pdb_file_rmsd(fn1, fn2):

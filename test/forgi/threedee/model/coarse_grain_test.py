@@ -128,7 +128,6 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(len(cg.seq._missing_nts), 3)
         self.assertEqual(cg.seq, cg2.seq)
 
-
     def test_from_pdb(self):
         import time
         now=time.time()
@@ -259,8 +258,13 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cgs = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
         self.assertEqual(len(cgs), 1) #Only look at first model!
 
+    @unittest.skip("Not yet implemented")
     def test_annotating_with_dssr(self):
         pass
+
+    def test_from_spqr_pdb(self):
+        cgs = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1DUQ.pdb.spqr.pdb')
+        self.assertEqual(len(cgs), 1) #Only look at first model!
 
 
 class CoarseGrainTest(tfgb.GraphVerification):

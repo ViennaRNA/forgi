@@ -14,6 +14,7 @@ import itertools as it
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as ftuv
+import forgi.threedee.model.similarity as ftms
 import forgi.graph.bulge_graph as fgb
 
 import forgi.utilities.debug as fud
@@ -243,6 +244,27 @@ class TestOrientation(unittest.TestCase):
         r = math.sqrt(2)
         v = math.pi/4
         nptest.assert_allclose(ftug.stem2_orient_from_stem1(stem1_vec, twist1, (r,u,v)), np.array([0.,1,1]), atol=10**-15)
+
+    def test_fit_stem_to_spqr(self):
+        cgs = ftmc.CoarseGrainRNA.from_pdb("test/forgi/threedee/data/1DUQ.pdb")
+        cg=cgs[0]
+        spqr_chain,_,_ = ftup.get_all_chains("test/forgi/threedee/data/1DUQ.pdb.spqr.pdb")
+        cg2, = ftmc.CoarseGrainRNA.from_fasta_text(cg.to_fasta_string()) #Renumbers atom ids
+        print(spqr_chain)
+        cg2.chains = {"A":spqr_chain[0], "B":spqr_chain[1]}
+        for res in sorted(cg2.chains["A"], reverse=True):
+            print("changing", res.id)
+            res.id=res.id[0], res.id[1]+1, res.id[2]# SPQR uses 0-based numbers
+        for res in sorted(cg2.chains["B"]):
+            print("changing", res.id)
+            res.id=res.id[0], res.id[1]-11, res.id[2]# SPQR uses 0-based numbers
+            print("to", res.id)
+
+        cg2._init_coords()
+        ftug.add_stem_information_from_pdb_chains(cg2)
+        cg.add_bulge_coords_from_stems()
+        ftug.add_loop_information_from_pdb_chains(cg2)
+        self.assertLess(ftms.cg_rmsd(cg, cg2), 0.3)
 
 
 class TestDistanceCalculation(unittest.TestCase):
