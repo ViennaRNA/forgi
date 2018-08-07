@@ -91,6 +91,8 @@ class BulgeGraph(BaseGraph):
         self.nx_graph = None
         self.nuc_bp_dists = None
         self._elem_bp_dists = {}
+        self._node_to_resnum = {}
+
 
         # Additional infos as key-value pairs are stored here.
         self.infos = col.defaultdict(list)
@@ -909,6 +911,14 @@ class BulgeGraph(BaseGraph):
                         connections[side]=neighbor
         return connections
     ############################################################################
+    def get_node_from_residue_num(self, base_num):
+        """
+        Iterate over the defines and see which one encompasses this base.
+        """
+        # Implemented with caching.
+        if base_num not in self._node_to_resnum:
+            self._node_to_resnum[base_num] = super(BulgeGraph, self).get_node_from_residue_num(base_num)
+        return self._node_to_resnum[base_num]
 
     @property
     def transformed(self):
@@ -2298,7 +2308,6 @@ class BulgeGraph(BaseGraph):
 
         return removed_pairs
 
-    #Seems to be unused...
     def ss_distance(self, e1, e2):
         '''
         Calculate the distance between two elements (e1, e2)

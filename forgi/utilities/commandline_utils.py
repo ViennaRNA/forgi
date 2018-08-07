@@ -78,7 +78,6 @@ def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_f
     if enable_logging:
         logging.basicConfig(format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
         logging_exceptions.config_from_args(args)
-
     cg_rnas = []
     filenames  = []
     for rna in args.rna:

@@ -499,12 +499,11 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
             insertions = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
             insertions[insertions=="."]=" "
             symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
-            models = np.array(cifdict["_pdbx_poly_seq_scheme.asym_id"], dtype=str)[mask]
             mr = []
             if not no_annotation:
                 for i,sseq in enumerate(int_seq_ids):
                     mr.append({
-                                "model":models[i],
+                                "model":None,
                                 "res_name":symbol[i],
                                 "chain":chains[i],
                                 "ssseq":sseq,
@@ -561,7 +560,6 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
 def enumerate_interactions_kdtree(model):
     kdtree = bpdb.NeighborSearch(list(model.get_atoms()))
     pairs = kdtree.search_all(6, "R")
-    log.debug("Interaction_pairs: %s", pairs)
     interacting_residues=set()
     for res1, res2 in pairs:
         rna_res=None

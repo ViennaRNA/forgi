@@ -41,7 +41,9 @@ except: #Outside of a git repo, do nothing.
 
 
 extras = {"forgi.visual":["matplotlib>=2.0"],
-          "faster vector":["cython"]}
+          "faster vector":["cython"],
+          "classification":["scikit-learn"]
+         }
 extras["all"]=list(itertools.chain(extras.values()))
 
 setup(
@@ -56,9 +58,10 @@ setup(
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
+                'forgi.threedee.classification',
                 'forgi._k2n_standalone', 'forgi.threedee.visual',
                 'forgi.visual', 'forgi.projection'],
-      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json']},
+      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv', 'data/aminor_params.json']},
       scripts=['examples/rnaConvert.py',
                'examples/describe_cg.py',
                'examples/compare_RNA.py',

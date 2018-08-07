@@ -42,8 +42,8 @@ class VirtualAtomsTest(unittest.TestCase):
         pdbfile1 = "test/forgi/threedee/data/3FU2.pdb"
         self.cg1,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile1, load_chains="biggest")
 
-        pdbfile2 = "test/forgi/threedee/data/3V2F.pdb"  #Takes some time. Big structure
-        self.cg2,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile2, load_chains="biggest")
+        #pdbfile2 = "test/forgi/threedee/data/3V2F.pdb"  #Takes some time. Big structure
+        #self.cg2,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile2, load_chains="biggest")
 
         pdbfile3 = "test/forgi/threedee/data/1X8W.pdb"
         self.cg3,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile3, load_chains="biggest")
@@ -64,6 +64,6 @@ class VirtualAtomsTest(unittest.TestCase):
         print(rmsd)
         self.assertLess(rmsd, 0.95) # 1.16
 
-        rmsd = realatom_vatom_rmsd(self.cg2)
-        print(rmsd)
-        self.assertLess(rmsd, 1.04) # 1.30
+        #rmsd = realatom_vatom_rmsd(self.cg2)
+        #print(rmsd)
+        #self.assertLess(rmsd, 1.04) # 1.30
