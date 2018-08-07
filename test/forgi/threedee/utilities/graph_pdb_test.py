@@ -188,13 +188,15 @@ class TestGraphPDB(unittest.TestCase):
                                     "Distance between {} and {} is {}".format(k1, k2, dist))
 
     def test_virtual_residue_atom_exact_match(self):
-        #This test serves to detect unwanted changes in the virtual atom calculation algorithm.
-        #It is allowed to fail, if the virtual atom calculation changes.
+        # This test serves to detect unwanted changes in the virtual atom calculation algorithm.
+        # It is allowed to fail, if the virtual atom calculation changes.
         cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
         ftug.add_virtual_residues(cg, 's0')
         vres= ftug.virtual_residue_atoms(cg, 's0', 1, 0)
-        nptest.assert_allclose(vres['C8'], np.array([ 5.23455929, -2.9606417 , -2.18156476]))
-        nptest.assert_allclose(vres['N2'], np.array([ 6.99285237,  2.32505693, -1.95868568]))
+        print(vres['C8'])
+        print(vres['N2'])
+        nptest.assert_allclose(vres['C8'], np.array([ 5.17130963, -2.93616933, -2.16725865]))
+        nptest.assert_allclose(vres['N2'], np.array([ 6.91170703,  2.35440312, -1.92080436]))
 
 
     """def test_numbered_virtual_residues(self): #Not USED (?)
@@ -262,7 +264,7 @@ class TestDistanceCalculation(unittest.TestCase):
     def test_junction_virtual_atom_distance_realPDB(self):
         distance=ftug.junction_virtual_atom_distance(self.rs_random_281, "m3")
         self.assertLess(distance, 4.)  #This should always hold!
-        self.assertAlmostEqual(distance, 3.4294889373610675) #This value might change, if we change the virtual atom calculation
+        self.assertAlmostEqual(distance, 3.486261134885911) #This value might change, if we change the virtual atom calculation
 
 
 class TestAtomPosition_VirtualAtoms(unittest.TestCase):

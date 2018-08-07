@@ -18,82 +18,76 @@ from logging_exceptions import log_to_exception
 import logging
 log=logging.getLogger(__name__)
 
-backbone_atoms_real = ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]
-backbone_atoms = ['P', 'O5*', 'C5*', 'C4*', 'C3*', 'O3*']
-backbone_atoms += ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]
-ring_atoms = ['C4*', 'C3*', 'C2*', 'C1*', 'O4*']
-ring_atoms_real = ["C4'", "C3'", "C2'", "C1'", "O4'"]
+class AtomName(str):
+    """
+    Like a string, but "C1'" and "C1*" compare equal
+    """
+    def __eq__(self, other):
+        if self.endswith("*"):
+            self=self[:-1]+"'"
+        if other.endswith("*"):
+            other=other[:-1]+"'"
+        return str(self)==str(other)
+    def __hash__(self):
+        if self.endswith("*"):
+            self=self[:-1]+"'"
+        return hash(str(self))
+        
+backbone_atoms = list(map(AtomName, ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]))
+ring_atoms = list(map(AtomName,["C4'", "C3'", "C2'", "C1'", "O4'"]))
 
-nonsidechain_atoms = backbone_atoms_real + ring_atoms_real
+nonsidechain_atoms = backbone_atoms + ring_atoms
 
 chi_torsion_atoms = dict()
-chi_torsion_atoms['A'] = ["O4'", "C1'", "N9", "C4"]
-chi_torsion_atoms['G'] = chi_torsion_atoms['A']
-chi_torsion_atoms['C'] = ["O4'", "C1'", "N1", "C2"]
-chi_torsion_atoms['U'] = chi_torsion_atoms['C']
+chi_torsion_atoms['A'] = chi_torsion_atoms['G'] = list(map(AtomName,["O4'", "C1'", "N9", "C4"]))
+chi_torsion_atoms['C'] = chi_torsion_atoms['U'] = list(map(AtomName, ["O4'", "C1'", "N1", "C2"]))
 
 side_chain_atoms = dict()
-side_chain_atoms['U'] = ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6']
-side_chain_atoms['C'] = ['N1', 'C2', 'O2', 'N3', 'C4', 'N4', 'C5', 'C6']
+side_chain_atoms['U'] = list(map(AtomName,['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6']))
+side_chain_atoms['C'] = list(map(AtomName,['N1', 'C2', 'O2', 'N3', 'C4', 'N4', 'C5', 'C6']))
 
-side_chain_atoms['A'] = ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N6', 'N7', 'C8', 'N9']
-side_chain_atoms['G'] = ['N1', 'C2', 'N2', 'N3', 'C4', 'C5', 'C6', 'O6', 'N7', 'C8', 'N9']
+side_chain_atoms['A'] = list(map(AtomName,['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N6', 'N7', 'C8', 'N9']))
+side_chain_atoms['G'] = list(map(AtomName,['N1', 'C2', 'N2', 'N3', 'C4', 'C5', 'C6', 'O6', 'N7', 'C8', 'N9']))
 
 all_side_chains = set(side_chain_atoms['U'] + side_chain_atoms['C'] + side_chain_atoms['A'] + side_chain_atoms['G'])
 
-all_rna_atoms = backbone_atoms_real + ring_atoms_real
-for v in side_chain_atoms.values():
-    all_rna_atoms += v
-all_rna_atoms = set(all_rna_atoms)
+all_rna_atoms = set(nonsidechain_atoms) | all_side_chains
 
 RNA_RESIDUES = [ "A", "U", "G", "C", 'rA', 'rC', 'rG', 'rU', 'DU']
 
-interactions = [('P', 'O5*'),
-                ('P', "O5'"),
-                ('P', 'OP1'),
-                ('P', 'O1P'),
-                ('P', 'OP2'),
-                ('P', 'O2P'),
-                ('C2*', 'O2*'),
-                ("C2'", "O2'"),
-               ('O5*', 'C5*'),
-               ("O5'", "C5'"),
-               ('C5*', 'C4*'),
-               ("C5'", "C4'"),
-               ('C4*', 'O4*'),
-               ("C4'", "O4'"),
-               ('C4*', 'C3*'),
-               ("C4'", "C3'"),
-               ('O4*', 'C1*'),
-               ("O4'", "C1'"),
-               ('C3*', 'C2*'),
-               ("C3'", "C2'"),
-               ('C3*', 'O3*'),
-               ("C3'", "O3'"),
-               ('C2*', 'C1*'),
-               ("C2'", "C1'"),
-               ('C1*', 'N1'),
-               ("C1'", "N1"),
-               ('N1', 'C2'),
-               ('N1', 'C6'),
-               ('C6', 'C5'),
-               ('C5', 'C4'),
-               ('C4', 'O4'),
-               ('C4', 'N4'),
-               ('C4', 'N3'),
-               ('N3', 'C2'),
-               ('C2', 'O2'),
-               ('C2', 'N2'),
-                ('C1*', 'N9'),
-               ("C1'", "N9"),
-               ('N9', 'C8'),
-               ('N9', 'C4'),
-               ('C8', 'N7'),
-               ('N7', 'C5'),
-               ('C6', 'O6'),
-               ('C6', 'N6')]
-
-interactions_set = [tuple(sorted(i)) for i in interactions]
+interactions = [ (AtomName(a), AtomName(b)) for a, b in map(sorted,
+                                                          [('P', "O5'"),
+                                                           ('P', 'OP1'),
+                                                           ('P', 'O1P'),
+                                                           ('P', 'OP2'),
+                                                           ('P', 'O2P'),
+                                                           ("C2'", "O2'"),
+                                                           ("O5'", "C5'"),
+                                                           ("C5'", "C4'"),
+                                                           ("C4'", "O4'"),
+                                                           ("C4'", "C3'"),
+                                                           ("O4'", "C1'"),
+                                                           ("C3'", "C2'"),
+                                                           ("C3'", "O3'"),
+                                                           ("C2'", "C1'"),
+                                                           ("C1'", "N1"),
+                                                           ('N1', 'C2'),
+                                                           ('N1', 'C6'),
+                                                           ('C6', 'C5'),
+                                                           ('C5', 'C4'),
+                                                           ('C4', 'O4'),
+                                                           ('C4', 'N4'),
+                                                           ('C4', 'N3'),
+                                                           ('N3', 'C2'),
+                                                           ('C2', 'O2'),
+                                                           ('C2', 'N2'),
+                                                           ("C1'", "N9"),
+                                                           ('N9', 'C8'),
+                                                           ('N9', 'C4'),
+                                                           ('C8', 'N7'),
+                                                           ('N7', 'C5'),
+                                                           ('C6', 'O6'),
+                                                           ('C6', 'N6')])]
 
 def trim_chain(chain, start_res, end_res):
     '''
@@ -153,6 +147,8 @@ def is_covalent(contact):
     '''
     Determine if a particular contact is covalent.
 
+    This does not look at the geometric distance but only at the atom names.
+
     :param contact: A pair of two Atom objects
     :return: `True` if they are covalently bonded
              `False` otherwise
@@ -169,7 +165,7 @@ def is_covalent(contact):
     ((r1, c1), (r2, c2)) = sorted((r1a, r2a), key=lambda x: x[0].id[1])
 
     if r1.id == r2.id:
-        if tuple(sorted((c1.name, c2.name))) in interactions_set:
+        if tuple(sorted((c1.name, c2.name))) in interactions:
             return True
 
     if r2.id[1] - r1.id[1] == 1:
@@ -218,30 +214,8 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     :return: The rmsd between the locations of all the atoms in the chains.
     '''
     import forgi.threedee.model.similarity as ftms
-    a_5_names = ['P', 'O5*', 'C5*', 'C4*', 'O4*', 'O2*']
-    a_5_names += ['P', "O5'", "C5'", "C4'", "O4'", "O2'"]
-    a_3_names = ["C1*", "C2*", "C3*", "O3*"]
-    a_3_names += ["C1'", "C2'", "C3'", "O3'"]
-
-    a_names = dict()
-    a_names['U'] = a_5_names + ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6'] + a_3_names
-    a_names['C'] = a_5_names + ['N1', 'C2', 'O2', 'N3', 'C4', 'N4', 'C5', 'C6'] + a_3_names
-
-    a_names['A'] = a_5_names + ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N6', 'N7', 'C8', 'N9'] + a_3_names
-    a_names['G'] = a_5_names + ['N1', 'C2', 'N2', 'N3', 'C4', 'C5', 'C6', 'O6', 'N7', 'C8', 'N9'] + a_3_names
-
-    a_names['U'] = a_5_names + ['N1', 'C2', 'O2', 'N3', 'C4', 'O4', 'C5', 'C6'] + a_3_names
-    a_names['C'] = a_5_names + ['N1', 'C2', 'O2', 'N3', 'C4', 'N4', 'C5', 'C6'] + a_3_names
-
-    a_names['A'] = a_5_names + ['N1', 'C2', 'N3', 'C4', 'C5', 'C6', 'N6', 'N7', 'C8', 'N9'] + a_3_names
-    a_names['G'] = a_5_names + ['N1', 'C2', 'N2', 'N3', 'C4', 'C5', 'C6', 'O6', 'N7', 'C8', 'N9'] + a_3_names
-
-    all_atoms1 = []
-    all_atoms2 = []
-
-    acceptable_residues = ['A','C','G','U','rA','rC','rG','rU','DG']
-    c1_list = [cr for cr in c1.get_list() if cr.resname.strip() in acceptable_residues]
-    c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in acceptable_residues]
+    c1_list = [cr for cr in c1.get_list() if cr.resname.strip() in RNA_RESIDUES]
+    c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in RNA_RESIDUES]
 
     if len(c1_list) != len(c2_list):
         #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
@@ -252,11 +226,13 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     to_residues=[]
     crds1 = []
     crds2 = []
+    all_atoms1 = []
+    all_atoms2 = []
     for r1,r2 in zip(c1_list, c2_list):
         if sidechains:
-            anames = backbone_atoms + a_names[c1[i].resname.strip()]
+            anames = nonsidechain_atoms + side_chain_atoms[c1[i].resname.strip()]
         else:
-            anames = backbone_atoms
+            anames = nonsidechain_atoms
         #anames = a_5_names + a_3_names
 
         for a in anames:
@@ -287,10 +263,7 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
 
         return (len(all_atoms1), sup.rms, sup.rotran, dev_per_res)
     else:
-        crvs1 = np.array([a.get_vector().get_array() for a in all_atoms1])
-        crvs2 = np.array([a.get_vector().get_array() for a in all_atoms2])
-
-        return (len(all_atoms1), ftuv.vector_set_rmsd(crvs1, crvs2), None, dev_per_res)
+        return (len(all_atoms1), ftuv.vector_set_rmsd(crds1, crds2), None, dev_per_res)
 
 def get_first_chain(filename):
     '''
