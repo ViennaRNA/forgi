@@ -537,7 +537,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                         self.coords[d] = (mids1[s1b], mids2[s2b])
                     else:
                         self.coords[d] = (mids2[s2b], mids1[s1b])
-
+                    log.debug("Set bulge coordinates of %s to %s", d, self.coords[d])
     def add_all_virtual_residues(self):
         """
         Calls ftug.add_virtual_residues() for all stems of this RNA.
