@@ -1,17 +1,18 @@
-from setuptools import setup
+from setuptools import setup, Extension
 from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
 import itertools
 import warnings
+import numpy
+
 
 def try_cythonize(arg):
   try:
     from Cython.Build import cythonize
-    cythonize(arg)
-    print("Done to cythonize")
+    return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
   except Exception as e:
-    warnings.warn("Could not use cython. Exception of type {} occurred: {}".format(type(e), e))
+    return Extension("", [arg+".c"], include_dirs=[numpy.get_include()])
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -42,12 +43,13 @@ except: #Outside of a git repo, do nothing.
 
 
 extras = {"forgi.visual":["matplotlib>=2.0"],
-          "faster vector":["cython"],
+          "development":["cython"],
           "classification":["scikit-learn"]
          }
 extras["all"]=list(itertools.chain(extras.values()))
 
 setup(
+      zip_safe=False,
       cmdclass={'build_py': build_py},
       name='forgi',
       version='2.0.1-alpha',
@@ -56,7 +58,7 @@ setup(
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec.pyx"), 
+      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec"), 
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
