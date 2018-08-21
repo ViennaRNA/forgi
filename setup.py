@@ -9,6 +9,7 @@ def try_cythonize(arg):
   try:
     from Cython.Build import cythonize
     cythonize(arg)
+    print("Done to cythonize")
   except Exception as e:
     warnings.warn("Could not use cython. Exception of type {} occurred: {}".format(type(e), e))
 
@@ -55,6 +56,7 @@ setup(
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
+      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec.pyx"), 
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
