@@ -7,6 +7,11 @@ from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 
 log = logging.getLogger(__name__)
 
+try:
+    profile
+except NameError:
+    profile=lambda x:x
+
 class BaseGraph(object):
     """
     A Base-class for the BulgeGraph and BulgeGraphConstruction.
@@ -36,20 +41,22 @@ class BaseGraph(object):
         connections.sort(key=sort_key)
         return connections
 
+
     def define_a(self, elem):
         if self.defines[elem] == []:
             return self._define_a_zerolength(elem)
         else:
             return self._define_a_nonzero(elem)
 
+    @profile
     def _define_a_nonzero(self, elem):
         define = self.defines[elem]
-        log.debug("Define_a nonzero of BaseGraph called for %s with define %s", elem, define)
+        #log.debug("Define_a nonzero of BaseGraph called for %s with define %s", elem, define) # commented out for performance reasons
         new_def = []
         for i in range(0,len(define),2):
             new_def.append(max(define[i]-1, 1))
             new_def.append(define[i+1]+1)
-        log.debug("Define_a nonzero returning %s", new_def)
+        #log.debug("Define_a nonzero returning %s", new_def)
         return new_def
 
 

@@ -49,10 +49,13 @@ class CoordinateStorage(Mapping):
             i = self._elem_names[elem_name]
         except ValueError:
             raise KeyError("Invalid index {}".format(elem_name))
-        ret = []
-        for j in range(self._coords_per_key):
-            ret.append(2*i+j)
-        return ret
+        if self._coords_per_key==2:
+            return [2*i, 2*i+1]
+        else:
+            ret = []
+            for j in range(self._coords_per_key):
+                ret.append(2*i+j)
+            return ret
     @profile
     def __getitem__(self, elem_name):
         """
@@ -81,13 +84,15 @@ class CoordinateStorage(Mapping):
                 raise KeyError("Invalid index: Indices must be of type string or sequence of strings. Found {}".format(elem_name))
             return self._coordinates[indices] #Advanced numpy indexing yields a copy.
 
+    @profile
     def __setitem__ (self, key, value):
-        if len(value)!=self._coords_per_key:
-            raise ValueError("Value must be a {}-tuple of coordinates".format(self._coords_per_key))
-        for i in range(self._coords_per_key):
-            if len(value[i])!=self._dimensions:
-                raise ValueError("Coordinates must have {} dimensions, "
-                                 "found {} for entry {}".format(self._dimensions, len(value[i]), i))
+        # Commented out for speed-gain
+        #if len(value)!=self._coords_per_key:
+        #    raise ValueError("Value must be a {}-tuple of coordinates".format(self._coords_per_key))
+        #for i in range(self._coords_per_key):
+        #    if len(value[i])!=self._dimensions:
+        #        raise ValueError("Coordinates must have {} dimensions, "
+        #                         "found {} for entry {}".format(self._dimensions, len(value[i]), i))
         indices = self._indices_for(key)
         for i, index in enumerate(indices):
             log.debug("Setting coordinate %s(%d) to %s", key, i, value[i])
@@ -153,6 +158,7 @@ class CoordinateStorage(Mapping):
         return not self == other
 
 class LineSegmentStorage(CoordinateStorage):
+    _coords_per_key = 2
     def __init__(self,*args, **kwargs):
         super(LineSegmentStorage, self).__init__(*args, **kwargs)
         self._i_to_elem = { i:elem for elem,i in self._elem_names.items()}

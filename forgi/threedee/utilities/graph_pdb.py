@@ -423,8 +423,6 @@ def stem2_orient_from_stem1_1(stem1_basis, r_u_v):
     '''
     r,u,v = r_u_v
     stem2_in_basis1 = cuv.spherical_polar_to_cartesian((r, u, v))
-    #stem1_basis = cuv.create_orthonormal_basis(stem1, twist1)
-    #stem2 = cuv.change_basis(stem2, cuv.standard_basis, stem1_basis)
     stem2 = np.dot(stem1_basis, stem2_in_basis1)
 
     return stem2
@@ -463,6 +461,7 @@ def get_angle_stat_geometry(stem1_vec, twist1, stem2_vec, twist2, bulge_vec):
 
     return u, v, t, r1, u1, v1
 
+@profile
 def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     """
     If we assgin a stat to a broken ml-segment, how much would the attached
@@ -493,7 +492,6 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     log.debug("Getting broken ML deviation for %s attached to %s "
               "using stat %s", broken_ml_name, fixed_stem_name,
               virtual_stat.pdb_name)
-    import forgi.threedee.model.stats as ftms
     s1, s2 = cg.edges[broken_ml_name]
     if s1 == fixed_stem_name:
         orig_stem_name = s2
@@ -516,10 +514,13 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     vstem_coords1 = vstem_coords0 + vstem_vec
 
     sides2 = cg.get_sides(orig_stem_name, broken_ml_name)
-    orig_stem_vec = cg.coords[orig_stem_name][sides2[1]] - cg.coords[orig_stem_name][sides2[0]]
-    true_bulge_vec = cg.coords[orig_stem_name][sides2[0]] - cg.coords[fixed_stem_name][sides[0]]
+    orig_coords0 = cg.coords[orig_stem_name][sides2[0]]
+    orig_coords1 = cg.coords[orig_stem_name][sides2[1]]
 
-    pos_dev = ( ftuv.vec_distance(cg.coords[orig_stem_name][sides2[0]], vstem_coords0) )
+    orig_stem_vec = orig_coords1 - orig_coords0
+    true_bulge_vec = orig_coords0 - cg.coords[fixed_stem_name][sides[0]]
+
+    pos_dev = ( ftuv.vec_distance(orig_coords0, vstem_coords0) )
     ang_dev = ftuv.vec_angle(vstem_vec, orig_stem_vec)
     twist_dev = ftuv.vec_angle(cg.twists[orig_stem_name][sides2[0]], vstem_twist)
     log.debug("Deviation: pos %s, orient %s, twist: %s", pos_dev,

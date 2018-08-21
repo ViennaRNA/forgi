@@ -565,11 +565,10 @@ def rotation_matrix(axis, theta):
     '''
     # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
     # The following would be the slower pure-python implementation (for comparison)
-    a = math.cos(theta/2)
     if isinstance(axis, (np.ndarray, list)):
             axis = normalize(axis)
             b, c, d = -axis*math.sin(theta/2)
-
+            a = math.cos(theta/2)
             return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
                       [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
                       [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
@@ -691,7 +690,7 @@ def normalize(vec):
     mag = magnitude(vec)
     if mag==0: #Numpy would return Nan and raise a RuntimeWarning.
         raise ValueError("Cannot normalize zero- vector!")
-    return vec / magnitude(vec)
+    return vec / mag
 
 def vec_angle(vec1, vec2):
     '''
