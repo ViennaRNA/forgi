@@ -2,7 +2,7 @@
 import numpy as np
 cimport cython
 cimport numpy as np
-from libc.math cimport sqrt, cos, sin, pi, acos
+from libc.math cimport sqrt, cos, sin, M_PI, acos
 
 #ctypedef np.ndarray[double, ndim=1] np.ndarray[double, ndim=1]
 #ctypedef np.ndarray[double, ndim=2] np.ndarray[double, ndim=2]
@@ -46,7 +46,7 @@ cdef np.ndarray[double, ndim=1] twist2_orient_from_stem1_1(np.ndarray[double, nd
     cdef np.ndarray[double, ndim=1] twist2_new = np.array([0., cos(t), sin(t)])
 
     cdef np.ndarray[double, ndim=2] rot_mat1 = rotation_matrix("z", v)
-    cdef np.ndarray[double, ndim=2] rot_mat2 = rotation_matrix("y", u - pi / 2.)
+    cdef np.ndarray[double, ndim=2] rot_mat2 = rotation_matrix("y", u - M_PI / 2.)
 
     cdef np.ndarray[double, ndim=2] rot_mat = np.dot(rot_mat2, rot_mat1)
     #assert np.allclose(nl.inv(rot_mat), rot_mat.T)
