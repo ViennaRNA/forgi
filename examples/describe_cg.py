@@ -224,14 +224,16 @@ def describe_ml_segments(cg):
                         vec1 = cg.coords.get_direction(s1)
                         vec2 = cg.coords.get_direction(s2)
                         angle = ftuv.vec_angle(vec1, vec2)
-                        if angle>math.pi/4:
-                            angle=math.pi/2-angle
+                        if angle>math.pi/2:
+                            angle=math.pi-angle
                         kh_stem_angle = angle
             data["kh_stem_angle"].append( kh_stem_angle )
     if data:
-        data["pk_number"]=number_by(data, "loop_start_after", "is_pseudoknotted_multiloop")
+        data["pk_number"]=number_by(data, "loop_start_after",
+                                          "is_pseudoknotted_multiloop")
         data["loop_number"]=number_by(data, "loop_start_after", None)
-        data["reguler_multiloop_number"]=number_by(data, "loop_start_after", "is_regular_multiloop")
+        data["reguler_multiloop_number"]=number_by(data, "loop_start_after",
+                                                         "is_regular_multiloop")
     return data
 
 def number_by(data, sorting_column = "loop_start_after", only_for_col = "is_pseudoknotted_multiloop"):
