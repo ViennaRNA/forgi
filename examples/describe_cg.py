@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding: utf-8
 from __future__ import print_function, absolute_import, division, unicode_literals
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
