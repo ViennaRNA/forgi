@@ -9,8 +9,13 @@ from pprint import pprint
 import json, warnings, sys
 from collections import Counter, defaultdict, namedtuple
 import itertools as it
+import logging
+
+from logging_exceptions import log_to_exception
 
 from forgi.graph.bulge_graph import RESID
+
+log=logging.getLogger(__name__)
 
 class DSSRLookupError(LookupError): pass
 
@@ -88,6 +93,7 @@ class DSSRAnnotation(object):
 
         :param dssr_stem: INT the stem in the DSSR Anntotation.
         """
+        log.debug("Mapping DSSR stem %s to forgi",dssr_stem)
         if "stems" not in self._dssr:
             raise DSSRLookupError("The DSSR object does not contain any stem!")
         for stem_obj in self._dssr["stems"]:
@@ -95,18 +101,23 @@ class DSSRAnnotation(object):
                 break
         else:
             raise DSSRLookupError("No stem with index {}".format(dssr_stem))
+        log.debug("Found stem %s&%s", stem_obj["strand1"], stem_obj["strand2"])
 
         cg_stems=Counter() #See, if the dssr_stems maps to more than 1 cg-stem
         for pair in stem_obj["pairs"]:
-            chain1, nt1=dssr_to_pdb_resid(pair["nt1"])
-            chain2, nt2=dssr_to_pdb_resid(pair["nt2"])
-            if self._cg.chain and (chain1 != self._cg.chain or chain2 != self._cg.chain):
-                print(chain1, chain2, self._cg.chain, file=sys.stderr)
-                raise WrongChain
-            for i, seq_id in enumerate(self._cg.seq_ids):
-                if seq_id == nt1 or seq_id == nt2:
-                    define, =self._cg.nucleotides_to_elements([i+1])
-                    cg_stems[define]+=1
+            res1=dssr_to_pdb_resid(pair["nt1"])
+            res2=dssr_to_pdb_resid(pair["nt2"])
+            log.debug("Contains pair %s-%s", res1, res2)
+            if self._cg.chains and (res1.chain not in self._cg.chains or res2.chain not in self._cg.chains):
+                e = WrongChain()
+                with log_to_exception(log, e):
+                    log.error("Wrong chain: res1={}, res2={}, cg.chains={}".format(res1, res2, self._cg.chains))
+                raise e
+            i1 = self._cg.seq.to_integer(res1)
+            i2 = self._cg.seq.to_integer(res2)
+            nodes = self._cg.nucleotides_to_elements([i1, i2])
+            for node in nodes:
+                cg_stems[node]+=1
         if not cg_stems:
             raise RuntimeError("No stem matching dssr_stem {}.".format(dssr_stem))
         most_common = cg_stems.most_common()

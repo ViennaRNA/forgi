@@ -170,6 +170,11 @@ def describe_ml_segments(cg):
         for segment in loop:
             if cg.define_a(segment)[0]<loop_start:
                 loop_start = cg.define_a(segment)[0]
+        if cg.dssr is not None:
+            dssr_stacks = cg.dssr.coaxial_stacks()
+        else:
+            dssr_stacks = None
+
         for segment in loop:
             if segment[0] !="m":
                 continue
@@ -210,6 +215,11 @@ def describe_ml_segments(cg):
             data["j3_family3D"].append(j3_family3D)
             data["j3_familyPerp"].append(j3_familyPerp)
             data["j3_Delta_j23_j31"].append(j3_Delta)
+            if dssr_stacks is not None:
+                if [s1, s2] in dssr_stacks or [s2,s1] in dssr_stacks:
+                    data["dssr_stacking"].append(True)
+                else:
+                    data["dssr_stacking"].append(False)
             kh_stem_angle = float("nan")
             if abs(cg.get_angle_type(segment, allow_broken = True))==5:
                 next_ml = cg.get_next_ml_segment(segment)

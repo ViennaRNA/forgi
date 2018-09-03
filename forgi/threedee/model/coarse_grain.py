@@ -153,7 +153,8 @@ def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
     if program == "MC-Annotate":
         lines= _run_mc_annotate(filename, subprocess_kwargs)
         try:
-            return ftum.get_dotplot(lines)
+            bpseq, seq_ids = ftum.get_dotplot(lines)
+            return bpseq, seq_ids, {}
         except Exception as e:
             log.exception("Could not convert MC-Annotate output to dotplot")
             raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
@@ -175,7 +176,8 @@ def _run_dssr(filename, subprocess_kwargs={}):
                 with open(os.path.join(dssr_output_dir, "d-2ndstrs.bpseq"), encoding='ascii') as f:
                     bpseq=f.read()
                 with open(dssr_out) as f:
-                    nts = json.load(f)["nts"]
+                    dssr_dict = json.load(f)
+                    nts = dssr_dict["nts"]
                     seq_ids = list(map(ftud.dssr_to_pdb_resid, [nt["nt_id"] for nt in nts]))
             except (OSError, IOError) as e:
                 with log_to_exception(log, e):
@@ -185,7 +187,7 @@ def _run_dssr(filename, subprocess_kwargs={}):
             assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
             e.strerror+=". Hint: Did you install x3dna-dssr?"
             raise e
-    return bpseq, seq_ids
+    return bpseq, seq_ids, dssr_dict
 
 def _run_mc_annotate(filename, subprocess_kwargs={}):
     """
@@ -222,6 +224,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Initialize the new structure.
         '''
         super(CoarseGrainRNA, self).__init__(graph_construction, sequence, name, infos, _dont_split)
+
+        self.dssr = None
 
         self._virtual_atom_cache={}
         #: Keys are element identifiers (e.g.: "s1" or "i3"), values are 2-tuples of vectors
@@ -353,7 +357,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             # first we annotate the 3D structure
             log.info("Starting annotation program for all chains")
-            bpseq, seq_ids = _annotate_pdb(rna_pdb_fn)
+            bpseq, seq_ids, dssr_dict = _annotate_pdb(rna_pdb_fn)
             breakpoints = breakpoints_from_seqids(seq_ids)
 
         # Here, we remove Pseudoknots on the bp-seq level. not the BulgeGraph
@@ -423,6 +427,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 raise
 
         cgs.sort(key=lambda x: x.name)
+        if dssr_dict:
+            for cg in cgs:
+                cg.dssr = ftud.DSSRAnnotation(dssr_dict, cg)
         log.debug("Returning %s", cgs)
         return cgs
 
