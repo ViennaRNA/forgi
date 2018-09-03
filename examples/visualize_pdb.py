@@ -97,16 +97,9 @@ def main():
     with tf.NamedTemporaryFile(mode="w+") as f:
         with tf.NamedTemporaryFile(suffix='.pml',mode="w+") as f1:
             with tf.NamedTemporaryFile(suffix='.pdb',mode="w+") as f2:
-                # extract just the biggest chain and renumber it so
-                # the nucleotides start at 1
-                if chain_id is None:
-                    chain, _,_ = ftup.get_biggest_chain(args[0])
-                else:
-                    chains, _,_ = ftup.get_all_chains(args[0])
-                    print(chains)
-                    chain, = [ chain for chain in chains if chain.id == chain_id ]
+                chains = cg.chains.values()
                 #chain = ftup.renumber_chain(chain)
-                ftup.output_chain(chain, f2.name)
+                ftup.output_multiple_chains(chains, f2.name)
                 f2.flush()
 
                 # display the distances between nucleotides
