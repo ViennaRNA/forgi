@@ -430,6 +430,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if dssr_dict:
             for cg in cgs:
                 cg.dssr = ftud.DSSRAnnotation(dssr_dict, cg)
+                cg.infos["dssr_stacks"]=list(map("-".join, cg.dssr.coaxial_stacks()))
         log.debug("Returning %s", cgs)
         return cgs
 
