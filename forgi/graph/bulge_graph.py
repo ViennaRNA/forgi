@@ -702,6 +702,27 @@ class BulgeGraph(BaseGraph):
         return domains
 
     ############################################################################
+    # Domains 2.0
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    @property
+    def junctions(self):
+        out=[]
+        multiloops = self.find_mlonly_multiloops()
+        for ml in multiloops:
+            ml = sorted(ml)
+            if self.is_loop_pseudoknot(ml):
+                continue
+            else:
+                out.append(ml)
+        return out
+
+    
+
+
+
+
+    ############################################################################
     # Descriptors of individual elements
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def element_length(self, key):

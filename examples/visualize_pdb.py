@@ -44,9 +44,11 @@ def main():
 
     parser.add_option('-d', '--distance', dest='distance', default=None, help="Draw the lines between specified virtual residues")
     parser.add_option('-o', '--output', dest='output', default=None, help="Create a picture of the scene and exit", type='str')
-    parser.add_option('', '--only-elements', dest='only_elements', default=None, help='Display only these elements '
-                                                                                      'element names should be '
-                                                                                      'separated by commas')
+    parser.add_option('', '--only-elements', dest='only_elements', default=None,
+                     help='Display only these elements, separated by commas')
+    parser.add_option('', '--thin-cylinders', dest='thin_cylinders', default=None,
+                        help='Make coarse_grain RNA thinner')
+
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true',
                       help='Display the virtual atoms')
 
@@ -71,6 +73,9 @@ def main():
     if len(cgs)>1:
         warnings.warn("The pdb has multiple connected components: {}. Showing the first".format([c.name for c in cgs]))
     pp = ftvp.PymolPrinter()
+    if options.thin_cylinders:
+        pp.cylinder_width=0.5
+        pp.show_twists=False
     pp.display_virtual_residues = options.virtual_residues
     pp.virtual_atoms = options.virtual_atoms
 

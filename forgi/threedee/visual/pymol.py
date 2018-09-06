@@ -51,7 +51,6 @@ class PymolPrinter(object):
         self.element_specific_colors = None
         self.print_text = True
         self.energy_function = None
-        self.add_twists = True
         self.add_longrange = False
         self.add_loops = True
         self.chain = None
@@ -68,7 +67,8 @@ class PymolPrinter(object):
                                     # object which needs to be hidden
                                     # when creating a movie
         self.only_elements = None
-
+        self.cylinder_width = 1.0
+        self.show_twists=True
     def get_color_vec(self, color):
         if color == 'green':
             return [0.0, 1.0, 0.0]
@@ -134,7 +134,7 @@ class PymolPrinter(object):
             color = self.override_color
 
         if not isinstance(color, (list, tuple)):
-            color = [str(c * self.color_modifier) for c in self.get_color_vec(color)]        
+            color = [str(c * self.color_modifier) for c in self.get_color_vec(color)]
         else:
             color = [str(c) for c in color[:3]]
 
@@ -258,7 +258,7 @@ class PymolPrinter(object):
             uids += [uid]
 
             s += "cgox_%s = []" % (uid) + '\n'
-          
+
             if np.all(n==p):
                 pos = n
                 axes = [ [2,0,0], [0,2,0], [0,0,2] ]
@@ -437,13 +437,13 @@ class PymolPrinter(object):
     def add_stem_like_core(self, coords, twists, stem_len, key,
                            color='green', width=2.4):
         (p, n) = coords
-
+        width*=self.cylinder_width
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key, key=key)
-        #self.add_sphere(p, 'light gray', width=2.0 ) 
-        #self.add_sphere(n, 'dark gray', width=2.0 ) 
+        #self.add_sphere(p, 'light gray', width=2.0 )
+        #self.add_sphere(n, 'dark gray', width=2.0 )
 
-        if self.add_twists:
+        if self.show_twists:
             mult = 8.
             width = .3
             #twist1o = bg.get_twists(key)[0]
@@ -474,24 +474,25 @@ class PymolPrinter(object):
 
         #stem_len = bg.stem_length(key)
 
-            for i in range(stem_len):
-                #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
-                res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
-                (pos, vec_c, vec_l, vec_r) = res
+        for i in range(stem_len):
+            #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
+            res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
+            (pos, vec_c, vec_l, vec_r) = res
+            if self.show_twists:
                 self.add_segment(pos, pos + mult * vec_c, "orange", width, '', key=key)
 
-                if self.add_letters:
-                    self.labels += [('L', list(pos + mult * vec_l))]
-                    self.labels += [('R', list(pos + mult * vec_r))]
+            if self.add_letters:
+                self.labels += [('L', list(pos + mult * vec_l))]
+                self.labels += [('R', list(pos + mult * vec_r))]
 
-                '''
-                self.add_segment(pos, pos + mult * vec_l, "yellow", width, '', key)
-                self.add_segment(pos, pos + mult * vec_r, "purple", width, '', key)
-                '''
+            '''
+            self.add_segment(pos, pos + mult * vec_l, "yellow", width, '', key)
+            self.add_segment(pos, pos + mult * vec_r, "purple", width, '', key)
+            '''
 
-                if self.display_virtual_residues:
-                    self.add_sphere(pos + mult * vec_l, "cyan", 1.)
-                    self.add_sphere(pos + mult * vec_r, "magenta", 1.)
+            if self.display_virtual_residues:
+                self.add_sphere(pos + mult * vec_l, "cyan", 1.)
+                self.add_sphere(pos + mult * vec_r, "magenta", 1.)
 
         '''
         self.add_sphere(p + mult * twist1, "white", width, key)
@@ -592,12 +593,12 @@ class PymolPrinter(object):
             points = []
             for s in stems:
                 points += [cg.coords[s][0], cg.coords[s][1]]
-            
+
             # create the linear regression
             data = np.array(points)
             datamean = data.mean(axis=0)
 
-    
+
             uu, dd, vv = np.linalg.svd(data - datamean)
 
             furthest = max([ftuv.magnitude(d) for d in (data - datamean) ])
@@ -647,7 +648,7 @@ class PymolPrinter(object):
         key=None
 
         for i in range(int(num_dashes)):
-            self.add_segment(point1 + i * (dash_length + gap_length) * direction, 
+            self.add_segment(point1 + i * (dash_length + gap_length) * direction,
                              point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
                              width, "", key=key)
 
@@ -667,12 +668,12 @@ class PymolPrinter(object):
                 self.add_stem_like(cg, key, color=color)
                 self.draw_bounding_boxes(cg, key)
             else:
-                #self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 ) 
+                #self.add_sphere(p+(n-p)*0.2, 'light gray', width=1.5 )
                 #self.add_sphere(n+(p-n)*0.2, 'dark gray', width=1.5 )
                 if key[0] == 'h':
                     if self.add_loops:
                         if key in loops:
-                            self.add_segment(p, n, color, 1.0,
+                            self.add_segment(p, n, color, self.cylinder_width,
                                              key + " " + str(cg.get_length(key)),
                                             key=key)
                 elif key[0] == 'm':
@@ -681,36 +682,36 @@ class PymolPrinter(object):
                     # check if the multiloop is longer than one. If it's not, then
                     # it has an empty define and we its length will be 1
                     if len(cg.defines[key]) == 0:
-                        self.add_segment(p, n, color, 1.0,
+                        self.add_segment(p, n, color, self.cylinder_width,
                                          key + " 1", key=key)
                     else:
-                        self.add_segment(p, n, color, 1.0,
+                        self.add_segment(p, n, color, self.cylinder_width,
                                          key + " " +
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0] + 1), key=key)
+                    if self.show_twists:
+                        self.add_segment(p, p+ 7 * twists[0], 'light gray', 0.3, '', key=key)
+                        self.add_segment(n, n+ 7 * twists[1], 'light gray', 0.3, '', key=key)
 
-                    self.add_segment(p, p+ 7 * twists[0], 'light gray', 0.3, '', key=key)
-                    self.add_segment(n, n+ 7 * twists[1], 'light gray', 0.3, '', key=key)
-
-                    x = (p + n) / 2
-                    t = ftuv.normalize((twists[0] + twists[1]) / 2.)
-                    self.add_segment(x, x + 7 * t, 'middle gray', 0.3, key=key)
+                        x = (p + n) / 2
+                        t = ftuv.normalize((twists[0] + twists[1]) / 2.)
+                        self.add_segment(x, x + 7 * t, 'middle gray', 0.3, key=key)
                 elif key[0] == 'f':
                     if self.visualize_three_and_five_prime:
-                        self.add_segment(p, n, color, 1.0,
+                        self.add_segment(p, n, color,self.cylinder_width,
                                          key + " " +
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0] + 1) + "", key=key)
 
                 elif key[0] == 't':
                     if self.visualize_three_and_five_prime:
-                        self.add_segment(p, n, color, 1.0,
+                        self.add_segment(p, n, color, self.cylinder_width,
                                          key + " " +
                                          str(cg.defines[key][1] -
                                          cg.defines[key][0]) + "", key=key)
                 else:
                     #self.add_stem_like(cg, key, "yellow", 1.0)
-                    self.add_segment(p, n, color, 1.0, key, key=key)
+                    self.add_segment(p, n, color, self.cylinder_width, key, key=key)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():
@@ -730,7 +731,7 @@ class PymolPrinter(object):
                         '''
                         self.add_segment(point1, point2, "purple",
                                          0.3, key1 + " " + key2, key=key)
-                        
+
                         '''
                     except:
                         continue
@@ -760,8 +761,8 @@ class PymolPrinter(object):
                         matplotlib.use('Agg')
                         import matplotlib.pyplot as plt
                         cmap = plt.get_cmap('gist_rainbow')
-                        self.add_sphere(va[r][a], 
-                                        color_rgb = cmap(i / float(len(va.keys()))), 
+                        self.add_sphere(va[r][a],
+                                        color_rgb = cmap(i / float(len(va.keys()))),
                                         width=atom_width)
                     else:
                         d = cg.get_node_from_residue_num(r)

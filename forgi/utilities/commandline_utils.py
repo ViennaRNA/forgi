@@ -65,7 +65,7 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
                                                  "if the input RNA is in pdb file format.")
     pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure\nfrom PDB files.")
     pdb_input_group.add_argument("--chain", type=str,
-                        help="When reading pdb-files: Only extract the given chain.")
+                        help="When reading pdb-files: Only extract the given chain(s). Comma-seperated")
     pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
                         help="When reading a single chain from a pdb-files: \nEnforce the secondary structure given as dotbracket\n string. (This only works, if --chain is given!)")
 
@@ -86,7 +86,7 @@ def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_f
         else:
             allow_many = True
         try:
-            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many, pdb_chain=args.chain,
+            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many, pdb_chain=args.chain.split(","),
                              pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
                              dissolve_length_one_stems = not args.keep_length_one_stems)
         except GraphConstructionError:
@@ -108,6 +108,7 @@ def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_f
 
 def sniff_filetype(file):
     line = next(file)
+    # PDB
     if line.startswith("ATOM") or line.startswith("HEADER") or line.startswith("HETATM"):
         return "pdb"
     line=line.strip()
@@ -117,18 +118,20 @@ def sniff_filetype(file):
     if line.startswith("name"):
         return "forgi"
     elif line.startswith("_") or line=="loop_":
-        return "mmcif"
+        return "cif"
     elif line.startswith(">"):
         return "fasta"
     elif line[0].isdigit():
         return "bpseq"
     else:
-        # Is it a bp-seq file with header?
+        # Is it a bp-seq or mmcif file with header?
         try:
             while True:
                 line = next(file).strip()
                 if line.startswith("#"):
                     continue
+                if line.startswith("_"):
+                    return "cif"
                 if line[0].isdigit():
                     try:
                         d1, nt, d2 = line.split()
@@ -189,25 +192,27 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             return [cg]
         else:
             return cg
-    elif filetype=="pdb":
+    elif filetype=="pdb" or filetype=="cif":
         if pdb_chain:
             cgs = ftmc.CoarseGrainRNA.from_pdb(filename, load_chains=pdb_chain,
                                          remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
                                          secondary_structure=pdb_dotbracket,
-                                         dissolve_length_one_stems=dissolve_length_one_stems)
+                                         dissolve_length_one_stems=dissolve_length_one_stems,
+                                         filetype=filetype)
         else:
             if pdb_dotbracket:
                 raise ValueError("pdb_dotbracket requires a chain to be given to avoid ambiguity.")
             cgs = ftmc.CoarseGrainRNA.from_pdb(filename, remove_pseudoknots = pbd_remove_pk,
-                                              dissolve_length_one_stems=dissolve_length_one_stems)
+                                              dissolve_length_one_stems=dissolve_length_one_stems,
+                                              filetype=filetype)
         if allow_many:
             return cgs
         else:
             if len(cgs)>1:
                 raise WrongFileFormat("More than one connected RNA component in pdb file {}.".format(filename))
             return cgs[0]
-    elif filetype=="mmcif":
-        raise WrongFileFormat("MMCIF files are not yet supported.")
+    #elif filetype=="mmcif":
+    #    raise WrongFileFormat("MMCIF files are not yet supported.")
     elif filetype=="bpseq":
         if rna_type=="3d":
             raise WrongFileFormat("bpseq file {} is not supported. We need 3D coordinates!".format(filename))

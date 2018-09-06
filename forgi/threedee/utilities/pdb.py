@@ -374,7 +374,7 @@ def output_chain(chain, filename, fr=None, to=None):
     io.set_structure(s)
     io.save(filename, HSelect())
 
-def output_multiple_chains(chains, filename):
+def output_multiple_chains(chains, filename, file_type="pdb"):
     '''
     Dump multiple chains to an output file. Remove the hydrogen atoms.
 
@@ -387,15 +387,17 @@ def output_multiple_chains(chains, filename):
                 return False
             else:
                 return True
-    m = bpdb.Model.Model(' ')
+    m = bpdb.Model.Model(0)
     s = bpdb.Structure.Structure(' ')
     for chain in chains:
         log.debug("Adding chain %s with %s residues", chain.id, len(chain))
         m.add(chain)
 
     s.add(m)
-
-    io = bpdb.PDBIO()
+    if file_type=="pdb":
+        io = bpdb.PDBIO()
+    else:
+        io = bpdb.MMCIFIO()
     io.set_structure(s)
     try:
         io.save(filename, HSelect())
