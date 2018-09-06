@@ -982,7 +982,7 @@ class BulgeGraph(BaseGraph):
 
         :param seq_id: An instance of RESID
         """
-        assert isinstance(seq_id, RESID)
+        assert isinstance(seq_id, RESID), "{} of type {} is not RESID".format(repr(seq_id), type(seq_id).__name__)
         return self.seq.to_integer(seq_id)
 
     def shortest_bg_loop(self, vertex):

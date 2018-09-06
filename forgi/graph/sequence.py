@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, division
 from __future__ import print_function
 from __future__ import division
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
@@ -702,6 +702,26 @@ class Sequence(object):
         for resid, nt in self._missing_nts:
             out.append({"RESID":resid, "res_name":nt})
         return out
+
+    def __add__(self, other):
+        #print("Sequence add called")
+        if isinstance(other, Sequence):
+            raise NotImplementedError("This is not yet implemented (but really should be)")
+        elif isinstance(other, str):
+            return str(self)+other
+        else:
+            return NotImplemented
+
+    def __radd__(self, other):
+        #print("Sequence radd called, other is ", repr(other), type(other).__name__, str.__name__)
+        #print(isinstance(other, str))
+        if isinstance(other, Sequence):
+            raise NotImplementedError("This is not yet implemented (but really should be)")
+        elif isinstance(other, str):
+            #print("Other is str")
+            return other+str(self)
+        else:
+            return NotImplemented
 
 class SequenceLoader:
     """

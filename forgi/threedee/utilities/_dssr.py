@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import object
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
@@ -186,19 +186,19 @@ class DSSRAnnotation(object):
         for stem in self._dssr.get("stems", []):
             dssr_helices.append(set())
             for pair in stem["pairs"]:
-                chain1, nt1=dssr_to_pdb_resid(pair["nt1"])
-                chain2, nt2=dssr_to_pdb_resid(pair["nt2"])
-                if forgi_chain is None or chain1==forgi_chain:
+                nt1=dssr_to_pdb_resid(pair["nt1"])
+                nt2=dssr_to_pdb_resid(pair["nt2"])
+                if forgi_chain is None or nt1[0]==forgi_chain:
                     dssr_helices[-1].add(nt1)
-                if forgi_chain is None or chain2==forgi_chain:
+                if forgi_chain is None or nt2[0]==forgi_chain:
                     dssr_helices[-1].add(nt2)
             if not dssr_helices[-1]:
                 del dssr_helices[-1]
         for stack in self._dssr.get("stacks", []):
             dssr_helices.append(set())
             for nt in stack["nts_long"].split(","):
-                chain, nt1 = dssr_to_pdb_resid(nt)
-                if forgi_chain is None or chain == forgi_chain:
+                nt1 = dssr_to_pdb_resid(nt)
+                if forgi_chain is None or nt1[0] == forgi_chain:
                     dssr_helices[-1].add(nt1)
             if not dssr_helices[-1]:
                 del dssr_helices[-1]
@@ -219,6 +219,7 @@ class DSSRAnnotation(object):
             forgi_helices.append(set())
             for d in helix:
                 forgi_helices[-1] |= set(n for n in self._cg.define_residue_num_iterator(d, seq_ids=True))
+        print("FH", forgi_helices)
         for i, d_helix in enumerate(dssr_helices):
             no_match = True
             for j, f_helix in enumerate(forgi_helices):
@@ -233,6 +234,7 @@ class DSSRAnnotation(object):
                     no_match = False
                     print ("forgi helix {} matches dssr helix {}. Only forgi: {}nts, only dssr: {}nts, both: {}nts".format(j,i, len(f_helix-d_helix), len(d_helix-f_helix),len(d_helix&f_helix)))
             if no_match: print("forgi helix {}: No match ({}nts)".format(j, len(f_helix)))
+        print("FH", forgi_helices)
         print ("seq   " + self._cg.seq)
         print ("forgi " + self._cg.to_dotbracket_string())
         display_f=[]
@@ -255,11 +257,12 @@ class DSSRAnnotation(object):
         print(helixstri)
         print ("DSSR  " + self._dssr["dbn"][chainname]["sstr"])
         display_d=[]
+        print(dssr_helices)
         for helix in dssr_helices:
             try:
                 display_d.append([self._cg.seq_id_to_pos(nt)-1 for nt in helix ])
             except ValueError as e:
-                warnings.warn (str(type(e))+str(e))
+                log.exception("Exception occurred")
         display_d.sort(key=lambda x: min(x))
         helixstri="dssr  "
         for i in range(len(self._cg.seq)):
