@@ -168,7 +168,9 @@ def _run_dssr(filename, subprocess_kwargs={}):
     # See http://forum.x3dna.org/rna-structures/redirect-auxiliary-file-output/
     with fus.make_temp_directory() as dssr_output_dir:
         dssr_out = os.path.join(dssr_output_dir, "out")
-        arguments = ['x3dna-dssr', "-i="+filename, "--prefix="+os.path.join(dssr_output_dir, "d"), "-o="+dssr_out, "--json"]
+        arguments = ['x3dna-dssr', "-i="+filename,
+                     "--prefix="+os.path.join(dssr_output_dir, "d"),
+                     "-o="+dssr_out, "--json"]
         log.info("Running DSSR: %s", sp.list2cmdline(arguments)) #https://stackoverflow.com/a/14837250/5069869
         try:
             ret_code = sp.call(arguments, universal_newlines=True, **subprocess_kwargs)
@@ -318,10 +320,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     @classmethod
     def from_pdb(cls, pdb_filename, load_chains=None, remove_pseudoknots=False,
-                 dissolve_length_one_stems = True, secondary_structure = None):
+                 dissolve_length_one_stems = True, secondary_structure = None, filetype="pdb"):
         """
         :param load_chains: A list of chain_ids or None (all chains)
         :param secondary_structure: Only useful if we load only 1 component
+        :param filetype: One of 'pdb' or 'cif'
         """
         warnings.warn("We currently do not load any long-range interactions")
         # We need to create files, so we can interface with
@@ -349,10 +352,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 chain_string="None"
             else:
                 chain_string = "-".join(map(str,load_chains))
-            rna_pdb_fn = op.join(output_dir, fn_basename+"_"+chain_string+'.temp.pdb')
+            rna_pdb_fn = op.join(output_dir, fn_basename+"_"+chain_string+'.temp.'+filetype)
             with open(rna_pdb_fn, 'w') as f:
                 #We need to output in pdb format for MC-Annotate
-                ftup.output_multiple_chains(new_chains, f.name)
+                ftup.output_multiple_chains(new_chains, f.name, filetype)
                 f.flush()
 
             # first we annotate the 3D structure
