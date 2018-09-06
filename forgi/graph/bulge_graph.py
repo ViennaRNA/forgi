@@ -717,7 +717,7 @@ class BulgeGraph(BaseGraph):
                 out.append(ml)
         return out
 
-    
+
 
 
 
@@ -2012,6 +2012,7 @@ class BulgeGraph(BaseGraph):
         :param: Return a tuple of two arrays containing the residue ids
                 on each strand
         """
+        #raise NotImplementedError("Removed. Use define_residue_num_iterator instead!")
         resnames = []
         ranges = zip(*[iter(self.defines[define])] * 2)
 

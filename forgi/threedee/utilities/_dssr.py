@@ -175,11 +175,37 @@ class DSSRAnnotation(object):
                     stacks_forgi.add(Stack((s1,s2), "stacking", "not stacking"))
         return stacks_forgi, stacks_dssr
 
+    def stacking_loops(self):
+        stacking=[]
+        for loop in self._cg.defines:
+            if loop[0] not in "im":
+                continue
+            nts_elem=[]
+            define_a = self._cg.define_a(loop)
+            pos1=define_a[0]
+            helix1 = [self._cg.seq.to_resid(pos1), self._cg.seq.to_resid(self._cg.pairing_partner(pos1))]
+            pos2 = define_a[1]
+            helix2 = [self._cg.seq.to_resid(pos2), self._cg.seq.to_resid(self._cg.pairing_partner(pos2))]
+            for stack in self._dssr.get("stacks", []):
+                nts_dssrstack=[]
+                for nt in stack["nts_long"].split(","):
+                    nt = dssr_to_pdb_resid(nt)
+                    nts_dssrstack.append(nt)
+                if any(nt in nts_dssrstack for nt in helix1) and any(nt in nts_dssrstack for nt in helix2):
+                    log.debug("elem %s is stacking ", loop)
+                    stacking.append(loop)
+                    break
+        log.debug(stacking)
+        return stacking
+
+
+
     def basepair_stacking(self, forgi_method="Tyagi"):
-        if "_" in self._cg.name:
-            chainname="chain_"+self._cg.name.split("_")[-1]
-            forgi_chain=self._cg.name.split("_")[-1]
-        else:
+        #if "_" in self._cg.name:
+        #    chainname="chain_"+self._cg.name.split("_")[-1]
+        #    forgi_chain=self._cg.name.split("_")[-1]
+        #else:
+        if True:
             chainname="all_chains"
             forgi_chain  = None
         dssr_helices = []
@@ -257,7 +283,7 @@ class DSSRAnnotation(object):
         print(helixstri)
         print ("DSSR  " + self._dssr["dbn"][chainname]["sstr"])
         display_d=[]
-        print(dssr_helices)
+        #print(dssr_helices)
         for helix in dssr_helices:
             try:
                 display_d.append([self._cg.seq_id_to_pos(nt)-1 for nt in helix ])
@@ -278,7 +304,9 @@ class DSSRAnnotation(object):
             else:
                 helixstri+=" "
         print(helixstri)
-
+        print(dssr_helices)
+        dssr_to_elems=[ self._cg.nucleotides_to_elements(list(map(self._cg.seq.to_integer, helix))) for helix in dssr_helices ]
+        print(dssr_to_elems)
     def compare_dotbracket(self):
         if "_" in self._cg.name:
             chainname="chain_"+self._cg.name.split("_")[-1]

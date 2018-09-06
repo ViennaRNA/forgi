@@ -213,10 +213,8 @@ def describe_ml_segments(cg):
             data["j3_Delta_j23_j31"].append(j3_Delta)
             dssr_stacking=False
             if "dssr_stacks" in cg.infos:
-                for stack in cg.infos["dssr_stacks"]:
-                    if s1 in stack.split("-") and s2 in stack.split("-"):
-                        dssr_stacking = True
-                        break
+                if segment in cg.infos["dssr_stacks"]:
+                    dssr_stacking = True
             data["dssr_stacking"].append(dssr_stacking)
 
             kh_stem_angle = float("nan")

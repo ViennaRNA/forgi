@@ -64,7 +64,7 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
                                     description="These options only take effect, "
                                                  "if the input RNA is in pdb file format.")
     pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure\nfrom PDB files.")
-    pdb_input_group.add_argument("--chain", type=str,
+    pdb_input_group.add_argument("--chains", type=str,
                         help="When reading pdb-files: Only extract the given chain(s). Comma-seperated")
     pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
                         help="When reading a single chain from a pdb-files: \nEnforce the secondary structure given as dotbracket\n string. (This only works, if --chain is given!)")
@@ -85,8 +85,13 @@ def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_f
             allow_many = False
         else:
             allow_many = True
+        if args.chains:
+            load_chains = args.chains.split(",")
+        else:
+            load_chains = None
         try:
-            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many, pdb_chain=args.chain.split(","),
+            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many,
+                             pdb_chain=load_chains,
                              pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
                              dissolve_length_one_stems = not args.keep_length_one_stems)
         except GraphConstructionError:

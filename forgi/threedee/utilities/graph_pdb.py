@@ -1855,10 +1855,14 @@ def get_basepair_center(cg, pos):
     va1 = cg.virtual_atoms(pos)
     va2 = cg.virtual_atoms(pos2)
     avpos=np.zeros(3)
-    for atom in atoms[seq1]:
-        avpos+=va1[atom]
-    for atom in atoms[seq2]:
-        avpos+=va2[atom]
+    try:
+        for atom in atoms[seq1]:
+            avpos+=va1[atom]
+        for atom in atoms[seq2]:
+            avpos+=va2[atom]
+    except KeyError:
+        log.error("%s\n%s",va1.keys(), va2.keys())
+        raise
     avpos/=(len(atoms[seq1])+len(atoms[seq2]))
     return avpos
 

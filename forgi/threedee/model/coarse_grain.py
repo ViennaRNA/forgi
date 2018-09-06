@@ -433,7 +433,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if dssr_dict:
             for cg in cgs:
                 cg.dssr = ftud.DSSRAnnotation(dssr_dict, cg)
-                cg.infos["dssr_stacks"]=list(map("-".join, cg.dssr.coaxial_stacks()))
+                cg.infos["dssr_stacks"]=cg.dssr.stacking_loops()
         log.debug("Returning %s", cgs)
         return cgs
 
@@ -1031,8 +1031,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         stem1, stem2 = self.connections(bulge)
         side_nts = self.get_connected_residues(stem1, stem2, bulge)[0]
         #Distance
-        bp_center1 = ftug.get_basepair_center(self, side_nts[0])
-        bp_center2 = ftug.get_basepair_center(self, side_nts[1])
+        try:
+            bp_center1 = ftug.get_basepair_center(self, side_nts[0])
+            bp_center2 = ftug.get_basepair_center(self, side_nts[1])
+        except KeyError:
+            return False
         if ftuv.vec_distance(bp_center1, bp_center2)>DISTANCE_CUTOFF[is_flush]:
             if verbose: print ("Distance {} > {}".format(ftuv.vec_distance(bp_center1, bp_center2), DISTANCE_CUTOFF[is_flush]))
             return False
