@@ -242,9 +242,12 @@ class SeqidList(Sequence):
             c = Counter(self._list)
             for k,amount in c.most_common():
                 if amount>1:
-                    log.error("Seq_id %s (%s)  occurs %s times!", k, repr(k), amount)
+                    log.error("Seq_id %s  occurs %s times!", k, amount)
                 else:
                     break
+            else:
+                raise ValueError("len %s (%s) != (%s) len %s", self._lookup, len(self._lookup),
+                                                               len(self._list),self._list)
             raise ValueError("Duplicate Seq_id encountered: {}".format(k))
     def __getitem__(self, i):
         return self._list[i]
