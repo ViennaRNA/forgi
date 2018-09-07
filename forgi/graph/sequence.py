@@ -237,7 +237,15 @@ class SeqidList(Sequence):
     def __init__(self, *args):
         self._list=list(*args)
         self._lookup={resid:i for i, resid in enumerate(self._list)}
-        assert len(self._lookup)==len(self._list) # No duplicate seqids
+        if len(self._lookup)!=len(self._list):
+            # duplicate seqids
+            c = Counter(self._list)
+            for k,amount in c.most_common():
+                if amount>1:
+                    log.error("Seq_id %s (%s)  occurs %s times!", k, repr(k), amount)
+                else:
+                    break
+            raise ValueError("Duplicate Seq_id encountered: {}".format(k))
     def __getitem__(self, i):
         return self._list[i]
     def __len__(self):
