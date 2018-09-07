@@ -135,7 +135,7 @@ def to_4_letter_alphabeth(chain):
                     chain.detach_child(r.id)
                     continue #Continue with same i (now different residue)
                 if res_info["Standard parent"] not in ["A","U","G","C"]:
-                    log.warning("Detaching %s, because %s has standard parent '{}'.", r, r.resname, res_info["Standard parent"])
+                    log.warning("Detaching %s, because %s has standard parent '%s'.", r, r.resname, res_info["Standard parent"])
                     chain.detach_child(r.id)
                     continue #Continue with same i (now different residue)
 
