@@ -1523,7 +1523,7 @@ def add_loop_information_from_pdb_chains(bg):
                 if first_res is not None:
                     raise
                 else:
-                    e = CgConstructionError("The PDB chain does not contain any C1' atom (despite containing {} residues).".format(len(list(chain.get_residues()))))
+                    e = CgConstructionError("The PDB chain does not contain any {} atom (despite containing {} residues).".format(catom_name, len(list(chain.get_residues()))))
                     with log_to_exception(log, e):
                         log.error("The chain's last residue only has the following atoms: %s", res.child_list)
                         raise e

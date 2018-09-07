@@ -134,6 +134,11 @@ def to_4_letter_alphabeth(chain):
                     log.warning("Detaching %s, because %s is classified as non-polymeric.", r, r.resname)
                     chain.detach_child(r.id)
                     continue #Continue with same i (now different residue)
+                if res_info["Standard parent"] not in ["A","U","G","C"]:
+                    log.warning("Detaching %s, because %s has standard parent '{}'.", r, r.resname, res_info["Standard parent"])
+                    chain.detach_child(r.id)
+                    continue #Continue with same i (now different residue)
+
                 modifications[fgr.RESID(chain=chain.id,resid=(" ", r.id[1], r.id[2]))]=r.resname.strip()
                 r.resname = res_info["Standard parent"]
 

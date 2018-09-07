@@ -192,7 +192,7 @@ def _run_dssr(filename, subprocess_kwargs={}):
                 err_msg=errfile.readlines()
                 if err_msg:
                     if len(err_msg)>=3:
-                        e=CgConstructionError("DSSR could not process the file: "+err_msg[-3]) 
+                        e=CgConstructionError("DSSR could not process the file: "+err_msg[-3])
                     with log_to_exception(log, e):
                         log.error("Captured Stderr is:\n%s", "".join(["... "+line for line in err_msg]))
                     raise e
@@ -358,18 +358,16 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     log.debug("Loaded Chain %s", chain.id)
                     chain, modifications = ftup.clean_chain(chain)
                     new_chains.append(chain)
-
             log.debug("%s, %s", pdb_filename, os.path.split(pdb_filename))
             fn_basename = os.path.split(pdb_filename)[1]
             if load_chains is None:
                 chain_string="None"
             else:
                 chain_string = "-".join(map(str,load_chains))
+
             rna_pdb_fn = op.join(output_dir, fn_basename+"_"+chain_string+'.temp.'+filetype)
-            with open(rna_pdb_fn, 'w') as f:
-                #We need to output in pdb format for MC-Annotate
-                ftup.output_multiple_chains(new_chains, f.name, filetype)
-                f.flush()
+            # Output cleaned version for annotating
+            ftup.output_multiple_chains(new_chains, rna_pdb_fn, filetype)
 
             # first we annotate the 3D structure
             log.info("Starting annotation program for all chains")
