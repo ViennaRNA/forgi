@@ -610,16 +610,33 @@ def rename_rosetta_atoms(chain):
     :return: The same chain with renamed atoms
     '''
     for a in bpdb.Selection.unfold_entities(chain, 'A'):
-        oldid = a.id
+        #oldid = a.id
         a.name = a.name.replace('*', "'")
         a.fullname = a.name.replace('*', "'")
         a.id = a.id.replace('*', "'")
 
-        del a.parent.child_dict[oldid]
-        a.parent.child_dict[a.id] = a
+        #: Not needed with newer biopython versions
+        #del a.parent.child_dict[oldid]
+        #a.parent.child_dict[a.id] = a
 
     return chain
 
+def remove_disordered(chain):
+    for i, residue in enumerate(chain):
+        if hasattr(residue, "selected_child"):
+            new_res = residue.selected_child
+            chain.detach_child(residue)
+            chain.insert(i, new_res)
+            residue=new_res
+        for j, atom in enumerate(residue):
+            if hasattr(atom, "selected_child"):
+                new_atom = atom.selected_child
+                new_atom.altloc = " "
+                new_atom.occupancy = 1.0
+                residue.detach_child(atom)
+                residue.insert(j, new_atom)
+    return chain
+    
 def remove_hetatm(chain):
     '''
     Remove all the hetatms in the chain.
@@ -650,7 +667,11 @@ def clean_chain(chain):
     """
     chain, modifications = to_4_letter_alphabeth(chain)
     chain = rename_rosetta_atoms(chain)
+    chain = remove_disordered(chain)
     return chain, modifications
+
+
+
 
 def interchain_contacts(struct):
     all_atoms = bpdb.Selection.unfold_entities(struct, 'A')
