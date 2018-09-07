@@ -495,22 +495,26 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
             mr = parser.header["missing_residues"]
         except AttributeError: # A mmCIF parser
             cifdict = bpdb.MMCIF2Dict.MMCIF2Dict(in_filename)
-            mask=np.array(cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str)=="?"
-            int_seq_ids = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=int)[mask]
-            chains = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
-            insertions = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
-            insertions[insertions=="."]=" "
-            symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
             mr = []
-            if not no_annotation:
-                for i,sseq in enumerate(int_seq_ids):
-                    mr.append({
-                                "model":None,
-                                "res_name":symbol[i],
-                                "chain":chains[i],
-                                "ssseq":sseq,
-                                "insertion":insertions[i]
-                                })
+            try:
+                mask=np.array(cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str)=="?"
+                int_seq_ids = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=int)[mask]
+                chains = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
+                insertions = np.array(cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
+                insertions[insertions=="."]=" "
+                symbol = np.array(cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
+            except KeyError:
+                pass
+            else:
+                if not no_annotation:
+                    for i,sseq in enumerate(int_seq_ids):
+                        mr.append({
+                                    "model":None,
+                                    "res_name":symbol[i],
+                                    "chain":chains[i],
+                                    "ssseq":sseq,
+                                    "insertion":insertions[i]
+                                    })
         except KeyError:
             import Bio
             mr = []
