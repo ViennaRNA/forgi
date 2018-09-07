@@ -11,7 +11,7 @@ except ImportError:
     from collections import Sequence
 
 import logging
-from collections import defaultdict
+from collections import defaultdict, Counter
 from string import ascii_lowercase, ascii_uppercase
 from functools import partial
 import inspect
