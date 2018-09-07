@@ -172,23 +172,36 @@ def _run_dssr(filename, subprocess_kwargs={}):
                      "--prefix="+os.path.join(dssr_output_dir, "d"),
                      "-o="+dssr_out, "--json"]
         log.info("Running DSSR: %s", sp.list2cmdline(arguments)) #https://stackoverflow.com/a/14837250/5069869
-        try:
-            ret_code = sp.call(arguments, universal_newlines=True, **subprocess_kwargs)
+        with open(os.path.join(dssr_output_dir, "stderror"), "w+") as errfile:
             try:
-                with open(os.path.join(dssr_output_dir, "d-2ndstrs.bpseq"), encoding='ascii') as f:
-                    bpseq=f.read()
-                with open(dssr_out) as f:
-                    dssr_dict = json.load(f)
-                    nts = dssr_dict["nts"]
-                    seq_ids = list(map(ftud.dssr_to_pdb_resid, [nt["nt_id"] for nt in nts]))
+                ret_code = sp.call(arguments, universal_newlines=True, stderr=errfile, **subprocess_kwargs)
+                try:
+                    with open(os.path.join(dssr_output_dir, "d-2ndstrs.bpseq"), encoding='ascii') as f:
+                        bpseq=f.read()
+                    with open(dssr_out) as f:
+                        dssr_dict = json.load(f)
+                        nts = dssr_dict["nts"]
+                        seq_ids = list(map(ftud.dssr_to_pdb_resid, [nt["nt_id"] for nt in nts]))
+                except (OSError, IOError) as e:
+                    with log_to_exception(log, e):
+                        log.error("Content of the directory %s is %s", dssr_output_dir, os.listdir(dssr_output_dir))
+                    raise
             except (OSError, IOError) as e:
-                with log_to_exception(log, e):
-                    log.error("Comtent of %s is %s", dssr_output_dir, os.listdir(dssr_output_dir))
-                raise
-        except OSError as e:
-            assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
-            e.strerror+=". Hint: Did you install x3dna-dssr?"
-            raise e
+                assert op.isfile(filename), "File {} (created by forgi) no longer exists".format(filename)
+                errfile.seek(0)
+                err_msg=errfile.readlines()
+                if err_msg:
+                    if len(err_msg)>=3:
+                        e=CgConstructionError("DSSR could not process the file: "+err_msg[-3]) 
+                    with log_to_exception(log, e):
+                        log.error("Captured Stderr is:\n%s", "".join(["... "+line for line in err_msg]))
+                    raise e
+                else:
+                    # On Py2.7, the filename of the executable (x3dna-dssr) is not part of the
+                    # error message raised by sp.call,
+                    # For this reason, we add the following hint (unneeded on Py3k)
+                    e.strerror+=". (Hint: Did you install x3dna-dssr?)"
+                raise e
     return bpseq, seq_ids, dssr_dict
 
 def _run_mc_annotate(filename, subprocess_kwargs={}):

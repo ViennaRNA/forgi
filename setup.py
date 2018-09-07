@@ -12,7 +12,8 @@ def try_cythonize(arg):
     from Cython.Build import cythonize
     return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
   except Exception as e:
-    return Extension("", [arg+".c"], include_dirs=[numpy.get_include()])
+    print(e)
+    return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
