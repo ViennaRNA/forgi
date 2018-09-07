@@ -11,8 +11,10 @@ import argparse
 from collections import defaultdict, Counter
 import logging
 import os.path
+import itertools as it
 import math
 import pandas as pd
+
 
 from logging_exceptions import log_to_exception
 
@@ -150,8 +152,12 @@ def describe_rna(cg, file_num, dist_pais, angle_pairs):
 def describe_ml_segments(cg):
     data = defaultdict(list)
     loops = cg.find_mlonly_multiloops()
-    for loop in loops:
-        description = cg.describe_multiloop(loop)
+    for loop in it.chain(loops, [[i] for i in cg.iloop_iterator()]):
+        print(loop)
+        if loop[0][0] =="i":
+            description=["interior_loop"]
+        else:
+            description = cg.describe_multiloop(loop)
         try:
             j3_roles = cg.assign_loop_roles(loop)
         except ValueError:
@@ -161,18 +167,18 @@ def describe_ml_segments(cg):
             j3_family3D = cg.junction_family_3d(j3_roles)
             j3_familyPerp = cg.junction_family_is_perpenticular(j3_roles)
             j3_Delta = cg.get_length(j3_roles["J23"]) - cg.get_length(j3_roles["J31"])
-
         else:
             j3_family3D = None
             j3_familyFlat = None
             j3_familyPerp = None
             j3_Delta = None
+
         loop_start = float("inf")
         for segment in loop:
             if cg.define_a(segment)[0]<loop_start:
                 loop_start = cg.define_a(segment)[0]
         for segment in loop:
-            if segment[0] !="m":
+            if segment[0] not in "mi":
                 continue
             data["loop_start_after"].append(loop_start)
             data["segment_start_after"].append(cg.define_a(segment)[0])
@@ -198,10 +204,17 @@ def describe_ml_segments(cg):
             else:
                 assert cg.get_sides(s2, segment) == (0,1)
             data["angle_between_stems"].append( ftuv.vec_angle(vec1, vec2) )
+            data["offset1"].append(ftuv.point_line_distance(cg.coords[s1][cg.get_sides(s1, segment)[0]],
+                                                           cg.coords[s2][0], cg.coords.get_direction(s2)
+                                                            ))
+            data["offset2"].append(ftuv.point_line_distance(cg.coords[s2][cg.get_sides(s2, segment)[0]],
+                                                           cg.coords[s1][0], cg.coords.get_direction(s1)
+                                                            ))
             data["junction_va_distance"].append(ftug.junction_virtual_atom_distance(cg, segment))
             data["is_external_multiloop"].append("open" in description)
             data["is_pseudoknotted_multiloop"].append("pseudoknot" in description)
             data["is_regular_multiloop"].append("regular_multiloop" in description)
+            data["is_interior_loop"].append("interior_loop" in description)
             if j3_roles is not None:
                 elem_role, = [ x[0] for x in j3_roles.items() if x[1]==segment]
             else:
