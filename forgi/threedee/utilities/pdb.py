@@ -388,7 +388,7 @@ def output_multiple_chains(chains, filename, file_type="pdb"):
             else:
                 return True
     m = bpdb.Model.Model(0)
-    s = bpdb.Structure.Structure(' ')
+    s = bpdb.Structure.Structure('stru')
     for chain in chains:
         log.debug("Adding chain %s with %s residues", chain.id, len(chain))
         m.add(chain)
