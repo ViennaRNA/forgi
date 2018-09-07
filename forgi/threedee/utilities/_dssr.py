@@ -29,19 +29,16 @@ def dssr_to_pdb_resid(dssr_resid):
         resid = dssr_resid
     if "^" in resid:
         resid, _, letter = resid.partition("^")
-        nat = []
-        for c in reversed(resid):
-            if c.isdigit(): nat.append(c)
-            else: break
-        resid="".join(reversed(nat))
-        return RESID(chain, (" ", int(resid) , letter))
     else:
-        nat = []
-        for c in reversed(resid):
-            if c.isdigit(): nat.append(c)
-            else: break
-        resid="".join(reversed(nat))
-        return RESID(chain, (" ", int(resid) ," "))
+        letter=" "
+    nat = []
+    for c in reversed(resid):
+        if c.isdigit() or c=="-":
+            nat.append(c)
+        else:
+            break
+    resid="".join(reversed(nat))
+    return RESID(chain, (" ", int(resid) ," "))
 
 
 class DSSRAnnotation(object):
