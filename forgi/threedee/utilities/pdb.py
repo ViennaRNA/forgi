@@ -625,7 +625,7 @@ def remove_disordered(chain):
     for i, residue in enumerate(chain):
         if hasattr(residue, "selected_child"):
             new_res = residue.selected_child
-            chain.detach_child(residue)
+            chain.detach_child(residue.id)
             chain.insert(i, new_res)
             residue=new_res
         for j, atom in enumerate(residue):
@@ -633,7 +633,8 @@ def remove_disordered(chain):
                 new_atom = atom.selected_child
                 new_atom.altloc = " "
                 new_atom.occupancy = 1.0
-                residue.detach_child(atom)
+                new_atom.disordered_flag=0
+                residue.detach_child(atom.id)
                 residue.insert(j, new_atom)
     return chain
     
