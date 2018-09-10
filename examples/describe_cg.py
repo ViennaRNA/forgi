@@ -185,6 +185,12 @@ def describe_ml_segments(cg):
             data["segment"].append(segment)
             data["junction_length"].append(len(loop))
             data["segment_length"].append(cg.get_length(segment))
+            if segment[0]=="i":
+              dims = list(sorted(cg.get_bulge_dimensions(segment)))
+            else:
+              dims=[-1,-1]
+            data["iloop_length_1"].append(dims[0])
+            data["iloop_length_2"].append(dims[1])
             data["loops_largest_segment_length"].append(max(cg.get_length(x) for x in loop))
             data["loops_shortest_segment_length"].append(min(cg.get_length(x) for x in loop))
             data["sum_of_loops_segment_lengths"].append(sum(cg.get_length(x) for x in loop))
