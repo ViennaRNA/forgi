@@ -5,6 +5,7 @@ from builtins import range
 import sys
 import warnings
 import itertools
+import math
 import numpy as np
 import Bio.PDB as bpdb
 from collections import defaultdict
@@ -601,6 +602,123 @@ def enumerate_interactions_kdtree(model):
                         return True
     return False"""
 
+HBOND_CUTOFF = 5
+
+def is_AU_pair(res1, res2):
+    print("Testing ", res1, res2)
+    if res1.resname.strip()=="A":
+        resA=res1
+        resU=res2
+    else:
+        resA=res2
+        resU=res1
+    a=resA["N6"].coord
+    b=resU["O4"].coord
+    c=resA["N1"].coord
+    d=resU["N3"].coord
+    d1 = ftuv.vec_distance(a,b)
+    d2 = ftuv.vec_distance(c,d)
+    if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
+        print("dist ok")
+        if is_almost_coplanar(a,b,c,d, resA["C8"].coord, resU["C6"].coord):
+            return True
+    print (d1, d2, "d too large")
+    return False
+
+def is_GU_pair(res1, res2):
+    print("Testing ", res1, res2)
+    if res1.resname.strip()=="G":
+        resG=res1
+        resU=res2
+    else:
+        resG=res2
+        resU=res1
+    a=resG["O6"].coord
+    b=resU["N3"].coord
+    c=resG["N1"].coord
+    d=resU["O2"].coord
+    d1 = ftuv.vec_distance(a,b)
+    d2 = ftuv.vec_distance(c,d)
+    if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
+        print("dist ok")
+        if is_almost_coplanar(a,b,c,d, resG["C8"].coord, resU["C6"].coord):
+            return True
+    print (d1, d2, "d too large")
+    return False
+
+def is_GC_pair(res1, res2):
+    print("Testing ", res1, res2)
+    if res1.resname.strip()=="G":
+        resG=res1
+        resC=res2
+    else:
+        resG=res2
+        resC=res1
+    a=resG["O6"].coord
+    c=resG["N1"].coord
+    e=resG["N2"].coord
+    b=resC["N4"].coord
+    d=resC["N3"].coord
+    f=resC["O2"].coord
+
+    d1 = ftuv.vec_distance(a,b)
+    d2 = ftuv.vec_distance(c,d)
+    d3 = ftuv.vec_distance(e,f)
+
+    if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF and d3<HBOND_CUTOFF:
+        print("dist ok")
+        if is_almost_coplanar(a,b,c,d,e,f, resC["C6"].coord, resG["C8"].coord):
+            return True
+    print (d1, d2, d3, "d too large")
+    return False
+
+def is_almost_coplanar(*points):
+    #https://stackoverflow.com/a/18968498
+    from numpy.linalg import svd
+    points=np.array(points).T
+    assert points.shape[0] <= points.shape[1], "There are only {} points in {} dimensions.".format(points.shape[1], points.shape[0])
+    ctr = points.mean(axis=1)
+    x = points - ctr[:,np.newaxis]
+    M = np.dot(x, x.T) # Could also use np.cov(x) here.
+    normal = svd(M)[0][:,-1]
+
+    for p in points.T:
+        w = p-ctr
+        oop_distance = ftuv.magnitude(np.dot(w, normal))/ftuv.magnitude(normal)
+        if oop_distance>0.8:
+            print("OOp dist too large:", oop_distance)
+            return False
+    return True
+def annotate_fallback(model):
+    """
+    If neither DSSR nor MC-Annotate are available, we use an ad-hoc implementation of canonical
+    basepair detection as fallback.
+    This does not work well for missing atoms or modified residues.
+    """
+    kdtree = bpdb.NeighborSearch(list(model.get_atoms()))
+    pairs = kdtree.search_all(10, "R")
+    basepairs=set()
+    for res1, res2 in pairs:
+        if res1.resname.strip() not in RNA_RESIDUES or res1.id[0].startswith("H_"):
+            continue
+        if res2.resname.strip() not in RNA_RESIDUES or res2.id[0].startswith("H_"):
+            continue
+        labels = {res1.resname.strip(), res2.resname.strip()}
+        try:
+            if labels == {"A", "U"} and is_AU_pair(res1, res2):
+                basepairs.add((res1,res2))
+            elif labels=={"G","C"} and is_GC_pair(res1, res2):
+                basepairs.add((res1, res2))
+            elif labels=={"G", "U"} and is_GU_pair(res1, res2):
+                basepairs.add((res1, res2))
+
+        except KeyError as e:
+            print(e, res1, res1.child_dict, res2, res2.child_dict)
+            pass
+
+    return basepairs
+
+
 def rename_rosetta_atoms(chain):
     '''
     Rosetta names all the backbone atoms with an asterisk rather than an
@@ -637,7 +755,7 @@ def remove_disordered(chain):
                 residue.detach_child(atom.id)
                 residue.insert(j, new_atom)
     return chain
-    
+
 def remove_hetatm(chain):
     '''
     Remove all the hetatms in the chain.
