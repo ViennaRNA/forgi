@@ -165,7 +165,7 @@ def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
     elif program == "forgi":
         return None
     else:
-        raise ValueError("Supported programs for annotating the pdb are: 'MC-Annotate' and 'DSSR', not '{}'".format(program))
+        raise ValueError("Supported programs for annotating the pdb are: 'MC-Annotate', 'DSSR' and 'forgi', not '{}'".format(program))
 
 
 def _run_dssr(filename, subprocess_kwargs={}):
@@ -378,7 +378,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             annotation = _annotate_pdb(rna_pdb_fn)
             if annotation is None:
                 # Fallback-annotation using forgi
-                bpseq, seq_ids = _annotate_fallback(new_chains)
+                bpseq, seq_ids = ftup.annotate_fallback(new_chains)
                 dssr_dict={}
             else:
                 bpseq, seq_ids, dssr_dict = annotation

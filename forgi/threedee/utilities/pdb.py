@@ -13,6 +13,7 @@ from collections import defaultdict
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
 from  forgi.threedee.utilities.modified_res import to_4_letter_alphabeth
+import forgi.graph.residue as fgr
 
 from logging_exceptions import log_to_exception
 
@@ -565,10 +566,23 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
 
 
 def enumerate_interactions_kdtree(model):
-    kdtree = bpdb.NeighborSearch(list(model.get_atoms()))
-    pairs = kdtree.search_all(6, "R")
+
+    kdtree = bpdb.NeighborSearch([a for a in model.get_atoms() if a.name[0] in ["C", "N", "O"]])
+    pairs = kdtree.search_all(6, "A")
+    res_pair_list=set()
+    for a1, a2 in pairs:
+        if a1.name not in all_side_chains and a2.name not in all_side_chains:
+            continue
+        p1 = a1.get_parent()
+        p2 = a2.get_parent()
+        if p1.id == p2.id:
+            continue
+        elif p1 < p2:
+            res_pair_list.add((p1, p2))
+        else:
+            res_pair_list.add((p2, p1))
     interacting_residues=set()
-    for res1, res2 in pairs:
+    for res1, res2 in res_pair_list:
         rna_res=None
         other_res=None
         if res1.resname.strip() in RNA_RESIDUES and not res1.id[0].startswith("H_"):
@@ -695,7 +709,7 @@ def annotate_fallback(chain_list):
     basepair detection as fallback.
     This does not work well for missing atoms or modified residues.
     """
-    kdtree = bpdb.NeighborSearch([ atom for chain in chains for atom in chain.get_atoms()])
+    kdtree = bpdb.NeighborSearch([ atom for chain in chain_list for atom in chain.get_atoms()])
     pairs = kdtree.search_all(10, "R")
     basepairs={}
     for res1, res2 in pairs:
@@ -707,7 +721,7 @@ def annotate_fallback(chain_list):
         try:
             is_bp = False
             if labels == {"A", "U"}:
-                is_bp=is_AU_pair(res1, res2))
+                is_bp=is_AU_pair(res1, res2)
             elif labels=={"G","C"}:
                 is_bp = is_GC_pair(res1, res2)
             elif labels=={"G", "U"}:
@@ -715,14 +729,14 @@ def annotate_fallback(chain_list):
             res1_id = fgr.resid_from_biopython(res1)
             res2_id = fgr.resid_from_biopython(res2)
             if res1_id in basepairs:
-                warnings.warn("More than one basepair detected for %s."
-                              " Ignoring %s-%s because %s-%s is already"
-                              " part of the structure", res1_id, res1_id, res2_id, res1_id, basepairs[res1_id])
+                warnings.warn("More than one basepair detected for {}."
+                              " Ignoring {}-{} because {}-{} is already"
+                              " part of the structure".format(res1_id, res1_id, res2_id, res1_id, basepairs[res1_id]))
                 continue
             if res2_id in basepairs:
-                warnings.warn("More than one basepair detected for %s."
-                              " Ignoring %s-%s because %s-%s is already"
-                              " part of the structure", res2_id, res2_id, res1_id, res2_id, basepairs[res2_id])
+                warnings.warn("More than one basepair detected for {}."
+                              " Ignoring {}-{} because {}-{} is already"
+                              " part of the structure".format(res2_id, res2_id, res1_id, res2_id, basepairs[res2_id]))
                 continue
             basepairs[res1_id]=res2_id
             basepairs[res2_id]=res1_id
@@ -737,15 +751,17 @@ def annotate_fallback(chain_list):
         for residue in chain:
             seq_ids.append(fgr.resid_from_biopython(residue))
     bpseq=""
+    chain_dict = {c.id:c for c in chain_list}
     for i, seqid in enumerate(seq_ids):
         if seqid in basepairs:
-            bp = seq_ids.index[basepairs[seqid]]+1
+            bp = seq_ids.index(basepairs[seqid])+1
         else:
             bp = 0
+
         bpseq+="{} {} {}\n".format(i+1,
-                                   chain_list[seqid.chain][seqid.resid].id[1].strip(),
+                                   chain_dict[seqid.chain][seqid.resid].resname.strip(),
                                    bp)
-    return bp_seq, seq_ids
+    return bpseq, seq_ids
 
 
 def rename_rosetta_atoms(chain):

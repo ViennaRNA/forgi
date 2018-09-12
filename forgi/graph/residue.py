@@ -9,12 +9,12 @@ class RESID(Resid_base):
     # Thanks to https://stackoverflow.com/a/42146452
     def __repr__(self):
         return "Res(\""+resid_to_str(self)+"\")"
-    def __new__(self, chain_or_string, resid=None):
+    def __new__(self, chain, resid=None):
         if resid is None:
-            r = resid_from_str(chain_or_string)
+            r = resid_from_str(chain)
             return r
         else:
-            return Resid_base(chain_or_string, resid)
+            return Resid_base(chain, resid)
 
 Res = RESID # So the repr can be used to create a RESID
 

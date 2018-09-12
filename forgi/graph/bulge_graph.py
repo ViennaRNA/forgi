@@ -985,7 +985,7 @@ class BulgeGraph(BaseGraph):
                  position nucleotide_number.
         """
         for d in self.stem_iterator():
-            if isinstance(nucleotide_number, fgr.RESID):
+            if isinstance(nucleotide_number, RESID):
                 bp_iter=self.stem_bp_iterator(d, seq_ids=True)
             else:
                 bp_iter=self.stem_bp_iterator(d)
