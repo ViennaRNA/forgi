@@ -142,13 +142,15 @@ def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
             program = c["PDB_ANNOTATION_TOOL"]
         else:
             while not program:
-                p = input("Choose external tool for annotating the PDB structure. (M=MC-Annotate, D=DSSR) ")
+                p = input("Choose external tool for annotating the PDB structure. (M=MC-Annotate, D=DSSR, F=Forgi's fallback implementation) ")
                 if p in "Mm":
                     program = "MC-Annotate"
                 elif p in "Dd":
                     program = "DSSR"
+                elif p in "Ff":
+                    program = "forgi"
                 else:
-                    print("Please choose either 'M' or 'D'. Press Ctrl+C to cancel.")
+                    print("Please choose either 'M', 'D' or 'F'. Press Ctrl+C to cancel.")
             config.set_config("PDB_ANNOTATION_TOOL", program)
     if program == "MC-Annotate":
         lines= _run_mc_annotate(filename, subprocess_kwargs)
@@ -160,6 +162,8 @@ def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
             raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
     elif program == "DSSR":
         return _run_dssr(filename, subprocess_kwargs)
+    elif program == "forgi":
+        return None
     else:
         raise ValueError("Supported programs for annotating the pdb are: 'MC-Annotate' and 'DSSR', not '{}'".format(program))
 
@@ -371,7 +375,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             # first we annotate the 3D structure
             log.info("Starting annotation program for all chains")
-            bpseq, seq_ids, dssr_dict = _annotate_pdb(rna_pdb_fn)
+            annotation = _annotate_pdb(rna_pdb_fn)
+            if annotation is None:
+                # Fallback-annotation using forgi
+                bpseq, seq_ids = _annotate_fallback(new_chains)
+                dssr_dict={}
+            else:
+                bpseq, seq_ids, dssr_dict = annotation
             breakpoints = breakpoints_from_seqids(seq_ids)
 
         # Here, we remove Pseudoknots on the bp-seq level. not the BulgeGraph

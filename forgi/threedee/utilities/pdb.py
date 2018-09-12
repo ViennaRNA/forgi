@@ -689,15 +689,15 @@ def is_almost_coplanar(*points):
             print("OOp dist too large:", oop_distance)
             return False
     return True
-def annotate_fallback(model):
+def annotate_fallback(chain_list):
     """
     If neither DSSR nor MC-Annotate are available, we use an ad-hoc implementation of canonical
     basepair detection as fallback.
     This does not work well for missing atoms or modified residues.
     """
-    kdtree = bpdb.NeighborSearch(list(model.get_atoms()))
+    kdtree = bpdb.NeighborSearch([ atom for chain in chains for atom in chain.get_atoms()])
     pairs = kdtree.search_all(10, "R")
-    basepairs=set()
+    basepairs={}
     for res1, res2 in pairs:
         if res1.resname.strip() not in RNA_RESIDUES or res1.id[0].startswith("H_"):
             continue
@@ -705,18 +705,47 @@ def annotate_fallback(model):
             continue
         labels = {res1.resname.strip(), res2.resname.strip()}
         try:
-            if labels == {"A", "U"} and is_AU_pair(res1, res2):
-                basepairs.add((res1,res2))
-            elif labels=={"G","C"} and is_GC_pair(res1, res2):
-                basepairs.add((res1, res2))
-            elif labels=={"G", "U"} and is_GU_pair(res1, res2):
-                basepairs.add((res1, res2))
-
+            is_bp = False
+            if labels == {"A", "U"}:
+                is_bp=is_AU_pair(res1, res2))
+            elif labels=={"G","C"}:
+                is_bp = is_GC_pair(res1, res2)
+            elif labels=={"G", "U"}:
+                is_bp = is_GU_pair(res1, res2)
+            res1_id = fgr.resid_from_biopython(res1)
+            res2_id = fgr.resid_from_biopython(res2)
+            if res1_id in basepairs:
+                warnings.warn("More than one basepair detected for %s."
+                              " Ignoring %s-%s because %s-%s is already"
+                              " part of the structure", res1_id, res1_id, res2_id, res1_id, basepairs[res1_id])
+                continue
+            if res2_id in basepairs:
+                warnings.warn("More than one basepair detected for %s."
+                              " Ignoring %s-%s because %s-%s is already"
+                              " part of the structure", res2_id, res2_id, res1_id, res2_id, basepairs[res2_id])
+                continue
+            basepairs[res1_id]=res2_id
+            basepairs[res2_id]=res1_id
         except KeyError as e:
-            print(e, res1, res1.child_dict, res2, res2.child_dict)
+            log.debug("Missing atom %s. %s has atoms %s, %s has atoms %s",
+                      e, res1, res1.child_dict, res2, res2.child_dict)
             pass
 
-    return basepairs
+
+    seq_ids = []
+    for chain in sorted(chain_list, key=lambda x: x.id):
+        for residue in chain:
+            seq_ids.append(fgr.resid_from_biopython(residue))
+    bpseq=""
+    for i, seqid in enumerate(seq_ids):
+        if seqid in basepairs:
+            bp = seq_ids.index[basepairs[seqid]]+1
+        else:
+            bp = 0
+        bpseq+="{} {} {}\n".format(i+1,
+                                   chain_list[seqid.chain][seqid.resid].id[1].strip(),
+                                   bp)
+    return bp_seq, seq_ids
 
 
 def rename_rosetta_atoms(chain):
