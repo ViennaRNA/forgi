@@ -21,6 +21,7 @@ class _GCDummy(object):
         self.defines = defines
         self.edges = edges
 
+
 class BGTransformer(object):
     def __init__(self, bg):
         self.bg = bg
@@ -28,12 +29,41 @@ class BGTransformer(object):
     def without_elements( self, elems ):
         """
         Return a copy of the BulgeGraph without the elements in elem.
-        Thier residues will be converted to missing residues.
+        Their residues will be converted to missing residues.
 
         :param elems: A list of element names, e.g. ["s1","s2"]
         """
-        raise NotImplementedError("TODO")
-
+        # We use the PDB numbering in new_defines, so we do not have to adjust indices if we remove
+        # residues in the middle.
+        resid_defines = {}
+        for k,v in self.defines:
+            resid_defines[k]=list(map(self.seq.to_resid, v))
+        new_edges  = copy.deepcopy(self.edges)
+        to_missing = []
+        for elem in elems:
+            if elem[0] !="i":
+                raise NotImplementedError("TODO")
+            else:
+                stem1, stem2 = new_edges[elem]
+                elem_define_a = list(map(self.seq.to_resid, self.define_a(elem)))
+                # Remove the iloop
+                to_missing.extend(self.define_residue_num_iterator(elem, seq_ids=True))
+                new_edges[stem1].remove(elem)
+                new_edges[stem2].remove(elem)
+                del new_edges[elem]
+                # Merge stem2 into stem1
+                new_edges[stem1]|=new_edges[stem2]
+                del new_edges[stem2]
+                if resid_defines[stem1][1] in elem_define_a:
+                    # stem1 -IL - stem2
+                    resid_defines[stem1][1] = resid_defines[stem2][1]
+                    resid_defines[stem1][2] = resid_defines[stem2][2]
+                else:
+                    # stem2 - il - stem1
+                    resid_defines[stem1][0] = resid_defines[stem2][0]
+                    resid_defines[stem1][3] = resid_defines[stem2][3]
+                del resid_defines[stem2]
+                del resid_defines[elem]
     def condensed(self):
         """
         Return a condensed copy of the BulgeGraph.

@@ -17,7 +17,7 @@ class _BulgeGraphConstruction(BaseGraph):
     An intermediate object that is used during BulgeGraphConstruction.
     It is responsible ONLY for the structure without cofold cutpoints,
     holds no sequence information and uses arbitrary graph labels during
-    it's nitialization!
+    it's intialization!
     """
     def __init__(self, tuples):
         self.defines = {}

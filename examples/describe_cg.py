@@ -277,6 +277,7 @@ def number_by(data, sorting_column = "loop_start_after", only_for_col = "is_pseu
     log.info("number_by column is %s, len(data[%s])=%s)", out_column, sorting_column, len(data[sorting_column]))
     return out_column
 
+
 parser = generateParser()
 if __name__=="__main__":
     args = parser.parse_args()

@@ -3,9 +3,20 @@ import collections
 import logging
 
 log = logging.getLogger(__name__)
+Resid_base = collections.namedtuple("complete_resid", ["chain", "resid"])
 
-RESID = collections.namedtuple("complete_resid", ["chain", "resid"])
+class RESID(Resid_base):
+    # Thanks to https://stackoverflow.com/a/42146452
+    def __repr__(self):
+        return "Res(\""+resid_to_str(self)+"\")"
+    def __new__(self, chain_or_string, resid=None):
+        if resid is None:
+            r = resid_from_str(chain_or_string)
+            return r
+        else:
+            return Resid_base(chain_or_string, resid)
 
+Res = RESID # So the repr can be used to create a RESID
 
 def resid_to_str(resid):
     if resid.chain is not None:
@@ -34,5 +45,3 @@ def resid_from_biopython(residue):
         return  RESID(residue.parent.id, residue.id)
     else:
         return RESID(None, residue.id)
-
-RESID.__repr__ = lambda x: "res"+resid_to_str(x)

@@ -717,7 +717,10 @@ class BulgeGraph(BaseGraph):
                 out.append(ml)
         return out
 
-
+    @property
+    def rods(self):
+        domains = self.get_domains()
+        return domains["rods"]
 
 
 
@@ -758,7 +761,7 @@ class BulgeGraph(BaseGraph):
         else:
             return min(self.get_bulge_dimensions(key))
 
-    def define_a(self, elem):
+    def define_a(self, elem, seq_ids=False):
         # Special case, because interior loops can have
         # defines of length 2 or 4
         if elem[0]=="i":
@@ -948,7 +951,7 @@ class BulgeGraph(BaseGraph):
     def add_info(self, key, value):
         self.infos[key].append(value)
 
-    def stem_bp_iterator(self, stem):
+    def stem_bp_iterator(self, stem, seq_ids=False):
         """
         Iterate over all the base pairs in the stem.
         """
@@ -957,7 +960,10 @@ class BulgeGraph(BaseGraph):
         stem_length = self.stem_length(stem)
 
         for i in range(stem_length):
-            yield (d[0] + i, d[3] - i)
+            if seq_ids:
+                yield self.seq.to_resid(d[0]+i), self.seq.to_resid(d[3]-i)
+            else:
+                yield (d[0] + i, d[3] - i)
 
     def stem_iterator(self):
         """
@@ -974,11 +980,15 @@ class BulgeGraph(BaseGraph):
         nucleotide_number. If this nucleotide is unpaired, return None.
 
         :param nucleotide_number: The position of the query nucleotide in the
-                                  sequence.
+                                  sequence or a RESID instance.
         :return: The number of the nucleotide base paired with the one at
                  position nucleotide_number.
         """
         for d in self.stem_iterator():
+            if isinstance(nucleotide_number, fgr.RESID):
+                bp_iter=self.stem_bp_iterator(d, seq_ids=True)
+            else:
+                bp_iter=self.stem_bp_iterator(d)
             for (r1, r2) in self.stem_bp_iterator(d):
                 if r1 == nucleotide_number:
                     return r2
