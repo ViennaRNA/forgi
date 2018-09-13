@@ -6,9 +6,9 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       str, super, zip)
 
 try:
-    from collections.abc import Sequence
+    from collections.abc import Sequence as SequenceABC
 except ImportError:
-    from collections import Sequence
+    from collections import Sequence as SequenceABC
 
 import logging
 from collections import defaultdict, Counter
@@ -233,7 +233,7 @@ class _MODIndexer(_IndexHelper):
         return _WMIndexer(self)
 
 
-class SeqidList(Sequence):
+class SeqidList(SequenceABC):
     def __init__(self, *args):
         self._list=list(*args)
         self._lookup={resid:i for i, resid in enumerate(self._list)}
@@ -259,6 +259,8 @@ class SeqidList(Sequence):
         except KeyError:
             raise ValueError("{} not in list".format(elem))
     def __eq__(self, other):
+        if not isinstance(other, SeqidList):
+            return NotImplemented
         return self._list==other._list
 
 

@@ -616,8 +616,9 @@ def enumerate_interactions_kdtree(model):
                         return True
     return False"""
 
-HBOND_CUTOFF = 5
-OOP_CUTOFF   = 0.8
+HBOND_CUTOFF = 4.5 # 4.5 and 0.9 are values optimized against DSSR for 5T5H_A-B-C
+OOP_CUTOFF   = 0.9
+
 def is_AU_pair(res1, res2):
     print("Testing ", res1, res2)
     if res1.resname.strip()=="A":
@@ -712,7 +713,7 @@ def annotate_fallback(chain_list):
     kdtree = bpdb.NeighborSearch([ atom for chain in chain_list for atom in chain.get_atoms()])
     pairs = kdtree.search_all(10, "R")
     basepairs={}
-    for res1, res2 in pairs:
+    for res1, res2 in sorted(pairs): # Sorted, so conflicting basepairs are deterministically solved
         if res1.resname.strip() not in RNA_RESIDUES or res1.id[0].startswith("H_"):
             continue
         if res2.resname.strip() not in RNA_RESIDUES or res2.id[0].startswith("H_"):

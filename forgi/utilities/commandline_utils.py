@@ -214,7 +214,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             return cgs
         else:
             if len(cgs)>1:
-                raise WrongFileFormat("More than one connected RNA component in pdb file {}.".format(filename))
+                raise WrongFileFormat("More than one connected RNA component in pdb file {}: {}".format(filename, [cg.name for cg in cgs]))
             return cgs[0]
     #elif filetype=="mmcif":
     #    raise WrongFileFormat("MMCIF files are not yet supported.")
