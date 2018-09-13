@@ -470,7 +470,6 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
              * interacting residues: A list of residues
     '''
     if parser is None:
-        #print("in_filename is {}".format(in_filename), file=sys.stderr)
         if in_filename.endswith(".pdb"):
             parser = bpdb.PDBParser()
         elif in_filename.endswith(".cif"):
@@ -482,11 +481,9 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
                 #page 10 of ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
                 # a HEADER entry is mandatory. Biopython sometime starts directly with ATOM
                 if line.startswith("HEADER") or line.startswith("ATOM"):
-                    #print("HEADER found", file=sys.stderr)
                     parser = bpdb.PDBParser()
                 else:
                     parser = bpdb.MMCIFParser()
-                    #print("HEADER NOT found", file=sys.stderr)
 
 
     with warnings.catch_warnings():
@@ -622,7 +619,6 @@ HBOND_CUTOFF = 4
 OOP_CUTOFF   = 0.8
 
 def is_AU_pair(res1, res2):
-    print("Testing ", res1, res2)
     if res1.resname.strip()=="A":
         resA=res1
         resU=res2
@@ -636,14 +632,12 @@ def is_AU_pair(res1, res2):
     d1 = ftuv.vec_distance(a,b)
     d2 = ftuv.vec_distance(c,d)
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
-        print("dist ok")
         if is_almost_coplanar(a,b,c,d, resA["C8"].coord, resU["C6"].coord):
             return True
     print (d1, d2, "d too large")
     return False
 
 def is_GU_pair(res1, res2):
-    print("Testing ", res1, res2)
     if res1.resname.strip()=="G":
         resG=res1
         resU=res2
@@ -657,14 +651,12 @@ def is_GU_pair(res1, res2):
     d1 = ftuv.vec_distance(a,b)
     d2 = ftuv.vec_distance(c,d)
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
-        print("dist ok")
         if is_almost_coplanar(a,b,c,d, resG["C8"].coord, resU["C6"].coord):
             return True
     print (d1, d2, "d too large")
     return False
 
 def is_GC_pair(res1, res2):
-    print("Testing ", res1, res2)
     if res1.resname.strip()=="G":
         resG=res1
         resC=res2
@@ -683,7 +675,6 @@ def is_GC_pair(res1, res2):
     d3 = ftuv.vec_distance(e,f)
 
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF and d3<HBOND_CUTOFF:
-        print("dist ok")
         if is_almost_coplanar(a,b,c,d,e,f, resC["C6"].coord, resG["C8"].coord):
             return True
     print (d1, d2, d3, "d too large")
@@ -703,7 +694,6 @@ def is_almost_coplanar(*points):
         w = p-ctr
         oop_distance = ftuv.magnitude(np.dot(w, normal))/ftuv.magnitude(normal)
         if oop_distance>OOP_CUTOFF:
-            print("OOp dist too large:", oop_distance)
             return False
     return True
 def annotate_fallback(chain_list):
