@@ -619,6 +619,7 @@ def enumerate_interactions_kdtree(model):
     return False"""
 
 HBOND_CUTOFF = 4
+OOP_CUTOFF   = 0.8
 
 def is_AU_pair(res1, res2):
     print("Testing ", res1, res2)
@@ -701,7 +702,7 @@ def is_almost_coplanar(*points):
     for p in points.T:
         w = p-ctr
         oop_distance = ftuv.magnitude(np.dot(w, normal))/ftuv.magnitude(normal)
-        if oop_distance>0.8:
+        if oop_distance>OOP_CUTOFF:
             print("OOp dist too large:", oop_distance)
             return False
     return True
