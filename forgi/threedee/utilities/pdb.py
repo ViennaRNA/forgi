@@ -566,8 +566,10 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
 
 
 def enumerate_interactions_kdtree(model):
-
-    kdtree = bpdb.NeighborSearch([a for a in model.get_atoms() if a.name[0] in ["C", "N", "O"]])
+    relevant_atoms = [a for a in model.get_atoms() if a.name[0] in ["C", "N", "O"]]
+    if not relevant_atoms:
+        return set()
+    kdtree = bpdb.NeighborSearch(relevant_atoms)
     pairs = kdtree.search_all(6, "A")
     res_pair_list=set()
     for a1, a2 in pairs:
@@ -616,7 +618,7 @@ def enumerate_interactions_kdtree(model):
                         return True
     return False"""
 
-HBOND_CUTOFF = 5
+HBOND_CUTOFF = 4
 
 def is_AU_pair(res1, res2):
     print("Testing ", res1, res2)
@@ -726,20 +728,21 @@ def annotate_fallback(chain_list):
                 is_bp = is_GC_pair(res1, res2)
             elif labels=={"G", "U"}:
                 is_bp = is_GU_pair(res1, res2)
-            res1_id = fgr.resid_from_biopython(res1)
-            res2_id = fgr.resid_from_biopython(res2)
-            if res1_id in basepairs:
-                warnings.warn("More than one basepair detected for {}."
-                              " Ignoring {}-{} because {}-{} is already"
-                              " part of the structure".format(res1_id, res1_id, res2_id, res1_id, basepairs[res1_id]))
-                continue
-            if res2_id in basepairs:
-                warnings.warn("More than one basepair detected for {}."
-                              " Ignoring {}-{} because {}-{} is already"
-                              " part of the structure".format(res2_id, res2_id, res1_id, res2_id, basepairs[res2_id]))
-                continue
-            basepairs[res1_id]=res2_id
-            basepairs[res2_id]=res1_id
+            if is_bp:
+                res1_id = fgr.resid_from_biopython(res1)
+                res2_id = fgr.resid_from_biopython(res2)
+                if res1_id in basepairs:
+                    warnings.warn("More than one basepair detected for {}."
+                                  " Ignoring {}-{} because {}-{} is already"
+                                  " part of the structure".format(res1_id, res1_id, res2_id, res1_id, basepairs[res1_id]))
+                    continue
+                if res2_id in basepairs:
+                    warnings.warn("More than one basepair detected for {}."
+                                  " Ignoring {}-{} because {}-{} is already"
+                                  " part of the structure".format(res2_id, res2_id, res1_id, res2_id, basepairs[res2_id]))
+                    continue
+                basepairs[res1_id]=res2_id
+                basepairs[res2_id]=res1_id
         except KeyError as e:
             log.debug("Missing atom %s. %s has atoms %s, %s has atoms %s",
                       e, res1, res1.child_dict, res2, res2.child_dict)
