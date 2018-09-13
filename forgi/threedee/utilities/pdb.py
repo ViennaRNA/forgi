@@ -246,7 +246,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in acceptable_residues]
 
     if len(c1_list) != len(c2_list):
-        #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
         raise Exception("Chains of different length. (Maybe an RNA-DNA hybrid?)")
 
     #c1_list.sort(key=lambda x: x.id[1])
@@ -279,7 +278,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     for i, res in enumerate(to_residues):
         dev_per_res[res].append(diff_vecs[i])
 
-    #print "rmsd len:", len(all_atoms1), len(all_atoms2)
     if superimpose:
         sup = bpdb.Superimposer()
         sup.set_atoms(all_atoms1, all_atoms2)
@@ -451,7 +449,6 @@ def get_biggest_chain(in_filename, parser=None):
             biggest = i
             biggest_len = num_residues
 
-        #print c, num_residues
     #sys.exit(1)
 
     orig_chain = chains[biggest]
@@ -634,7 +631,6 @@ def is_AU_pair(res1, res2):
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
         if is_almost_coplanar(a,b,c,d, resA["C8"].coord, resU["C6"].coord):
             return True
-    print (d1, d2, "d too large")
     return False
 
 def is_GU_pair(res1, res2):
@@ -653,7 +649,6 @@ def is_GU_pair(res1, res2):
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
         if is_almost_coplanar(a,b,c,d, resG["C8"].coord, resU["C6"].coord):
             return True
-    print (d1, d2, "d too large")
     return False
 
 def is_GC_pair(res1, res2):
@@ -677,7 +672,6 @@ def is_GC_pair(res1, res2):
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF and d3<HBOND_CUTOFF:
         if is_almost_coplanar(a,b,c,d,e,f, resC["C6"].coord, resG["C8"].coord):
             return True
-    print (d1, d2, d3, "d too large")
     return False
 
 def is_almost_coplanar(*points):
