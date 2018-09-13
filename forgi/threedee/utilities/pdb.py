@@ -246,7 +246,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     c2_list = [cr for cr in c2.get_list() if cr.resname.strip() in acceptable_residues]
 
     if len(c1_list) != len(c2_list):
-        #print >>sys.stderr, "Chains of different length", len(c1.get_list()), len(c2.get_list())
         raise Exception("Chains of different length. (Maybe an RNA-DNA hybrid?)")
 
     #c1_list.sort(key=lambda x: x.id[1])
@@ -279,7 +278,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     for i, res in enumerate(to_residues):
         dev_per_res[res].append(diff_vecs[i])
 
-    #print "rmsd len:", len(all_atoms1), len(all_atoms2)
     if superimpose:
         sup = bpdb.Superimposer()
         sup.set_atoms(all_atoms1, all_atoms2)
@@ -451,7 +449,6 @@ def get_biggest_chain(in_filename, parser=None):
             biggest = i
             biggest_len = num_residues
 
-        #print c, num_residues
     #sys.exit(1)
 
     orig_chain = chains[biggest]
@@ -470,7 +467,6 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
              * interacting residues: A list of residues
     '''
     if parser is None:
-        #print("in_filename is {}".format(in_filename), file=sys.stderr)
         if in_filename.endswith(".pdb"):
             parser = bpdb.PDBParser()
         elif in_filename.endswith(".cif"):
@@ -482,11 +478,9 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
                 #page 10 of ftp://ftp.wwpdb.org/pub/pdb/doc/format_descriptions/Format_v33_A4.pdf
                 # a HEADER entry is mandatory. Biopython sometime starts directly with ATOM
                 if line.startswith("HEADER") or line.startswith("ATOM"):
-                    #print("HEADER found", file=sys.stderr)
                     parser = bpdb.PDBParser()
                 else:
                     parser = bpdb.MMCIFParser()
-                    #print("HEADER NOT found", file=sys.stderr)
 
 
     with warnings.catch_warnings():
@@ -566,8 +560,10 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
 
 
 def enumerate_interactions_kdtree(model):
-
-    kdtree = bpdb.NeighborSearch([a for a in model.get_atoms() if a.name[0] in ["C", "N", "O"]])
+    relevant_atoms = [a for a in model.get_atoms() if a.name[0] in ["C", "N", "O"]]
+    if not relevant_atoms:
+        return set()
+    kdtree = bpdb.NeighborSearch(relevant_atoms)
     pairs = kdtree.search_all(6, "A")
     res_pair_list=set()
     for a1, a2 in pairs:
@@ -620,7 +616,6 @@ HBOND_CUTOFF = 4.5 # 4.5 and 0.9 are values optimized against DSSR for 5T5H_A-B-
 OOP_CUTOFF   = 0.9
 
 def is_AU_pair(res1, res2):
-    print("Testing ", res1, res2)
     if res1.resname.strip()=="A":
         resA=res1
         resU=res2
@@ -634,14 +629,11 @@ def is_AU_pair(res1, res2):
     d1 = ftuv.vec_distance(a,b)
     d2 = ftuv.vec_distance(c,d)
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
-        print("dist ok")
         if is_almost_coplanar(a,b,c,d, resA["C8"].coord, resU["C6"].coord):
             return True
-    print (d1, d2, "d too large")
     return False
 
 def is_GU_pair(res1, res2):
-    print("Testing ", res1, res2)
     if res1.resname.strip()=="G":
         resG=res1
         resU=res2
@@ -655,14 +647,11 @@ def is_GU_pair(res1, res2):
     d1 = ftuv.vec_distance(a,b)
     d2 = ftuv.vec_distance(c,d)
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
-        print("dist ok")
         if is_almost_coplanar(a,b,c,d, resG["C8"].coord, resU["C6"].coord):
             return True
-    print (d1, d2, "d too large")
     return False
 
 def is_GC_pair(res1, res2):
-    print("Testing ", res1, res2)
     if res1.resname.strip()=="G":
         resG=res1
         resC=res2
@@ -681,10 +670,8 @@ def is_GC_pair(res1, res2):
     d3 = ftuv.vec_distance(e,f)
 
     if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF and d3<HBOND_CUTOFF:
-        print("dist ok")
         if is_almost_coplanar(a,b,c,d,e,f, resC["C6"].coord, resG["C8"].coord):
             return True
-    print (d1, d2, d3, "d too large")
     return False
 
 def is_almost_coplanar(*points):
@@ -701,7 +688,6 @@ def is_almost_coplanar(*points):
         w = p-ctr
         oop_distance = ftuv.magnitude(np.dot(w, normal))/ftuv.magnitude(normal)
         if oop_distance>OOP_CUTOFF:
-            print("OOp dist too large:", oop_distance)
             return False
     return True
 def annotate_fallback(chain_list):
@@ -727,20 +713,21 @@ def annotate_fallback(chain_list):
                 is_bp = is_GC_pair(res1, res2)
             elif labels=={"G", "U"}:
                 is_bp = is_GU_pair(res1, res2)
-            res1_id = fgr.resid_from_biopython(res1)
-            res2_id = fgr.resid_from_biopython(res2)
-            if res1_id in basepairs:
-                warnings.warn("More than one basepair detected for {}."
-                              " Ignoring {}-{} because {}-{} is already"
-                              " part of the structure".format(res1_id, res1_id, res2_id, res1_id, basepairs[res1_id]))
-                continue
-            if res2_id in basepairs:
-                warnings.warn("More than one basepair detected for {}."
-                              " Ignoring {}-{} because {}-{} is already"
-                              " part of the structure".format(res2_id, res2_id, res1_id, res2_id, basepairs[res2_id]))
-                continue
-            basepairs[res1_id]=res2_id
-            basepairs[res2_id]=res1_id
+            if is_bp:
+                res1_id = fgr.resid_from_biopython(res1)
+                res2_id = fgr.resid_from_biopython(res2)
+                if res1_id in basepairs:
+                    warnings.warn("More than one basepair detected for {}."
+                                  " Ignoring {}-{} because {}-{} is already"
+                                  " part of the structure".format(res1_id, res1_id, res2_id, res1_id, basepairs[res1_id]))
+                    continue
+                if res2_id in basepairs:
+                    warnings.warn("More than one basepair detected for {}."
+                                  " Ignoring {}-{} because {}-{} is already"
+                                  " part of the structure".format(res2_id, res2_id, res1_id, res2_id, basepairs[res2_id]))
+                    continue
+                basepairs[res1_id]=res2_id
+                basepairs[res2_id]=res1_id
         except KeyError as e:
             log.debug("Missing atom %s. %s has atoms %s, %s has atoms %s",
                       e, res1, res1.child_dict, res2, res2.child_dict)
