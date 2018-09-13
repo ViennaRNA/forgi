@@ -243,3 +243,20 @@ try:
     rmsd = rmsd_qc_wrap
 except:
     rmsd = rmsd_kabsch
+
+
+def basepair_distance(cg1, cg2):
+    # QUESTION Move to forgi.graph? or forgi.utilities
+    # Note: An implementation in c (with python bindings) is available in the Vienna RNA package
+    dist=0
+    if str(cg1.seq) != str(cg2.seq): # Compare as strings, to ignore missing and mofified residues
+        raise Incompareable("We do not support a basepair distance between rnas with different sequences.")
+    for stem in cg1.stem_iterator():
+        for bp in cg1.stem_bp_iterator(stem):
+            if cg2.pairing_partner(bp[0])!=bp[1]:
+                dist+=1
+    for stem in cg2.stem_iterator():
+        for bp in cg2.stem_bp_iterator(stem):
+            if cg1.pairing_partner(bp[0])!=bp[1]:
+                dist+=1
+    return dist

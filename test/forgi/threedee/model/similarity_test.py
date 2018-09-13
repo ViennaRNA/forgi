@@ -147,7 +147,17 @@ class TestRMSD(unittest.TestCase):
         self.assertGreater(ftme.rmsd(a1, a3), ftme.rmsd(a1, a2))
 
 
+class TestBasepairDistance(unittest.TestCase):
+    def setUp(self):
+        self.cg1 = ftmc.CoarseGrainRNA.from_dotbracket("(((...(.)..)))")
+        self.cg2 = ftmc.CoarseGrainRNA.from_dotbracket("(.(.(.(.)).).)")
+        self.cg3 = ftmc.CoarseGrainRNA.from_dotbracket(".(((...(.).)))")
+        self.cg4 = ftmc.CoarseGrainRNA.from_dotbracket("(((........)))")
 
+    def test_basepair_distance(self):
+        self.assertEqual(ftme.basepair_distance(self.cg1, self.cg2), 2)
+        self.assertEqual(ftme.basepair_distance(self.cg1, self.cg3), 8)
+        self.assertEqual(ftme.basepair_distance(self.cg1, self.cg4), 1)
 
 ##############################################################################
 ##  The old confusion_matrix code by pkerpedjiev. Used as reference in tests
