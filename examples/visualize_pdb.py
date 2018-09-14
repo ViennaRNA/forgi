@@ -203,7 +203,14 @@ def main():
                 pymol_cmd += 'bg white\n'
                 pymol_cmd += 'clip slab, 10000\n'
                 pymol_cmd += 'orient\n'
-
+                for d in cg.defines:
+                    resids = list(cg.define_residue_num_iterator(d, seq_ids=True))
+                    if resids:
+                        chains = {r.chain for r in resids}
+                        sel = []
+                        for c in chains:
+                            sel.append("( chain {} and resi {}) ".format(c, "+".join(map(str, (r.resid[1] for r in resids )))))
+                        pymol_cmd += "select {}, ".format(d)+" or ".join(sel)+"\n"
                 if options.output is not None:
                     pymol_cmd += 'ray\n'
                     pymol_cmd += 'png %s\n' % (options.output)
