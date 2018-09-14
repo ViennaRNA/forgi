@@ -9,12 +9,18 @@ import logging
 import warnings
 
 import forgi.threedee.model.coarse_grain as ftmc
+import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.visual.pymol as ftvp
 
 from optparse import OptionParser
 
+import numpy as np
+
+def get_residue(chains, label):
+    chain, number = label.split(":")
+    return chains[chain][(' ', int(number), ' ')]
 
 def main():
     logging.basicConfig()
@@ -51,7 +57,9 @@ def main():
 
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true',
                       help='Display the virtual atoms')
-
+    parser.add_option('', '--show-bp-detection', dest='show_bp_detection', type="str",
+                      help="A comma-seperated list of residue numbers, "
+                           "for which the forgi-basepair-detection algorithm will be illustrated.")
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
@@ -90,7 +98,8 @@ def main():
     pp.add_loops = options.loops
     pp.add_longrange = options.longrange
     #sys.exit(1)
-    pp.coordinates_to_pymol(cg)
+    if not options.show_bp_detection:
+        pp.coordinates_to_pymol(cg)
     pp.print_text = options.text
     print("virtual_residues:", options.virtual_residues, file=sys.stderr)
     #pp.print_text = False
@@ -102,29 +111,68 @@ def main():
     with tf.NamedTemporaryFile(mode="w+") as f:
         with tf.NamedTemporaryFile(suffix='.pml',mode="w+") as f1:
             with tf.NamedTemporaryFile(suffix='.pdb',mode="w+") as f2:
-                chains = cg.chains.values()
+                chains = cg.chains
                 #chain = ftup.renumber_chain(chain)
-                ftup.output_multiple_chains(chains, f2.name)
+                ftup.output_multiple_chains(chains.values(), f2.name)
                 f2.flush()
 
                 # display the distances between nucleotides
                 if options.distance is not None:
-                    for dist_pair in options.distance.split(':'):
+                    for dist_pair in options.distance.split('*'):
                         fr,to = dist_pair.split(',')
-
-                        fr = int(fr)
-                        to = int(to)
-
                         try:
-                            vec1 = chain[fr]["C1*"].get_vector().get_array()
-                            vec2 = chain[to]["C1*"].get_vector().get_array()
+                            vec1 = get_residue(chains, fr)["C1'"].get_vector().get_array()
+                            vec2 = get_residue(chains, to)["C1'"].get_vector().get_array()
                         except KeyError:
                             # Rosetta produces atoms with non-standard names
-                            vec1 = chain[fr]["C1*"].get_vector().get_array()
-                            vec2 = chain[to]["C1*"].get_vector().get_array()
+                            vec1 = get_residue(chains, fr)["C1*"].get_vector().get_array()
+                            vec2 = get_residue(chains, to)["C1*"].get_vector().get_array()
 
                         pp.add_dashed(vec1, vec2, width=1.2)
 
+
+                if options.show_bp_detection:
+                    r_key1, r_key2 = options.show_bp_detection.split(",")
+                    res1 = get_residue(chains,r_key1)
+                    res2 = get_residue(chains, r_key2)
+                    points = ftup._get_points(res1, res2)
+                    for pair in points[1:]:
+                        if ftuv.vec_distance(pair[0], pair[1])<ftup.HBOND_CUTOFF:
+                            c="green"
+                        else:
+                            c="purple"
+                        pp.add_dashed(pair[0], pair[1], width=0.2, color=c)
+                    flattened_points = [ p for pair in points for p in pair]
+                    coplanar_indices, ctr, normal_vec = ftup._coplanar_point_indices(*flattened_points)
+                    for i,p in enumerate(flattened_points):
+                        if i in coplanar_indices:
+                            c = "green"
+                        else:
+                            c="purple"
+                        pp.add_sphere(p, color=c, width=0.4, text="")
+
+                    # Plane: n*P=n*A or n*(P-A)=0
+
+                    # The two reference points not involved in base-pairing
+                    d = np.dot(normal_vec, ctr)
+                    x1 = points[0][0][0]
+                    y1 = points[0][0][1]
+                    # ax+by+cz=d
+                    z1 = (d-(normal_vec[0]*x1+normal_vec[1]*y1))/normal_vec[2]
+                    x3 = points[0][1][0]
+                    y3 = points[0][1][1]
+                    z3 = (d-(normal_vec[0]*x3+normal_vec[1]*y3))/normal_vec[2]
+                    FACTOR=1.2
+                    # Get the normal to the connection of the two points in the plane
+                    conn = np.array([ x1-x3, y1-y3, z1-z3 ])
+                    vect = np.cross(conn, normal_vec)
+                    p1 = np.array([x1,y1,z1])-FACTOR*conn
+                    p3 = np.array([x3,y3,z3])+FACTOR*conn
+                    l = ftuv.vec_distance(p1,p3)/2
+                    vect/=ftuv.magnitude(vect)
+                    vect*=l
+                    corners = [ p1, ctr+vect, p3, p3, ctr-vect, p1]
+                    pp.boxes.append((corners, 'yellow'))
                 print(pp.pymol_string(), file=f)
                 f.flush()
 

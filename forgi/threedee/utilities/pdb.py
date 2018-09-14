@@ -615,7 +615,17 @@ def enumerate_interactions_kdtree(model):
 HBOND_CUTOFF = 4.5 # 4.5 and 0.9 are values optimized against DSSR for 5T5H_A-B-C
 OOP_CUTOFF   = 0.9
 
-def is_AU_pair(res1, res2):
+def _get_points(res1, res2):
+    labels = {res1.resname.strip(), res2.resname.strip()}
+    if labels == {"A", "U"}:
+        return _points_AU(res1, res2)
+    elif labels=={"G","C"}:
+        return  _points_GC(res1, res2)
+    elif labels=={"G", "U"}:
+        return _points_GC(res1, res2)
+    else:
+        return None
+def _points_AU(res1, res2):
     if res1.resname.strip()=="A":
         resA=res1
         resU=res2
@@ -626,14 +636,9 @@ def is_AU_pair(res1, res2):
     b=resU["O4"].coord
     c=resA["N1"].coord
     d=resU["N3"].coord
-    d1 = ftuv.vec_distance(a,b)
-    d2 = ftuv.vec_distance(c,d)
-    if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
-        if is_almost_coplanar(a,b,c,d, resA["C8"].coord, resU["C6"].coord):
-            return True
-    return False
+    return (resA["C8"].coord, resU["C6"].coord), (a,b), (c,d)
 
-def is_GU_pair(res1, res2):
+def _points_GU(res1, res2):
     if res1.resname.strip()=="G":
         resG=res1
         resU=res2
@@ -644,14 +649,9 @@ def is_GU_pair(res1, res2):
     b=resU["N3"].coord
     c=resG["N1"].coord
     d=resU["O2"].coord
-    d1 = ftuv.vec_distance(a,b)
-    d2 = ftuv.vec_distance(c,d)
-    if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF:
-        if is_almost_coplanar(a,b,c,d, resG["C8"].coord, resU["C6"].coord):
-            return True
-    return False
+    return (resG["C8"].coord, resU["C6"].coord), (a,b), (c,d)
 
-def is_GC_pair(res1, res2):
+def _points_GC(res1, res2):
     if res1.resname.strip()=="G":
         resG=res1
         resC=res2
@@ -664,18 +664,23 @@ def is_GC_pair(res1, res2):
     b=resC["N4"].coord
     d=resC["N3"].coord
     f=resC["O2"].coord
+    return (resC["C6"].coord, resG["C8"].coord), (a,b), (c,d), (e,f)
 
-    d1 = ftuv.vec_distance(a,b)
-    d2 = ftuv.vec_distance(c,d)
-    d3 = ftuv.vec_distance(e,f)
+def is_basepair_pair(res1, res2):
 
-    if d1<HBOND_CUTOFF and d2<HBOND_CUTOFF and d3<HBOND_CUTOFF:
-        if is_almost_coplanar(a,b,c,d,e,f, resC["C6"].coord, resG["C8"].coord):
-            return True
+    pairs = _get_points(res1, res2)
+    if not pairs:
+        return False
+    for pair in pairs[1:]: # pairs[0] is only for coplanarity]]
+        d = ftuv.vec_distance(pair[0], pair[1])
+        if d>=HBOND_CUTOFF:
+            return False
+    if is_almost_coplanar(*[point for pair in pairs for point in pair]):
+        return True
     return False
 
-def is_almost_coplanar(*points):
-    #https://stackoverflow.com/a/18968498
+def _coplanar_point_indices(*points):
+    """ Thanks to https://stackoverflow.com/a/18968498"""
     from numpy.linalg import svd
     points=np.array(points).T
     assert points.shape[0] <= points.shape[1], "There are only {} points in {} dimensions.".format(points.shape[1], points.shape[0])
@@ -684,12 +689,18 @@ def is_almost_coplanar(*points):
     M = np.dot(x, x.T) # Could also use np.cov(x) here.
     normal = svd(M)[0][:,-1]
 
-    for p in points.T:
+    out=[]
+    for i,p in enumerate(points.T):
         w = p-ctr
         oop_distance = ftuv.magnitude(np.dot(w, normal))/ftuv.magnitude(normal)
-        if oop_distance>OOP_CUTOFF:
-            return False
-    return True
+        if oop_distance<=OOP_CUTOFF:
+            out.append(i)
+    return out, ctr, normal
+
+def is_almost_coplanar(*points):
+    indices, c, n = _coplanar_point_indices(*points)
+    return len(indices)==len(points)
+
 def annotate_fallback(chain_list):
     """
     If neither DSSR nor MC-Annotate are available, we use an ad-hoc implementation of canonical
@@ -706,13 +717,7 @@ def annotate_fallback(chain_list):
             continue
         labels = {res1.resname.strip(), res2.resname.strip()}
         try:
-            is_bp = False
-            if labels == {"A", "U"}:
-                is_bp=is_AU_pair(res1, res2)
-            elif labels=={"G","C"}:
-                is_bp = is_GC_pair(res1, res2)
-            elif labels=={"G", "U"}:
-                is_bp = is_GU_pair(res1, res2)
+            is_bp = is_basepair_pair(res1, res2)
             if is_bp:
                 res1_id = fgr.resid_from_biopython(res1)
                 res2_id = fgr.resid_from_biopython(res2)

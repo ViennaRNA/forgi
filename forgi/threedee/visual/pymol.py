@@ -166,6 +166,7 @@ class PymolPrinter(object):
 
         self.new_segments = []
 
+
     def pymol_spheres_string(self):
         self.spheres += self.new_spheres
         s = ''
@@ -421,7 +422,7 @@ class PymolPrinter(object):
             color_vec = [str(c) for c in self.get_color_vec(color)]
             out_str += 'obj%s = [\n' % (uid)
             out_str += "LINEWIDTH, .8, \n"
-            out_str += "BEGIN, LINES, \n"
+            out_str += "BEGIN, TRIANGLES, \n"
             out_str += "COLOR, %s," % (",  ".join([str(c) for c in color_vec]))
             out_str += '\n'
             for corner in box:
@@ -636,11 +637,11 @@ class PymolPrinter(object):
         elif elem_name[0] == 'f':
             return 'cyan'
 
-    def add_dashed(self, point1, point2, width=0.3):
+    def add_dashed(self, point1, point2, width=0.3, color="purple"):
         '''
         Add a dashed line from point1 to point2.
         '''
-        dash_length = 0.6
+        dash_length = width / 2
         gap_length = dash_length * 2
         direction = ftuv.normalize(point2 - point1)
 
@@ -649,7 +650,7 @@ class PymolPrinter(object):
 
         for i in range(int(num_dashes)):
             self.add_segment(point1 + i * (dash_length + gap_length) * direction,
-                             point1 + (i * (dash_length + gap_length) + dash_length) * direction, "purple",
+                             point1 + (i * (dash_length + gap_length) + dash_length) * direction, color,
                              width, "", key=key)
 
 
