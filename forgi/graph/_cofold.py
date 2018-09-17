@@ -45,7 +45,7 @@ def split_at_cofold_cutpoints(bg, cutpoints):
             _split_inside_stem(bg, splitpoint, element_left)
         else:
             _split_inside_loop(bg, splitpoint, element_left)
-
+        bg._node_to_resnum={}
     if not _is_connected(bg):
         raise GraphConstructionError("Cannot create BulgeGraph. Found two sequences not connected by any "
                          " base-pair.")

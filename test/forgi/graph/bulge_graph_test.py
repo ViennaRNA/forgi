@@ -1377,7 +1377,24 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(len(all_stems), 0)
 
     def test_get_node_from_residue_num(self):
-        bg = fgb.BulgeGraph.from_bg_file('test/forgi/data/telomerase.cg')
+        bg = fgb.BulgeGraph.from_dotbracket('(((((((()))(((((((((((((((&(())))))))))))))))))))))')
+        for elem, define in bg.defines.items():
+            for d in  define:
+                self.assertEqual(bg.get_node_from_residue_num(d), elem)
+
+    def test_define_range_iterator(self):
+        bg = fgb.BulgeGraph.from_dotbracket('(((((((()))(((((((((((((((&(())))))))))))))))))))))')
+        for elem, define in bg.defines.items():
+            r = list(bg.define_range_iterator(elem))
+            print(r)
+            if len(r)==0:
+                self.assertEqual(define, [])
+            elif len(r)==1:
+                self.assertEqual(r[0], define)
+            else:
+                self.assertEqual(len(r), 2)
+                self.assertEqual(r[0], define[:2])
+                self.assertEqual(r[1], define[2:])
 
     def test_get_connected_nucleotides(self):
         db = '((..((..))..))'

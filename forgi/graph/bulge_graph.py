@@ -2311,8 +2311,8 @@ class BulgeGraph(BaseGraph):
                         nuc=f1
                     else:
                         nuc=f2
-                log.debug("Next nuc is {} ({})".format(nuc, repr(nuc)))
                 node =  self.get_node_from_residue_num(nuc)
+                log.debug("Next nuc is {} ({}), node is {}".format(nuc, repr(nuc), node))
 
 
 
