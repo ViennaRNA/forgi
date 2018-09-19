@@ -241,7 +241,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cg2 = ftmc.CoarseGrainRNA.from_bg_string(cg_str)
 
         self.assertEqual(cg.defines, cg2.defines)
-        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0) #This only looks at stems
+        self.assertLess(ftme.cg_rmsd(cg, cg2), 10**-6) #This only looks at stems
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
 
     def test_connected_cgs_from_pdb(self):
@@ -349,6 +349,16 @@ class CoarseGrainTest(tfgb.GraphVerification):
             nptest.assert_allclose(cg1.coords[key][0],cg2.coords[key][0])
             nptest.assert_allclose(cg1.coords[key][1],cg2.coords[key][1])
         nptest.assert_allclose(cg1.project_from, cg2.project_from)
+
+    def test_to_and_from_cgstring_vres(self):
+        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/2mis.pdb')
+        cg.add_all_virtual_residues()
+        cgstri = cg.to_cg_string()
+        self.assertIn("vres", cgstri)
+        cg2 = ftmc.CoarseGrainRNA.from_bg_string(cgstri)
+        self.assertEqual(len(cg2.vposs["h0"]), cg2.defines["h0"][1]-cg2.defines["h0"][0]+1)
+        self.assertLess(ftuv.vec_distance(cg.vposs["h0"][0], cg2.vposs["h0"][0]), 10**-8)
+        self.assertLess(ftuv.vec_distance(cg.vposs["i0"][2], cg2.vposs["i0"][2]), 10**-8)
 
     def test_get_bulge_angle_stats_core(self):
         cg = ftmc.CoarseGrainRNA.from_bg_file('test/forgi/threedee/data/1y26.cg')
@@ -567,7 +577,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         log.info("len(coords):{}, len(directions):{}, len(defines):{}".format(len(coords), len(directions), len(cg.defines)))
 
         cg.coords_from_directions(directions)
-        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg_old), 0)
+        self.assertLess(ftme.cg_rmsd(cg, cg_old), 10**-6)
         new_coords = cg.get_coordinates_array()
         offset = (coords - new_coords)
         assert np.allclose(offset,offset[0])
@@ -659,11 +669,11 @@ class RotationTranslationTest(unittest.TestCase):
     def test_rotate_keeps_RMSD_zero(self):
         cg1_rot = copy.deepcopy(self.cg1)
         cg1_rot.rotate(30, unit="degrees")
-        self.assertAlmostEqual(ftme.cg_rmsd(self.cg1, cg1_rot), 0) #This currently uses virtual atoms, thus takes twists into account.
+        self.assertLess(ftme.cg_rmsd(self.cg1, cg1_rot), 10**-6) #This currently uses virtual atoms, thus takes twists into account.
         print (self.cg2.coords)
         cg2_rot = copy.deepcopy(self.cg2)
         cg2_rot.rotate(45, unit="degrees")
-        self.assertAlmostEqual(ftme.cg_rmsd(self.cg2, cg2_rot), 0)
+        self.assertLess(ftme.cg_rmsd(self.cg2, cg2_rot), 10**-6)
 
 class StericValueTest(unittest.TestCase):
     def setUp(self):

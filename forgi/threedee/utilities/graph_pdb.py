@@ -1126,9 +1126,8 @@ def junction_virtual_atom_distance(bg, bulge):
     #    assert dist < dist4, "{} ({} nts): {} !< {}".format(bulge, bg.element_length(bulge), dist, dist4)
     return dist
 
-
 @profile
-def add_virtual_residues(bg, stem):
+def add_virtual_residues(bg, element):
     '''
     Create all of the virtual residues and the associated
     bases and inverses for the given stem.
@@ -1139,8 +1138,25 @@ def add_virtual_residues(bg, stem):
        `cg.add_all_virtual_residues`
 
     :param bg: The CoarseGrainRNA bulge graph containing the stem
-    :param stem: The name of the stem to be included
+    :param element: The name of the stem to be included
     '''
+    if element[0]=="s":
+        return _add_stem_virtual_residues(bg, element)
+    else:
+        return _add_loop_virtual_residues(bg, element)
+
+def _add_loop_virtual_residues(cg, element):
+    if not cg.chains:
+        log.info("No virtual residues added for %s, because no pdb chain present", element)
+        return
+    for i, resid in enumerate(cg.define_residue_num_iterator(element, seq_ids=True)):
+        global_coords = cg.chains[resid.chain][resid.resid]["C1'"].coord
+        origin, basis = element_coord_system(cg, element)
+        element_coords = ftuv.change_basis(global_coords-origin, basis, ftuv.standard_basis)
+        cg.vposs[element][i] = element_coords
+
+
+def _add_stem_virtual_residues(bg, stem):
     stem_vec = bg.coords.get_direction(stem)
     twist_vec = bg.get_twists(stem)[0]
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):
@@ -1163,13 +1179,13 @@ def add_virtual_residues(bg, stem):
         bg.vinvs[stem][i] = vinv
 
 
-def stem_vres_reference_atoms(bg, chain, s, i):
+def stem_vres_reference_atoms(bg, chains, s, i):
     '''
     Calculate the position of each atom in the reference of the
     stem and virtual residue.
 
     :param bg: The BulgeGraph
-    :param chain: The PDB representation of the chain
+    :param chains: A dictionary chain_id: BiopythonChain
     :param s: The stem identifier
     :param i: The i'th base-pair in the stem
 
@@ -1194,13 +1210,14 @@ def stem_vres_reference_atoms(bg, chain, s, i):
         else:
             res_id = residue_ids[1][-(1+i)]
         for atom in ftup.all_rna_atoms:
-            res = chain[res_id]
+            res = chains[res_id.chain][res_id.resid]
             try:
                 c = res[atom].coord
             except KeyError:
                 continue
             else:
                 new_c = cuv.change_basis(c - vpos, basis, cuv.standard_basis)
+                log.debug("Atom %s has coords %s", atom, new_c)
                 coords[strand][atom] = new_c
 
     return (vpos, basis, coords)
@@ -1369,28 +1386,6 @@ def extract_define_residues(define, chain):
         for x in range(r[0], r[1] + 1):
             c.add(chain[x])
     return c
-
-#Seems to be unused at least since version 0.3
-def receptor_angle(bg, l, s):
-    (i1, i2) = cuv.line_segment_distance(bg.coords[l][0],
-                                         bg.coords[l][1],
-                                         bg.coords[s][0],
-                                         bg.coords[s][1])
-
-    stem_len = bg.stem_length(s)
-    stem_vec = bg.coords[s][1] - bg.coords[s][0]
-
-    m1 = cuv.magnitude(i2 - bg.coords[s][0])
-    m2 = cuv.magnitude(bg.coords[s][1] - bg.coords[s][0])
-
-    res_num = (stem_len - 1.) * m1 / m2
-    vres = virtual_res_3d_pos(bg, s, res_num)[1]
-    if cuv.magnitude(i2 - i1) == 0.:
-        return 0.
-
-    incoming_angle = cuv.vector_rejection(i1 - i2, stem_vec)
-
-    return cuv.vec_angle(vres, incoming_angle)
 
 
 def add_stem_information_from_pdb_chains(cg):
@@ -1731,8 +1726,9 @@ class VirtualAtomsLookup(object):
 
     def _getitem_for_element(self, d, pos):
         """
-        :returns: A dictionary containing all atoms (as keys) and their positions (as values) for the given residue.
-        :param d: The coarse grained element (e.g. "s1")
+        :returns:   A dictionary containing all atoms (as keys) and
+                    their positions (as values) for the given residue.
+        :param d:   The coarse grained element (e.g. "s1")
         :param pos: The position of the residue. It has to be in the element d!
         """
         global _average_atom_positions

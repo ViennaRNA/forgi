@@ -441,39 +441,15 @@ class PymolPrinter(object):
         width*=self.cylinder_width
         self.add_cone(p, n, 'white', width, key)
         self.add_segment(p, n, color, width, key, key=key)
-        #self.add_sphere(p, 'light gray', width=2.0 )
-        #self.add_sphere(n, 'dark gray', width=2.0 )
 
         if self.show_twists:
             mult = 8.
             width = .3
-            #twist1o = bg.get_twists(key)[0]
-            #twist2o = bg.get_twists(key)[1]
             (twist1o, twist2o) = twists
 
             self.add_segment(p, p + mult * twist1o, "cyan", width, '', key=key)
             self.add_segment(n, n + mult * twist2o, "magenta", width, '', key=key)
-            '''
 
-            twist_rot_mat_l = cuv.rotation_matrix(n - p, -(1.45 / 2.))
-            twist_rot_mat_r = cuv.rotation_matrix(n - p, (1.45 / 2.))
-
-            twist1 = np.dot(twist_rot_mat_l, twist1o)
-            twist2 = np.dot(twist_rot_mat_l, twist2o)
-
-            twist3 = np.dot(twist_rot_mat_r, twist1o)
-            twist4 = np.dot(twist_rot_mat_r, twist2o)
-
-
-
-            self.add_segment(p, p + mult * twist1, "white", width, '', key)
-            self.add_segment(n, n + mult * twist2, "white", width, '', key)
-
-            self.add_segment(p, p + mult * twist3, "red", width, '', key)
-            self.add_segment(n, n + mult * twist4, "red", width, '', key)
-            '''
-
-        #stem_len = bg.stem_length(key)
 
         for i in range(stem_len):
             #(pos, vec) = ftug.virtual_res_3d_pos(bg, key, i)
@@ -486,19 +462,7 @@ class PymolPrinter(object):
                 self.labels += [('L', list(pos + mult * vec_l))]
                 self.labels += [('R', list(pos + mult * vec_r))]
 
-            '''
-            self.add_segment(pos, pos + mult * vec_l, "yellow", width, '', key)
-            self.add_segment(pos, pos + mult * vec_r, "purple", width, '', key)
-            '''
 
-            if self.display_virtual_residues:
-                self.add_sphere(pos + mult * vec_l, "cyan", 1.)
-                self.add_sphere(pos + mult * vec_r, "magenta", 1.)
-
-        '''
-        self.add_sphere(p + mult * twist1, "white", width, key)
-        self.add_sphere(n + mult * twist2, "white", width, key)
-        '''
 
     def add_stem_like(self, cg, key, color='green', width=2.4):
         if key in cg.twists:
@@ -609,9 +573,6 @@ class PymolPrinter(object):
 
             self.add_segment(start_point, end_point, 'white', width=4, text='', key='')
 
-
-        print("YOOOOOOOOOOOOOOOOOOOOOOO", file=sys.stderr)
-
     def get_element_color(self, elem_name):
         '''
         Get the color for this element. The color is determined by the name
@@ -713,6 +674,15 @@ class PymolPrinter(object):
                 else:
                     #self.add_stem_like(cg, key, "yellow", 1.0)
                     self.add_segment(p, n, color, self.cylinder_width, key, key=key)
+
+        if self.display_virtual_residues:
+            for i in range(1,cg.seq_length+1):
+                pos = cg.get_virtual_residue(i, True)
+                if cg.get_node_from_residue_num(i)[0]=="s":
+                    c="cyan"
+                else:
+                    c="magenta"
+                self.add_sphere(pos, c, 1.)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():

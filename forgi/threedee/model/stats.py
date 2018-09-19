@@ -30,42 +30,6 @@ avg_stem_bp_length = 2.24
 avg_twist_rotation_per_bp = 360 / 11.
 
 
-#loop_lengths = [
-#        (0., 0.),
-#        ( 7.0 , 9.0 ),
-#        ( 7.459 , 9.33 ),
-#        ( 7.774 , 8.945 ),
-#        ( 8.102 , 8.985 ),
-#        ( 6.771 , 8.182 ),
-#        ( 6.465 , 7.533 ),
-#        ( 6.435 , 7.676 ),
-#        ( 6.605 , 8.987 ),
-#        ( 8.396 , 9.367 ),
-#        ( 12.13 , 18.68 ),
-#        ( 19.76 , 22.32 ),
-#        ( 11.57 , 14.59 ),
-#        ( 8.702 , 8.744 ),
-#        ( 15.46 , 15.46 ),
-#        ( 15.0 , 30.0 ),
-#        ( 15.0 , 30.0 ),
-#        ( 15.0 , 30.0 ),
-#        ( 15. , 30. ),
-#        ( 15. , 30. ),
-#        ( 15. , 30. ),
-#        ( 15. , 30. ),
-#        ( 15. , 30. ),
-#        ( 15. , 30. ),
-#        ( 33.02 , 33.02 ) ]
-#
-#def get_loop_length(bg, key):
-#
-#    if int(bg.defines[key][0]) > int(bg.defines[key][1]):
-#        loop_length = 1.
-#    else:
-#        loop_length = int(bg.defines[key][1]) - int(bg.defines[key][0])
-#
-#    return rand.uniform(loop_lengths[loop_length][0], loop_lengths[loop_length][1])
-
 class LoopStat(object):
     '''
     Class for storing the individual statistics about loops.
@@ -83,7 +47,9 @@ class LoopStat(object):
         self.v = 0.
 
         self.define=[]
-        self.seqs=[]
+        self.seq=""
+        self.vres = {}
+
         if len(line) > 0:
             try:
                 self.parse_line(line)
@@ -109,10 +75,18 @@ class LoopStat(object):
         self.v = float(parts[5])
         if len(parts)>6:
             self.define = list(map(int, [parts[6], parts[7]]))
-            self.seqs = parts[8:]
+            self.seq = parts[8]
+        if len(parts)>9:
+            for i,j in enumerate(range(9,len(parts), 3)):
+                self.vres[i]=np.array(list(map(float(parts[j:j+3]))))
 
     def __str__(self):
-        return "{stat_type} {pdb_name} {bp_length} {phys_length} {u} {v} ".format(**self.__dict__)+" ".join(map(str, self.define))+" "+" ".join(self.seqs)
+        out= ("{stat_type} {pdb_name} {bp_length} {phys_length}"
+               " {u} {v} ".format(**self.__dict__))
+        out += " ".join(map(str, self.define))+" "+self.seqs
+        for k, v in sorted(self.vres.items(), key = lambda x: x[0]):
+            out+=" {:.8f} {:.8f} {:.8f}".format(v[0], v[1], v[2])
+        return out
 
     def __eq__(self, other):
         if type(self)==type(other):
@@ -187,7 +161,7 @@ class AngleStat(object):
     '''
 
     def __init__(self, stat_type="angle", pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
-                 define=[], seqs=[]):
+                 define=[], seq="", vres={}):
         #log.debug("Stat init called")
         self.pdb_name = pdb_name
         self.dim1 = dim1
@@ -205,8 +179,8 @@ class AngleStat(object):
         self.ang_type = ang_type
 
         self.define = define
-        self.seqs = seqs
-
+        self.seq = seq
+        self.vres = vres
 
     def __eq__(self, a_s):
         '''
@@ -278,7 +252,10 @@ class AngleStat(object):
             assert(def_len > 0)
 
         self.define = list(map(int,parts[11:11 + def_len]))
-        self.seqs = parts[11+def_len:]
+        self.seq = parts[11+def_len]
+        if len(parts)>12+def_len:
+            for i,j in enumerate(range(12+def_len,len(parts), 3)):
+                self.vres[i]=np.array(list(map(float(parts[j:j+3]))))
 
     def orientation_params(self):
         '''
