@@ -12,7 +12,7 @@ def serialize_vres(vpos):
               Groups of three numbers are x,y,z coordinates of one residue.
     """
     out_str = ""
-    for k, v in sorted(vpos, key = lambda x: x[0]):
+    for k, v in sorted(vpos.items(), key = lambda x: x[0]):
         out_str+="{:.8f} {:.8f} {:.8f} ".format(v[0], v[1], v[2])
     return out_str
 

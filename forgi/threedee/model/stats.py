@@ -83,7 +83,7 @@ class LoopStat(object):
     def __str__(self):
         out= ("{stat_type} {pdb_name} {bp_length} {phys_length}"
                " {u} {v} ".format(**self.__dict__))
-        out += " ".join(map(str, self.define))+" "+self.seqs
+        out += " ".join(map(str, self.define))+" "+self.seq
         out += ftuvres.serialize_vres(self.vres)
         return out
 
