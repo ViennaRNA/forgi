@@ -73,6 +73,7 @@ def main():
                       help='Show the big stems that encompass the colinear ones.')
     parser.add_option('-v', '--virtual-atoms', dest='virtual_atoms', default=False, action='store_true',
                       help='Display the virtual atoms')
+    parser.add_option('', '--virtual-residues', dest='virtual_residues', default=False, action='store_true', help='Display the virtual residues as spheres')
     parser.add_option('-d', '--distance', dest='distance', default=None,
                       help="Draw the lines between specified virtual residues")
     parser.add_option('-t', '--residue-distance', dest='residue_distance', default=None,
@@ -114,6 +115,7 @@ def main():
     pp.sidechain_atoms = options.sidechain_atoms
     pp.basis = options.basis
     pp.rainbow = options.rainbow
+    pp.display_virtual_residues = options.virtual_residues
 
     if options.only_elements is not None:
         pp.only_elements = options.only_elements.split(',')

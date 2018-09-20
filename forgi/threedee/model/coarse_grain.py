@@ -335,7 +335,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 cg.interacting_residues.append(fgr.resid_from_str(parts[1]))
             if parts[0] == "vres":
                 elem = parts[1]
-                cg.vposs[elem] = parse_vres(parts[2:])
+                cg.vposs[elem] = ftuvres.parse_vres(parts[2:])
 
         cg.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
         return cg
@@ -520,6 +520,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ftug.add_stem_information_from_pdb_chains(cg)
         cg.add_bulge_coords_from_stems()
         ftug.add_loop_information_from_pdb_chains(cg)
+        ftug._add_loop_vres(cg)
         assert len(cg.defines)==len(cg.coords), cg.defines.keys()^cg.coords.keys()
         cg.interacting_residues=list(r for r in map(fgr.resid_from_biopython, interacting_residues)
                                      if r.chain in chain_ids)
@@ -575,7 +576,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                         self.coords[d] = (mids1[s1b], mids2[s2b])
                     else:
                         self.coords[d] = (mids2[s2b], mids1[s1b])
-
     def add_all_virtual_residues(self):
         """
         Calls ftug.add_virtual_residues() for all stems of this RNA.
@@ -589,15 +589,15 @@ class CoarseGrainRNA(fgb.BulgeGraph):
            The position of residues in loops is much more flexible, which is why virtual
            residue positions for loops usually do not make sense.
         """
-        for elem in self.defines:
+        for stem in self.stem_iterator():
             try:
-                log.debug("Adding virtual residues for stem %s with coords %s", elem, self.coords[elem])
-                ftug.add_virtual_residues(self, elem)
+                log.debug("Adding virtual residues for stem %s with coords %s", stem, self.coords[stem])
+                ftug.add_virtual_residues(self, stem)
             except (KeyError, ValueError, AssertionError):
-                if np.all(np.isnan(self.coords[v])):
-                    raise RnaMissing3dError("No 3D coordinates available for elem {}".format(elem))
-                elif np.all(np.isnan(self.twists[v])):
-                    raise RnaMissing3dError("No twists available for elem {}".format(elem))
+                if np.all(np.isnan(self.coords[stem])):
+                    raise RnaMissing3dError("No 3D coordinates available for stem {}".format(stem))
+                elif stem[0]=="s" and np.all(np.isnan(self.twists[stem])):
+                    raise RnaMissing3dError("No twists available for stem {}".format(stem))
                 else:
                     log.warning("Reraising in add_all_virtual_residues")
                     raise
@@ -612,7 +612,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         mult=5
         elem = self.get_node_from_residue_num(pos)
-        if elem not in self.v3dposs or not self.v3dposs[elem]:
+        if elem[0]=="s" and elem not in self.v3dposs or not self.v3dposs[elem]:
             ftug.add_virtual_residues(self, elem)
         if elem[0]=="s":
             for i in range(self.stem_length(elem)):
@@ -810,7 +810,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         out=[]
         for seqid in self.interacting_residues:
             out.append("interacting\t{}".format(fgr.resid_to_str(seqid)))
-        return "\n".join(out)
+        return "\n".join(out)+"\n"
 
     def get_sampled_stems_str(self):
         out_str = ''
@@ -847,7 +847,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             cg_str = self.to_cg_string()
             f.write(cg_str)
 
-    def get_bulge_angle_stats_core(self, elem, connections):
+    def get_bulge_angle_stats_core(self, elem, forward=True):
         '''
         Return the angle stats for a particular bulge. These stats describe the
         relative orientation of the two stems that it connects.
@@ -856,6 +856,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         :param connections: The two stems that are connected by it.
         :return: ftms.AngleStat object
         '''
+        connections = self.connections(elem)
+        if not forward:
+            connections=connections[::-1]
+
         log.debug("elem %s connections %s",elem, connections)
         (stem1, twist1, stem2, twist2, bulge) = ftug.get_stem_twist_and_bulge_vecs(self, elem, connections)
         log.debug("stem1 %s, twist1 %s, stem2 %s, twist2 %s, bulge %s", stem1, twist1, stem2, twist2, bulge)
@@ -980,14 +984,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         if bulge == 'start':
             return (ftms.AngleStat(), ftms.AngleStat())
 
-        connections = self.connections(bulge)
 
-        angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
-        angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))
+        angle_stat1 = self.get_bulge_angle_stats_core(bulge, True)
+        angle_stat2 = self.get_bulge_angle_stats_core(bulge, False)
         # If we go into the reverse direction, the first vector of the element basis is inverted.
         # and thus also the last one (cross product of first and second)
-        for k,v in angle_stat2.vres.items():
-            angle_stat2.vres[k]= v*[-1,1,-1]
+        #for k,v in angle_stat2.vres.items():
+        #    angle_stat2.vres[k]= v*[-1,1,-1]
         assert round(angle_stat1.get_angle(),5) == round(angle_stat2.get_angle(),5), ("{}!={}".format(angle_stat1.get_angle(), angle_stat2.get_angle()))
         return (angle_stat1, angle_stat2)
 

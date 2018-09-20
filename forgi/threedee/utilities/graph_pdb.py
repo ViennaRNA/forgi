@@ -1552,6 +1552,11 @@ def add_loop_information_from_pdb_chains(bg):
         assert centroid is not None
         bg.coords[d] = (start_point, centroid)
 
+def _add_loop_vres(cg):
+    for elem in cg.defines:
+        if elem[0]!="s":
+            add_virtual_residues(cg, elem)
+
 def cylinder_works(cg, cylinders_to_stems, tv, c, r= 4.):
     '''
     Check if all of these points are inside the cylinder.

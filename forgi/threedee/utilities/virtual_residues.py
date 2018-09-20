@@ -1,3 +1,7 @@
+from __future__ import division, unicode_literals
+
+import numpy as np
+
 def serialize_vres(vpos):
     """
     Output carthesian coordinates for each virtual residue, ordered by nucleotide number and seperated by space.
@@ -27,5 +31,5 @@ def parse_vres(parts):
     """
     vpos={}
     for i, j in enumerate(range(0, len(parts), 3)):
-        vposs[elem][i] = np.array(list(map(float, parts[j:j+3])))
+        vpos[i] = np.array(list(map(float, parts[j:j+3])))
     return vpos

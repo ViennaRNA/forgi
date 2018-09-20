@@ -84,7 +84,7 @@ class LoopStat(object):
         out= ("{stat_type} {pdb_name} {bp_length} {phys_length}"
                " {u} {v} ".format(**self.__dict__))
         out += " ".join(map(str, self.define))+" "+self.seq
-        out += ftuvres.serialize_vres(self.vres)
+        out += " "+ftuvres.serialize_vres(self.vres)
         return out
 
     def __eq__(self, other):
@@ -214,7 +214,7 @@ class AngleStat(object):
         return True
 
     def parse_line(self, line):
-        parts = line.strip().split(' ')
+        parts = line.strip().split()
 
         self.stat_type = parts[0]
         self.pdb_name = parts[1]
@@ -252,6 +252,7 @@ class AngleStat(object):
 
         self.define = list(map(int,parts[11:11 + def_len]))
         self.seq = parts[11+def_len]
+        log.debug("len(parts)=%s, def_len=%s", len(parts), def_len)
         if len(parts)>12+def_len:
             self.vres = ftuvres.parse_vres(parts[12+def_len:])
 
