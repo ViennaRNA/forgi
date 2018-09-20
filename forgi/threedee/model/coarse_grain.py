@@ -389,6 +389,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 bpseq, seq_ids, dssr_dict = annotation
             breakpoints = breakpoints_from_seqids(seq_ids)
 
+        assert bpseq is not None, "{} {} {}".format(bpseq, seq_ids, dssr_dict)
         # Here, we remove Pseudoknots on the bp-seq level. not the BulgeGraph
         # level, because there may be multiple components, so we cannot create
         # a BulgeGraph.
