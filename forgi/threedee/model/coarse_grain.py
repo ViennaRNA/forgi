@@ -51,6 +51,7 @@ from ..utilities import _dssr as ftud
 from ..utilities import vector as ftuv
 from ...utilities import debug as fud
 from ...utilities import stuff as fus
+import forgi.threedee.utilities.virtual_residues as ftuvres
 from ...utilities.observedDict import observedDict
 from ...utilities.exceptions import CgConstructionError, CgIntegrityError, GraphConstructionError
 from .linecloud import CoordinateStorage, LineSegmentStorage
@@ -334,8 +335,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 cg.interacting_residues.append(fgr.resid_from_str(parts[1]))
             if parts[0] == "vres":
                 elem = parts[1]
-                for i, j in enumerate(range(2, len(parts), 3)):
-                    cg.vposs[elem][i] = np.array(list(map(float, parts[j:j+3])))
+                cg.vposs[elem] = parse_vres(parts[2:])
 
         cg.add_bulge_coords_from_stems() #Old versions of the file may contain bulge coordinates in the wrong order.
         return cg
@@ -822,8 +822,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         for elem in self.vposs:
             if elem[0]!="s":
                 out_str+="vres {} ".format(elem)
-                for k, v in sorted(self.vposs[elem].items(), key = lambda x: x[0]):
-                    out_str+="{:.8f} {:.8f} {:.8f} ".format(v[0], v[1], v[2])
+                out_str+=ftuvres.serialize_vres(self.vposs[elem])
                 out_str+="\n"
         return out_str
 
@@ -985,8 +984,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         angle_stat1 = self.get_bulge_angle_stats_core(bulge, connections)
         angle_stat2 = self.get_bulge_angle_stats_core(bulge, list(reversed(connections)))
         # If we go into the reverse direction, the first vector of the element basis is inverted.
+        # and thus also the last one (cross product of first and second)
         for k,v in angle_stat2.vres.items():
-            angle_stat2.vres[k]= v*[-1,1,1]
+            angle_stat2.vres[k]= v*[-1,1,-1]
         assert round(angle_stat1.get_angle(),5) == round(angle_stat2.get_angle(),5), ("{}!={}".format(angle_stat1.get_angle(), angle_stat2.get_angle()))
         return (angle_stat1, angle_stat2)
 

@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as ftuv
+import forgi.threedee.utilities.virtual_residues as ftuvres
 import forgi.threedee.utilities.graph_pdb as ftug
 
 # The two constants seem to be unused.
@@ -77,15 +78,13 @@ class LoopStat(object):
             self.define = list(map(int, [parts[6], parts[7]]))
             self.seq = parts[8]
         if len(parts)>9:
-            for i,j in enumerate(range(9,len(parts), 3)):
-                self.vres[i]=np.array(list(map(float(parts[j:j+3]))))
+            self.vres = ftuvres.parse_vres(parts[9:])
 
     def __str__(self):
         out= ("{stat_type} {pdb_name} {bp_length} {phys_length}"
                " {u} {v} ".format(**self.__dict__))
         out += " ".join(map(str, self.define))+" "+self.seqs
-        for k, v in sorted(self.vres.items(), key = lambda x: x[0]):
-            out+=" {:.8f} {:.8f} {:.8f}".format(v[0], v[1], v[2])
+        out += ftuvres.serialize_vres(self.vres)
         return out
 
     def __eq__(self, other):
@@ -254,8 +253,7 @@ class AngleStat(object):
         self.define = list(map(int,parts[11:11 + def_len]))
         self.seq = parts[11+def_len]
         if len(parts)>12+def_len:
-            for i,j in enumerate(range(12+def_len,len(parts), 3)):
-                self.vres[i]=np.array(list(map(float(parts[j:j+3]))))
+            self.vres = ftuvres.parse_vres(parts[12+def_len:])
 
     def orientation_params(self):
         '''
@@ -286,7 +284,7 @@ class AngleStat(object):
         return (self.r1, self.u1, self.v1)
 
     def __str__(self):
-        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s" % (self.stat_type,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s %s" % (self.stat_type,
                                                               self.pdb_name,
                                                               self.dim1,
                                                               self.dim2,
@@ -298,7 +296,8 @@ class AngleStat(object):
                                                               self.v1,
                                                               self.ang_type,
                                                              " ".join(map(str, self.define)),
-                                                             " ".join(self.seqs))
+                                                             self.seq,
+                                                             ftuvres.serialize_vres(self.vres))
         return out_str
     def __hash__(self):
         return hash(str(self))
