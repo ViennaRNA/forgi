@@ -38,7 +38,7 @@ def dssr_to_pdb_resid(dssr_resid):
         else:
             break
     resid="".join(reversed(nat))
-    return RESID(chain, (" ", int(resid) ," "))
+    return RESID(chain, (" ", int(resid) ,letter))
 
 
 class DSSRAnnotation(object):

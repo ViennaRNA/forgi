@@ -1443,6 +1443,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             return self.twists[node]
 
         connections = list(self.edges[node])
+        if not connections:
+            log.error("%s has no edges in cg with defines %s and edges %s", node, self.defines, self.edges)
         (s1b, s1e) = self.get_sides(connections[0], node)
 
         if len(connections) == 1:
