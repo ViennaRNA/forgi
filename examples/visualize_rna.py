@@ -65,7 +65,7 @@ def get_parser():
     parser.add_argument('--batch', default=False, action='store_true',
                         help='Start pymol in batch mode')
     parser.add_argument( '--pymol-file', type=str,
-                      help=argparse.SUPPRESS) #Store the PYMOL file under this name
+                      help=argparse.SUPPRESS) #Store the PYMOL file under this name. WARNING: Do not use .pml as file ending!!!
 
     return parser
 
@@ -141,23 +141,54 @@ def main(args):
         with open(stru_filename, "w") as f:
             f.write(pp.pymol_string())
 
+        pdb_fns = []
+        selections=""
+        for i, rna in enumerate(rnas):
+            if rna.chains:
+                obj_name = "pdb{}_{}".format(i, rna.name.replace("-", "_"))
+                fn = os.path.join(tmpdir, obj_name+".pdb")
+                pdb_fns.append(fn)
+                ftup.output_multiple_chains(rna.chains.values(), fn)
+                for d in rna.defines:
+                    resids = list(rna.define_residue_num_iterator(d, seq_ids=True))
+                    if resids:
+                        chains = {r.chain for r in resids}
+                        sel = []
+                        for c in chains:
+                            sel.append("( %{} and chain {} and resi {}) ".format(obj_name, c, "+".join(map(str, (r.resid[1] for r in resids )))))
+                        selections += "select {}, ".format(d+"_"+obj_name)+" or ".join(sel)+"\n"
+
+
         pymol_cmd = 'hide all\n'
-        pymol_cmd += 'run %s\n' % (stru_filename)
         pymol_cmd += 'show cartoon, all\n'
+        pymol_cmd += 'set cartoon_ring_mode\n'
+        pymol_cmd += 'set cartoon_tube_radius, .3\n'
+        if args.only_elements is not None:
+            pymol_cmd += "hide all\n"
+
+            for constraint in args.only_elements.split(','):
+                color = pp.get_element_color(constraint)
+
+                for r in cg.define_residue_num_iterator(constraint, seq_ids=True):
+                    pymol_cmd += "show sticks, resi %r\n" % (r[1])
+                    pymol_cmd += "color %s, resi %r\n" % (color, r[1])
+
+        pymol_cmd += 'run %s\n' % (stru_filename)
         pymol_cmd += 'bg white\n'
         pymol_cmd += 'clip slab, 10000\n'
         pymol_cmd += 'orient\n'
+        pymol_cmd += selections
         if args.output is not None:
             pymol_cmd += 'ray\n'
             pymol_cmd += 'png %s\n' % (args.output)
-            pymol_cmd += 'quit\n'
+            #pymol_cmd += 'quit\n'
         pml_filename = os.path.join(tmpdir, "command.pml")
         with open(pml_filename, "w") as f1:
             f1.write(pymol_cmd)
         if args.batch:
-            p = sp.Popen(['pymol', '-cq', pml_filename], stdout=sp.PIPE, stderr=sp.PIPE)
+            p = sp.Popen(['pymol', '-cq' ]+pdb_fns+[pml_filename], stdout=sp.PIPE, stderr=sp.PIPE)
         else:
-            p = sp.Popen(['pymol', pml_filename], stdout=sp.PIPE, stderr=sp.PIPE)
+            p = sp.Popen(['pymol']+pdb_fns+[pml_filename], stdout=sp.PIPE, stderr=sp.PIPE)
         out, err = p.communicate()
 
 

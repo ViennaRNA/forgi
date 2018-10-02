@@ -232,6 +232,7 @@ class PymolPrinter(object):
         self.cylinder_width = 1.0
         self.show_twists=True
         self.plotters = []
+        self.show_bounding_boxes = False
 
     def add_cg(self, cg):
         rna_plotter = PyMolRNA(cg.name)
@@ -247,7 +248,8 @@ class PymolPrinter(object):
 
             if key[0] == 's':
                 self.add_stem_like(rna_plotter, cg, key, color=color)
-                self.draw_bounding_boxes(rna_plotter, cg, key)
+                if self.show_bounding_boxes:
+                    self.draw_bounding_boxes(rna_plotter, cg, key)
             else:
                 if key[0] == 'h':
                     if self.add_loops:
