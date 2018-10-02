@@ -1667,7 +1667,18 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         rotation_matrix = ftuv.rotation_matrix(axis, angle)
         self.coords.rotate(rotation_matrix)
         self.twists.rotate(rotation_matrix)
+        self.after_coordinates_changed()
 
+    def rotate_translate(self, offset, rotation_matrix):
+        self.coords-=offset
+        self.coords.rotate(rotation_matrix)
+        self.twists.rotate(rotation_matrix)
+        self.after_coordinates_changed()
+        for chain in self.chains.values():
+            chain.transform([[1,0,0],[0,1,0],[0,0,1]],-offset)
+            chain.transform(rotation_matrix.T, [0,0,0])
+
+    def after_coordinates_changed(self):
         #Caching for virtual residues
         self.vposs = c.defaultdict( dict )
         self.vbases = c.defaultdict( dict )
