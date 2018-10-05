@@ -185,8 +185,8 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
                 return bg
     with open(filename) as rnafile:
         filetype = sniff_filetype(rnafile)
-    if rna_type=="pdb" and filetype!="pdb":
-        raise WrongFileFormat("Only PDB files are accepted, but file {} has type {}.".format(filename, filetype))
+    if rna_type=="pdb" and filetype not in ["pdb", "cif"]:
+        raise WrongFileFormat("Only PDB files (*.pdb/.cif) are accepted, but file {} has type {}.".format(filename, filetype))
     if rna_type=="only_cg" and filetype!="forgi":
         raise WrongFileFormat("Only forgi cg files are accepted, but file {} has type {}.".format(filename, filetype))
     if filetype=="forgi":

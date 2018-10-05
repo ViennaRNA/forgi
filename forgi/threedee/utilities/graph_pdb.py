@@ -1555,6 +1555,7 @@ def add_loop_information_from_pdb_chains(bg):
 def _add_loop_vres(cg):
     if len(cg.defines)>2:
         return # fifeprime only-cgs have no twists
+    log.debug("Adding virtual residues")
     for elem in cg.defines:
         if elem[0]!="s":
             add_virtual_residues(cg, elem)

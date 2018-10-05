@@ -635,8 +635,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 origin, basis = ftug.element_coord_system(self, elem)
                 new_coords = ftuv.change_basis(elem_coords, ftuv.standard_basis, basis)+origin
                 return new_coords
-            except KeyError:
-                log.error("Using OLD vres for loops.")
+            except KeyError as e:
+                log.error("Using OLD vres for loops: %s for pos %s in elem %s.", e, pos, elem)
                 if not allow_single_stranded:
                     raise ValueError("Position {} is not in a stem! It is in {}.".format(pos, elem))
                 if elem[0]=="h":
