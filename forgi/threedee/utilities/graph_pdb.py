@@ -39,11 +39,11 @@ import forgi.threedee.utilities.vector as ftuv
 import forgi
 from forgi.threedee.utilities.modified_res import change_residue_id
 from forgi.utilities.exceptions import CgConstructionError
-
+from forgi.threedee.utilities.pdb import AtomName
 log = logging.getLogger(__name__)
 
-catom_name = "C1'"
-REFERENCE_CATOM = "C1'"
+catom_name = AtomName("C1'")
+REFERENCE_CATOM = AtomName("C1'")
 
 
 try:
@@ -1553,7 +1553,7 @@ def add_loop_information_from_pdb_chains(bg):
         bg.coords[d] = (start_point, centroid)
 
 def _add_loop_vres(cg):
-    if len(cg.defines)>2:
+    if len(cg.defines)<2:
         return # fifeprime only-cgs have no twists
     log.debug("Adding virtual residues")
     for elem in cg.defines:

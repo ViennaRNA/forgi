@@ -739,14 +739,18 @@ def rename_rosetta_atoms(chain):
     :return: The same chain with renamed atoms
     '''
     for a in bpdb.Selection.unfold_entities(chain, 'A'):
-        #oldid = a.id
+        oldid = a.id
         a.name = a.name.replace('*', "'")
         a.fullname = a.name.replace('*', "'")
         a.id = a.id.replace('*', "'")
-
         #: Not needed with newer biopython versions
-        #del a.parent.child_dict[oldid]
-        #a.parent.child_dict[a.id] = a
+        #: Seems to be needed again?
+        del a.parent.child_dict[oldid]
+        a.parent.child_dict[a.id] = a
+    #log.debug("Replaced rosetta atoms. \n%s\n%s",
+    #                    chain.child_list[0].child_list,
+    #                    chain.child_list[0].child_dict
+    #                    )
 
     return chain
 
