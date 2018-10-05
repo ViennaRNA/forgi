@@ -1179,13 +1179,12 @@ def _add_stem_virtual_residues(bg, stem):
         bg.vinvs[stem][i] = vinv
 
 
-def stem_vres_reference_atoms(bg, chains, s, i):
+def stem_vres_reference_atoms(bg, s, i):
     '''
     Calculate the position of each atom in the reference of the
     stem and virtual residue.
 
     :param bg: The BulgeGraph
-    :param chains: A dictionary chain_id: BiopythonChain
     :param s: The stem identifier
     :param i: The i'th base-pair in the stem
 
@@ -1210,7 +1209,7 @@ def stem_vres_reference_atoms(bg, chains, s, i):
         else:
             res_id = residue_ids[1][-(1+i)]
         for atom in ftup.all_rna_atoms:
-            res = chains[res_id.chain][res_id.resid]
+            res = bg.chains[res_id.chain][res_id.resid]
             try:
                 c = res[atom].coord
             except KeyError:
@@ -1223,22 +1222,21 @@ def stem_vres_reference_atoms(bg, chains, s, i):
     return (vpos, basis, coords)
 
 
-def bounding_boxes(bg, chain, s, i):
+def bounding_boxes(bg, s, i):
     '''
     Return the bounding boxes of the two nucleotides at the
     i'th position on the stem.
 
-    :param bg: The BulgeGraph
-    :param chain: The PDB representation of the chain
+    :param bg: A BulgeGraph where bg.chains is not None
     :param s: The stem identifier
     :param i: The i'th base-pair in the stem
 
-    :return: (origin, bases, [(c1, c2), (c1, c2)]) The bases
-            (one for each nucleotide) and the corners defining the bounding box
+    :return: (origin, basis, [(c1, c2), (c1, c2)]) The bases
+             and the corners defining the bounding box
             of the two nucleotides
     '''
 
-    (vpos, bases, atoms) = stem_vres_reference_atoms(bg, chain, s, i)
+    (vpos, basis, atoms) = stem_vres_reference_atoms(bg, s, i)
     corners = []
 
     for k in range(2):
@@ -1252,7 +1250,7 @@ def bounding_boxes(bg, chain, s, i):
         n = min_c
         x = max_c
         corners += [(n, x)]
-    return (vpos, bases, corners)
+    return (vpos, basis, corners)
 
 
 def virtual_residue_atoms(bg, s, i, strand=0):

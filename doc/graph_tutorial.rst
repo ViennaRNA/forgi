@@ -16,13 +16,13 @@ The secondary structure of an RNA molecule can be divided into
 five different types of 'elements'. Each element is assigned a name that
 can be used to refer to it and to determine its identity:
 
-* **fiveprime:** The unpaired nucleotides at the 5' end of a molecule/ chain. Always start with 'f' (e.g. 'f0').
-* **threeprime**: The unpaired nucleotides at the 3' end of a molecule/ chain. Always start with 't' (e.g. 't0')
+* **fiveprime:** The unpaired nucleotides at the 5' end of a molecule/ chain. Name always starts with 'f' (e.g. 'f0').
+* **threeprime**: The unpaired nucleotides at the 3' end of a molecule/ chain. Name always start with 't' (e.g. 't0')
 * **stem:** Regions of contiguous canonical Watson-Crick base-paired nucleotides.
             Always start with 's' (e.g., 's0', 's1', 's2', ...)
 * **interior loop:** Bulged out nucleotides. Unpaird double stranded regions, flanked by stems on either side.
                      Always start with 'i' ('i0', 'i1', 'i2',...)
-* **multiloop segment:** Single-stranded unpaired regions. Always start with 'm'. ('m0', 'm1', 'm2'...)
+* **multiloop segment:** Single-stranded regions bewteen two stems. Always start with 'm'. ('m0', 'm1', 'm2'...)
                       In the current version of forgi, pseudo-knots and exterior loops segments between stems are treated as multiloop segments.
 * **hairpin loop:** Always start with 'h'.
 
@@ -65,12 +65,11 @@ Evident in this image are six structural elements.
 The multiloop itself can be divided into three unpaired sections of
 nucleotides. Each of these elements is connected to certain other elements. For
 example, the stem at the top is connected to two unpaired regions of the
-multi-loop. Both of the hairpin loops are connected one stem each. If we
+multi-loop. Both of the hairpin loops are connected to one stem each. If we
 abstract away the sequence information, we can imagine the structure as being
 represented by a graph.
 
-The forgi package can be used to do just this by using the
-dotbracket_to_bulge_graph.py script::
+The forgi package can be used to do just this using the `rnaConvert.py` script::
 
     $ python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T forgi
     name untitled
@@ -88,10 +87,8 @@ dotbracket_to_bulge_graph.py script::
     connect s0 m1 m0
 
 
-The result is an adjacency list of all the elements. The stems are defined with
-names starting with 's', hairpins with an 'h', multiloops with an 'm', interior
-loops with an 'i', five-prime unpaired regions with an 'f' and three-prime
-unpaired regions with a 't'. The numbers indicate the nucleotides that are
+The define section contain one secondary structure element per line.
+The numbers indicate the nucleotides that are
 present in each element. So the stem s0 is composed of nucleotides 1 to 9 on
 one strand and 63 to 71 on the other. The other elements are described in a
 similar manner. The hairpin *h0* includes the nucleotides 19 to 27.
@@ -182,7 +179,12 @@ Loading Structures
 ------------------
 
 There are a number of ways to represent an RNA secondary structure and forgi
-provides functionality for reading a number of them.
+can read many of them using factory-classmethods of the `BulgeGraph` object
+or its subclass, the `CoarseGrainedRNA` object.
+
+As a high-level alternative, there is the `load_rna` factory function found in
+`forgi.utilities.commandline_utils`. It automatically detects the filetype of the
+input file, calls the correct constructor and returns a list of CoarseGrainRNA objects.
 
 Loading a Structure from a Dot-Bracket String
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -194,8 +196,7 @@ secondary structure prediction tools such as `RNAfold`_ and `Mfold`_. It can
 also be used as input to create a skeleton graph in `forgi`::
 
     >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph()
-    >>> bg.from_dotbracket('((..))..((..))')
+    >>> bg = fgb.BulgeGraph.from_dotbracket('((..))..((..))')
     >>> print bg.to_bg_string()
     name untitled
     length 14
@@ -222,7 +223,6 @@ can load this file and create graph structure from it using the
 `from_bpseq_str` function::
 
     >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph()
     >>> bpstr="""1 A 0
     ... 2 A 12
     ... 3 A 11
@@ -245,8 +245,7 @@ can load this file and create graph structure from it using the
     ... 20 A 15
     ... 21 A 0
     ... """
-    >>>
-    >>> bg.from_bpseq_str(bpstr)
+    >>> bg = fbg.BulgeGraph.from_bpseq_str(bpstr)
     >>> print bg.to_bg_string()
     name untitled
     length 21
@@ -272,7 +271,7 @@ A fasta file containing an id, a sequence and a secondary structure in
 dot-bracket notation can be used to create a BulgeGraph structure::
 
     >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.from_fasta_text(""">blah
+    >>> bg = fgb.BulgeGraph.from_fasta_text(""">blah
     ... AAAACCGGGCCUUUUACCCCAAAUUGGAA
     ... ((((..(((..)))..))))...((..))
     ... """)
@@ -291,6 +290,21 @@ dot-bracket notation can be used to create a BulgeGraph structure::
     connect s2 h1 m0
     connect s1 i0 h0
     connect s0 i0 m0
+
+Using the load_rna factory function
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you prefer writing high-level code or if you are unsure about the format of the input file,
+you should use the `load_rna` factory function from the `forgi.utilities.commandline_utils` module,
+or - if integration with the argparse module is desired - the `cgs_from_args` function::
+
+    >>> import forgi.utilities.commanline_utils as fuc
+    >>> rnas = fuc.load_rna("examples/input/1y26.fx")
+    >>> for rna in rnas:
+    >>>     print(rna.name, rna.seq_length)
+    1y26 71
+
+
 
 Querying the Secondary Structure
 --------------------------------
