@@ -41,6 +41,10 @@ def get_parser():
     parser.add_argument('-x', '--text', default=False,
                       action='store_true',
                        help="Add labels indicating the element names to the figure.")
+    parser.add_argument('--labels', type=str,
+                      help="Add labels to elements. Expects a comma seperated "
+                            "string of element:label, like 'm0:LookHere' to"
+                            " display 'LookHere' at the center of 'm0'.")
     parser.add_argument( '--encompassing-stems', default=False,
                       action='store_true',
                       help=argparse.SUPPRESS)#'Show the big stems that encompass the colinear ones.')
@@ -129,8 +133,24 @@ def main(args):
 
     if args.align:
         align_rnas(rnas)
+    if args.labels:
+        label_list = args.labels.split(",")
+        labels = {}
+        for label in label_list:
+            if not label: continue
+            try:
+                elem, lab = label.split(':')
+            except ValueError:
+                raise ValueError("Please specify --labels with as list of colon-seperated tuples. Found invalid entry {}.".format(repr(label)))
+            labels[elem]=lab
+        if not pp.print_text:
+            labels = defaultdict(lambda:"", labels)
+            pp.print_text=True
+    else:
+        labels={}
+
     for rna in rnas:
-        pp.add_cg(rna)
+        pp.add_cg(rna, labels)
 
     with make_temp_directory() as tmpdir:
         # The file describing the cg-structure as cylinders
@@ -176,7 +196,7 @@ def main(args):
         pymol_cmd += 'run %s\n' % (stru_filename)
         pymol_cmd += 'bg white\n'
         pymol_cmd += 'clip slab, 10000\n'
-        pymol_cmd += 'orient\n'
+        #pymol_cmd += 'orient\n'
         pymol_cmd += selections
         if args.output is not None:
             pymol_cmd += 'ray\n'

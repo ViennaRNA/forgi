@@ -14,6 +14,7 @@ import numpy as np
 import uuid
 import collections as col
 import warnings
+import logging
 
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.graph_pdb as ftug
@@ -26,6 +27,7 @@ import Bio.PDB.Model as bpm
 import Bio.PDB.Structure as bps
 import Bio.PDB as bp
 
+log=logging.getLogger(__name__)
 
 NAMED_COLORS = {
     'green':       [0.0, 1.0, 0.0],
@@ -72,6 +74,13 @@ class PyMolRNA(object):
         self.spheres += [(np.array(p), color, width, text)]
 
     def add_segment(self, p, n, color='green', width=0.2, text="", key=''):
+        """
+        :param p: start coordinates
+        :param n: end-coordinates
+        :param color: A color. Either a 3-element list with values
+                     from 0 to 1 for R, G and B,
+                     or a color name (as defined in this modules variable NAMED_COLORS)
+        """
         self.segments += [(np.array(p), np.array(n), color, width, text, key)]
 
     def add_dashed(self, point1, point2, width=0.1, color="purple"):
@@ -132,12 +141,13 @@ class PyMolRNA(object):
                 warnings.warn("p is not iterable! It is {} (for '{}'). IGNORING. ".format(p, text))
         return s
 
-    def pymol_text_string(self):
+
+    def pymol_text_string(self, rna_number):
         counter = 0
         s = ''
         pa_s = 'cmd.set("label_size", 20)\n'
         uids = []
-
+        names = []
         for (p, n, color, width, text, key) in self.segments:
             if len(text) == 0:
                 continue
@@ -147,37 +157,27 @@ class PyMolRNA(object):
             uid = str(uuid.uuid4()).replace('-', 'x')
             uids += [uid]
 
-            s += "cgox_%s = []" % (uid) + '\n'
-
             if np.all(n==p):
                 pos = n
                 axes = [ [2,0,0], [0,2,0], [0,0,2] ]
             else:
                 comp1 = cuv.normalize(n - p)
-
                 ncl = cuv.get_non_colinear_unit_vector(comp1)
-
                 comp2 = cuv.normalize(np.cross(ncl, comp1))
                 comp3 = cuv.normalize(np.cross(ncl, comp2))
-
                 pos = (p + n) / 2.0 + 3 * comp2
-
                 axes = [list(comp1 * 2), list(comp2 * 2), list(comp3 * 2)]
 
-            text = "%s: %.1f" % (text, cuv.magnitude(n - p))
+            #text = "%s: %.1f" % (text, cuv.magnitude(n - p))
 
-            s += "cyl_text(cgox_%s, plain, %s, " % (uid, str(list(pos)))
-            s += "\"%s\", 0.20, axes=%s)" % (text, str(axes)) + '\n'
-            pa_s += "pa_%s = cmd.pseudoatom(pos=%s," % (uid, str(list(pos)))
-            pa_s += "b=1.0, label=\"%s\")\n" % (text)
+            name = "label{}_{}_{}".format(len(uids), rna_number, self.name)
+            names.append(name)
+            pa_s += 'pa_{} = cmd.pseudoatom("{}", pos={},'.format(uid, name, str(list(pos)))
+            pa_s += 'b=1.0, label="{}")\n'.format(text)
             counter += 1
 
-        s += "cmd.set(\"cgo_line_radius\",0.03)" + '\n'
-        for i in range(counter):
-            s += "cmd.load_cgo(cgox_%s, " % (uids[i])
-            s += "\'cgox%s\')" % (uids[i]) + '\n'
-        s += "cmd.zoom(\"all\", 2.0)" + '\n'
-
+        all_patoms = [ "pa_{}".format(ui) for ui in uids ]
+        pa_s += "cmd.group('{}', '{}')\n".format("labels_{}_{}".format(rna_number, self.name), " ".join(names))
         return pa_s
 
     def pymol_box_string(self):
@@ -234,10 +234,12 @@ class PymolPrinter(object):
         self.plotters = []
         self.show_bounding_boxes = False
 
-    def add_cg(self, cg):
+    def add_cg(self, cg, labels):
+        """
+        :param labels: A dictionary with element names as keys
+                       and labels as values.
+        """
         rna_plotter = PyMolRNA(cg.name)
-
-        loops = list(cg.hloop_iterator())
         for key in cg.coords.keys():
             if self.only_elements is not None:
                 if key not in self.only_elements:
@@ -247,44 +249,51 @@ class PymolPrinter(object):
             color = self.get_element_color(key)
 
             if key[0] == 's':
-                self.add_stem_like(rna_plotter, cg, key, color=color)
+                try:
+                    text = labels[key]
+                except KeyError:
+                    text = key
+                self.add_stem_like(rna_plotter, cg, text, key, color=color)
                 if self.show_bounding_boxes:
                     self.draw_bounding_boxes(rna_plotter, cg, key)
             else:
                 if key[0] == 'h':
                     if self.add_loops:
-                        if key in loops:
-                            rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                             key + " " + str(cg.get_length(key)),
+                        try:
+                            text = labels[key]
+                        except KeyError:
+                            text = key + " " + str(cg.get_length(key))
+                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                                            text,
                                             key=key)
                 elif key[0] == 'm':
                     twists = cg.get_twists(key)
+                    try:
+                        text = labels[key]
+                    except KeyError:
+                        # check if the multiloop is longer than one. If it's not, then
+                        # it has an empty define and its length will be 0
+                        if len(cg.defines[key]) == 0:
+                            text = key + " 0"
+                        else:
+                            text = key + " " + str(cg.defines[key][1] - cg.defines[key][0] + 1)
+                    rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                                            text, key=key)
+                elif key[0] in 'ft':
+                    try:
+                        text = labels[key]
+                    except KeyError:
+                        text = key + " " + str(cg.defines[key][1] - cg.defines[key][0] + 1)
 
-                    # check if the multiloop is longer than one. If it's not, then
-                    # it has an empty define and its length will be 0
-                    if len(cg.defines[key]) == 0:
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                         key + " 0", key=key)
-                    else:
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                         key + " " +
-                                         str(cg.defines[key][1] -
-                                         cg.defines[key][0] + 1), key=key)
-                elif key[0] == 'f':
                     if self.visualize_three_and_five_prime:
                         rna_plotter.add_segment(p, n, color,self.cylinder_width,
-                                         key + " " +
-                                         str(cg.defines[key][1] -
-                                         cg.defines[key][0] + 1) + "", key=key)
-
-                elif key[0] == 't':
-                    if self.visualize_three_and_five_prime:
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                         key + " " +
-                                         str(cg.defines[key][1] -
-                                         cg.defines[key][0]) + "", key=key)
-                else:
-                    rna_plotter.add_segment(p, n, color, self.cylinder_width, key, key=key)
+                                                text, key=key)
+                elif key[0]=="i":
+                    try:
+                        text = labels[key]
+                    except KeyError:
+                        text = key
+                    rna_plotter.add_segment(p, n, color, self.cylinder_width, text, key=key)
 
         if self.display_virtual_residues:
             for i in range(1,cg.seq_length+1):
@@ -294,7 +303,6 @@ class PymolPrinter(object):
                 else:
                     c="magenta"
                 rna_plotter.add_sphere(pos, c, 1.)
-
         if self.add_longrange:
             for key1 in cg.longrange.keys():
                 for key2 in cg.longrange[key1]:
@@ -361,19 +369,19 @@ class PymolPrinter(object):
                 rna_plotter.add_segment(origin, origin + 7. * basis[1], 'purple', 0.5, key=key)
         self.plotters.append(rna_plotter)
 
-    def add_stem_like(self, rna_plotter, cg, key, color='green', width=2.4):
+    def add_stem_like(self, rna_plotter, cg, text, key, color='green', width=2.4):
         if key in cg.twists:
             return self.add_stem_like_core(rna_plotter, cg.coords[key], cg.twists[key],
-                                           cg.stem_length(key), key, color, width)
+                                           cg.stem_length(key), text, key, color, width)
         else:
             return self.add_stem_like_core(rna_plotter, cg.coords[key], None,
-                                           cg.stem_length(key), key, color, width)
+                                           cg.stem_length(key), text, key, color, width)
 
-    def add_stem_like_core(self, rna_plotter, coords, twists, stem_len, key,
+    def add_stem_like_core(self, rna_plotter, coords, twists, stem_len, text, key,
                            color='green', width=2.4):
         (p, n) = coords
         width*=self.cylinder_width
-        rna_plotter.add_segment(p, n, color, width, key, key=key)
+        rna_plotter.add_segment(p, n, color, width, text, key=key)
 
         if self.show_twists:
             rna_plotter.add_cone(p, n, 'white', width, key)
@@ -431,10 +439,10 @@ class PymolPrinter(object):
                 s += plotter.pymol_segments_string()
             s += plotter.pymol_spheres_string()
             s += ']\n'
-            s += self.pymol_outro_string(object_id)
+            s += self.pymol_load_cgo_string(object_id)
 
             if self.print_text:
-                s += plotter.pymol_text_string()
+                s += plotter.pymol_text_string(i)
             s += plotter.pymol_box_string()
 
         if self.draw_axes:
@@ -447,7 +455,7 @@ class PymolPrinter(object):
         s += "from pymol.vfont import plain" + '\n'
         return s
 
-    def pymol_outro_string(self, object_id):
+    def pymol_load_cgo_string(self, object_id):
         if self.movie:
             s = "cmd.load_cgo(obj%s, 'ss%s', %d)" % (object_id,
                                                       object_id,

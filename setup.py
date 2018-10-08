@@ -70,8 +70,7 @@ setup(
       scripts=['examples/rnaConvert.py',
                'examples/describe_cg.py',
                'examples/compare_RNA.py',
-               'examples/visualize_cg.py',
-               'examples/visualize_pdb.py'],
+               'examples/visualize_rna.py'],
       install_requires=[
 		'numpy>=1.10.0',
                 'scipy>=0.19.1',
