@@ -18,7 +18,6 @@ import warnings
 import sys
 from pprint import pprint
 
-from bs4 import BeautifulSoup
 
 
 from ...graph import residue as fgr
@@ -37,6 +36,12 @@ def _parse_table_row(tr):
         return None
 
 def _html_to_info_dict(html):
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
+        warnings.warn("Could not query PDBeChem, because BeautifulSoup is not installed"
+                      "(install with `pip install forgi[pdbechem]` or `pip install forgi[all]`)")
+        return {}
     with warnings.catch_warnings():
         warnings.simplefilter("ignore") #We don't care what xml parser beautiful soup uses
         parsed_html = BeautifulSoup(html)
@@ -124,6 +129,7 @@ def to_4_letter_alphabeth(chain):
                 res_info = ModifiedResidueLookup()[r.resname]
                 if not res_info:
                     #Unknown code. Remove residue
+                    log.info("Detaching %s, because we do not understand the code %s.", r, r.resname)                    
                     chain.detach_child(r.id)
                     continue #Continue with same i (now different residue)
                 if res_info["Polymer type"] != "Ribonucleotide":
