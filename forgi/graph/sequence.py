@@ -23,8 +23,12 @@ VALID_CHAINIDS = ascii_uppercase+ascii_lowercase
 
 class MissingResidue(object):
     def __init__(self, resid, res_name):
+        """
+        :param resid: A fgr.RESID instance of a string.
+        :param resname: A string. Probably one of "AUGC".
+        """
         if not isinstance(resid, fgr.RESID):
-            log.error("Type of %s is %s", resid, type(resid).__name__)
+            log.debug("Type of %s is %s", resid, type(resid).__name__)
             resid = fgr.resid_from_str(resid)
         self.resid = resid
         self.res_name = res_name

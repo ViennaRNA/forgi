@@ -69,16 +69,17 @@ def query_PDBeChem(three_letter_code):
 
 def change_residue_id(residue, new_id):
     chain = residue.parent
-    if new_id in chain:
+    if chain is not None and new_id in chain:
         raise ValueError("Cannot change id {old} to {new}. {new} already exists".format(old=residue.id, new=new_id))
     old_id = residue.id
     residue.id = new_id
-    try:
-        del chain.child_dict[old_id]
-    except KeyError:
-        pass # New version of biopython. Id is a property
-    else:
-        chain.child_dict[new_id] = residue
+    if chain is not None:
+        try:
+            del chain.child_dict[old_id]
+        except KeyError:
+            pass # New version of biopython. Id is a property
+        else:
+            chain.child_dict[new_id] = residue
 
 
 def to_4_letter_alphabeth(chain):

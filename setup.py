@@ -45,7 +45,8 @@ except: #Outside of a git repo, do nothing.
 
 extras = {"forgi.visual":["matplotlib>=2.0"],
           "development":["cython"],
-          "classification":["scikit-learn"]
+          "classification":["scikit-learn"],
+          "pdbechem":['beautifulsoup4>=4.6']
          }
 extras["all"]=list(itertools.chain(extras.values()))
 
@@ -80,7 +81,6 @@ setup(
                 'pandas>=0.20',
                 'appdirs>=1.4',
                 'logging_exceptions>=0.1.8',
-                'beautifulsoup4>=4.6'
 	],
       extras_require=extras,
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers

@@ -672,14 +672,19 @@ def stem_from_chains(cg, chains, elem_name):
         with log_to_exception(log, e):
             log.error("seq_ids were '%r'", cg.seq_ids)
         raise
+    new_residue_ids = []
     for strand in residue_ids:
         for res_id in strand:
+            log.debug("Adding residue %s", res_id)
+            original_residue = chains[res_id.chain][res_id.resid]
+            residue = original_residue.copy()
             try:
-                stem_chain.add(chains[res_id.chain][res_id.resid])
-            except Bio.PDB.PDBExceptions.PDBConstructionException:
-                change_residue_id(stem_chain[res_id.resid], uuid.uuid4())
-                stem_chain.add(chains[res_id.chain][res_id.resid])
-
+                stem_chain.add(residue)
+            except Bio.PDB.PDBExceptions.PDBConstructionException as e:
+                log.info("Temporarily changing resid %s to uuid, because this id is present twice (with different chain) in one stem", residue.id)
+                change_residue_id(residue, uuid.uuid4())
+                stem_chain.add(residue)
+            new_residue_ids.append(residue.id)
     rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,
                           superimpose=True, apply_sup=False)[2]
 

@@ -376,10 +376,9 @@ def output_multiple_chains(chains, filename, file_type="pdb"):
         io.save(filename, HSelect())
     except Exception as e:
         with log_to_exception(log, e):
-            log.error("Could not output PDB with residues:")
-            log.error(list(r.get_id() for r in bpdb.Selection.unfold_entities(m, 'R')))
-            log.error(" in chains:")
-            log.error(list(c.get_id() for c in bpdb.Selection.unfold_entities(m, 'C')))
+            log.error("Could not output PDB with chains and residues:")
+            for chain in s[0]:
+                log.error("%s: %s", chain.id, [r.id for r in chain])
         raise
 def get_particular_chain(in_filename, chain_id, parser=None):
     '''

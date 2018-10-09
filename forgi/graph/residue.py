@@ -6,7 +6,7 @@ log = logging.getLogger(__name__)
 Resid_base = collections.namedtuple("complete_resid", ["chain", "resid"])
 
 class RESID(Resid_base):
-    # Thanks to https://stackoverflow.com/a/42146452
+    # Thanks to https://stackoverflow.com/a/42146452 for hints on extending named_tuples
     def __repr__(self):
         return "Res(\""+resid_to_str(self)+"\")"
     def __new__(cls, chain, resid=None):
@@ -34,7 +34,7 @@ def resid_from_str(resstr):
     else:
         resid=resstr
         log.debug("No chain given in string {!r}".format(resstr))
-        chain=str('A')
+        chain=None
     idparts=resid.split(".")
     if len(idparts)==1:
         idparts.append(" ")
