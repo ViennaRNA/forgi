@@ -22,6 +22,13 @@ try:
     import io
 except ImportError: #Python 2
     import StringIO as io
+try:
+    import shutil
+    which=shutil.which
+except (ImportError,AttributeError):
+    import distutils.spawn
+    which = distutils.spawn.find_executable
+
 from io import open
 import logging
 from pprint import pprint
@@ -129,44 +136,47 @@ def _are_adjacent_basepairs(seq_ids, edge1, edge2):
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
-def _annotate_pdb(filename, subprocess_kwargs={}, program=None):
+def _annotate_pdb(filename, annotation_tool=None, subprocess_kwargs={}):
     """
     Get the secondary structure of the pdb by using an external tool.
 
     :param filename: The name of the temporary pdb file
     :param subprocess_kwargs: Will be passed as keyword arguments to subprocess.call/ subprcess.check_output
-    :param program: A string, one of "MC-Annotate", "DSSR" or None (to use the value from forgi.)
+    :param annotation_tool: See docstring of CoarseGrainRNA.from_pdb
     """
+    not_installed_msg = ("{} was requested as annotation tool, but {} "
+                         "is not installed or not in the PATH. (Hint: run "
+                         "forgi_config.py to set the preferred annotation tool)")
+    program = annotation_tool
     if program is None:
         c = config.read_config()
         if "PDB_ANNOTATION_TOOL" in c:
             program = c["PDB_ANNOTATION_TOOL"]
+    if program == "DSSR" or program is None:
+        if which("x3dna-dssr"):
+            return _run_dssr(filename, subprocess_kwargs)
         else:
-            while not program:
-                p = input("Choose external tool for annotating the PDB structure. (M=MC-Annotate, D=DSSR, F=Forgi's fallback implementation) ")
-                if p in "Mm":
-                    program = "MC-Annotate"
-                elif p in "Dd":
-                    program = "DSSR"
-                elif p in "Ff":
-                    program = "forgi"
-                else:
-                    print("Please choose either 'M', 'D' or 'F'. Press Ctrl+C to cancel.")
-            config.set_config("PDB_ANNOTATION_TOOL", program)
-    if program == "MC-Annotate":
-        lines= _run_mc_annotate(filename, subprocess_kwargs)
-        try:
-            bpseq, seq_ids = ftum.get_dotplot(lines)
-            return bpseq, seq_ids, {}
-        except Exception as e:
-            log.exception("Could not convert MC-Annotate output to dotplot")
-            raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
-    elif program == "DSSR":
-        return _run_dssr(filename, subprocess_kwargs)
-    elif program == "forgi":
+            log.info("x3dna-dssr is not installed or not in the PATH.")
+            if program is not None:
+                raise ValueError(not_installed_msg.format("DSSR", "x3dna-dssr"))
+    if program == "MC-Annotate" or program is None:
+        if which("MC-Annotate"):
+            lines= _run_mc_annotate(filename, subprocess_kwargs)
+            try:
+                bpseq, seq_ids = ftum.get_dotplot(lines)
+                return bpseq, seq_ids, {}
+            except Exception as e:
+                log.exception("Could not convert MC-Annotate output to dotplot")
+                raise CgConstructionError("Could not convert MC-Annotate output to dotplot") #from e
+        else:
+            log.info("MC-Annotate is not installed or not in the PATH.")
+            if program is not None:
+                raise ValueError(not_installed_msg.format("MC-Annotate", "MC-Annotate"))
+    elif program == "forgi" or program is None:
         return None
     else:
-        raise ValueError("Supported programs for annotating the pdb are: 'MC-Annotate', 'DSSR' and 'forgi', not '{}'".format(program))
+        raise ValueError("Supported programs for annotating the pdb are: "
+                         "'MC-Annotate', 'DSSR' and 'forgi', not '{}'".format(program))
 
 
 def _run_dssr(filename, subprocess_kwargs={}):
@@ -342,11 +352,22 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     @classmethod
     def from_pdb(cls, pdb_filename, load_chains=None, remove_pseudoknots=False,
-                 dissolve_length_one_stems = True, secondary_structure = None, filetype="pdb"):
+                 dissolve_length_one_stems = True, secondary_structure = None,
+                 filetype="pdb", annotation_tool = None):
         """
         :param load_chains: A list of chain_ids or None (all chains)
         :param secondary_structure: Only useful if we load only 1 component
         :param filetype: One of 'pdb' or 'cif'
+        :param annotation_tool: One of "DSSR", "MC-Annotate", "forgi" or None.
+                        If this is None, we take the value of the configuration
+                        file (run forgi_config.py to create a config file).
+                        If no config file is given either, we see what tools are
+                        installed, preferring the newer DSSR over MC-Annotate and
+                        falling back to the fogi implementation if neither is in
+                        the PATH variable.
+                        If a string is given or the configuration file set,
+                        we never fall back to a different option but raise an
+                        error, if the requested tool is unavailable.
         """
         warnings.warn("We currently do not load any long-range interactions")
         # We need to create files, so we can interface with
@@ -380,7 +401,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             # first we annotate the 3D structure
             log.info("Starting annotation program for all chains")
-            annotation = _annotate_pdb(rna_pdb_fn)
+            annotation = _annotate_pdb(rna_pdb_fn, annotation_tool)
             if annotation is None:
                 # Fallback-annotation using forgi
                 bpseq, seq_ids = ftup.annotate_fallback(new_chains)

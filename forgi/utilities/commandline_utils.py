@@ -60,14 +60,19 @@ def get_rna_input_parser(helptext, nargs = 1, rna_type = "any", enable_logging=T
                              "or kept (if this option is present).\n"
                              "In  the case of input in forgi-format,\n"
                              "the RNA from the file is not modified.")
-    pdb_input_group = parser.add_argument_group("Options for loading of PDB files",
-                                    description="These options only take effect, "
-                                                 "if the input RNA is in pdb file format.")
-    pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure\nfrom PDB files.")
-    pdb_input_group.add_argument("--chains", type=str,
-                        help="When reading pdb-files: Only extract the given chain(s). Comma-seperated")
-    pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
-                        help="When reading a single chain from a pdb-files: \nEnforce the secondary structure given as dotbracket\n string. (This only works, if --chain is given!)")
+    if rna_type != "only_cg":
+        pdb_input_group = parser.add_argument_group("Options for loading of PDB files",
+                                        description="These options only take effect, "
+                                                     "if the input RNA is in pdb file format.")
+        pdb_input_group.add_argument("--pseudoknots", action="store_true", help="Allow pseudoknots when extracting the structure\nfrom PDB files.")
+        pdb_input_group.add_argument("--chains", type=str,
+                            help="When reading pdb-files: Only extract the given chain(s). Comma-seperated")
+        pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
+                            help="When reading a single chain from a pdb-files: \nEnforce the secondary structure given as dotbracket\n string. (This only works, if --chain is given!)")
+        pdb_input_group.add_argument("--pdb-annotation_tool", type=str, default=None,
+                            help="What program to use for detecting basepairs in PDB/ MMCIF structures."
+                                 " This commandline option overrides the value in the config file (if present)."
+                                 "If this is not present and no config-file is given, we try to detect the installed programs.")
 
     if enable_logging:
         verbosity_group = parser.add_argument_group("Control verbosity of logging output")
@@ -93,7 +98,8 @@ def cgs_from_args(args, nargs = 1, rna_type="any", enable_logging=True, return_f
             cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many,
                              pdb_chain=load_chains,
                              pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
-                             dissolve_length_one_stems = not args.keep_length_one_stems)
+                             dissolve_length_one_stems = not args.keep_length_one_stems,
+                             pdb_annotation_tool=args.pdb_annotation_tool)
         except GraphConstructionError:
             if not skip_errors:
                 raise
@@ -151,7 +157,8 @@ def sniff_filetype(file):
 
 def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
              pbd_remove_pk=True, pdb_dotbracket="",
-             dissolve_length_one_stems = True):
+             dissolve_length_one_stems = True,
+             pdb_annotation_tool=None):
     """
     :param rna_type: One of "any", and "3d" and "pdb"
                      "any": Return either BulgeGraph or CoarseGrainRNA objekte,
@@ -167,6 +174,9 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
     :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.
     :param pdb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.
     :param dissolve_length_one_stems: Ignored if input is in forgi bg/cg format.
+    :param pdb_annotation_tool: Use DSSR, MC-Annotate or forgi heuristic for
+                    basepair-detection in PDB/MMCIF files (None for auto-detect).
+                    Ignored for other file-types.
 
     :retuns: A list of RNAs or a single RNA
     """
@@ -203,13 +213,13 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
                                          remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
                                          secondary_structure=pdb_dotbracket,
                                          dissolve_length_one_stems=dissolve_length_one_stems,
-                                         filetype=filetype)
+                                         filetype=filetype, annotation_tool=pdb_annotation_tool)
         else:
             if pdb_dotbracket:
                 raise ValueError("pdb_dotbracket requires a chain to be given to avoid ambiguity.")
             cgs = ftmc.CoarseGrainRNA.from_pdb(filename, remove_pseudoknots = pbd_remove_pk,
                                               dissolve_length_one_stems=dissolve_length_one_stems,
-                                              filetype=filetype)
+                                              filetype=filetype, annotation_tool=pdb_annotation_tool)
         if allow_many:
             return cgs
         else:
