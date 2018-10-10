@@ -37,3 +37,11 @@ class CofoldPrivateMemberTest(unittest.TestCase):
         remove_vertex(bg, "m0")
         log.error(bg.edges)
         self.assertFalse(fgc._is_connected(bg))
+    def test_split_inside_stem(self):
+        db = "(.((...)).)"
+        bg = fgb.BulgeGraph.from_dotbracket(db)
+        fgc._split_inside_stem(bg, 8, "s1")
+        self.assertEqual(bg.defines["s0"], [1,1,11,11])
+        self.assertEqual(bg.defines["s1"], [3,3,9,9])
+        self.assertEqual(bg.defines["s2"], [4,4,8,8])
+        self.assertEqual(bg.defines["m0"], [])

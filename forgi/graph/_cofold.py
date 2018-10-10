@@ -150,11 +150,15 @@ def _split_inside_stem(bg, splitpoint, element):
 
     for edge in bg.edges[element]:
         log.debug("Checking edge %s with define %s connected to %s", edge, bg.defines[edge], bg.edges[edge])
-        if max(bg.flanking_nucleotides(edge))==define1[0] or min(bg.flanking_nucleotides(edge))==define1[3]:
+        flank = bg.flanking_nucleotides(edge)
+        found = 0
+        if define1[0] in flank or define1[3] in flank:
             edges1.append(edge)
-        elif max(bg.flanking_nucleotides(edge))==define2[2] or min(bg.flanking_nucleotides(edge))==define2[1]:
+            found+=1
+        if define2[1] in flank or define2[2] in flank:
             edges2.append(edge)
-        else:
+            found+=1
+        if found!=1:
             log.error("For stem %s with define %s and cutpoint %s:", element, bg.defines[element], splitpoint)
             log.error("Edge {}, with flanking nts {}, define1 {}, define2 {}".format(edge, bg.flanking_nucleotides(edge), define1, define2))
             assert False
