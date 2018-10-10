@@ -104,7 +104,7 @@ def _insert_breakpoints_simple(seq, breakpoints, start=0, reverse = False):
     """
     :param seq: A sequence without any missing residues
     :param breakpoints: 0-based break points
-    :param stop: The coordinate "on the forward strand",
+    :param start: The coordinate "on the forward strand",
                  i.e. the lower number of start and stop.
     """
     log.debug("Inserting breakpoints %s into %s", seq, breakpoints)
@@ -238,8 +238,8 @@ class _MODIndexer(_IndexHelper):
 
 
 class SeqidList(SequenceABC):
-    def __init__(self, *args):
-        self._list=list(*args)
+    def __init__(self, arg):
+        self._list=list(arg)
         self._lookup={resid:i for i, resid in enumerate(self._list)}
         if len(self._lookup)!=len(self._list):
             # duplicate seqids
@@ -282,6 +282,7 @@ class Sequence(object):
     """
     def __init__(self, seq, seqids, missing_residues=[], modifications=None):
         """
+        :param seq: A string
         :param missing_residues: A list of dictionaries with the following keys:
                 "res_name", "chain", "ssseq", "insertion"
         """
