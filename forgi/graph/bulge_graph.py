@@ -32,7 +32,7 @@ from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 from ..threedee.utilities import mcannotate as ftum
-from .sequence import Sequence, _insert_breakpoints_simple, SequenceLoader, _seq_ids_from_seq_str
+from .sequence import Sequence, _insert_breakpoints_simple, SequenceLoader, _seq_ids_from_seq_str, VALID_CHAINIDS
 from . import transform_graphs as fgt
 from .residue import RESID, resid_to_str, resid_from_str
 from ._basegraph import BaseGraph
@@ -132,6 +132,69 @@ class BulgeGraph(BaseGraph):
         log.debug("Defines are {}".format(graph_constr.defines))
         bg = cls(graph_constr, seq, name)
         return _cleaned_bg(bg, dissolve_length_one_stems, remove_pseudoknots)
+
+    @classmethod
+    def from_ct_string(cls, ct_string, dissolve_length_one_stems=False,
+                           remove_pseudoknots=False):
+
+        """
+        Create the graph from a string holding a connectivity table.
+        See http://x3dna.org/highlights/dssr-derived-secondary-structure-in-ct-format
+        """
+        lines = ct_string.splitlines()
+        header = lines[0]
+        num_nts = int(header.split()[0])
+        name = header[len(num_nts):].strip()
+        haswarned_circ = False
+        seq = ""
+        tuples = []
+        breakpoints = []
+        seq_ids = []
+        for i, line in enumerate(lines):
+            if i==0:
+                continue
+            fields = line.split()
+            pos = int(fields[0])
+            if pos!=i:
+                if pos>i and len(seq)==num_nts:
+                    log.warning("Ignoring alternatiove structure in ct-file. Using only the first structure")
+                    break
+                else:
+                    raise ValueError("Missing residue number {}, foun {} instead".format(i, pos))
+            seqid = int(fields[5])
+            if seq_ids[-1][1][1] == seq_ids:
+                if seq_ids[-1][1][2] == " ":
+                    insertion = "A"
+                else:
+                    insertion = chr(ord(seq_ids[-1][1][2])+1)
+            seq_ids.append(RESID(VALID_CHAINIDS[len(breakpoints)], (" ", int(fields[5]), insertion)))
+            tuples.append((int(fields[0]), int(fields[4])))
+            next_nt = int(fields[3])
+            if next_nt<pos:
+                if next_nt!=0:
+                    if not haswarned_circ:
+                        log.warning("Circular RNA not supported. Treating it as non-circular.")
+                        haswarned_circ=True
+                breakpoints.append(pos)
+            prev_nt = int(fields[2])
+            if prev_nt!=pos-1:
+                if pos-1 not in breakpoints:
+                    raise ValueError("3rd and 4th column not consistent in ct-file "
+                                    "at pos {}. Expecting residue at {} to have "
+                                    "next-residue set to 0 or the beginning "
+                                    "of the chain.".format(pos, pos-1))
+                if prev_nt>pos:
+                    if not haswarned_circ:
+                        log.warning("Circular RNA not supported. Treating it as non-circular.")
+                        haswarned_circ=True
+        if len(seq)!=num_nts:
+            raise ValueError("Insufficient nts present in ct file.")
+        seq = _insert_breakpoints_simple(seq, breakpoints, 1)
+        seq = Sequence(seq_str, seq_ids)
+        graph_constr = _BulgeGraphConstruction(tuples)
+        bg = cls(graph_constr, seq, name)
+        bg = _cleaned_bg(bg, dissolve_length_one_stems, remove_pseudoknots)
+        return bg
 
     @classmethod
     def from_bpseq_str(cls, bpseq_str, breakpoints=[], name=None,
