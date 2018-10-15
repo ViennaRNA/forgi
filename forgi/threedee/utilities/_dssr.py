@@ -65,12 +65,30 @@ class DSSRAnnotation(object):
             raise TypeError("dssr must be an string- or dict instance, not {}".format(type(dssr)))
         self._dssr = dssr
         self._cg = cg
-    def noncanonical_pairs(self):
+    def noncanonical_pairs(self, elem=None):
         for pair in self._dssr["pairs"]:
             nt1 = dssr_to_pdb_resid(pair["nt1"])
             nt2 = dssr_to_pdb_resid(pair["nt2"])
             bp_type = pair["LW"]
-            yield nt1, nt2, bp_type
+            if hasattr(self._cg, "chains"):
+                if nt1.chain not in self._cg.chains or nt2.chain not in self._cg.chains:
+                    continue
+            if elem is None:
+                if bp_type=="cWW":
+                    partner=self._cg.pairing_partner(nt2)
+                    if nt1==partner:
+                        continue
+                    elif self._cg.get_node_from_residue_num(nt1)[0]=="s" and self._cg.get_node_from_residue_num(nt2)[0]=="s":
+                        log.warning("Pairing partner of %s is %s, but "
+                                    "DSSR has %s in interaction. Base-triple?", nt2, partner, nt1)
+                yield nt1, nt2, bp_type
+            else:
+                try:
+                    if self._cg.get_node_from_residue_num(nt1)==elem and self._cg.get_node_from_residue_num(nt2)==elem:
+                        yield nt1, nt2, bp_type
+                except ValueError:
+                    pass
+
 
 
     def coaxial_stacks(self):

@@ -935,14 +935,25 @@ class BulgeGraph(BaseGraph):
                         connections[side]=neighbor
         return connections
     ############################################################################
+    def get_elem(self, position):
+        """
+        Get the secondary structure element from a nucleotide position
+
+        :param position: An integer or a fgr.RESID instance, describing the nucleotide number.
+        """
+        if isinstance(position, RESID):
+            position = self.seq.to_integer(position)
+
+        if position not in self._node_to_resnum:
+            self._node_to_resnum[position] = super(BulgeGraph, self).get_node_from_residue_num(position)
+        return self._node_to_resnum[position]
+
+
     def get_node_from_residue_num(self, base_num):
         """
-        Iterate over the defines and see which one encompasses this base.
+        USE get_elem instead.
         """
-        # Implemented with caching.
-        if base_num not in self._node_to_resnum:
-            self._node_to_resnum[base_num] = super(BulgeGraph, self).get_node_from_residue_num(base_num)
-        return self._node_to_resnum[base_num]
+        return self.get_elem(base_num)
 
     @property
     def transformed(self):
@@ -989,7 +1000,7 @@ class BulgeGraph(BaseGraph):
                 bp_iter=self.stem_bp_iterator(d, seq_ids=True)
             else:
                 bp_iter=self.stem_bp_iterator(d)
-            for (r1, r2) in self.stem_bp_iterator(d):
+            for (r1, r2) in bp_iter:
                 if r1 == nucleotide_number:
                     return r2
                 elif r2 == nucleotide_number:
