@@ -136,7 +136,7 @@ def _are_adjacent_basepairs(seq_ids, edge1, edge2):
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
-def _annotate_pdb(filename, annotation_tool=None, subprocess_kwargs={}):
+def _annotate_pdb(filename, annotation_tool=None, filetype, subprocess_kwargs={}):
     """
     Get the secondary structure of the pdb by using an external tool.
 
@@ -159,7 +159,9 @@ def _annotate_pdb(filename, annotation_tool=None, subprocess_kwargs={}):
             log.info("x3dna-dssr is not installed or not in the PATH.")
             if program is not None:
                 raise ValueError(not_installed_msg.format("DSSR", "x3dna-dssr"))
-    if program == "MC-Annotate" or program is None:
+    if program == "MC-Annotate" or (program is None and filetype=="pdb"):
+        if filetype!="pdb":
+            raise ValueError("MC-Annotate does not support MMCIF")
         if which("MC-Annotate"):
             lines= _run_mc_annotate(filename, subprocess_kwargs)
             try:
@@ -401,7 +403,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
             # first we annotate the 3D structure
             log.info("Starting annotation program for all chains")
-            annotation = _annotate_pdb(rna_pdb_fn, annotation_tool)
+            annotation = _annotate_pdb(rna_pdb_fn, annotation_tool, filetype)
             if annotation is None:
                 # Fallback-annotation using forgi
                 bpseq, seq_ids = ftup.annotate_fallback(new_chains)
