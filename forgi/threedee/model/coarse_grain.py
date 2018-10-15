@@ -136,7 +136,7 @@ def _are_adjacent_basepairs(seq_ids, edge1, edge2):
     log.debug("Basepairs %s and %s are NOT adjacent.", edge1, edge2)
     return False
 
-def _annotate_pdb(filename, annotation_tool=None, filetype, subprocess_kwargs={}):
+def _annotate_pdb(filename, annotation_tool, filetype, subprocess_kwargs={}):
     """
     Get the secondary structure of the pdb by using an external tool.
 

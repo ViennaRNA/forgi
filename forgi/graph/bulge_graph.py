@@ -142,18 +142,23 @@ class BulgeGraph(BaseGraph):
         See http://x3dna.org/highlights/dssr-derived-secondary-structure-in-ct-format
         """
         lines = ct_string.splitlines()
-        header = lines[0]
+        lines = [line for line in lines if line]
+        header = lines[0].strip()
         num_nts = int(header.split()[0])
-        name = header[len(num_nts):].strip()
+        name = header[num_nts:].strip()
         haswarned_circ = False
         seq = ""
         tuples = []
         breakpoints = []
         seq_ids = []
         for i, line in enumerate(lines):
+            line=line.strip()
+            if not line:
+                continue
             if i==0:
                 continue
             fields = line.split()
+            seq+=fields[1]
             pos = int(fields[0])
             if pos!=i:
                 if pos>i and len(seq)==num_nts:
@@ -162,11 +167,13 @@ class BulgeGraph(BaseGraph):
                 else:
                     raise ValueError("Missing residue number {}, foun {} instead".format(i, pos))
             seqid = int(fields[5])
-            if seq_ids[-1][1][1] == seq_ids:
+            if seq_ids and pos-1 not in breakpoints and seq_ids[-1][1][1] == seqid:
                 if seq_ids[-1][1][2] == " ":
                     insertion = "A"
                 else:
                     insertion = chr(ord(seq_ids[-1][1][2])+1)
+            else:
+                insertion = " "
             seq_ids.append(RESID(VALID_CHAINIDS[len(breakpoints)], (" ", int(fields[5]), insertion)))
             tuples.append((int(fields[0]), int(fields[4])))
             next_nt = int(fields[3])
@@ -188,9 +195,10 @@ class BulgeGraph(BaseGraph):
                         log.warning("Circular RNA not supported. Treating it as non-circular.")
                         haswarned_circ=True
         if len(seq)!=num_nts:
-            raise ValueError("Insufficient nts present in ct file.")
+            raise ValueError("Insufficient nts ({}) present in ct file, expecting {}.".format(len(seq), num_nts))
         seq = _insert_breakpoints_simple(seq, breakpoints, 1)
-        seq = Sequence(seq_str, seq_ids)
+        print(seq_ids)
+        seq = Sequence(seq, seq_ids)
         graph_constr = _BulgeGraphConstruction(tuples)
         bg = cls(graph_constr, seq, name)
         bg = _cleaned_bg(bg, dissolve_length_one_stems, remove_pseudoknots)

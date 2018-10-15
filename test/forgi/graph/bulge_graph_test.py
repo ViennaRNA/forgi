@@ -1014,6 +1014,46 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
 
         self.assertEquals(bg.seq_length, 71)
 
+    def test_from_ct_file(self):
+        # ct-file modified from http://x3dna.org/highlights/dssr-derived-secondary-structure-in-ct-format
+        ct_stri = """
+           27 DSSR-derived secondary structure in '1msy'
+            1 U     0     2     0  2647
+            2 G     1     3    26  2648
+            3 C     2     4    25  2649
+            4 U     3     5    24  2650
+            5 C     4     6    23  2651
+            6 C     5     7    22  2652
+            7 U     6     8     0  2653
+            8 A     7     9     0  2654
+            9 G     8    10     0  2655
+           10 U     9    11     0  2656
+           11 A    10    12     0  2657
+           12 C    11    0    17  2658
+           13 G    0    14     0  2659
+           14 U    13    15     0  2660
+           15 A    14    16     0  2661
+           16 A    15    17     0  2662
+           17 G    16    18    12  2663
+           18 G    17    19     0  2664
+           19 A    18    20     0  2665
+           20 C    19    21     0  2666
+           21 C    20    22     0  2667
+           22 G    21    23     6  2667
+           23 G    22    24     5  2667
+           24 A    23    25     4  2667
+           25 G    24    26     3  2671
+           26 U    25    27     2  2672
+           27 G    26     0     0  2673
+           """
+        bg = fgb.BulgeGraph.from_ct_string(ct_stri)
+        self.check_graph_integrity(bg)
+        self.assertEqual(bg.seq.to_resid(12), fgr.resid_from_str("A:2658"))
+        self.assertEqual(bg.seq.to_resid(19), fgr.resid_from_str("B:2665"))
+        self.assertEqual(bg.seq.to_resid(22), fgr.resid_from_str("B:2667.A"))
+        self.assertEqual(bg.seq.to_resid(24), fgr.resid_from_str("B:2667.C"))
+
+
     def check_from_and_to_dotbracket(self, dotbracket):
         bg = fgb.BulgeGraph.from_dotbracket(dotbracket)
         self.assertEquals(bg.to_dotbracket_string(), dotbracket)
