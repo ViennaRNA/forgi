@@ -216,6 +216,11 @@ def describe_ml_segments(cg):
             data["offset2"].append(ftuv.point_line_distance(cg.coords[s2][cg.get_sides(s2, segment)[0]],
                                                            cg.coords[s1][0], cg.coords.get_direction(s1)
                                                             ))
+            closer1, far1 = cg.coords[s1][cg.get_sides(s1, segment)[0]], cg.coords[s1][cg.get_sides(s1, segment)[1]]
+            closer2, far2 = cg.coords[s2][cg.get_sides(s2, segment)[0]], cg.coords[s2][cg.get_sides(s2, segment)[1]]
+
+            data["offset"].append(ftuv.vec_distance(*ftuv.line_segment_distance(closer1, closer1+(closer1-far1)*100000,
+                                                             closer2, closer2+(closer2-far2)*100000)))
             data["junction_va_distance"].append(ftug.junction_virtual_atom_distance(cg, segment))
             data["is_external_multiloop"].append("open" in description)
             data["is_pseudoknotted_multiloop"].append("pseudoknot" in description)
