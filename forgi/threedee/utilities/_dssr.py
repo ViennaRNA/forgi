@@ -65,6 +65,14 @@ class DSSRAnnotation(object):
             raise TypeError("dssr must be an string- or dict instance, not {}".format(type(dssr)))
         self._dssr = dssr
         self._cg = cg
+    def noncanonical_pairs(self):
+        for pair in self._dssr["pairs"]:
+            nt1 = dssr_to_pdb_resid(pair["nt1"])
+            nt2 = dssr_to_pdb_resid(pair["nt2"])
+            bp_type = pair["LW"]
+            yield nt1, nt2, bp_type
+
+
     def coaxial_stacks(self):
         """
         Get the element name in the CoarseGrainRNA for all coaxial stacks found by DSSR.
