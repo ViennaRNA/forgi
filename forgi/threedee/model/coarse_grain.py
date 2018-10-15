@@ -1691,7 +1691,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.after_coordinates_changed()
 
     def rotate_translate(self, offset, rotation_matrix):
-        self.coords-=offset
+        self.coords._coordinates-=offset
         self.coords.rotate(rotation_matrix)
         self.twists.rotate(rotation_matrix)
         self.after_coordinates_changed()
@@ -1700,8 +1700,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             chain.transform(rotation_matrix.T, [0,0,0])
 
     def after_coordinates_changed(self):
+        # vposs is in the element coordinate system ==> does not have to be changed.
+        #self.vposs = c.defaultdict( dict )
         #Caching for virtual residues
-        self.vposs = c.defaultdict( dict )
         self.vbases = c.defaultdict( dict )
         self.vvecs = c.defaultdict( dict )
         self.v3dposs = c.defaultdict( dict )

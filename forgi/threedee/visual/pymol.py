@@ -61,14 +61,14 @@ def pymol_color(color, modifier):
     return color
 
 class PyMolRNA(object):
-    def __init__(self, name):
+    def __init__(self, name, color_modifier=1.0):
         self.name = name.replace("-","_")
         self.segments = []
         self.boxes    = []
         self.labels   = []
         self.spheres  = []
         self.cones    = []
-        self.color_modifier=1.0
+        self.color_modifier=color_modifier
 
     def add_sphere(self, p, color='green', width=0.2, text=""):
         self.spheres += [(np.array(p), color, width, text)]
@@ -234,12 +234,12 @@ class PymolPrinter(object):
         self.plotters = []
         self.show_bounding_boxes = False
 
-    def add_cg(self, cg, labels):
+    def add_cg(self, cg, labels, color_modifier=1.0):
         """
         :param labels: A dictionary with element names as keys
                        and labels as values.
         """
-        rna_plotter = PyMolRNA(cg.name)
+        rna_plotter = PyMolRNA(cg.name, color_modifier)
         for key in cg.coords.keys():
             if self.only_elements is not None:
                 if key not in self.only_elements:

@@ -17,6 +17,8 @@ import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.commandline_utils as fuc
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.pdb as ftup
+import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.model.similarity as ftms
 import forgi.threedee.visual.pymol as ftvp
 from forgi.utilities.stuff import make_temp_directory
 
@@ -120,10 +122,13 @@ def pymol_printer_from_args(args):
 
 def align_rnas(rnas):
     crds0 = ftuv.center_on_centroid(ftug.bg_virtual_residues(rnas[0]))
+    centroid0 = ftuv.get_vector_centroid(ftug.bg_virtual_residues(rnas[0]))
     for rna in rnas[1:]:
         centroid1 = ftuv.get_vector_centroid(ftug.bg_virtual_residues(rna))
         crds1 = ftuv.center_on_centroid(ftug.bg_virtual_residues(rna))
-        rot_mat = ftur.optimal_superposition(crds0, crds1)
+        rot_mat = ftms.optimal_superposition(crds0, crds1)
+        offset = centroid1-centroid0
+        log.error(offset)
         rna.rotate_translate(offset, rot_mat)
 
 
@@ -149,8 +154,11 @@ def main(args):
     else:
         labels={}
 
+    color_modifier=1.0
     for rna in rnas:
-        pp.add_cg(rna, labels)
+        pp.add_cg(rna, labels, color_modifier)
+        color_modifier*=0.7
+
 
     with make_temp_directory() as tmpdir:
         # The file describing the cg-structure as cylinders
