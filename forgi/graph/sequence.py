@@ -16,6 +16,7 @@ from string import ascii_lowercase, ascii_uppercase
 from functools import partial
 import inspect
 
+from logging_exceptions import log_to_exception
 from . import residue as fgr
 log = logging.getLogger(__name__)
 
@@ -400,7 +401,10 @@ class Sequence(object):
                     if show_modifications and key in self._modifications:
                         return self._modifications[key]
                     return nt
-                raise IndexError("Nucleotide {} is not part of this RNA".format(key))
+                error = IndexError("Nucleotide {} is not part of this RNA".format(key))
+                with log_to_exception(log, error):
+                    log.error("self._missing_nts = %s", self._missing_nts)
+                raise error
             else:
                 if show_modifications and key in self._modifications:
                     return self._modifications[key]

@@ -97,8 +97,9 @@ class TestIndexingWithMissing(unittest.TestCase):
         #   **** ***  ****
         self.seq1 = fgs.Sequence("CAUAAUUUCCG",
                                 list(map(fgr.resid_from_str,
-                                     "14,15,15.A,16,18,19,20,21,22,23,A:24".split(","))),
-                                missing_residues=[{"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
+                                     "A:14,A:15,A:15.A,A:16,A:18,A:19,A:20,A:21,A:22,A:23,A:24".split(","))),
+                                missing_residues=[
+                                 {"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
                                  {"model":None, "ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
                                  {"model":None, "ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
                                  {"model":None, "ssseq":20, "res_name":"C", "chain":"A", "insertion":"A"},
@@ -115,13 +116,13 @@ class TestIndexingWithMissing(unittest.TestCase):
 
 
     def test_indexing_with_resid_without_missing(self):
-        self.assertEqual(self.seq1[fgr.resid_from_str("14")],"C")
+        self.assertEqual(self.seq1[fgr.resid_from_str("A:14")],"C")
         with self.assertRaises(IndexError):
-            self.seq1[fgr.resid_from_str("8")]
+            self.seq1[fgr.resid_from_str("A:8")]
 
     def test_indexing_with_resid(self):
-        self.assertEqual(self.seq1.with_missing[fgr.resid_from_str("14")],"C")
-        self.assertEqual(self.seq1.with_missing[fgr.resid_from_str("8")],"G")
+        self.assertEqual(self.seq1.with_missing[fgr.resid_from_str("A:14")],"C")
+        self.assertEqual(self.seq1.with_missing[fgr.resid_from_str("A:8")],"G")
 
     def test_integer_slice_all_positive(self):
         self.assertEqual(self.seq1.with_missing[2:5], "AUACA")
@@ -178,8 +179,8 @@ class TestIndexingWithModifications(unittest.TestCase):
     def setUp(self):
         self.seq = fgs.Sequence("AUGCA",
                                 list(map(fgr.resid_from_str,
-                                     "14,15,15.A,16,18".split(",")))
-                                , [], {fgr.resid_from_str("14"): "I", fgr.resid_from_str("16"):"Some Free Text"})
+                                     "A:14,A:15,A:15.A,A:16,A:18".split(",")))
+                                , [], {fgr.resid_from_str("A:14"): "I", fgr.resid_from_str("A:16"):"Some Free Text"})
         self.seq2 = fgs.Sequence("AAA&GGG",
                                  list(map(fgr.resid_from_str,
                                      "A:14,A:15,A:15.A,B:12,B:13,B:200.A".split(","))),
@@ -200,7 +201,7 @@ class TestIndexingWithModifications(unittest.TestCase):
         self.assertEqual(self.seq2.with_modifications[:], [["A", "A", "A"],["G", "G", "Hallo"]])
 
     def test_indexing_resid(self):
-        self.assertEqual(self.seq.with_modifications[fgr.resid_from_str("14")],"I")
+        self.assertEqual(self.seq.with_modifications[fgr.resid_from_str("A:14")],"I")
         self.assertEqual(self.seq2.with_modifications[fgr.resid_from_str("A:14"):fgr.resid_from_str("B:200.A")],
                          [["A", "A", "A"],["G", "G", "Hallo"]])
 
@@ -219,7 +220,7 @@ class NonIndexingTests(unittest.TestCase):
         #   **** ***  ****
         self.seq1 = fgs.Sequence("CAUAAUUUCCG",
                                 list(map(fgr.resid_from_str,
-                                     "14,15,15.A,16,18,19,20,21,22,23,A:24".split(","))),
+                                     "A:14,A:15,A:15.A,A:16,A:18,A:19,A:20,A:21,A:22,A:23,A:24".split(","))),
                                 [{"model":None, "ssseq":8, "res_name":"G", "chain":"A", "insertion":None},
                                  {"model":None, "ssseq":10, "res_name":"G", "chain":"A", "insertion":"D"},
                                  {"model":None, "ssseq":17, "res_name":"C", "chain":"A", "insertion":None},
