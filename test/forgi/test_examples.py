@@ -123,6 +123,7 @@ class TestOtherScripts(unittest.TestCase):
                        "test/forgi/threedee/data/1y26.pdb"],
                       universal_newlines=True, env = subprocess_env)
 
+    @unittest.skip("2D RMSD no longer supported")
     def test_projection_rmsd(self):
         rmsd1 = sp.check_output([sys.executable, "examples/projection_rmsd.py",
                                "test/forgi/threedee/data/1y26.cg",

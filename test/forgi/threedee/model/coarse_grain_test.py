@@ -126,6 +126,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         cg2, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/2X1F.pdb', load_chains="B")
         log.error(cg.seq._missing_nts)
         self.assertEqual(len(cg.seq._missing_nts), 3)
+        self.assertEqual(len(cg2.seq._missing_nts), 3)
         self.assertEqual(cg.seq, cg2.seq)
 
 

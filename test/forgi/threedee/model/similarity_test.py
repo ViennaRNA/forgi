@@ -89,7 +89,7 @@ class CompareTest(unittest.TestCase):
         cg2.coords.rotate(ftuv.rotation_matrix([1.,2.,3.], 22))
         cg2.twists.rotate(ftuv.rotation_matrix([1.,2.,3.], 22))
 
-        self.assertAlmostEqual(ftme.cg_rmsd(cg1,cg2), 0)
+        self.assertLess(ftme.cg_rmsd(cg1,cg2), 10**-6)
 
 class TestRMSD(unittest.TestCase):
     '''
@@ -136,6 +136,7 @@ class TestRMSD(unittest.TestCase):
         self.assertAlmostEqual(ftme.drmsd(a1, a2), 0)
         self.assertAlmostEqual(ftme.rmsd(a1, a2), 0)
 
+    @unittest.skip("With rmsd_qc, we require 3 dimensions")
     def test_rmsd_in_2D(self):
         a1 = np.array([[1., 1.], [0., 0.], [-1., -1.]])
         a2 = np.array([[2., 2.], [0., 0.], [-2., -2.]])
