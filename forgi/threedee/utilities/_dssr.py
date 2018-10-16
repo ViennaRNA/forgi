@@ -65,14 +65,33 @@ class DSSRAnnotation(object):
             raise TypeError("dssr must be an string- or dict instance, not {}".format(type(dssr)))
         self._dssr = dssr
         self._cg = cg
+
     def noncanonical_pairs(self, elem=None):
+        """
+        Yield all nucleotides which are in a non-canonical basepair
+        or a canonical basepair outside a stem.
+
+        This ignores interactions with other RNA chains that are not
+        part of the CoarseGrainRNA. Thus, yielded nucleotides are valid indices
+        to the CoarseGrainRNA's `.seq` object.
+
+        :param elem: An element name, e.g. "i0".
+                     If given, only find basepairs within this secondary structure element.
+        :param yields: A triple: `nt1, nt2, basepair-type`
+                       nt1 and nt2 are forgi.graph.residue.RESID instances (PDB numbering scheme).
+                       The basepair-type is given in the LW notation,
+                       e.g. cWH for cis basepairing between the Watson-Crick anfd the Hoogsteen edge.
+                       or   tHS for trans basepairing between the Hoogsteen and the Sugar edge.
+        """
         for pair in self._dssr["pairs"]:
             nt1 = dssr_to_pdb_resid(pair["nt1"])
             nt2 = dssr_to_pdb_resid(pair["nt2"])
             bp_type = pair["LW"]
-            if hasattr(self._cg, "chains"):
-                if nt1.chain not in self._cg.chains or nt2.chain not in self._cg.chains:
-                    continue
+            try:
+                self._cg.seq.with_missing[nt1]
+                self._cg.seq.with_missing[nt2]
+            except KeyError:
+                continue
             if elem is None:
                 if bp_type=="cWW":
                     partner=self._cg.pairing_partner(nt2)
@@ -88,8 +107,6 @@ class DSSRAnnotation(object):
                         yield nt1, nt2, bp_type
                 except ValueError:
                     pass
-
-
 
     def coaxial_stacks(self):
         """
@@ -110,6 +127,7 @@ class DSSRAnnotation(object):
             else:
                 cg_stacks.append(cg_stack)
         return cg_stacks
+
     def cg_stem(self, dssr_stem):
         """
         Get the stem define in the CoarseGrainRNA that corresponds to the stem id in the dssr-format.
@@ -199,6 +217,19 @@ class DSSRAnnotation(object):
         return stacks_forgi, stacks_dssr
 
     def stacking_loops(self):
+        """
+        Returns a list of loop (multiloop and interior-loop) elements,
+        along which the adjacent stems stack.
+
+        Note that not all nucleotides of these elements have to participate in
+        the stack and additional nucleotides can be used for the stack.
+
+        I fact, this only checks whether one nucleotide of each of the first
+        (seen from the side of the loop element) basepairs of the adjacent
+        stems are in a continuouse stack.
+
+        :returns: A list of element names
+        """
         stacking=[]
         for loop in self._cg.defines:
             if loop[0] not in "im":
