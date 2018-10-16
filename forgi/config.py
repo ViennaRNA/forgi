@@ -7,7 +7,8 @@ import appdirs
 log = logging.getLogger(__name__)
 
 dirs = appdirs.AppDirs("forgi", "TBI")
-ALLOWED_KEY_VALUES = {"PDB_ANNOTATION_TOOL":["MC-Annotate", "DSSR", "forgi"]}
+ALLOWED_KEY_VALUES = {"PDB_ANNOTATION_TOOL": ["MC-Annotate", "DSSR", "forgi"]}
+
 
 def iter_configfiles():
     """
@@ -17,6 +18,7 @@ def iter_configfiles():
     for directory in [dirs.site_config_dir, dirs.user_config_dir]:
         filename = os.path.join(directory, "config.json")
         yield filename
+
 
 def read_config():
     config = {}

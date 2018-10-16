@@ -66,13 +66,13 @@ from .knots import conflict_elimination, ec, eg,\
 
 KNOWN_INPUT_FORMATS = {'bpseq': BpseqParser, 'ct': MinimalCtParser}
 KNOWN_OUTPUT_FORMATS = {'bpseq': bpseq_output, 'ct': ct_output,
-    'vienna': vienna_output}
+                        'vienna': vienna_output}
 KNOWN_METHODS = {'EC': ec, 'EG': eg,
-    'IO': inc_order, 'IL': inc_length, 'IR': inc_range,\
-     'OA': opt_all, 'OSR': opt_single_random, 'OSP': opt_single_property,\
-    'NR': nussinov_restricted,}
-KNOWN_OPT_METHODS = {'BPS': ('max', num_bps),\
-    'HB': ('max', hydrogen_bonds)}
+                 'IO': inc_order, 'IL': inc_length, 'IR': inc_range,
+                 'OA': opt_all, 'OSR': opt_single_random, 'OSP': opt_single_property,
+                 'NR': nussinov_restricted, }
+KNOWN_OPT_METHODS = {'BPS': ('max', num_bps),
+                     'HB': ('max', hydrogen_bonds)}
 
 DEFAULT_INPUT_FORMAT = 'ct'
 DEFAULT_OUTPUT_FORMAT = None
@@ -80,6 +80,7 @@ DEFAULT_METHOD = 'EG'
 DEFAULT_OPT_METHOD = 'BPS'
 DEFAULT_VERBOSE = False
 DEFAULT_REMOVED = False
+
 
 class KnottedStructure(object):
     """Lightweight object to hold a pseudoknotted structure
@@ -95,6 +96,7 @@ class KnottedStructure(object):
         self.Knotted = Knotted
         self.Seq = Seq
         self.Header = Header
+
 
 class NestedStructure(object):
     """Lightweight object to hold a pseudoknot-free structure
@@ -118,39 +120,39 @@ def parse_command_line_parameters():
     """Parse command line arguments"""
 
     # USAGE AND HELP INFO
-    usage = '\n'.join(["Usage: python %prog [options] structure_file",\
-        "See web or script documentation for an explanation"+\
-        " on the formats and methods."])
+    usage = '\n'.join(["Usage: python %prog [options] structure_file",
+                       "See web or script documentation for an explanation" +
+                       " on the formats and methods."])
     input_format_help =\
         "Input format. Options: [%s]. DEFAULT = ct."\
-        %(', '.join(KNOWN_INPUT_FORMATS.keys()))
+        % (', '.join(KNOWN_INPUT_FORMATS.keys()))
     output_format_help =\
         "Output format. Options: [%s]. DEFAULT = same as input format."\
-        %(', '.join(KNOWN_OUTPUT_FORMATS.keys()))
+        % (', '.join(KNOWN_OUTPUT_FORMATS.keys()))
     method_help = "Pseudoknot removal method. Options: [%s]. DEFAULT = EG."\
-        %(', '.join(KNOWN_METHODS.keys()))
-    opt_method_help="Optimization method. Options: [%s]. DEFAULT = BPS."\
-        %(', '.join(KNOWN_OPT_METHODS.keys()))
+        % (', '.join(KNOWN_METHODS.keys()))
+    opt_method_help = "Optimization method. Options: [%s]. DEFAULT = BPS."\
+        % (', '.join(KNOWN_OPT_METHODS.keys()))
 
     result = OptionParser(usage=usage)
 
     # FLAGS
-    result.add_option('-v','--verbose',action='store_true',dest='verbose',\
-        help="Run script with verbose output")
-    result.add_option('-r','--removed',action='store_true',dest='removed',\
-        help="Report removed base pairs")
+    result.add_option('-v', '--verbose', action='store_true', dest='verbose',
+                      help="Run script with verbose output")
+    result.add_option('-r', '--removed', action='store_true', dest='removed',
+                      help="Report removed base pairs")
     # VLAUE PARAMETERS
-    result.add_option('-f','--input_format',action='store',type='string',\
-        dest='input_format', metavar="FORMAT",\
-        help=input_format_help)
-    result.add_option('-F','--output_format',action='store',type='string',\
-        dest='output_format', metavar="FORMAT",\
-        help=output_format_help)
-    result.add_option('-m','--method', action='store', type='string',\
-        dest='method', metavar='METHOD',\
-        help=method_help)
-    result.add_option('-o','--opt_method', action='store', type='string',\
-        dest='opt_method', help=opt_method_help)
+    result.add_option('-f', '--input_format', action='store', type='string',
+                      dest='input_format', metavar="FORMAT",
+                      help=input_format_help)
+    result.add_option('-F', '--output_format', action='store', type='string',
+                      dest='output_format', metavar="FORMAT",
+                      help=output_format_help)
+    result.add_option('-m', '--method', action='store', type='string',
+                      dest='method', metavar='METHOD',
+                      help=method_help)
+    result.add_option('-o', '--opt_method', action='store', type='string',
+                      dest='opt_method', help=opt_method_help)
 
     # DEFAULT VALUES
     result.set_defaults(verbose=DEFAULT_VERBOSE)
@@ -163,16 +165,16 @@ def parse_command_line_parameters():
     return result.parse_args()
 
 
-def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
-    output_format=DEFAULT_OUTPUT_FORMAT, method=DEFAULT_METHOD,\
-    opt_method=DEFAULT_OPT_METHOD, verbose=DEFAULT_VERBOSE,\
-    removed=DEFAULT_REMOVED):
+def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,
+             output_format=DEFAULT_OUTPUT_FORMAT, method=DEFAULT_METHOD,
+             opt_method=DEFAULT_OPT_METHOD, verbose=DEFAULT_VERBOSE,
+             removed=DEFAULT_REMOVED):
     """Return string of output containing nested structures (+commens)
 
     Use help function or see script documentation for an explanation
         of the parameters.
     """
-    result = [] #list of lines with output
+    result = []  # list of lines with output
 
     # by default, output is in same format as input
     if output_format is None:
@@ -184,25 +186,25 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
     # validate input, give feedback on invalid input
     if input_format not in KNOWN_INPUT_FORMATS:
         message = "'%s' is an invalid format. Valid options are [%s]"\
-            %(format, ', '.join(KNOWN_INPUT_FORMATS.keys()))
+            % (format, ', '.join(KNOWN_INPUT_FORMATS.keys()))
         raise ValueError(message)
     if output_format not in KNOWN_OUTPUT_FORMATS:
         message = "'%s' is an invalid output format. Valid options are [%s]"\
-            %(format, ', '.join(KNOWN_OUTPUT_FORMATS.keys()))
+            % (format, ', '.join(KNOWN_OUTPUT_FORMATS.keys()))
         raise ValueError(message)
     if method not in KNOWN_METHODS:
         message = "'%s' is an invalid method. Valid options are [%s]"\
-            %(method, ', '.join(KNOWN_METHODS.keys()))
+            % (method, ', '.join(KNOWN_METHODS.keys()))
         raise ValueError(message)
     if opt_method not in KNOWN_OPT_METHODS:
         message =\
             "'%s' is an invalid optimization function. Valid options are [%s]"\
-            %(opt_method, ', '.join(KNOWN_OPT_METHODS.keys()))
+            % (opt_method, ', '.join(KNOWN_OPT_METHODS.keys()))
         raise ValueError(message)
 
     if verbose:
-        result.append('INPUT FILE = %s;'%(input_file))
-        result.append('FORMAT = %s; METHOD = %s;'%(input_format, method))
+        result.append('INPUT FILE = %s;' % (input_file))
+        result.append('FORMAT = %s; METHOD = %s;' % (input_format, method))
 
     # =========================================================================
     # COLLECT FILE INFORMATION
@@ -220,12 +222,12 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
             input_data = [ks]
         else:
             for header, seq, pairs in input_parser(input_filehandle):
-                input_data.append(KnottedStructure(Knotted=pairs, Seq=seq,\
-                    Header=header))
+                input_data.append(KnottedStructure(Knotted=pairs, Seq=seq,
+                                                   Header=header))
     except (BpseqParseError, CtError, ValueError) as e:
         message_lines = ["Cannot read input file.",
-            "Make sure the input file is in the specified format.",
-            "Internal error message:","%s."%(str(e))]
+                         "Make sure the input file is in the specified format.",
+                         "Internal error message:", "%s." % (str(e))]
         raise ValueError('\n'.join(message_lines))
     # =========================================================================
     # CREATE NESTED STRUCTURE(S)
@@ -237,7 +239,7 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
 
     output_data = []
     for knotted_struct in input_data:
-        if method in ['OA', 'OSR','OSP']:
+        if method in ['OA', 'OSR', 'OSP']:
             if opt_method == 'HB':
                 opt_goal, opt_wrapper =\
                     KNOWN_OPT_METHODS[opt_method]
@@ -246,66 +248,66 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
                 opt_goal, opt_function =\
                     KNOWN_OPT_METHODS[opt_method]
             if verbose:
-                result.append('OPTIMIZATION GOAL = %s; FUNCTION = %s;'\
-                    %(opt_method, opt_goal))
+                result.append('OPTIMIZATION GOAL = %s; FUNCTION = %s;'
+                              % (opt_method, opt_goal))
         else:
             if verbose:
                 result.append('OPTIMIZATION GOAL AND FUNCTION IGNORED')
 
-        if method == 'OA': # return value is a list of Pairs objects
-            nested_result = pk_function(knotted_struct.Knotted,\
-                goal=opt_goal, scoring_function=opt_function,\
-                return_removed=removed)
+        if method == 'OA':  # return value is a list of Pairs objects
+            nested_result = pk_function(knotted_struct.Knotted,
+                                        goal=opt_goal, scoring_function=opt_function,
+                                        return_removed=removed)
             if removed:
                 for nested, removed_pairs in nested_result:
-                    ns = NestedStructure(Nested=nested, Seq=knotted_struct.Seq,\
-                    Header=knotted_struct.Header, Removed=Pairs(removed_pairs))
+                    ns = NestedStructure(Nested=nested, Seq=knotted_struct.Seq,
+                                         Header=knotted_struct.Header, Removed=Pairs(removed_pairs))
                     output_data.append(ns)
                     if verbose:
-                        result.append(\
-                        'NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'\
-                        %(len(knotted_struct.Knotted), len(ns.Nested)))
+                        result.append(
+                            'NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'
+                            % (len(knotted_struct.Knotted), len(ns.Nested)))
             else:
                 for nested in nested_result:
-                    ns = NestedStructure(Nested=nested, Seq=knotted_struct.Seq,\
-                        Header=knotted_struct.Header)
+                    ns = NestedStructure(Nested=nested, Seq=knotted_struct.Seq,
+                                         Header=knotted_struct.Header)
                     output_data.append(ns)
                     if verbose:
-                        result.append(\
-                        'NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'\
-                        %(len(knotted_struct.Knotted), len(ns.Nested)))
-        elif method in ['OSR','OSP']:
+                        result.append(
+                            'NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'
+                            % (len(knotted_struct.Knotted), len(ns.Nested)))
+        elif method in ['OSR', 'OSP']:
             if removed:
-                nested_pairs, removed_pairs = pk_function(pairs, goal=opt_goal,\
-                    scoring_function=opt_function, return_removed=removed)
-                ns = NestedStructure(Nested=nested_pairs,\
-                    Seq=knotted_struct.Seq,\
-                    Header=knotted_struct.Header, Removed=Pairs(removed_pairs))
+                nested_pairs, removed_pairs = pk_function(pairs, goal=opt_goal,
+                                                          scoring_function=opt_function, return_removed=removed)
+                ns = NestedStructure(Nested=nested_pairs,
+                                     Seq=knotted_struct.Seq,
+                                     Header=knotted_struct.Header, Removed=Pairs(removed_pairs))
             else:
-                nested_pairs = pk_function(pairs, goal=opt_goal,\
-                    scoring_function=opt_function)
-                ns = NestedStructure(Nested=nested_pairs,\
-                    Seq=knotted_struct.Seq,\
-                    Header=knotted_struct.Header)
+                nested_pairs = pk_function(pairs, goal=opt_goal,
+                                           scoring_function=opt_function)
+                ns = NestedStructure(Nested=nested_pairs,
+                                     Seq=knotted_struct.Seq,
+                                     Header=knotted_struct.Header)
             if verbose:
-                result.append('NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'\
-                    %(len(pairs), len(nested_pairs)))
+                result.append('NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'
+                              % (len(pairs), len(nested_pairs)))
             output_data.append(ns)
-        else: # return value is a single Pairs object
+        else:  # return value is a single Pairs object
             if removed:
-                nested_pairs, removed_pairs = pk_function(pairs,\
-                    return_removed=removed)
-                ns = NestedStructure(Nested=nested_pairs,\
-                    Seq=knotted_struct.Seq,\
-                    Header=knotted_struct.Header, Removed=Pairs(removed_pairs))
+                nested_pairs, removed_pairs = pk_function(pairs,
+                                                          return_removed=removed)
+                ns = NestedStructure(Nested=nested_pairs,
+                                     Seq=knotted_struct.Seq,
+                                     Header=knotted_struct.Header, Removed=Pairs(removed_pairs))
             else:
                 nested_pairs = pk_function(pairs)
-                ns = NestedStructure(Nested=nested_pairs,\
-                    Seq=knotted_struct.Seq,\
-                    Header=knotted_struct.Header)
+                ns = NestedStructure(Nested=nested_pairs,
+                                     Seq=knotted_struct.Seq,
+                                     Header=knotted_struct.Header)
             if verbose:
-                result.append('NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'\
-                    %(len(pairs), len(nested_pairs)))
+                result.append('NUMBER OF BASE PAIRS BEFORE: %s; AFTER: %s'
+                              % (len(pairs), len(nested_pairs)))
             output_data.append(ns)
 
     # =========================================================================
@@ -316,9 +318,10 @@ def k2n_main(input_filehandle, input_format=DEFAULT_INPUT_FORMAT,\
 
     # return string with output
     for ns in output_data:
-        result.append(output_function(seq=ns.Seq, pairs=ns.Nested,\
-            header_lines=ns.Header, removed=ns.Removed))
+        result.append(output_function(seq=ns.Seq, pairs=ns.Nested,
+                                      header_lines=ns.Header, removed=ns.Removed))
     return '\n'.join(result)
+
 
 if __name__ == "__main__":
 
@@ -326,7 +329,7 @@ if __name__ == "__main__":
     # PARSE COMMAND LINE PARAMETERS AND SEND INFO TO MAIN FUNCTION
     # =========================================================================
 
-    opts,arg = parse_command_line_parameters()
+    opts, arg = parse_command_line_parameters()
 
     try:
         input_file = arg[0]
@@ -334,7 +337,7 @@ if __name__ == "__main__":
         raise ValueError("No input file specified")
 
     with open(input_filename, 'U') as input_filehandle:
-        result = k2n_main(input_filehandle, input_format=opts.input_format,\
-        output_format=opts.output_format, method=opts.method,\
-        opt_method=opts.opt_method, verbose=opts.verbose, removed=opts.removed)
+        result = k2n_main(input_filehandle, input_format=opts.input_format,
+                          output_format=opts.output_format, method=opts.method,
+                          opt_method=opts.opt_method, verbose=opts.verbose, removed=opts.removed)
     print(result)

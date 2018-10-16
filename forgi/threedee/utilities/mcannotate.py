@@ -15,6 +15,7 @@ import forgi.graph.residue as fgr
 
 log = logging.getLogger(__name__)
 
+
 def parse_resid(mcann_resid):
     '''
     Read in an MC-Annotate formatted resid and return a tuple
@@ -26,6 +27,7 @@ def parse_resid(mcann_resid):
     else:
         return (' ', int(parts[0]), parts[1])
 
+
 def format_resid(pdb_resid):
     '''
     Convert a PDB.Chain.Residue id to an MC-Annotate formatted
@@ -36,6 +38,7 @@ def format_resid(pdb_resid):
         return str(pdb_resid[1])
     else:
         return str(pdb_resid[1]) + "." + pdb_resid[2]
+
 
 def parse_chain_base(chain_base):
     """
@@ -57,13 +60,14 @@ def parse_chain_base(chain_base):
         if chain_base[0] == '\'':
             end_quote_idx = chain_base.find('\'', 1)
             chain = chain_base[1:end_quote_idx]
-            base = chain_base[end_quote_idx+1:]
+            base = chain_base[end_quote_idx + 1:]
         else:
             # no chain identifier
             chain = ''
             base = chain_base
     log.debug("base is %s", base)
     return (chain, base)
+
 
 def parse_base_pair_id(base_pair_id):
     """
@@ -79,18 +83,21 @@ def parse_base_pair_id(base_pair_id):
 
     parts = re.findall(residue_pattern, base_pair_id)
     if len(parts) != 2:
-        e = ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        e = ValueError(
+            "Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
         with log_to_exception(log, e):
             log.error("Regex matched the following parts: %s", parts)
         raise e
     if "-".join(parts) != base_pair_id:
-        raise ValueError("Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
+        raise ValueError(
+            "Invalid interaction in the MC-Annotate file: %s" % base_pair_id)
 
     log.debug("Parts are '{}'".format(parts))
     (from_chain, from_base) = parse_chain_base(parts[0].strip())
     (to_chain, to_base) = parse_chain_base(parts[1].strip())
 
     return (from_chain, from_base, to_chain, to_base)
+
 
 def get_interacting_base_pairs(line):
     """
@@ -101,6 +108,7 @@ def get_interacting_base_pairs(line):
     """
     line_parts = line.split(' ')
     return parse_base_pair_id(line_parts[0])
+
 
 def iterate_over_residue_list(mcannotate_lines):
     """
@@ -121,6 +129,7 @@ def iterate_over_residue_list(mcannotate_lines):
         if residue_conf_line:
             yield line
 
+
 def iterate_over_interactions(mcannotate_lines):
     """
     Generator function for the iteration over lines in the 'Base-pairs' section of an
@@ -140,7 +149,8 @@ def iterate_over_interactions(mcannotate_lines):
         if base_pair_line:
             log.debug("A Basepair line is '{}'".format(line))
             try:
-                (from_chain, from_base, to_chain, to_base) =  get_interacting_base_pairs(line)
+                (from_chain, from_base, to_chain,
+                 to_base) = get_interacting_base_pairs(line)
             except ValueError as ve:
                 log_exception(ve, logging.WARNING, with_stacktrace=False)
                 continue
@@ -152,27 +162,27 @@ def get_dotplot(lines):
     """docstring for get_dotplot"""
     residues = []
     residue_types = []
-    bps = defaultdict(lambda:-1)
+    bps = defaultdict(lambda: -1)
     bpseq_str = ""
 
     for line in iterate_over_residue_list(lines):
         parts = line.split(' ')
-        residues.append(parse_chain_base(parts[0])) # A tuple chain, id
+        residues.append(parse_chain_base(parts[0]))  # A tuple chain, id
         residue_types += [parts[2]]
 
     paired = set()
     for line in iterate_over_interactions(lines):
         parts = line.split(' ')
         #bond_type = parts[3]
-        #if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
+        # if bond_type.find('Ww/Ww') >= 0 or bond_type.find('Ww/Ws') >= 0 or bond_type.find('Ws/Ww') >= 0:
         if ((line.find('Ww/Ww') >= 0 and (line.find('A-U') >= 0 or
-                                        line.find('U-A') >= 0 or
-                                        line.find('C-G') >= 0 or
-                                        line.find('G-C') >= 0)) or
-           (line.find('Ws/Ww') >= 0 and line.find('U-G') >= 0) or
-            (line.find('Ww/Ws') >= 0 and line.find('G-U') >= 0)):
-            #if bond_type.find('Ww/Ww') >= 0:
-            #print line
+                                          line.find('U-A') >= 0 or
+                                          line.find('C-G') >= 0 or
+                                          line.find('G-C') >= 0)) or
+            (line.find('Ws/Ww') >= 0 and line.find('U-G') >= 0) or
+                (line.find('Ww/Ws') >= 0 and line.find('G-U') >= 0)):
+            # if bond_type.find('Ww/Ww') >= 0:
+            # print line
             chain1, base1, chain2, base2 = parse_base_pair_id(parts[0])
             res1 = (chain1, base1)
             res2 = (chain2, base2)
@@ -182,7 +192,8 @@ def get_dotplot(lines):
                         existing = "{} - {}".format(res1, residues[bps[res1]])
                     else:
                         existing = "{} - {}".format(res2, residues[bps[res2]])
-                    log.warning("Base-triple encountered: Ignoring basepair %s - %s, because basepair %s exists", res1, res2, existing)
+                    log.warning(
+                        "Base-triple encountered: Ignoring basepair %s - %s, because basepair %s exists", res1, res2, existing)
                 continue
 
             paired.add(res1)
@@ -191,16 +202,19 @@ def get_dotplot(lines):
                 bps[res1] = residues.index(res2)
                 bps[res2] = residues.index(res1)
             except ValueError as e:
-                log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
+                log.error("bps = %s, residues = %s, res1 = %s, res2 = %s",
+                          bps, residues, res1, res2)
                 with log_to_exception(log, e):
-                    log.error("bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
+                    log.error(
+                        "bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)
                 raise
 
-
     for i in range(len(residue_types)):
-        bpseq_str += "%d %s %s\n" % ( i+1, residue_types[i], bps[residues[i]]+1)
+        bpseq_str += "%d %s %s\n" % (i + 1,
+                                     residue_types[i], bps[residues[i]] + 1)
     seq_ids = _seqids_from_residue_map(residues)
     return bpseq_str, seq_ids
+
 
 def _seqids_from_residue_map(residue_map):
     """

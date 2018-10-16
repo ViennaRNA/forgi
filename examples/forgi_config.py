@@ -8,10 +8,11 @@ import sys
 
 import forgi.config
 
-parser = argparse.ArgumentParser("Create/ update configuration files for forgi.")
+parser = argparse.ArgumentParser(
+    "Create/ update configuration files for forgi.")
 
 if __name__ == "__main__":
-    config={}
+    config = {}
     for filename in forgi.config.iter_configfiles():
         try:
             with open(filename) as f:
@@ -22,7 +23,7 @@ if __name__ == "__main__":
             if conf:
                 print("The following values are set in {}:".format(filename))
                 for k, v in conf.items():
-                    print("   {:15s}: {}".format(k,repr(v)))
+                    print("   {:15s}: {}".format(k, repr(v)))
                 config.update(conf)
             else:
                 print("This config file is empty")
@@ -33,21 +34,25 @@ if __name__ == "__main__":
                 conf = json.load(f)
             for key in forgi.config.ALLOWED_KEY_VALUES:
                 if key in config:
-                    print("After parsing all config files, {} is set to {}".format(key, config[key]))
+                    print("After parsing all config files, {} is set to {}".format(
+                        key, config[key]))
                     if key in conf:
-                        print("In the file you are editing, {} is set to {}".format(key, conf[key]))
+                        print("In the file you are editing, {} is set to {}".format(
+                            key, conf[key]))
                     else:
-                        print("In the file you are editing, {} is not set".format(key))
+                        print(
+                            "In the file you are editing, {} is not set".format(key))
                 else:
                     print("Currently, {} is not set in any config file".format(key))
                 while True:
-                    new_value = input("Choose value for {} ({}, empty input leave it unchanged, 'X' to delete the entry from the config file)".format(key, "/".join(forgi.config.ALLOWED_KEY_VALUES[key])))
+                    new_value = input("Choose value for {} ({}, empty input leave it unchanged, 'X' to delete the entry from the config file)".format(
+                        key, "/".join(forgi.config.ALLOWED_KEY_VALUES[key])))
                     if not new_value:
                         break
                     if new_value in forgi.config.ALLOWED_KEY_VALUES[key]:
-                        conf[key]=new_value
+                        conf[key] = new_value
                         break
-                    if new_value=="X":
+                    if new_value == "X":
                         del conf[key]
                         break
                     # Else next loop execution

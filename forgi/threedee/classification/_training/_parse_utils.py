@@ -27,6 +27,7 @@ class LineBasedParser(object):
     * If comment is non-empty, all lines starting with the comment character(s)
       (after stripping) are skipped as well.
     """
+
     def parse(self, filename):
         """
         :param filename: A filename. This file will be opened for reading.
@@ -61,36 +62,43 @@ class LineBasedParser(object):
         self._after_parsing()
         return self.result
 
+
 class ChainIdMappingParser(LineBasedParser):
     comment = ""  # No comment characters allowed in these files.
+
     def _before_parsing(self):
-        self.result = namedtuple("ChainChainMapping", ["bundle2mmcif", "mmcif2bundle"])(defaultdict(dict), {})
+        self.result = namedtuple("ChainChainMapping", [
+                                 "bundle2mmcif", "mmcif2bundle"])(defaultdict(dict), {})
         self.bundle = None
+
     def _parse_line(self, line):
         if self.bundle is None:
             if "New chain ID" not in line or "Original chain ID" not in line:
                 raise ValueError("Expecting first line to contain "
-                              "'New chain ID' and 'Original chain ID'")
+                                 "'New chain ID' and 'Original chain ID'")
             else:
                 self.bundle = "HEADER"
                 return
-        elif self.bundle=="HEADER" or "-pdb-bundle" in line:
+        elif self.bundle == "HEADER" or "-pdb-bundle" in line:
             if not line[4:].startswith("-pdb-bundle"):
                 raise ValueError("Expecting '-pdb-bundle'", charno=4)
             else:
-                if not line[-1]==":":
-                    raise ValueError("Expecting pdb-bundle name to be followed by ':'")
+                if not line[-1] == ":":
+                    raise ValueError(
+                        "Expecting pdb-bundle name to be followed by ':'")
                 self.bundle = line[:-1]
                 return
         else:
             new, old = line.split()
-            new=new.strip()
-            old=old.strip()
-            if len(new)!=1:
-                raise ValueError("Expecting chain in pbd-bundle to be only 1 character.")
-            self.result.bundle2mmcif[self.bundle][new]=old
-            self.result.mmcif2bundle[old]=(self.bundle, new)
+            new = new.strip()
+            old = old.strip()
+            if len(new) != 1:
+                raise ValueError(
+                    "Expecting chain in pbd-bundle to be only 1 character.")
+            self.result.bundle2mmcif[self.bundle][new] = old
+            self.result.mmcif2bundle[old] = (self.bundle, new)
             return
+
     def _after_parsing(self):
         # Convert the defaultdict to a normal dict.
         self.result = namedtuple("ChainChainMapping",

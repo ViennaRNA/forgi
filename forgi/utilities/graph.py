@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import networkx as nx
 
+
 def shortest_cycle(G, v):
     '''
     Calculate one of the shortest cycles which includes the node v.
@@ -12,24 +13,25 @@ def shortest_cycle(G, v):
     lengths = []
 
     for n in G.neighbors(v):
-        G.remove_edge(v,n)
+        G.remove_edge(v, n)
         try:
-            p = nx.shortest_path(G,v,n)
-            l = nx.shortest_path_length(G,v,n)
+            p = nx.shortest_path(G, v, n)
+            l = nx.shortest_path_length(G, v, n)
         except nx.exception.NetworkXNoPath:
-            G.add_edge(v,n)
+            G.add_edge(v, n)
             continue
 
-        lengths += [(l,p)]
-        G.add_edge(v,n)
+        lengths += [(l, p)]
+        G.add_edge(v, n)
 
     if len(lengths) > 0:
         return min(lengths)[1]
     else:
         return []
 
+
 if __name__ == '__main__':
-    edges = [(1,2),(2,3),(2,5),(1,4),(4,5),(1,3)]
+    edges = [(1, 2), (2, 3), (2, 5), (1, 4), (4, 5), (1, 3)]
     G = nx.Graph()
     G.add_edges_from(edges)
 
