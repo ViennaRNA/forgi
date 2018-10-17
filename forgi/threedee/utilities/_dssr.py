@@ -96,9 +96,10 @@ class DSSRAnnotation(object):
             nt2 = dssr_to_pdb_resid(pair["nt2"])
             bp_type = pair["LW"]
             try:
-                self._cg.seq.with_missing[nt1]
-                self._cg.seq.with_missing[nt2]
-            except KeyError:
+                s1 = self._cg.seq.with_missing[nt1]
+                s2 = self._cg.seq.with_missing[nt2]
+                log.debug("Basepair is %s -%s- %s", s1, bp_type, s2)
+            except IndexError:
                 continue
             if elem is None:
                 if bp_type == "cWW":

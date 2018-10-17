@@ -1308,21 +1308,6 @@ class BulgeGraph(BaseGraph):
         for edge in self.edges[name]:
             self.edges[edge].add(name)
 
-    def _remove_node(self, name):
-        """
-        Remove a node and all its (in- and out-) edges.
-
-        .. warning::
-
-            This does NOT update the defines/ cponnections of other nodes, and
-            may result in the graph falling apart into several connected components.
-
-        """
-        for edge in list(self.edges[node]):
-            self.remove_edge(*edge)
-        del self.edges[node]
-        del self.defines[node]
-
     def length_one_stem_basepairs(self):
         """
         Return a list of basepairs that correspond to length-1 stems.

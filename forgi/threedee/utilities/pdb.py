@@ -103,18 +103,6 @@ interactions = [(AtomName(a), AtomName(b)) for a, b in map(sorted,
                                                             ('C6', 'N6')])]
 
 
-def trim_chain(chain, start_res, end_res):
-    '''
-    Remove all residues that are not between start_res and end_res, inclusive.
-    '''
-    to_detach = []
-    for res in chain:
-        if res.id[1] <= start_res or end_res <= res.id[1]:
-            to_detach += [res]
-
-    for res in to_detach:
-        chain.detach_child(res.id)
-
 
 def trim_chain_between(chain, start_res, end_res):
     '''
