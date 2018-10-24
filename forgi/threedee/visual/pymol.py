@@ -14,6 +14,7 @@ import numpy as np
 import uuid
 import collections as col
 import warnings
+import logging
 
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.graph_pdb as ftug
@@ -26,6 +27,7 @@ import Bio.PDB.Model as bpm
 import Bio.PDB.Structure as bps
 import Bio.PDB as bp
 
+log = logging.getLogger(__name__)
 
 NAMED_COLORS = {
     'green':       [0.0, 1.0, 0.0],
@@ -42,12 +44,12 @@ NAMED_COLORS = {
     'dark gray':   [.1, .1, .1],
     'middle gray': [.6, .6, .6],
     'gray':        [.6, .6, .6],
-    'black':       [0.,0.,0.]
+    'black':       [0., 0., 0.]
 }
 
 
 def pymol_color(color, modifier):
-    def get_color_vec( color):
+    def get_color_vec(color):
         if color in NAMED_COLORS:
             return NAMED_COLORS[color]
         else:
@@ -58,20 +60,28 @@ def pymol_color(color, modifier):
         color = [str(c) for c in color[:3]]
     return color
 
+
 class PyMolRNA(object):
-    def __init__(self, name):
-        self.name = name.replace("-","_")
+    def __init__(self, name, color_modifier=1.0):
+        self.name = name.replace("-", "_")
         self.segments = []
-        self.boxes    = []
-        self.labels   = []
-        self.spheres  = []
-        self.cones    = []
-        self.color_modifier=1.0
+        self.boxes = []
+        self.labels = []
+        self.spheres = []
+        self.cones = []
+        self.color_modifier = color_modifier
 
     def add_sphere(self, p, color='green', width=0.2, text=""):
         self.spheres += [(np.array(p), color, width, text)]
 
     def add_segment(self, p, n, color='green', width=0.2, text="", key=''):
+        """
+        :param p: start coordinates
+        :param n: end-coordinates
+        :param color: A color. Either a 3-element list with values
+                     from 0 to 1 for R, G and B,
+                     or a color name (as defined in this modules variable NAMED_COLORS)
+        """
         self.segments += [(np.array(p), np.array(n), color, width, text, key)]
 
     def add_dashed(self, point1, point2, width=0.1, color="purple"):
@@ -82,24 +92,28 @@ class PyMolRNA(object):
         gap_length = dash_length * 2
         direction = ftuv.normalize(point2 - point1)
 
-        num_dashes = ftuv.magnitude(point2 - point1) / (dash_length + gap_length)
-        key=None
+        num_dashes = ftuv.magnitude(
+            point2 - point1) / (dash_length + gap_length)
+        key = None
 
         for i in range(int(num_dashes)):
             self.add_segment(point1 + i * (dash_length + gap_length) * direction,
-                             point1 + (i * (dash_length + gap_length) + dash_length) * direction, color,
+                             point1 + (i * (dash_length + gap_length) +
+                                       dash_length) * direction, color,
                              width, "", key=key)
 
     def add_cone(self, p, n, color='white', width=2.4, text=''):
 
         cone_extension = 2.
-        cyl_vec = cuv.normalize(n-p)
-        cyl_len = cuv.magnitude(n-p)
+        cyl_vec = cuv.normalize(n - p)
+        cyl_len = cuv.magnitude(n - p)
 
         new_width = width * (cyl_len + cone_extension) / cyl_len
 
-        self.cones += [(np.array(p) - cone_extension * cyl_vec, np.array(n), color, width, text)]
-        self.cones += [(np.array(n) + cone_extension * cyl_vec, np.array(p), color, width, text)]
+        self.cones += [(np.array(p) - cone_extension * cyl_vec,
+                        np.array(n), color, width, text)]
+        self.cones += [(np.array(n) + cone_extension * cyl_vec,
+                        np.array(p), color, width, text)]
 
     def pymol_segments_string(self):
         color = 'green'
@@ -122,22 +136,23 @@ class PyMolRNA(object):
 
         for (p, color, width, text) in self.spheres:
             color = pymol_color(color, self.color_modifier)
-            if np.ndim(p)>0:
+            if np.ndim(p) > 0:
                 s += "COLOR, %s," % (",  ".join([str(c) for c in color]))
                 s += '\n'
                 s += "SPHERE, %s, %f," % (", ".join([str(pi) for pi in p]),
                                           width)
                 s += '\n'
             else:
-                warnings.warn("p is not iterable! It is {} (for '{}'). IGNORING. ".format(p, text))
+                warnings.warn(
+                    "p is not iterable! It is {} (for '{}'). IGNORING. ".format(p, text))
         return s
 
-    def pymol_text_string(self):
+    def pymol_text_string(self, rna_number):
         counter = 0
         s = ''
         pa_s = 'cmd.set("label_size", 20)\n'
         uids = []
-
+        names = []
         for (p, n, color, width, text, key) in self.segments:
             if len(text) == 0:
                 continue
@@ -147,37 +162,29 @@ class PyMolRNA(object):
             uid = str(uuid.uuid4()).replace('-', 'x')
             uids += [uid]
 
-            s += "cgox_%s = []" % (uid) + '\n'
-
-            if np.all(n==p):
+            if np.all(n == p):
                 pos = n
-                axes = [ [2,0,0], [0,2,0], [0,0,2] ]
+                axes = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
             else:
                 comp1 = cuv.normalize(n - p)
-
                 ncl = cuv.get_non_colinear_unit_vector(comp1)
-
                 comp2 = cuv.normalize(np.cross(ncl, comp1))
                 comp3 = cuv.normalize(np.cross(ncl, comp2))
-
                 pos = (p + n) / 2.0 + 3 * comp2
-
                 axes = [list(comp1 * 2), list(comp2 * 2), list(comp3 * 2)]
 
-            text = "%s: %.1f" % (text, cuv.magnitude(n - p))
+            #text = "%s: %.1f" % (text, cuv.magnitude(n - p))
 
-            s += "cyl_text(cgox_%s, plain, %s, " % (uid, str(list(pos)))
-            s += "\"%s\", 0.20, axes=%s)" % (text, str(axes)) + '\n'
-            pa_s += "pa_%s = cmd.pseudoatom(pos=%s," % (uid, str(list(pos)))
-            pa_s += "b=1.0, label=\"%s\")\n" % (text)
+            name = "label{}_{}_{}".format(len(uids), rna_number, self.name)
+            names.append(name)
+            pa_s += 'pa_{} = cmd.pseudoatom("{}", pos={},'.format(uid,
+                                                                  name, str(list(pos)))
+            pa_s += 'b=1.0, label="{}")\n'.format(text)
             counter += 1
 
-        s += "cmd.set(\"cgo_line_radius\",0.03)" + '\n'
-        for i in range(counter):
-            s += "cmd.load_cgo(cgox_%s, " % (uids[i])
-            s += "\'cgox%s\')" % (uids[i]) + '\n'
-        s += "cmd.zoom(\"all\", 2.0)" + '\n'
-
+        all_patoms = ["pa_{}".format(ui) for ui in uids]
+        pa_s += "cmd.group('{}', '{}')\n".format(
+            "labels_{}_{}".format(rna_number, self.name), " ".join(names))
         return pa_s
 
     def pymol_box_string(self):
@@ -203,6 +210,7 @@ class PyMolRNA(object):
 
         return out_str
 
+
 class PymolPrinter(object):
     def __init__(self):
         self.display_virtual_residues = False
@@ -226,18 +234,20 @@ class PymolPrinter(object):
         self.stem_color = 'green'
         self.multiloop_color = 'red'
         self.prev_obj_name = ''     # The name of the previously created
-                                    # object which needs to be hidden
-                                    # when creating a movie
+        # object which needs to be hidden
+        # when creating a movie
         self.only_elements = None
         self.cylinder_width = 1.0
-        self.show_twists=True
+        self.show_twists = True
         self.plotters = []
         self.show_bounding_boxes = False
 
-    def add_cg(self, cg):
-        rna_plotter = PyMolRNA(cg.name)
-
-        loops = list(cg.hloop_iterator())
+    def add_cg(self, cg, labels, color_modifier=1.0):
+        """
+        :param labels: A dictionary with element names as keys
+                       and labels as values.
+        """
+        rna_plotter = PyMolRNA(cg.name, color_modifier)
         for key in cg.coords.keys():
             if self.only_elements is not None:
                 if key not in self.only_elements:
@@ -247,54 +257,64 @@ class PymolPrinter(object):
             color = self.get_element_color(key)
 
             if key[0] == 's':
-                self.add_stem_like(rna_plotter, cg, key, color=color)
+                try:
+                    text = labels[key]
+                except KeyError:
+                    text = key
+                self.add_stem_like(rna_plotter, cg, text, key, color=color)
                 if self.show_bounding_boxes:
                     self.draw_bounding_boxes(rna_plotter, cg, key)
             else:
                 if key[0] == 'h':
                     if self.add_loops:
-                        if key in loops:
-                            rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                             key + " " + str(cg.get_length(key)),
-                                            key=key)
+                        try:
+                            text = labels[key]
+                        except KeyError:
+                            text = key + " " + str(cg.get_length(key))
+                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                                                text,
+                                                key=key)
                 elif key[0] == 'm':
                     twists = cg.get_twists(key)
+                    try:
+                        text = labels[key]
+                    except KeyError:
+                        # check if the multiloop is longer than one. If it's not, then
+                        # it has an empty define and its length will be 0
+                        if len(cg.defines[key]) == 0:
+                            text = key + " 0"
+                        else:
+                            text = key + " " + \
+                                str(cg.defines[key][1] -
+                                    cg.defines[key][0] + 1)
+                    rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                                            text, key=key)
+                elif key[0] in 'ft':
+                    try:
+                        text = labels[key]
+                    except KeyError:
+                        text = key + " " + \
+                            str(cg.defines[key][1] - cg.defines[key][0] + 1)
 
-                    # check if the multiloop is longer than one. If it's not, then
-                    # it has an empty define and its length will be 0
-                    if len(cg.defines[key]) == 0:
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                         key + " 0", key=key)
-                    else:
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                         key + " " +
-                                         str(cg.defines[key][1] -
-                                         cg.defines[key][0] + 1), key=key)
-                elif key[0] == 'f':
-                    if self.visualize_three_and_five_prime:
-                        rna_plotter.add_segment(p, n, color,self.cylinder_width,
-                                         key + " " +
-                                         str(cg.defines[key][1] -
-                                         cg.defines[key][0] + 1) + "", key=key)
-
-                elif key[0] == 't':
                     if self.visualize_three_and_five_prime:
                         rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                         key + " " +
-                                         str(cg.defines[key][1] -
-                                         cg.defines[key][0]) + "", key=key)
-                else:
-                    rna_plotter.add_segment(p, n, color, self.cylinder_width, key, key=key)
+                                                text, key=key)
+                elif key[0] == "i":
+                    try:
+                        text = labels[key]
+                    except KeyError:
+                        text = key
+                    rna_plotter.add_segment(
+                        p, n, color, self.cylinder_width, text, key=key)
 
         if self.display_virtual_residues:
-            for i in range(1,cg.seq_length+1):
+            for i in range(1, cg.seq_length + 1):
                 pos = cg.get_virtual_residue(i, True)
-                if cg.get_node_from_residue_num(i)[0]=="s":
-                    c="cyan"
+                if cg.get_node_from_residue_num(i)[0] == "s":
+                    c = "cyan"
                 else:
-                    c="magenta"
+                    c = "magenta"
                 rna_plotter.add_sphere(pos, c, 1.)
-
         if self.add_longrange:
             for key1 in cg.longrange.keys():
                 for key2 in cg.longrange[key1]:
@@ -330,7 +350,7 @@ class PymolPrinter(object):
             va = ftug.virtual_atoms(cg, sidechain=self.sidechain_atoms)
 
             atom_width = 0.5
-            for i,r in enumerate(sorted(va.keys())):
+            for i, r in enumerate(sorted(va.keys())):
                 for a in va[r].keys():
                     if self.rainbow:
                         import matplotlib
@@ -338,42 +358,49 @@ class PymolPrinter(object):
                         import matplotlib.pyplot as plt
                         cmap = plt.get_cmap('gist_rainbow')
                         rna_plotter.add_sphere(va[r][a],
-                                        color = cmap(i / float(len(va.keys()))),
-                                        width=atom_width)
+                                               color=cmap(
+                                                   i / float(len(va.keys()))),
+                                               width=atom_width)
                     else:
                         d = cg.get_node_from_residue_num(r)
                         if d[0] == 's':
                             if a in ftup.nonsidechain_atoms:
-                                rna_plotter.add_sphere(va[r][a], self.stem_color, width=atom_width)
+                                rna_plotter.add_sphere(
+                                    va[r][a], self.stem_color, width=atom_width)
                             else:
-                                rna_plotter.add_sphere(va[r][a], 'forest', width=atom_width)
+                                rna_plotter.add_sphere(
+                                    va[r][a], 'forest', width=atom_width)
                         elif d[0] == 'i':
-                            rna_plotter.add_sphere(va[r][a], 'yellow', width=atom_width)
+                            rna_plotter.add_sphere(
+                                va[r][a], 'yellow', width=atom_width)
                         elif d[0] == 'm':
-                            rna_plotter.add_sphere(va[r][a], self.multiloop_color, width=atom_width)
+                            rna_plotter.add_sphere(
+                                va[r][a], self.multiloop_color, width=atom_width)
                         elif d[0] == 'h':
-                            rna_plotter.add_sphere(va[r][a], 'blue', width=atom_width)
+                            rna_plotter.add_sphere(
+                                va[r][a], 'blue', width=atom_width)
 
         if self.basis:
             for d in cg.defines.keys():
                 origin, basis = ftug.element_coord_system(cg, d)
 
-                rna_plotter.add_segment(origin, origin + 7. * basis[1], 'purple', 0.5, key=key)
+                rna_plotter.add_segment(
+                    origin, origin + 7. * basis[1], 'purple', 0.5, key=key)
         self.plotters.append(rna_plotter)
 
-    def add_stem_like(self, rna_plotter, cg, key, color='green', width=2.4):
+    def add_stem_like(self, rna_plotter, cg, text, key, color='green', width=2.4):
         if key in cg.twists:
             return self.add_stem_like_core(rna_plotter, cg.coords[key], cg.twists[key],
-                                           cg.stem_length(key), key, color, width)
+                                           cg.stem_length(key), text, key, color, width)
         else:
             return self.add_stem_like_core(rna_plotter, cg.coords[key], None,
-                                           cg.stem_length(key), key, color, width)
+                                           cg.stem_length(key), text, key, color, width)
 
-    def add_stem_like_core(self, rna_plotter, coords, twists, stem_len, key,
+    def add_stem_like_core(self, rna_plotter, coords, twists, stem_len, text, key,
                            color='green', width=2.4):
         (p, n) = coords
-        width*=self.cylinder_width
-        rna_plotter.add_segment(p, n, color, width, key, key=key)
+        width *= self.cylinder_width
+        rna_plotter.add_segment(p, n, color, width, text, key=key)
 
         if self.show_twists:
             rna_plotter.add_cone(p, n, 'white', width, key)
@@ -381,18 +408,20 @@ class PymolPrinter(object):
             width = .3
             (twist1o, twist2o) = twists
 
-            rna_plotter.add_segment(p, p + mult * twist1o, "cyan", width, '', key=key)
-            rna_plotter.add_segment(n, n + mult * twist2o, "magenta", width, '', key=key)
+            rna_plotter.add_segment(
+                p, p + mult * twist1o, "cyan", width, '', key=key)
+            rna_plotter.add_segment(
+                n, n + mult * twist2o, "magenta", width, '', key=key)
 
             for i in range(stem_len):
                 res = ftug.virtual_res_3d_pos_core((p, n), twists, i, stem_len)
                 (pos, vec_c, vec_l, vec_r) = res
-                rna_plotter.add_segment(pos, pos + mult * vec_c, "orange", width, '', key=key)
+                rna_plotter.add_segment(
+                    pos, pos + mult * vec_c, "orange", width, '', key=key)
 
                 if self.add_letters:
                     rna_plotter.labels += [('L', list(pos + mult * vec_l))]
                     rna_plotter.labels += [('R', list(pos + mult * vec_r))]
-
 
     def pymol_axis_string(self):
         w = 0.12  # cylinder width
@@ -431,10 +460,10 @@ class PymolPrinter(object):
                 s += plotter.pymol_segments_string()
             s += plotter.pymol_spheres_string()
             s += ']\n'
-            s += self.pymol_outro_string(object_id)
+            s += self.pymol_load_cgo_string(object_id)
 
             if self.print_text:
-                s += plotter.pymol_text_string()
+                s += plotter.pymol_text_string(i)
             s += plotter.pymol_box_string()
 
         if self.draw_axes:
@@ -447,15 +476,15 @@ class PymolPrinter(object):
         s += "from pymol.vfont import plain" + '\n'
         return s
 
-    def pymol_outro_string(self, object_id):
+    def pymol_load_cgo_string(self, object_id):
         if self.movie:
             s = "cmd.load_cgo(obj%s, 'ss%s', %d)" % (object_id,
-                                                      object_id,
-                                                      self.state) + '\n'
+                                                     object_id,
+                                                     self.state) + '\n'
             self.state += 1
         else:
             s = "cmd.load_cgo(obj%s, 'ss%s')" % (object_id,
-                                                  object_id) + '\n'
+                                                 object_id) + '\n'
         return s
 
     def draw_bounding_boxes(self, rna_plotter, bg, s):
@@ -542,15 +571,15 @@ class PymolPrinter(object):
             data = np.array(points)
             datamean = data.mean(axis=0)
 
-
             uu, dd, vv = np.linalg.svd(data - datamean)
 
-            furthest = max([ftuv.magnitude(d) for d in (data - datamean) ])
+            furthest = max([ftuv.magnitude(d) for d in (data - datamean)])
 
             start_point = -furthest * vv[0] + datamean
             end_point = furthest * vv[0] + datamean
 
-            rna_plotter.add_segment(start_point, end_point, 'white', width=4, text='', key='')
+            rna_plotter.add_segment(
+                start_point, end_point, 'white', width=4, text='', key='')
 
     def get_element_color(self, elem_name):
         '''

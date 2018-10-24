@@ -1,5 +1,6 @@
 import math
 
+
 def atan3(p1, p2):
     '''
     Return the angle between the two points in the
@@ -17,6 +18,7 @@ def atan3(p1, p2):
         return 2 * math.pi + a
     else:
         return a
+
 
 def clock_angle(a1, a2):
     '''

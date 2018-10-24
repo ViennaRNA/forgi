@@ -2,10 +2,12 @@
 
 from __future__ import print_function
 from builtins import range
-import sys, math
+import sys
+import math
 import forgi.graph.bulge_graph as cgb
 
 from optparse import OptionParser
+
 
 def print_rosetta_constraints(bg):
     '''
@@ -16,7 +18,9 @@ def print_rosetta_constraints(bg):
     '''
     for s in bg.stem_iterator():
         for i in range(bg.stem_length(s)):
-            print("STEM PAIR %d %d" % (bg.defines[s][0] + i, bg.defines[s][3] - i))
+            print("STEM PAIR %d %d" %
+                  (bg.defines[s][0] + i, bg.defines[s][3] - i))
+
 
 def main():
     usage = """
@@ -26,8 +30,8 @@ def main():
         These constraints will describe the stems within the structure by 
         showing which necleotides need to pair with which other nucleotides.
         """
-    parser = OptionParser(usage = usage)
-    parser.add_option('-f', '--fasta', action='store_true', default=False, 
+    parser = OptionParser(usage=usage)
+    parser.add_option('-f', '--fasta', action='store_true', default=False,
                       help='The structure is being input as a fasta file')
     '''
     parser.add_option('-p', '--pseudoknots', action='store_true', default=False, 
@@ -35,7 +39,6 @@ def main():
     '''
 
     (options, args) = parser.parse_args()
-
 
     if len(args) < 1:
         parser.print_help()
@@ -54,5 +57,6 @@ def main():
 
     print_rosetta_constraints(bg)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

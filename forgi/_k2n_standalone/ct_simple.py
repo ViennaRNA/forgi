@@ -14,8 +14,10 @@ from __future__ import absolute_import
 from builtins import str
 from .rna2d import Pairs
 
+
 class CtError(Exception):
     pass
+
 
 def is_ct_line(line):
     """Return True if line is header line
@@ -30,6 +32,7 @@ def is_ct_line(line):
     if 'ENERGY' in line or 'Energy' in line:
         return True
     return False
+
 
 def ct_record_finder(lines):
     """Yield successive ct records"""
@@ -47,6 +50,7 @@ def ct_record_finder(lines):
         yield curr
         curr = []
 
+
 def ct_head_body(lines):
     """Separate first line (header) from the rest (seq/struct info)
 
@@ -57,9 +61,11 @@ def ct_head_body(lines):
     body = lines[1:]
     return head, body
 
+
 def ct_parse_header(line):
     """Return simple string of header"""
     return line.strip()
+
 
 def ct_parse_content(lines):
     """Return tuple of (raw_sequence, Pairs object)
@@ -82,11 +88,11 @@ def ct_parse_content(lines):
     try:
         first_char = int(lines[0].strip().split()[0])
         if first_char != 1:
-            raise CtError("First content line starts with %s, should be 1"\
-                %(first_char))
+            raise CtError("First content line starts with %s, should be 1"
+                          % (first_char))
     except ValueError:
-        raise CtError("First content line doesn't start with an int: %s"\
-            %(lines[0].strip()))
+        raise CtError("First content line doesn't start with an int: %s"
+                      % (lines[0].strip()))
 
     seq = []
     struct = Pairs()
@@ -94,18 +100,19 @@ def ct_parse_content(lines):
     for line in lines:
         parts = line.strip().split()
         if len(parts) != 6:
-            raise CtError("Number of parts in line is %s, expected 6"\
-                %(len(parts)))
+            raise CtError("Number of parts in line is %s, expected 6"
+                          % (len(parts)))
         seq.append(parts[1])
         up, down = int(parts[0]), int(parts[4])
 
         # check file consistency
-        if last_line is not None and up != last_line +1:
-            raise CtError("Numbers out of order: %s after %s"%(up, last_line))
-        if int(parts[2]) != up-1 or int(parts[5]) != up:
-            raise CtError("Inconsistency in line: %s"%(line.strip()))
-        if int(parts[3]) != up+1 and int(parts[3]) != 0:
-            raise CtError("Inconsistency in line: %s"%(line.strip()))
+        if last_line is not None and up != last_line + 1:
+            raise CtError("Numbers out of order: %s after %s" %
+                          (up, last_line))
+        if int(parts[2]) != up - 1 or int(parts[5]) != up:
+            raise CtError("Inconsistency in line: %s" % (line.strip()))
+        if int(parts[3]) != up + 1 and int(parts[3]) != 0:
+            raise CtError("Inconsistency in line: %s" % (line.strip()))
         # if everything is ok, append
         if down == 0:
             struct.append((up, None))
@@ -115,15 +122,16 @@ def ct_parse_content(lines):
     if struct.hasConflicts():
         raise CtError("Stucture has conflicts")
     renumbered = Pairs()
-    for x,y in struct.directed():
-        renumbered.append((x-1, y-1))
+    for x, y in struct.directed():
+        renumbered.append((x - 1, y - 1))
     #struct = adjust_base(struct.directed(), -1)
     seq = ''.join(seq)
 
     return seq, renumbered
 
-def MinimalCtParser(lines, strict=True, header_parser=ct_parse_header,\
-    content_parser=ct_parse_content):
+
+def MinimalCtParser(lines, strict=True, header_parser=ct_parse_header,
+                    content_parser=ct_parse_content):
     """Return pure data as is"""
     for rec in ct_record_finder(lines):
         try:
@@ -137,15 +145,16 @@ def MinimalCtParser(lines, strict=True, header_parser=ct_parse_header,\
             else:
                 continue
 
-def CtParser(lines, strict=True, header_parser=ct_parse_header,\
-    content_parser=ct_parse_content):
+
+def CtParser(lines, strict=True, header_parser=ct_parse_header,
+             content_parser=ct_parse_content):
     """Return RNA sequence object etc.
     """
-    for header_info, seq, pairs in MinimalCtParser(lines, strict=strict,\
-        header_parser=ct_parse_header, content_parser=ct_parse_content):
+    for header_info, seq, pairs in MinimalCtParser(lines, strict=strict,
+                                                   header_parser=ct_parse_header, content_parser=ct_parse_content):
         try:
-            sequence, pairs = supported[program]['INTEGRATION']\
-                (header_info, content_info)
+            sequence, pairs = supported[program]['INTEGRATION'](
+                header_info, content_info)
             yield sequence, pairs
         except CtError as e:
             if strict:
@@ -153,10 +162,11 @@ def CtParser(lines, strict=True, header_parser=ct_parse_header,\
             else:
                 continue
 
+
 if __name__ == "__main__":
     from sys import argv
-    #for lines in CTRecordFinder(open(argv[1],'U')):
+    # for lines in CTRecordFinder(open(argv[1],'U')):
     #    print lines
 
-    for res in MinimalCtParser(open(argv[1],'U')):
+    for res in MinimalCtParser(open(argv[1], 'U')):
         print(res)

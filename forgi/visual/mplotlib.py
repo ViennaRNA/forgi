@@ -10,6 +10,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     """
     Make a scatter of circles plot of x vs y, where x and y are sequence 
@@ -41,7 +42,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
 
 
     Examples :: 
-      
+
         a = np.arange(11)
         circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
 
@@ -54,20 +55,20 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     #import matplotlib.colors as colors
 
     if ax is None:
-        ax = plt.gca()    
+        ax = plt.gca()
 
-    if isinstance(c,basestring):
+    if isinstance(c, basestring):
         color = c     # ie. use colors.colorConverter.to_rgba_array(c)
     else:
         color = None  # use cmap, norm after collection is created
     kwargs.update(color=color)
 
     if np.isscalar(x):
-        patches = [Circle((x, y), s),]
+        patches = [Circle((x, y), s), ]
     elif np.isscalar(s):
-        patches = [Circle((x_,y_), s) for x_,y_ in zip(x,y)]
+        patches = [Circle((x_, y_), s) for x_, y_ in zip(x, y)]
     else:
-        patches = [Circle((x_,y_), s_) for x_,y_,s_ in zip(x,y,s)]
+        patches = [Circle((x_, y_), s_) for x_, y_, s_ in zip(x, y, s)]
     collection = PatchCollection(patches, **kwargs)
 
     if color is None:
@@ -79,10 +80,11 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     ax.autoscale_view()
     return collection
 
-def plot_rna(cg, ax=None, offset=(0,0)):
+
+def plot_rna(cg, ax=None, offset=(0, 0)):
     '''
     Plot an RNA structure given a set of nucleotide coordinates
-    
+
     :param cg: A forgi.threedee.model.coarse_grain.CoarseGrainRNA structure
     :param ax: A matplotlib plotting area
     :param offset: Offset the plot by these coordinates. If a simple True is passed in, then
@@ -99,8 +101,9 @@ def plot_rna(cg, ax=None, offset=(0,0)):
     #circles = []
 
     bp_string = cg.to_dotbracket_string()
-    el_string = cg.to_element_string()    # get the type of element of each nucleotide
-                                          # i.e. eeesssshhhhsssseeee
+    # get the type of element of each nucleotide
+    el_string = cg.to_element_string()
+    # i.e. eeesssshhhhsssseeee
     el_to_color = {'f': 'orange',
                    't': 'orange',
                    's': 'green',
@@ -112,7 +115,7 @@ def plot_rna(cg, ax=None, offset=(0,0)):
         ax = plt.gca()
 
     if offset is None:
-        offset = (0,0)
+        offset = (0, 0)
     else:
         if offset == True:
             offset = (ax.get_xlim()[1], ax.get_ylim()[1])
@@ -120,20 +123,20 @@ def plot_rna(cg, ax=None, offset=(0,0)):
             pass
 
     vrna_coords = RNA.get_xy_coordinates(bp_string)
-    for i,_ in enumerate(bp_string):
-        coords += [(offset[0] + vrna_coords.get(i).X, 
+    for i, _ in enumerate(bp_string):
+        coords += [(offset[0] + vrna_coords.get(i).X,
                     vrna_coords.get(i).Y)]
         #colors += [el_to_color[el_string[i-1]]]
-        circle = plt.Circle((offset[0] + vrna_coords.get(i).X, 
+        circle = plt.Circle((offset[0] + vrna_coords.get(i).X,
                              vrna_coords.get(i).Y),
-                              color=el_to_color[el_string[i]])
+                            color=el_to_color[el_string[i]])
         ax.add_artist(circle)
 
     coords = np.array(coords)
-    datalim = ((min(list(coords[:,0]) + [ax.get_xlim()[0]]), 
-                min(list(coords[:,1]) + [ax.get_ylim()[0]])), 
-               (max(list(coords[:,0]) + [ax.get_xlim()[1]]), 
-                max(list(coords[:,1]) + [ax.get_ylim()[1]])))
+    datalim = ((min(list(coords[:, 0]) + [ax.get_xlim()[0]]),
+                min(list(coords[:, 1]) + [ax.get_ylim()[0]])),
+               (max(list(coords[:, 0]) + [ax.get_xlim()[1]]),
+                max(list(coords[:, 1]) + [ax.get_ylim()[1]])))
 
     '''
     min_coord = min(datalim[0][0], datalim[0][1])
@@ -151,9 +154,10 @@ def plot_rna(cg, ax=None, offset=(0,0)):
     #ax.set_aspect(width / height)
     ax.set_aspect('equal', 'datalim')
     ax.update_datalim(datalim)
-    ax.autoscale_view();
-    
+    ax.autoscale_view()
+
     return (ax, coords)
+
 
 def plot_pdb(filename, ax=None):
     """
@@ -178,7 +182,7 @@ def plot_pdb(filename, ax=None):
     for chain in model:
         # iterate over RNAs
         if ftup.is_rna(chain):
-            # convert to cg and store so that we can convert pdb nucleotide ids to 
+            # convert to cg and store so that we can convert pdb nucleotide ids to
             # secondary structure indexes later
             cg = ftmc.from_pdb(filename, chain_id=chain.id)
             cgs[chain.id] = cg
@@ -186,13 +190,13 @@ def plot_pdb(filename, ax=None):
             # plot the structure and store the coordinates
             (ax, coords) = plot_rna(cg, offset=True, ax=ax)
             chain_coords[chain.id] = coords
-            
+
     for (a1, a2) in ftup.interchain_contacts(structure):
         # iterate over all the interactions in order to find out which
         # nucleotides this protein interacts with
         chain1 = a1.parent.parent
         chain2 = a2.parent.parent
-        
+
         if ftup.is_protein(chain1) and ftup.is_rna(chain2):
             # collect all the RNA nucleotides that a protein interacts with
             sid = cgs[chain2.id].seq_ids.index(a2.parent.id)
@@ -213,25 +217,27 @@ def plot_pdb(filename, ax=None):
         if ftup.is_protein(chain):
             # the protein will be positioned at the centroid of the nucleotides
             # that it interacts with
-            interacting_coords = [np.array(chain_coords[chain_id][nuc_num]) 
+            interacting_coords = [np.array(chain_coords[chain_id][nuc_num])
                                   for (chain_id, nuc_num) in protein_interactions[chain.id]]
 
-            centroid = np.sum(interacting_coords, axis=0) / len(interacting_coords)
+            centroid = np.sum(interacting_coords, axis=0) / \
+                len(interacting_coords)
 
             # the size of the circle representing it will be proportional to its
             # length (in nucleotides)
             radius = 2 * math.sqrt(len(chain.get_list()))
             protein_circles += [[centroid[0], centroid[1], radius]]
-            
+
             # draw all of the interactions as lines
             for coord in interacting_coords:
-                ax.plot([coord[0], centroid[0]], [coord[1], centroid[1]], 'k-', alpha=0.5)
-        
+                ax.plot([coord[0], centroid[0]], [
+                        coord[1], centroid[1]], 'k-', alpha=0.5)
+
     protein_circles = np.array(protein_circles)
     if len(protein_circles) > 0:
-        circles(protein_circles[:,0], protein_circles[:,1], protein_circles[:,2], 'grey', alpha=0.5)
+        circles(protein_circles[:, 0], protein_circles[:, 1],
+                protein_circles[:, 2], 'grey', alpha=0.5)
 
-    #plt.axis('off')
+    # plt.axis('off')
 
     pass
-

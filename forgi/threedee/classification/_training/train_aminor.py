@@ -8,19 +8,21 @@ import json
 
 import forgi.utilities.commandline_utils as fuc
 import forgi.threedee.classification._training.aminor_training as ftcta
-log=logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
-PDBIDS_LRSU=["1HC8", "1MMS", "1MZP", "1VQO", "3jbu", "4IOA", "4LGT", "4QVI", "4v9p",
-      "4w2g", "4wt8", "5D8H", "5imq", "5MMI", "5O60", "5V7Q", "3J79", "3J7Q", "5T2C"]
-PDBIDS_SRSU=["1G1X", "1I6U", "1KUQ", "2VQE", "4V19", "4v9o", "5lzd", "5mmm",
-             "5o61", "5OOL", "5v93","3J7A", "3J7P", "4UG0", "3JAM", "4P8Z",
-             "4UG0", "4V5O", "4V88", "5FLX", "5LZS","5OPT", "5XXU", "5XYI", "6AZ1"]
+PDBIDS_LRSU = ["1HC8", "1MMS", "1MZP", "1VQO", "3jbu", "4IOA", "4LGT", "4QVI", "4v9p",
+               "4w2g", "4wt8", "5D8H", "5imq", "5MMI", "5O60", "5V7Q", "3J79", "3J7Q", "5T2C"]
+PDBIDS_SRSU = ["1G1X", "1I6U", "1KUQ", "2VQE", "4V19", "4v9o", "5lzd", "5mmm",
+               "5o61", "5OOL", "5v93", "3J7A", "3J7P", "4UG0", "3JAM", "4P8Z",
+               "4UG0", "4V5O", "4V88", "5FLX", "5LZS", "5OPT", "5XXU", "5XYI", "6AZ1"]
 
 ################################################################################
-### Lets use this as a script
-### Run as python -m forgi.threedee.classification._training.aminor_training
+# Lets use this as a script
+# Run as python -m forgi.threedee.classification._training.aminor_training
 ################################################################################
+
+
 def main():
     parser = fuc.get_rna_input_parser("Train a classifier for A-Minior interactions.",
                                       nargs="+", rna_type="only_cg")
@@ -51,11 +53,13 @@ def main():
     cgs, cg_filenames = fuc.cgs_from_args(args, "+", rna_type="only_cg",
                                           return_filenames=True)
     ftcta.create_geometry_file(args.trainingsdata_out, cgs, cg_filenames,
-                         args.fr3d_result, args.chain_id_mapping_dir,
-                         args.fr3d_query)
-    hyper_params = ftcta.tune_model(args.trainingsdata_out, args.train_set, args.test_set)
+                               args.fr3d_result, args.chain_id_mapping_dir,
+                               args.fr3d_query)
+    hyper_params = ftcta.tune_model(
+        args.trainingsdata_out, args.train_set, args.test_set)
     with open(args.model_params_out, "w") as f:
-        json.dump(hyper_params,f)
+        json.dump(hyper_params, f)
+
 
 if __name__ == "__main__":
     main()

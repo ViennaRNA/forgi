@@ -11,11 +11,14 @@ class GraphConstructionError(ValueError):
     Exceptions raised if the BulgeGraph could be constructed from the given input.
     """
     pass
+
+
 class GraphIntegrityError(ValueError):
     """
     Exception raised if a BulgeGraph was found to be in an inconsistent or faulty state.
     """
     pass
+
 
 class CgConstructionError(GraphConstructionError):
     """
@@ -24,6 +27,8 @@ class CgConstructionError(GraphConstructionError):
     Raised for Errors related to the 3D information.
     """
     pass
+
+
 class CgIntegrityError(GraphIntegrityError):
     """
     Exception raised if a BulgeGraphCoarseGrainRNA was found to be in an inconsistent or faulty state,

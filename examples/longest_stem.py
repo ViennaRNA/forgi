@@ -7,6 +7,7 @@ from optparse import OptionParser
 
 import forgi.graph.bulge_graph as cgb
 
+
 def longest_stem(brackets):
     bg = cgb.BulgeGraph()
     bg.from_dotbracket(brackets)
@@ -19,11 +20,12 @@ def longest_stem(brackets):
 
     return biggest_stem[0]
 
+
 def main():
     usage = """
     ./longest_stem.py dotbracket_file
     """
-    num_args=1
+    num_args = 1
     parser = OptionParser()
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
@@ -52,6 +54,6 @@ def main():
 
     print(biggest_stem[0])
 
+
 if __name__ == '__main__':
     main()
-

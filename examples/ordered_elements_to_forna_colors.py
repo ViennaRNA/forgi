@@ -47,7 +47,7 @@ def main():
     Output a forna coloring string such that nucleotides in the elements
     are colored according to the order that they are input.
     """
-    num_args= 2
+    num_args = 2
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
@@ -58,29 +58,26 @@ def main():
     if len(args) < num_args:
         parser.print_help()
         sys.exit(1)
-    
+
     cg = ftmc.CoarseGrainRNA(args[0])
 
     import matplotlib.pyplot as plt
     cmap = plt.get_cmap('Blues')
 
-
     out_str = " "
     to_color_nodes = args[1].split(',')
-    for i,node in enumerate(to_color_nodes):
+    for i, node in enumerate(to_color_nodes):
         chosen_color = cmap(1 - i / float(len(to_color_nodes)))
 
         for res in cg.define_residue_num_iterator(node):
             out_str += " {}:rgb({},{},{})".format(res, int(255 * chosen_color[0]),
-                                                       int(255 * chosen_color[1]),
-                                                       int(255 * chosen_color[2]))
+                                                  int(255 * chosen_color[1]),
+                                                  int(255 * chosen_color[2]))
 
     print(template.format(cg.to_dotbracket_string(),
                           cg.seq,
                           out_str))
 
 
-
 if __name__ == '__main__':
     main()
-
