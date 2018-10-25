@@ -10,6 +10,7 @@ import forgi.utilities.commandline_utils as fuc
 from optparse import OptionParser
 import logging
 
+
 def main(args):
 
     with fuc.hide_traceback():
@@ -19,7 +20,8 @@ def main(args):
     for multi in multiloops:
         shortened = set()
         for m in multi:
-            if m[0] != 'm': continue
+            if m[0] != 'm':
+                continue
             connected_stems = list(bg.edges[m])
             for to_shorten in connected_stems:
                 if to_shorten in shortened:
@@ -34,15 +36,14 @@ def main(args):
                 # multiloop
                 (s1b, s1e) = bg.get_sides(to_shorten, m)
 
-                #print to_shorten, s1b, "(", bg.defines[to_shorten], ")"
+                # print to_shorten, s1b, "(", bg.defines[to_shorten], ")"
                 # the nucleotides that need to be changed
                 to_change = bg.get_side_nucleotides(to_shorten, s1b)
-                #print bg.defines[to_shorten], to_change
+                # print bg.defines[to_shorten], to_change
 
                 db[to_change[0] - 1] = '.'
                 db[to_change[1] - 1] = '.'
                 print("".join(db))
-
 
 
 parser = fuc.get_rna_input_parser("Add (default) or remove a basepair from a random multiloop in the file and "

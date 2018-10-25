@@ -18,7 +18,7 @@ import os.path as op
 import sys
 from optparse import OptionParser
 
-#rna_structure_template = """
+# rna_structure_template = """
 #        var options = {{'sequence': '{}',
 #                        'structure': '{}',
 #                        'extraLinks': {}
@@ -104,6 +104,7 @@ This is an RNA container.
     </script>
 """
 
+
 def reorder_structs(pair_bitmaps):
     '''
     Order the structures according to their first PC as evaluated
@@ -115,10 +116,11 @@ def reorder_structs(pair_bitmaps):
     '''
     from sklearn.decomposition import PCA
     pca = PCA(n_components=1)
-    one_d_bitmaps = pca.fit_transform(pair_bitmaps)[:,0]
+    one_d_bitmaps = pca.fit_transform(pair_bitmaps)[:, 0]
 
     ix = np.argsort(one_d_bitmaps)
     return ix
+
 
 def get_residue_num_list(cg, d):
     '''
@@ -138,16 +140,16 @@ def get_residue_num_list(cg, d):
         return list(cg.define_residue_num_iterator(d, adjacent=True))
 
     stem_length = cg.stem_length(d)
-    start_res = cg.defines[d][0] + int(stem_length/2)
-
+    start_res = cg.defines[d][0] + int(stem_length / 2)
 
     pt = fus.dotbracket_to_pairtable(cg.to_dotbracket_string())
     other_res = pt[start_res]
 
-    nucleotide_list = [start_res, start_res+1,
-                       other_res-1, other_res]
+    nucleotide_list = [start_res, start_res + 1,
+                       other_res - 1, other_res]
 
     return nucleotide_list
+
 
 def nd_define_iterator(cg):
     '''
@@ -160,8 +162,9 @@ def nd_define_iterator(cg):
         if len(cg.defines[d]) > 0:
             yield d
 
+
 def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxsize,
-                       correct_links = None):
+                        correct_links=None):
     '''
     Get a list of extra_links that are within a certain distance of each
     other.
@@ -188,7 +191,7 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxsize,
         if bp_dist < bp_distance:
             continue
 
-        dist = cg.element_physical_distance(e1,e2)
+        dist = cg.element_physical_distance(e1, e2)
 
         if dist > cutoff_dist:
             pair_bitmap += [0]
@@ -203,15 +206,17 @@ def extract_extra_links(cg, cutoff_dist=25, bp_distance=sys.maxsize,
             if correct_links is not None:
                 for correct_link in correct_links:
                     if ((links1 == correct_link['from'] and links2 == correct_link['to']) or
-                        (links1 == correct_link['from'] and links2 == correct_link['to'])):
+                            (links1 == correct_link['from'] and links2 == correct_link['to'])):
                         correct = True
                         break
             else:
                 correct = True
 
-            links += [{"from": links1, "to": links2, "linkType": 'correct' if correct else 'incorrect'}]
+            links += [{"from": links1, "to": links2,
+                       "linkType": 'correct' if correct else 'incorrect'}]
 
     return (links, pair_bitmap)
+
 
 def main():
     usage = """
@@ -220,13 +225,17 @@ def main():
     Convert coarse grain files to html files using fornac
     to display a 2D version of the structure.
     """
-    num_args= 1
+    num_args = 1
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-d', '--distance', dest='distance', default=25, help="Draw links between elements that are within a certain distance from each other", type='float')
-    parser.add_option('-b', '--bp-distance', dest='bp_distance', default=16, help="Draw links only between nucleotides which are so many nucleotides apart", type='int')
-    parser.add_option('-s', '--sort-by', dest='sort_by', default='mcc', help="What to sort by (options: mcc, pca)", type='string')
-    parser.add_option('-n', '--names', dest='names', default=False, action='store_true', help='Add the name of the structure to the display')
+    parser.add_option('-d', '--distance', dest='distance', default=25,
+                      help="Draw links between elements that are within a certain distance from each other", type='float')
+    parser.add_option('-b', '--bp-distance', dest='bp_distance', default=16,
+                      help="Draw links only between nucleotides which are so many nucleotides apart", type='int')
+    parser.add_option('-s', '--sort-by', dest='sort_by', default='mcc',
+                      help="What to sort by (options: mcc, pca)", type='string')
+    parser.add_option('-n', '--names', dest='names', default=False,
+                      action='store_true', help='Add the name of the structure to the display')
 
     (options, args) = parser.parse_args()
 
@@ -239,14 +248,14 @@ def main():
     cgs = []
     all_links = []
     mccs = []
-    cm=None
+    cm = None
     for filename in args:
         cg = ftmc.CoarseGrainRNA(filename)
         cgs += [cg]
         if not cm:
-            cm=ftme.AdjacencyCorrelation(cg)
+            cm = ftme.AdjacencyCorrelation(cg)
         (links, pair_bitmap) = extract_extra_links(cg, options.distance, options.bp_distance,
-                                                  correct_links = None if len(all_links) == 0 else all_links[0])
+                                                   correct_links=None if len(all_links) == 0 else all_links[0])
 
         all_links += [links]
 
@@ -261,7 +270,8 @@ def main():
         fud.pv('options.names')
         fud.pv('mcc, rmsd')
         if options.names:
-            seq_struct['name'] = op.basename(filename) + " ({:.2f},{:.1f})".format(mcc, rmsd)
+            seq_struct['name'] = op.basename(
+                filename) + " ({:.2f},{:.1f})".format(mcc, rmsd)
         else:
             seq_struct['name'] = ''
 
@@ -276,10 +286,11 @@ def main():
         ix = np.argsort(-np.array(mccs))
 
     new_array = [0 for i in range(len(ix))]
-    for i,x in enumerate(ix):
+    for i, x in enumerate(ix):
         new_array[i] = structs[x]
 
     print(output_template.format(json.dumps(new_array)))
+
 
 if __name__ == '__main__':
     main()

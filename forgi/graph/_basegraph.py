@@ -7,6 +7,12 @@ from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
 
 log = logging.getLogger(__name__)
 
+try:
+    profile
+except NameError:
+    def profile(x): return x
+
+
 class BaseGraph(object):
     """
     A Base-class for the BulgeGraph and BulgeGraphConstruction.
@@ -18,6 +24,7 @@ class BaseGraph(object):
 
     It has no sequence.
     """
+
     def __init__(self):
         self.defines = []
         self.edges = defaultdict(set)
@@ -42,16 +49,16 @@ class BaseGraph(object):
         else:
             return self._define_a_nonzero(elem)
 
+    @profile
     def _define_a_nonzero(self, elem):
         define = self.defines[elem]
-        log.debug("Define_a nonzero of BaseGraph called for %s with define %s", elem, define)
+        # log.debug("Define_a nonzero of BaseGraph called for %s with define %s", elem, define) # commented out for performance reasons
         new_def = []
-        for i in range(0,len(define),2):
-            new_def.append(max(define[i]-1, 1))
-            new_def.append(define[i+1]+1)
-        log.debug("Define_a nonzero returning %s", new_def)
+        for i in range(0, len(define), 2):
+            new_def.append(max(define[i] - 1, 1))
+            new_def.append(define[i + 1] + 1)
+        #log.debug("Define_a nonzero returning %s", new_def)
         return new_def
-
 
     def flanking_nucleotides(self, d):
         '''
@@ -63,10 +70,11 @@ class BaseGraph(object):
         set_adjacent = set(self.define_a(d))
         set_not_adjacent = set(self.defines[d])
         flanking = list(sorted(set_adjacent - set_not_adjacent))
-        log.debug("Flanking nts are %s - %s = %s", set_adjacent, set_not_adjacent, flanking)
+        log.debug("Flanking nts are %s - %s = %s",
+                  set_adjacent, set_not_adjacent, flanking)
         return flanking
 
-    def _define_a_zerolength(self, elem): #TODO speed-up by caching
+    def _define_a_zerolength(self, elem):  # TODO speed-up by caching
         """
         Return the define with adjacent nucleotides for a zero-length element.
 
@@ -75,40 +83,42 @@ class BaseGraph(object):
 
         :param elem: An element, e.g. "m0
         """
-        if self.defines[elem]!=[]:
+        if self.defines[elem] != []:
             raise ValueError("{} does not have zero length".format(elem))
         edges = self.edges[elem]
-        if len(edges)==1: #Hairpin
+        if len(edges) == 1:  # Hairpin
             stem, = edges
             define = self.defines[stem]
-            if define[2]==define[1]+1:
+            if define[2] == define[1] + 1:
                 return [define[1], define[2]]
             else:
                 raise GraphIntegrityError("Very strange zero-length hairpin {} "
                                           "(not?) connected to {}".format(elem, stem))
-        elif len(edges)==2:
+        elif len(edges) == 2:
             stem1, stem2 = edges
-            #See if this is the only element connecting the two stems.
+            # See if this is the only element connecting the two stems.
             connections = self.edges[stem1] & self.edges[stem2]
             log.debug("Stems %s and %s, connected by %s have the following common edges: %s with defines %s",
                       stem1, stem2, elem, connections, list(map(lambda x: self.defines[x], connections)))
             zl_connections = []
             for conn in connections:
-                if self.defines[conn]==[]:
+                if self.defines[conn] == []:
                     zl_connections.append(conn)
             assert elem in zl_connections
-            #We DEFINE the 0-length connections to be sorted alphabetically by position
+            # We DEFINE the 0-length connections to be sorted alphabetically by position
             zl_connections.sort()
+            log.debug("Getting zl-coordinates")
             zl_coordinates = self._zerolen_defines_a_between(stem1, stem2)
-
-            if len(zl_connections)!=len(zl_coordinates):
+            log.debug("Comparing zl-coordinates %s with connections %s",
+                      zl_coordinates, zl_connections)
+            if len(zl_connections) != len(zl_coordinates):
                 raise GraphIntegrityError("Expecting stems {} and {} to have {} zero-length "
                                           "connections at nucleotide positions {}, however, "
                                           "found {} elements: {}".format(stem1, stem2,
-                                                            len(zl_coordinates),
-                                                            zl_coordinates,
-                                                            len(zl_connections),
-                                                            zl_connections))
+                                                                         len(zl_coordinates),
+                                                                         zl_coordinates,
+                                                                         len(zl_connections),
+                                                                         zl_connections))
             zl_coordinates = list(zl_coordinates)
             zl_coordinates.sort()
             i = zl_connections.index(elem)
@@ -120,13 +130,13 @@ class BaseGraph(object):
     def _zerolen_defines_a_between(self, stem1, stem2):
         zl_coordinates = set()
         for k, l in it.product(range(4), repeat=2):
-            if abs(self.defines[stem1][k]-self.defines[stem2][l])==1:
+            if abs(self.defines[stem1][k] - self.defines[stem2][l]) == 1:
                 d = [self.defines[stem1][k], self.defines[stem2][l]]
                 d.sort()
                 log.debug("Zero-length element found: %s", d)
                 zl_coordinates.add(tuple(d))
+        log.debug("Returning zl-coordinates: %s", zl_coordinates)
         return zl_coordinates
-
 
     def _get_sides_plus(self, s1, b):
         """
@@ -142,15 +152,16 @@ class BaseGraph(object):
                  These sides are equivalent to the indices of the define.
         """
         if b not in self.edges[s1]:
-            raise ValueError("_get_sides_plus expects stem to be connected to bulge!")
+            raise ValueError(
+                "_get_sides_plus expects stem to be connected to bulge!")
 
         s1d = self.defines[s1]
         bd = self.defines[b]
 
         if len(bd) == 0:
             bd = self._define_a_zerolength(b)
-            bd[0]+=1
-            bd[1]-=1
+            bd[0] += 1
+            bd[1] -= 1
 
         # before the stem on the 5' strand
         if s1d[0] - bd[1] == 1:
@@ -165,18 +176,20 @@ class BaseGraph(object):
         elif bd[0] - s1d[3] == 1:
             return (3, 0)
 
-        raise GraphIntegrityError("Faulty bulge {}:{} connected to {}:{}".format(b, bd, s1, s1d))
+        raise GraphIntegrityError(
+            "Faulty bulge {}:{} connected to {}:{}".format(b, bd, s1, s1d))
 
     def get_node_from_residue_num(self, base_num):
         """
         Iterate over the defines and see which one encompasses this base.
         """
-        seq_id=False
+        seq_id = False
         for key in self.defines.keys():
             for r in self.define_range_iterator(key):
                 if base_num >= r[0] and base_num <= r[1]:
                     return key
-        raise LookupError("Base number {} not found in the defines {}.".format(base_num, self.defines))
+        raise LookupError(
+            "Base number {} not found in the defines {}.".format(base_num, self.defines))
 
     def define_range_iterator(self, node, adjacent=False):
         """
@@ -195,6 +208,6 @@ class BaseGraph(object):
             define = self.defines[node]
 
         if define:
-            yield [ define[0], define[1] ]
-            if len(define)>2:
-                yield [ define[2], define[3] ]
+            yield [define[0], define[1]]
+            if len(define) > 2:
+                yield [define[2], define[3]]

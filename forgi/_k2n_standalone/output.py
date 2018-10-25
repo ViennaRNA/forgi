@@ -15,6 +15,7 @@ from builtins import str
 from builtins import map
 from .rna2d import Pairs
 
+
 def ct_output(seq, pairs, header_lines=None, removed=None):
     """Return sequence and structure information in ct format
 
@@ -26,34 +27,35 @@ def ct_output(seq, pairs, header_lines=None, removed=None):
     """
     pairs = Pairs(pairs)
     result = []
-    
-    if not header_lines: # None or empty
-        header = '%s ENERGY = 0.0'%(len(seq))
-    else: # take first line. If ct leave as is, otherwise add energy
+
+    if not header_lines:  # None or empty
+        header = '%s ENERGY = 0.0' % (len(seq))
+    else:  # take first line. If ct leave as is, otherwise add energy
         head = header_lines[0]
         if 'ENERGY' in head or 'Energy' in head or 'dG' in head:
             header = head.strip()
         else:
-            header = '%s ENERGY = 0.0 %s'%(len(seq), head.strip())
-    
+            header = '%s ENERGY = 0.0 %s' % (len(seq), head.strip())
+
     result.append(header)
     partners = pairs.toPartners(len(seq))
     for idx, (seq_symbol, partner_idx) in enumerate(zip(seq, partners)):
         if partner_idx is None:
             partner_idx = -1
-        result.append('\t'.join(map(str,[idx+1, seq_symbol, idx,\
-            idx+2, partner_idx+1, idx+1])))
+        result.append('\t'.join(map(str, [idx + 1, seq_symbol, idx,
+                                          idx + 2, partner_idx + 1, idx + 1])))
 
     if removed is not None:
-        result.append('# REMOVED PAIRS FOR: %s'%(header))
+        result.append('# REMOVED PAIRS FOR: %s' % (header))
         partners = removed.toPartners(len(seq))
         for idx, (seq_symbol, partner_idx) in enumerate(zip(seq, partners)):
             if partner_idx is None:
                 partner_idx = -1
-            result.append('\t'.join(map(str,[idx+1, seq_symbol, idx,\
-                idx+2, partner_idx+1, idx+1])))
+            result.append('\t'.join(map(str, [idx + 1, seq_symbol, idx,
+                                              idx + 2, partner_idx + 1, idx + 1])))
 
     return '\n'.join(result)
+
 
 def bpseq_output(seq, pairs, header_lines=None, removed=None):
     """Return sequence and structure information in bpseq format
@@ -71,17 +73,20 @@ def bpseq_output(seq, pairs, header_lines=None, removed=None):
     for idx, (seq_symbol, partner_idx) in enumerate(zip(seq, partners)):
         if partner_idx is None:
             partner_idx = -1
-        result.append(' '.join(map(str,[idx+1, seq_symbol, partner_idx+1])))
-    
+        result.append(
+            ' '.join(map(str, [idx + 1, seq_symbol, partner_idx + 1])))
+
     if removed is not None:
         result.append('# REMOVED BASE PAIRS')
         partners = removed.toPartners(len(seq))
         for idx, (seq_symbol, partner_idx) in enumerate(zip(seq, partners)):
             if partner_idx is None:
                 partner_idx = -1
-            result.append(' '.join(map(str,[idx+1, seq_symbol, partner_idx+1])))
+            result.append(
+                ' '.join(map(str, [idx + 1, seq_symbol, partner_idx + 1])))
 
     return '\n'.join(result)
+
 
 def vienna_output(seq, pairs, header_lines=None, removed=None):
     """Return sequence and structure information in vienna format
@@ -98,18 +103,19 @@ def vienna_output(seq, pairs, header_lines=None, removed=None):
     result = []
     if not header_lines:
         head = '> Nested structure'
-    else: # take first
+    else:  # take first
         head = '> ' + header_lines[0].strip()
     result.append(head)
     result.append(seq)
     result.append(pairs.toVienna(len(seq)))
     if removed is not None:
-        result.append('>REMOVED BASE PAIRS FOR: %s'%(head))
+        result.append('>REMOVED BASE PAIRS FOR: %s' % (head))
         try:
             result.append(removed.toVienna(len(seq)))
         except:
             result.append(str(removed))
     return '\n'.join(result)
+
 
 if __name__ == "__main__":
     pass

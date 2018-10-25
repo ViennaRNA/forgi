@@ -3,6 +3,8 @@ from __future__ import print_function, division, absolute_import
 import pkgutil
 import logging
 import warnings
+import json
+
 try:
     from io import StringIO
 except ImportError:
@@ -25,19 +27,19 @@ import matplotlib.pyplot as plt
 log = logging.getLogger(__name__)
 
 
-CUTOFFDIST=30
-ANGLEWEIGHT=10
+CUTOFFDIST = 30
+ANGLEWEIGHT = 10
 
 """
 This module contains code for classifying a coarse-grained geometry as A-Minor
 interaction.
 
-:warning: This is intended for low-resolution data , as it does not take the
-          orientation of individual bases into account. If you have all-atom
-          data, dedicated tools like FR3D will be more accurate.
+.. warning:: This is intended for low-resolution data , as it does not take the
+             orientation of individual bases into account. If you have all-atom
+             data, dedicated tools like FR3D will be more accurate.
 
 If you just want to classify interactions in a given structure, you only need
-the functions `classify_interaction` or `all_interactions`lassify_interaction`.
+the functions `classify_interaction` or `all_interactions`.
 
 To train your own version of the classifier, modify its parameters or perform
 cross-validation, use the AMinorClassifier.
@@ -47,21 +49,9 @@ function.
 """
 
 
-P_INTERACTION=0.05 #0.03644949066213922
+P_INTERACTION = 0.05  # 0.03644949066213922
 
 ################# Just classify my structure ############################
-
-def classify_interaction(cg, stem, loop, clf=None):
-    """
-    :param clf: A fitted AMinorClassifier instance. If not given,
-                the default pretrained classifier is used.
-    """
-    if clf in None:
-        clf=_get_default_clf(loop)
-    geo = np.array(get_relative_orientation(cg, loop, stem))
-    geo.reshape(1, -1)
-    y,=clf.predict(geo)
-    return y
 
 
 def loop_potential_interactions(cg, loop, domain=None):
@@ -69,10 +59,10 @@ def loop_potential_interactions(cg, loop, domain=None):
     Iterate over all stems and return those loop-stem pairs that will be passed
     to the AMinor classification and are not ruled out beforehand.
     """
-    geos=[]
-    labels=[]
+    geos = []
+    labels = []
     if domain is not None:
-        stems = (s for s in domain if s[0]=="s")
+        stems = (s for s in domain if s[0] == "s")
     else:
         stems = cg.stem_iterator()
     for stem in stems:
@@ -87,7 +77,11 @@ def loop_potential_interactions(cg, loop, domain=None):
             continue
         geos.append(get_relative_orientation(cg, loop, stem))
         labels.append([loop, stem])
+    geos = np.array(geos)
+    if len(geos) > 0:
+        geos[:, 0] /= ANGLEWEIGHT
     return geos, labels
+
 
 def potential_interactions(cg, loop_type, domain=None):
     """
@@ -97,12 +91,12 @@ def potential_interactions(cg, loop_type, domain=None):
               `geos` can be passed to the AMinor classifier.
               `labels` is an Nx2 array, where the inner dimension is loopname, stemname
     """
-    labels=[]
-    geos=[]
+    labels = []
+    geos = []
     for loop in cg.defines:
         if domain is not None and loop not in domain:
             continue
-        if loop[0]!=loop_type:
+        if loop[0] != loop_type:
             continue
         if 'A' not in "".join(cg.get_define_seq_str(loop)):
             continue
@@ -110,6 +104,7 @@ def potential_interactions(cg, loop_type, domain=None):
         geos.extend(loop_geos)
         labels.extend(loop_labels)
     return np.array(geos), np.array(labels)
+
 
 def all_interactions(cg, clfs=None):
     """
@@ -121,27 +116,65 @@ def all_interactions(cg, clfs=None):
                  loop_type is one of "i", "h", "m".
                  If clfs is None or a key is missing, uses the default
                  pretrained classifier.
+
+    :returns: A list of  tuples (loop, stem)
     """
-    interactions=[]
+    interactions = []
     for loop_type in ["i", "h"]:
         if clfs is not None and loop_type not in clfs:
             warnings.warn("No classifier specified for loop type %s (only for %s), "
                           "using default classifier.", loop_type, ",".join(clfs.keys()))
         if clfs is None or loop_type not in clfs:
-            clf=_get_default_clf(loop_type)
+            clf = _get_default_clf(loop_type)
         else:
-            clf=clfs[loop_type]
-        geos, labels=potential_interactions(cg, loop_type)
-        y = clf.predict(geos)
-        log.info("Classifying %s", labels)
-        log.info("# hits=%s", sum(y))
-        interactions.extend(labels[y])
-    return np.array(interactions)
+            clf = clfs[loop_type]
+        geos, labels = potential_interactions(cg, loop_type)
+        interactions.extend(
+            _classify_potential_interactions(clf, geos, labels))
+    return interactions
+
+
+def classify_interaction(cg, loop, stem=None, clf=None):
+    """
+    Returns the interaction pair loop, stem as a tuple or False if no interaction exists.
+
+    :param cg: The CoarseGrainRNA
+    :param loop: The loop name, e.g. "i0"
+    :param stem: A stem name, e.g. "s0" to consider interactions of loop with another stem as False
+                 and only an interaction with this stem as True.
+
+                ..warning:: Our statistical modelling allows for at most 1 interaction per loop.
+                            This means that we have calculate the interaction probability of this
+                            loop with all stems, even if stem is given. If another stem has a
+                            higher interaction probability than the given stem,
+                            this function will return False, regardless of the interaction
+                            probability stem-loop.
+
+    :param clf: A trained AMinorClassifier or None (use default classifier for loop type)
+
+
+    ..note:: `all_interactions` is more efficient, if you are interested in all loop-stem pairs.
+
+    :returns: A tuple (loop, stem) or False
+    """
+    if clf is None:
+        clf = _get_default_clf(loop[0])
+    geos, labels = loop_potential_interactions(cg, loop)
+    interactions = _classify_potential_interactions(clf, geos, labels)
+    if not interactions:
+        return False
+    if stem is not None and interactions != [(loop, stem)]:
+        return False
+    interaction, = interactions
+    return interaction
 
 ############# Roll your own classifier ###########################
-def get_trainings_data( loop):
-    loop_type=loop[0]
-    return _DefaultClf._get_data( loop_type)
+
+
+def get_trainings_data(loop):
+    loop_type = loop[0]
+    return _DefaultClf._get_data(loop_type)
+
 
 class AMinorClassifier(BaseEstimator, ClassifierMixin):
     """
@@ -181,9 +214,10 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
     a loop with A is in an A-minor interaction, over the number of all
     loop-stem pairs with less than 30 angstrom distance and an A in the sequence.
     """
+
     def __init__(self, kernel="linear", bandwidth=0.3, symmetric=True, p_I=P_INTERACTION):
         self.p_I = p_I
-        self.symmetric=symmetric
+        self.symmetric = symmetric
         self.kernel = kernel
         self.bandwidth = bandwidth
 
@@ -212,28 +246,24 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         X, y = check_X_y(X, y)
         log.info("Trainings-data has shape %s", X.shape)
         log.info("We have %s known interactions ", sum(y))
-        if X.shape[1]!=3:
-            raise TypeError("Expect exactly 3 features, found {}".format(X.shape[1]))
-        if not all(yi in [0,1] for yi in y):
+        if X.shape[1] != 3:
+            raise TypeError(
+                "Expect exactly 3 features, found {}".format(X.shape[1]))
+        if not all(yi in [0, 1] for yi in y):
             raise ValueError("y should only contain the values 1 and 0")
-        X[:,0]/=ANGLEWEIGHT
-        #print("First datapoint", X[0], y[0])
         ame = X[np.where(y)]
-        non_ame=X[np.where(y==0)]
+        non_ame = X[np.where(y == 0)]
         if self.symmetric:
-            ame=self._make_symmetric(ame)
+            ame = self._make_symmetric(ame)
             non_ame = self._make_symmetric(non_ame)
-        #print(ame)
-        log.info("Fitting\n%s", X[np.where(y)])
+        log.info("Fitting. First positive sample: %s", X[np.where(y)][0])
         self.ame_kde_ = KernelDensity(kernel=self.kernel,
                                       bandwidth=self.bandwidth).fit(ame).score_samples
         self.non_ame_kde_ = KernelDensity(kernel=self.kernel,
                                           bandwidth=self.bandwidth).fit(non_ame).score_samples
-        #fig,ax = plt.subplots()
-        #plt.plot(np.linspace(0, np.pi/2, 200), self.ame_kde_(np.array([[1.0,a1,1.5] for a1 in np.linspace(0, np.pi/2, 200)])))
-        #plt.plot(np.linspace(0, np.pi/2, 200), self.non_ame_kde_(np.array([[1.0,a1,1.5] for a1 in np.linspace(0, np.pi/2, 200)])))
-        #plt.plot(np.linspace(0, np.pi/2, 200), self.predict_proba(np.array([[1.0,a1,1.5] for a1 in np.linspace(0, np.pi/2, 200)])))
-        #plt.show()
+        self.X_ = X
+        self.y_ = y
+
     @staticmethod
     def _make_symmetric(geos):
         """
@@ -251,13 +281,14 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         By creating 4 times as many datapoints, we avoid bias near the boundary.
         """
         geos = np.concatenate([geos,
-                               [(d, np.pi-a1, a2) for d, a1, a2 in geos]])
-        geos = np.concatenate([geos,
-                               [(d, a1, -a2) for d, a1, a2 in geos]])
+                               [(d, np.pi - a1, a2) for d, a1, a2 in geos]])
+        # We allow negative angles for angle2, so there is no need to make it symmetric.
+        # geos = np.concatenate([geos,
+        #                       [(d, a1, -a2) for d, a1, a2 in geos]])
         return geos
 
     def predict(self, X):
-        return self.predict_proba(X)>0.5
+        return self.predict_proba(X) > 0.5
 
     def score(self, X, y):
         """
@@ -265,27 +296,49 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
         """
         y_pred = self.predict(X)
         tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
-        specificity =  tn/(tn+fp)
-        sensitivity = tp/(tp+fn)
-        # We give a stronger weight to sensitivity.
-        return 0.3*specificity + 0.7*sensitivity
-        #precision = tp/(tp+fp)
-        return f1_score(y, y_pred)
+        specificity = tn / (tn + fp)
+        sensitivity = tp / (tp + fn)
+        return (0.8 * sensitivity + 0.2 * specificity)
+
     def predict_proba(self, X):
         check_is_fitted(self, ['ame_kde_', 'non_ame_kde_'])
         X = check_array(X)
-        #print("PI", self.p_I, "bw", self.bandwidth)
-        #print()
-        X[:,0] /= ANGLEWEIGHT
-        numerator = np.exp(self.ame_kde_(X))*self.p_I
-        denom = numerator+np.exp(self.non_ame_kde_(X))*(1-self.p_I)
-        #print(np.exp(self.non_ame_kde_(X)))
-        with warnings.catch_warnings(): # division by 0
+        log.debug("Predicting for %s", X)
+        numerator = np.exp(self.ame_kde_(X)) * self.p_I
+        denom = numerator + np.exp(self.non_ame_kde_(X)) * (1 - self.p_I)
+        with warnings.catch_warnings():  # division by 0
             warnings.simplefilter("ignore", RuntimeWarning)
-            return np.nan_to_num(numerator/denom)
+            return np.nan_to_num(numerator / denom)
+
+    def set_params(self, **kwargs):
+        super(AMinorClassifier, self).set_params(**kwargs)
+        # If it was fitted, we must propagate the parameter changes
+        # to the child-KDEs by refitting to the same data
+        if hasattr(self, "X_"):
+            self.fit(self.X_, self.y_)
+        return self
 
 
 ############## get orientation #########################
+
+def get_loop_flexibility(cg, loop):
+    """
+    Unused. We tried to see if the length of the loop vs # bases had an effect on ointeraction probability.
+    """
+    assert loop[0] == "i"
+    d = cg.define_a(loop)
+    nt1, nt2 = d[1] - d[0], d[3] - d[2]
+    max_nts = max(nt1, nt2)
+    loop_length = ftuv.magnitude(cg.coords.get_direction(loop))
+    # As number of nucleotide-links (or phosphate groups) per Angstrom
+    # 9.2 is the sum of average bond lengths for bonds in the nucleotide linkage.
+    # Bond lengths taken from: DOI: 10.1021/ja9528846
+    # A value of 1 means, all bonds are stretched.
+    # Ideal helices have a value of: 4.41
+    # A value below 1 should be rare.
+    # Higher values mean higher flexibility.
+    return (max_nts) / loop_length * 9.2
+
 
 def get_relative_orientation(cg, loop, stem):
     '''
@@ -306,59 +359,116 @@ def get_relative_orientation(cg, loop, stem):
                                                               cg.coords[stem][1],
                                                               cg.coords[loop][0],
                                                               cg.coords[loop][1])
-    conn_vec = point_on_loop-point_on_stem
+    conn_vec = point_on_loop - point_on_stem
     dist = ftuv.magnitude(conn_vec)
     angle1 = ftuv.vec_angle(cg.coords.get_direction(stem),
                             conn_vec)
     # The direction of the stem vector is irrelevant, so
     # choose the smaller of the two angles between two lines
-    if angle1>np.pi/2:
-        angle1 = np.pi-angle1
+    if angle1 > np.pi / 2:
+        angle1 = np.pi - angle1
     tw = cg.get_twists(stem)
-    if dist==0:
-        angle2=float("nan")
+    if dist == 0:
+        angle2 = float("nan")
     else:
         if stem[0] != 's':
-            raise ValueError("The receptor needs to be a stem, not {}".format(stem))
+            raise ValueError(
+                "The receptor needs to be a stem, not {}".format(stem))
         else:
             stem_len = cg.stem_length(stem)
             # Where along the helix our A-residue points to the minor groove.
             # This can be between residues. We express it as floating point nucleotide coordinates.
             # So 0.0 means at the first basepair, while 1.5 means between the second and the third basepair.
-            pos = ftuv.magnitude(point_on_stem - cg.coords[stem][0]) / ftuv.magnitude(cg.coords.get_direction(stem)) * (stem_len - 1)
+            pos = ftuv.magnitude(point_on_stem - cg.coords[stem][0]) / ftuv.magnitude(
+                cg.coords.get_direction(stem)) * (stem_len - 1)
             # The vector pointing to the minor groove, even if we are not at a virtual residue (pos is a float value)
-            virt_twist = ftug.virtual_res_3d_pos_core(cg.coords[stem], cg.twists[stem], pos, stem_len)[1]
+            virt_twist = ftug.virtual_res_3d_pos_core(
+                cg.coords[stem], cg.twists[stem], pos, stem_len)[1]
             # The projection of the connection vector onto the plane normal to the stem
-            conn_proj = ftuv.vector_rejection(conn_vec, cg.coords.get_direction(stem))
+            conn_proj = ftuv.vector_rejection(
+                conn_vec, cg.coords.get_direction(stem))
             try:
                 # Note: here the directions of both vectors are well defined,
                 # so angles >90 degrees make sense.
                 angle2 = ftuv.vec_angle(virt_twist, conn_proj)
             except ValueError:
-                if np.all(virt_twist==0):
-                    angle2=float("nan")
+                if np.all(virt_twist == 0):
+                    angle2 = float("nan")
                 else:
                     raise
+            # Furthermore, the direction of the second angle is meaningful.
+            # We call use a positive angle, if the cross-product of the two vectors
+            # has the same sign as the stem vector and a negative angle otherwise
+            cr = np.cross(virt_twist, conn_proj)
+            sign = ftuv.is_almost_parallel(cr,  cg.coords.get_direction(stem))
+            assert sign != 0, "{} vs {} not (anti) parallel".format(
+                cr, cg.coords.get_direction(stem))
+            angle2 *= sign
+
     return dist, angle1, angle2
 
 ############# Private ##########################################
+
+
+def _get_masks(df, loop_type):
+    lt_mask = df.loop_type == loop_type
+    cutoff_mask = df.dist < CUTOFFDIST
+    in_support = lt_mask & cutoff_mask
+    has_a = df.loop_sequence.str.contains("A")
+    is_i = df.is_interaction
+    mask_ame = in_support & is_i & has_a
+    mask_non_ame = in_support & np.invert(is_i | has_a)
+    mask_non_fred = in_support & np.invert(is_i) & has_a
+    return mask_ame, mask_non_ame, mask_non_fred
+
+
+def _classify_potential_interactions(clf, geos, labels):
+    if len(geos) == 0:
+        return []
+    score = clf.predict_proba(geos)
+    y = score > 0.5
+    log.info("Classifying %s", labels)
+    log.info("score %s", score)
+    log.info("# hits (not unique)=%s", sum(y))
+    # We modelled the probabilities in a way that each loop can have only 1 interaction.
+    # So for multiple interactions, use only the best one.
+    best_interactions = {}
+    for i, label in enumerate(labels):
+        loop = label[0]
+        if score[i] < 0.5:
+            continue
+        if loop not in best_interactions or score[i] > best_interactions[loop][0]:
+            best_interactions[loop] = (score[i], label)
+    log.info("%s unique interacting loops.", len(best_interactions))
+    log.debug(best_interactions)
+    return [best_i[1] for best_i in best_interactions.values()]
+
+
 class _DefaultClf(object):
     """Just to put global (cached) variables into a seperate scope."""
-    _clfs={} # The pretrained classifiers, lazily loaded.
+    _clfs = {}  # The pretrained classifiers, lazily loaded.
     _geo_df = None
+
     @classmethod
     def get_default_clf(cls, loop_type):
         if loop_type not in cls._clfs:
             clf = AMinorClassifier()
+            rawdata = pkgutil.get_data(
+                'forgi', 'threedee/data/aminor_params.json')
+            params = json.load(StringIO(rawdata.decode("ascii")))
+            clf.set_params(**params[loop_type])
             X, y = cls._get_data(loop_type)
             clf.fit(X, y)
-            cls._clfs[loop_type]=clf
+            cls._clfs[loop_type] = clf
         return cls._clfs[loop_type]
+
     @classmethod
     def get_dataframe(cls):
         if cls._geo_df is None:
-            rawdata = pkgutil.get_data('forgi', 'threedee/data/aminor_geometries.csv')
-            cls._geo_df = pd.read_csv(StringIO(rawdata.decode("ascii")), comment="#", sep=" ")
+            rawdata = pkgutil.get_data(
+                'forgi', 'threedee/data/aminor_geometries.csv')
+            cls._geo_df = pd.read_csv(
+                StringIO(rawdata.decode("ascii")), comment="#", sep=" ")
         return cls._geo_df
 
     @classmethod
@@ -366,25 +476,29 @@ class _DefaultClf(object):
         df = cls.get_dataframe()
         return df_to_data_labels(df, loop_type)
 
+
 def _get_default_clf(loop):
     """
     :param loop: A element name, e.g. "i0" or a loop-type, e.g. "i"
     """
-    loop_type=loop[0]
+    loop_type = loop[0]
     return _DefaultClf.get_default_clf(loop_type)
+
 
 def df_to_data_labels(df, loop_type):
     """
     Create the trainings data as two arrays X and y (or data and labels)
     from the initial dataframe
+
+    :returns: X, y
     """
-    df=df[df.loop_type==loop_type]
-    df=df[df.dist<CUTOFFDIST]
-    positive = df[df["is_interaction"]]
-    negative = df[(df["is_interaction"]==False)&(~df["loop_sequence"].str.contains("A").astype(bool))]
-    data = np.concatenate( [
-            [[ x.dist, x.angle1, x.angle2 ]
-                      for x in positive.itertuples()],
-            [[ x.dist, x.angle1, x.angle2 ]
-                      for x in negative.itertuples()]])
-    return data, np.array([1]*len(positive)+[0]*len(negative))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        df["loop_name"] = df.pdb_id + \
+            df.interaction.str.split("-").apply(lambda x: x[0])
+    mask_ame, mask_non_ame, mask_non_fred = _get_masks(df, loop_type)
+    data = pd.concat([df[mask_ame].drop_duplicates(["loop_name"]),
+                      df[mask_non_ame]])
+    data = np.array([[x.dist / ANGLEWEIGHT, x.angle1, x.angle2, x.is_interaction]
+                     for x in data.itertuples()])
+    return data[:, :3], data[:, 3]

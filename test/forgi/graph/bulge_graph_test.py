@@ -20,7 +20,7 @@ import forgi.utilities.stuff as fus
 import forgi.graph.sequence as fgs
 import forgi.graph.residue as fgr
 
-log=logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class GraphVerification(unittest.TestCase):
@@ -41,7 +41,7 @@ class GraphVerification(unittest.TestCase):
         nucs = [False] * bg.seq_length
         for d in bg.defines.keys():
             for r in bg.define_residue_num_iterator(d):
-                nucs[r-1] = True
+                nucs[r - 1] = True
 
         for i, n in enumerate(nucs):
             self.assertTrue(n)
@@ -67,28 +67,31 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         db = "(((&(((...))))))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "h0", "m0"]))
-        self.assertEqual(cg.defines["s0"], [1,3,13,15])
-        self.assertEqual(cg.defines["s1"], [4,6,10,12])
+        self.assertEqual(cg.defines["s0"], [1, 3, 13, 15])
+        self.assertEqual(cg.defines["s1"], [4, 6, 10, 12])
         self.assertEqual(cg.edges["s0"], set(["m0"]))
         self.assertEqual(cg.edges["s1"], set(["m0", "h0"]))
+
     def test_cutpoint_in_stem_b(self):
         db = "((((((...)))&)))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "h0", "m0"]))
-        self.assertEqual(cg.defines["s0"], [1,3,13,15])
-        self.assertEqual(cg.defines["s1"], [4,6,10,12])
+        self.assertEqual(cg.defines["s0"], [1, 3, 13, 15])
+        self.assertEqual(cg.defines["s1"], [4, 6, 10, 12])
         self.assertEqual(cg.edges["s0"], set(["m0"]))
         self.assertEqual(cg.edges["s1"], set(["m0", "h0"]))
 
     def test_cutpoint_in_ml(self):
         db = "(((.(((...)))..&..(((...))).)))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "f0", "t0", "s2", "h1", "m2"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "m0", "s1", "h0", "f0", "t0", "s2", "h1", "m2"]))
 
     def test_cutpoint_in_il(self):
         db = "(((..&..(((...))))))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "t0", "s1", "h0", "m0"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "f0", "t0", "s1", "h0", "m0"]))
 
     def test_cutpoint_in_h(self):
         db = "(((..&..)))"
@@ -108,12 +111,14 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
     def test_cutpoint_between_i_s(self):
         db = "(((...&(((...))))))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "t0", "s1", "h0", "m0"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "t0", "s1", "h0", "m0"]))
 
     def test_cutpoint_between_m_s(self):
         db = "(((.(((...)))..&(((...))).)))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m2", "t0", "h0", "h1"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "s1", "s2", "m0", "m2", "t0", "h0", "h1"]))
 
     def test_cutpoint_between_s_i0_s(self):
         db = "(((&(((...))).)))"
@@ -125,7 +130,8 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         db = "(((.(((...)))&(((...))).)))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
         print(cg.defines)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "h0", "s2", "h1", "m2"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "m0", "s1", "h0", "s2", "h1", "m2"]))
 
     def test_cutpoint_between_s_pk(self):
         db = "((([[[&)))]]]"
@@ -138,6 +144,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         cg = fgb.BulgeGraph.from_dotbracket(db)
         print(cg.defines)
         self.assertEqual(set(cg.defines.keys()), set(["s0", "m0", "s1", "m1"]))
+
     def test_cutpoint_between_s_pk3(self):
         db = "(((..[[[&)))]]]"
         cg = fgb.BulgeGraph.from_dotbracket(db)
@@ -153,12 +160,14 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
     def test_cutpoint_between_s_i(self):
         db = "(((&...(((...))))))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "f0", "s1", "h0", "m0"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "f0", "s1", "h0", "m0"]))
 
     def test_cutpoint_between_s_m(self):
         db = "(((.(((...)))&..(((...))).)))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(set(cg.defines.keys()), set(["s0", "s1", "s2", "m0", "m2", "f0", "h0", "h1"]))
+        self.assertEqual(set(cg.defines.keys()), set(
+            ["s0", "s1", "s2", "m0", "m2", "f0", "h0", "h1"]))
 
     def test_cutpoint_between_s_h(self):
         db = "(((&..)))"
@@ -171,7 +180,7 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
         self.assertEqual(set(cg.defines.keys()), set(["s0", "t0"]))
 
     def test_cutpoint_instead_of_h(self):
-        db="(((&)))"
+        db = "(((&)))"
         cg = fgb.BulgeGraph.from_dotbracket(db)
         self.assertEqual(set(cg.defines.keys()), set(["s0"]))
 
@@ -180,15 +189,19 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
                    GCGCG&CGUGC
                    (((((&)))))"""
         bg, = fgb.BulgeGraph.from_fasta_text(fasta)
-        bg.seq.seq_ids = [fgb.RESID("A", (" ", 1," ")),fgb.RESID("A", (" ", 2," ")),
-                          fgb.RESID("A", (" ", 3," ")),fgb.RESID("A", (" ", 4," ")),
-                          fgb.RESID("A", (" ", 5," ")),
-                          fgb.RESID("B", (" ", 1," ")),fgb.RESID("B", (" ", 2," ")),
-                          fgb.RESID("B", (" ", 3," ")),fgb.RESID("B", (" ", 4," ")),
-                          fgb.RESID("B", (" ", 5," "))]
-        self.assertEqual(bg.seq_id_to_pos(fgb.RESID("A", (" ", 1," "))), 1)
-        self.assertEqual(bg.seq_id_to_pos(fgb.RESID("B", (" ", 1," "))), 6)
-        self.assertEqual(bg.seq[bg.seq_id_to_pos(fgb.RESID("B", (" ", 3," ")))], "U")
+        bg.seq.seq_ids = [fgb.RESID("A", (" ", 1, " ")), fgb.RESID("A", (" ", 2, " ")),
+                          fgb.RESID("A", (" ", 3, " ")), fgb.RESID(
+                              "A", (" ", 4, " ")),
+                          fgb.RESID("A", (" ", 5, " ")),
+                          fgb.RESID("B", (" ", 1, " ")), fgb.RESID(
+                              "B", (" ", 2, " ")),
+                          fgb.RESID("B", (" ", 3, " ")), fgb.RESID(
+                              "B", (" ", 4, " ")),
+                          fgb.RESID("B", (" ", 5, " "))]
+        self.assertEqual(bg.seq_id_to_pos(fgb.RESID("A", (" ", 1, " "))), 1)
+        self.assertEqual(bg.seq_id_to_pos(fgb.RESID("B", (" ", 1, " "))), 6)
+        self.assertEqual(bg.seq[bg.seq_id_to_pos(
+            fgb.RESID("B", (" ", 3, " ")))], "U")
 
     def test_dissolve_length_one_stem_cofold(self):
         db = "(((.(&...).)))..."
@@ -239,61 +252,61 @@ class BulgeGraphCofoldOverallTest(GraphVerification):
 class BulgeGraphZeroLengthTest(GraphVerification):
 
     def test__define_a_zerolength_single_ml(self):
-        db="(((...)))(((...)))"
-           #123456789012345678
-        bg=fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(bg._define_a_zerolength("m0"), [9,10])
+        db = "(((...)))(((...)))"
+        # 123456789012345678
+        bg = fgb.BulgeGraph.from_dotbracket(db)
+        self.assertEqual(bg._define_a_zerolength("m0"), [9, 10])
 
     def test__define_a_zerolength_two_ml(self):
-        db="((([[[)))..]]]"
-           #12345678901234
-        bg=fgb.BulgeGraph.from_dotbracket(dotbracket_str = db)
-        zl_elems=[]
-        c_l=0
+        db = "((([[[)))..]]]"
+        # 12345678901234
+        bg = fgb.BulgeGraph.from_dotbracket(dotbracket_str=db)
+        zl_elems = []
+        c_l = 0
         for elem, d in bg.defines.items():
-            if elem[0]=="m":
+            if elem[0] == "m":
                 if d:
                     with self.assertRaises(ValueError):
                         bg._define_a_zerolength(elem)
-                    c_l+=1
+                    c_l += 1
                 else:
                     zl_elems.append(elem)
         zl_elems.sort()
-        self.assertEqual(c_l,1)
-        self.assertEqual(len(zl_elems),2)
-        self.assertEqual(bg._define_a_zerolength(zl_elems[0]), [3,4])
-        self.assertEqual(bg._define_a_zerolength(zl_elems[1]), [6,7])
+        self.assertEqual(c_l, 1)
+        self.assertEqual(len(zl_elems), 2)
+        self.assertEqual(bg._define_a_zerolength(zl_elems[0]), [3, 4])
+        self.assertEqual(bg._define_a_zerolength(zl_elems[1]), [6, 7])
 
     def test__define_a_zerolength_single_ml2(self):
-        db="(((..[[[)))..]]]"
-           #12345678901234
-        bg=fgb.BulgeGraph.from_dotbracket(dotbracket_str = db)
-        zl_elems=[]
-        c_l=0
+        db = "(((..[[[)))..]]]"
+        # 12345678901234
+        bg = fgb.BulgeGraph.from_dotbracket(dotbracket_str=db)
+        zl_elems = []
+        c_l = 0
         for elem, d in bg.defines.items():
-            if elem[0]=="m":
+            if elem[0] == "m":
                 if d:
                     with self.assertRaises(ValueError):
                         bg._define_a_zerolength(elem)
-                    c_l+=1
+                    c_l += 1
                 else:
                     zl_elems.append(elem)
         zl_elems.sort()
-        self.assertEqual(c_l,2)
-        self.assertEqual(len(zl_elems),1)
-        self.assertEqual(bg._define_a_zerolength(zl_elems[0]), [8,9])
+        self.assertEqual(c_l, 2)
+        self.assertEqual(len(zl_elems), 1)
+        self.assertEqual(bg._define_a_zerolength(zl_elems[0]), [8, 9])
 
     def test__define_a_zerolength_three_ml(self):
-        db="((([[[)))]]]"
-           #12345678901234
-        bg=fgb.BulgeGraph.from_dotbracket(dotbracket_str = db)
-        zl_elems=[]
+        db = "((([[[)))]]]"
+        # 12345678901234
+        bg = fgb.BulgeGraph.from_dotbracket(dotbracket_str=db)
+        zl_elems = []
         for elem, d in bg.defines.items():
-            if elem[0]=="m":
+            if elem[0] == "m":
                 self.assertEqual(d, [])
-        self.assertEqual(bg._define_a_zerolength("m0"), [3,4])
-        self.assertEqual(bg._define_a_zerolength("m1"), [6,7])
-        self.assertEqual(bg._define_a_zerolength("m2"), [9,10])
+        self.assertEqual(bg._define_a_zerolength("m0"), [3, 4])
+        self.assertEqual(bg._define_a_zerolength("m1"), [6, 7])
+        self.assertEqual(bg._define_a_zerolength("m2"), [9, 10])
 
     def test_breakpoint_at_zero_length_element_graph_construction(self):
         # Test needed because of a subtile bug with cofold structures and
@@ -388,7 +401,8 @@ connect s0 f0 m1 m0 t0
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
 """
-        bg, = fgb.BulgeGraph.from_fasta_text(self.fasta, dissolve_length_one_stems=True)
+        bg, = fgb.BulgeGraph.from_fasta_text(
+            self.fasta, dissolve_length_one_stems=True)
         stri = bg.to_bg_string()
         bg2 = fgb.BulgeGraph.from_bg_string(stri)
         stri2 = bg2.to_bg_string()
@@ -401,7 +415,8 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 (((((((((...((((((.........))))))........((((((.......))))))..)))))))))
 """
-        bg, = fgb.BulgeGraph.from_fasta_text(self.fasta, dissolve_length_one_stems=True)
+        bg, = fgb.BulgeGraph.from_fasta_text(
+            self.fasta, dissolve_length_one_stems=True)
         bg.add_info("test", "This is a test info")
         stri1 = bg.to_bg_string()
         bg2 = fgb.BulgeGraph.from_bg_string(stri1)
@@ -411,7 +426,8 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 
         with open('test/forgi/threedee/data/3V2F.fa', 'r') as f:
             text = f.read()
-            bg, = fgb.BulgeGraph.from_fasta_text(text, dissolve_length_one_stems=False)
+            bg, = fgb.BulgeGraph.from_fasta_text(
+                text, dissolve_length_one_stems=False)
 
         for s in bg.stem_iterator():
             bg.stem_length(s)
@@ -452,7 +468,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEqual(x.seq, 'ACGCCA')
 
         a = (
-"""
+            """
 >a
 ACGCCA
 ((..))
@@ -490,6 +506,7 @@ GGUCCGCAGCCUCCUCGCGGCGCAAGCUGGGCAACAUUCCGAAAGGUAAUGGCGAAUGCGGACC
         bg, = fgb.BulgeGraph.from_fasta_text(a)
         self.assertEqual(len(list(bg.stem_iterator())), 5)
 
+    @unittest.skip("Slow test (~18 sec)")
     def test_from_fasta4(self):
         struct = ".(((((((((((((((((.......))))))))(((((...)))))..((((...(((((....)))))...)))).)))))))))..((((.((((((((((...((((..((((((...)))))).(((((.((((((((.....)))))))).((((.....)))))))))....((((.(((((((.(((((((.....)))))........))))).)))).))))(((((((..(((((...((((....(((((((....((.((((((((((((.....((((.......)))).)))).(((((((((((((((((......(((((....)))))))))))))).)))..)))))..(((((((...))))))).)))))))).))....)))))))...))))...)))))..))))))).(((....)))..)))))))))).(((.((((....(((.((((((((((((......)))))).)))))).))).))))...))).)))).)))).......((((((((((..((((((((((.((((((((((((((((((((((((.(((((((((.....))))))))).))))))))))......(((....))).)))))).((((((..(((((.(((......)))(((...((((((.(((..((((((((.....(((....((((((..(((((.(((......)))))))).....))))))........)))...))).))))))))))))))((((((((((((((((...((((..((.(((..((((((.((.(((...))).)).)))))).((.(((((((....))).)))).)).((((((((((..................(((((((((((((((((((...)).)))))).)))))))))))))))(((((...))))).))))))...))).))..)))).....))))).))))))).)))).))).((((((((....))))))))..))))).))))))..))))))..)).)))))))..))).....))))))))))(((((((.(((..((((((((.....))))))))((((((((((....(((....)))......((((.((((((..(((((((...((((((((((((.((.....)))))))))....((((...))))(((((..(((.....))).)))))))))))))))))))).))).)))).)))))))))).........((((((((...(((...((((((((..((((((......((((..(((.(((.(((((.(((.(((((((((((.((((((.((((.(((....))))))).....(((.((...)).)))))))))...((((((((((((.(((((((..((((((((..((..((((((((.......))).)))))..)).(((..(((((((((((....)))))).)).)))..))).))))).))).))))))).....(((..(((....)))..)))........)))).)))))))).)))((((....))))...)))))))).)))))))).))).)))....))))))))))))).)))))....))).))))))))))).)))))))....((((.((((........)))).))))((((((..(((((.((.(((((((....(((((((((((((((.(((((((((...(((((..(((.....(((((.............)))))....))))))))))).(((((((..((.....)))))))))..((((...))))..)))))).).))))))((((.....)))).))))))))....)))))))(((((((((......))))))))))))))))..))))))....((((((..(((.(((((.(((((.((((.((((((((((....(((((.(((((........)))((((((((.(((...((............)).))).))))))))..((((((...)))))).(((((((((((...(((.(((((...(((..(((((((((((((....)))))......((......))..(((((((((((.((((((((((((.((((((.(((.((..(((((...))))))).)))...............((((.....)))))))))).))))))))))))...)))..))))))))..))))))))..(((((((.....(((.(....))))((((....)))).((((..(((((((((((.((....)).)))))))))))..))))))).))))))).)))))..)))..)))))))))))........((((((...(((((...))))))))))))))))))....))))))))))(((((((..(((...)))....)).))).)).))))..)))))))))).))).))))))...............................................((((((.(((((...((.(((((((.(((((...(((((((..(((.(((((((((..(((...)))))))))))).))).....)))))))...))))).(((((...))))).))))).)))).)))))))))))((((((((...((.(((((((..((.((((((...(((((((.((((.....))))))).......))))..))))))))..))..))))).))...))))))))...................................................................................(((((((..((((...)))))))))))(((((((.((((((((((.(((((.((((((..(((........((((((((....(((.(((((((((.............................................((((((.(((......(((..(((.((.....)).)))........(((..(((((((....))))))).)))..(((((....))))).(((((....))))).))))))..))))))........)))))).))).))))))))))))))...))).))))))))((((((....))))))((((....(((((..(((((....)))))...))))))))))))))..))))).)))))))(((.((((((((.(((..(((.....))).))))))))))).)))....((((((((((((...(((.((.(((((.(((......))).))))).)))))......)))))))))))).((....))................................................................................................((((((((((....(((....)))..))))))))))........(((((((((.(((((((((..(((..(((((.(((.......)))))).))..)))))))))))))))))).)))..(((((......)))))((((...(((.(((((((((.(((((........))))))).))))))).)))...((.....((((.((((.((((((((..(((.((((((........))))))....)))))))))))......)))))))))).))))...........((((((((.......)))))))).(((((((....((((((((((.....))))))(((((..((((.....((((.(((.((((((..((((((((......)))))..((((((((((((((((.(((...))))))......((((..((((((..........)))))).((((((...))))))...((((..((((((((((((((((((..(((((.(((..((((......))))...))).)))))............))))..))))))))))).))))))).((....))))))...(((((((((((........)).)))...)))))).))).))))))))))..)))))))))..))).))))....(((........))).(((((...)))))......))))...))))).....(((((((...((.((..(((((((((.(((..(((....)))(((((.((((............)))).)))))....))))))))).))).)).)).))))).))......)))))))))))..((((((((.((((....)))).)))))))).(((.(((((.....))))))))(((((((((((((((((((..((((((((....(((....)))...))))))))...)))).)).))...)))))((((...))))((((((...))))))))))))......................................((((.(.((((((.(((.....................................................((((((((((....((((((..((((.....(((.(((((((((((..((.((.(((..(((.....)))..)))))...)).)))))))))))))))))).)))))).((....))(((((....((((((....(((((..(((........))).)))))(((...)))..))))))))))).((((((((((((((.((((((((((.(((((((.(((((..........)))....)).))))).........)).))...))))))..)).))).)))).)))))))........)))))))))))))))))))).)))).......(((....))).(((...)))....................................((((((.((.........................(((((((....))))))).......((((((.......)))))).......................(((((((((..(((((........(((((((((((((((.(((((.......))))).((((.((.....))))))..))).))))))))))))........)))))..))....)))))))......................................................(((((((((................(((((((...((((.((.(((((.........)))))......((((...(((......)))..)))).(((((((.....))))....(((((....)))))....))).)))))).))))))).......((((....((((...))))))))..)))))))))(((((.((.....))))))).)))))))).((((((.((((((((.((((((((.....((....)).(((.((((((...((((((.....(((((....))))))))))).)))))).)))......)))))))).((((((((((((.((.(((((((((.((((.((((.....)))).)))))))).)))))))..)))))))....(((((((((((.((((.((((((...(((((((..(((..((((...(((...))))))))))....(((((.......))))).......)))))))))))))))))..(((((((....))))))).((((((((.(((....(((((..((((....(((.(((..((((.((((.((((((((........)))))))).....)))).))))))))))........)))))))))......))).))))))))..((((((((..((((((((.(((((............))).)).))))))))..))...))))))......)))))......))))))..))))).((....)).)))))))).))))))((((((........))))))....(((((..(((.((((.((((..(((((..(((((...(((.(((.....((((((..((((((.((((.(((((.((.....(((..((.....))))))).))))).)))).)))))).((((.((((.....))))..)))).(((((((((...)))))))))...))))))))).)))...)))))..)))))...)))).)))))))..))))).((((((((.((......)))))))))).((((((((.....))))))))...((((((((((..((((((((((((((..((((......))))))))))))((((.((..(((.((((((.(((((.....)))))))))))..)))..))))))))))))))))))))))......((((((.....)))))).....(((((..(((((.((((((((...((((((((((((((.((((((((..(((((((((....((((((((.(((((((..((((.....((((.((((...((((...((((((..(((......)))..)))))).)))))))).))))))))..)))))))...(((((.((...((((......))))..)))))))(((((((((((((.(((.(((((((((((...)))))))....))))))).)).....((((....((((...)))))))))))))))..((((((((((((...))))))))...)))).(((((((((......)))))....)))).....)))).))))))))...)))))))))...))))))))))......))).)).(((((.((((...(((((((((((.((((((((.....))))))))..))))..)))))))(((((...)))))((((..(((..((((((((.((....))..))))))))..))).)))).))))))))))))))))....))))))))....))))).)))))((((((.(((((((((...))))))))).))))))"
         seq = """ttaaaactggatccaggttgttcccacctggatttcccacagggagtggtactctgttat
@@ -619,7 +636,7 @@ actgatagtttattagttttat
         fasta = ">hrv\n{}\n{}".format(seq, struct)
         bg2, = fgb.BulgeGraph.from_fasta_text(fasta)
 
-        self.assertEqual(bg1.defines['s56'], [713,717,731,735])
+        self.assertEqual(bg1.defines['s56'], [713, 717, 731, 735])
         self.assertEqual(len(bg1.defines), 1167)
         self.assertEqual(bg1.seq, seq.replace("t", "u"))
 
@@ -651,7 +668,8 @@ AAAGGGUUUCCC
             lines = f.readlines()
 
         bpseq_str = "".join(lines)
-        bg = fgb.BulgeGraph.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
+        bg = fgb.BulgeGraph.from_bpseq_str(
+            bpseq_str, dissolve_length_one_stems=True)
 
         for d in bg.defines:
             self.assertFalse(d[0] == 'x')
@@ -660,7 +678,8 @@ AAAGGGUUUCCC
             lines = f.readlines()
 
         bpseq_str = "".join(lines)
-        bg = fgb.BulgeGraph.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
+        bg = fgb.BulgeGraph.from_bpseq_str(
+            bpseq_str, dissolve_length_one_stems=True)
 
         node = bg.get_node_from_residue_num(25)
         self.assertFalse(node[0] == 'h')
@@ -812,7 +831,7 @@ AAAGGGUUUCCC
         db = '[[.((..]]...))'
         nm = '12345678901234'
 
-        bpstr="""1 A 9
+        bpstr = """1 A 9
 2 A 8
 3 A 0
 4 A 14
@@ -829,9 +848,9 @@ AAAGGGUUUCCC
 """
         bg.from_bpseq_str(bpstr)
 
-        db='[[.((..]]...)).((..((..)).))'
-        nm='1234567890123456789012345678'
-        bpstr="""1 A 9
+        db = '[[.((..]]...)).((..((..)).))'
+        nm = '1234567890123456789012345678'
+        bpstr = """1 A 9
 2 A 8
 3 A 0
 4 A 14
@@ -862,10 +881,10 @@ AAAGGGUUUCCC
 """
         bg.from_bpseq_str(bpstr)
 
-        db='[[.((..]]..((..)).))'
-        nm='12345678901234567890'
+        db = '[[.((..]]..((..)).))'
+        nm = '12345678901234567890'
 
-        bpstr="""1 A 9
+        bpstr = """1 A 9
 2 A 8
 3 A 0
 4 A 20
@@ -898,15 +917,16 @@ AAAGGGUUUCCC
     def test_define_residue_num_iterator1(self):
         bg = fgb.BulgeGraph.from_dotbracket('(.(...).)')
         ress = list(bg.define_residue_num_iterator('i0', adjacent=True))
-        self.assertEqual(ress, [1,2,3,7,8,9])
+        self.assertEqual(ress, [1, 2, 3, 7, 8, 9])
 
         bg = fgb.BulgeGraph.from_dotbracket('((.((...))))')
         ress = list(bg.define_residue_num_iterator('i0', adjacent=True))
-        self.assertEqual(ress, [2,3,4,10,11])
+        self.assertEqual(ress, [2, 3, 4, 10, 11])
 
     def test_define_residue_num_iterator(self):
         bg = fgb.BulgeGraph.from_dotbracket('((.).)')
-        self.assertEqual(list(bg.define_residue_num_iterator('s1', adjacent=True)), [1,2,3,4,5])
+        self.assertEqual(list(bg.define_residue_num_iterator(
+            's1', adjacent=True)), [1, 2, 3, 4, 5])
 
         bg = fgb.BulgeGraph.from_dotbracket('((..((..))((..))))')
         drni = bg.define_residue_num_iterator('m2', adjacent=True)
@@ -921,21 +941,22 @@ AAAGGGUUUCCC
         bg, = fgb.BulgeGraph.from_fasta_text('..((..((...))..))..((..))..')
 
         self.assertEqual(list(bg.define_residue_num_iterator('f0')),
-                         [1,2])
+                         [1, 2])
         self.assertEqual(list(bg.define_residue_num_iterator('t0')),
                          [26, 27])
         self.assertEqual(list(bg.define_residue_num_iterator('s1')),
                          [7, 8, 12, 13])
         self.assertEqual(list(bg.define_residue_num_iterator('i0')),
-                         [5,6,14,15])
+                         [5, 6, 14, 15])
 
-        fa=""">blah
+        fa = """>blah
 AAAAAAAAAA
 ((((.)).))
 """
-        bg, = fgb.BulgeGraph.from_fasta_text(fa, dissolve_length_one_stems=True)
+        bg, = fgb.BulgeGraph.from_fasta_text(
+            fa, dissolve_length_one_stems=True)
         self.assertEqual(list(bg.define_residue_num_iterator('i0', adjacent=True)),
-                         [2,3,7,8,9])
+                         [2, 3, 7, 8, 9])
 
         self.assertEqual(list(x.resid for x in bg.define_residue_num_iterator('i0', adjacent=True, seq_ids=True)),
                          [(' ', 2, ' '), (' ', 3, ' '), (' ', 7, ' '), (' ', 8, ' '), (' ', 9, ' ')])
@@ -945,16 +966,17 @@ AAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAA
 ..((..((...))..))..((..))..
 """
-        bg, = fgb.BulgeGraph.from_fasta_text(fa, dissolve_length_one_stems=False)
+        bg, = fgb.BulgeGraph.from_fasta_text(
+            fa, dissolve_length_one_stems=False)
         self.assertEqual(list(bg.define_range_iterator('i0')),
-                         [[5,6],[14,15]])
-        self.assertEqual(list(bg.define_range_iterator('i0', adjacent = True)),
-                         [[4,7],[13,16]])
+                         [[5, 6], [14, 15]])
+        self.assertEqual(list(bg.define_range_iterator('i0', adjacent=True)),
+                         [[4, 7], [13, 16]])
 
         self.assertEqual(list(bg.define_range_iterator('f0')),
-                         [[1,2]])
+                         [[1, 2]])
         self.assertEqual(list(bg.define_range_iterator('t0')),
-                         [[26,27]])
+                         [[26, 27]])
 
     def test_from_dotplot4(self):
         dotbracket = '()'
@@ -1003,15 +1025,54 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         self.check_for_all_nucleotides(bg)
 
         dotbracket = '((((((((((..(((((((.......)))))))......).((((((.......))))))..)))))))))'
-        bg = fgb.BulgeGraph.from_dotbracket(dotbracket, dissolve_length_one_stems=True)
+        bg = fgb.BulgeGraph.from_dotbracket(
+            dotbracket, dissolve_length_one_stems=True)
         self.check_for_overlapping_defines(bg)
         self.check_for_all_nucleotides(bg)
-
 
     def test_from_bg_string(self):
         bg = fgb.BulgeGraph.from_bg_string(self.bg_string)
 
         self.assertEquals(bg.seq_length, 71)
+
+    def test_from_ct_file(self):
+        # ct-file modified from http://x3dna.org/highlights/dssr-derived-secondary-structure-in-ct-format
+        ct_stri = """
+           27 DSSR-derived secondary structure in '1msy'
+            1 U     0     2     0  2647
+            2 G     1     3    26  2648
+            3 C     2     4    25  2649
+            4 U     3     5    24  2650
+            5 C     4     6    23  2651
+            6 C     5     7    22  2652
+            7 U     6     8     0  2653
+            8 A     7     9     0  2654
+            9 G     8    10     0  2655
+           10 U     9    11     0  2656
+           11 A    10    12     0  2657
+           12 C    11    0    17  2658
+           13 G    0    14     0  2659
+           14 U    13    15     0  2660
+           15 A    14    16     0  2661
+           16 A    15    17     0  2662
+           17 G    16    18    12  2663
+           18 G    17    19     0  2664
+           19 A    18    20     0  2665
+           20 C    19    21     0  2666
+           21 C    20    22     0  2667
+           22 G    21    23     6  2667
+           23 G    22    24     5  2667
+           24 A    23    25     4  2667
+           25 G    24    26     3  2671
+           26 U    25    27     2  2672
+           27 G    26     0     0  2673
+           """
+        bg = fgb.BulgeGraph.from_ct_string(ct_stri)
+        self.check_graph_integrity(bg)
+        self.assertEqual(bg.seq.to_resid(12), fgr.resid_from_str("A:2658"))
+        self.assertEqual(bg.seq.to_resid(19), fgr.resid_from_str("B:2665"))
+        self.assertEqual(bg.seq.to_resid(22), fgr.resid_from_str("B:2667.A"))
+        self.assertEqual(bg.seq.to_resid(24), fgr.resid_from_str("B:2667.C"))
 
     def check_from_and_to_dotbracket(self, dotbracket):
         bg = fgb.BulgeGraph.from_dotbracket(dotbracket)
@@ -1042,8 +1103,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
     def test_get_any_sides(self):
         bg = fgb.BulgeGraph.from_dotbracket('((..((..))..)).((..))')
 
-        self.assertEqual(bg.get_any_sides('s0', 'i0'), (1,0))
-        self.assertEqual(bg.get_any_sides('i0', 's0'), (0,1))
+        self.assertEqual(bg.get_any_sides('s0', 'i0'), (1, 0))
+        self.assertEqual(bg.get_any_sides('i0', 's0'), (0, 1))
 
         bg = fgb.BulgeGraph.from_dotbracket('((..((..))((..))))')
         bg.log(logging.INFO)
@@ -1055,7 +1116,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
             lines = f.readlines()
 
         bpseq_str = "".join(lines)
-        bg = fgb.BulgeGraph.from_bpseq_str(bpseq_str, dissolve_length_one_stems=True)
+        bg = fgb.BulgeGraph.from_bpseq_str(
+            bpseq_str, dissolve_length_one_stems=True)
 
     def test_to_dotbracket(self):
         self.check_from_and_to_dotbracket('..((..))..')
@@ -1073,11 +1135,11 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
     def test_get_bulge_dimensions(self):
         bg = fgb.BulgeGraph.from_dotbracket('((.).)')
         bd = bg.get_bulge_dimensions('i0')
-        self.assertEquals(bd, (0,1))
+        self.assertEquals(bd, (0, 1))
 
         bg = fgb.BulgeGraph.from_dotbracket('(.(.))')
         bd = bg.get_bulge_dimensions('i0')
-        self.assertEquals(bd, (1,0))
+        self.assertEquals(bd, (1, 0))
 
         bg = fgb.BulgeGraph.from_dotbracket('().()')
         bd = bg.get_bulge_dimensions('m0')
@@ -1086,13 +1148,15 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph.from_dotbracket(dotbracket)
         found = col.Counter()
         for loop in bg.defines:
-            if loop[0]!="m": continue
+            if loop[0] != "m":
+                continue
             bd = bg.get_bulge_dimensions(loop)
-            found[bd]+=1
-        self.assertEqual(found[(0,1000)], 1)
-        self.assertEqual(found[(1,1000)], 3)
+            found[bd] += 1
+        self.assertEqual(found[(0, 1000)], 1)
+        self.assertEqual(found[(1, 1000)], 3)
 
-        bg = fgb.BulgeGraph.from_dotbracket('((..((..))....))..((..((..))...))')
+        bg = fgb.BulgeGraph.from_dotbracket(
+            '((..((..))....))..((..((..))...))')
 
         bd = bg.get_bulge_dimensions('i0')
         self.assertEquals(bd, (2, 4))
@@ -1112,7 +1176,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg = fgb.BulgeGraph.from_dotbracket('(())(())')
         self.assertEquals(bg.get_length('m0'), 0)
 
-        bg = fgb.BulgeGraph.from_dotbracket('(((((((((..(((..((((.(((((((((.....(((((.(((((....((((....))))....))))).....(((((((((.......)))))))))....))))).((........))...)))))))))))))...)))..))....))))))).')
+        bg = fgb.BulgeGraph.from_dotbracket(
+            '(((((((((..(((..((((.(((((((((.....(((((.(((((....((((....))))....))))).....(((((((((.......)))))))))....))))).((........))...)))))))))))))...)))..))....))))))).')
 
         self.assertEqual(bg.get_length('i4'), 2)
 
@@ -1120,20 +1185,21 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         bg, = fgb.BulgeGraph.from_fasta_text(""">1Y26_X
 CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
 ((((((((((..((((((.........))))))......).((((((.......))))))..)))))))))""")
-        self.assertEqual(bg.get_define_seq_str("s0"), ['CGCUUCAUA', 'UAUGAAGUG'])
-        self.assertEqual(bg.get_define_seq_str("s0", True), ['CGCUUCAUAU', 'UUAUGAAGUG'])
+        self.assertEqual(bg.get_define_seq_str(
+            "s0"), ['CGCUUCAUA', 'UAUGAAGUG'])
+        self.assertEqual(bg.get_define_seq_str("s0", True),
+                         ['CGCUUCAUAU', 'UUAUGAAGUG'])
 
-        bg = fgb.BulgeGraph.from_dotbracket("(.(.))", seq = 'acgauu')
+        bg = fgb.BulgeGraph.from_dotbracket("(.(.))", seq='acgauu')
         self.assertEquals(bg.get_define_seq_str("i0"), ['c', ''])
 
         self.assertEquals(bg.get_define_seq_str("h0"), ['a'])
         self.assertEquals(bg.get_define_seq_str("h0", True), ['gau'])
 
+        bg = fgb.BulgeGraph.from_dotbracket("(.(.))", seq='acgauu')
+        self.assertEquals(bg.get_define_seq_str("i0", True), ['acg', 'uu'])
 
-        bg = fgb.BulgeGraph.from_dotbracket("(.(.))", seq = 'acgauu')
-        self.assertEquals(bg.get_define_seq_str("i0", True), ['acg','uu'])
-
-        bg = fgb.BulgeGraph.from_dotbracket('(.(.).(.).)', seq = 'acguaaccggu')
+        bg = fgb.BulgeGraph.from_dotbracket('(.(.).(.).)', seq='acguaaccggu')
         self.assertEquals(bg.get_define_seq_str('m0'), ['c'])
         self.assertEquals(bg.get_define_seq_str('m0', True), ['acg'])
 
@@ -1143,7 +1209,7 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         self.assertEquals(bg.get_define_seq_str('m2'), ['g'])
         self.assertEquals(bg.get_define_seq_str('m2', True), ['ggu'])
 
-        bg = fgb.BulgeGraph.from_dotbracket(".(.).", seq = 'acgau')
+        bg = fgb.BulgeGraph.from_dotbracket(".(.).", seq='acgau')
         self.assertEquals(bg.get_define_seq_str("f0", True), ['ac'])
         self.assertEquals(bg.get_define_seq_str("f0"), ['a'])
 
@@ -1195,13 +1261,13 @@ CGCUUCAUAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUAUGAAGUG
         bg = fgb.BulgeGraph.from_dotbracket('(.(.).).(.(.))')
         (m1, m2) = bg.get_flanking_region('i1', side=0)
         self.assertEqual(bg.get_flanking_region('i0', side=0),
-                         (1,3))
+                         (1, 3))
         self.assertEqual(bg.get_flanking_region('i0', side=1),
-                         (5,7))
+                         (5, 7))
         self.assertEqual(bg.get_flanking_region('i1', side=0),
-                         (9,11))
+                         (9, 11))
         self.assertEqual(bg.get_flanking_region('i1', side=1),
-                         (13,14))
+                         (13, 14))
 
         dotbracket = '...(((((((((((((((((())))))))))))))))))...(((((((((((((((())))))))))))))))'
         seq = fus.gen_random_sequence(len(dotbracket))
@@ -1214,12 +1280,13 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 """
 
     def test_get_flanking_sequence(self):
-        bg = fgb.BulgeGraph.from_dotbracket('((..))', seq = 'AACCGG')
+        bg = fgb.BulgeGraph.from_dotbracket('((..))', seq='AACCGG')
 
         self.assertEqual(bg.get_flanking_sequence('h0'),
                          'AACCGG')
 
-        bg = fgb.BulgeGraph.from_dotbracket('((.((.)).(.).))', seq = 'AUGCaugcAUGCaug')
+        bg = fgb.BulgeGraph.from_dotbracket(
+            '((.((.)).(.).))', seq='AUGCaugcAUGCaug')
         self.assertEqual(bg.get_flanking_sequence('m0'),
                          'AUGCa')
         self.assertEqual(bg.get_flanking_sequence('m1'),
@@ -1242,32 +1309,32 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg = fgb.BulgeGraph.from_dotbracket('((.((.)).(.).))')
 
         self.assertEqual(bg.get_flanking_handles('m0'),
-                         (2,4,1,3))
+                         (2, 4, 1, 3))
         self.assertEqual(bg.get_flanking_handles('m1'),
-                         (8,10,1,3))
+                         (8, 10, 1, 3))
         self.assertEqual(bg.get_flanking_handles('m2'),
-                         (12,14,0,2))
+                         (12, 14, 0, 2))
 
         bg = fgb.BulgeGraph.from_dotbracket('(.(.).).(.(.))')
         self.assertEqual(bg.get_flanking_handles('i0', side=0),
-                         (1,3,0,2))
+                         (1, 3, 0, 2))
         self.assertEqual(bg.get_flanking_handles('i0', side=1),
-                         (5,7,0,2))
+                         (5, 7, 0, 2))
         self.assertEqual(bg.get_flanking_handles('i1', side=0),
-                         (9,11,0,2))
+                         (9, 11, 0, 2))
         self.assertEqual(bg.get_flanking_handles('i1', side=1),
-                         (13,14,0,1))
+                         (13, 14, 0, 1))
 
         bg = fgb.BulgeGraph.from_dotbracket('((.((.)).)).((.((.))))')
         #                                   1234567890123456789012
         self.assertEqual(bg.get_flanking_handles('i0', side=0),
-                         (2,4,1,3))
+                         (2, 4, 1, 3))
         self.assertEqual(bg.get_flanking_handles('i0', side=1),
-                         (8,10,1,3))
+                         (8, 10, 1, 3))
         self.assertEqual(bg.get_flanking_handles('i1', side=0),
-                         (14,16,1,3))
+                         (14, 16, 1, 3))
         self.assertEqual(bg.get_flanking_handles('i1', side=1),
-                         (20,21,1,2))
+                         (20, 21, 1, 2))
 
     def test_are_adjacent_stems(self):
         bg = fgb.BulgeGraph.from_dotbracket('((..((..))..))..((..))')
@@ -1304,7 +1371,8 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(bg.connection_type('i0', ['s1', 's0']), -1)
 
     def test_random_subgraph(self):
-        bg = fgb.BulgeGraph.from_dotbracket('(.(.).).(.(.))..((..((..((..))..))..))')
+        bg = fgb.BulgeGraph.from_dotbracket(
+            '(.(.).).(.(.))..((..((..((..))..))..))')
 
         sg = bg.random_subgraph()
 
@@ -1313,11 +1381,12 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 
     def test_random_subgraph2(self):
         bg = fgb.BulgeGraph.from_dotbracket("...(((...)))...(((...)))...(((...(((...)))...)))",
-                                 seq="AAAGGGAAACCCAAAGGGAAACCCAAAGGGUUUGGGAAACCCUUUCCC")
+                                            seq="AAAGGGAAACCCAAAGGGAAACCCAAAGGGUUUGGGAAACCCUUUCCC")
         for rep in range(10):
             for l in range(3, 8):
                 sg = bg.random_subgraph(l)
                 self.assertGreaterEqual(len(sg), l)
+
     def test_has_connection(self):
         bg = fgb.BulgeGraph.from_dotbracket('(())..(())..(())..')
 
@@ -1376,7 +1445,26 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         self.assertEqual(len(all_stems), 0)
 
     def test_get_node_from_residue_num(self):
-        bg = fgb.BulgeGraph.from_bg_file('test/forgi/data/telomerase.cg')
+        bg = fgb.BulgeGraph.from_dotbracket(
+            '(((((((()))(((((((((((((((&(())))))))))))))))))))))')
+        for elem, define in bg.defines.items():
+            for d in define:
+                self.assertEqual(bg.get_node_from_residue_num(d), elem)
+
+    def test_define_range_iterator(self):
+        bg = fgb.BulgeGraph.from_dotbracket(
+            '(((((((()))(((((((((((((((&(())))))))))))))))))))))')
+        for elem, define in bg.defines.items():
+            r = list(bg.define_range_iterator(elem))
+            print(r)
+            if len(r) == 0:
+                self.assertEqual(define, [])
+            elif len(r) == 1:
+                self.assertEqual(r[0], define)
+            else:
+                self.assertEqual(len(r), 2)
+                self.assertEqual(r[0], define[:2])
+                self.assertEqual(r[1], define[2:])
 
     def test_get_connected_nucleotides(self):
         db = '((..((..))..))'
@@ -1385,16 +1473,15 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         cr = bg.get_connected_residues('s0', 's1')
 
         self.assertEqual(len(cr), 2)
-        self.assertEqual(cr[0], [2,5])
+        self.assertEqual(cr[0], [2, 5])
         self.assertEqual(cr[1], [13, 10])
 
         # The order depends on the order of the input stems.
         cr = bg.get_connected_residues('s1', 's0')
 
         self.assertEqual(len(cr), 2)
-        self.assertEqual(cr[0], [5,2])
+        self.assertEqual(cr[0], [5, 2])
         self.assertEqual(cr[1], [10, 13])
-
 
         db = '((..))..((..))'
         bg = fgb.BulgeGraph.from_dotbracket(db)
@@ -1402,12 +1489,13 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         cr = bg.get_connected_residues('s0', 's1')
 
         self.assertEqual(len(cr), 1)
-        self.assertEqual(cr[0], [6,9])
+        self.assertEqual(cr[0], [6, 9])
 
     def test_nucleotides_to_elements(self):
         db = '((..))..((..))'
         bg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(bg.nucleotides_to_elements([1,5,7,11]), {"s0", "m0", "h1"})
+        self.assertEqual(bg.nucleotides_to_elements(
+            [1, 5, 7, 11]), {"s0", "m0", "h1"})
 
     def test_to_bpseq_str(self):
         bpstr = self.bpseq['1y26']
@@ -1421,9 +1509,9 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
         bg = fgb.BulgeGraph.from_bpseq_str(bpstr)
         pair_tuples = bg.to_pair_tuples()
 
-        self.assertTrue((1,26) in pair_tuples)
-        self.assertTrue((26,1) in pair_tuples)
-        self.assertTrue((7,0) in pair_tuples)
+        self.assertTrue((1, 26) in pair_tuples)
+        self.assertTrue((26, 1) in pair_tuples)
+        self.assertTrue((7, 0) in pair_tuples)
 
     def test_to_pairtable(self):
         bpstr = self.bpseq['1y26']
@@ -1442,12 +1530,11 @@ AAAACCGGGCCUUUUACCCCAAAUUGGAA
 GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
-#2345678
+# 2345678
         bg, = fgb.BulgeGraph.from_fasta_text(fasta)
 
         # needs networkx, and for what?
-        #bg.to_networkx()
-
+        # bg.to_networkx()
 
     def test_shortest_bg_loop(self):
         fasta = """>1L2X_A
@@ -1531,24 +1618,24 @@ AAAAAAAAAAAAAAAAAAAAAAAAAA
 GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
-#23456789012345678901234567
+# 23456789012345678901234567
         bg, = fgb.BulgeGraph.from_fasta_text(fasta)
 
         pairs = bg.pseudoknotted_basepairs()
-        self.assertTrue((9,27) in pairs)
-        self.assertTrue((10,26) in pairs)
-        self.assertTrue((11,25) in pairs)
-
+        self.assertTrue((9, 27) in pairs)
+        self.assertTrue((10, 26) in pairs)
+        self.assertTrue((11, 25) in pairs)
 
     def test_stem_bp_iterator(self):
         fasta = """>1L2X_A
 GCGCGGCACCGUCCGCGGAACAAACGG
 .(((((..[[[.))))).......]]]
 """
-#23456789012345678901234567
+# 23456789012345678901234567
         bg, = fgb.BulgeGraph.from_fasta_text(fasta)
 
-        self.assertEqual(list(bg.stem_bp_iterator("s1")), [(9, 27), (10, 26), (11, 25)])
+        self.assertEqual(list(bg.stem_bp_iterator("s1")),
+                         [(9, 27), (10, 26), (11, 25)])
 
     def test_ss_distance(self):
         db = '((.((..))..))'
@@ -1573,10 +1660,10 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         #     12345678901234567
 
         bg = fgb.BulgeGraph.from_dotbracket(db)
-        p,l = bg.get_position_in_element(1)
+        p, l = bg.get_position_in_element(1)
         self.assertEqual(p, 0)
         self.assertEqual(l, 2)
-        p,l = bg.get_position_in_element(12)
+        p, l = bg.get_position_in_element(12)
 
         self.assertEqual(p, 2)
         self.assertEqual(l, 5)
@@ -1584,15 +1671,15 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         db = '((..(((...))....)))'
         #     1234567890123445678
         bg = fgb.BulgeGraph.from_dotbracket(db)
-        p,l = bg.get_position_in_element(3)
+        p, l = bg.get_position_in_element(3)
         self.assertEqual(p, 1)
         self.assertEqual(l, 3)
 
-        p,l = bg.get_position_in_element(8)
+        p, l = bg.get_position_in_element(8)
         self.assertEqual(p, 1)
         self.assertEqual(l, 2)
 
-        p,l = bg.get_position_in_element(9)
+        p, l = bg.get_position_in_element(9)
         self.assertEqual(p, 2)
         self.assertEqual(l, 2)
 
@@ -1600,11 +1687,11 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         #     12345678
         bg = fgb.BulgeGraph.from_dotbracket(db)
 
-        p,l = bg.get_position_in_element(3)
+        p, l = bg.get_position_in_element(3)
         self.assertEqual(p, 1)
         self.assertEqual(l, 2)
 
-        p,l = bg.get_position_in_element(6)
+        p, l = bg.get_position_in_element(6)
         self.assertEqual(p, 1)
         self.assertEqual(l, 2)
 
@@ -1612,7 +1699,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         #     12345678
         bg = fgb.BulgeGraph.from_dotbracket(db)
 
-        p,l = bg.get_position_in_element(4)
+        p, l = bg.get_position_in_element(4)
         self.assertEqual(p, 1)
         self.assertEqual(l, 2)
 
@@ -1681,7 +1768,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         # s0 m0 s1 m2 s2 m3 s3 m4
         bg = fgb.BulgeGraph.from_dotbracket(db)
 
-        #fud.pv('bg.to_bg_string()')
+        # fud.pv('bg.to_bg_string()')
 
         (mi, mx) = bg.min_max_bp_distance('s1', 's2')
         self.assertEqual(mi, 3)
@@ -1691,7 +1778,7 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(mi, 0)
         self.assertEqual(mx, 2)
 
-        db =  '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
+        db = '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
         bg = fgb.BulgeGraph.from_dotbracket(db)
         (mi, mx) = bg.min_max_bp_distance('s1', 's10')
         self.assertEqual(mi, 19)
@@ -1699,19 +1786,20 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         (mi, mx) = bg.min_max_bp_distance('s4', 's7')
         self.assertEqual(mi, 18)
         self.assertEqual(mx, 24)
+
     def test_global_pos_to_stem_pos(self):
         db = '...((((((((...))))))))...'
         bg = fgb.BulgeGraph.from_dotbracket(db)
 
         self.assertEqual(bg.stem_side_vres_to_resn("s0", 0, 3), 7)
         self.assertEqual(bg.stem_side_vres_to_resn("s0", 1, 3), 19)
-        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",7),(3,0))
-        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",19),(3,1))
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0", 7), (3, 0))
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0", 19), (3, 1))
 
         self.assertEqual(bg.stem_side_vres_to_resn("s0", 0, 0), 4)
         self.assertEqual(bg.stem_side_vres_to_resn("s0", 1, 0), 22)
-        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",4),(0,0))
-        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0",22),(0,1))
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0", 4), (0, 0))
+        self.assertEqual(bg.stem_resn_to_stem_vres_side("s0", 22), (0, 1))
 
     def test_get_stem_edge(self):
         db = '........(((((((((.(((.((...)).))).)))))).)))..(((....)))....'
@@ -1720,64 +1808,71 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         # f0 s0 s1 i1 s2 i0 s3 h0 i2 m0 s4 h1 t0
         bg = fgb.BulgeGraph.from_dotbracket(db)
 
-        edge = bg.get_stem_edge('s0',9)
+        edge = bg.get_stem_edge('s0', 9)
         self.assertEqual(edge, 0)
 
-        edge = bg.get_stem_edge('s0',42)
+        edge = bg.get_stem_edge('s0', 42)
         self.assertEqual(edge, 1)
 
-        edge = bg.get_stem_edge('s1',12)
+        edge = bg.get_stem_edge('s1', 12)
         self.assertEqual(edge, 0)
 
-        edge = bg.get_stem_edge('s1',40)
+        edge = bg.get_stem_edge('s1', 40)
         self.assertEqual(edge, 1)
 
-        edge = bg.get_stem_edge('s2',19)
+        edge = bg.get_stem_edge('s2', 19)
         self.assertEqual(edge, 0)
 
-        edge = bg.get_stem_edge('s2',33)
+        edge = bg.get_stem_edge('s2', 33)
         self.assertEqual(edge, 1)
 
-        edge = bg.get_stem_edge('s3',24)
+        edge = bg.get_stem_edge('s3', 24)
         self.assertEqual(edge, 0)
 
-        edge = bg.get_stem_edge('s3',28)
+        edge = bg.get_stem_edge('s3', 28)
         self.assertEqual(edge, 1)
 
-        edge = bg.get_stem_edge('s4',48)
+        edge = bg.get_stem_edge('s4', 48)
         self.assertEqual(edge, 0)
 
-        edge = bg.get_stem_edge('s4',55)
+        edge = bg.get_stem_edge('s4', 55)
         self.assertEqual(edge, 1)
 
     def test_shortest_path(self):
-        db =  '........(((((((((.(((.((...)).))).)))))).)))..(((....)))....'
+        db = '........(((((((((.(((.((...)).))).)))))).)))..(((....)))....'
         #      123456789012345678901234567890123456789012345678901234567890
         #
         #      ffffffffsssssssssisssisshhhssisssissssssisssmmssshhhhssstttt
         #      000000000001111111222033000330222111111120000044411114440000
         bg = fgb.BulgeGraph.from_dotbracket(db)
         bg.log(logging.INFO)
-        sp = bg.shortest_path('s1', 'h0') # Path traverses stem from base to loop
+        # Path traverses stem from base to loop
+        sp = bg.shortest_path('s1', 'h0')
         self.assertEqual(sp, ['s1', 'i0', 's2', 'i1', 's3', 'h0'])
 
-        sp = bg.shortest_path('s0', 's1') # Includes assymetric bulge w/ length of 0 on one side (i2)
+        # Includes assymetric bulge w/ length of 0 on one side (i2)
+        sp = bg.shortest_path('s0', 's1')
         self.assertEqual(sp, ['s0', 'i2', 's1'])
 
-        sp = bg.shortest_path('f0', 'h0') # Includes assymetric bulge w/ length of 0 on one side (i2)
-        self.assertEqual(sp, ['f0', 's0', 'i2', 's1', 'i0', 's2', 'i1', 's3', 'h0'])
+        # Includes assymetric bulge w/ length of 0 on one side (i2)
+        sp = bg.shortest_path('f0', 'h0')
+        self.assertEqual(sp, ['f0', 's0', 'i2', 's1',
+                              'i0', 's2', 'i1', 's3', 'h0'])
 
-        sp = bg.shortest_path('f0', 't0') # Path traverses a multiloop
+        sp = bg.shortest_path('f0', 't0')  # Path traverses a multiloop
         self.assertEqual(sp, ['f0', 's0', 'm0', 's4', 't0'])
 
-        sp = bg.shortest_path('h0','h1') # Path traverses stem from loop to base
-        self.assertEqual(sp, ['h0', 's3', 'i1', 's2', 'i0', 's1', 'i2', 's0', 'm0', 's4', 'h1'])
+        # Path traverses stem from loop to base
+        sp = bg.shortest_path('h0', 'h1')
+        self.assertEqual(sp, ['h0', 's3', 'i1', 's2', 'i0',
+                              's1', 'i2', 's0', 'm0', 's4', 'h1'])
 
-        sp = bg.shortest_path('t0','f0') # Shortest path along graph in reverse
+        # Shortest path along graph in reverse
+        sp = bg.shortest_path('t0', 'f0')
         self.assertEqual(sp, ['t0', 's4', 'm0', 's0', 'f0'])
 
     def test_get_domains(self):
-        db =  '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
+        db = '..(((..(((..(((..((((((...)))..)))..)))(((...))).(((...(((((((((...))).(((...)))...))).))).)))....))))))..'
         #      1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
         #      ffsssiisssmmsssiisssssshhhsssiisssiisssssshhhsssmsssiiissssssssshhhsssmssshhhsssmmmsssisssisssmmmmsssssstt
         #                                                                             111   111
@@ -1786,30 +1881,33 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         bg = fgb.BulgeGraph.from_dotbracket(db)
         dom = bg.get_domains()
         bg.log(logging.INFO)
-        log.info("m4: %s %s %s", bg.connections("m4"), bg.get_angle_type("m4"), bg.get_angle_type("m4", allow_broken=True))
+        log.info("m4: %s %s %s", bg.connections("m4"), bg.get_angle_type(
+            "m4"), bg.get_angle_type("m4", allow_broken=True))
         mls = sorted([
-                    sorted(['f0', 't0']),
-                    sorted(['m0', 'm1', 'm2', 'm6']),
-                    sorted(['m3', 'm4', 'm5'])
-                    ])
+            sorted(['f0', 't0']),
+            sorted(['m0', 'm1', 'm2', 'm6']),
+            sorted(['m3', 'm4', 'm5'])
+        ])
         rods = sorted([
-                        sorted(['s0', 'i0', 's1']),
-                        sorted(['s2', 'i2', 's3', 'i1', 's4', 'h0']),
-                        sorted(['s5', 'h1']),
-                        sorted(['s6', 'i3', 's7', 'i4', 's8']),
-                        sorted(['s9', 'h2']),
-                        sorted(['s10', 'h3'])
+            sorted(['s0', 'i0', 's1'], key=lambda x: bg.define_a(x)),
+            sorted(['s2', 'i2', 's3', 'i1', 's4', 'h0'],
+                   key=lambda x: bg.define_a(x)),
+            sorted(['s5', 'h1'], key=lambda x: bg.define_a(x)),
+            sorted(['s6', 'i3', 's7', 'i4', 's8'],
+                   key=lambda x: bg.define_a(x)),
+            sorted(['s9', 'h2'], key=lambda x: bg.define_a(x)),
+            sorted(['s10', 'h3'], key=lambda x: bg.define_a(x))
         ])
         self.assertEqual(dom["multiloops"], mls)
+        log.debug("Comparing rods %s and %s", dom["rods"], rods)
         self.assertEqual(dom["rods"], rods)
         self.assertEqual(dom["pseudoknots"], [])
 
     def test_get_domains2(self):
-        db =  '(((...(((...((((((...(((...(((...(((((((((...(((...))))))...)))...))))))...))))))...))))))).))'
+        db = '(((...(((...((((((...(((...(((...(((((((((...(((...))))))...)))...))))))...))))))...))))))).))'
 
         bg = fgb.BulgeGraph.from_dotbracket(db)
         dom = bg.get_domains()
-
 
         self.assertEqual(len(dom["multiloops"]), 0)
         self.assertEqual(len(dom["rods"]), 1)
@@ -1817,48 +1915,48 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(len(dom["pseudoknots"]), 0)
 
 
-
-
 class MultiloopFinding(unittest.TestCase):
     def setUp(self):
         pass
 
     def test_get_next_ml_segment(self):
-        db="...(((.(((...))).(((...)))...)))..."
+        db = "...(((.(((...))).(((...)))...)))..."
         """
         ...(((.(((...))).(((...)))...)))...
         fffsssmssshhhsssmssshhhsssmmmsssttt
         00000001110001112222111222111000000
         """
         bg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(bg.get_next_ml_segment("f0"),"t0")
-        self.assertEqual(bg.get_next_ml_segment("m0"),"m1")
-        self.assertEqual(bg.get_next_ml_segment("m1"),"m2")
-        self.assertEqual(bg.get_next_ml_segment("m2"),"m0")
-        self.assertEqual(bg.get_next_ml_segment("t0"),None)
+        self.assertEqual(bg.get_next_ml_segment("f0"), "t0")
+        self.assertEqual(bg.get_next_ml_segment("m0"), "m1")
+        self.assertEqual(bg.get_next_ml_segment("m1"), "m2")
+        self.assertEqual(bg.get_next_ml_segment("m2"), "m0")
+        self.assertEqual(bg.get_next_ml_segment("t0"), None)
+
     def test_get_next_ml_segment_pk(self):
         db = "..(((..[[[..)))..]]].."
-             #ffsssmmsssmmsssmmssstt
-             #0000000111110002211100'
+        # ffsssmmsssmmsssmmssstt
+        # 0000000111110002211100'
         bg = fgb.BulgeGraph.from_dotbracket(db)
-        self.assertEqual(bg.get_next_ml_segment("f0"),"m2")
-        self.assertEqual(bg.get_next_ml_segment("m2"),"m1")
-        self.assertEqual(bg.get_next_ml_segment("m1"),"m0")
-        self.assertEqual(bg.get_next_ml_segment("m0"),"t0")
-        self.assertEqual(bg.get_next_ml_segment("t0"),None)
+        self.assertEqual(bg.get_next_ml_segment("f0"), "m2")
+        self.assertEqual(bg.get_next_ml_segment("m2"), "m1")
+        self.assertEqual(bg.get_next_ml_segment("m1"), "m0")
+        self.assertEqual(bg.get_next_ml_segment("m0"), "t0")
+        self.assertEqual(bg.get_next_ml_segment("t0"), None)
+
     def test_get_next_ml_segment_cofold(self):
         db = "...(((..&...)))"
-             #fff   tt fff
-             #000   00 111
+        # fff   tt fff
+        # 000   00 111
         bg = fgb.BulgeGraph.from_dotbracket(db)
         bg.log(logging.INFO)
-        self.assertEqual(bg.get_next_ml_segment("f0"),None)
-        self.assertEqual(bg.get_next_ml_segment("t0"),None)
-        self.assertEqual(bg.get_next_ml_segment("f1"),"t0")
+        self.assertEqual(bg.get_next_ml_segment("f0"), None)
+        self.assertEqual(bg.get_next_ml_segment("t0"), None)
+        self.assertEqual(bg.get_next_ml_segment("f1"), "t0")
+
     def test__get_next_ml_segment_no_stem(self):
         bg, = fgb.BulgeGraph.from_fasta_text(".....")
-        self.assertEqual(bg.get_next_ml_segment("f0"),None)
-
+        self.assertEqual(bg.get_next_ml_segment("f0"), None)
 
     def test_shortest_mlonly_multiloop(self):
         db = "(((..(((...)))(((...))).(((...)))...)))"
@@ -1873,6 +1971,7 @@ class MultiloopFinding(unittest.TestCase):
         print(bg.to_element_string(True))
         self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
+
     def test_shortest_mlonly_multiloop_first_0_length(self):
         db = "((((((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
@@ -1881,6 +1980,7 @@ class MultiloopFinding(unittest.TestCase):
         print(bg.to_element_string(True))
         self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
+
     def test_shortest_mlonly_multiloop_first_longest(self):
         db = "(((......(((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
@@ -1889,6 +1989,7 @@ class MultiloopFinding(unittest.TestCase):
         print(bg.to_element_string(True))
         self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
+
     def test_shortest_mlonly_multiloop_first_0_length_different_start(self):
         db = "((((((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
@@ -1897,6 +1998,7 @@ class MultiloopFinding(unittest.TestCase):
         print(bg.to_element_string(True))
         self.assertEqual(ml, ("m0", "m1", "m2", "m3"))
     #@unittest.skip("shortest_mlonly_multiloop")
+
     def test_shortest_mlonly_multiloop_first_longest_different_start(self):
         db = "(((......(((...))).(((...))).(((...)))...)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
@@ -1907,52 +2009,57 @@ class MultiloopFinding(unittest.TestCase):
 
     def test_find_mlonly_multiloops_pseudoknotfree(self):
         db = "(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))"
-            #"sssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsss"
+        #"sssmmmsssmmmssshhhsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsss"
         bg = fgb.BulgeGraph.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([( "m1", "m2", "m3"),("m0", "m4", "m5", "m6" )]))
+        self.assertEqual(sorted(mls), sorted(
+            [("m1", "m2", "m3"), ("m0", "m4", "m5", "m6")]))
+
     def test_find_mlonly_multiloops_pseudoknotfree_0lengthML(self):
         db = "...(((((((((...)))(((...))))))(((...)))(((...))))))..."
-             #fffssssssssshhhsssssshhhssssssssshhhsssssshhhssssssttt
-             #000000111222000222333111333111444222444555333555000000
+        # fffssssssssshhhsssssshhhssssssssshhhsssssshhhssssssttt
+        # 000000111222000222333111333111444222444555333555000000
         bg = fgb.BulgeGraph.from_dotbracket(db)
         bg.log(logging.INFO)
-        #print("\n".join(map(str,sorted(bg.edges.items()))))
+        # print("\n".join(map(str,sorted(bg.edges.items()))))
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([("f0", "t0"),( "m0", "m4", "m5", "m6"),("m1", "m2", "m3" )]))
+        self.assertEqual(sorted(mls), sorted(
+            [("f0", "t0"), ("m0", "m4", "m5", "m6"), ("m1", "m2", "m3")]))
+
     def test_find_mlonly_multiloops_pseudoknot_free_someML0length(self):
         db = "...(((...((((((...)))...(((...)))...)))(((...)))...(((...))))))..."
         bg = fgb.BulgeGraph.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(sorted(mls),sorted([("f0", "t0"), ("m0", "m4", "m5", "m6" ), ( "m1", "m2", "m3")]))
+        self.assertEqual(sorted(mls), sorted(
+            [("f0", "t0"), ("m0", "m4", "m5", "m6"), ("m1", "m2", "m3")]))
+
     def test_find_mlonly_multiloops_254_pk_witht1(self):
         db = "(((..[[[..)))..]]].."
-             #sssmmsssmmsssmmssstt
-             #00000111110002211111'
+        # sssmmsssmmsssmmssstt
+        # 00000111110002211111'
         bg = fgb.BulgeGraph.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("m0", "t0", "m2", "m1")])
+        self.assertEqual(mls, [("m0", "t0", "m2", "m1")])
+
     def test_find_mlonly_multiloops_254_pk_witht1f1(self):
         db = "..(((..[[[..)))..]]].."
-             #ffsssmmsssmmsssmmssstt
+        # ffsssmmsssmmsssmmssstt
         bg = fgb.BulgeGraph.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("f0", "m2", "m1", "m0", "t0")])
-
+        self.assertEqual(mls, [("f0", "m2", "m1", "m0", "t0")])
 
     def test_find_mlonly_multiloops_2534_pk(self):
         db = "(((..[[[..)))(((...)))..]]]"
-            # sssmmsssmmsssssshhhsssmmsss
-            # 000001111100022200022233111
+        # sssmmsssmmsssssshhhsssmmsss
+        # 000001111100022200022233111
         bg = fgb.BulgeGraph.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
-        self.assertEqual(mls,[("m0", "m2", "m3", "m1")])
-
+        self.assertEqual(mls, [("m0", "m2", "m3", "m1")])
 
     def test_find_mlonly_multiloops_combined(self):
         db = "...(((..[[[..)))(((...)))..]]]...(((...(((...(((.(((..[[[..)))..]]]...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
-             #fffsssmmsssmmsssssshhhsssmmsssmmmsssmmmsssmmmsssmsssmmsssmmsssmmsssmmmsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt
-             #0000000011111000222000222331114443335554446665557666887779966600777111555222888111888333444444999222999555000333000666333000
+        # fffsssmmsssmmsssssshhhsssmmsssmmmsssmmmsssmmmsssmsssmmsssmmsssmmsssmmmsssmmmssshhhsssmmmsssmmmssshhhsssmmmssshhhsssmmmsssttt
+        # 0000000011111000222000222331114443335554446665557666887779966600777111555222888111888333444444999222999555000333000666333000
         bg = fgb.BulgeGraph.from_dotbracket(db)
         bg.log(logging.INFO)
         mls = bg.find_mlonly_multiloops()
@@ -1976,14 +2083,14 @@ class MultiloopFinding(unittest.TestCase):
 
     def test_find_mlonly_multiloops_pk2455(self):
         db = "(((...(((...)))...(((...[[[...)))...(((...]]]...)))...)))..."
-            #"sssmmmssshhhsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssttt"
-            #000000111000111111222222333333222444444555333666444777000000
+        #"sssmmmssshhhsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssmmmsssttt"
+        # 000000111000111111222222333333222444444555333666444777000000
         bg = fgb.BulgeGraph.from_dotbracket(db)
         bg.log(logging.INFO)
         mls = bg.find_mlonly_multiloops()
         pprint(mls)
         self.assertEqual(sorted(mls),
-                         sorted([("t0",),("m0", "m1", "m4", "m7"), ("m2", "m6", "m5", "m3")]))
+                         sorted([("t0",), ("m0", "m1", "m4", "m7"), ("m2", "m6", "m5", "m3")]))
 
     def test_find_mlonly_multiloops_cofold_1(self):
         db = "(((((...&...)))))"
@@ -2002,6 +2109,7 @@ class MultiloopFinding(unittest.TestCase):
         bg = fgb.BulgeGraph.from_dotbracket(db)
         mls = bg.find_mlonly_multiloops()
         self.assertEqual(mls, [("f0", )])
+
     def test_find_mlonly_multiloops_cofold_f_only(self):
         db = "...(((&)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
@@ -2019,73 +2127,87 @@ class MultiloopFinding(unittest.TestCase):
         self.assertEqual(bg.describe_multiloop(mls[1]), set(["pseudoknot"]))
         # This "strange" pseudoknot has no angle type 5
         for m in bg.mloop_iterator():
-            self.assertNotEqual(abs(bg.get_angle_type(m, allow_broken=True)), 5)
+            self.assertNotEqual(
+                abs(bg.get_angle_type(m, allow_broken=True)), 5)
 
 
 class WalkBackboneTests(unittest.TestCase):
     def setUp(self):
         pass
+
     def test_iter_elements_along_backbones(self):
         db = "...(((...(((...(((...)))...(((...)))...)))...(((...)))...(((...)))...)))..."
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
         self.assertEqual(l, ["f0", "s0", "m0", "s1", "m1", "s2", "h0", "s2", "m2", "s3", "h1", "s3",
-                            "m3", "s1", "m4", "s4", "h2", "s4", "m5", "s5", "h3", "s5", "m6", "s0",
-                            "t0"])
+                             "m3", "s1", "m4", "s4", "h2", "s4", "m5", "s5", "h3", "s5", "m6", "s0",
+                             "t0"])
+
     def test_iter_elements_along_backbones_no_t1(self):
         db = "(((...)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
         self.assertEqual(l, ["s0", "h0", "s0"])
+
     def test_iter_elements_along_backbones_onesided_i(self):
         db = "((.((...))))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
         self.assertEqual(l, ["s0", "i0", "s1", "h0", "s1", "s0"])
+
     def test_iter_elements_along_backbones_zero_len_ml(self):
         db = "((.((...))((...))))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
-        self.assertEqual(l, ["s0", "m0", "s1", "h0", "s1", "m1","s2", "h1","s2","m2","s0"])
+        self.assertEqual(l, ["s0", "m0", "s1", "h0", "s1",
+                             "m1", "s2", "h1", "s2", "m2", "s0"])
+
     def test_iter_elements_along_backbones_strange_pseudoknot(self):
         # Obscure bug with dot-free structutre of 1VQO_0
         # This did not cause the bug:
         db = "(((..[[..((..(((....)))..]]..))..)))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
-        self.assertEqual(l, ["s0", "m0", "s1", "m1", "s2", "m2","s3", "h0","s3","m3","s1", "m4", "s2", "m5", "s0"])
+        self.assertEqual(l, ["s0", "m0", "s1", "m1", "s2", "m2",
+                             "s3", "h0", "s3", "m3", "s1", "m4", "s2", "m5", "s0"])
         # This caused the bug
         db = "((([[((((()))]])))))"
         bg = fgb.BulgeGraph.from_dotbracket(db)
         l = list(bg.iter_elements_along_backbone())
-        self.assertEqual(l, ["s0", "m0", "s1", "m1", "s2", "m2","s3","s3","m3","s1", "m4", "s2", "m5", "s0"])
+        self.assertEqual(l, ["s0", "m0", "s1", "m1", "s2", "m2",
+                             "s3", "s3", "m3", "s1", "m4", "s2", "m5", "s0"])
+
 
 class BulgeGraphElementNucleotideTests(GraphVerification):
     def test_define_a_s(self):
         bg = fgb.BulgeGraph.from_dotbracket(".((((...)))).")
-        self.assertEqual(bg.define_a("s0"), [1,6,8,13])
+        self.assertEqual(bg.define_a("s0"), [1, 6, 8, 13])
         bg = fgb.BulgeGraph.from_dotbracket(".((((...))))")
-        self.assertEqual(bg.define_a("s0"), [1,6,8,12])
+        self.assertEqual(bg.define_a("s0"), [1, 6, 8, 12])
         bg = fgb.BulgeGraph.from_dotbracket("((((...)))).")
-        self.assertEqual(bg.define_a("s0"), [1,5,7,12])
+        self.assertEqual(bg.define_a("s0"), [1, 5, 7, 12])
+
     def test_define_a_i(self):
         bg = fgb.BulgeGraph.from_dotbracket("(..(((...))).)")
-        self.assertEqual(bg.define_a("i0"), [1,4,12,14])
+        self.assertEqual(bg.define_a("i0"), [1, 4, 12, 14])
         bg = fgb.BulgeGraph.from_dotbracket("((((...))).)")
-        self.assertEqual(bg.define_a("i0"), [1,2,10,12])
+        self.assertEqual(bg.define_a("i0"), [1, 2, 10, 12])
         bg = fgb.BulgeGraph.from_dotbracket("(..(((...))))")
-        self.assertEqual(bg.define_a("i0"), [1,4,12,13])
+        self.assertEqual(bg.define_a("i0"), [1, 4, 12, 13])
+
     def test_define_a_m(self):
         bg = fgb.BulgeGraph.from_dotbracket("((...))((...))")
-        self.assertEqual(bg.define_a("m0"), [7,8])
+        self.assertEqual(bg.define_a("m0"), [7, 8])
         bg = fgb.BulgeGraph.from_dotbracket("((...)).((...))")
-        self.assertEqual(bg.define_a("m0"), [7,9])
+        self.assertEqual(bg.define_a("m0"), [7, 9])
+
     def test_define_a_m_pk(self):
         bg = fgb.BulgeGraph.from_dotbracket("(([[[))]]]")
-        self.assertEqual(bg.define_a("m0"), [2,3])
-        self.assertEqual(bg.define_a("m1"), [5,6])
-        self.assertEqual(bg.define_a("m2"), [7,8])
+        self.assertEqual(bg.define_a("m0"), [2, 3])
+        self.assertEqual(bg.define_a("m1"), [5, 6])
+        self.assertEqual(bg.define_a("m2"), [7, 8])
+
     def test_define_a_ft(self):
         bg = fgb.BulgeGraph.from_dotbracket("..((...))..")
-        self.assertEqual(bg.define_a("f0"), [1,3])
-        self.assertEqual(bg.define_a("t0"), [9,11])
+        self.assertEqual(bg.define_a("f0"), [1, 3])
+        self.assertEqual(bg.define_a("t0"), [9, 11])

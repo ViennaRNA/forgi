@@ -8,6 +8,7 @@ import os.path as op
 import sys
 from optparse import OptionParser
 
+
 def main():
     usage = """
     python interior_loop_angles.py pdb_file
@@ -15,7 +16,7 @@ def main():
     Iterate over the interior loop angles and calculate how much of a kink
     they introduce between the two adjacent stems.
     """
-    num_args= 0
+    num_args = 0
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
@@ -30,11 +31,11 @@ def main():
     cg = ftmc.from_pdb(op.expanduser(args[0]))
     for iloop in cg.iloop_iterator():
         conn = cg.connections(iloop)
-        angle = ftuv.vec_angle(cg.coords[conn[0]][1] - cg.coords[conn[0]][0], cg.coords[conn[1]][1] - cg.coords[conn[1]][0])
+        angle = ftuv.vec_angle(
+            cg.coords[conn[0]][1] - cg.coords[conn[0]][0], cg.coords[conn[1]][1] - cg.coords[conn[1]][0])
 
         fud.pv('iloop, angle')
 
 
 if __name__ == '__main__':
     main()
-

@@ -9,6 +9,7 @@ import forgi.utilities.debug as fud
 import sys
 from optparse import OptionParser
 
+
 def main():
     usage = """
     python fasta_to_reduced_graph.py fasta_file
@@ -17,7 +18,7 @@ def main():
     fasta_file should be either a filename pointing to a fasta file
     or a dash (-) indicating that the input should come from stdin.
     """
-    num_args= 0
+    num_args = 0
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
@@ -42,7 +43,7 @@ def main():
     # ((..))
     bg = fgb.from_fasta_text(text)
 
-    prev=None
+    prev = None
     seen = set()
     out_str = ''
     elements_traversed = []
@@ -74,10 +75,10 @@ def main():
     print(out_str)
     print(",".join(elements_traversed))
 
-    for t,e in zip(out_str, elements_traversed):
+    for t, e in zip(out_str, elements_traversed):
         # print the sequences of each element in the reduced representation
         print(t, e, bg.get_define_seq_str(e))
 
+
 if __name__ == '__main__':
     main()
-

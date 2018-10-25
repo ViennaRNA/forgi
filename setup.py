@@ -1,9 +1,19 @@
-from setuptools import setup
+from setuptools import setup, Extension
 from setuptools.command.build_py import build_py as _build_py
 import subprocess
 import os
-from Cython.Build import cythonize
+import itertools
+import warnings
+import numpy
 
+
+def try_cythonize(arg):
+  try:
+    from Cython.Build import cythonize
+    return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
+  except Exception as e:
+    print(e)
+    return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -29,32 +39,51 @@ try: #If we are in a git-repo, get git-describe version.
             # Apped the version number to init.py
             with open(outfile, "a") as of:
                 of.write('\n__complete_version__ = "{}"'.format(forgi_version))
-except OSError as e: #Outside of a git repo, do nothing.
+except: #Outside of a git repo, do nothing.
     build_py = _build_py
 
 
+extras = {"forgi.visual":["matplotlib>=2.0"],
+          "development":["cython"],
+          "classification":["scikit-learn"],
+          "pdbechem":['beautifulsoup4>=4.6']
+         }
+extras["all"]=list(itertools.chain(extras.values()))
+
 setup(
+      zip_safe=False,
       cmdclass={'build_py': build_py},
       name='forgi',
-      version='2.0-alpha',
+      version='2.0.1-alpha',
       description='RNA Graph Library',
       author='Peter Kerpedjiev, Bernhard Thiel',
       author_email='pkerp@tbi.univie.ac.at, thiel@tbi.univie.ac.at',
       license='GNU Affero GPL 3.0',
       url='http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      ext_modules = cythonize("forgi/threedee/utilities/cytvec.pyx"),
+      ext_modules = try_cythonize("forgi/threedee/utilities/cytvec"), 
       packages=['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
                 'forgi.threedee.classification',
                 'forgi._k2n_standalone', 'forgi.threedee.visual',
                 'forgi.visual', 'forgi.projection'],
-      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv']},
+      package_data={'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv', 'data/aminor_params.json']},
       scripts=['examples/rnaConvert.py',
                'examples/describe_cg.py',
                'examples/compare_RNA.py',
-               'examples/visualize_cg.py',
-               'examples/visualize_pdb.py'],
+               'examples/visualize_rna.py',
+               'examples/forgi_config.py'],
+      install_requires=[
+		'numpy>=1.10.0',
+                'scipy>=0.19.1',
+                'networkx>=2.0',
+                'future',
+                'biopython',
+                'pandas>=0.20',
+                'appdirs>=1.4',
+                'logging_exceptions>=0.1.8',
+	],
+      extras_require=extras,
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         # How mature is this project? Common values are

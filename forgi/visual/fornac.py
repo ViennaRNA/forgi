@@ -30,11 +30,12 @@ This after the RNA container.
     </script>
 """
 
+
 def create_fornac_page_for_structure(bg, color_string):
     """
     Create a fornac page dispalying this structure. The dotbracket string
     and sequence will automatically be extracted from the BulgeGraph.
-    
+
     Colors can be specified as a dictionary containing floating 
     point values. These will be uniformly scaled according to the color
     scale passed in.
@@ -44,9 +45,10 @@ def create_fornac_page_for_structure(bg, color_string):
     :return: The html text of the resulting web page.
     """
     return fornac_template.format(bg.to_dotbracket_string(),
-                                  bg.seq, color_string) 
+                                  bg.seq, color_string)
 
-def scale_colors(colors_dict, cmap = None, reverse = False):
+
+def scale_colors(colors_dict, cmap=None, reverse=False):
     '''
     A dictionary with values containing scalars which need to 
     be scaled according to some color map. The keys are irrelevant.
@@ -64,7 +66,6 @@ def scale_colors(colors_dict, cmap = None, reverse = False):
         import matplotlib.pyplot as plt
         cmap = plt.get_cmap('Blues')
 
-
     values = colors_dict.values()
     min_value = min(values)
     max_value = max(values)
@@ -72,12 +73,16 @@ def scale_colors(colors_dict, cmap = None, reverse = False):
     new_dict = {}
     for key in colors_dict:
         if reverse:
-            color = cmap(1 - ((colors_dict[key] - min_value) / (max_value - min_value)))
+            color = cmap(
+                1 - ((colors_dict[key] - min_value) / (max_value - min_value)))
         else:
-            color = cmap((colors_dict[key] - min_value) / (max_value - min_value))
-        new_dict[key] = (int(255 * color[0]), int(255 * color[1]), int(255 * color[2]))
+            color = cmap(
+                (colors_dict[key] - min_value) / (max_value - min_value))
+        new_dict[key] = (int(255 * color[0]),
+                         int(255 * color[1]), int(255 * color[2]))
 
     return new_dict
+
 
 def element_to_nucleotide_colors(bg, element_colors):
     '''
@@ -93,6 +98,7 @@ def element_to_nucleotide_colors(bg, element_colors):
 
     return new_dict
 
+
 def nucleotide_colors_to_fornac_color_string(nucleotide_colors):
     '''
     Convert a dictionary of per nucleotide colors to a fornac
@@ -105,8 +111,7 @@ def nucleotide_colors_to_fornac_color_string(nucleotide_colors):
     color_string = ""
     for key in nucleotide_colors:
         color_string += "{}:rgb({},{},{}) ".format(key, nucleotide_colors[key][0],
-                                                        nucleotide_colors[key][1],
-                                                        nucleotide_colors[key][2])
+                                                   nucleotide_colors[key][1],
+                                                   nucleotide_colors[key][2])
 
     return color_string
-

@@ -7,11 +7,22 @@ import appdirs
 log = logging.getLogger(__name__)
 
 dirs = appdirs.AppDirs("forgi", "TBI")
+ALLOWED_KEY_VALUES = {"PDB_ANNOTATION_TOOL": ["MC-Annotate", "DSSR", "forgi"]}
+
+
+def iter_configfiles():
+    """
+    Iterate over config file locations, from lowest priority to highest priority.
+    The file does not hve to exist.
+    """
+    for directory in [dirs.site_config_dir, dirs.user_config_dir]:
+        filename = os.path.join(directory, "config.json")
+        yield filename
+
 
 def read_config():
     config = {}
-    for directory in [dirs.site_config_dir, dirs.user_config_dir]:
-        filename = os.path.join(directory, "config.json")
+    for filename in iter_configfiles():
         try:
             with open(filename) as f:
                 conf = json.load(f)
@@ -23,19 +34,3 @@ def read_config():
             config.update(conf)
 
     return config
-
-def set_config(key, value):
-    filename = os.path.join(dirs.user_config_dir, "config.json")
-    try:
-        with open(filename) as f:
-            config = json.load(f)
-    except (OSError, IOError):
-        config = {}
-    config[key]=value
-    try:
-        os.makedirs(dirs.user_config_dir)
-    except OSError:
-        pass
-    with open(filename, "w") as f:
-        json.dump(config, f)
-        log.info("Configuration file %s updated", filename)
