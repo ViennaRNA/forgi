@@ -931,7 +931,7 @@ class BulgeGraph(BaseGraph):
             # 15 20
             s1 = self.defines[c[0]]
             s2 = self.defines[c[1]]
-
+            log.debug("Getting bulge dimensions for %s", bulge)
             return get_define_len([s1[1] + 1, s2[0] - 1]), get_define_len([s2[3] + 1, s1[2] - 1])
         else:
             if bd:

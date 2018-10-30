@@ -479,7 +479,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
             log.debug("PDB header %s", parser.header)
             mr = parser.header["missing_residues"]
         except AttributeError:  # A mmCIF parser
-            cifdict = bpdb.MMCIF2Dict.MMCIF2Dict(in_filename)
+            cifdict = parser._mmcif_dict # We read a private attribute here, because parsing the mmcif dictionary a second time would cause a performance penalty.
             mr = []
             try:
                 mask = np.array(
