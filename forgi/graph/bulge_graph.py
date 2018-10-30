@@ -896,8 +896,10 @@ class BulgeGraph(BaseGraph):
                     self.defines[node][1] - self.defines[node][0] + 1)
             """
         else:
-            return self.get_bulge_dimensions(node, with_missing)
-
+            bd = self.get_bulge_dimensions(node, with_missing)
+            log.debug("BulgeDimensions of %s are %s", node, bd)
+            return bd
+    
     def get_bulge_dimensions(self, bulge, with_missing=False):
         """
         Return the dimensions of the bulge.
