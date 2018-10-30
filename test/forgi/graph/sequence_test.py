@@ -290,3 +290,4 @@ class NonIndexingTests(unittest.TestCase):
         self.assertEqual(self.seq1.with_missing.define_length([4, 5]), 3)
         self.assertEqual(self.seq1.with_missing.define_length([4, 5, 7, 7]), 4)
         self.assertEqual(self.seq1.with_missing.define_length([]), 0)
+        self.assertEqual(self.seq1.with_missing.define_length([5,4]), 0) # Slices with start>end are empty
