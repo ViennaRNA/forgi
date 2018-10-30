@@ -701,8 +701,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     elem_coords, ftuv.standard_basis, basis) + origin
                 return new_coords
             except KeyError as e:
-                log.error(
-                    "Using OLD vres for loops: %s for pos %s in elem %s.", e, pos, elem)
+                try:
+                    self._has_warned_old_vres
+                except NameError:
+                    self._has_warned_old_vres = set()
+                if elem not in self._has_warned_old_vres:
+                    log.warning(
+                        "Using old virtual residues for loops: %s for pos %s in elem %s.", e, pos, elem)
+                    self._has_warned_old_vres.add(elem)
                 if not allow_single_stranded:
                     raise ValueError(
                         "Position {} is not in a stem! It is in {}.".format(pos, elem))
