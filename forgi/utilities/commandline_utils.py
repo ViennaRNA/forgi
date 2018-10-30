@@ -74,7 +74,7 @@ def get_rna_input_parser(helptext, nargs=1, rna_type="any", enable_logging=True,
                                      help="When reading pdb-files: Only extract the given chain(s). Comma-seperated")
         pdb_input_group.add_argument("--pdb-secondary-structure", type=str, default="",
                                      help="When reading a single chain from a pdb-files: \nEnforce the secondary structure given as dotbracket\n string. (This only works, if --chain is given!)")
-        pdb_input_group.add_argument("--pdb-annotation_tool", type=str, default=None,
+        pdb_input_group.add_argument("--pdb-annotation-tool", type=str, default=None,
                                      help="What program to use for detecting basepairs in PDB/ MMCIF structures."
                                      " This commandline option overrides the value in the config file (if present)."
                                      "If this is not present and no config-file is given, we try to detect the installed programs.")
@@ -98,6 +98,11 @@ def cgs_from_args(args, nargs=1, rna_type="any", enable_logging=True, return_fil
             allow_many = False
         else:
             allow_many = True
+        if rna_type == "only_cg":
+            args.chains = None
+            args.pseudoknots = None
+            args.pdb_secondary_structure = None
+            args.pdb_annotation_tool = None
         if args.chains:
             load_chains = args.chains.split(",")
         else:
