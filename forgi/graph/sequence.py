@@ -762,6 +762,8 @@ class Sequence(object):
         val = 0
         for i in range(0, len(d), 2):
             val += d[i + 1] - d[i] + 1
+        log.debug("Define length of %s without missing is %s", d, val)
+
         return val
 
     def _export_missing(self):
