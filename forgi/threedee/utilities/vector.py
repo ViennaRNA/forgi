@@ -906,8 +906,7 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     :param s2_p0: The start of the second segment
     :param s2_p1: The end of the second segment
 
-    :return: A tuple of points (i1,i2) containing the point i1 on s1
-        closest to the point i2 on segment s2.
+    :return: True or False
     '''
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
