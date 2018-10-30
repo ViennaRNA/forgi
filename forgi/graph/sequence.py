@@ -254,6 +254,8 @@ class _WMIndexer(_IndexHelper):
         for i in range(0, len(d), 2):
             val += sum(1 for _ in self._iter_resids(
                 self.to_resid(d[i]), self.to_resid(d[i + 1])))
+            log.debug("Define length of %s with missing incremented to %s", d, val)
+        log.debug("Define length of %s with missing is finally %s", d, val)
         return val
 
 
