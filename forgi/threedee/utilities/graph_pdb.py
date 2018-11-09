@@ -706,7 +706,7 @@ def stem_from_chains(cg, chains, elem_name):
                 stem_chain.add(residue)
             new_residue_ids.append(residue.id)
     rotran = ftup.pdb_rmsd(stem_chain, ideal_chain, sidechains=False,
-                           superimpose=True, apply_sup=False)[2]
+                           superimpose=True )[2]
 
     # average length of a base-pair: 2.547
     mult = 0.01  # Stems with 1 bp have a tiny length

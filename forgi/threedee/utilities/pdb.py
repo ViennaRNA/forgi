@@ -212,7 +212,8 @@ def noncovalent_distances(chain, cutoff=0.3):
     return [ftuv.magnitude(c[1] - c[0]) for c in contacts if not is_covalent(c)]
 
 
-def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
+
+def pdb_rmsd(c1, c2, sidechains=False, superimpose=True ):
     '''
     Calculate the all-atom rmsd between two RNA chains.
 
@@ -220,11 +221,14 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     :param c2: Another Bio.PDB.Chain
     :return: The rmsd between the locations of all the atoms in the chains.
     '''
-    import forgi.threedee.model.similarity as ftms
     c1_list = [cr for cr in c1.get_list() if cr.resname.strip()
                in RNA_RESIDUES]
     c2_list = [cr for cr in c2.get_list() if cr.resname.strip()
                in RNA_RESIDUES]
+    return residuelist_rmsd(c1_list, c2_list, sidechains, superimpose )
+
+def residuelist_rmsd(c1_list, c2_list, sidechains=False, superimpose=True):
+    import forgi.threedee.model.similarity as ftms
 
     if len(c1_list) != len(c2_list):
         raise Exception(
@@ -240,7 +244,7 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     for r1, r2 in zip(c1_list, c2_list):
         if sidechains:
             anames = nonsidechain_atoms + \
-                side_chain_atoms[c1[i].resname.strip()]
+                side_chain_atoms[r1.resname.strip()]
         else:
             anames = nonsidechain_atoms
         #anames = a_5_names + a_3_names
@@ -266,9 +270,6 @@ def pdb_rmsd(c1, c2, sidechains=False, superimpose=True, apply_sup=False):
     if superimpose:
         sup = bpdb.Superimposer()
         sup.set_atoms(all_atoms1, all_atoms2)
-
-        if apply_sup:
-            sup.apply(c2.get_atoms())
 
         return (len(all_atoms1), sup.rms, sup.rotran, dev_per_res)
     else:

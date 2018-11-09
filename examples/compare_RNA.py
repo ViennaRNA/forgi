@@ -47,17 +47,28 @@ def main(args):
         if showall or args.rmsd:
             print("RMSD:\t{:.3f}".format(ftms.cg_rmsd(cg1, cg2)))
         if showall or args.pdb_rmsd:
-            if cg1.chains.keys() == cg2.chains.keys() and cg1.chains != {}:
-                for chain in cg1.chains:
-                    print("PDB-RMSD (chain {}):\t{:.3f}".format(chain,
-                                                                ftup.pdb_rmsd(cg1.chains[chain], cg2.chains[chain])[1]))
-            else:
+            if not pdb_rmsd(cg1, cg2):
                 # If --pdb-rmsd was not given, just don't print it.
                 # If it was given, we exit with non-zero exit status.
                 if args.pdb_rmsd:
                     print(
                         "Cannot calculate PDB-RMSD: The two files do not contain the same chains.")
                     sys.exit(1)
+
+def pdb_rmsd(cg1, cg2):
+    common_chains = set(cg1.chains.keys()) & set(cg2.chains.keys())
+    reslist1 = []
+    reslist2 = []
+    for chain in common_chains:
+        reslist1.extend(cr for cr in cg1.chains[chain].get_list() 
+                         if cr.resname.strip() in ftup.RNA_RESIDUES)
+        reslist2.extend(cr for cr in cg2.chains[chain].get_list() 
+                         if cr.resname.strip() in ftup.RNA_RESIDUES)
+    if common_chains:
+        print("PDB-RMSD (chains {}):\t{:.3f}".format("-".join(common_chains),
+              ftup.residuelist_rmsd(reslist1, reslist2, sidechains=True)[1]))
+        return True
+    return False
 
 
 parser = get_parser()
