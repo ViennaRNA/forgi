@@ -17,6 +17,8 @@ Main Library Code - CITING
 Peter Kerpedjiev, Christian Höner zu Siederdissen and Ivo L. Hofacker
 *RNA* (**2015**), http://dx.doi.org/10.1261/rna.047522.114
 
+For the pseudoknot removal code, see citation below.
+
 Contributions
 -------------
 
@@ -39,10 +41,10 @@ We thank Sandra Smit for providing us with the code of the knotted2nested standa
 a stripped down version of code available as part of the PyCogent package.
 If you use this part of the library, please cite the paper mentioned below.
 
-The full source code is available as the pycogent package under the GPL License:
+The full source code is available in the pycogent package under the GPL License:
 
 ========   ==================================================================
-Used_in    forgi.aux.k2n_standalone
+Used_in    forgi._k2n_standalone
 URI        https://github.com/pycogent/pycogent
 License    GPL
 Year       2007 - 2008
