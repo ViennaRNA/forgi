@@ -72,6 +72,7 @@ setup(
                'examples/describe_cg.py',
                'examples/compare_RNA.py',
                'examples/visualize_rna.py',
+               'examples/pseudoknot_analyzer.py',
                'examples/forgi_config.py'],
       install_requires=[
 		'numpy>=1.10.0',
