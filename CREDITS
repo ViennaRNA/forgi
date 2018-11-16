@@ -44,7 +44,7 @@ If you use this part of the library, please cite the paper mentioned below.
 The full source code is available as the pycogent package under the GPL License:
 
 ========   ==================================================================
-Used_in    forgi.aux.k2n_standalone
+Used_in    forgi._k2n_standalone
 URI        https://github.com/pycogent/pycogent
 License    GPL
 Year       2007 - 2008
