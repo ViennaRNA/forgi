@@ -1,5 +1,6 @@
 from forgi.graph.transform_graphs import _GCDummy, BGTransformer
 
+
 class CGTransformer(BGTransformer):
     def condensed(self):
         """

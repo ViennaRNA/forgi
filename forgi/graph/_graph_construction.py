@@ -19,12 +19,14 @@ class _BulgeGraphConstruction(BaseGraph):
     holds no sequence information and uses arbitrary graph labels during
     it's intialization!
     """
+
     def __init__(self, tuples):
         self.defines = {}
         self.edges = defaultdict(set)
         self.weights = {}
         self._name_counter = 0
         self.from_tuples(tuples)
+
     def from_tuples(self, tuples):
         """
         Create a bulge_graph from a list of pair tuples. Unpaired
@@ -33,7 +35,7 @@ class _BulgeGraphConstruction(BaseGraph):
         stems = []
         bulges = []
 
-        tuples.sort() #We move along the backbone
+        tuples.sort()  # We move along the backbone
         tuples = iter(tuples)
         (t1, t2) = next(tuples)
 
@@ -47,11 +49,11 @@ class _BulgeGraphConstruction(BaseGraph):
         for t1, t2 in tuples:
             (from_bp, to_bp) = (t1, t2)
 
-            if abs(to_bp - prev_to) == 1 and prev_to != 0: #adjacent basepairs on 3' strand
+            if abs(to_bp - prev_to) == 1 and prev_to != 0:  # adjacent basepairs on 3' strand
                 # stem
                 if (((prev_to - prev_from > 0 and to_bp - from_bp > 0) or
-                         (prev_to - prev_from < 0 and to_bp - from_bp < 0)) and
-                            (to_bp - prev_to) == -(from_bp - prev_from)):
+                     (prev_to - prev_from < 0 and to_bp - from_bp < 0)) and
+                        (to_bp - prev_to) == -(from_bp - prev_from)):
                     (prev_from, prev_to) = (from_bp, to_bp)
                     last_paired = from_bp
                     continue
@@ -111,7 +113,8 @@ class _BulgeGraphConstruction(BaseGraph):
             ss2 = stems[i][0][1] + 1
             se1 = stems[i][1][0] + 1
             se2 = stems[i][1][1] + 1
-            log.debug("stem define not sorted: %s %s %s %s", ss1, ss2, se1, se2)
+            log.debug("stem define not sorted: %s %s %s %s",
+                      ss1, ss2, se1, se2)
             log.debug("self.defines %s", self.defines)
 
             self.defines['y%d' % (i)] = [min(ss1, se1), max(ss1, se1),
@@ -123,21 +126,23 @@ class _BulgeGraphConstruction(BaseGraph):
             self.defines['b%d' % (i)] = sorted([bulge[0] + 1, bulge[1] + 1])
             self.weights['b%d' % (i)] = 1
 
-
         log.debug("from_stems_and_bulges: %s; %s", self.defines, self.edges)
         self.create_bulge_graph(stems, bulges)
-        log.debug("after create_bulge_graph: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
+        log.debug("after create_bulge_graph: DEFINES:\n %s;\n EDGES:\n %s", pformat(
+            self.defines), pformat(self.edges))
         self.create_stem_graph(stems, len(bulges))
-        log.debug("after create_stem_graph: DEFINES \n%s;\nEDGES \n%s", pformat(self.defines), pformat(self.edges))
+        log.debug("after create_stem_graph: DEFINES \n%s;\nEDGES \n%s",
+                  pformat(self.defines), pformat(self.edges))
         self.collapse()
-        log.debug("after collapse: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
+        log.debug("after collapse: DEFINES:\n %s;\n EDGES:\n %s",
+                  pformat(self.defines), pformat(self.edges))
         self.sort_defines()
-        log.debug("after _sort_defines: DEFINES:\n%s;\n EDGES:\n%s", pformat(self.defines), pformat(self.edges))
+        log.debug("after _sort_defines: DEFINES:\n%s;\n EDGES:\n%s",
+                  pformat(self.defines), pformat(self.edges))
         self.relabel_nodes()
-        log.debug("after relabel_nodes: DEFINES:\n %s;\n EDGES:\n %s", pformat(self.defines), pformat(self.edges))
+        log.debug("after relabel_nodes: DEFINES:\n %s;\n EDGES:\n %s",
+                  pformat(self.defines), pformat(self.edges))
         self.remove_degenerate_nodes()
-
-
 
     def remove_degenerate_nodes(self):
         """
@@ -151,7 +156,6 @@ class _BulgeGraphConstruction(BaseGraph):
         for r in to_remove:
             remove_vertex(self, r)
 
-
     def sort_defines(self):
         """
         Sort the defines of interior loops and stems so that the 5' region
@@ -164,7 +168,6 @@ class _BulgeGraphConstruction(BaseGraph):
                 if d[0] > d[2]:
                     new_d = [d[2], d[3], d[0], d[1]]
                     self.defines[k] = new_d
-
 
     def reduce_defines(self):
         """
@@ -188,7 +191,8 @@ class _BulgeGraphConstruction(BaseGraph):
                     j = new_j
                     new_j += j + 2
 
-                    (f1, t1) = (int(self.defines[key][j]), int(self.defines[key][j + 1]))
+                    (f1, t1) = (int(self.defines[key][j]), int(
+                        self.defines[key][j + 1]))
 
                     # remove bulges of length 0
                     if f1 == -1 and t1 == -2:
@@ -205,7 +209,8 @@ class _BulgeGraphConstruction(BaseGraph):
                             # which would imply a non-existant loop at its end
                             continue
 
-                        (f2, t2) = (int(self.defines[key][k]), int(self.defines[key][k + 1]))
+                        (f2, t2) = (int(self.defines[key][k]), int(
+                            self.defines[key][k + 1]))
 
                         if t2 + 1 != f1 and t1 + 1 != f2:
                             continue
@@ -252,10 +257,11 @@ class _BulgeGraphConstruction(BaseGraph):
 
             if v[0] == 's':
                 self.defines[new_vertex] = self.defines.get(new_vertex, []) + [self.defines[v][0],
-                                                            self.defines[v][2]] + [
-                                                            self.defines[v][1], self.defines[v][3]]
+                                                                               self.defines[v][2]] + [
+                    self.defines[v][1], self.defines[v][3]]
             else:
-                self.defines[new_vertex] = self.defines.get(new_vertex, []) + self.defines[v]
+                self.defines[new_vertex] = self.defines.get(
+                    new_vertex, []) + self.defines[v]
 
             self.weights[new_vertex] += 1
 
@@ -330,17 +336,18 @@ class _BulgeGraphConstruction(BaseGraph):
         :returns: None
         """
         # print "stems:", stems
-        for i,j in it.combinations(range(len(stems)), 2):
+        for i, j in it.combinations(range(len(stems)), 2):
             for k1, k2, l1, l2 in it.product(range(2), repeat=4):
                 s1 = stems[i][k1][l1]
                 s2 = stems[j][k2][l2]
-                if k1==1 and stems[i][0][l1]==stems[i][1][l1]:
+                if k1 == 1 and stems[i][0][l1] == stems[i][1][l1]:
                     continue
-                if k2==1 and stems[j][0][l2]==stems[j][1][l2]:
+                if k2 == 1 and stems[j][0][l2] == stems[j][1][l2]:
                     continue
                 if abs(s1 - s2) == 1:
                     bn = 'b{}'.format(bulge_counter)
-                    log.debug("Adding bulge %s between %s and %s. (%s is next to %s ) k1 %s, k2 %s, l1 %s, l2 %s", bn, stems[i], stems[j], s1, s2, k1, k2, l1, l2)
+                    log.debug("Adding bulge %s between %s and %s. (%s is next to %s ) k1 %s, k2 %s, l1 %s, l2 %s",
+                              bn, stems[i], stems[j], s1, s2, k1, k2, l1, l2)
                     # self.defines[bn] = [min(s1, s2)+1, max(s1, s2)+1]
                     self.defines[bn] = []
                     self.weights[bn] = 1
@@ -353,7 +360,7 @@ class _BulgeGraphConstruction(BaseGraph):
 
                     bulge_counter += 1
 
-        for d in list(self.defines.keys()): #0-nt Hairpins
+        for d in list(self.defines.keys()):  # 0-nt Hairpins
             if d[0] != 'y':
                 continue
 
@@ -392,7 +399,7 @@ class _BulgeGraphConstruction(BaseGraph):
         seq_length = 0
         for d in self.defines:
             for r in self.define_range_iterator(d):
-                seq_length += r[1]-r[0]+1
+                seq_length += r[1] - r[0] + 1
 
         for d in self.defines.keys():
             if d[0] == 'y' or d[0] == 's':
@@ -416,8 +423,8 @@ class _BulgeGraphConstruction(BaseGraph):
                 continue
 
             if (len(self.edges[d]) == 1 and
-                        self.defines[d][0] != 1 and
-                        self.defines[d][1] != seq_length):
+                self.defines[d][0] != 1 and
+                    self.defines[d][1] != seq_length):
                 hairpins += [d]
                 continue
 
@@ -443,14 +450,13 @@ class _BulgeGraphConstruction(BaseGraph):
             d, = threeprimes
             relabel_node(self, d, 't0')
         for i, d in enumerate(stems):
-            relabel_node(self,d, 's%d' % (i))
+            relabel_node(self, d, 's%d' % (i))
         for i, d in enumerate(interior_loops):
-            relabel_node(self,d, 'i%d' % (i))
+            relabel_node(self, d, 'i%d' % (i))
         for i, d in enumerate(multiloops):
-            relabel_node(self,d, 'm%d' % (i))
+            relabel_node(self, d, 'm%d' % (i))
         for i, d in enumerate(hairpins):
-            relabel_node(self,d, 'h%d' % (i))
-
+            relabel_node(self, d, 'h%d' % (i))
 
     def compare_stems(self, b):
         """
@@ -458,7 +464,7 @@ class _BulgeGraphConstruction(BaseGraph):
         """
         return (self.defines[b][0], 0)
 
-    def compare_bulges(self, b, flank_nucs = False):
+    def compare_bulges(self, b, flank_nucs=False):
         """
         A function that can be passed in as the key to a sort.
 
@@ -494,7 +500,6 @@ class _BulgeGraphConstruction(BaseGraph):
                     self.edges['b{}'.format(j)].add('y{}'.format(i))
 
 
-
 def any_difference_of_one(stem, bulge):
     """
     See if there's any difference of one between the two
@@ -514,6 +519,7 @@ def any_difference_of_one(stem, bulge):
                     return True
     return False
 
+
 def remove_vertex(bg, v):
     """
     Delete a node after merging it with another
@@ -531,6 +537,7 @@ def remove_vertex(bg, v):
     # delete all edges from this node
     del bg.edges[v]
     del bg.defines[v]
+
 
 def relabel_node(bg, old_name, new_name):
     """
@@ -551,7 +558,7 @@ def relabel_node(bg, old_name, new_name):
     del bg.edges[old_name]
     bg.edges[new_name] = edge
 
-    #replace the name of any edge that pointed to old_name
+    # replace the name of any edge that pointed to old_name
     for k in bg.edges.keys():
         new_edges = set()
         for e in bg.edges[k]:

@@ -13,7 +13,8 @@ import numpy as np
 import sys
 from optparse import OptionParser
 
-def calculate_burial(kd, position, directions, radius=5, step_size=1., max_dist = 500):
+
+def calculate_burial(kd, position, directions, radius=5, step_size=1., max_dist=500):
     '''
     Calculate how far we need to travel from this position until we
     arrive at a region with no atoms within the search radius.
@@ -36,7 +37,7 @@ def calculate_burial(kd, position, directions, radius=5, step_size=1., max_dist 
 
         while ftuv.magnitude((new_pos - position)) < max_dist:
             kd.search(new_pos, float(radius))
-            #kd.all_search(10)
+            # kd.all_search(10)
             neighbors = kd.get_indices()
 
             distance = ftuv.magnitude(new_pos - position)
@@ -48,17 +49,20 @@ def calculate_burial(kd, position, directions, radius=5, step_size=1., max_dist 
 
     return min(distances)
 
+
 def main():
     usage = """
     python burial.py pdb_file
 
     Calculate how buried each nucleotide is in this PDB file.
     """
-    num_args= 1
+    num_args = 1
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-r', '--radius', dest='radius', default=5, help="The radius of the search ball", type='float')
-    parser.add_option('-s', '--step-size', dest='step_size', default=1, help="The size of each step in the depth search", type='float')
+    parser.add_option('-r', '--radius', dest='radius', default=5,
+                      help="The radius of the search ball", type='float')
+    parser.add_option('-s', '--step-size', dest='step_size', default=1,
+                      help="The size of each step in the depth search", type='float')
     #parser.add_option('-u', '--useless', dest='uselesss', default=False, action='store_true', help='Another useless option')
 
     (options, args) = parser.parse_args()
@@ -67,7 +71,8 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    all_directions = np.array(ftuv.GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints = 45))
+    all_directions = np.array(
+        ftuv.GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45))
 
     chain = ftup.load_structure(args[0])
     atoms = bpdb.Selection.unfold_entities(chain, 'A')
@@ -76,10 +81,10 @@ def main():
     kd = bkd.KDTree(3)
     kd.set_coords(atom_coords)
 
-    for i,r in enumerate(chain.get_list()):
+    for i, r in enumerate(chain.get_list()):
         distance = calculate_burial(kd, r["C1'"].get_coord(),
                                     all_directions, radius=options.radius,
-                                   step_size = options.step_size)
+                                    step_size=options.step_size)
 
         print("{}:{}".format(r, distance))
         pass

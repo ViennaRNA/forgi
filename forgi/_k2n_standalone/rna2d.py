@@ -24,13 +24,15 @@ Provides following classes:
     StructureNode: for tree representation of nested RNA structure.
 """
 
+
 class keep_chars(object):
     """Returns a filter object o(s): call to return a filtered string.
 
     Specifically, strips out everything in s that is not in keep.
     This filter is case sensitive by default.
     """
-    allchars = str.maketrans('','')
+    allchars = str.maketrans('', '')
+
     def __init__(self, keep, case_sens=True):
         """Returns a new keep_chars object, based on string keep"""
         if not case_sens:
@@ -41,11 +43,15 @@ class keep_chars(object):
 
     def __call__(self, s, a=None, d=None):
         """f(s) -> s, translates using self.allchars and self.delchars"""
-        if a is None: a = self.allchars
-        if d is None: d = self.delchars
-        return s.translate(a,d)
+        if a is None:
+            a = self.allchars
+        if d is None:
+            d = self.delchars
+        return s.translate(a, d)
+
 
 maybe_number = keep_chars('0123456789.+-eE')
+
 
 def float_from_string(data):
     """Extracts a floating point number from string in data, if possible."""
@@ -55,6 +61,7 @@ def float_from_string(data):
 class PairError(ValueError):
     """Base class for errors in pairing."""
     pass
+
 
 class Partners(list):
     """Holds list p such that p[i] is the index of the partner of i, or None.
@@ -73,20 +80,21 @@ class Partners(list):
     the EmptyPartners(n) factory function to get an empty Partners list of
     length n.
     """
+
     def __setitem__(self, index, item):
         """Sets self[index] to item, enforcing integrity constraints."""
         if index == item:
             raise ValueError("Cannot set base %s to pair with itself." % item)
-        #if item already paired, raise Error or make partner unpaired
+        # if item already paired, raise Error or make partner unpaired
         if item and self[item]:
             self[self[item]] = None
-        #if already paired, need to make partner unpaired
+        # if already paired, need to make partner unpaired
         curr_partner = self[index]
         if curr_partner is not None:
             list.__setitem__(self, curr_partner, None)
-        #set self[index] to item
+        # set self[index] to item
         list.__setitem__(self, index, item)
-        #if item is not None, set self[item] to index
+        # if item is not None, set self[item] to index
         if item is not None:
             list.__setitem__(self, item, index)
 
@@ -107,7 +115,8 @@ class Partners(list):
         raise NotImplementedError
 
     __delitem__ = __delslice__ = __iadd__ = __imul__ = __setslice__ = append \
-    = extend = insert = pop = remove = reverse = sort = _not_implemented
+        = extend = insert = pop = remove = reverse = sort = _not_implemented
+
 
 def EmptyPartners(length):
     """Returns empty list of Partners with specified length."""
@@ -121,6 +130,7 @@ class Pairs(list):
     perform any validation. Useful as an intermediate in many different
     calculations.
     """
+
     def toPartners(self, length, offset=0, strict=True):
         """Returns a Partners object, if possible.
 
@@ -136,8 +146,8 @@ class Pairs(list):
 
             if result[upstream] or result[downstream]:
                 if strict:
-                    raise ValueError("Pairs contain conflicting partners: %s"\
-                        % self)
+                    raise ValueError("Pairs contain conflicting partners: %s"
+                                     % self)
             result[upstream] = downstream
         return result
 
@@ -152,11 +162,11 @@ class Pairs(list):
         strict specifies whether collisions cause fatal errors.
         """
         if self.hasPseudoknots():
-            raise Exception("Pairs contains pseudoknots %s"%(self))
+            raise Exception("Pairs contains pseudoknots %s" % (self))
 
         try:
             length = int(length)
-        except ValueError: #raised when length can't be converted to int
+        except ValueError:  # raised when length can't be converted to int
             length = len(length)
 
         p = self.directed()
@@ -170,8 +180,8 @@ class Pairs(list):
 
             if strict:
                 if (result[upstream] != '.') or (result[downstream] != '.'):
-                    raise ValueError("Pairs contain conflicting partners: %s"\
-                        % self)
+                    raise ValueError("Pairs contain conflicting partners: %s"
+                                     % self)
             result[upstream] = '('
             result[downstream] = ')'
         return ViennaStructure(''.join(result))
@@ -207,7 +217,7 @@ class Pairs(list):
         seen = {}
         for up, down in self:
             if (up is None) or (down is None):
-                continue    #omit unpaired bases
+                continue  # omit unpaired bases
             if up > down:
                 up, down = down, up
             seen[(up, down)] = True
@@ -235,7 +245,7 @@ class Pairs(list):
         pseudoknot if checked_up<good_down and checked_down>good_down
         """
         pairs = self.directed()
-        seen = [] # list of pairs against which you compare each time
+        seen = []  # list of pairs against which you compare each time
         pairs.sort()
         for pair in pairs:
             if not seen:
@@ -247,18 +257,17 @@ class Pairs(list):
                     if not seen:
                         break
                     else:
-                        lastseen_up,lastseen_down = seen[-1]
+                        lastseen_up, lastseen_down = seen[-1]
                 if not seen:
                     seen.append(pair)
                     continue
-                if pair[1]>lastseen_down:
-                    #pseudoknot found
+                if pair[1] > lastseen_down:
+                    # pseudoknot found
                     return True
                 else:
-                    #good pair
+                    # good pair
                     seen.append(pair)
         return False
-
 
     def hasConflicts(self):
         """Returns True if the pair list contains conflicts.
@@ -271,30 +280,32 @@ class Pairs(list):
             #print >>sys.stderr, "first:", first, "second:", second
             if first is None:
                 if second is None:
-                    continue    #no pairing info
+                    continue  # no pairing info
                 else:
-                    first, second = second, first   #swap order so None is 2nd
-            if second is None: #check first isn't paired
+                    first, second = second, first  # swap order so None is 2nd
+            if second is None:  # check first isn't paired
                 if partners.get(first, None) is not None:
                     return True
                 else:
                     partners[first] = None
-            else:   #first and second were both non-empty: check partners
+            else:  # first and second were both non-empty: check partners
                 if first in partners:
                     if partners[first] != second:
                         print("here2", file=sys.stderr)
-                        print("first:", first, "second:", second, "partners[first]", partners[first], file=sys.stderr)
+                        print("first:", first, "second:", second,
+                              "partners[first]", partners[first], file=sys.stderr)
                         print("partners:", partners)
                         return True
                 if second in partners:
                     if partners[second] != first:
                         print("here3", file=sys.stderr)
-                        print("first:", first, "second:", second, "partners[second]:", partners[second], file=sys.stderr)
+                        print("first:", first, "second:", second,
+                              "partners[second]:", partners[second], file=sys.stderr)
                         return True
-                #add current pair to the list of constraints
+                # add current pair to the list of constraints
                 partners[first] = second
                 partners[second] = first
-        #can only get here if there weren't conflicts
+        # can only get here if there weren't conflicts
         return False
 
     def mismatches(self, sequence, pairs=None):
@@ -318,7 +329,6 @@ class Pairs(list):
         return mismatches
 
 
-
 class StructureString(str):
     """Base class for ViennaStructure and WussStructure. Immutable.
 
@@ -327,9 +337,9 @@ class StructureString(str):
     If you compare two StructureStrings the structure is the only important
     thing, since the energy is relative to the associated sequence.
     """
-    Alphabet=None
-    StartSymbols = ''      #dict of symbols that start base pairs
-    EndSymbols = ''        #dict of symbols that end base pairs
+    Alphabet = None
+    StartSymbols = ''  # dict of symbols that start base pairs
+    EndSymbols = ''  # dict of symbols that end base pairs
 
     def __new__(cls, Structure, Energy=None):
         """Returns new StructureString."""
@@ -337,9 +347,10 @@ class StructureString(str):
         if a:
             for i in Structure:
                 if i not in a:
-                    raise ValueError("Tried to include unknown symbol '%s'" % i)
+                    raise ValueError(
+                        "Tried to include unknown symbol '%s'" % i)
 
-        return str.__new__(cls,Structure)
+        return str.__new__(cls, Structure)
 
     def __init__(self, Structure='', Energy=None):
         """Initializes StructureString with Structure and optionally Energy."""
@@ -369,22 +380,22 @@ class StructureString(str):
         as a tree. Consequently, when you hit a closed base pair, you know
         that it it must pair with the last base pair you opened.
         """
-        num_bases = len(self) #number of bases
-        result = [None] * len(self) #array of None, one for each base
+        num_bases = len(self)  # number of bases
+        result = [None] * len(self)  # array of None, one for each base
         stack = []
         start = self.StartSymbols
         end = self.EndSymbols
         for i, symbol in enumerate(self):
-           if symbol in start:       #open a pair
-               stack.append(i)
-           elif symbol in end:     #close a pair
-               curr = stack.pop()  #return and delete last element
-               result[i] = curr #make i pair with the last element...
-               result[curr] = i #...and the last element pair with i
+            if symbol in start:  # open a pair
+                stack.append(i)
+            elif symbol in end:  # close a pair
+                curr = stack.pop()  # return and delete last element
+                result[i] = curr  # make i pair with the last element...
+                result[curr] = i  # ...and the last element pair with i
 
-        #test whether there are any open pairs left unaccounted for
+        # test whether there are any open pairs left unaccounted for
         if stack:
-           raise IndexError("Too many open pairs in structure:\n%s" % self)
+            raise IndexError("Too many open pairs in structure:\n%s" % self)
         return Partners(result)
 
     def toPairs(self):
@@ -400,23 +411,24 @@ class StructureString(str):
         start = self.StartSymbols
         end = self.EndSymbols
         for i, symbol in enumerate(self):
-           if symbol in start:       #open a pair
-               stack.append(i)
-           elif symbol in end:     #close a pair
-               result[stack.pop()] = i
-        #test whether there are any open pairs left unaccounted for
+            if symbol in start:  # open a pair
+                stack.append(i)
+            elif symbol in end:  # close a pair
+                result[stack.pop()] = i
+        # test whether there are any open pairs left unaccounted for
         if stack:
-           raise IndexError("Too many open pairs in structure:\n%s" % self)
-        return Pairs([(key,result[key]) for key in result])
+            raise IndexError("Too many open pairs in structure:\n%s" % self)
+        return Pairs([(key, result[key]) for key in result])
 
 
 class ViennaStructure(StructureString):
     """Contains a Vienna dot-bracket structure, possibly with energy."""
     Alphabet = dict.fromkeys('(.)')
-    StartSymbols = {'(':None}      #dict of symbols that start base pairs
-    EndSymbols =   {')':None}      #dict of symbols that end base pairs
+    StartSymbols = {'(': None}  # dict of symbols that start base pairs
+    EndSymbols = {')': None}  # dict of symbols that end base pairs
 
-def Vienna(data,Energy=None):
+
+def Vienna(data, Energy=None):
     """Tries to extract structure and energy from string data.
 
     Returns (structure, energy) where energy might be None.
@@ -432,6 +444,6 @@ def Vienna(data,Energy=None):
                 energy = float_from_string(pieces[1])
             except (TypeError, ValueError, IndexError):
                 energy = Energy
-        else: #energy given by user overrules the one in structure
+        else:  # energy given by user overrules the one in structure
             energy = Energy
     return ViennaStructure(pieces[0], energy)

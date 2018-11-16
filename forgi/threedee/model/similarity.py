@@ -24,13 +24,13 @@ except:
     def profile(f):
         return f
 
+
 class Incompareable(ValueError):
     """
     Raised if two objects are compared, which are incompareable.
 
     E.g. Coordinate sets of different length are incompareable with respect to the RMSD.
     """
-
 
 
 def ppv(tp, fp):
@@ -46,6 +46,7 @@ def ppv(tp, fp):
     except ZeroDivisionError:
         return float("nan")
 
+
 def sty(tp, fn):
     '''
     Calculate the sensitivity.
@@ -58,6 +59,7 @@ def sty(tp, fn):
         return tp / float(tp + fn)
     except ZeroDivisionError:
         return float("nan")
+
 
 def mcc(confusion_matrix):
     '''
@@ -90,10 +92,11 @@ class AdjacencyCorrelation(object):
     This is significantly faster than the confusion_matrix function, if
     many structures will be compared to the same reference structure.
     """
+
     def __init__(self, reference_cg, distance=25.0, bp_distance=16):
-        self._distance=distance
-        self._bp_distance=bp_distance
-        self._reference_interactions=self._get_interactions(reference_cg)
+        self._distance = distance
+        self._bp_distance = bp_distance
+        self._reference_interactions = self._get_interactions(reference_cg)
 
     @profile
     def _get_interactions(self, cg):
@@ -103,13 +106,14 @@ class AdjacencyCorrelation(object):
         ignore = set()
         for n1, n2 in it.combinations(cg.defines.keys(), r=2):
             if cg.connected(n1, n2):
-                ignore.add((n1,n2))
+                ignore.add((n1, n2))
                 continue
             bp_dist = cg.min_max_bp_distance(n1, n2)[0]
             if bp_dist < self._bp_distance:
-                ignore.add((n1,n2))
+                ignore.add((n1, n2))
 
-        interactions=set(cg.coords.elements_closer_than(self._distance, ignore))
+        interactions = set(
+            cg.coords.elements_closer_than(self._distance, ignore))
         return interactions
 
     def evaluate(self, cg):
@@ -123,23 +127,24 @@ class AdjacencyCorrelation(object):
                    correspond to the same RNA.
         :return: A dictionary like this: `{"tp": tp, "tn": tn, "fp": fp, "fn": fn}`
         '''
-        interactions=self._get_interactions(cg)
-        nodes=set(cg.defines.keys())
-        allIA=set()
+        interactions = self._get_interactions(cg)
+        nodes = set(cg.defines.keys())
+        allIA = set()
         for n1, n2 in it.combinations(nodes, r=2):
             if cg.connected(n1, n2):
                 continue
             bp_dist = cg.min_max_bp_distance(n1, n2)[0]
             if bp_dist < self._bp_distance:
                 continue
-            allIA.add(tuple(sorted((n1,n2))))
+            allIA.add(tuple(sorted((n1, n2))))
 
-        d={ "tp":0, "tn":0, "fp":0, "fn":0 }
-        d["tp"]=len(self._reference_interactions & interactions)
-        d["fp"]=len(interactions - self._reference_interactions)
-        d["fn"]=len(self._reference_interactions - interactions)
-        d["tn"]=len(allIA - (self._reference_interactions | interactions) )
+        d = {"tp": 0, "tn": 0, "fp": 0, "fn": 0}
+        d["tp"] = len(self._reference_interactions & interactions)
+        d["fp"] = len(interactions - self._reference_interactions)
+        d["fn"] = len(self._reference_interactions - interactions)
+        d["tn"] = len(allIA - (self._reference_interactions | interactions))
         return d
+
 
 def optimal_superposition(crds1, crds2):
     """
@@ -147,7 +152,8 @@ def optimal_superposition(crds1, crds2):
     using the Kabsch algorithm
     """
     if crds1.shape != crds2.shape:
-        raise Incompareable("Cannot superimpose coordinate lists of different length.")
+        raise Incompareable(
+            "Cannot superimpose coordinate lists of different length.")
     if crds1.shape[1] == 3 or crds1.shape[1] == 2:
         correlation_matrix = np.dot(np.transpose(crds1), crds2)
         v, s, w_tr = np.linalg.svd(correlation_matrix)
@@ -158,6 +164,8 @@ def optimal_superposition(crds1, crds2):
     else:
         raise ValueError("Wrong dimension of crds1. Needs to be an array of "
                          "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
+
+
 def cg_rmsd(cg1, cg2):
     '''
     Calculate the RMSD between two Coarse Grain models using their
@@ -177,16 +185,21 @@ def cg_rmsd(cg1, cg2):
                             "because they do not have the same number of "
                             "virtual residues.".format(cg1.name, cg2.name))
 
+
 def rmsd_contrib_per_element(cg1, cg2):
-    residues1, elems1 = cg1.get_ordered_virtual_residue_poss(return_elements = True)
-    residues2, elems2 = cg2.get_ordered_virtual_residue_poss(return_elements = True)
+    residues1, elems1 = cg1.get_ordered_virtual_residue_poss(
+        return_elements=True)
+    residues2, elems2 = cg2.get_ordered_virtual_residue_poss(
+        return_elements=True)
     if elems1 != elems2:
-        raise ValueError("RNAs with different structure are not compareable by RMSD.")
+        raise ValueError(
+            "RNAs with different structure are not compareable by RMSD.")
     diff_vecs = _pointwise_deviation(residues1, residues2)
     elem_devs = defaultdict(list)
     for i, elem in enumerate(elems1):
         elem_devs[elem].append(diff_vecs[i])
     return elem_devs
+
 
 def _pointwise_deviation(crds1, crds2, is_centered=False):
     """
@@ -203,6 +216,7 @@ def _pointwise_deviation(crds1, crds2, is_centered=False):
 
     return diff_vecs
 
+
 def rmsd_kabsch(crds1, crds2, is_centered=False):
     '''
     Center the coordinate vectors on their centroid
@@ -212,6 +226,7 @@ def rmsd_kabsch(crds1, crds2, is_centered=False):
 
     vec_lengths = np.sum(diff_vecs * diff_vecs, axis=1)
     return math.sqrt(sum(vec_lengths) / len(vec_lengths))
+
 
 def drmsd(coords1, coords2):
     '''
@@ -224,13 +239,16 @@ def drmsd(coords1, coords2):
     :param coords2: The vectors of the 'atoms' in the second structure.
     :return: The dRMSD measure.
     '''
-    ds1 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords1, r=2)])
-    ds2 = np.array([ftuv.vec_distance(c1, c2) for c1,c2 in it.combinations(coords2, r=2)])
+    ds1 = np.array([ftuv.vec_distance(c1, c2)
+                    for c1, c2 in it.combinations(coords1, r=2)])
+    ds2 = np.array([ftuv.vec_distance(c1, c2)
+                    for c1, c2 in it.combinations(coords2, r=2)])
 
     rmsd = math.sqrt(np.mean((ds1 - ds2) * (ds1 - ds2)))
     #rmsd = math.sqrt(np.mean(ftuv.vec_distance(ds1, ds2)))
 
     return rmsd
+
 
 def rmsd_qc_wrap(coords1, coords2, is_centered=False):
     r = rmsd_qc(coords1, coords2, is_centered)
@@ -238,8 +256,9 @@ def rmsd_qc_wrap(coords1, coords2, is_centered=False):
         return rmsd_kabsch(coords1, coords2, is_centered)
     return r
 
+
 try:
-    from py_qcprot import rmsd as rmsd_qc #Faster C version, if available
+    from py_qcprot import rmsd as rmsd_qc  # Faster C version, if available
     rmsd = rmsd_qc_wrap
 except:
     rmsd = rmsd_kabsch
@@ -248,15 +267,16 @@ except:
 def basepair_distance(cg1, cg2):
     # QUESTION Move to forgi.graph? or forgi.utilities
     # Note: An implementation in c (with python bindings) is available in the Vienna RNA package
-    dist=0
-    if str(cg1.seq) != str(cg2.seq): # Compare as strings, to ignore missing and mofified residues
-        raise Incompareable("We do not support a basepair distance between rnas with different sequences.")
+    dist = 0
+    if str(cg1.seq) != str(cg2.seq):  # Compare as strings, to ignore missing and mofified residues
+        raise Incompareable(
+            "We do not support a basepair distance between rnas with different sequences.")
     for stem in cg1.stem_iterator():
         for bp in cg1.stem_bp_iterator(stem):
-            if cg2.pairing_partner(bp[0])!=bp[1]:
-                dist+=1
+            if cg2.pairing_partner(bp[0]) != bp[1]:
+                dist += 1
     for stem in cg2.stem_iterator():
         for bp in cg2.stem_bp_iterator(stem):
-            if cg1.pairing_partner(bp[0])!=bp[1]:
-                dist+=1
+            if cg1.pairing_partner(bp[0]) != bp[1]:
+                dist += 1
     return dist

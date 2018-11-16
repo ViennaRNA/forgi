@@ -2,7 +2,8 @@
 from __future__ import division
 from builtins import map
 from builtins import range
-import timeit, sys
+import timeit
+import sys
 import itertools
 from collections import Counter
 
@@ -16,7 +17,7 @@ import warnings
 import logging
 #import scipy as sp
 
-log=logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 try:
     profile
 except:
@@ -39,6 +40,8 @@ standard_basis = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
 tau = 2 * math.pi
 
 # Seems to be unused
+
+
 def get_inter_distances(vecs):
     '''
     Calculate all of the distances between the points of vecs.
@@ -48,10 +51,11 @@ def get_inter_distances(vecs):
     '''
     distances = []
     for i in range(len(vecs)):
-        for j in range(i+1, len(vecs)):
+        for j in range(i + 1, len(vecs)):
             distances += [vec_distance(vecs[i], vecs[j])]
 
     return distances
+
 
 def get_random_vector(mult=1.):
     """
@@ -63,8 +67,9 @@ def get_random_vector(mult=1.):
     # Using rejection sampling to generate uniform distribution from points inside a sphere.
     # Thanks to http://stats.stackexchange.com/a/7984/90399
     while True:
-        vec=np.array([mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
-        if magnitude(vec)<=mult:
+        vec = np.array([mult * rand.uniform(-1, 1), mult *
+                        rand.uniform(-1, 1), mult * rand.uniform(-1, 1)])
+        if magnitude(vec) <= mult:
             return vec
 
 
@@ -81,7 +86,7 @@ def get_orthogonal_unit_vector(vec):
     return normalize(vec3)
 
 
-#def get_random_vector_pair(angle=rand.uniform(0, math.pi)) -> Removed, because it was never used.
+# def get_random_vector_pair(angle=rand.uniform(0, math.pi)) -> Removed, because it was never used.
 
 
 def get_double_alignment_matrix(vp1, vp2):
@@ -106,7 +111,8 @@ def get_double_alignment_matrix(vp1, vp2):
 
     comp1 = np.cross(vp1[1], vp1[0])
     #comp1 = np.cross(vp1[0], vp1[1])
-    comp2 = np.cross(vp1[0], comp1) # should be along the plane of vp1[0] and vp1[1]
+    # should be along the plane of vp1[0] and vp1[1]
+    comp2 = np.cross(vp1[0], comp1)
 
     basis1 = create_orthonormal_basis(normalize(vp1[0]), normalize(comp2))
     rej2 = change_basis(new_vp2_1, basis1, standard_basis)
@@ -115,8 +121,9 @@ def get_double_alignment_matrix(vp1, vp2):
 
     mat2 = rotation_matrix(vp1[0], angle)
 
-    #return np.dot(mat1, mat2)
+    # return np.dot(mat1, mat2)
     return np.dot(mat2, mat1)
+
 
 def get_alignment_matrix(vec1, vec2):
     '''
@@ -149,6 +156,7 @@ def get_non_colinear_unit_vector(vec):
 
     return np.array(unit)
 
+
 def is_almost_parallel(vec1, vec2):
     """
     Are vec1 and vec2 almost parallel?
@@ -158,23 +166,25 @@ def is_almost_parallel(vec1, vec2):
              -1 if they are antiparallel,
              0 if they are neither.
     """
-    CUTOFF=10**-8
-    vec2_clean=[]
+    CUTOFF = 10**-8
+    vec2_clean = []
     for c in vec2:
-        if abs(c)<CUTOFF:
+        if abs(c) < CUTOFF:
             vec2_clean.append(float("nan"))
         else:
             vec2_clean.append(c)
-    factors=np.asarray(vec1)/np.asarray(vec2_clean)
+    factors = np.asarray(vec1) / np.asarray(vec2_clean)
     factors = [f for f in factors if not np.isnan(f)]
     log.debug("vec1 %s, vec2 %s, fac %s", vec1, vec2, factors)
     if not factors:
-        return 0 # vec2~[0,0,0]
-    elif all(np.sign(factors)==np.sign(factors[0])) and all(abs(f-factors[0])<CUTOFF for f in factors):
+        return 0  # vec2~[0,0,0]
+    elif all(np.sign(factors) == np.sign(factors[0])) and all(abs(f - factors[0]) < CUTOFF for f in factors):
         log.debug("Signs: %s", np.sign(factors))
-        return np.sign(factors[0]) # returns 0, if vec1==[0,0,0]
+        return np.sign(factors[0])  # returns 0, if vec1==[0,0,0]
     else:
-        return 0 # Not (anti-)parallel
+        return 0  # Not (anti-)parallel
+
+
 '''
 # OLD:
 def is_almost_parallel(vec1, vec2):
@@ -198,25 +208,26 @@ def is_almost_parallel(vec1, vec2):
     return all((abs(vec1[i])<CUTOFF and abs(vec2[i])<CUTOFF) or (abs(vec2[i])>CUTOFF and abs(vec1[i]/vec2[i]-factor)<CUTOFF) for i in range(len(vec1)))
 '''
 
+
 def line_segments_collinearity(segment1, segment2):
     """
     Quantifies, how collinear (according to some measure) two line segments are.
 
     :param segment1, segment2: Each a tuple of vectors (start, end)
     """
-    dir1 = normalize(segment1[1]-segment1[0])
-    dir2 = normalize(segment2[1]-segment2[0])
+    dir1 = normalize(segment1[1] - segment1[0])
+    dir2 = normalize(segment2[1] - segment2[0])
 
     # Get the average direction of the two vectors, if oriented correctly.
-    s1 = dir1+dir2
-    s2 = dir1-dir2
-    if magnitude(s1)>magnitude(s2):
+    s1 = dir1 + dir2
+    s2 = dir1 - dir2
+    if magnitude(s1) > magnitude(s2):
         sum_vec = s1
     else:
         sum_vec = s2
     # Further more, the line should pass through the center of the
     # 4 points defining the line segments.
-    points = np.array(segment1+segment2)
+    points = np.array(segment1 + segment2)
     center = points.mean(axis=0)
     '''
     # Now plot for verification
@@ -239,19 +250,20 @@ def line_segments_collinearity(segment1, segment2):
 
     # Now calculate the distances of the 4 points from the fitted line
     d_point_line = point_line_distance(points, center, sum_vec)
-    assert len(d_point_line)==4
+    assert len(d_point_line) == 4
     # Return an R**2 value, like or linear regression (1=collinear, <1 worse)
-    return 1-sum(d_point_line**2)/((points-center)**2).sum()
-
+    return 1 - sum(d_point_line**2) / ((points - center)**2).sum()
 
     # Different version via SVD
-    centered_points = points-center
-    uu, dd, vv = np.linalg.svd(centered_points)#, full_matrices=False)
+    centered_points = points - center
+    uu, dd, vv = np.linalg.svd(centered_points)  # , full_matrices=False)
     # Now vv[0] is the direction of the target line.
     # Calculate the deviation of the points from the target line.
-    distances_from_line = np.linalg.norm(np.cross(vv[0], centered_points), axis=1)/magnitude(vv[0])
-    r2 = 1 - (np.sum(distances_from_line**2)/ np.sum(centered_points**2))
+    distances_from_line = np.linalg.norm(
+        np.cross(vv[0], centered_points), axis=1) / magnitude(vv[0])
+    r2 = 1 - (np.sum(distances_from_line**2) / np.sum(centered_points**2))
     return r2
+
 
 def create_orthonormal_basis(vec1, vec2=None, vec3=None):
     '''
@@ -265,7 +277,8 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
         try:
             from . import cytvec
         except ImportError as e:
-            warnings.warn("Extention modules (cython code) not installed, using slower python version")
+            warnings.warn(
+                "Extention modules (cython code) not installed, using slower python version")
         else:
             return cytvec.create_orthonormal_basis(vec1, vec2)
 
@@ -274,8 +287,9 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
         vec2 = np.cross(vec1, vec2)
     else:
         if USE_ASSERTS:
-            if round(vec_angle(vec2, vec1),9)!=round(math.pi/2,9):
-                assert False, ("vec2 {} is not normal to vec1 {}! Angle is {} rad ({} degrees)".format(vec2, vec1, vec_angle(vec2, vec1), math.degrees(vec_angle(vec2, vec1)), math.pi/2))
+            if round(vec_angle(vec2, vec1), 9) != round(math.pi / 2, 9):
+                assert False, ("vec2 {} is not normal to vec1 {}! Angle is {} rad ({} degrees)".format(
+                    vec2, vec1, vec_angle(vec2, vec1), math.degrees(vec_angle(vec2, vec1)), math.pi / 2))
 
     mag_vec1 = magnitude(vec1)
     if mag_vec1 == 0:
@@ -284,7 +298,8 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
 
     mag_vec2 = magnitude(vec2)
     if mag_vec2 == 0:
-        raise ZeroDivisionError("vec 2 has magnitude 0. vecs are so far {} and {} ".format(vec1, vec2))
+        raise ZeroDivisionError(
+            "vec 2 has magnitude 0. vecs are so far {} and {} ".format(vec1, vec2))
     vec2 = vec2 / mag_vec2
 
     if vec3 is None:
@@ -292,10 +307,12 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
 
     mag_vec3 = magnitude(vec3)
     if mag_vec3 == 0:
-        raise ZeroDivisionError("vec 3 has magnitude 0. vecs are {}, {} and {}".format(repr(vec1), repr(vec2), repr(vec3)))
+        raise ZeroDivisionError("vec 3 has magnitude 0. vecs are {}, {} and {}".format(
+            repr(vec1), repr(vec2), repr(vec3)))
     vec3 = vec3 / mag_vec3
 
     return np.array([vec1, vec2, vec3])
+
 
 """
 # Code used for comparing the fastes method of creating an orthonormal basis:
@@ -342,6 +359,7 @@ def time_cob():
     print "2: ", t2.repeat(number=100000) #prints [2.7473390102386475, 2.74338698387146, 2.731964111328125]
 """
 
+
 def spherical_cartesian_to_polar(vec):
     '''
     Return a parameterization of a vector of 3 coordinates:
@@ -364,8 +382,10 @@ def spherical_cartesian_to_polar(vec):
     v = math.atan2(vec[1], vec[0])
 
     if USE_ASSERTS:
-        nt.assert_allclose(vec[0], r * math.sin(u) * math.cos(v), rtol=1e-7, atol=1e-7)
+        nt.assert_allclose(vec[0], r * math.sin(u) *
+                           math.cos(v), rtol=1e-7, atol=1e-7)
     return np.array((r, u, v))
+
 
 def spherical_polar_to_cartesian(vec):
     '''
@@ -384,6 +404,7 @@ def spherical_polar_to_cartesian(vec):
 
     return np.array([x, y, z])
 
+
 def get_standard_basis(dim):
     '''
     Get a standard basis for the given dimension.
@@ -400,6 +421,7 @@ def get_standard_basis(dim):
     standard_basis = np.array(standard_basis)
 
     return standard_basis
+
 
 def change_basis(coords, new_basis, old_basis):
     '''
@@ -428,15 +450,18 @@ def change_basis(coords, new_basis, old_basis):
 
     return new_coords
 
+
 def change_basis_vectorized(coords, new_basis, old_basis):
     """
     Change an array of vectors (coords) from old_basis to new_basis.
 
     :param coords: A array of coordinates to transform.
     """
-    standard_coords = np.tensordot(old_basis.transpose(), coords, axes=([-1],[1])).T
+    standard_coords = np.tensordot(
+        old_basis.transpose(), coords, axes=([-1], [1])).T
     standard_to_new = nl.inv(new_basis.transpose())
-    new_coords = np.tensordot(standard_to_new, standard_coords, axes=([-1],[1])).T
+    new_coords = np.tensordot(
+        standard_to_new, standard_coords, axes=([-1], [1])).T
     return new_coords
 
 
@@ -487,6 +512,7 @@ def time_basis2():
     print t2.repeat(number=100000)
 """
 
+
 def vector_rejection(a, b):
     '''
     Return the vector rejection of a from b. In other words, return the orthogonal
@@ -501,7 +527,8 @@ def vector_rejection(a, b):
     d = np.dot(b, b)
     return a - (n / d) * b
 
-def rotation_matrix_weave(axis, theta, mat = None):
+
+def rotation_matrix_weave(axis, theta, mat=None):
     '''
     Calculate the rotation matrix for a rotation of theta degrees around axis.
 
@@ -519,7 +546,7 @@ def rotation_matrix_weave(axis, theta, mat = None):
              need only be multiplied by the matrix.
     '''
     if mat == None:
-        mat = np.eye(3,3)
+        mat = np.eye(3, 3)
 
     support = "#include <math.h>"
     code = """
@@ -543,7 +570,8 @@ def rotation_matrix_weave(axis, theta, mat = None):
     """
 
     from scipy import weave
-    weave.inline(code, ['axis', 'theta', 'mat'], support_code = support, libraries = ['m'])
+    weave.inline(code, ['axis', 'theta', 'mat'],
+                 support_code=support, libraries=['m'])
 
     return mat
 
@@ -566,29 +594,31 @@ def rotation_matrix(axis, theta):
     # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
     # The following would be the slower pure-python implementation (for comparison)
     if isinstance(axis, (np.ndarray, list)):
-            axis = normalize(axis)
-            b, c, d = -axis*math.sin(theta/2)
-            a = math.cos(theta/2)
-            return np.array([[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 2*(b*d+a*c)],
-                      [2*(b*c+a*d), a*a+c*c-b*b-d*d, 2*(c*d-a*b)],
-                      [2*(b*d-a*c), 2*(c*d+a*b), a*a+d*d-b*b-c*c]])
+        axis = normalize(axis)
+        b, c, d = -axis * math.sin(theta / 2)
+        a = math.cos(theta / 2)
+        return np.array([[a * a + b * b - c * c - d * d, 2 * (b * c - a * d), 2 * (b * d + a * c)],
+                         [2 * (b * c + a * d), a * a + c * c -
+                          b * b - d * d, 2 * (c * d - a * b)],
+                         [2 * (b * d - a * c), 2 * (c * d + a * b), a * a + d * d - b * b - c * c]])
     else:
         s = math.sin(theta)
         a = math.cos(theta)
-        if axis=="y":
-            return np.array([[ a,  0, -s],
-                             [ 0,  1,  0],
-                             [ s,  0,  a]])
-        elif axis=="z":
-            return np.array([[ a,  s, 0],
+        if axis == "y":
+            return np.array([[a,  0, -s],
+                             [0,  1,  0],
+                             [s,  0,  a]])
+        elif axis == "z":
+            return np.array([[a,  s, 0],
                              [-s,  a, 0],
-                             [ 0,  0, 1]])
-        elif axis=="x":
-            return np.array([[ 1,  0,  0],
-                             [ 0,  a, s],
-                             [ 0, -s,  a]])
+                             [0,  0, 1]])
+        elif axis == "x":
+            return np.array([[1,  0,  0],
+                             [0,  a, s],
+                             [0, -s,  a]])
         else:
             raise TypeError('Axis must be numpy array or one of "x", "y", "z"')
+
 
 def vector_set_rmsd(set1, set2):
     '''
@@ -634,9 +664,11 @@ def get_vector_centroid(crds1):
 
     for i in centroid1:
         if math.isnan(i):
-            raise ValueError('nan encountered in centroid: {}, len crds1 = {}.'.format(centroid1, len(crds1)))
+            raise ValueError('nan encountered in centroid: {}, len crds1 = {}.'.format(
+                centroid1, len(crds1)))
 
     return centroid1
+
 
 def center_on_centroid(crds1):
     centroid1 = get_vector_centroid(crds1)
@@ -652,14 +684,21 @@ def magnitude(vec):
     :param vec: The vector in question.
     :return: The magnitude of the vector.
     '''
-    #return np.linalg.norm(vec) #A lot of overhead, if used for a single vector
+    # return np.linalg.norm(vec) #A lot of overhead, if used for a single vector
     return np.sqrt(np.dot(vec, vec))
+
 
 def det3x3(matrix):
     """return the determinant of a 3x3 matrix"""
-    positive = matrix[0,0]*matrix[1,1]*matrix[2,2]+matrix[0,1]*matrix[1,2]*matrix[2,0]+matrix[0,2]*matrix[1,0]*matrix[2,1]
-    minus = matrix[2,0]*matrix[1,1]*matrix[0,2]+matrix[2,1]*matrix[1,2]*matrix[0,0]+matrix[2,2]*matrix[1,0]*matrix[0,1]
-    return positive-minus
+    positive = matrix[0, 0] * matrix[1, 1] * matrix[2, 2] + matrix[0, 1] * \
+        matrix[1, 2] * matrix[2, 0] + \
+        matrix[0, 2] * matrix[1, 0] * matrix[2, 1]
+    minus = matrix[2, 0] * matrix[1, 1] * matrix[0, 2] + matrix[2, 1] * \
+        matrix[1, 2] * matrix[0, 0] + \
+        matrix[2, 2] * matrix[1, 0] * matrix[0, 1]
+    return positive - minus
+
+
 """
 def time_mag1():
     vec1 = get_random_vector()
@@ -679,6 +718,7 @@ def time_mag():
     print t2.repeat(number=10000)
 """
 
+
 def normalize(vec):
     '''
     Normalize a vector so that its magnitude becomes 1.0 while
@@ -688,9 +728,10 @@ def normalize(vec):
     :return: A normalized version of the vector.
     '''
     mag = magnitude(vec)
-    if mag==0: #Numpy would return Nan and raise a RuntimeWarning.
+    if mag == 0:  # Numpy would return Nan and raise a RuntimeWarning.
         raise ValueError("Cannot normalize zero- vector!")
     return vec / mag
+
 
 def vec_angle(vec1, vec2):
     '''
@@ -742,6 +783,7 @@ def vec_dot(a, b):
     # 0.6194930076599121
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 
+
 '''
 def cross(a, b):
     c = [a[1]*b[2] - a[2]*b[1],
@@ -751,75 +793,80 @@ def cross(a, b):
     return c
 '''
 
-def seg_intersect(line1, line2) :
+
+def seg_intersect(line1, line2):
     """
     Intersection of 2 line segments in 2D space (as lists or numpy array-like).
     :param line1: a tuple/list (a1, a2): The first line segment, from a1 to a2
     :param line2: a tuple/list (b1, b2):The 2nd line segment, from b1 to b2
     """
-    a1,a2=line1
-    b1,b2=line2
-    a1=np.array(a1)
-    a2=np.array(a2)
-    b1=np.array(b1)
-    b2=np.array(b2)
-    if max(map(len, [a1,a2,b1,b2]))!=2:
-        raise ValueError("Expecting only 2-dimensional vectors. Found higher-dimensional vector: a1={}, a2={}, b1={}, b2={}".format(a1,a2,b1,b2))
-    if min(map(len, [a1,a2,b1,b2]))!=2:
-        raise ValueError("Expecting only 2-dimensional vectors. Found lower-dimensional vector.")
-    if (a1==a2).all() or (b1==b2).all(): raise ValueError("Start and end of a line must not be equal! a1={}, a2={}, b1={}, b2={}".format(a1,a2,b1,b2))
-    dxa=a2[0]-a1[0]
-    dya=a2[1]-a1[1]
-    dxb=b2[0]-b1[0]
-    dyb=b2[1]-b1[1]
-    num=a1[0]*dya-a1[1]*dxa-b1[0]*dya+b1[1]*dxa
-    denom=float(dxb*dya-dyb*dxa)
+    a1, a2 = line1
+    b1, b2 = line2
+    a1 = np.array(a1)
+    a2 = np.array(a2)
+    b1 = np.array(b1)
+    b2 = np.array(b2)
+    if max(map(len, [a1, a2, b1, b2])) != 2:
+        raise ValueError(
+            "Expecting only 2-dimensional vectors. Found higher-dimensional vector: a1={}, a2={}, b1={}, b2={}".format(a1, a2, b1, b2))
+    if min(map(len, [a1, a2, b1, b2])) != 2:
+        raise ValueError(
+            "Expecting only 2-dimensional vectors. Found lower-dimensional vector.")
+    if (a1 == a2).all() or (b1 == b2).all():
+        raise ValueError(
+            "Start and end of a line must not be equal! a1={}, a2={}, b1={}, b2={}".format(a1, a2, b1, b2))
+    dxa = a2[0] - a1[0]
+    dya = a2[1] - a1[1]
+    dxb = b2[0] - b1[0]
+    dyb = b2[1] - b1[1]
+    num = a1[0] * dya - a1[1] * dxa - b1[0] * dya + b1[1] * dxa
+    denom = float(dxb * dya - dyb * dxa)
 
-    if denom==0:
-        #parallel or on same lines
-        if dxa==0:
-          t1=(b1[1]-a1[1])/dya
-          t2=(b2[1]-a1[1])/dya
-          t1test=t1
+    if denom == 0:
+        # parallel or on same lines
+        if dxa == 0:
+            t1 = (b1[1] - a1[1]) / dya
+            t2 = (b2[1] - a1[1]) / dya
+            t1test = t1
         else:
-          t1=(b1[0]-a1[0])/dxa
-          t2=(b2[0]-a1[0])/dxa
-        if dya==0:
-          t1test=t1
+            t1 = (b1[0] - a1[0]) / dxa
+            t2 = (b2[0] - a1[0]) / dxa
+        if dya == 0:
+            t1test = t1
         else:
-          t1test=(b1[1]-a1[1])/dya
-        if t1!=t1test:
+            t1test = (b1[1] - a1[1]) / dya
+        if t1 != t1test:
             return []
-        #On same line
-        if dxa==0:
-          s1=(a1[1]-b1[1])/dyb
-          s2=(a2[1]-b1[1])/dyb
+        # On same line
+        if dxa == 0:
+            s1 = (a1[1] - b1[1]) / dyb
+            s2 = (a2[1] - b1[1]) / dyb
         else:
-          s1=(a1[0]-b1[0])/dxb
-          s2=(a2[0]-b1[0])/dxb
-        if all(x<0 or x>1 for x in [s1, s2, t1, t2]):
+            s1 = (a1[0] - b1[0]) / dxb
+            s2 = (a2[0] - b1[0]) / dxb
+        if all(x < 0 or x > 1 for x in [s1, s2, t1, t2]):
             return []
-        ts=min(t1, t2)
-        te=max(t1, t2)
-        toret=[]
-        if ts<0:
+        ts = min(t1, t2)
+        te = max(t1, t2)
+        toret = []
+        if ts < 0:
             toret.append(a1)
         else:
             toret.append(b1)
-        if te<1:
+        if te < 1:
             toret.append(b2)
         else:
             toret.append(a2)
         return toret
     else:
-        s=num/denom
-        if s>=0 and s<=1:
-            c=np.array(b1)+s*(np.array(b2)-np.array(b1))
-            if dxa!=0:
-                t=(c[0]-a1[0])/dxa
+        s = num / denom
+        if s >= 0 and s <= 1:
+            c = np.array(b1) + s * (np.array(b2) - np.array(b1))
+            if dxa != 0:
+                t = (c[0] - a1[0]) / dxa
             else:
-                t=(c[1]-a1[1])/dya
-            if t>=0 and t<=1:
+                t = (c[1] - a1[1]) / dya
+            if t >= 0 and t <= 1:
                 return [c]
         return []
 
@@ -831,17 +878,19 @@ def point_line_distance(point, line_start, line_dir):
 
     :param point: A point(an array with shape (3,)) or multiple points (shape n,3)
     """
-    if np.shape(point)==(3,):
-        return magnitude(np.cross(line_dir, (line_start-point)))/magnitude(line_dir)
+    if np.shape(point) == (3,):
+        return magnitude(np.cross(line_dir, (line_start - point))) / magnitude(line_dir)
     else:
         # More than one point
-        return np.linalg.norm(np.cross(line_dir, line_start-point), axis=1)/magnitude(line_dir)
+        return np.linalg.norm(np.cross(line_dir, line_start - point), axis=1) / magnitude(line_dir)
+
 
 def vec_distance(vec1, vec2):
     vec1 = np.asarray(vec1)
     vec2 = np.asarray(vec2)
-    direction = vec2-vec1
+    direction = vec2 - vec1
     return math.sqrt(np.dot(direction, direction))
+
 
 @profile
 def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
@@ -857,29 +906,26 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     :param s2_p0: The start of the second segment
     :param s2_p1: The end of the second segment
 
-    :return: A tuple of points (i1,i2) containing the point i1 on s1
-        closest to the point i2 on segment s2.
+    :return: True or False
     '''
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
-    lenw=magnitude(w)
-    a = np.dot(u,u)        # always >= 0
-    c = np.dot(v,v)        # always >= 0
+    lenw = magnitude(w)
+    a = np.dot(u, u)        # always >= 0
+    c = np.dot(v, v)        # always >= 0
 
-    if lenw <distance:
+    if lenw < distance:
         return True
-    if lenw > math.sqrt(a)+math.sqrt(c)+distance:
+    if lenw > math.sqrt(a) + math.sqrt(c) + distance:
         return False
 
+    b = np.dot(u, v)
 
-    b = np.dot(u,v)
+    d = np.dot(u, w)
+    e = np.dot(v, w)
 
-    d = np.dot(u,w)
-    e = np.dot(v,w)
-
-
-    D = a*c - b*b       # always >= 0
+    D = a * c - b * b       # always >= 0
     sD = D      # sc = sN / sD, default sD = D >= 0
     tD = D      # tc = tN / tD, default tD = D >= 0
 
@@ -892,8 +938,8 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
         tN = e
         tD = c
     else:                # get the closest points on the infinite lines
-        sN = (b*e - c*d)
-        tN = (a*e - b*d)
+        sN = (b * e - c * d)
+        tN = (a * e - b * d)
         if (sN < 0.0):      # sc < 0 => the s=0 edge is visible
             sN = 0.0
             tN = e
@@ -929,10 +975,9 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
     tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
 
     # get the difference of the two closest points
-    #dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
+    # dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
 
-    return vec_distance(s1_p0 + sc * u, s2_p0 + tc * v)<distance
-
+    return vec_distance(s1_p0 + sc * u, s2_p0 + tc * v) < distance
 
 
 def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
@@ -957,14 +1002,13 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
 
-    a = np.dot(u,u)        # always >= 0
-    b = np.dot(u,v)
-    c = np.dot(v,v)        # always >= 0
-    d = np.dot(u,w)
-    e = np.dot(v,w)
+    a = np.dot(u, u)        # always >= 0
+    b = np.dot(u, v)
+    c = np.dot(v, v)        # always >= 0
+    d = np.dot(u, w)
+    e = np.dot(v, w)
 
-
-    D = a*c - b*b       # always >= 0
+    D = a * c - b * b       # always >= 0
     sD = D      # sc = sN / sD, default sD = D >= 0
     tD = D      # tc = tN / tD, default tD = D >= 0
 
@@ -977,8 +1021,8 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
         tN = e
         tD = c
     else:                # get the closest points on the infinite lines
-        sN = (b*e - c*d)
-        tN = (a*e - b*d)
+        sN = (b * e - c * d)
+        tN = (a * e - b * d)
         if (sN < 0.0):      # sc < 0 => the s=0 edge is visible
             sN = 0.0
             tN = e
@@ -1014,9 +1058,10 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     tc = 0.0 if abs(tN) < SMALL_NUM else tN / tD
 
     # get the difference of the two closest points
-    #dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
+    # dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)
 
     return (s1_p0 + sc * u, s2_p0 + tc * v)
+
 
 def closest_point_on_seg(seg_a, seg_b, circ_pos):
     '''
@@ -1027,9 +1072,9 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html
     '''
     if not isinstance(seg_a, np.ndarray):
-        seg_a=np.array(seg_a)
-        seg_b=np.array(seg_b)
-        circ_pos=np.array(circ_pos)
+        seg_a = np.array(seg_a)
+        seg_b = np.array(seg_b)
+        circ_pos = np.array(circ_pos)
     seg_v = seg_b - seg_a
     pt_v = circ_pos - seg_a
     mag = math.sqrt(sum(seg_v * seg_v))
@@ -1063,6 +1108,7 @@ def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
         raise ValueError("Circle's center is exactly on segment")
     offset = dist_v / mag(dist_v) * (circ_rad - mag(dist_v))
     return offset
+
 
 def cylinder_line_intersection(cyl, line, r):
     '''
@@ -1098,9 +1144,9 @@ def cylinder_line_intersection(cyl, line, r):
 
     # Figure out the x position by determining how far along
     # the y-coordinate of the segment the closest point is
-    x  = (line_t[0][0] +
-            (line_vec_t[0] *
-            (p[0] - line_t[0][1]) / line_vec_t[1]))
+    x = (line_t[0][0] +
+         (line_vec_t[0] *
+          (p[0] - line_t[0][1]) / line_vec_t[1]))
     v = p - cyl_t[0][1:]
     o = math.sqrt(sum(v * v))
     p = [x, p[0], p[1]]
@@ -1153,7 +1199,9 @@ def cylinder_line_intersection(cyl, line, r):
 
     return change_basis(intersects_t.T, standard_basis, cyl_basis).T
 
-#COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
+# COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
+
+
 def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
     '''
     If we create a cone that starts at one end of cylinder1, does it
@@ -1188,7 +1236,9 @@ def pin_fits_two_cyl(cyl1, cyl2, cyl_width):
 
     return True
 
-#COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
+# COVERAGE: Not used in ernwin and forgi at least since forgi v0.3
+
+
 def point_in_cylinder(pt1, pt2, r, testpt):
     '''
     Determine if testpt is within a cylinder of radius r.
@@ -1221,25 +1271,27 @@ def point_in_cylinder(pt1, pt2, r, testpt):
         else:
             return True
 
+
 def GetPointsEquiAngularlyDistancedOnSphere(numberOfPoints=45):
     """ each point you get will be of form 'x, y, z'; in cartesian coordinates
         eg. the 'l2 distance' from the origion [0., 0., 0.] for each point will be 1.0
         ------------
         converted from:  http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere )
     """
-    dlong = math.pi*(3.0-math.sqrt(5.0))  # ~2.39996323
-    dz   =  2.0/numberOfPoints
-    long =  0.0
-    z    =  1.0 - dz/2.0
-    ptsOnSphere =[]
-    for k in range( 0, numberOfPoints):
-        r    = math.sqrt(1.0-z*z)
-        ptNew = (math.cos(long)*r, math.sin(long)*r, z)
-        ptsOnSphere.append( ptNew )
-        z    = z - dz
+    dlong = math.pi * (3.0 - math.sqrt(5.0))  # ~2.39996323
+    dz = 2.0 / numberOfPoints
+    long = 0.0
+    z = 1.0 - dz / 2.0
+    ptsOnSphere = []
+    for k in range(0, numberOfPoints):
+        r = math.sqrt(1.0 - z * z)
+        ptNew = (math.cos(long) * r, math.sin(long) * r, z)
+        ptsOnSphere.append(ptNew)
+        z = z - dz
         long = long + dlong
 
     return ptsOnSphere
+
 
 def sortAlongLine(start, end, points):
     """
@@ -1251,24 +1303,26 @@ def sortAlongLine(start, end, points):
 
     :returns: A list containing start, end and all elements of points, sorted by the distance from start
     """
-    #print start, end, points
-    s_points=points+[start, end]
+    # print start, end, points
+    s_points = points + [start, end]
     s_points.sort(key=lambda x: vec_distance(x, start))
     return s_points
 
+
 def middlepoint(vec1, vec2):
     """The point in the middle between vec1 and vec2."""
-    generator=((x+vec2[i])/2.0 for i,x in enumerate(vec1))
-    typ=type(vec1)
-    if typ==np.ndarray:
+    generator = ((x + vec2[i]) / 2.0 for i, x in enumerate(vec1))
+    typ = type(vec1)
+    if typ == np.ndarray:
         return np.fromiter(generator, float, len(vec1))
     return typ(generator)
 
+
 def pair_distance_distribution(points, stepsize=1):
-    dists=Counter()
+    dists = Counter()
     for p1, p2 in itertools.combinations(points, r=2):
         d = vec_distance(p1, p2)
-        dists[d//stepsize]+=1
-    m=max(dists.keys())
-    x = np.arange(0,m+1)
-    return x*stepsize, np.array([dists[xi] for xi in x])
+        dists[d // stepsize] += 1
+    m = max(dists.keys())
+    x = np.arange(0, m + 1)
+    return x * stepsize, np.array([dists[xi] for xi in x])

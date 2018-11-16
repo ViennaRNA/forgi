@@ -10,6 +10,7 @@ import os.path as op
 import sys
 from optparse import OptionParser
 
+
 def calculate_variation(angle_stats, loop_size):
     '''
     Calculate how much the statistics for a particular vary
@@ -20,14 +21,14 @@ def calculate_variation(angle_stats, loop_size):
     is difficult to derive, but this method will use the
     simplest available, the volume of the n-dimensional
     enclosure defined by the minimum and the maximum coordinates.
-    
+
     :param stats: forgi.threedee.model.stats.AngleStats
     :param dims: The dimensions of the loop (i.e. (1,3))
     :return: The volume of the accessible area.
     '''
-    # ang_type indicates whether it's an iloop forward/backward 
+    # ang_type indicates whether it's an iloop forward/backward
     # or a multiloop forward/backward
-    ang_types = [1,2,3,4]
+    ang_types = [1, 2, 3, 4]
 
     for ang_type in ang_types:
         ang_dims = tuple(list(loop_size) + [ang_type])
@@ -35,6 +36,7 @@ def calculate_variation(angle_stats, loop_size):
 
             fud.pv('ang_dims')
             fud.pv('len(angle_stats[ang_dims])')
+
 
 def main():
     usage = """
@@ -45,7 +47,7 @@ def main():
 
     Whether the input is a pdb or a cg file depends on the extension.
     """
-    num_args= 0
+    num_args = 0
     parser = OptionParser(usage=usage)
 
     #parser.add_option('-o', '--options', dest='some_option', default='yo', help="Place holder for a real option", type='str')
@@ -70,6 +72,6 @@ def main():
         calculate_variation(angle_stats, cg.get_bulge_dimensions(loop))
         #fud.pv('loop, cg.get_bulge_dimensions(loop), cg.get_angle_type(loop)')
 
+
 if __name__ == '__main__':
     main()
-

@@ -1,5 +1,6 @@
 from __future__ import print_function
-import unittest, os
+import unittest
+import os
 import forgi.utilities.stuff as fus
 import sys
 
@@ -21,10 +22,10 @@ class StuffTest(unittest.TestCase):
 ((([[[)))(.(]]])).
 123456789012345678
 """
-        self.pt_dbs = [([4,3,4,1,2], "([)]"),
-                       ([6,4,5,6,1,2,3], "([{)]}"),
-                       ([6,3,4,1,2,6,5], "([)]()"),
-											 ([18, 9,8,7, 15,14,13, 3,2,1, 17,0,16,6,5,4,12,10,0], "((([[[)))(.(]]])).")]
+        self.pt_dbs = [([4, 3, 4, 1, 2], "([)]"),
+                       ([6, 4, 5, 6, 1, 2, 3], "([{)]}"),
+                       ([6, 3, 4, 1, 2, 6, 5], "([)]()"),
+                       ([18, 9, 8, 7, 15, 14, 13, 3, 2, 1, 17, 0, 16, 6, 5, 4, 12, 10, 0], "((([[[)))(.(]]])).")]
         pass
 
     def test_pairtable_to_dotbracket(self):
@@ -32,7 +33,7 @@ class StuffTest(unittest.TestCase):
         Convert a pair table to a dotbracket string.
 
         """
-        for pt,db in self.pt_dbs:
+        for pt, db in self.pt_dbs:
             self.assertEqual(fus.pairtable_to_dotbracket(pt), db)
 
     #@raises(ValueError)
@@ -45,7 +46,7 @@ class StuffTest(unittest.TestCase):
         """
         Convert a dotbracket string to a pair table.
         """
-        for pt,db in self.pt_dbs:
+        for pt, db in self.pt_dbs:
             self.assertEqual(fus.dotbracket_to_pairtable(db), pt)
 
     def test_dotbracket_to_pairtable1(self):
@@ -68,10 +69,12 @@ class StuffTest(unittest.TestCase):
         """
         Convert a pairtable to base pair tuples.
         """
-        pt_tuples = [([4,3,4,1,2], [(1,3),(2,4),(3,1),(4,2)]),
-                      ([6,4,5,6,1,2,3], [(1,4),(2,5),(3,6),(4,1),(5,2),(6,3)]),
-                      ([6,3,4,1,2,6,5], [(1,3),(2,4),(3,1),(4,2),(5,6),(6,5)]),
-                      ([6,2,1,0,0,0,0], [(1,2),(2,1),(3,0),(4,0),(5,0),(6,0)])]
+        pt_tuples = [([4, 3, 4, 1, 2], [(1, 3), (2, 4), (3, 1), (4, 2)]),
+                     ([6, 4, 5, 6, 1, 2, 3], [
+                      (1, 4), (2, 5), (3, 6), (4, 1), (5, 2), (6, 3)]),
+                     ([6, 3, 4, 1, 2, 6, 5], [
+                      (1, 3), (2, 4), (3, 1), (4, 2), (5, 6), (6, 5)]),
+                     ([6, 2, 1, 0, 0, 0, 0], [(1, 2), (2, 1), (3, 0), (4, 0), (5, 0), (6, 0)])]
 
         for pt, tup in pt_tuples:
             self.assertEqual(fus.pairtable_to_tuples(pt), tup)
@@ -80,10 +83,12 @@ class StuffTest(unittest.TestCase):
         """
         Convert a pairtable to base pair tuples.
         """
-        pt_tuples = [([4,3,4,1,2], [(1,3),(2,4),(3,1),(4,2)]),
-                      ([6,4,5,6,1,2,3], [(1,4),(2,5),(3,6),(4,1),(5,2),(6,3)]),
-                      ([6,3,4,1,2,6,5], [(1,3),(2,4),(3,1),(4,2),(5,6),(6,5)]),
-                      ([6,2,1,0,0,0,0], [(1,2),(2,1)])]
+        pt_tuples = [([4, 3, 4, 1, 2], [(1, 3), (2, 4), (3, 1), (4, 2)]),
+                     ([6, 4, 5, 6, 1, 2, 3], [
+                      (1, 4), (2, 5), (3, 6), (4, 1), (5, 2), (6, 3)]),
+                     ([6, 3, 4, 1, 2, 6, 5], [
+                      (1, 3), (2, 4), (3, 1), (4, 2), (5, 6), (6, 5)]),
+                     ([6, 2, 1, 0, 0, 0, 0], [(1, 2), (2, 1)])]
 
         for pt, tup in pt_tuples:
             self.assertEqual(fus.tuples_to_pairtable(tup, pt[0]), pt)
@@ -95,14 +100,13 @@ class StuffTest(unittest.TestCase):
         print("pt:", pt, file=sys.stderr)
         elements = fus.pairtable_to_elements(pt, 0, 1, len(db))
 
-        self.assertTrue(['s',2,[1,2,13,14]] in elements)
-        self.assertTrue(['s',4,[3,4,9,10]] in elements)
+        self.assertTrue(['s', 2, [1, 2, 13, 14]] in elements)
+        self.assertTrue(['s', 4, [3, 4, 9, 10]] in elements)
 
-        self.assertTrue(['i',3,[2,3,10,11,12,13,]])
-        self.assertTrue(['h',5,[4,5,6,7,8,9]])
+        self.assertTrue(['i', 3, [2, 3, 10, 11, 12, 13, ]])
+        self.assertTrue(['h', 5, [4, 5, 6, 7, 8, 9]])
 
         print("pairtable_to_elements:", elements, file=sys.stderr)
-
 
     def test_pairtable_to_elements1(self):
         db = "(.[.).]"

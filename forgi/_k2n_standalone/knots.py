@@ -98,7 +98,7 @@ __status__ = "Production"
 
 class PairedRegion(object):
     """Store an uninterrupted list of base pairs by start, end, and length
-    
+
     A paired region (a.k.a. ladder or (helical) region) is a stretch of
         perfectly nested base pairs with positions:
         [(m,n), (m+1,n-1), (m+2,n-2),...]
@@ -129,13 +129,13 @@ class PairedRegion(object):
         self.Start = Start
         self.End = End
         if Length < 1:
-            raise ValueError(\
+            raise ValueError(
                 "PairedRegion should contain at least one base pair")
         self.Length = Length
         self.Id = Id
         self.Pairs = Pairs()
         for i in range(self.Length):
-            self.Pairs.append((self.Start+i, self.End-i)) 
+            self.Pairs.append((self.Start + i, self.End - i))
 
     def __str__(self):
         """Return string representation of PairedRegion, list of Pairs
@@ -149,7 +149,7 @@ class PairedRegion(object):
 
     def __eq__(self, other):
         """Compares Pairs and IDs
-       
+
         other -- PairedRegion object
 
         If IDs are not set (both None), Pairs is the only criterion. 
@@ -168,12 +168,12 @@ class PairedRegion(object):
     def upstream(self):
         """Return list of upstream positions in self from 5' to 3'
         """
-        return [i for (i,j) in self.Pairs]
+        return [i for (i, j) in self.Pairs]
 
     def downstream(self):
         """Return list of downstream positions in self from 5' to 3'
         """
-        result = [j for (i,j) in self.Pairs]
+        result = [j for (i, j) in self.Pairs]
         result.reverse()
         return result
 
@@ -186,7 +186,7 @@ class PairedRegion(object):
 
     def range(self):
         """Return the range of this region
-        
+
         The range of the region is the number of bases between the
         highest upstream and the lowest downstream position.
         (i.e. the number of unpaired bases in the hairpin if this
@@ -229,19 +229,19 @@ class PairedRegion(object):
             overlapping, and thus False is returned. For non-identical,
             but overlapping regions an error will be raised.
         """
-        if self == other: # equal blocks
+        if self == other:  # equal blocks
             return False
         # if not equal, but overlapping, raise error
         if self.overlapping(other):
             raise ValueError("Can only handle non-overlapping regions")
-        
+
         if (other.Start > self.End and other.End > self.End) or\
-            (self.Start > other.End and self.End > other.End):
+                (self.Start > other.End and self.End > other.End):
             return False
-        if (self.Start < other.Start < self.End and\
+        if (self.Start < other.Start < self.End and
             self.Start < other.End < self.End) or\
-            (other.Start < self.Start < other.End and\
-            other.Start < self.End < other.End):
+            (other.Start < self.Start < other.End and
+             other.Start < self.End < other.End):
             return False
         return True
 
@@ -255,6 +255,7 @@ class PairedRegion(object):
             instance.
         """
         self.Score = scoring_function(self)
+
 
 def PairedRegionFromPairs(pairs, Id=None):
     """Return new PairedRegion object from Pairs object
@@ -284,18 +285,18 @@ def PairedRegionFromPairs(pairs, Id=None):
     start = p[0][0]
     end = p[0][1]
     length = len(p)
-    return PairedRegion(start, end, length, Id=Id) 
+    return PairedRegion(start, end, length, Id=Id)
 
 
 class PairedRegions(list):
     """Stores a list of PairedRegion objects
-    
+
     A PairedRegions object is a condensed way of looking at an RNA structure,
         where continuous stretches of base pairs are collapsed into 
         PairedRegion objects. See the documentation on PairedRegion for more
         details.
     """
-    
+
     def __init__(self, regions=None):
         """Initialize new PairedRegions object
 
@@ -319,9 +320,9 @@ class PairedRegions(list):
         """
         result = []
         for i in self:
-            result.append("%s:%s,%s,%s;"%(i.Id,i.Start,i.End,i.Length))
-        return '('+' '.join(result)+')'
-    
+            result.append("%s:%s,%s,%s;" % (i.Id, i.Start, i.End, i.Length))
+        return '(' + ' '.join(result) + ')'
+
     def __eq__(self, other):
         """Return True if two PairedRegions objects are equal
 
@@ -352,7 +353,7 @@ class PairedRegions(list):
             an error is raised.
         """
         result = {}
-        for pr in self: # for every paired region
+        for pr in self:  # for every paired region
             if pr.Id in result:
                 raise ValueError("Duplicate key found")
             result[pr.Id] = pr
@@ -365,7 +366,7 @@ class PairedRegions(list):
 
     def totalLength(self):
         """Return the cumulative length of all PairedRegion objects in self
-        
+
         The totalLength is the total number of base pairs in this
             PairedRegions object. So, it adds the number of pairs in each
             PairedRegion in the list.
@@ -386,10 +387,10 @@ class PairedRegions(list):
             try:
                 score += pr.Score
             except AttributeError:
-                raise ValueError("Score not set for %s"%(str(self)))
+                raise ValueError("Score not set for %s" % (str(self)))
             except TypeError:
-                raise ValueError("Score should be numerical, but is %s"\
-                    %(pr.Score))
+                raise ValueError("Score should be numerical, but is %s"
+                                 % (pr.Score))
         return score
 
     def toPairs(self):
@@ -417,14 +418,14 @@ class PairedRegions(list):
         for pr in self:
             se = (pr.Start, pr.End)
             if se in result:
-                raise ValueError("Duplicate key found: %s"%(str(se)))
+                raise ValueError("Duplicate key found: %s" % (str(se)))
             result[se] = pr
         return result
-        #return dict([((pr.Start, pr.End), pr) for pr in self])
+        # return dict([((pr.Start, pr.End), pr) for pr in self])
 
     def lowestStart(self):
         """Return lowest begin value of any PairedRegion in the list
-        
+
         It lists all the Start values for all the PairedRegion objects
             in the list and returns the lowest value. If there are no
             regions in self, None is returned.
@@ -512,8 +513,8 @@ class PairedRegions(list):
         result = {}
         for boundary_idx, boundary_value in eb.items():
             if boundary_value in result:
-                raise ValueError(\
-                    "Boundary value %s is not unique"%(boundary_value))
+                raise ValueError(
+                    "Boundary value %s is not unique" % (boundary_value))
             result[boundary_value] = boundary_idx
         #result = dict([(v,k) for k,v in eb.items()])
         return result
@@ -528,7 +529,7 @@ class PairedRegions(list):
         """
         result = PairedRegions()
         seen = {}
-        for pr in self+other:
+        for pr in self + other:
             if pr.Id not in seen:
                 result.append(pr)
                 seen[pr.Id] = True
@@ -597,7 +598,7 @@ class PairedRegions(list):
             result.append(pr)
         return result
 
- 
+
 def PairedRegionsFromPairs(pairs):
     """Return PairedRegions object from Pairs
 
@@ -620,22 +621,23 @@ def PairedRegionsFromPairs(pairs):
     clean_pairs.sort()
     regions = []
     curr_region = []
-    pr_id = -1 # paired region ID
+    pr_id = -1  # paired region ID
     for pair in clean_pairs:
         if not curr_region:
             curr_region.append(pair)
         else:
-            x,y = curr_region[-1]
-            if pair == (x+1, y-1):
+            x, y = curr_region[-1]
+            if pair == (x + 1, y - 1):
                 curr_region.append(pair)
             else:
                 pr_id += 1
                 regions.append(PairedRegionFromPairs(curr_region, Id=pr_id))
                 curr_region = [pair]
-    if curr_region: # last block
+    if curr_region:  # last block
         pr_id += 1
         regions.append(PairedRegionFromPairs(curr_region, Id=pr_id))
     return PairedRegions(regions)
+
 
 class ConflictMatrix(object):
     """Stores conflict matrix
@@ -647,7 +649,7 @@ class ConflictMatrix(object):
 
     def __init__(self, data):
         """Initialize new ConflictMatrix object
-        
+
         data -- either a PairedRegions object or a Pairs object,
             or anything that can be made into a Pairs object
             (e.g. a list of tuples)
@@ -666,7 +668,7 @@ class ConflictMatrix(object):
             id_to_pr = data.byId()
         elif isinstance(data, Pairs):
             id_to_pr = PairedRegionsFromPairs(data).byId()
-        else: # try to convert to Pairs 
+        else:  # try to convert to Pairs
             try:
                 d = Pairs(data)
                 id_to_pr = PairedRegionsFromPairs(d).byId()
@@ -678,10 +680,10 @@ class ConflictMatrix(object):
         ro.sort()
         co = list(id_to_pr.keys())
         co.sort()
-        conf = {} # dict of conflicts between blocks
+        conf = {}  # dict of conflicts between blocks
         for id1, bl in id_to_pr.items():
             for id2, bl2 in id_to_pr.items():
-                if id2 < id1: # minimize number of calculations
+                if id2 < id1:  # minimize number of calculations
                     continue
                 if id1 not in conf:
                     conf[id1] = {}
@@ -694,17 +696,17 @@ class ConflictMatrix(object):
                 is_conflicting = bl.conflicting(bl2)
                 conf[id1][id2] = is_conflicting
                 conf[id2][id1] = is_conflicting
-        self.Matrix = Dict2D(conf, RowOrder=ro, ColOrder=co) # create Dict2D
+        self.Matrix = Dict2D(conf, RowOrder=ro, ColOrder=co)  # create Dict2D
 
     def conflictsOf(self, pr_id):
         """Return list of region IDs for regions that conflict with pr_id
-        
+
         pr_id -- row ID in the matrix (ID of paired region)
 
         Input is ID of a particular region, return value are the IDs of
             all regions that conflict with the given region.
         """
-        return [k for k,v in self.Matrix[pr_id].items() if v is True]
+        return [k for k, v in self.Matrix[pr_id].items() if v is True]
 
     def conflicting(self):
         """Return list of region IDs for conflicting regions
@@ -735,24 +737,24 @@ class ConflictMatrix(object):
 
         cliques = []
         seen = {}
-        
+
         for pr_id in cm.RowOrder:
             if pr_id in seen:
                 continue
             todo = set([pr_id])
             done = set()
             while todo != done:
-                collection = [] # collection of conflicts
+                collection = []  # collection of conflicts
                 for i in todo:
-                    if i in done: # no need to do them twice
+                    if i in done:  # no need to do them twice
                         continue
-                    conf = [] # conflicting regions
-                    for k,v in cm[i].items():
+                    conf = []  # conflicting regions
+                    for k, v in cm[i].items():
                         if v is True:
                             conf.append(k)
-                    collection.extend(conf) # add conflict to collection
-                    done.add(i) # register that i is done
-                todo.update(collection) # update todo
+                    collection.extend(conf)  # add conflict to collection
+                    done.add(i)  # register that i is done
+                todo.update(collection)  # update todo
             if len(done) > 1:
                 cliques.append(list(done))
             for i in done:
@@ -763,12 +765,14 @@ class ConflictMatrix(object):
 # SCORING FUNCTIONS FOR DYNAMIC PROGRAMMING APPROACH
 # =============================================================================
 
+
 def num_bps(paired_region):
     """Return number of base pairs (=Length) of paired_region
-    
+
     paired_region -- PairedRegion object
     """
     return paired_region.Length
+
 
 def hydrogen_bonds(seq):
     """Return function to score a PairedRegion by its hydrogen bonds
@@ -778,13 +782,13 @@ def hydrogen_bonds(seq):
     This method counts the number of hydrogen bonds in Watson-Crick and 
         Wobble base pairs. GC pairs score 3, AU and GU pairs score 2.
     """
-    HB_SCORE = {('G','C'): 3, ('C','G'): 3,\
-                ('A','U'): 2, ('U','A'): 2,\
-                ('G','U'): 2, ('U','G'): 2}
+    HB_SCORE = {('G', 'C'): 3, ('C', 'G'): 3,
+                ('A', 'U'): 2, ('U', 'A'): 2,
+                ('G', 'U'): 2, ('U', 'G'): 2}
 
     def apply_to(paired_region):
         """Return score of paired_region by its hydrogen bonds
-        
+
         paired_region -- PairedRegion object
 
         Scores each base pair in the region by giving each GC base pair 3 
@@ -792,8 +796,8 @@ def hydrogen_bonds(seq):
             are ignored and don't add anything to the overall score.
         """
         score = 0
-        for up,down in paired_region.Pairs:
-            seq_pair = (seq[up],seq[down])
+        for up, down in paired_region.Pairs:
+            seq_pair = (seq[up], seq[down])
             try:
                 score += HB_SCORE[seq_pair]
             except KeyError:
@@ -805,9 +809,10 @@ def hydrogen_bonds(seq):
 # HELPER FUNCTIONS FOR DYNAMIC PROGRAMMING APPROACH
 # =============================================================================
 
+
 def contains_true(i):
     """Return True if input contains True
-    
+
     i -- any object that implements __contains__
 
     Returns True if True is in the input. Both True and 1 count as True.
@@ -817,8 +822,9 @@ def contains_true(i):
         if True in i:
             return True
         return False
-    except TypeError: # when i is a string
+    except TypeError:  # when i is a string
         return False
+
 
 def empty_matrix(size):
     """Return square matrix as list of lists of specified size.
@@ -838,6 +844,7 @@ def empty_matrix(size):
         for j in range(size):
             result[i].append([PairedRegions()])
     return result
+
 
 def pick_multi_best(candidates, goal='max'):
     """Return list of unique solutions with a maximum/minimum score.
@@ -898,7 +905,7 @@ def pick_multi_best(candidates, goal='max'):
     return result
 
 
-def dp_matrix_multi(paired_regions, goal='max', scoring_function=num_bps): 
+def dp_matrix_multi(paired_regions, goal='max', scoring_function=num_bps):
     """Return dynamic programming matrix with top-right half filled
 
     paired_regions -- PairedRegions object
@@ -958,37 +965,37 @@ def dp_matrix_multi(paired_regions, goal='max', scoring_function=num_bps):
         filled. This cell contains the optimal solutions for the given set
         of paired regions.
     """
-    if goal not in ['max','min']:
-        raise ValueError("goal has to be 'min' or 'max', but is '%s'"%(goal))
+    if goal not in ['max', 'min']:
+        raise ValueError("goal has to be 'min' or 'max', but is '%s'" % (goal))
     prs = paired_regions
-    num_cells = len(prs)*2
+    num_cells = len(prs) * 2
 
-    # pre-calculate scores 
+    # pre-calculate scores
     for pr in prs:
         pr.score(scoring_function)
 
     # create and initialize matrix
     result = empty_matrix(num_cells)
-    
+
     # create some lookup dictionaries
     # enumerated start and end points
     enum_boundaries = prs.enumeratedBoundaries()
     # inverted enumerated start/end points {pr.Start/End: position in list}
-    inv_enum_boundaries = prs.invertedEnumeratedBoundaries() 
-    pos_to_pr = prs.byStartEnd() # {(pr.Start, pr.End): PairedRegion}
-    
-    # fill the matrix 
+    inv_enum_boundaries = prs.invertedEnumeratedBoundaries()
+    pos_to_pr = prs.byStartEnd()  # {(pr.Start, pr.End): PairedRegion}
+
+    # fill the matrix
     for end_idx in range(num_cells):
-        for begin_idx in range(end_idx-1, -1, -1):
+        for begin_idx in range(end_idx - 1, -1, -1):
             # look up sequence positions that match indices
             begin_pos = enum_boundaries[begin_idx]
             end_pos = enum_boundaries[end_idx]
-            # look up solutions in left and bottom cells 
-            left_cell = result[begin_idx][end_idx-1]
-            bottom_cell = result[begin_idx+1][end_idx]
+            # look up solutions in left and bottom cells
+            left_cell = result[begin_idx][end_idx - 1]
+            bottom_cell = result[begin_idx + 1][end_idx]
             # collect candidates
             candidates = []
-            
+
             # add solutions from the left cell
             for sol in bottom_cell:
                 candidates.append(sol)
@@ -999,13 +1006,13 @@ def dp_matrix_multi(paired_regions, goal='max', scoring_function=num_bps):
             # ==> add left_bottom + this region
             if (begin_pos, end_pos) in pos_to_pr:
                 this_region = pos_to_pr[(begin_pos, end_pos)]
-                bottom_left = result[begin_idx+1][end_idx-1]
+                bottom_left = result[begin_idx + 1][end_idx - 1]
                 for sol in bottom_left:
-                    candidates.append(\
-                    PairedRegions(sol+PairedRegions([this_region])))
-            
+                    candidates.append(
+                        PairedRegions(sol + PairedRegions([this_region])))
+
             # if we have a solution in the left and in the bottom cell:
-            if left_cell !=[[]] and bottom_cell != [[]]:
+            if left_cell != [[]] and bottom_cell != [[]]:
 
                 # check whether they can be added or iterate
                 for sol1 in left_cell:
@@ -1014,27 +1021,28 @@ def dp_matrix_multi(paired_regions, goal='max', scoring_function=num_bps):
                         he_idx = inv_enum_boundaries[he_pos]
                         ls_pos = sol2.lowestStart()
                         ls_idx = inv_enum_boundaries[ls_pos]
-                        
+
                         # If both solutions are disjoint
                         if he_pos < ls_pos:
                             candidates.append(sol1.merge(sol2))
-                        else: # not disjoint ==> iterate
-                            for splitter in range(ls_idx-1, he_idx+1):
+                        else:  # not disjoint ==> iterate
+                            for splitter in range(ls_idx - 1, he_idx + 1):
                                 cell_to_left = result[begin_idx][splitter]
-                                cell_to_bottom = result[splitter+1][end_idx]
+                                cell_to_bottom = result[splitter + 1][end_idx]
                                 if cell_to_bottom == [[]]:
                                     break
                                 for sub_sol1 in cell_to_left:
                                     for sub_sol2 in cell_to_bottom:
                                         both = sub_sol1.merge(sub_sol2)
                                         candidates.append(both)
-            
+
             # select all the candidates of maximum length
             best_candidate = pick_multi_best(candidates, goal=goal)
             result[begin_idx][end_idx] = best_candidate
 
-    # return the whole matrix 
+    # return the whole matrix
     return result
+
 
 def matrix_solutions(paired_regions, goal='max', scoring_function=num_bps):
     """Return the list of solutions in the top-right cell of the DP matrix
@@ -1045,16 +1053,18 @@ def matrix_solutions(paired_regions, goal='max', scoring_function=num_bps):
         dp_matrix_multi) and returns the list of solutions in the 
         top-right cell.
     """
-    return dp_matrix_multi(paired_regions, goal=goal,\
-        scoring_function=scoring_function)[0][-1]
+    return dp_matrix_multi(paired_regions, goal=goal,
+                           scoring_function=scoring_function)[0][-1]
 
 # =============================================================================
 # DYNAMIC PROGRAMMING APPROACH
 # =============================================================================
 
 # DP function used to remove pseudoknots
-def opt_all(pairs, return_removed=False, goal='max',\
-    scoring_function=num_bps):
+
+
+def opt_all(pairs, return_removed=False, goal='max',
+            scoring_function=num_bps):
     """Return a list of pseudoknot-free Pairs objects
 
     pairs -- Pairs object or list of tuples. One base can only interact
@@ -1087,7 +1097,7 @@ def opt_all(pairs, return_removed=False, goal='max',\
     """
     if not pairs.hasPseudoknots():
         if return_removed:
-            return [(pairs,Pairs())]
+            return [(pairs, Pairs())]
         else:
             return [pairs]
 
@@ -1096,15 +1106,15 @@ def opt_all(pairs, return_removed=False, goal='max',\
     cm = ConflictMatrix(prs)
 
     nc_regions = prs.nonConflicting(cm=cm)
-    cliques = prs.conflictCliques(cm=cm) 
-    
+    cliques = prs.conflictCliques(cm=cm)
+
     # basis for all nested structures are the non-conflicting regions
     result = [PairedRegions(nc_regions)]
     # resolve conflicts, store survivors and removed
-    for cl in cliques: 
+    for cl in cliques:
         new_result = []
-        best = matrix_solutions(cl, goal=goal,\
-            scoring_function=scoring_function)
+        best = matrix_solutions(cl, goal=goal,
+                                scoring_function=scoring_function)
         for best_sol in best:
             for prev_res in result:
                 new_result.append(prev_res.merge(best_sol))
@@ -1125,16 +1135,17 @@ def opt_all(pairs, return_removed=False, goal='max',\
             removed.append(rem)
         nested = [prs.toPairs() for prs in result]
         return list(zip(nested, removed))
-    
-    nested = [prs.toPairs() for prs in result] 
+
+    nested = [prs.toPairs() for prs in result]
     return nested
 
 # =============================================================================
 # MAJORITY OF BASE PAIRS -- CONVENIENCE FUNCTIONS
 # =============================================================================
 
-def opt_single_random(pairs, return_removed=False, goal='max',\
-    scoring_function=num_bps):
+
+def opt_single_random(pairs, return_removed=False, goal='max',
+                      scoring_function=num_bps):
     """Return single pseudoknot-free Pairs object with an optimal score
 
     pairs -- Pairs object or list of tuples. One base can only interact
@@ -1154,12 +1165,13 @@ def opt_single_random(pairs, return_removed=False, goal='max',\
         scoring_function=num_bps, the routine finds the nested structures
         with the maximum number of base pairs.
     """
-    nested_structs = opt_all(pairs, return_removed, goal,\
-        scoring_function)
+    nested_structs = opt_all(pairs, return_removed, goal,
+                             scoring_function)
     return choice(nested_structs)
 
-def opt_single_property(pairs, return_removed=False, goal='max',\
-    scoring_function=num_bps):
+
+def opt_single_property(pairs, return_removed=False, goal='max',
+                        scoring_function=num_bps):
     """Return single pseudoknot-free Pairs object with max number of bps
 
     pairs -- Pairs object or list of tuples. One base can only interact
@@ -1186,8 +1198,8 @@ def opt_single_property(pairs, return_removed=False, goal='max',\
         scoring_function=num_bps, the routine finds the nested structures
         with the maximum number of base pairs.
     """
-    nested_structs = opt_all(pairs, return_removed, goal,\
-        scoring_function)
+    nested_structs = opt_all(pairs, return_removed, goal,
+                             scoring_function)
     lookup = {}
     if return_removed:
         for p, p_rem in nested_structs:
@@ -1198,7 +1210,7 @@ def opt_single_property(pairs, return_removed=False, goal='max',\
             three = (num_regions, avg_range, avg_start)
             if three not in lookup:
                 lookup[three] = []
-            lookup[three].append((p,p_rem))
+            lookup[three].append((p, p_rem))
     else:
         for p in nested_structs:
             prs = PairedRegionsFromPairs(p)
@@ -1269,6 +1281,7 @@ def find_max_conflicts(conflicting_ids, cm, id_to_pr):
             max_start = max(start_vals.keys())
             return start_vals[max_start]
 
+
 def find_min_gain(conflicting_ids, cm, id_to_pr):
     """Return region ID of the region with the minimum gain
 
@@ -1319,6 +1332,7 @@ def find_min_gain(conflicting_ids, cm, id_to_pr):
             max_start = max(start_vals.keys())
             return start_vals[max_start]
 
+
 def add_back_non_conflicting(paired_regions, removed):
     """Return new PairedRegions object and new dict of removed regions
 
@@ -1336,11 +1350,11 @@ def add_back_non_conflicting(paired_regions, removed):
     """
     id_to_pr = paired_regions.byId()
     new_removed = removed.copy()
-    
+
     added = True
     # process removed from 5' to 3'
     order = [(pr.Start, pr.Id) for pr in new_removed.values()]
-    order.sort() # from low start value to high start value
+    order.sort()  # from low start value to high start value
     while added:
         added = False
         for start, region_id in order:
@@ -1355,7 +1369,7 @@ def add_back_non_conflicting(paired_regions, removed):
                 id_to_pr[region_id] = pr1
                 del new_removed[region_id]
                 order = [(pr.Start, pr.Id) for pr in new_removed.values()]
-                order.sort() # from low start value to high start value
+                order.sort()  # from low start value to high start value
                 added = True
                 break
 
@@ -1363,8 +1377,8 @@ def add_back_non_conflicting(paired_regions, removed):
 
 
 # Conflict-elimination heuristic.
-def conflict_elimination(pairs, sel_function, add_back=True,\
-    return_removed=False):
+def conflict_elimination(pairs, sel_function, add_back=True,
+                         return_removed=False):
     """Return pseudoknot-free Pairs object
 
     pairs -- Pairs object or list of tuples
@@ -1377,7 +1391,7 @@ def conflict_elimination(pairs, sel_function, add_back=True,\
         in too many regions being removed. Default value is True.
     return_removed -- boolean, if True a tuple of (nested pairs, removed pairs)
         will be returned. Default is False --> only nested pairs are returned.
-   
+
     CONFLICT ELIMINATION -- PSEUDOKNOT REMOVAL METHOD
     EC -- sel_function=find_max_conflicts
     EG -- sel_functino=find_min_gain
@@ -1410,17 +1424,19 @@ def conflict_elimination(pairs, sel_function, add_back=True,\
     if add_back:
         # collect IDs of non-conflicting removed regions
         prs, removed = add_back_non_conflicting(prs, removed)
-        
+
     if return_removed:
         rem = PairedRegions(list(removed.values())).toPairs()
         return prs.toPairs(), rem
     return prs.toPairs()
 
+
 def elim_wrapper(sel_function):
     def apply_to(pairs, add_back=True, return_removed=False):
-        return conflict_elimination(pairs, sel_function=sel_function,\
-            add_back=add_back, return_removed=return_removed)
+        return conflict_elimination(pairs, sel_function=sel_function,
+                                    add_back=add_back, return_removed=return_removed)
     return apply_to
+
 
 ec = elim_wrapper(sel_function=find_max_conflicts)
 eg = elim_wrapper(sel_function=find_min_gain)
@@ -1430,6 +1446,8 @@ eg = elim_wrapper(sel_function=find_min_gain)
 # =============================================================================
 
 # Incremental in order (IO) method
+
+
 def inc_order(pairs, reversed=False, return_removed=False):
     """Return pseudoknot-free Pairs object
 
@@ -1483,8 +1501,10 @@ def inc_order(pairs, reversed=False, return_removed=False):
         removed.sort()
         return result.toPairs(), removed
     return result.toPairs()
-    
+
 # Incremental by length (IL) method
+
+
 def inc_length(pairs, reversed=False, return_removed=False):
     """Return pseudoknot-free Pairs object
 
@@ -1516,7 +1536,7 @@ def inc_length(pairs, reversed=False, return_removed=False):
     # create conflict matrix to lookup the conflicts
     cm = ConflictMatrix(prs)
 
-    length_pos_data = {} # dict of {region_length: [(pr.start, pr)]}
+    length_pos_data = {}  # dict of {region_length: [(pr.start, pr)]}
     for pr in prs:
         if pr.Length not in length_pos_data:
             length_pos_data[pr.Length] = []
@@ -1525,13 +1545,13 @@ def inc_length(pairs, reversed=False, return_removed=False):
         v.sort()
         if reversed:
             v.reverse()
-    
+
     excluded = {}
     result = PairedRegions()
-   
+
     lengths = list(length_pos_data.keys())
     lengths.sort()
-    lengths.reverse() # longest regions first
+    lengths.reverse()  # longest regions first
 
     for pr_len in lengths:
         for pr_start, pr in length_pos_data[pr_len]:
@@ -1550,6 +1570,8 @@ def inc_length(pairs, reversed=False, return_removed=False):
     return result.toPairs()
 
 # Incremental by range (IR) method
+
+
 def inc_range(pairs, reversed=False, return_removed=False):
     """Return pseudoknot-free Pairs object
 
@@ -1561,7 +1583,7 @@ def inc_range(pairs, reversed=False, return_removed=False):
         to the 3' side is added first. Default is False (5' region preferred).
     return_removed -- boolean, if True a tuple of (nested pairs, removed pairs)
         will be returned. Default is False --> only nested pairs are returned.
-    
+
     INCREMENTAL BY RANGE (IR) -- PSEUDOKNOT REMOVAL METHOD
 
     This algorithm will process the paired regions from the one with the 
@@ -1587,9 +1609,9 @@ def inc_range(pairs, reversed=False, return_removed=False):
     # create conflict matrix to lookup the conflicts
     cm = ConflictMatrix(prs)
 
-    range_pos_data = {} # dict of {region_range: [(pr.start, pr)]}
+    range_pos_data = {}  # dict of {region_range: [(pr.start, pr)]}
     for pr in prs:
-        rr = pr.range() # region range
+        rr = pr.range()  # region range
         if rr not in range_pos_data:
             range_pos_data[rr] = []
         range_pos_data[rr].append((pr.Start, pr))
@@ -1622,6 +1644,7 @@ def inc_range(pairs, reversed=False, return_removed=False):
 # NUSSINOV RESTRICTED
 # =============================================================================
 
+
 def nussinov_fill(pairs, size):
     """Return filled dynamic programming search matrix with number of base pairs
 
@@ -1636,16 +1659,17 @@ def nussinov_fill(pairs, size):
     bp_dict = dict.fromkeys(pairs)
     m = zeros((size, size), int)
     for j in range(size):
-        for i in range(j-1,-1,-1):
+        for i in range(j - 1, -1, -1):
             options = []
-            options.append(m[i+1,j]) # i unpaired
-            options.append(m[i,j-1]) # j unpaired
-            if (i,j) in bp_dict: # i and j form a pair
-                options.append(m[i+1,j-1] + 1)
-            for k in range(i+1,j-1): # bifurcation
-                options.append(m[i,k] + m[k+1,j])
-            m[i,j] = max(options)
+            options.append(m[i + 1, j])  # i unpaired
+            options.append(m[i, j - 1])  # j unpaired
+            if (i, j) in bp_dict:  # i and j form a pair
+                options.append(m[i + 1, j - 1] + 1)
+            for k in range(i + 1, j - 1):  # bifurcation
+                options.append(m[i, k] + m[k + 1, j])
+            m[i, j] = max(options)
     return m
+
 
 def nussinov_traceback(m, i, j, pairs):
     """Return set of base pairs: nested structure with max number of pairs
@@ -1660,14 +1684,15 @@ def nussinov_traceback(m, i, j, pairs):
         a single solution containing the maximum number of base pairs.
     """
     bp_dict = dict.fromkeys(pairs)
-    if m[i,j] == 0: #or if i>=j:
+    if m[i, j] == 0:  # or if i>=j:
         return set()
-    if (i,j) in bp_dict and m[i+1,j-1] + 1 == m[i,j]:
-        return set([(i,j)]) | nussinov_traceback(m, i+1, j-1, pairs)
-    for k in range(i,j):
-        if m[i,j] == m[i,k] + m[k+1,j]:
-            return nussinov_traceback(m,i,k,pairs) | \
-                nussinov_traceback(m,k+1,j,pairs)
+    if (i, j) in bp_dict and m[i + 1, j - 1] + 1 == m[i, j]:
+        return set([(i, j)]) | nussinov_traceback(m, i + 1, j - 1, pairs)
+    for k in range(i, j):
+        if m[i, j] == m[i, k] + m[k + 1, j]:
+            return nussinov_traceback(m, i, k, pairs) | \
+                nussinov_traceback(m, k + 1, j, pairs)
+
 
 def nussinov_restricted(pairs, return_removed=False):
     """Return nested Pairs object containing the maximum number of pairs
@@ -1697,10 +1722,10 @@ def nussinov_restricted(pairs, return_removed=False):
     if not p.hasPseudoknots():
         nested = p  # if not Pseudoknots: return structure
     else:
-        all_items = [x for x,y in p] + [y for x,y in p]
-        max_idx = max([_f for _f in all_items if _f])+1
+        all_items = [x for x, y in p] + [y for x, y in p]
+        max_idx = max([_f for _f in all_items if _f]) + 1
         m = nussinov_fill(p, size=max_idx)
-        nested = nussinov_traceback(m, 0, max_idx-1, p)
+        nested = nussinov_traceback(m, 0, max_idx - 1, p)
         nested = Pairs(list(nested))
         nested.sort()
     if return_removed:
@@ -1711,7 +1736,6 @@ def nussinov_restricted(pairs, return_removed=False):
         return nested, removed
     else:
         return nested
-
 
 
 if __name__ == "__main__":
