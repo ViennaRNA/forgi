@@ -110,7 +110,7 @@ def cgs_from_args(args, nargs=1, rna_type="any", enable_logging=True, return_fil
         try:
             cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many,
                                  pdb_chain=load_chains,
-                                 pbd_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
+                                 pdb_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
                                  dissolve_length_one_stems=not args.keep_length_one_stems,
                                  pdb_annotation_tool=args.pdb_annotation_tool)
         except GraphConstructionError:
@@ -170,7 +170,7 @@ def sniff_filetype(file):
 
 
 def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
-             pbd_remove_pk=True, pdb_dotbracket="",
+             pdb_remove_pk=True, pdb_dotbracket="",
              dissolve_length_one_stems=True,
              pdb_annotation_tool=None):
     """
@@ -229,7 +229,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
     elif filetype == "pdb" or filetype == "cif":
         if pdb_chain:
             cgs = ftmc.CoarseGrainRNA.from_pdb(filename, load_chains=pdb_chain,
-                                               remove_pseudoknots=pbd_remove_pk and not pdb_dotbracket,
+                                               remove_pseudoknots=pdb_remove_pk and not pdb_dotbracket,
                                                secondary_structure=pdb_dotbracket,
                                                dissolve_length_one_stems=dissolve_length_one_stems,
                                                filetype=filetype, annotation_tool=pdb_annotation_tool)
@@ -237,7 +237,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             if pdb_dotbracket:
                 raise ValueError(
                     "pdb_dotbracket requires a chain to be given to avoid ambiguity.")
-            cgs = ftmc.CoarseGrainRNA.from_pdb(filename, remove_pseudoknots=pbd_remove_pk,
+            cgs = ftmc.CoarseGrainRNA.from_pdb(filename, remove_pseudoknots=pdb_remove_pk,
                                                dissolve_length_one_stems=dissolve_length_one_stems,
                                                filetype=filetype, annotation_tool=pdb_annotation_tool)
         if allow_many:

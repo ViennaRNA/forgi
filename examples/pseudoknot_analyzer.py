@@ -12,19 +12,22 @@ import forgi.utilities.commandline_utils as fuc
 import forgi.threedee.utilities.vector as ftuv
 from forgi.utilities.exceptions import GraphIntegrityError
 from forgi.utilities.exceptions import GraphConstructionError
-from numbered_dotbracket import NumberedDotbracket
+from forgi.utilities.numbered_dotbracket import NumberedDotbracket
 
 log = logging.getLogger(__name__)
 
 """
-Take the dotbracket string structure with pseudoknots from the rnaConverter (cg-File)
-and sort the different types of pseudoknots e.g H-type, kissing hairpin
-Prediction based on Reidys et al. concept: 
-Reidys, C.M. et al., 2011. Topology and prediction of RNA pseudoknots. Bioinformatics, 27(8), pp.1076–1085.
+Classify all pseudoknots found in the input 3D structure based on their shapes
+according to Reidys et al. concept into H-type, kissing hairpin,...
 
+Additionally, calculate the angles between stems in the poseudoknots.
+
+See:
+Reidys, C.M. et al., 2011. Topology and prediction of RNA pseudoknots.
+Bioinformatics, 27(8), pp.1076–1085.
 
 Input:
-python pk_identification_genus2.py filename.cg --minlength #
+python pseudoknot_analyzer.py filename.cg --minlength #
 
 :param minlength: Minimum length of each stem, default=2
 """
@@ -449,11 +452,14 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
 
 
 def main():
-    parser = fuc.get_rna_input_parser("Convert RNA files between cgs to dotbracket"
-            "with pseudoknots", "+", parser_kwargs={"conflict_handler":"resolve"})
+    parser = fuc.get_rna_input_parser("Find pseudoknots in RNA structures, "
+                                      "classify them into shapes and analyze "
+                                      "their 3D architecturre.", "+",
+                                      parser_kwargs={"conflict_handler":"resolve"})
     parser.add_argument("--pseudoknots", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--minlength", type= int, help= "Minimum length of each stem",
-                        default = 2)
+    parser.add_argument("--minlength", type= int, help= "Minimum length of each stem. "
+                            "Stems with fewer base-pairs are treated as unpaired.",
+                            default = 2)
 
     args =  parser.parse_args()
     args.pseudoknots=True

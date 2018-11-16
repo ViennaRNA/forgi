@@ -1,4 +1,4 @@
-from numbered_dotbracket import NumberedDotbracket
+from forgi.utilities.numbered_dotbracket import NumberedDotbracket
 
 def test_without_substr():
     db = "([)(([)])(([)({)])([)](([)](]))"
