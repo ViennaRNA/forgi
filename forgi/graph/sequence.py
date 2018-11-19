@@ -298,11 +298,18 @@ class SeqidList(SequenceABC):
         except KeyError:
             raise ValueError("{} not in list".format(elem))
 
+    def __ne__(self, other):
+        if not isinstance(other, SeqidList):
+            return NotImplemented
+        return not self==other
+
     def __eq__(self, other):
         if not isinstance(other, SeqidList):
             return NotImplemented
         return self._list == other._list
 
+    def __repr__(self):
+        return "SeqidList({})".format(repr(self._list))
 
 class Sequence(object):
     """
