@@ -703,7 +703,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             except KeyError as e:
                 try:
                     self._has_warned_old_vres
-                except NameError:
+                except AttributeError:
                     self._has_warned_old_vres = set()
                 if elem not in self._has_warned_old_vres:
                     log.warning(
