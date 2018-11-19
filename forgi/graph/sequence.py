@@ -733,7 +733,7 @@ class Sequence(object):
         """
         for k in sorted(self._modifications.keys()):
             yield self.k, self._modifications[k]
-        
+
     @property
     def with_missing(self):
         """

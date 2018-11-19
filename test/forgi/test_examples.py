@@ -112,7 +112,7 @@ class TestCompareRNA(unittest.TestCase):
         lines = cg_out.split("\n")
         self.assertEqual(lines[0], "ACC:\t1.000")
         self.assertEqual(lines[1], "RMSD:\t0.000")
-        self.assertEqual(lines[2], "PDB-RMSD (chain X):\t0.000")
+        self.assertEqual(lines[2], "PDB-RMSD (chains X):\t0.000")
 
     def test_compare_different(self):
         with self.assertRaises(sp.CalledProcessError):
