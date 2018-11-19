@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals
 from builtins import zip
 from builtins import range
 import sys
+import re
 import warnings
 import itertools
 import math
@@ -507,13 +508,16 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
                             "insertion": insertions[i]
                         })
         except KeyError:
-            import Bio
             mr = []
-            log.info("Header fields are: %s", parser.header)
-            log.warning(
-                "Old biopython version %s. No missing residues", Bio.__version__)
-            warnings.warn("Could not get information about missing residues."
-                          "Try updating your biopython installation.")
+            with open(in_filename) as f:
+                for wholeline in f:
+                    if wholeline.startswith("REMARK 465"):
+                        line = wholeline[10:].strip()
+                        mr_info = _parse_remark_465(line)
+                        if mr_info is not None:
+                            mr.append(mr_info)
+                    else:
+                        continue
         else:
             if mr:
                 log.info("This PDB has missing residues")
@@ -555,6 +559,50 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
              chains, mr, interacting_residues)
     return chains, mr, interacting_residues
 
+
+
+def _parse_remark_465(line):
+    """Parse missing residue remarks.
+    Returns a dictionary describing the missing residue.
+    The specification for REMARK 465 at
+    http://www.wwpdb.org/documentation/file-format-content/format33/remarks2.html#REMARK%20465
+    only gives templates, but does not say they have to be followed.
+    So we assume that not all pdb-files with a REMARK 465 can be understood.
+    Returns a dictionary with the following keys:
+    "model", "res_name", "chain", "ssseq", "insertion"
+    """
+    if line:
+        # Note that line has been stripped.
+        assert line[0] != " " and line[-1] not in "\n ", "line has to be stripped"
+    pattern = (r"""
+                (\d+\s[\sA-Z][\sA-Z][A-Z] |   # Either model number + residue name
+                 [A-Z]?[A-Z]?[A-Z])           # Or only residue name with
+                                              # 1 (RNA) to 3 letters
+                \s ([A-Za-z0-9])              # A single character chain
+                \s+(\d+[A-Za-z]?)$            # Residue number: A digit followed
+                                              # by an optional insertion code
+                                              # (Hetero-flags make no sense in
+                                              # context with missing res)
+                """)
+    match = re.match(pattern, line, re.VERBOSE)
+    if match is not None:
+        residue = {}
+        if " " in match.group(1):
+            model, residue["res_name"] = match.group(1).split(" ")
+            residue["model"] = int(model)
+        else:
+            residue["model"] = None
+            residue["res_name"] = match.group(1)
+        residue["chain"] = match.group(2)
+        try:
+            residue["ssseq"] = int(match.group(3))
+        except ValueError:
+            residue["insertion"] = match.group(3)[-1]
+            residue["ssseq"] = int(match.group(3)[:-1])
+        else:
+            residue["insertion"] = None
+        return residue
+    return None
 
 def enumerate_interactions_kdtree(model):
     relevant_atoms = [a for a in model.get_atoms() if a.name[0] in [
