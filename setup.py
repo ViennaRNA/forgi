@@ -12,8 +12,10 @@ def try_cythonize(arg):
     from Cython.Build import cythonize
     return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
   except Exception as e:
-    print(e)
-    return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
+    try:
+        return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
+    except Exception as e:
+        print("Could not compile C-code. Falling back to pure-python code")
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
