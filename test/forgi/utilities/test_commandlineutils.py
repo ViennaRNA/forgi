@@ -1,4 +1,10 @@
+from __future__ import print_function, unicode_literals, division
 import unittest
+
+try:
+    from io import StringIO
+except ImportError:
+    from StringIO import StringIO
 
 import forgi.utilities.commandline_utils as fuc
 import forgi.threedee.model.coarse_grain as ftmc
@@ -73,3 +79,7 @@ class TestCommanldineUtils(unittest.TestCase):
         bg2 = fuc.load_rna("test/forgi/data/pk.fa", "bg",
                            False, dissolve_length_one_stems=True)
         self.assertLess(len(bg2.defines), len(bg.defines))
+
+    def test_sniff_malformed_file(self):
+        file = StringIO("\n>fasta header\nAAAGGGCCC\n.........")
+        self.assertEqual(fuc.sniff_filetype(file), "fasta")

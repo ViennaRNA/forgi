@@ -136,8 +136,8 @@ def sniff_filetype(file):
     if line.startswith("ATOM") or line.startswith("HEADER") or line.startswith("HETATM"):
         return "pdb"
     line = line.strip()
-    # We allow comments in all files except PDB files.
-    while line.startswith("#"):
+    # We allow comments and empty lines in all files except PDB files.
+    while not line or line.startswith("#"):
         line = next(file).strip()
     if line.startswith("name"):
         return "forgi"
