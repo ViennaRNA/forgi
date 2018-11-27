@@ -202,8 +202,6 @@ def get_dotplot(lines):
                 bps[res1] = residues.index(res2)
                 bps[res2] = residues.index(res1)
             except ValueError as e:
-                log.error("bps = %s, residues = %s, res1 = %s, res2 = %s",
-                          bps, residues, res1, res2)
                 with log_to_exception(log, e):
                     log.error(
                         "bps = %s, residues = %s, res1 = %s, res2 = %s", bps, residues, res1, res2)

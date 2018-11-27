@@ -663,7 +663,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     raise RnaMissing3dError(
                         "No twists available for stem {}".format(stem))
                 else:
-                    log.warning("Reraising in add_all_virtual_residues")
+                    log.warning("Reraising an ERROR in add_all_virtual_residues")
                     raise
 
     def get_virtual_residue(self, pos, allow_single_stranded=False):
@@ -707,7 +707,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     self._has_warned_old_vres = set()
                 if elem not in self._has_warned_old_vres:
                     log.warning(
-                        "Using old virtual residues for loops: %s for pos %s in elem %s.", e, pos, elem)
+                        "No virtual residues have been loaded for loops: %s (for pos %s) in elem %s."
+                        "Using inaccurate position along the cylinder instead.", e, pos, elem)
                     self._has_warned_old_vres.add(elem)
                 if not allow_single_stranded:
                     raise ValueError(
@@ -960,7 +961,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             u, v, t, r1, u1, v1 = ftug.get_angle_stat_geometry(
                 stem1, twist1, stem2, twist2, bulge)
         except ZeroDivisionError as e:
-            with log_to_error(log, e):
+            with log_to_exception(log, e):
                 log.error("Error getting stats for elem %s", elem)
             raise
         dims = self.get_bulge_dimensions(elem)
@@ -1309,7 +1310,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         '''
         if len(list(self.stem_iterator())) == 0:
             log.warning(
-                "Cannnot calculate ROG (%s) for structure %s without stems", method, self.name)
+                "Cannnot calculate ROG (%s) for structure %s without stems. Returning 'nan'", method, self.name)
             return float("nan")
         if method == "fast":
             coords = self.get_ordered_stem_poss()
@@ -1554,8 +1555,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             assert node[0] == "f"
             log.warning("Twists for structures without any stems are 'nan'")
             return np.zeros(3) * float("nan"), np.zeros(3) * float("nan")
-            log.error("%s has no edges in cg with defines %s and edges %s",
-                      node, self.defines, self.edges)
         (s1b, s1e) = self.get_sides(connections[0], node)
 
         if len(connections) == 1:

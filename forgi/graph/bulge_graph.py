@@ -160,7 +160,7 @@ class BulgeGraph(BaseGraph):
             if pos != i:
                 if pos > i and len(seq) == num_nts:
                     log.warning(
-                        "Ignoring alternatiove structure in ct-file. Using only the first structure")
+                        "Ignoring alternative structure in ct-file. Using only the first structure")
                     break
                 else:
                     raise ValueError(
@@ -1221,7 +1221,7 @@ class BulgeGraph(BaseGraph):
         if elem[0] not in "mft":
             self.log()
             log.error("%s is not a multiloop node", elem)
-            return None
+            assert False
         return elem
 
     def shortest_mlonly_multiloop(self, ml_segment):
@@ -1738,7 +1738,7 @@ class BulgeGraph(BaseGraph):
             return 1
 
         raise ValueError("Position (%d) not in stem (%s)." % (pos, stem))
-        
+
 
     def get_sides(self, s1, b):
         """
@@ -2248,7 +2248,7 @@ class BulgeGraph(BaseGraph):
             return self.ang_types[bulge]
         else:
             if allow_broken:
-                stems = self.connections[bulge]
+                stems = self.connections(bulge)
                 s1, s2 = sorted(stems, key=lambda x: self.buildorder_of(x))
                 return self.connection_type(bulge, [s1, s2])
             else:
