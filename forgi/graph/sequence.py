@@ -304,8 +304,11 @@ class SeqidList(SequenceABC):
         return not self==other
 
     def __eq__(self, other):
-        if not isinstance(other, SeqidList):
+        if isinstance(other, list):
+            return self._list == other
+        elif not isinstance(other, SeqidList):
             return NotImplemented
+        log.debug("First element same? %s.", self._list[0]==other._list[0])
         return self._list == other._list
 
     def __repr__(self):

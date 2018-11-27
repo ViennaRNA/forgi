@@ -16,7 +16,8 @@ class RESID(Resid_base):
             r = resid_from_str(chain)
             return r
         else:
-            return Resid_base.__new__(cls, chain, resid)
+            resid = (resid[0], int(resid[1]), str(resid[2]))
+            return Resid_base.__new__(cls, str(chain), resid)
 
 
 Res = RESID  # So the repr can be used to create a RESID
@@ -43,7 +44,7 @@ def resid_from_str(resstr):
     idparts = resid.split(".")
     if len(idparts) == 1:
         idparts.append(" ")
-    return RESID(chain, (' ', int(idparts[0]), idparts[1]))
+    return RESID(str(chain), (' ', int(idparts[0]), str(idparts[1])))
 
 
 def resid_from_biopython(residue):
