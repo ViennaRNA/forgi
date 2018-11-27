@@ -16,6 +16,7 @@ def try_cythonize(arg):
         return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
     except Exception as e:
         print("Could not compile C-code. Falling back to pure-python code")
+        return []
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
