@@ -1100,17 +1100,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
         s = bg.get_multiloop_side('m2')
         self.assertEquals(s, (2, 3))
 
-    def test_get_any_sides(self):
-        bg = fgb.BulgeGraph.from_dotbracket('((..((..))..)).((..))')
-
-        self.assertEqual(bg.get_any_sides('s0', 'i0'), (1, 0))
-        self.assertEqual(bg.get_any_sides('i0', 's0'), (0, 1))
-
-        bg = fgb.BulgeGraph.from_dotbracket('((..((..))((..))))')
-        bg.log(logging.INFO)
-        self.assertEqual(bg.get_any_sides('s1', 'm0'), (0, 1))
-        self.assertEqual(bg.get_any_sides('m0', 's1'), (1, 0))
-
     def test_get_sides(self):
         with open('test/forgi/data/1ymo.bpseq', 'r') as f:
             lines = f.readlines()

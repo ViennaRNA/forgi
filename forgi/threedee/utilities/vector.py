@@ -528,55 +528,9 @@ def vector_rejection(a, b):
     return a - (n / d) * b
 
 
-def rotation_matrix_weave(axis, theta, mat=None):
-    '''
-    Calculate the rotation matrix for a rotation of theta degrees around axis.
-
-    Implemented in C++ using the weave module. Runs approximately 6x faster than
-    the numpy version below if no mat is passed in and around 20x faster if mat is
-    passed in.
-
-    Thanks to unutbu on StackOverflow
-
-    http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector
-
-    :param axis: The axis around which to rotate
-    :param theta: The angle of rotation in radians!
-    :return: A matrix which can be used to perform the given rotation. The coordinates
-             need only be multiplied by the matrix.
-    '''
-    if mat == None:
-        mat = np.eye(3, 3)
-
-    support = "#include <math.h>"
-    code = """
-        double x = sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
-        double a = cos(theta / 2.0);
-        double b = -(axis[0] / x) * sin(theta / 2.0);
-        double c = -(axis[1] / x) * sin(theta / 2.0);
-        double d = -(axis[2] / x) * sin(theta / 2.0);
-
-        mat[0] = a*a + b*b - c*c - d*d;
-        mat[1] = 2 * (b*c - a*d);
-        mat[2] = 2 * (b*d + a*c);
-
-        mat[3*1 + 0] = 2*(b*c+a*d);
-        mat[3*1 + 1] = a*a+c*c-b*b-d*d;
-        mat[3*1 + 2] = 2*(c*d-a*b);
-
-        mat[3*2 + 0] = 2*(b*d-a*c);
-        mat[3*2 + 1] = 2*(c*d+a*b);
-        mat[3*2 + 2] = a*a+d*d-b*b-c*c;
-    """
-
-    from scipy import weave
-    weave.inline(code, ['axis', 'theta', 'mat'],
-                 support_code=support, libraries=['m'])
-
-    return mat
-
-
 def rotation_matrix(axis, theta):
+    #TODO:  Use rotation_matrix_weave code (deleted in the commit that introduced this comment)
+    # as a guide how to implement this in cython in the future for speedup.
     '''
     Calculate the rotation matrix for a CLOCKWISE rotation of theta around axis.
     This is in the opposite direction that is usually used.
@@ -591,8 +545,6 @@ def rotation_matrix(axis, theta):
     :return: A matrix which can be used to perform the given rotation. The coordinates
              need only be multiplied by the matrix. (np.dot(matrix, vec))
     '''
-    # return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated
-    # The following would be the slower pure-python implementation (for comparison)
     if isinstance(axis, (np.ndarray, list)):
         axis = normalize(axis)
         b, c, d = -axis * math.sin(theta / 2)
@@ -620,16 +572,16 @@ def rotation_matrix(axis, theta):
             raise TypeError('Axis must be numpy array or one of "x", "y", "z"')
 
 
-def vector_set_rmsd(set1, set2):
+def _vector_set_rmsd(set1, set2):
     '''
     Calculate the not-centered rmsd between two sets of vectors.
+    Currently in forgi.threedee.utilities.pdb, but subject to future deprecation.
 
     :param set1: A matrix
     :param set2: Another matrix.
 
     :return: The rmsd between the rows of the matrix.
     '''
-    warnings.warn("DEPRECATED! Use ftms.rmsd!!!")
     rmsd = 0
     count = 0
     for i in range(len(set1)):
@@ -1090,24 +1042,6 @@ def closest_point_on_seg(seg_a, seg_b, circ_pos):
     proj_v = seg_v_unit * proj
     closest = proj_v + seg_a
     return closest
-
-
-# COVERAGE: Not used in forgi and ernwin at least since forgi v0.3. Consider deprecation
-def segment_circle(seg_a, seg_b, circ_pos, circ_rad):
-    '''
-    Something. Lifted from:
-
-    http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html
-    '''
-    closest = closest_point_on_seg(seg_a, seg_b, circ_pos)
-    dist_v = circ_pos - closest
-    mag = math.sqrt(sum(dist_v * dist_v))
-    if m > circ_rad:
-        return vec(0, 0)
-    if mag(dist_v) <= 0:
-        raise ValueError("Circle's center is exactly on segment")
-    offset = dist_v / mag(dist_v) * (circ_rad - mag(dist_v))
-    return offset
 
 
 def cylinder_line_intersection(cyl, line, r):

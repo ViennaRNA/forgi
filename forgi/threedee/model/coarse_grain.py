@@ -1504,11 +1504,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 assert self.get_sides(stem2, bulge) == (0, 1)
         return ftuv.vec_angle(vec1, vec2)
 
-    def get_coordinates_list(self):
-        warnings.warn("CoarseGrainRNA.get_coordinates_list is deprecated and being "
-                      "replaced by get_coordinates_array!")
-        return self.get_coordinates_array()
-
     def get_coordinates_array(self):
         '''
         Get all of the coordinates in one large array.

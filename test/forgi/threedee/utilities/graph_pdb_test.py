@@ -220,13 +220,6 @@ class TestGraphPDB(unittest.TestCase):
         nptest.assert_allclose(vres['N2'], np.array(
             [6.91170703,  2.35440312, -1.92080436]))
 
-    """def test_numbered_virtual_residues(self): #Not USED (?)
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
-
-        nres = ftug.numbered_virtual_residues(cg)
-        #fud.pv('nres')
-        #TODO assert something"""
-
 
 class TestOrientation(unittest.TestCase):
     def setUp(self):

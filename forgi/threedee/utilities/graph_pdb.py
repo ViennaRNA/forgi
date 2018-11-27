@@ -812,38 +812,6 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     plt.show()
     #assert False
 
-# Should be deprecated in future
-
-
-def get_mids(cg, chains, elem_name, seq_ids=True):
-    '''
-    Get the mid points of the abstract cylinder which represents a helix.
-
-    :param chain: The Bio.PDB representation of the 3D structure.
-    :param define: The define of the helix, as per the BulgeGraph
-                   definition standard.
-    :return: An array of two vectors representing the two endpoints of the
-             helix.
-    '''
-    coords, twists = stem_from_chains(cg, chains, elem_name)
-    return coords
-
-# Should be deprecated in future
-
-
-def get_twists(cg, chain, elem_name, mids=None):
-    '''
-    Get the projection of the (ca - mids) vectors onto the helix axis. This,
-    in a sense will define how much the helix twists.
-
-    :param cg: The CoarseGrainRNA representation
-    :param chain: The Bio.PDB representation of the 3D structure.
-    :param define: The name of the define
-    :return: Two vectors which represent the twist of the helix.
-    '''
-    coords, twists = stem_from_chains(cg, chain, elem_name)
-    return twists
-
 
 def total_helix_rotation(coords, twists, stem_len):
     """
@@ -958,27 +926,6 @@ def bg_virtual_residues(bg):
             vress += [vres[0] + vres[2], vres[0] + vres[3]]
 
     return np.array(vress)
-
-# Seems to be unused!
-
-
-def numbered_virtual_residues(bg):
-    '''
-    Return a list of virtual residues, along with their
-    nucleotide positions.
-
-    :param bg: A coarse grain RNA
-    :return: A list of tuples containing nucleotides numbers and coordinates.
-    '''
-    vress = []
-
-    for s in bg.sorted_stem_iterator():
-        for i in range(bg.stem_length(s)):
-            vres = virtual_res_3d_pos(bg, s, i)
-            vress += [(bg.defines[s][0] + i, vres[0] + vres[2]),
-                      (bg.defines[s][3] - i, vres[0] + vres[3])]
-
-    return vress
 
 
 def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
@@ -1474,20 +1421,6 @@ def add_stem_information_from_pdb_chains(cg):
             #cg.sampled[d] = [cg.name] + cg.defines[d]
 
 
-def add_bulge_information_from_pdb_chain(bg, chain):
-    '''
-    Add the information about the starts and ends of the bulges. The stems
-    have to be created beforehand.
-
-    Modifies the structure bg.
-
-    :param bg: The CoarseGrainRNA.
-    '''
-    warnings.warn("add_bulge_information_from_pdb_chain is deprecated."
-                  " Use cg.add_bulge_coords_from_stems instead!")
-    bg.add_bulge_coords_from_stems()
-
-
 def get_incomplete_elements(cg):
     """
     Get an estimated list of cg-elements which have missing residues in the PDB.
@@ -1502,50 +1435,6 @@ def get_incomplete_elements(cg):
             if cg.seq[r[0]:r[1]] != cg.seq.with_missing[r[0]:r[1]]:
                 incomplete.add(elem)
     return incomplete
-
-
-'''
-# Code not relying on the sequence classes missing residues being populated:
-def get_incomplete_elements(cg):
-    """
-    Get an estimated list of cg-elements which have missing residues in the PDB.
-
-    One of many problems with PDB data are residues, for which no
-    coordinates could be determined experimentally. This function gives
-    an estimated list of cg-elements, which are affected by missing residues.
-    """
-    incomplete = set()
-    for elem in cg.defines:
-        if _is_incomplete_element(cg, elem):
-            incomplete.add(elem)
-    return incomplete
-
-def _is_incomplete_element(cg, elem):
-    """
-    Returns True, if there is a gap in the pdb's seq-ids between nucleotides in
-    this  element.
-
-    This is a strong indicator for missing residues, but should be compared to
-    the REMARK 465 header in the future. (TODO)
-    """
-    # Adjacent=True for loops, but false for stems:
-    # A break between a stem and a loop counts towards the loop.
-    for side in cg.define_range_iterator(elem, adjacent = (not elem[0]=="s")):
-        prev_seq_id = None
-        for pos in range(side[0], side[1]+1):
-            try:
-                seq_id = cg.seq.to_resid(pos)
-            except IndexError as e:
-                with log_to_exception(log, e):
-                    log.error("For elem %s with define %s: Cannot generate seq_id for pos %s", elem, side, pos)
-                raise
-            if prev_seq_id is not None:
-                if seq_id.resid[1]>prev_seq_id.resid[1]+1:
-                    # We have a break.
-                    return True
-            prev_seq_id = seq_id
-    return False
-'''
 
 
 def add_loop_information_from_pdb_chains(bg):

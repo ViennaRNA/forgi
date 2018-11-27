@@ -17,7 +17,9 @@ class RESID(Resid_base):
             return r
         else:
             resid = (resid[0], int(resid[1]), str(resid[2]))
-            return Resid_base.__new__(cls, str(chain), resid)
+            if chain is not None:
+                chain = str(chain)
+            return Resid_base.__new__(cls, chain, resid)
 
 
 Res = RESID  # So the repr can be used to create a RESID
@@ -41,10 +43,12 @@ def resid_from_str(resstr):
         resid = resstr
         log.debug("No chain given in string {!r}".format(resstr))
         chain = None
+    if chain is not None:
+        chain = str(chain)
     idparts = resid.split(".")
     if len(idparts) == 1:
         idparts.append(" ")
-    return RESID(str(chain), (' ', int(idparts[0]), str(idparts[1])))
+    return RESID(chain, (' ', int(idparts[0]), str(idparts[1])))
 
 
 def resid_from_biopython(residue):

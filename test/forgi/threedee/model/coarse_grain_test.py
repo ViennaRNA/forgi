@@ -451,15 +451,6 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg.coords["f0"] = [0, 0, 0.], [12., 1, 1]
         self.assertTrue(math.isnan(cg.radius_of_gyration()))
 
-    @unittest.skip("Deprecated")
-    def test_get_coordinates_list(self):
-        cg = ftmc.CoarseGrainRNA.from_bg_file(
-            'test/forgi/threedee/data/1y26.cg')
-        self.check_graph_integrity(cg)
-
-        cl = cg.get_coordinates_list()
-        self.assertEqual(len(cl), len(cg.defines) * 2)
-
     def test_get_sides(self):
         cg = ftmc.CoarseGrainRNA.from_bg_file(
             'test/forgi/threedee/data/1gid.cg')

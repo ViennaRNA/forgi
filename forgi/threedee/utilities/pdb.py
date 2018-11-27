@@ -274,7 +274,7 @@ def residuelist_rmsd(c1_list, c2_list, sidechains=False, superimpose=True):
 
         return (len(all_atoms1), sup.rms, sup.rotran, dev_per_res)
     else:
-        return (len(all_atoms1), ftuv.vector_set_rmsd(crds1, crds2), None, dev_per_res)
+        return (len(all_atoms1), ftuv._vector_set_rmsd(crds1, crds2), None, dev_per_res)
 
 
 def get_first_chain(filename):

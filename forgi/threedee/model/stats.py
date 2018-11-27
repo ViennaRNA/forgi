@@ -431,19 +431,6 @@ class RandomAngleStats(object):
         (s.u, s.v, s.v, s.r1, s.u1, s.v1) = new_stats
         return s
 
-    # This function seems to be unused. Consider deprecation...
-    def stats_by_dimensions(self, dims, n):
-        '''
-        Return a set of n AngleStats for a bulge with a dimension
-        of of dims.
-
-        :param dims: The dimensions of the bulge (i.e. `(1,2)`)
-        :params n: The number of angle stats to return. If n is greater
-            than the number of stats stored, then return the number of
-            stats available.
-        '''
-        return self.angle_kdes[dims[0]][dims[1]].resample(size=n)
-
 
 class ConstructionStats(object):
     angle_stats = None

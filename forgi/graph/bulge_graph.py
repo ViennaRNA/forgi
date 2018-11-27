@@ -899,7 +899,7 @@ class BulgeGraph(BaseGraph):
             bd = self.get_bulge_dimensions(node, with_missing)
             log.debug("BulgeDimensions of %s are %s", node, bd)
             return bd
-    
+
     def get_bulge_dimensions(self, bulge, with_missing=False):
         """
         Return the dimensions of the bulge.
@@ -1738,28 +1738,7 @@ class BulgeGraph(BaseGraph):
             return 1
 
         raise ValueError("Position (%d) not in stem (%s)." % (pos, stem))
-
-    # Seems to be unused. Consider deprecation
-    def get_any_sides(self, e1, e2):
-        """
-        Get the side of e1 that e2 is on. The only difference from the get_sides
-        method is the fact that e1 does not have to be a stem.
-
-        0 indicates that e2 is on the side with lower numbered
-        nucleotides and 1 indicates that e2 is on the side with
-        greater nucleotide numbers.
-
-        :param e1: The name of the first element.
-        :param e2: The name of the second element.
-        :return: A tuple indicating the side of e1 adjacent to e2 and the side of e2
-                 adjacent to e1
-        """
-        if e1[0] == 's':
-            return self.get_sides(e1, e2)
-        elif e2[0] == 's':
-            return self.get_sides(e2, e1)[::-1]
-
-        return None
+        
 
     def get_sides(self, s1, b):
         """
@@ -1884,17 +1863,6 @@ class BulgeGraph(BaseGraph):
                 else:
                     seqs.insert(0, "")
         return seqs
-
-    def get_stem_direction(self, s1, s2):
-        """
-        Return 0 if the lowest numbered residue in s1
-        is lower than the lowest numbered residue in s2.
-        """
-        warnings.warn(
-            "get_stem_direction is deprecated and will be removed in the future!", stacklevel=2)
-        if self.defines[s1][0] < self.defines[s2][0]:
-            return 0
-        return 1
 
     def get_multiloop_side(self, m):
         """
@@ -2246,9 +2214,6 @@ class BulgeGraph(BaseGraph):
                 next_stem = set.difference(self.edges[current],
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
-                # If pseudoknots exist, the direction is not always 0!
-                # assert self.get_stem_direction(prev, build_order[-1][2])==0
-                # does not hold for pseudoknots!
         self.build_order = build_order
         self.ang_type = None
 
@@ -2273,13 +2238,8 @@ class BulgeGraph(BaseGraph):
 
         :param allow_broken: How to treat broken multiloop segments.
                              * False (default): Return None
-                             * The string "bo" or "build_order": Return the
-                               angle type according to the build-order
+                             * True: Return the angle type according to the build-order
                                (i.e. from the first built stem to the last-built stem)
-                             * True: Return the angle_type from the stem with
-                               lower nt number to the stem with higher nt number.
-                               In forgi 2.0 this will be removed and the behavior of "bo"
-                               will be used instead.
         """
         if self.ang_types is None:
             self.set_angle_types()
@@ -2287,16 +2247,9 @@ class BulgeGraph(BaseGraph):
         if bulge in self.ang_types:
             return self.ang_types[bulge]
         else:
-            if allow_broken == "bo" or allow_broken == " build_order":
+            if allow_broken:
                 stems = self.connections[bulge]
                 s1, s2 = sorted(stems, key=lambda x: self.buildorder_of(x))
-                return self.connection_type(bulge, [s1, s2])
-            elif allow_broken:
-                warnings.warn("The behavior of 'allow_broken=True' will change "
-                              "to reflect the behavior of 'allow_broken=\"bo\"' "
-                              "with forgi version 2.0", DeprecationWarning)
-                # Ordered by nucleotide number
-                s1, s2 = self.connections(bulge)
                 return self.connection_type(bulge, [s1, s2])
             else:
                 return None
