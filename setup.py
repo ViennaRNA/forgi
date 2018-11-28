@@ -143,7 +143,7 @@ try:
     setup(**setup_args)
 except BuildFailed as ex:
     log.warning("The C extension could not be compiled")
-    del setup_args[ext_modules]
+    del setup_args["ext_modules"]
     setup(**setup_args)
     log.info("Installed forgi without faster compiled C-code.")
 
