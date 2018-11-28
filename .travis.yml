@@ -12,7 +12,6 @@ python:
 
 os:
   - linux
-  - osx
 
 git:
   depth: 3
