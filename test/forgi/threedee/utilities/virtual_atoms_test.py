@@ -44,11 +44,7 @@ def realatom_vatom_rmsd(cg):
 class VirtualAtomsTest(unittest.TestCase):
     def setUp(self):
         pdbfile1 = "test/forgi/threedee/data/3FU2.pdb"
-        try:
-            self.cg1,  = ftmc.CoarseGrainRNA.from_pdb(
-                    pdbfile1, load_chains="biggest", annotation_tool="MC-Annotate")
-        except ftmc.AnnotationToolNotInstalled:
-            self.skipTest("Requires MC-Annotate for reproducibility")
+        self.cg1,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile1, load_chains="biggest")
 
         # pdbfile2 = "test/forgi/threedee/data/3V2F.pdb"  #Takes some time. Big structure
         #self.cg2,  = ftmc.CoarseGrainRNA.from_pdb(pdbfile2, load_chains="biggest")
