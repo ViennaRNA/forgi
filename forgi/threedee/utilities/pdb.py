@@ -555,7 +555,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
         if residues_interact(rna_res, other_res):
             log.error("%s and %s interact", rna_res, other_res)
             interacting_residues.add(rna_res)'''
-    log.info("LOADING DONE: chains %s, mr %s, ir: %s",
+    log.debug("LOADING DONE: chains %s, mr %s, ir: %s",
              chains, mr, interacting_residues)
     return chains, mr, interacting_residues
 
@@ -644,7 +644,7 @@ def enumerate_interactions_kdtree(model):
         else:
             log.debug("but %s has wrong atoms %s", other_res,
                       list(a.name for a in other_res.get_atoms()))
-    log.info("Interacting: %s", interacting_residues)
+    log.debug("Interacting: %s", interacting_residues)
     return interacting_residues
 
 

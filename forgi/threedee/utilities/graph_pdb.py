@@ -1153,7 +1153,19 @@ def _add_loop_virtual_residues(cg, element):
             "No virtual residues added for %s, because no pdb chain present", element)
         return
     for i, resid in enumerate(cg.define_residue_num_iterator(element, seq_ids=True)):
-        global_coords = cg.chains[resid.chain][resid.resid]["C1'"].coord
+        try:
+            global_coords = cg.chains[resid.chain][resid.resid]["C1'"].coord
+        except KeyError:
+            log.warning("Added virtual residue position for residue %s will be "
+                      "inaccurate, because no C1' is present. Atoms are %s", resid,
+                      list(cg.chains[resid.chain][resid.resid].child_dict.keys()))
+            p=np.zeros(3)
+            i=0
+            for atom in cg.chains[resid.chain][resid.resid]:
+                p+=atom.coord
+                i+=1
+            global_coords = p/i
+
         origin, basis = element_coord_system(cg, element)
         element_coords = ftuv.change_basis(
             global_coords - origin, basis, ftuv.standard_basis)

@@ -401,7 +401,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                         we never fall back to a different option but raise an
                         error, if the requested tool is unavailable.
         """
-        warnings.warn("We currently do not load any long-range interactions")
+        #warnings.warn("We currently do not load any long-range interactions")
         # We need to create files, so we can interface with
         # the annotation program.
         if remove_pseudoknots and secondary_structure:
@@ -448,8 +448,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # level, because there may be multiple components, so we cannot create
         # a BulgeGraph.
         if remove_pseudoknots:
-            log.info("Removing pseudoknots")
-            log.info(bpseq)
+            #log.info("Removing pseudoknots")
+            #log.info(bpseq)
             bpseq = cak.k2n_main(io.StringIO(bpseq), input_format='bpseq',
                                  #output_format = 'vienna',
                                  output_format='bpseq',
