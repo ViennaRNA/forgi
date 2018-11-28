@@ -4,6 +4,7 @@ from __future__ import division
 
 from builtins import range
 
+import warnings
 import unittest
 import sys
 import itertools as it
@@ -297,7 +298,8 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cgs[1].defines, cgs[3].defines)
 
     def test_multiple_models_in_file(self):
-        cgs = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
+        with self.assertWarns(warnings.UserWarning):
+            cgs = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
         self.assertEqual(len(cgs), 1)  # Only look at first model!
 
     def test_annotating_with_dssr(self):
@@ -492,7 +494,9 @@ class CoarseGrainTest(tfgb.GraphVerification):
             if d[0] in "mi":
                 cg.get_bulge_angle_stats(d)
 
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
         for d in cg.defines:
             if d[0] in "mi":
                 cg.get_bulge_angle_stats(d)
@@ -513,7 +517,9 @@ class CoarseGrainTest(tfgb.GraphVerification):
         cg.get_loop_stat('h3')
 
     def test_length_one_stems(self):
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb',
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb',
                                            remove_pseudoknots=False)
         self.check_graph_integrity(cg)
         self.check_cg_integrity(cg)
@@ -733,8 +739,10 @@ class RotationTranslationTest(unittest.TestCase):
     def setUp(self):
         self.cg1 = ftmc.CoarseGrainRNA.from_bg_file(
             'test/forgi/threedee/data/1y26.cg')
-        self.cg2, = ftmc.CoarseGrainRNA.from_pdb(
-            'test/forgi/threedee/data/1byj.pdb')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.cg2, = ftmc.CoarseGrainRNA.from_pdb(
+                        'test/forgi/threedee/data/1byj.pdb')
 
     def test_rotate_keeps_RMSD_zero(self):
         cg1_rot = copy.deepcopy(self.cg1)

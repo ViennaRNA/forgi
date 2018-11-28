@@ -3,6 +3,7 @@ import Bio.PDB as bpdb
 import os
 import sys
 import unittest
+import warnings
 
 import forgi.threedee.utilities.pdb as ftup
 import forgi.utilities.debug as fud
@@ -85,12 +86,14 @@ class TestPDBUtilities(unittest.TestCase):
         self.assertAlmostEqual(r[1], 27.700276108193787)
 
     def test_is_protein(self):
-        struct = bpdb.PDBParser().get_structure(
-            "temp", 'test/forgi/threedee/data/1MFQ.pdb')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            struct = bpdb.PDBParser().get_structure(
+                        "temp", 'test/forgi/threedee/data/1MFQ.pdb')
         chains = struct.get_chains()
 
         for c in chains:
-            ftup.is_protein(c)
+            self.assertEqual(ftup.is_protein(c), c.id!="A")
             # fud.pv('ftup.is_protein(c)')
 
             # code...

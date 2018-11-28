@@ -99,8 +99,9 @@ class TestFr3dParsing(unittest.TestCase):
             line = line.strip()
             if line.startswith("#") or not line:
                 continue
-            self.assertEqual(ftcta._parse_fred_line(
-                line, cgs, "?", "test/forgi/threedee/data/chain_id_mappings"), None)
+            with self.assertWarns(warnings.UserWarning):
+                self.assertEqual(ftcta._parse_fred_line(
+                    line, cgs, "?", "test/forgi/threedee/data/chain_id_mappings"), None)
 
     def test_fr3d_orientation(self):
         cg = ftmc.CoarseGrainRNA.from_bg_file(
@@ -126,7 +127,8 @@ class TestFr3dParsing(unittest.TestCase):
     def test_parse_fred_missing_chain(self):
         cg = ftmc.CoarseGrainRNA.from_bg_file(
             "test/forgi/threedee/data/1S72_0.cg")
-        a, skipped = ftcta.parse_fred(30, {"1S72": [
+        with self.assertWarns(warnings.UserWarning):
+            a, skipped = ftcta.parse_fred(30, {"1S72": [
                                       cg]}, A_MULTICHAIN_FR3D_OUTPUT, "test/forgi/threedee/data/chain_id_mappings")
         # Chain 9 is not connected to chain 0, thus not present in the cg-file.
         self.assertEqual(len(a), 0)
