@@ -151,7 +151,11 @@ class TestGraphPDB(unittest.TestCase):
         self.verify_virtual_twist_angles(cg, 's3')
 
     def test_coordinates_for_add_virtual_residues(self):
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        try:
+            cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb', annotation_tool="MC-Annotate")
+        except ftmc.AnnotationToolNotInstalled:
+            self.skipTest("This requires MC-Annotate")
+
         ftug.add_virtual_residues(cg, 's0')
         # XYZ coordinate for first residue are ok:
         self.assertAlmostEqual(cg.vposs["s0"][0][0], 2.3, delta=3,
@@ -210,7 +214,11 @@ class TestGraphPDB(unittest.TestCase):
     def test_virtual_residue_atom_exact_match(self):
         # This test serves to detect unwanted changes in the virtual atom calculation algorithm.
         # It is allowed to fail, if the virtual atom calculation changes.
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        try:
+            cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb',
+                                               annotation_tool="MC-Annotate")
+        except ftmc.AnnotationToolNotInstalled:
+            self.skipTest("Requires MC-Annotate")
         ftug.add_virtual_residues(cg, 's0')
         vres = ftug.virtual_residue_atoms(cg, 's0', 1, 0)
         print(vres['C8'])
@@ -269,8 +277,12 @@ class TestOrientation(unittest.TestCase):
 
 class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
-        self.rs_random_281, = ftmc.CoarseGrainRNA.from_pdb(
-            'test/forgi/threedee/data/RS_random_281_S_0.pdb')
+        try:
+            self.rs_random_281, = ftmc.CoarseGrainRNA.from_pdb(
+                'test/forgi/threedee/data/RS_random_281_S_0.pdb', annotation_tool="MC-Annotate")
+        except ftmc.AnnotationToolNotInstalled:
+            self.skipTest("Requires MC-Annotate")
+
         for key in self.rs_random_281.defines.keys():
             if key[0] == "s":
                 ftug.add_virtual_residues(self.rs_random_281, key)
@@ -300,7 +312,11 @@ class TestDistanceCalculation(unittest.TestCase):
 
 class TestAtomPosition_VirtualAtoms(unittest.TestCase):
     def setUp(self):
-        cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb')
+        try:
+            cg, = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1y26.pdb', annotation_tool="MC-Annotate")
+        except ftmc.AnnotationToolNotInstalled:
+            self.skipTest("Requires MC-Annotate")
+
         # cg.defines['s0']==[1,9,63,71]
         self.va1 = ftug.virtual_atoms(cg, sidechain=False)
         self.va2 = ftug.virtual_atoms(cg, sidechain=True)

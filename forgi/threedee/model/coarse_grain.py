@@ -67,6 +67,9 @@ from ... import config
 
 log = logging.getLogger(__name__)
 
+class AnnotationToolNotInstalled(ValueError):
+    pass
+
 
 try:
     profile  # The @profile decorator from line_profiler (kernprof)
@@ -165,7 +168,7 @@ def _annotate_pdb(filename, annotation_tool, filetype, subprocess_kwargs={}):
         else:
             log.info("x3dna-dssr is not installed or not in the PATH.")
             if program is not None:
-                raise ValueError(
+                raise AnnotationToolNotInstalled(
                     not_installed_msg.format("DSSR", "x3dna-dssr"))
     if program == "MC-Annotate" or (program is None and filetype == "pdb"):
         if filetype != "pdb":
@@ -183,7 +186,7 @@ def _annotate_pdb(filename, annotation_tool, filetype, subprocess_kwargs={}):
         else:
             log.info("MC-Annotate is not installed or not in the PATH.")
             if program is not None:
-                raise ValueError(not_installed_msg.format(
+                raise AnnotationToolNotInstalled(not_installed_msg.format(
                     "MC-Annotate", "MC-Annotate"))
     elif program == "forgi" or program is None:
         return None
