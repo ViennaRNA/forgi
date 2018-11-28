@@ -83,8 +83,10 @@ class CompareTest(unittest.TestCase):
             'test/forgi/threedee/data/1GID_A.cg')
         cg2 = ftmc.CoarseGrainRNA.from_bg_file(
             'test/forgi/threedee/data/1GID_A_sampled.cg')
-        residues1 = ftug.bg_virtual_residues(cg1)
-        residues2 = ftug.bg_virtual_residues(cg2)
+        cg1.add_all_virtual_residues()
+        cg2.add_all_virtual_residues()
+        residues1 = cg1.get_ordered_virtual_residue_poss()
+        residues2 = cg2.get_ordered_virtual_residue_poss()
         self.assertAlmostEqual(
             ftme.rmsd(residues1, residues2), ftme.cg_rmsd(cg1, cg2))
 

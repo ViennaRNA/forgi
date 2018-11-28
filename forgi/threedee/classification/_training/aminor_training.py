@@ -361,7 +361,7 @@ def parse_fred(cutoff_dist, all_cgs, fr3d_out, chain_id_mapping_dir):
               least one line did not lead to an Aminor Geometry
     """
     with warnings.catch_warnings():
-        warnings.simplefilter('always', UserWarning)
+        warnings.simplefilter('always', UserWarning, append=True)
         geometries = AmeGeometrySet()
         skipped = 0
         #: What type of AMinor interactions.

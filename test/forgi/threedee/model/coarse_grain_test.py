@@ -14,6 +14,7 @@ import math
 import logging
 import tempfile as tf
 import os.path
+import contextlib
 
 try:
     from unittest.mock import patch
@@ -33,6 +34,12 @@ from ...graph import bulge_graph_test as tfgb
 
 log = logging.getLogger(__name__)
 
+
+@contextlib.contextmanager
+def ignore_warnings():
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        yield None
 
 def cg_from_sg(cg, sg):
     '''
@@ -298,7 +305,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         self.assertEqual(cgs[1].defines, cgs[3].defines)
 
     def test_multiple_models_in_file(self):
-        with self.assertWarns(warnings.UserWarning):
+        with self.assertWarns(UserWarning) if hasattr(self, 'assertWarns') else ignore_warnings():
             cgs = ftmc.CoarseGrainRNA.from_pdb('test/forgi/threedee/data/1byj.pdb')
         self.assertEqual(len(cgs), 1)  # Only look at first model!
 

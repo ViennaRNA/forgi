@@ -99,7 +99,8 @@ class TestPDBUtilities(unittest.TestCase):
             # code...
 
     def test_interchain_contacts(self):
-        struct = bpdb.PDBParser().get_structure(
-            "temp", 'test/forgi/threedee/data/1MFQ.pdb')
-
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            struct = bpdb.PDBParser().get_structure(
+                "temp", 'test/forgi/threedee/data/1MFQ.pdb')
         ftup.interchain_contacts(struct)
