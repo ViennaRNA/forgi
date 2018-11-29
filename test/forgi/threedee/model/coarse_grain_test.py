@@ -83,13 +83,7 @@ def mock_run_mc_annotate(original_function):
                 lines = f.readlines()
             log.error("Using cached MC-Annotate output")
         except IOError:  # on py3 this is an alias of oserror
-            try:
-                lines = original_function(filename, subprocess_kwargs)
-            except:
-                if not ftmc.which("MC-Annotate"):
-                    raise unittest.SkipTest("This Test requires MC-Annotate for consistency.")
-                else:
-                    raise
+            lines = original_function(filename, subprocess_kwargs)
             with open(os.path.join("test", "forgi", "threedee", "data", new_fn), "w") as f:
                 print("\n".join(lines), file=f)
         log.info("Returning lines: %s", lines)
@@ -101,7 +95,10 @@ def mocked_read_config():
     """
     Require MC-Annotate for consistency. If not installed, tests should be skipped.
     """
-    return {"PDB_ANNOTATION_TOOL": "MC-Annotate"}
+    if not ftmc.which("MC-Annotate"):
+        raise unittest.SkipTest("This Test requires MC-Annotate for consistency.")
+    else:
+        return {"PDB_ANNOTATION_TOOL": "MC-Annotate"}
 
 
 @patch('forgi.config.read_config', mocked_read_config)

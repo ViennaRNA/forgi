@@ -6,9 +6,12 @@ Subpackages
 
 .. toctree::
 
+
     forgi.threedee.model
     forgi.threedee.utilities
     forgi.threedee.visual
+    forgi.threedee.classification
+
 
 Module contents
 ---------------

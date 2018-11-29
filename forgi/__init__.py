@@ -1,7 +1,7 @@
 __author__ = "Peter Kerpedjiev, Bernhard Thiel"
 __copyright__ = "Copyright 2012 - 2016"
 __license__ = "GNU Affero GPL v 3.0"
-__version__ = "2.0-alpha"
+__version__ = "2.0.0"
 __maintainer__ = "Bernhard Thiel"
 __email__ = "thiel@tbi.univie.ac.at"
 

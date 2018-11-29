@@ -1,5 +1,7 @@
 forgi\.config module
 ====================
 
-This module contains some configuration values, like the path to the stats file.
-
+.. automodule:: forgi.config
+    :members:
+    :undoc-members:
+    :show-inheritance:

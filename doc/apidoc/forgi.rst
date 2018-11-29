@@ -5,7 +5,7 @@ This is the documentation of the forgi package,
 generated from the docstrings.
 
 .. note::
-    Some submodules contain docstrings in a different format than the rest of the code base.
+    Some private submodules contain docstrings in a different format than the rest of the code base.
     They have been left out of this documentation. Please see the source code for their documentation.
 
 Subpackages

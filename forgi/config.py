@@ -13,7 +13,7 @@ ALLOWED_KEY_VALUES = {"PDB_ANNOTATION_TOOL": ["MC-Annotate", "DSSR", "forgi"]}
 def iter_configfiles():
     """
     Iterate over config file locations, from lowest priority to highest priority.
-    The file does not hve to exist.
+    The file does not have to exist.
     """
     for directory in [dirs.site_config_dir, dirs.user_config_dir]:
         filename = os.path.join(directory, "config.json")
@@ -21,6 +21,11 @@ def iter_configfiles():
 
 
 def read_config():
+    """
+    Read all configuration files and return a configuration dictionary
+
+    :returns: A dictionary.
+    """
     config = {}
     for filename in iter_configfiles():
         try:
