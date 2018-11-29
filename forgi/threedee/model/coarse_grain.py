@@ -199,6 +199,7 @@ def _run_dssr(filename, subprocess_kwargs={}):
     # See http://forum.x3dna.org/rna-structures/redirect-auxiliary-file-output/
     with fus.make_temp_directory() as dssr_output_dir:
         dssr_out = os.path.join(dssr_output_dir, "out")
+
         arguments = ['x3dna-dssr', "-i=" + filename,
                      "--prefix=" + os.path.join(dssr_output_dir, "d"),
                      "-o=" + dssr_out, "--json"]
@@ -212,7 +213,13 @@ def _run_dssr(filename, subprocess_kwargs={}):
                     with open(os.path.join(dssr_output_dir, "d-2ndstrs.bpseq"), encoding='ascii') as f:
                         bpseq = f.read()
                     with open(dssr_out) as f:
-                        dssr_dict = json.load(f)
+                        try:
+                            dssr_dict = json.load(f)
+                        except ValueError as e: # DSSR does not escape backslashes (see "http://forum.x3dna.org/bug-reports/json-output-should-escape-backslashes/"), which can be in windows paths. Escape them manually.
+                            f.seek(0)
+                            json_stri = f.read().replace('\\','\\\\')
+                            log.error(json_stri)
+                            dssr_dict = json.loads(json_stri)
                         nts = dssr_dict["nts"]
                         seq_ids = list(map(ftud.dssr_to_pdb_resid, [
                                        nt["nt_id"] for nt in nts]))

@@ -1,6 +1,7 @@
 * Create a release branch from develop. (Only bugfixes in release branch)
 * Grep code for "DEPRECATED", "DeprecationWarning" and similar words 
-  and remove remaining deprecated code.
+  and remove remaining deprecated code. (`grep -r -i Depreca forgi test examples`)
+* grep for log.warning, log.error and warnings.warn and reevaluate if this warning is needed.
 * Increment version number in setup.py, __init__.py, doc/conf.py (2 times) and in doc/index.rst
 * Run nosetests
 * Update api-documentation to include all (new) modules and subpackages. (venv/bin/sphinx-apidoc -o tempdir forgi --separate) followed by comparing and manually merging tempdir with doc/apidoc 
