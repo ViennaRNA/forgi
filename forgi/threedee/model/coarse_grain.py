@@ -12,12 +12,15 @@ import os.path as op
 import shutil
 import subprocess as sp
 import sys
-import tempfile as tf
 import time
 import math
 import warnings
 import itertools as it
 import json
+try:
+    from json import JSONDecodeError #py3k
+except ImportError: #py2k
+    JSONDecodeError = ValueError
 try:
     import io
 except ImportError:  # Python 2
@@ -216,7 +219,7 @@ def _run_dssr(filename, subprocess_kwargs={}):
                     with open(dssr_out) as f:
                         try:
                             dssr_dict = json.load(f)
-                        except ValueError as e: # DSSR does not escape backslashes (see "http://forum.x3dna.org/bug-reports/json-output-should-escape-backslashes/"), which can be in windows paths. Escape them manually.
+                        except JSONDecodeError as e: # DSSR does not escape backslashes (see "http://forum.x3dna.org/bug-reports/json-output-should-escape-backslashes/"), which can be in windows paths. Escape them manually.
                             f.seek(0)
                             json_stri = f.read().replace('\\','\\\\')
                             log.error(json_stri)

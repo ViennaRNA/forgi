@@ -12,8 +12,9 @@ import copy
 import time
 import math
 import logging
-import tempfile as tf
 import os.path
+import os
+import shutil
 import contextlib
 
 try:
@@ -30,6 +31,7 @@ import forgi.threedee.model.similarity as ftme
 import forgi.threedee.utilities.graph_pdb as ftug
 import forgi.threedee.utilities.vector as ftuv
 import forgi.utilities.debug as fud
+from forgi.utilities.stuff import make_temp_directory
 from ...graph import bulge_graph_test as tfgb
 
 log = logging.getLogger(__name__)
@@ -129,6 +131,34 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
                                          cg.coords[edges[1]][0]))
             self.assertFalse(np.allclose(cg.coords[edges[0]][1],
                                          cg.coords[edges[1]][1]))
+
+    def test_dssr_backslash_in_filename(self):
+        """
+        DSSR puts the input filename in the JSON, which makes the JSON invalid,
+        if a backslash is in it. We patch the DSSR JSON before parsing.
+        """
+        with make_temp_directory() as d:
+            # On Windows, bla is a directory, and the backslash is
+            # part of the path,
+            # on decent operating systems,
+            # the backslash is part of the filename.
+            filename=os.path.join(d, "bla\\something.pdb")
+            dir, rest = os.path.split(filename)
+            # On Windows, make the directory bla, on Linux do nothing
+            try:
+                os.makedirs(dir)
+            except OSError:
+                # Directory exists
+                pass
+            shutil.copy('test/forgi/threedee/data/1y26.pdb', filename)
+            try:
+                # Make sure we do not raise any error.
+                cg, = ftmc.CoarseGrainRNA.from_pdb(filename,
+                                               annotation_tool="DSSR")
+            except ftmc.AnnotationToolNotInstalled:
+                self.skipTest("This Test requires DSSR")
+        self.check_graph_integrity(cg)
+        self.assertGreater(len(cg.defines), 2)
 
     def test_from_mmcif(self):
         import Bio.PDB as bpdb
