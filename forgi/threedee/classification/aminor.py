@@ -112,6 +112,7 @@ def all_interactions(cg, clfs=None):
 
     This is more efficient than using classify_interaction iteratively,
     because it uses vectorization.
+
     :param clfs: A dictionary {loop_type: AMinorClassifier} where
                  loop_type is one of "i", "h", "m".
                  If clfs is None or a key is missing, uses the default
@@ -349,11 +350,11 @@ def get_relative_orientation(cg, loop, stem):
 
     The 3 parameters are:
 
-        1. Distance between the closest points of the two elements
-        2. The angle between the stem and the vector between the two
-        3. The angle between the minor groove of l2 and the projection of
-        the vector between stem and loop onto the plane normal to the stem
-        direction.
+        1.  Distance between the closest points of the two elements
+        2.  The angle between the stem and the vector between the two
+        3.  The angle between the minor groove of l2 and the projection of
+            the vector between stem and loop onto the plane normal to the stem
+            direction.
     '''
     point_on_stem, point_on_loop = ftuv.line_segment_distance(cg.coords[stem][0],
                                                               cg.coords[stem][1],

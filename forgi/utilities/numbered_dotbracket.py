@@ -24,11 +24,12 @@ class NumberedDotbracket():
                            I.e. the basepair of the helix that is at the 3' end
                            of the forward strand.
                            It is a list with the same length as residue_numers.
-                           Example 1. Every nucleotide only represents itself::
+
+                           *   Example 1. Every nucleotide only represents itself::
                                     dotbracket_str   (((..)))
                                     residue numbers  12345678
                                     helix_ends       12345678
-                           Example 2. The same helix as Ex. 1, now condensed.
+                           *  Example 2. The same helix as Ex. 1, now condensed.
                                     The helix 1-3,6-8 is represented by the basepair 1-8::
                                     dotbracket_str   (..)
                                     residue numbers  1458
@@ -37,7 +38,9 @@ class NumberedDotbracket():
                                     of the helix, going from 1 to 3.
                                     The nucleotide 8 represents the other strand,
                                     going from 6 to 8.
-                          The value for helix ends for unpaired nucleotides is ignored.
+
+                          The value for helix ends for unpaired nucleotides is
+                          undefined and should ignored.
         """
         dotbracket_str = dotbracket_str.replace("&","")
         if residue_numbers is None:

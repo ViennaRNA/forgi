@@ -2237,6 +2237,7 @@ class BulgeGraph(BaseGraph):
         spanning tree.
 
         :param allow_broken: How to treat broken multiloop segments.
+        
                              * False (default): Return None
                              * True: Return the angle type according to the build-order
                                (i.e. from the first built stem to the last-built stem)

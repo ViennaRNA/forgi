@@ -315,11 +315,17 @@ class SeqidList(SequenceABC):
 
 class Sequence(object):
     """
-    There are two indexing conventions:
-    *) 1-based indexing into the sequence for which structure information is available
+    A class holding the RNA sequence.
+
+    It supports 2 indexing conventions (see below), missing residues
+    and modified nucleotids.
+
+    The two indexing conventions are:
+
+    *  1-based indexing into the sequence for which structure information is available
        This uses indices of type integer.
        Integer based indexing can not address missing residues!
-    *) Indexing using PDB-style numbers (They can start at any positive or negative number and
+    *  Indexing using PDB-style numbers (They can start at any positive or negative number and
        may contain insertion codes or gaps.)
        This uses indices of type fgr.RESID
        PDB-Style indices may address missing residues (Reidues for which only sequence

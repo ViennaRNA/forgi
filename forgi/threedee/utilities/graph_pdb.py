@@ -1249,7 +1249,7 @@ def bounding_boxes(bg, s, i):
 
     :return: (origin, basis, [(c1, c2), (c1, c2)]) The bases
              and the corners defining the bounding box
-            of the two nucleotides
+             of the two nucleotides
     '''
 
     (vpos, basis, atoms) = stem_vres_reference_atoms(bg, s, i)
