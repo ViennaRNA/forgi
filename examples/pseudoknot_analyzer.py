@@ -24,7 +24,7 @@ Additionally, calculate the angles between stems in the poseudoknots.
 
 See:
 Reidys, C.M. et al., 2011. Topology and prediction of RNA pseudoknots.
-Bioinformatics, 27(8), pp.1076–1085.
+Bioinformatics, 27(8), pp.1076-1085.
 
 Input:
 python pseudoknot_analyzer.py filename.cg --minlength #
@@ -310,31 +310,6 @@ def classify_pseudoknot_genus2(pseudoknot):
         remaining_pks = []
     return pk_classes, remaining_pks
 
-def get_all_mls_between(stems, rna):
-    """
-    Get all ml-segments, that connect two of the stems in stems
-
-    :param stem: E.g. 's1'
-    :param rna: A forgi CoarseGrainRNA object
-    """
-    mls = []
-    for s1,s2 in itertools.combinations(stems, 2):
-        common_edges = rna.edges[s1] & rna.edges[s2]
-        assert all(m[0]=="m" for m in common_edges)
-        mls += common_edges
-    return common_edges
-
-def angle_between(stem1, stem2, rna):
-    """
-    Get all angles between the two offered stems
-
-    :param stem: E.g. 's1'
-    :param rna: A forgi CoarseGrainRNA object
-    """
-    vec1 = rna.coords.get_direction(stem1)
-    vec2 = rna.coords.get_direction(stem2)
-    return ftuv.vec_angle(vec1, vec2)
-
 
 def stem_parameters(stem, rna, side):
     """
@@ -367,7 +342,9 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
     :param filename: Filename of the current structure
     :parma pk_type: Class of the pseudoknot
     :param rna: A forgi CoarseGrainRNA object
-    :param pk: Structure of the pseudoknot
+    :param pk: Structure of the pseudoknot, a NumberedDotbracket object,
+               in a condensed (shadow-like) representation.
+               This representation always contains the most 5' basepair.
     :param pk_number: consecutive number of the pseudoknot
     """
     domains = rna.get_domains()
@@ -423,6 +400,21 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                 stem2 = stems_3p[0]
             else:
                 stem2 = stems_3p[i+1]
+
+        if rna.dssr:
+            stacks = rna.dssr.coaxial_stacks()
+            log.error(stacks)
+            for stack in stacks:
+                if stem1 in stack and stem2 in stack:
+                    # The two stems stack, but we do not specify along which
+                    # multiloop segment they stack.
+                    dataset["stems_are_stacking"].append(True)
+                    break
+            else:
+                dataset["is_stacking_dssr"].append(False)
+        else:
+            dataset["is_stacking_dssr"].append(float("nan"))
+
 
         pos1, dir1 = stem_parameters(stem1, rna, not strand)
         pos2, dir2 = stem_parameters(stem2, rna, strand2)

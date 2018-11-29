@@ -162,6 +162,7 @@ def _annotate_pdb(filename, annotation_tool, filetype, subprocess_kwargs={}):
         c = config.read_config()
         if "PDB_ANNOTATION_TOOL" in c:
             program = c["PDB_ANNOTATION_TOOL"]
+    log.info("Requested annotation program is %s", program)
     if program == "DSSR" or program is None:
         if which("x3dna-dssr"):
             return _run_dssr(filename, subprocess_kwargs)
@@ -169,7 +170,7 @@ def _annotate_pdb(filename, annotation_tool, filetype, subprocess_kwargs={}):
             log.info("x3dna-dssr is not installed or not in the PATH.")
             if program is not None:
                 raise AnnotationToolNotInstalled(
-                    not_installed_msg.format("DSSR", "x3dna-dssr"))
+                    not_installed_msg.format(program, "x3dna-dssr"))
     if program == "MC-Annotate" or (program is None and filetype == "pdb"):
         if filetype != "pdb":
             raise ValueError("MC-Annotate does not support MMCIF")
@@ -187,7 +188,7 @@ def _annotate_pdb(filename, annotation_tool, filetype, subprocess_kwargs={}):
             log.info("MC-Annotate is not installed or not in the PATH.")
             if program is not None:
                 raise AnnotationToolNotInstalled(not_installed_msg.format(
-                    "MC-Annotate", "MC-Annotate"))
+                    program, "MC-Annotate"))
     elif program == "forgi" or program is None:
         return None
     else:

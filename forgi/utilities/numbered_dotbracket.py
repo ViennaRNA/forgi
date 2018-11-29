@@ -21,12 +21,15 @@ class NumberedDotbracket():
                            stem with missing residues,
                            The helix end give the last/ first missing(condensed)
                            residue number which is represented by this basepair.
+                           I.e. the basepair of the helix that is at the 3' end
+                           of the forward strand.
                            It is a list with the same length as residue_numers.
-                           Example 1. Every nucleotide obnly represents itself::
+                           Example 1. Every nucleotide only represents itself::
                                     dotbracket_str   (((..)))
                                     residue numbers  12345678
                                     helix_ends       12345678
-                           Example 2. The helix 1-3,6-8 is represented by the basepair 1-8::
+                           Example 2. The same helix as Ex. 1, now condensed.
+                                    The helix 1-3,6-8 is represented by the basepair 1-8::
                                     dotbracket_str   (..)
                                     residue numbers  1458
                                     helix_ends       3456
