@@ -266,9 +266,6 @@ def _run_mc_annotate(filename, subprocess_kwargs={}):
         raise e
 
     lines = out.strip().split('\n')
-
-    # convert the mcannotate output into bpseq format
-
     return lines
 
 
