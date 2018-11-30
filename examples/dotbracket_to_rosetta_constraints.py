@@ -5,7 +5,7 @@ from builtins import range
 import sys
 import math
 import forgi.graph.bulge_graph as cgb
-
+import forgi.utilities.commanline_utils as fuc
 from optparse import OptionParser
 
 
@@ -24,38 +24,17 @@ def print_rosetta_constraints(bg):
 
 def main():
     usage = """
-        Usage: ./dotbracket_to_rosetta_constraints.py
-
         Convert a dotbracket file to a set of constraints for the Rosetta rna_denovo program.
-        These constraints will describe the stems within the structure by 
+        These constraints will describe the stems within the structure by
         showing which necleotides need to pair with which other nucleotides.
         """
-    parser = OptionParser(usage=usage)
-    parser.add_option('-f', '--fasta', action='store_true', default=False,
-                      help='The structure is being input as a fasta file')
-    '''
-    parser.add_option('-p', '--pseudoknots', action='store_true', default=False, 
-                      help='Output constraints for pseudoknots')
-    '''
+    parser = fuc.get_rna_input_parser(usage, nargs=1)
+    args = parser.parse_args()
 
-    (options, args) = parser.parse_args()
-
-    if len(args) < 1:
-        parser.print_help()
-        sys.exit(1)
-    if args[0] == '-':
-        f = sys.stdin
-    else:
-        f = open(args[0])
-
-    if options.fasta:
-        bg = cgb.from_fasta(args[0])
-    else:
-        brackets = "".join(f.readlines()).replace('\n', '')
-        bg = cgb.BulgeGraph()
-        bg.from_dotbracket(brackets)
-
-    print_rosetta_constraints(bg)
+    cgs = fuc.cgs_from_args(args)
+    if len(cgs)>1:
+        raise ValueError("More than one RNA molecule found in the input.")
+    print_rosetta_constraints(cgs[0])
 
 
 if __name__ == "__main__":

@@ -13,12 +13,12 @@ import numpy as np
 
 def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     """
-    Make a scatter of circles plot of x vs y, where x and y are sequence 
+    Make a scatter of circles plot of x vs y, where x and y are sequence
     like objects of the same lengths. The size of circles are in data scale.
 
     :param x,y: scalar or array_like, shape (n, )
                 Input data
-    :param s: scalar or array_like, shape (n, ) 
+    :param s: scalar or array_like, shape (n, )
               Radius of circle in data scale (ie. in data unit)
     :param c: color or sequence of color, optional, default : 'b'
               `c` can be a single color format string, or a sequence of color
@@ -41,7 +41,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     :returns: paths : `~matplotlib.collections.PathCollection`
 
 
-    Examples :: 
+    Examples ::
 
         a = np.arange(11)
         circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
@@ -51,7 +51,6 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     """
     from matplotlib.patches import Circle
     from matplotlib.collections import PatchCollection
-    import pylab as plt
     #import matplotlib.colors as colors
 
     if ax is None:

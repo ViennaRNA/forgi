@@ -18,13 +18,13 @@ can be used to refer to it and to determine its identity:
 
 * **fiveprime:** The unpaired nucleotides at the 5' end of a molecule/ chain. Name always starts with 'f' (e.g. 'f0').
 * **threeprime**: The unpaired nucleotides at the 3' end of a molecule/ chain. Name always start with 't' (e.g. 't0')
-* **stem:** Regions of contiguous canonical Watson-Crick base-paired nucleotides.
+* **stem:** Regions of contiguous canonical Watson-Crick base-paired nucleotides. By default, stems have at least 2 consecutive basepairs.
             Always start with 's' (e.g., 's0', 's1', 's2', ...)
-* **interior loop:** Bulged out nucleotides. Unpaird double stranded regions, flanked by stems on either side.
+* **interior loop:** Bulged out nucleotides and interior loops. An interior loop can contain unpaired bases on either strand or on both strands, flanked by stems on either side.
                      Always start with 'i' ('i0', 'i1', 'i2',...)
 * **multiloop segment:** Single-stranded regions bewteen two stems. Always start with 'm'. ('m0', 'm1', 'm2'...)
                       In the current version of forgi, pseudo-knots and exterior loops segments between stems are treated as multiloop segments.
-* **hairpin loop:** Always start with 'h'.
+* **hairpin loop:** Always starts with 'h'.
 
 A Simple Example
 ----------------
@@ -60,14 +60,15 @@ Evident in this image are six structural elements.
 
  * 3 stems
  * 2 hairpin loops
- * 1 multiloop
+ * 1 multiloop (consisting of 3 multiloop segments)
 
-The multiloop itself can be divided into three unpaired sections of
-nucleotides. Each of these elements is connected to certain other elements. For
+Each of these elements is connected to certain other elements. For
 example, the stem at the top is connected to two unpaired regions of the
 multi-loop. Both of the hairpin loops are connected to one stem each. If we
 abstract away the sequence information, we can imagine the structure as being
 represented by a graph.
+
+.. _forgiBGformat:
 
 The forgi package can be used to do just this using the `rnaConvert.py` script::
 
@@ -92,6 +93,7 @@ The numbers indicate the nucleotides that are
 present in each element. So the stem s0 is composed of nucleotides 1 to 9 on
 one strand and 63 to 71 on the other. The other elements are described in a
 similar manner. The hairpin *h0* includes the nucleotides 19 to 27.
+The *connect* section describes the edges in the graph.
 
 In this case it is difficult to picture which section is which from the text
 representation. To make it easier, we will generate a file
@@ -182,9 +184,10 @@ There are a number of ways to represent an RNA secondary structure and forgi
 can read many of them using factory-classmethods of the `BulgeGraph` object
 or its subclass, the `CoarseGrainedRNA` object.
 
-As a high-level alternative, there is the `load_rna` factory function found in
-`forgi.utilities.commandline_utils`. It automatically detects the filetype of the
-input file, calls the correct constructor and returns a list of CoarseGrainRNA objects.
+As a high-level alternative, there is the `load_rna` factory function available
+as `forgi.load_rna`. It automatically detects the filetype of the
+input file, calls the correct constructor and returns a list of
+CoarseGrainRNA objects.
 
 Loading a Structure from a Dot-Bracket String
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -192,7 +195,7 @@ Loading a Structure from a Dot-Bracket String
 A pseudoknot-free secondary structure can be represented a sequence of dots and
 brackets where the dots represent unpaired bases and the matching brackets
 represent base pairs. This representation is often delivered as the output of
-secondary structure prediction tools such as `RNAfold`_ and `Mfold`_. It can
+secondary structure prediction tools such as `RNAfold`_. It can
 also be used as input to create a skeleton graph in `forgi`::
 
     >>> import forgi.graph.bulge_graph as fgb
@@ -210,7 +213,6 @@ also be used as input to create a skeleton graph in `forgi`::
     connect s0 h0 m0
 
 .. _RNAfold: http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi
-.. _mFold: http://mfold.rna.albany.edu/?q=mfold
 
 Loading a Structure from a BPSEQ Formatted File:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -295,8 +297,7 @@ Using the load_rna factory function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you prefer writing high-level code or if you are unsure about the format of the input file,
-you should use the `load_rna` factory function from the `forgi.utilities.commandline_utils` module,
-or - if integration with the argparse module is desired - the `cgs_from_args` function::
+you should use the `forgi.load_rna` factory function:
 
     >>> import forgi.utilities.commanline_utils as fuc
     >>> rnas = fuc.load_rna("examples/input/1y26.fx")
@@ -305,6 +306,15 @@ or - if integration with the argparse module is desired - the `cgs_from_args` fu
     1y26 71
 
 
+Alternatively, if integration with the argparse module is desired, you can
+use the `forgi.utilities.commandline_utils.cgs_from_args` function::
+
+    >>> import forgi.utilities.commanline_utils as fuc
+    >>> parser = fuc.get_rna_input_parser("My commandline application does something")
+    >>> parser.add_argument("--some-argument", help="some custom argument "
+    ...                                     "not handled by forgi.", type=str)
+    >>> args = parser.parse_args()
+    >>> rnas = fuc.cgs_from_args(args)
 
 Querying the Secondary Structure
 --------------------------------
@@ -315,13 +325,14 @@ Finding the Partner of a Base Pair
 Consider the situation where we have a secondary structure and we want to know
 the base-pairing partner of nucleotide *n*. This is easily done with forgi::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph()
-    >>> bg.from_dotbracket('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
+    >>> bg, = forgi.load_rna('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
     >>> bg.pairing_partner(1)
     71
     >>> bg.pairing_partner(13)
     33
+
+The `pairing_partner` can alternatively take a PDB-style residue id as argument (see :ref:`forgi_threedee_tutorial`)
+
 
 Extracting a Pair Table
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -332,9 +343,7 @@ of nucleotides in the secondary structure. Every subsequent element **i**
 either contains the number 0, indicating the nucleotide **i** is unpaired or an
 integer **j** which is the pairing partner of **i**::
 
-    >>> import forgi.graph.bulge_graph as cgb
-    >>> bg = cgb.BulgeGraph()
-    >>> bg.from_dotbracket('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
+    >>> bg, = forgi.load_rna('(((((((((...((((((.........))))))........((((((.......))))))..)))))))))')
     >>> bg.to_pair_table()
     [71, 71, 70, 69, 68, 67, 66, 65, 64, 63, 0, 0, 0, 33, 32, 31, 30, 29, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 17, 16, 15, 14, 13, 0, 0, 0, 0, 0, 0, 0, 0, 60, 59, 58, 57, 56, 55, 0, 0, 0, 0, 0, 0, 0, 47, 46, 45, 44, 43, 42, 0, 0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
@@ -344,12 +353,12 @@ Getting the Name of an Element from the Residue Number
 
 Various applictions of ``forgi`` require knowledge of the internal name
 of a particular element. As these names are generated by ``forgi`` itself, it's
-useful to be to retrieve the name of an element given the number of a
-residue which is part of it. To demonstrate how to do this we will first need
+useful to retrieve the name of an element given the number of a
+residue which is part of it. To demonstrate how to do this we first need
 to load a secondary structure::
 
     >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
+    >>> bg = forgi.load_rna('((..))..((..))')
     >>> print bg.to_bg_string()
     name untitled
     length 14
@@ -364,15 +373,16 @@ to load a secondary structure::
 
 Then we can simply query for the element name based on the residue number::
 
-    >>> bg.get_node_from_residue_num(1)
+    >>> bg.get_elem(1)
     's0'
-    >>> bg.get_node_from_residue_num(3)
+    >>> bg.get_elem(3)
     'h0'
-    >>> bg.get_node_from_residue_num(9)
+    >>> bg.get_elem(9)
     's1'
 
 This can then be used to in other applications such as :ref:`loop-dimensions`,
-:ref:`dissolving-stems`, :ref:`iloop-iterating`, etc...
+:ref:`iloop-iterating`, etc...
+
 
 
 Finding the Length of the Longest Stem
@@ -387,8 +397,7 @@ example. The decomposition provided by forgi will, however, take this into
 account in enumerating the structural elements. It then becomes a matter of
 iterating over the stems and checking their lengths::
 
-    bg = cgb.BulgeGraph()
-    bg.from_dotbracket(brackets)
+    bg, = forgi.load_rna(brackets)
     biggest_stem = (-1, 'x')
     for s in bg.stem_iterator():
         if bg.stem_length(s) > biggest_stem[0]:
@@ -408,13 +417,11 @@ fasta representation::
 
     import forgi.graph.bulge_graph as fgb
 
-    bg = fgb.BulgeGraph()
-
     fa = """>blah
     AAAACCGGGCCUUUUACCCCAAAUUGGAA
     ((((..(((..)))..))))...((..))
     """
-    bg.from_fasta(fa)
+    bg, = fgb.BulgeGraph.from_fasta_text(fa)
 
 From the structure, we can see that there are two hairpins (`h0` and `h1`), one
 interior loop (`i0`) and one multiloop (`m0`). We can get the sequence for `h0`
@@ -452,7 +459,7 @@ segment), but in order to maintain consistency with interior loops, we make it
 a tuple by attaching 1000 as the second value::
 
     >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((.(.))..((..)))')
+    >>> bg, = forgi.load_rna('((.(.))..((..)))')
     >>> bg.get_bulge_dimensions('i0')
     (1, 0)
     >>> bg.get_bulge_dimensions('m0')
@@ -464,31 +471,32 @@ a tuple by attaching 1000 as the second value::
 
 .. _dissolving-stems:
 
-Removing basepairs and dissolving Stems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..
+    Removing basepairs and dissolving Stems
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Basepairs be removed from the skeleton graph using the `remove_base_pairs`
-memberfunction::
+    Basepairs can be removed from the skeleton graph using the `remove_base_pairs`
+    memberfunction::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
-    >>> bg.remove_base_pairs([(1,6), (9,14)])
-    >>> print bg.to_dotbracket_string()
-    .(..)....(..).
+        >>> import forgi.graph.bulge_graph as fgb
+        >>> bg, = forgi.load_rna('((..))..((..))')
+        >>> bg.remove_base_pairs([(1,6), (9,14)])
+        >>> print bg.to_dotbracket_string()
+        .(..)....(..).
 
-To remove a whole stem, use the `stem_bp_iterator` member function::
+    To remove a whole stem, use the `stem_bp_iterator` member function::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))')
-    >>> bg.remove_base_pairs(list(bg.stem_bp_iterator("s0")))
-    >>> print bg.to_dotbracket_string()
-    .(..)....(..).
+        >>> import forgi.graph.bulge_graph as fgb
+        >>> bg, = forgi.load_rna('((..))..((..))')
+        >>> bg.remove_base_pairs(list(bg.stem_bp_iterator("s0")))
+        >>> print bg.to_dotbracket_string()
+        .(..)....(..).
 
-Note::
+    Note::
 
-    In forgi 1.0, you have to explicitly convert the iterator to
-    a list. In future versions, this conversion will be done automatically by
-    `remove_base_pairsremove_base_pairs`.
+        In forgi 1.0, you have to explicitly convert the iterator to
+        a list. In future versions, this conversion will be done automatically by
+        `remove_base_pairs`.
 
 Finding Out Which Side of a Stem a Loop Is On
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -499,15 +507,15 @@ be on one side of it. Which side it's on can be elucidated using the
 ``get_sides`` function::
 
     >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str="..((..((..))..))..")
+    >>> bg, = forgi.load_rna("..((..((..))..))..")
     >>> bg.get_sides('s0', 'i0')
     (1, 0)
     >>> bg.get_sides('s1', 'i0')
     (0, 1)
 
 The result shows that the loop `i0` is on side 1 of stem `s0` and side 0 of
-stem `s1`. If `bg.get_sides(s,b)` return a tuple `(sb, se)`, where the nucleotides
-in `bg.coords[sb]` are on the side of the loop.
+stem `s1`. `bg.get_sides(s,b)` returns a tuple `(sb, se)`, where the nucleotides
+in `bg.coords[s][sb[0]]` are on the side of the loop.
 
 Iteration
 ---------
@@ -525,9 +533,8 @@ combining an iterator which yields all of the interior loops and another
 iterator which iterates over the nucleotides within a particular element::
 
     >>> import sys
-    >>> import forgi.graph.bulge_graph as cgb
-    >>> bg = cgb.BulgeGraph()
-    >>> bg.from_dotbracket("((..((..))..))..((..((..))..))")
+    >>> import forgi
+    >>> bg, = forgi.load_rna("((..((..))..))..((..((..))..))")
     >>> for iloop in bg.iloop_iterator():
     ...     for rn in bg.define_residue_num_iterator(iloop):
     ...             sys.stdout.write(str(rn) + " ")
@@ -541,8 +548,8 @@ Iterating Over The List of Elements
 
 To iterate over each stem in the structure, use the `stem_iterator()` function::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((..((..))..))..((..((..))...)).')
+    >>> import forgi
+    >>> bg, = forgi.load_rna('((..((..))..))..((..((..))...)).')
     >>> print list(bg.stem_iterator())
     ['s3', 's2', 's1', 's0']
 
@@ -593,13 +600,13 @@ As an example, consider the following structure:
     :width: 200
     :align: center
 
-.. python examples/graph_to_neato.py -c "((..((.)).(.).))" | neato -Tpng -o doc/mst_init.png
+..
+    rnaConvert.py -T neato "((..((.)).(.).))" --keep-length-one-stems | neato -Tpng -o doc/mst_init.png
 
 To break the cycle, we would like to remove the segment 'm0'. This is easily
 done using the `get_mst()` function of the `BulgeGraph` data structure::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str="((..((.)).(.).))")
+    >>> bg, = forgi.load_rna("((..((.)).(.).))")
     >>> bg.get_mst()
     set(['s2', 's1', 's0', 'm1', 'm2'])
 
@@ -612,8 +619,7 @@ Traversing the Graph
 We can traverse all of the loops in a graph in breadth-first manner using the
 `traverse_graph` function::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
+    >>> bg, = forgi.load_rna('(.(.(.(.).(.).).(.).))')
     >>> bg.traverse_graph()
     [('s0', 'i0', 's1'), ('s1', 'm1', 's5'), ('s5', 'm4', 's2'), ('s2', 'm3', 's4'), ('s4', 'm5', 's3')]
 
@@ -624,25 +630,34 @@ has the following three elements: (from_stem, loop, to_stem).
 Finding the elements which form the multiloops of a structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `find_multiloop_loops()` function returns a list of sets where each set
-contains the elements that are part of a particular junction.
+The `junctions` property returns a list of lists, where each inner list
+describes a single non-pseudoknotted multiloop.
 
 
 .. image:: find_loops.png
     :width: 290
     :align: center
 
-.. python examples/graph_to_neato.py -c "(.(.(.(.).(.).).(.).))" | neato -Tpng -o doc/mst_init.png
+..
+    rnaConvert.py -T neato '(.(.(.(.).(.).).(.).))' --keep-length-one-stems | neato -Tpng -o doc/find_loops.png
+
 
 Example::
 
-    >>> import forgi.graph.bulge_graph as fgb
-    >>> bg = fgb.BulgeGraph(dotbracket_str='(.(.(.(.).(.).).(.).))')
-    >>> print bg.find_multiloop_loops()
-    [set(['s3', 's2', 's4', 'm5', 'm3', 'm2']), set(['s2', 's1', 's5', 'm4', 'm1', 'm0'])]
+    >>> import forgi
+    >>> bg, = forgi.load_rna('(.(.(.(.).(.).).(.).))', dissolve_length_one_stems=False)
+    >>> print bg.junctions()
+    [['m0', 'm4', 'm5'], ['m1', 'm2', 'm3']]
+
+The order of the loops and within the loops is well defined:
+The loops are ordered alphabetically by their first element.
+The order inside the loop is from the 5' to 3' along the RNA chain.
+
+Fin ding rods or helices
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Calculating the Minimum Secondary Structure Distance Between Two Elements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The secondary structure distance, in our case, will be calculated as the
 distance along the backbone or along base-pair links. When calculated between
@@ -652,7 +667,7 @@ in each of the two elements.
 Consider the following example::
 
 
-    >>> bg = fgb.BulgeGraph(dotbracket_str='((..))..((..))((..))')
+    >>> bg, = forgi.load_rna('((..))..((..))((..))')
     >>> bg.ss_distance('s0', 's1')
     3
     >>> bg.ss_distance('s0', 's2')
@@ -679,7 +694,7 @@ To specify the secondary structure of an RNA molecule, one needs to pass in a
 parameter file indicating which nucleotides are paired.
 
 Given an dot-bracket sequence as input, forgi can be easily be used to generate
-the parameter file for rna_denovo.Using the secondary structure of 1y26 (shown
+the parameter file for rna_denovo. Using the secondary structure of 1y26 (shown
 in the first example) one can run the appropriate example:
 
 ``python examples/dotbracket_to_rosetta_constraints.py examples/1y26_ss.dotbracket``

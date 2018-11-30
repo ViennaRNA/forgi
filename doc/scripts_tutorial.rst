@@ -4,39 +4,44 @@ Useful scripts coming with forgi
 ================================
 
 Forgi comes with a few scripts in the example folder.
-Here some of the most useful are documented.
+The most useful ones get installed automatically and are explained here.
 
-Visualization scripts
-~~~~~~~~~~~~~~~~~~~~~
+Visualization script
+--------------------
 
-There are scripts for visualizing PDB structures and coarse-grain RNA structures
-in the forgi file format (see :doc:`graph_tutorial` and :doc:`threedee_tutorial`).
-These scripts require pymol and create a coarse grained representation based on
-structural elements as compiled graphics object.
+The script `visualize_rna.py` is a wrapper around PyMol for visualizing PDB
+structures and coarse-grain RNA structures in the forgi file format.
+This script created a coarse grained representation of the RNA based on
+structural elements as compiled graphics object and displays it along the
+all-atom structure (if present).
 
 To view a pdb file use::
 
-    visualize_pdb.py 1jj2.pdb
+    visualize_rna.py 1jj2.pdb
 
 This will display a cleaned version of the original PDB structure (with proteins removed)
 together with the secondary structure representation as compiled graphics object. In addition,
 selections for each stem and loop element are defined.
+You can use PyMol's "Load" button to load the raw PDB (with proteins) into
+PyMol. It will be oriented correctly.
 
-To view a cg file use::
+If you view a file in the forgi file format (`visualize_rna.py 1y26.cg`), only
+the compiled graphics object will be shown, because no all-atom coordinates
+are present.
 
-    visualize_cg.py 1y26.cg
+Use :code:`visualize_rna.py -x 1y26.cg` to show coarse-grained element names.
 
-Use :code:`visualize_cg.py -x 1y26.cg` to show coarse-grained element names.
-
-Use :code:`visualize_cg.py --virtual-atoms 1y26.cg` to show virtual atoms for the backbone.
-
-Use :code:`visualize_cg.py --sidechain-atoms 1y26.cg` to show all virtual atoms.
+Use :code:`visualize_rna.py --virtual-atoms 1y26.cg` to show virtual atoms for
+the backbone and :code:`visualize_cg.py --sidechain-atoms 1y26.cg` to show all
+virtual atoms. Virtual atoms are not the true atom positions, but instead
+calculated based on ideal helices, the coarse-grained helix twist and the
+coarse-grained helix coordinates.
 
 File format conversions
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 To convert files between the file formats "fasta with secondary structure", "dotbracket string",
-"coarse-grain file", "bpseq", "pdb" and "mmcif", use the :code:`rnaConvert.py` script::
+"coarse-grain forgi file", "bpseq", "pdb", "mmcif" and "ct", use the :code:`rnaConvert.py` script::
 
     rnaConvert.py 1jj2.pdb -T forgi
 
@@ -61,10 +66,10 @@ a file will be created for each of them, with numbers appended to the filename.
 Render the graph-representation of a Bulge Graph as an image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run the following command, which requires neato, to generate a png image
-of the graph represenation of the RNA::
+Run the following command, which requires neato (http://www.graphviz.org/),
+to generate an svg image of the graph represenation of the RNA::
 
-    rnaConvert.py 1y26.cg -T neato | neato -Tpng -o /tmp/test.png
+    rnaConvert.py 1y26.cg -T neato | neato --Tsvg -o /tmp/test.svg
 
 
 

@@ -795,7 +795,6 @@ class BulgeGraph(BaseGraph):
         out = []
         multiloops = self.find_mlonly_multiloops()
         for ml in multiloops:
-            ml = sorted(ml)
             if self.is_loop_pseudoknot(ml):
                 continue
             else:
@@ -1515,7 +1514,7 @@ class BulgeGraph(BaseGraph):
             first_i = loop.index(first)
             loop = loop[first_i:] + loop[:first_i]
             loops.append(tuple(loop))
-        return loops
+        return list(sorted(loops))
 
     def describe_multiloop(self, multiloop):
         """
@@ -1960,6 +1959,12 @@ class BulgeGraph(BaseGraph):
         return (None, None)
 
     def get_flanking_sequence(self, bulge_name, side=0):
+        """
+        Return the sequence of a bulge and the adjacent strand of the adjacent stems.
+
+        :param bulge_name: The name of the bulge, e.g. 'h0'
+        :param side: Used for interior loops: The strand of interest (0=forward, 1=backward)
+        """
         if len(self.seq) == 0:
             raise ValueError(
                 "No sequence present in the bulge_graph: %s" % (self.name))
@@ -2237,7 +2242,7 @@ class BulgeGraph(BaseGraph):
         spanning tree.
 
         :param allow_broken: How to treat broken multiloop segments.
-        
+
                              * False (default): Return None
                              * True: Return the angle type according to the build-order
                                (i.e. from the first built stem to the last-built stem)
