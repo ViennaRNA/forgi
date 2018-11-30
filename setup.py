@@ -104,10 +104,10 @@ setup_args = {
       "install_requires":[
 		'numpy>=1.10.0',
                 'scipy>=0.19.1',
-                'networkx>=2.0',
-                'future',
-                'biopython',
                 'pandas>=0.20',
+                'future',
+                'networkx>=2.0',
+                'biopython',
                 'appdirs>=1.4',
                 'logging_exceptions>=0.1.8',
 	],
