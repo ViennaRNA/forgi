@@ -27,8 +27,7 @@ log = logging.getLogger(__name__)
 
 def get_parser():
     parser = fuc.get_rna_input_parser('Visualize a 3D structure in pymol.',
-                                      '+', '3d')
-
+                                       '3d')
     parser.add_argument('--thin-cylinders', default=None,
                         help='Make coarse_grain RNA thinner')
     parser.add_argument('--virtual-atoms', default=False, action='store_true',

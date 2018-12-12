@@ -29,7 +29,7 @@ def main(parser):
 
     with fuc.hide_traceback():
         cg1, cg2 = fuc.cgs_from_args(
-            args, nargs=2, rna_type="3d", enable_logging=True)
+            args, rna_type="3d", enable_logging=True)
 
     dir1 = np.array(args.directions[0].split(","), dtype=float)
     dir2 = np.array(args.directions[1].split(","), dtype=float)

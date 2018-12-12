@@ -14,7 +14,7 @@ import logging
 def main(args):
 
     with fuc.hide_traceback():
-        bg, = fuc.cgs_from_args(args, 1, "any", enable_logging=True)
+        bg, = fuc.cgs_from_args(args, "any", enable_logging=True)
 
     multiloops, _ = bg.find_multiloop_loops()
     for multi in multiloops:

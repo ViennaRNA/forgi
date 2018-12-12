@@ -50,7 +50,7 @@ def main():
                              "The final model will be trained on all the data.")
 
     args = parser.parse_args()
-    cgs, cg_filenames = fuc.cgs_from_args(args, "+", rna_type="only_cg",
+    cgs, cg_filenames = fuc.cgs_from_args(args, rna_type="only_cg",
                                           return_filenames=True)
     ftcta.create_geometry_file(args.trainingsdata_out, cgs, cg_filenames,
                                args.fr3d_result, args.chain_id_mapping_dir,

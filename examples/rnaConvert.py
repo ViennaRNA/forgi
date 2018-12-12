@@ -68,7 +68,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     with fuc.hide_traceback():
         cgs = fuc.cgs_from_args(
-            args, "+", rna_type=FILETYPES[args.target_type].rna_type)
+            args, rna_type=FILETYPES[args.target_type].rna_type)
 
     if args.filename:
         args.to_file = True

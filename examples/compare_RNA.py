@@ -31,7 +31,7 @@ def get_parser():
 def main(args):
     with fuc.hide_traceback():
         cg1, cg2 = fuc.cgs_from_args(
-            args, 2, rna_type="3d", enable_logging=True)
+            args, rna_type="3d", enable_logging=True)
 
         if cg1.defines != cg2.defines:
             print(
@@ -60,9 +60,9 @@ def pdb_rmsd(cg1, cg2):
     reslist1 = []
     reslist2 = []
     for chain in common_chains:
-        reslist1.extend(cr for cr in cg1.chains[chain].get_list() 
+        reslist1.extend(cr for cr in cg1.chains[chain].get_list()
                          if cr.resname.strip() in ftup.RNA_RESIDUES)
-        reslist2.extend(cr for cr in cg2.chains[chain].get_list() 
+        reslist2.extend(cr for cr in cg2.chains[chain].get_list()
                          if cr.resname.strip() in ftup.RNA_RESIDUES)
     if common_chains:
         print("PDB-RMSD (chains {}):\t{:.3f}".format("-".join(common_chains),

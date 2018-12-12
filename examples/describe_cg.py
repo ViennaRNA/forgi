@@ -319,7 +319,7 @@ parser = generateParser()
 if __name__ == "__main__":
     args = parser.parse_args()
     cgs, filenames = fuc.cgs_from_args(
-        args, "+", "any", enable_logging=True, return_filenames=True)
+        args, "any", enable_logging=True, return_filenames=True)
     data = defaultdict(list)
 
     if args.distances:

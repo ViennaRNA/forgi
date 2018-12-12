@@ -26,7 +26,7 @@ def main(parser):
     sources = c.defaultdict(list)
 
     cgs = fuc.cgs_from_args(
-        args, nargs="+", rna_type="pdb", enable_logging=True)
+        args, rna_type="pdb", enable_logging=True)
     for i, cg in enumerate(cgs):
 
         if len(list(cg.stem_iterator())) == 0:
