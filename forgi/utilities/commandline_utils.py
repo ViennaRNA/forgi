@@ -122,6 +122,7 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
     cg_rnas = []
     filenames = []
     for rna in args.rna:
+        log.debug("Load RNA %s", rna)
         if rna_type == "only_cg":
             args.chains = None
             args.pseudoknots = None
@@ -143,8 +144,9 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
                 raise
             else:
                 log.exception("The PDB %s was skipped due to the following error", rna)
-        cg_rnas.extend(cg_or_cgs)
-        filenames.extend([rna] * len(cg_or_cgs))
+        else:
+            cg_rnas.extend(cg_or_cgs)
+            filenames.extend([rna] * len(cg_or_cgs))
     if return_filenames:
         return cg_rnas, filenames
     else:

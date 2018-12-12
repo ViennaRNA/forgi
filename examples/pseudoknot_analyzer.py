@@ -455,7 +455,7 @@ def main():
 
     args =  parser.parse_args()
     args.pseudoknots=True
-    rnas, filenames = fuc.cgs_from_args(args, "+", rna_type="any",return_filenames = True, skip_errors=True)
+    rnas, filenames = fuc.cgs_from_args(args, rna_type="any",return_filenames = True, skip_errors=True)
 
 
     #variables for statistics
