@@ -122,10 +122,6 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
     cg_rnas = []
     filenames = []
     for rna in args.rna:
-        if isinstance(nargs, int):
-            allow_many = False
-        else:
-            allow_many = True
         if rna_type == "only_cg":
             args.chains = None
             args.pseudoknots = None
@@ -136,7 +132,7 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
         else:
             load_chains = None
         try:
-            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=allow_many,
+            cg_or_cgs = load_rna(rna, rna_type=rna_type, allow_many=True,
                                  pdb_chain=load_chains,
                                  pdb_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
                                  dissolve_length_one_stems=not args.keep_length_one_stems,
@@ -145,13 +141,9 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
             if not skip_errors:
                 raise
             else:
-                log.exception("The following PDB was skipped")
-        if allow_many:
-            cg_rnas.extend(cg_or_cgs)
-            filenames.extend([rna] * len(cg_or_cgs))
-        else:
-            cg_rnas.append(cg_or_cgs)
-            filenames.append(rna)
+                log.exception("The PDB %s was skipped due to the following error", rna)
+        cg_rnas.extend(cg_or_cgs)
+        filenames.extend([rna] * len(cg_or_cgs))
     if return_filenames:
         return cg_rnas, filenames
     else:
@@ -204,7 +196,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
     """
     :param rna_type: One of "any", and "3d" and "pdb"
 
-                     *  "any": Return either BulgeGraph or CoarseGrainRNA objekte,
+                     *  "any": Return either BulgeGraph or CoarseGrainRNA object,
                                depending on the input format
                      *  "only_cg": Only accept cg-files.
                      *  "3d":  Return CoarseGrainRNA objects,
