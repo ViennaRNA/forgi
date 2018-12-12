@@ -86,7 +86,35 @@ def get_rna_input_parser(helptext, nargs=1, rna_type="any", enable_logging=True,
     return parser
 
 
-def cgs_from_args(args, nargs=1, rna_type="any", enable_logging=True, return_filenames=False, skip_errors=False):
+def cgs_from_args(args, rna_type="any", enable_logging=True,
+                  return_filenames=False, skip_errors=False):
+    """
+    Given an Namespace from argparse, return a list of CoarseGrainRNA objects
+    (or BulgeGraph objects).
+
+    :param args: A argparse Namespace.
+    :param rna_type: See documentation of load_rna
+    :param enable_logging: In addition to loading the CoarseGrainRNA objects,
+                    call logging.basicConfig() and use args.verbose
+                    and args.debug
+                    to set the level for different loggers.
+    :param return_filenames: Instead of returning a list of rnas,
+                    return a tuple `rnas, filenames`,
+                    where filenames is a list of filenames of equal length as
+                    the returned list of CoarseGrainRNA objects and with
+                    corresponding order.
+                    If a file contains two seperate RNA molecules, the
+                    filename will thus be found twice in the list of filenames.
+    :param skip_errors: Boolean. Log GraphConstructionErrors and continue with
+                    the next filename instead of letting the error propagate.
+
+    Usage::
+
+        parser = get_rna_input_parser()
+        args = parser.parse_args()
+        rnas = cgs_from_args(args)
+
+    """
     if enable_logging:
         logging.basicConfig(
             format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
