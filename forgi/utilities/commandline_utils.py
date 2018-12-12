@@ -139,6 +139,7 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
                                  pdb_annotation_tool=args.pdb_annotation_tool)
         except GraphConstructionError:
             if not skip_errors:
+                log.error("An error occurred while loading the file %s", rna)
                 raise
             else:
                 log.exception("The PDB %s was skipped due to the following error", rna)
