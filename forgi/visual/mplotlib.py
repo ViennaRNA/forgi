@@ -9,9 +9,11 @@ import forgi.threedee.utilities.pdb as ftup
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import logging
 
+log = logging.getLogger(__name__)
 
-def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
+def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None,labels=[], **kwargs):
     """
     Make a scatter of circles plot of x vs y, where x and y are sequence
     like objects of the same lengths. The size of circles are in data scale.
@@ -46,8 +48,9 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
         a = np.arange(11)
         circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
 
-    This code is under [The BSD 3-Clause License]
+    This code by ??? is under [The BSD 3-Clause License]
     (http://opensource.org/licenses/BSD-3-Clause)
+
     """
     from matplotlib.patches import Circle
     from matplotlib.collections import PatchCollection
@@ -68,6 +71,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
         patches = [Circle((x_, y_), s) for x_, y_ in zip(x, y)]
     else:
         patches = [Circle((x_, y_), s_) for x_, y_, s_ in zip(x, y, s)]
+
     collection = PatchCollection(patches, **kwargs)
 
     if color is None:
@@ -80,7 +84,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     return collection
 
 
-def plot_rna(cg, ax=None, offset=(0, 0)):
+def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}):
     '''
     Plot an RNA structure given a set of nucleotide coordinates
 
@@ -88,9 +92,10 @@ def plot_rna(cg, ax=None, offset=(0, 0)):
     :param ax: A matplotlib plotting area
     :param offset: Offset the plot by these coordinates. If a simple True is passed in, then
                    offset by the current width of the plot
+    :param text_kwargs: keyword arguments passed to matplotlib.pyplot.annotate.
     :return: (ax, coords) The axes and the coordinates for each nucleotide
     '''
-    print("plotting RNA...")
+    log.info("Starting to plot RNA...")
     import RNA
 
     RNA.cvar.rna_plot_type = 1
@@ -115,21 +120,22 @@ def plot_rna(cg, ax=None, offset=(0, 0)):
 
     if offset is None:
         offset = (0, 0)
+    elif offset is True:
+        offset = (ax.get_xlim()[1], ax.get_ylim()[1])
     else:
-        if offset == True:
-            offset = (ax.get_xlim()[1], ax.get_ylim()[1])
-        else:
-            pass
+        pass
 
     vrna_coords = RNA.get_xy_coordinates(bp_string)
     for i, _ in enumerate(bp_string):
-        coords += [(offset[0] + vrna_coords.get(i).X,
-                    vrna_coords.get(i).Y)]
+        coord = (offset[0] + vrna_coords.get(i).X,
+                 offset[1] + vrna_coords.get(i).Y)
+        coords.append(coord)
         #colors += [el_to_color[el_string[i-1]]]
-        circle = plt.Circle((offset[0] + vrna_coords.get(i).X,
-                             vrna_coords.get(i).Y),
+        circle = plt.Circle((coord[0], coord[1]),
                             color=el_to_color[el_string[i]])
         ax.add_artist(circle)
+        if cg.seq:
+            ax.annotate(cg.seq[i+1],xy=coord, ha="center", va="center",fontweight="bold", **text_kwargs )
 
     coords = np.array(coords)
     datalim = ((min(list(coords[:, 0]) + [ax.get_xlim()[0]]),
