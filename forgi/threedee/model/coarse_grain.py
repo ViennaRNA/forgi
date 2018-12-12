@@ -587,7 +587,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ftug.add_stem_information_from_pdb_chains(cg)
         cg.add_bulge_coords_from_stems()
         ftug.add_loop_information_from_pdb_chains(cg)
-        ftug._add_loop_vres(cg)
+        ftug._add_loop_vres(cg)    
         assert len(cg.defines) == len(
             cg.coords), cg.defines.keys() ^ cg.coords.keys()
         cg.interacting_residues = list(r for r in map(fgr.resid_from_biopython, interacting_residues)

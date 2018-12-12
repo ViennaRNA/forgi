@@ -1526,7 +1526,11 @@ def _add_loop_vres(cg):
     log.debug("Adding virtual residues")
     for elem in cg.defines:
         if elem[0] != "s":
-            add_virtual_residues(cg, elem)
+            try:
+                add_virtual_residues(cg, elem)
+            except:
+                log.warning("Could not add virtual residues from PDB for %s, elem %s", cg.name, elem)
+
 
 
 def cylinder_works(cg, cylinders_to_stems, tv, c, r=4.):
