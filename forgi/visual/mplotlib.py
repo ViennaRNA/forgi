@@ -84,7 +84,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None,labels=[], **kwargs):
     return collection
 
 
-def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}):
+def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, color=True):
     '''
     Plot an RNA structure given a set of nucleotide coordinates
 
@@ -131,11 +131,18 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}):
                  offset[1] + vrna_coords.get(i).Y)
         coords.append(coord)
         #colors += [el_to_color[el_string[i-1]]]
-        circle = plt.Circle((coord[0], coord[1]),
+        if color:
+            circle = plt.Circle((coord[0], coord[1]),
                             color=el_to_color[el_string[i]])
+        else:
+            circle = plt.Circle((coord[0], coord[1]),
+                                edgecolor="black", fill=False)
+
         ax.add_artist(circle)
         if cg.seq:
-            ax.annotate(cg.seq[i+1],xy=coord, ha="center", va="center",fontweight="bold", **text_kwargs )
+            if "fontweight" not in text_kwargs:
+                text_kwargs["fontweight"]="bold"
+            ax.annotate(cg.seq[i+1],xy=coord, ha="center", va="center", **text_kwargs )
 
     coords = np.array(coords)
     datalim = ((min(list(coords[:, 0]) + [ax.get_xlim()[0]]),
