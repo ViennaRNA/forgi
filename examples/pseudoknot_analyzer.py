@@ -367,6 +367,7 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
 
     for i, stem1_5p in enumerate(stems_5p):
         dataset["Filename"].append(filename)
+        dataset["rnaname"] = rna.name
         dataset["pk_type"].append(pk_type)
         dataset["pk_id"].append(pk_number)
         dataset["angle_nr"].append(i)
@@ -408,7 +409,7 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                 if stem1 in stack and stem2 in stack:
                     # The two stems stack, but we do not specify along which
                     # multiloop segment they stack.
-                    dataset["stems_are_stacking"].append(True)
+                    dataset["is_stacking_dssr"].append(True)
                     break
             else:
                 dataset["is_stacking_dssr"].append(False)
@@ -442,13 +443,13 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
 
 
 
-
 def main():
     parser = fuc.get_rna_input_parser("Find pseudoknots in RNA structures, "
                                       "classify them into shapes and analyze "
                                       "their 3D architecturre.", "+",
                                       parser_kwargs={"conflict_handler":"resolve"})
     parser.add_argument("--pseudoknots", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--outfile-mode", choices=["w","a"], default='w', help="Overwrite ('w') or append ('a') to output file")
     parser.add_argument("--minlength", type= int, help= "Minimum length of each stem. "
                             "Stems with fewer base-pairs are treated as unpaired.",
                             default = 2)
@@ -492,8 +493,9 @@ def main():
             entry["other"] = len(other)
             entry["PK_other_structures"] = ",".join(map(str, other))
             entry["filename"] = filename
+            entry["rnaname"] = rna.name
             print(filename)
-            pseudoknot_dataset.append( entry )
+            pseudoknot_dataset.append(entry)
             pk_id = 0
             for key, pks in pk_classes.items():
                 for pk in pks:
@@ -514,10 +516,10 @@ def main():
             log.error("Error processing %s", rna.name)
             raise
     df1 = pandas.DataFrame(pseudoknot_dataset)
-    df1.to_csv("pseudoknot_identification_genus2.csv", sep="\t")
+    df1.to_csv("pseudoknot_identification_genus2.csv", mode=args.outfile_mode, header=args.outfile_mode!="a", sep="\t")
 
     df2 = pandas.DataFrame(pseudoknot_dataset_extended)
-    df2.to_csv("pseudoknot_identification_extended_genus2.csv", sep="\t")
+    df2.to_csv("pseudoknot_identification_extended_genus2.csv", mode=args.outfile_mode, header=args.outfile_mode!="a", sep="\t")
 
 
     print("Structures with Pseudoknots: {}".format(with_pk))
