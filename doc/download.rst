@@ -35,6 +35,17 @@ invoking setup.py directly::
 Optional, external dependencies (require manual installation)
 -------------------------------------------------------------
 
+Vienna RNA package
+~~~~~~~~~~~~~~~~~~
+
+We provide a wrapper for RNAplot: `forgi.visual.mplotlib.plot_rna`.
+This function imports the Vienna RNA package python bindings and
+visualizes the 2D layout calculated by the Vienna RNA package
+using matplotlib.
+
+The Vienna RNA package is available at https://www.tbi.univie.ac.at/RNA/
+
+
 Either MC-Annotate or DSSR
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -55,12 +66,12 @@ Alternatively, you can use the commandline option `--pdb-annotation-tool DSSR` o
 passing `annotation_tool="DSSR"` or `annotation_tool="MC-Annotate"` to the
 function `forgi.load_rna`.
 
-
 PyMol
 ~~~~~
 
 The `visualize_rna.py` script requires an installation of
 PyMol (https://pymol.org/) to work.
+
 
 
 Automatically installed dependencies

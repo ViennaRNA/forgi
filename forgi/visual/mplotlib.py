@@ -84,19 +84,32 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None,labels=[], **kwargs):
     return collection
 
 
-def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, color=True):
+def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
+             basepair_kwargs={}, color=True, lighten=0):
     '''
     Plot an RNA structure given a set of nucleotide coordinates
+
+    .. note::
+
+        This function calls set_axis_off on the axis. You can revert this by
+        using ax.set_axis_on() if you like to see the axis.
 
     :param cg: A forgi.threedee.model.coarse_grain.CoarseGrainRNA structure
     :param ax: A matplotlib plotting area
     :param offset: Offset the plot by these coordinates. If a simple True is passed in, then
                    offset by the current width of the plot
-    :param text_kwargs: keyword arguments passed to matplotlib.pyplot.annotate.
+    :param text_kwargs: keyword arguments passed to matplotlib.pyplot.annotate
+                        for plotting of the sequence
+    :param backbone_kwargs: keyword arguments passed to matplotlib.pyplot.plot
+                        for plotting of the backbone links
+    :param basepair_kwargs: keyword arguments passed to matplotlib.pyplot.plot
+                        for plotting of the basepair links
+    :param lighten: Make circles lighter.A percent value where 1 makes everything white and 0 leaves the colors unchanged
     :return: (ax, coords) The axes and the coordinates for each nucleotide
     '''
     log.info("Starting to plot RNA...")
     import RNA
+    import matplotlib.colors as mc
 
     RNA.cvar.rna_plot_type = 1
 
@@ -130,10 +143,39 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, color=True):
         coord = (offset[0] + vrna_coords.get(i).X,
                  offset[1] + vrna_coords.get(i).Y)
         coords.append(coord)
-        #colors += [el_to_color[el_string[i-1]]]
+    coords = np.array(coords)
+    # First plot backbone
+    bkwargs = {"color":"black", "zorder":0}
+    bkwargs.update(backbone_kwargs)
+    ax.plot(coords[:,0], coords[:,1], **bkwargs)
+    # Now plot basepairs
+    basepairs = []
+    for s in cg.stem_iterator():
+        for p1, p2 in cg.stem_bp_iterator(s):
+            basepairs.append([coords[p1-1], coords[p2-1]])
+    basepairs = np.array(basepairs)
+    if color:
+        c = "red"
+    else:
+        c = "black"
+    bpkwargs = {"color":c, "zorder":0, "linewidth":3}
+    bpkwargs.update(basepair_kwargs)
+    ax.plot(basepairs[:,:,0].T, basepairs[:,:,1].T, **bpkwargs)
+
+    # Now plot circles
+    for i, coord in enumerate(coords):
         if color:
+            c = el_to_color[el_string[i]]
+            h,l,s = colorsys.rgb_to_hls(*mc.to_rgb(c))
+            if lighten>0:
+                l += (1-l)*min(1,lighten)
+            else:
+                l +=l*max(-1, lighten)
+            if l>1 or l<0:
+                print(l)
+            c=colorsys.hls_to_rgb(h,l,s)
             circle = plt.Circle((coord[0], coord[1]),
-                            color=el_to_color[el_string[i]])
+                            color=c)
         else:
             circle = plt.Circle((coord[0], coord[1]),
                                 edgecolor="black", fill=False)
@@ -144,7 +186,6 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, color=True):
                 text_kwargs["fontweight"]="bold"
             ax.annotate(cg.seq[i+1],xy=coord, ha="center", va="center", **text_kwargs )
 
-    coords = np.array(coords)
     datalim = ((min(list(coords[:, 0]) + [ax.get_xlim()[0]]),
                 min(list(coords[:, 1]) + [ax.get_ylim()[0]])),
                (max(list(coords[:, 0]) + [ax.get_xlim()[1]]),
@@ -167,6 +208,7 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, color=True):
     ax.set_aspect('equal', 'datalim')
     ax.update_datalim(datalim)
     ax.autoscale_view()
+    ax.set_axis_off()
 
     return (ax, coords)
 
