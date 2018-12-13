@@ -47,14 +47,21 @@ dot-bracket notation:
 
 ``(((((((((...((((((.........))))))........((((((.......))))))..)))))))))``
 
-This notation corresponds to a structure containing the base pairs shown in the
-following figure:
+The secondary structure can be visualized using
+`RNAplot <https://www.tbi.univie.ac.at/RNA/RNAplot.1.html>`_.
+Forgi also contains wrapper code that calls the ViennaRNA library (the basis of RNAplot)
+to generate the graph layout and visualizes it using matpoltlib::
+
+    import matplotlib.pyplot as plt
+    import forgi.visual.mplotlib as fvm
+    import forgi
+    cg = forgi.load_rna("examples/input/1y26.fx", allow_many=False)
+    fvm.plot_rna(cg, text_kwargs={"fontweight":"black"}, lighten=0.7,
+                 backbone_kwargs={"linewidth":3})
+    plt.show()
 
 .. image:: 1y26_ss.png
-    :width: 260
-    :height: 260
     :align: center
-
 
 Evident in this image are six structural elements.
 
@@ -156,8 +163,6 @@ With a secondary structure:
 Which looks like this:
 
 .. image:: 1gid_ss.png
-    :width: 360
-    :height: 360
     :align: center
 
 Can be transformed using the command:
