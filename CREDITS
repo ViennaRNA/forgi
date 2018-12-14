@@ -13,9 +13,12 @@ Main Library Code - CITING
 
 **Please Cite:**
 
-"Predicting RNA 3D structure using a coarse-grain helix-centered model"
-Peter Kerpedjiev, Christian Höner zu Siederdissen and Ivo L. Hofacker
-*RNA* (**2015**), http://dx.doi.org/10.1261/rna.047522.114
+"3D based on 2D: Calculating helix angles and stacking
+patterns using forgi 2.0 , an RNA python library cen-
+tered on secondary structure elements."
+Bernhard C. Thiel, Peter Kerpedjiev, Irene K. Beckmann and Ivo L.
+Hofacker
+**in preparation**
 
 For the pseudoknot removal code, see citation below.
 
