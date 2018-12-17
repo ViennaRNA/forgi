@@ -10,6 +10,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
+import colorsys
 
 log = logging.getLogger(__name__)
 
@@ -110,7 +111,6 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
     log.info("Starting to plot RNA...")
     import RNA
     import matplotlib.colors as mc
-
     RNA.cvar.rna_plot_type = 1
 
     coords = []
