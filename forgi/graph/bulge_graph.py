@@ -2393,10 +2393,10 @@ class BulgeGraph(BaseGraph):
         at the edge of each element, and is the closest distance
         between the two elements.
 
-        :param e1: The name of the first element
-        :param e2: The name of the second element
-        :return: The integer distance between the two along the secondary
-                 structure.
+        :param e1: The name or nucleotide number of the first element
+        :param e2: The name or nucleotide number of the second element
+        :return: The integer distance between the two elements / residues along the secondary
+                 structure. (if a element is given, we use its corner for the distance, otherwise the exact nucleotide)
         '''
         # get the edge nucleotides
         # thanks to:
@@ -2406,15 +2406,24 @@ class BulgeGraph(BaseGraph):
         d1_corners = []
         d2_corners = []
 
-        for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e1, adjacent=True)),
-                                     lambda index_item: index_item[0] - index_item[1]):
-            group = list(map(oper.itemgetter(1), group))
-            d1_corners += group
-
-        for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e2, adjacent=True)),
-                                     lambda index_item: index_item[0] - index_item[1]):
-            group = list(map(oper.itemgetter(1), group))
-            d2_corners += group
+        if isinstance(e1, int):
+            d1_corners=[e1]
+        elif isinstance(e1, RESID):
+            d1_corners=[self.seg.to_integer(e1)]
+        else:
+            for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e1, adjacent=True)),
+                                         lambda index_item: index_item[0] - index_item[1]):
+                group = list(map(oper.itemgetter(1), group))
+                d1_corners += group
+        if isinstance(e2, int):
+            d2_corners=[e2]
+        elif isinstance(e2, RESID):
+            d2_corners=[self.seg.to_integer(e2)]
+        else:
+            for key, group in it.groupby(enumerate(self.define_residue_num_iterator(e2, adjacent=True)),
+                                         lambda index_item: index_item[0] - index_item[1]):
+                group = list(map(oper.itemgetter(1), group))
+                d2_corners += group
 
         import networkx as nx
 
@@ -2423,20 +2432,36 @@ class BulgeGraph(BaseGraph):
         for c1, c2 in it.product(d1_corners, d2_corners):
             path_lengths += [nx.shortest_path_length(G, c1, c2)]
 
-        if e1 == e2:
+        if isinstance(e1, (int, RESID)):
+            e1_elem = self.get_elem(e1)
+        else:
+            e1_elem = e1
+        if isinstance(e2, (int, RESID)):
+            e2_elem = self.get_elem(e2)
+        else:
+            e2_elem = e2
+
+        if e1_elem == e2_elem and (e1!=e1_elem or e2!=e2_elem):
             return 0
 
-        if e1 in self.edges[e2]:
+        if e1_elem!=e1 and e2_elem != e2:
+            # Nt- nt distance. No correction
+            return min(path_lengths)
+
+        if e1_elem in self.edges[e2_elem]:
             return min(path_lengths) + 1
 
         # make some exceptions for edges which have length 0
-        common_edges = set.intersection(self.edges[e1], self.edges[e2])
+        common_edges = set.intersection(self.edges[e1_elem], self.edges[e2_elem])
         for e in common_edges:
             if e[0] == 'i' and len(self.defines[e]) < 4:
                 return min(path_lengths) + 1
             elif e[0] == 'm' and len(self.defines[e]) < 2:
                 return min(path_lengths) + 1
 
+        if e1_elem!=e1 or e2_elem!=e2:
+            return min(path_lengths)+1
+            
         return min(path_lengths) + 2
 
     def define_residue_num_iterator(self, node, adjacent=False, seq_ids=False):
