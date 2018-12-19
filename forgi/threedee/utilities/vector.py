@@ -633,6 +633,8 @@ def magnitude(vec):
     '''
     Return the magnitude of a vector `(|V|)`.
 
+    This is guaranteed for arbitrary dimensions of vec.
+
     :param vec: The vector in question.
     :return: The magnitude of the vector.
     '''
@@ -838,6 +840,14 @@ def point_line_distance(point, line_start, line_dir):
 
 
 def vec_distance(vec1, vec2):
+    """
+    The (euclidean) distance between two points vec1 and vec2.
+
+    This is guaranteed to work for arbitrary but equal dimensions of vec1 and vec2.
+
+    :param vec1, vec2: A list or np.array of floats
+    :returns: A float
+    """
     vec1 = np.asarray(vec1)
     vec2 = np.asarray(vec2)
     direction = vec2 - vec1

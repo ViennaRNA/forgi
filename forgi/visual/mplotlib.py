@@ -6,10 +6,12 @@ from past.builtins import basestring
 import Bio
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.pdb as ftup
+import forgi.threedee.utilities.vector as ftuv
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
+import itertools
 import colorsys
 
 log = logging.getLogger(__name__)
@@ -84,9 +86,125 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None,labels=[], **kwargs):
     ax.autoscale_view()
     return collection
 
+def _clashfree_annot_pos(pos, coords):
+    for c in coords:
+        dist = ftuv.vec_distance(c, pos)
+        #log.debug("vec_dist=%s", dist)
+        if dist<14:
+            return False
+    return True
+
+def _annotate_rna_plot(ax, cg, coords, annotations, text_kwargs):
+    # Plot annotations
+    annot_dict = { elem:elem for elem in cg.defines}
+    if annotations is None:
+        annot_dict={elem:"" for elem in cg.defines}
+    else:
+        annot_dict.update(annotations)
+    stem_coords = {}
+    for stem in cg.stem_iterator():
+        stem_start =  np.mean([coords[cg.defines[stem][0]-1],
+                               coords[cg.defines[stem][3]-1]],
+                               axis=0)
+        stem_end =  np.mean([coords[cg.defines[stem][1]-1],
+                               coords[cg.defines[stem][2]-1]],
+                               axis=0)
+        stem_center = np.mean([stem_start, stem_end], axis=0)
+        stem_coords[stem]=(stem_start, stem_center, stem_end)
+        if annot_dict[stem]:
+            stem_vec = stem_end - stem_start
+            norm_vec = (stem_vec[1], -stem_vec[0])
+            norm_vec/=ftuv.magnitude(norm_vec)
+            annot_pos = np.array(stem_center)+23*norm_vec
+            #log.debug("Checking clashfree for %s, %s", stem, annot_pos)
+            if not _clashfree_annot_pos(annot_pos, coords):
+                log.debug("Cannot annotate %s as %s ON THE RIGHT HAND SIDE, because of insufficient space. Trying left side...", stem, annot_dict[stem])
+                annot_pos = np.array(stem_center)-23*norm_vec
+                #log.debug("Checking clashfree OTHER SIDE for %s, %s", stem, annot_pos)
+                if not _clashfree_annot_pos(annot_pos, coords):
+                    log.info("Cannot annotate %s as '%s', because of insufficient space.", stem, annot_dict[stem])
+                    annot_pos = None
+            #log.debug("%s", annot_pos)
+            if annot_pos is not None:
+                ax.annotate(annot_dict[stem], xy=annot_pos,
+                            ha="center", va="center", **text_kwargs )
+    for hloop in cg.hloop_iterator():
+        hc = []
+        for nt in cg.define_residue_num_iterator(hloop, adjacent=True):
+            hc.append(coords[nt-1])
+        annot_pos = np.mean(hc, axis=0)
+        if _clashfree_annot_pos(annot_pos, coords):
+            ax.annotate(annot_dict[hloop], xy=annot_pos,
+                        ha="center", va="center", **text_kwargs )
+        else:
+            log.info("Cannot annotate %s as '%s' ON THE INSIDE, because of insufficient space. Trying outside...", hloop, annot_dict[hloop])
+            nt1, nt2 = cg.define_a(hloop)
+            start = np.mean([coords[nt1-1], coords[nt2-1]], axis=0)
+            vec = annot_pos-start
+            annot_pos = annot_pos+vec*3
+            if _clashfree_annot_pos(annot_pos, coords):
+                ax.annotate(annot_dict[hloop], xy=annot_pos,
+                            ha="center", va="center", **text_kwargs )
+            else:
+                log.info("Cannot annotate %s as '%s', because of insufficient space.", hloop, annot_dict[hloop])
+    for iloop in cg.iloop_iterator():
+        s1, s2 = cg.connections(iloop)
+        annot_pos = np.mean([ stem_coords[s1][2], stem_coords[s2][0]], axis=0)
+        if _clashfree_annot_pos(annot_pos, coords):
+            ax.annotate(annot_dict[iloop], xy=annot_pos,
+                        ha="center", va="center", **text_kwargs )
+        else:
+            log.debug("Cannot annotate %s as '%s' ON THE INSIDE, because of insufficient space. Trying outside...", iloop, annot_dict[iloop])
+            loop_vec = stem_coords[s2][0] - stem_coords[s1][2]
+            norm_vec = (loop_vec[1], -loop_vec[0])
+            norm_vec/=ftuv.magnitude(norm_vec)
+            annot_pos_p = np.array(annot_pos)+25*norm_vec
+            annot_pos_m = np.array(annot_pos)-25*norm_vec
+            # iloops can be asymmetric (more nts on one strand.)
+            # plot the label on the strand with more nts.
+            plus=0
+            minus=0
+            for nt in cg.define_residue_num_iterator(iloop):
+                if ftuv.vec_distance(annot_pos_p, coords[nt-1])<ftuv.vec_distance(annot_pos_m, coords[nt-1]):
+                    plus+=1
+                else:
+                    minus+=1
+            if plus>minus:
+                if _clashfree_annot_pos(annot_pos_p, coords):
+                    ax.annotate(annot_dict[iloop], xy=annot_pos_p,
+                                ha="center", va="center", **text_kwargs )
+                else:
+                    log.info("Cannot annotate %s as '%s' (only trying inside and right side), because of insufficient space.", iloop, annot_dict[iloop])
+
+            else:
+                if _clashfree_annot_pos(annot_pos_m, coords):
+                    ax.annotate(annot_dict[iloop], xy=annot_pos_m,
+                                ha="center", va="center", **text_kwargs )
+                else:
+                    log.info("Cannot annotate %s as '%s' (only trying inside and left side), because of insufficient space.", iloop, annot_dict[iloop])
+    for mloop in itertools.chain(cg.floop_iterator(), cg.tloop_iterator(), cg.mloop_iterator()):
+        nt1, nt2 = cg.define_a(mloop)
+        res = list(cg.define_residue_num_iterator(mloop))
+        if len(res)==0:
+            anchor = np.mean([coords[nt1-1], coords[nt2-1]], axis=0)
+        elif len(res)%2==1:
+            anchor = coords[res[int(len(res)//2)]-1]
+        else:
+            anchor =  np.mean([ coords[res[int(len(res)//2)-1]-1],
+                                coords[res[int(len(res)//2)]-1] ],
+                              axis=0)
+        loop_vec = coords[nt1-1] - coords[nt2-1]
+        norm_vec = (loop_vec[1], -loop_vec[0])
+        norm_vec/=ftuv.magnitude(norm_vec)
+        annot_pos = anchor - norm_vec*18
+        if _clashfree_annot_pos(annot_pos, coords):
+            ax.annotate(annot_dict[mloop], xy=annot_pos,
+                        ha="center", va="center", **text_kwargs )
+        else:
+            log.info("Cannot annotate %s as '%s' , because of insufficient space.", mloop, annot_dict[mloop])
 
 def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
-             basepair_kwargs={}, color=True, lighten=0):
+             basepair_kwargs={}, color=True, lighten=0, annotations={}):
     '''
     Plot an RNA structure given a set of nucleotide coordinates
 
@@ -105,7 +223,19 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
                         for plotting of the backbone links
     :param basepair_kwargs: keyword arguments passed to matplotlib.pyplot.plot
                         for plotting of the basepair links
-    :param lighten: Make circles lighter.A percent value where 1 makes everything white and 0 leaves the colors unchanged
+    :param lighten: Make circles lighter. A percent value where 1 makes
+                    everything white and 0 leaves the colors unchanged
+    :param annotations: A dictionary {elem_name: string} or None.
+                        By default, the element names (e.g. "s0") are plotted
+                        next to the element. This dictionary can be used to
+                        override the default element names by costum strings.
+                        To remove individual annotations, assign an empty string to the key.
+                        To remove all annotations, set this to None.
+
+                        .. warning::
+
+                            Annotations are not shown, if there is not enough space.
+                            Annotations not shown are logged with level INFO
     :return: (ax, coords) The axes and the coordinates for each nucleotide
     '''
     log.info("Starting to plot RNA...")
@@ -161,7 +291,6 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
     bpkwargs = {"color":c, "zorder":0, "linewidth":3}
     bpkwargs.update(basepair_kwargs)
     ax.plot(basepairs[:,:,0].T, basepairs[:,:,1].T, **bpkwargs)
-
     # Now plot circles
     for i, coord in enumerate(coords):
         if color:
@@ -186,6 +315,19 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
                 text_kwargs["fontweight"]="bold"
             ax.annotate(cg.seq[i+1],xy=coord, ha="center", va="center", **text_kwargs )
 
+    all_coords=list(coords)
+    ntnum_kwargs = {"color":"gray"}
+    ntnum_kwargs.update(text_kwargs)
+    for nt in range(10, cg.seq_length, 10):
+        # We try different angles
+        annot_pos = _find_annot_pos_on_circle(nt, all_coords, cg)
+        if annot_pos is not None:
+            ax.annotate(str(nt), xy=coords[nt-1], xytext=annot_pos,
+                        arrowprops={"width":1, "headwidth":1, "color":"gray"},
+                        ha="center", va="center", zorder=0, **ntnum_kwargs)
+            all_coords.append(annot_pos)
+
+    _annotate_rna_plot(ax, cg, all_coords, annotations, text_kwargs)
     datalim = ((min(list(coords[:, 0]) + [ax.get_xlim()[0]]),
                 min(list(coords[:, 1]) + [ax.get_ylim()[0]])),
                (max(list(coords[:, 0]) + [ax.get_xlim()[1]]),
@@ -212,6 +354,24 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
 
     return (ax, coords)
 
+def _find_annot_pos_on_circle(nt, coords, cg):
+    for i in range(5):
+        for sign in [-1,1]:
+            a = np.pi/4*i*sign
+            if cg.get_elem(nt)[0]=="s":
+                bp = cg.pairing_partner(nt)
+                anchor = coords[bp-1]
+            else:
+                anchor =np.mean([ coords[nt-2], coords[nt]], axis=0)
+            vec = coords[nt-1]-anchor
+            vec=vec/ftuv.magnitude(vec)
+            rotated_vec =  np.array([vec[0]*math.cos(a)-vec[1]*math.sin(a),
+                                     vec[0]*math.sin(a)+vec[1]*math.cos(a)])
+            annot_pos = coords[nt-1]+rotated_vec*18
+            if _clashfree_annot_pos(annot_pos, coords):
+                log.debug("Annot pos on c is %s",annot_pos)
+                return annot_pos
+    return None
 
 def plot_pdb(filename, ax=None):
     """
