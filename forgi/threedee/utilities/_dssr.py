@@ -134,7 +134,9 @@ class DSSRAnnotation(object):
             except RuntimeError:
                 continue
             else:
+                log.debug("Coaxial stack %s mapped to forgi %s", dssr_stack, cg_stack)
                 cg_stacks.append(cg_stack)
+        log.debug("coaxial stacks are %s", cg_stacks)
         return cg_stacks
 
     def cg_stem(self, dssr_stem):
