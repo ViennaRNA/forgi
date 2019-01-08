@@ -21,6 +21,7 @@ Classify all pseudoknots found in the input 3D structure based on their shapes
 according to Reidys et al. concept into H-type, kissing hairpin,...
 
 Additionally, calculate the angles between stems in the poseudoknots.
+Annotation Tools: MC-mcannotate or DSSR (enable stacking analysis)
 
 See:
 Reidys, C.M. et al., 2011. Topology and prediction of RNA pseudoknots.
@@ -402,20 +403,72 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
             else:
                 stem2 = stems_3p[i+1]
 
+        # enable stacking analysis via DSSR
+        # differentiate between stacking (True), no stacking (False) and brakes
+        # within/aorund the pseudoknot (-1) incl. 'virtual' angles e.g. H-Type angle_type3
+        ml_stack=[]
         if rna.dssr:
+            stacking_loops = rna.dssr.stacking_loops()
+            start_found = 0
+            connection = []
+            stacking = None
+            branch = None
+            for elem in rna.iter_elements_along_backbone(): #walk along the backbone
+                if elem == stem1:
+                    start_found += 1
+                    if rna.defines[elem][strand*2+1] in rna.backbone_breaks_after:
+                        stacking = -1
+                    log.debug("First stem, elem %s, stacking %s", elem, stacking)
+                elif start_found == strand+1:
+                    if branch:
+                        if elem == branch:
+                            branch = None
+                        continue
+                    if elem[0] != "s":
+                        connection.append(elem)
+                        if rna.defines[elem] and rna.defines[elem][-1] in rna.backbone_breaks_after:
+                            stacking = -1
+                        if elem not in stacking_loops and stacking != -1:
+                            stacking = False
+                    elif elem == stem2:
+                        if stacking is None:
+                            stacking = True
+                        log.debug("Found second stem, elem %s, stacking %s", elem, stacking)
+                        break
+                    elif elem[0] == "s" and connection:
+                        branch = elem
+                        if rna.defines[elem][-1] in rna.backbone_breaks_after:
+                            stacking = -1
+                    log.debug("elem %s, stacking %s, branch %s", elem, stacking, branch)
+            else:
+                log.debug("End iteration, stacking->-1")
+                stacking = -1
+            # more detailed stacking (including backbone brackes within and around the pseudoknot)
+            dataset["this_loop_stacking_dssr"].append(stacking)
+            dataset["connecting_loops"].append(",".join(connection))
+
+            # more genereal stacking information
+            connecting_loops = rna.edges[stem1]&rna.edges[stem2]
+            for loop in connecting_loops:
+                if loop in stacking_loops:
+                    ml_stack.append(loop)
             stacks = rna.dssr.coaxial_stacks()
             log.error(stacks)
             for stack in stacks:
                 if stem1 in stack and stem2 in stack:
-                    # The two stems stack, but we do not specify along which
+                    # the two stems stack, but we do not specify along which
                     # multiloop segment they stack.
                     dataset["is_stacking_dssr"].append(True)
                     break
             else:
                 dataset["is_stacking_dssr"].append(False)
+
         else:
             dataset["is_stacking_dssr"].append(float("nan"))
+            dataset["this_loop_stacking_dssr"].append(float("nan"))
+            dataset["connecting_loops"].append("")
 
+        dataset["stacking_loops"].append(",".join(ml_stack))
 
         pos1, dir1 = stem_parameters(stem1, rna, not strand)
         pos2, dir2 = stem_parameters(stem2, rna, strand2)
