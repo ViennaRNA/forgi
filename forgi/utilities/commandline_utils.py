@@ -156,7 +156,7 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
 def sniff_filetype(file):
     line = next(file)
     # PDB
-    if line.startswith("ATOM") or line.startswith("HEADER") or line.startswith("HETATM"):
+    if line.startswith("ATOM") or line.startswith("HEADER") or line.startswith("HETATM") or line.startswith("REMARK"):
         return "pdb"
     line = line.strip()
     # We allow comments and empty lines in all files except PDB files.
