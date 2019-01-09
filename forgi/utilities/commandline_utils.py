@@ -207,7 +207,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
                                raise an error otherwise
                      *   "pdb": only accept pdb files
 
-    :param allow_many: If True, return a list. If False, return a single 
+    :param allow_many: If True, return a list. If False, return a single
                        CoarseGrainRNA object or raise a WrongFileFormat,
                        if more than one RNA is present.
     :param pdb_chain: Extract the given chain from the file.

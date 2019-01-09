@@ -381,7 +381,9 @@ def output_multiple_chains(chains, filename, file_type="pdb"):
     for chain in chains:
         log.debug("Adding chain %s with %s residues", chain.id, len(chain))
         m.add(chain)
-
+        if file_type=="pdb" and len(chain.id)!=1:
+            raise ValueError("Cannot save chain with name %s (not a single character) "
+                             "in PDB format. Use cif format instead!")
     s.add(m)
     if file_type == "pdb":
         io = bpdb.PDBIO()
