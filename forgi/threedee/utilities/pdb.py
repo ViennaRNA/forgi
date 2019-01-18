@@ -862,37 +862,32 @@ def remove_disordered(chain):
     return chain
 
 
-def remove_hetatm(chain):
-    '''
-    Remove all the hetatms in the chain.
-
-    :param chain: A Bio.PDB.Chain
-    :return: The same chain, but missing all hetatms
-    '''
-    raise NotImplementedError("Replaced by to_4_letter_alphabeth")
-
-
 def load_structure(pdb_filename):
     '''
     Load a Bio.PDB.Structure object and return the largest chain.
     This chain will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, etc...
+
     '''
     chain, mr, ir = get_biggest_chain(pdb_filename)
-    return clean_chain(chain)[0]
+    return clean_chain(chain, True)[0]
 
 
-def clean_chain(chain):
+def clean_chain(chain, query_PDBeChem=False):
     """
     Clean a pdb chain for further use with forgi.
 
     It will be modified so that all hetatms are removed, modified
     residues will be renamed to regular residues, residue ids will be positive integers, ...
 
-    :param chaion: A Bio.PDB.Chain object
+    :param chain: A Bio.PDB.Chain object
+    :param query_PDBeChem: If true, query the PDBeChem database whenever a
+                          modified residue with unknown 3-letter code
+                          is encountered.
+
     :returns: A modified version of this chain
     """
-    chain, modifications = to_4_letter_alphabeth(chain)
+    chain, modifications = to_4_letter_alphabeth(chain, query_PDBeChem)
     chain = rename_rosetta_atoms(chain)
     chain = remove_disordered(chain)
     return chain, modifications

@@ -78,6 +78,12 @@ def get_rna_input_parser(helptext, nargs=1, rna_type="any", enable_logging=True,
                                      help="What program to use for detecting basepairs in PDB/ MMCIF structures."
                                      " This commandline option overrides the value in the config file (if present)."
                                      "If this is not present and no config-file is given, we try to detect the installed programs.")
+        pdb_input_group.add_argument("--pdb-allow-www-query", action="store_true",
+                                     help="Usually, if modified residues/ ligand with an unknown 3-letter code are encountered in PDB files, "
+                                          "they are removed from the chain and a log message of severity INFO is issued. "
+                                          "With this option, we first try to query the PDBeChem database for the 3-letter code, to "
+                                          "see whether or not it is a modified residue that can be converted to its standard parent "
+                                          " and should be part of the chain.")
 
     if enable_logging:
         verbosity_group = parser.add_argument_group(
@@ -137,7 +143,8 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
                                  pdb_chain=load_chains,
                                  pdb_remove_pk=not args.pseudoknots, pdb_dotbracket=args.pdb_secondary_structure,
                                  dissolve_length_one_stems=not args.keep_length_one_stems,
-                                 pdb_annotation_tool=args.pdb_annotation_tool)
+                                 pdb_annotation_tool=args.pdb_annotation_tool,
+                                 pdb_allow_www_query=args.pdb_allow_www_query)
         except GraphConstructionError:
             if not skip_errors:
                 log.error("An error occurred while loading the file %s", rna)
@@ -195,7 +202,7 @@ def sniff_filetype(file):
 def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
              pdb_remove_pk=True, pdb_dotbracket="",
              dissolve_length_one_stems=True,
-             pdb_annotation_tool=None):
+             pdb_annotation_tool=None, pdb_allow_www_query=False):
     """
     :param rna_type: One of "any", and "3d" and "pdb"
 
@@ -259,14 +266,16 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
                                                remove_pseudoknots=pdb_remove_pk and not pdb_dotbracket,
                                                secondary_structure=pdb_dotbracket,
                                                dissolve_length_one_stems=dissolve_length_one_stems,
-                                               filetype=filetype, annotation_tool=pdb_annotation_tool)
+                                               filetype=filetype, annotation_tool=pdb_annotation_tool,
+                                               query_PDBeChem=pdb_allow_www_query)
         else:
             if pdb_dotbracket:
                 raise ValueError(
                     "pdb_dotbracket requires a chain to be given to avoid ambiguity.")
             cgs = ftmc.CoarseGrainRNA.from_pdb(filename, remove_pseudoknots=pdb_remove_pk,
                                                dissolve_length_one_stems=dissolve_length_one_stems,
-                                               filetype=filetype, annotation_tool=pdb_annotation_tool)
+                                               filetype=filetype, annotation_tool=pdb_annotation_tool,
+                                               query_PDBeChem=pdb_allow_www_query)
         if allow_many:
             return cgs
         else:

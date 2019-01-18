@@ -393,11 +393,14 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     @classmethod
     def from_pdb(cls, pdb_filename, load_chains=None, remove_pseudoknots=False,
                  dissolve_length_one_stems=True, secondary_structure=None,
-                 filetype="pdb", annotation_tool=None):
+                 filetype="pdb", annotation_tool=None, query_PDBeChem=False):
         """
         :param load_chains: A list of chain_ids or None (all chains)
         :param secondary_structure: Only useful if we load only 1 component
         :param filetype: One of 'pdb' or 'cif'
+        :param query_PDBeChem: If true, query the PDBeChem database whenever a
+                        modified residue with unknown 3-letter code
+                        is encountered.
         :param annotation_tool: One of "DSSR", "MC-Annotate", "forgi" or None.
                         If this is None, we take the value of the configuration
                         file (run forgi_config.py to create a config file).
@@ -426,7 +429,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             for chain in chains:
                 if load_chains in [None, "biggest"] or chain.id in load_chains:
                     log.debug("Loaded Chain %s", chain.id)
-                    chain, modifications = ftup.clean_chain(chain)
+                    chain, modifications = ftup.clean_chain(chain, query_PDBeChem)
                     new_chains.append(chain)
             log.debug("%s, %s", pdb_filename, os.path.split(pdb_filename))
             fn_basename = os.path.split(pdb_filename)[1]
@@ -587,7 +590,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         ftug.add_stem_information_from_pdb_chains(cg)
         cg.add_bulge_coords_from_stems()
         ftug.add_loop_information_from_pdb_chains(cg)
-        ftug._add_loop_vres(cg)    
+        ftug._add_loop_vres(cg)
         assert len(cg.defines) == len(
             cg.coords), cg.defines.keys() ^ cg.coords.keys()
         cg.interacting_residues = list(r for r in map(fgr.resid_from_biopython, interacting_residues)

@@ -92,7 +92,7 @@ def change_residue_id(residue, new_id):
             chain.child_dict[new_id] = residue
 
 
-def to_4_letter_alphabeth(chain):
+def to_4_letter_alphabeth(chain, query_db=False):
     '''
     Rename the modified residues so that they have the same
     names as unmodified residues.
@@ -103,9 +103,9 @@ def to_4_letter_alphabeth(chain):
 
     If it is a modified ribonucleotde, replace it by the unmodified "standard parent"
 
-    TODO: What to do with I (INOSINE)
 
     :param chain: A Bio.PDB.Chain structure
+    :param query_db: If true, query PDBeChem whenever a 3-letter code is unknown.
     :return: The same chain, but with only AUGC residues.
     '''
     modifications = {}
@@ -132,7 +132,7 @@ def to_4_letter_alphabeth(chain):
                 " ", r.id[1], r.id[2]))] = r.resname.strip()
         else:
             if r.resname.strip() not in "AUGC":
-                res_info = ModifiedResidueLookup()[r.resname]
+                res_info = ModifiedResidueLookup(query_db)[r.resname]
                 if not res_info:
                     # Unknown code. Remove residue
                     log.info(
@@ -183,13 +183,18 @@ class ModifiedResidueLookup(object):
     Convenience wrapper to access modified_res_lookup.RESIDUE_DICT.
     If a key does not exist, query the database to add it."""
 
-    def __init__(self):
+    def __init__(self, query_db=False):
+        """
+        :param query_db: If true, query PDBeChem whenever a 3-letter code is not understood.
+        """
         from . import modified_res_lookup
         self._dict = modified_res_lookup.RESIDUE_DICT
-
+        self._query_db= query_db
     def __getitem__(self, key):
         key = key.strip()
         if key not in self._dict:
+            if not self._query_db:
+                return None
             try:
                 self._dict[key] = query_PDBeChem(key)
                 log.debug("Successfully looked up %s", key)
