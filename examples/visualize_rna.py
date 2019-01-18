@@ -182,9 +182,9 @@ def main(args):
         for i, rna in enumerate(rnas):
             if rna.chains:
                 obj_name = "pdb{}_{}".format(i, rna.name.replace("-", "_"))
-                fn = os.path.join(tmpdir, obj_name + ".pdb")
+                fn = os.path.join(tmpdir, obj_name + ".cif")
                 pdb_fns.append(fn)
-                ftup.output_multiple_chains(rna.chains.values(), fn)
+                ftup.output_multiple_chains(rna.chains.values(), fn, "cif")
                 for d in rna.defines:
                     resids = list(
                         rna.define_residue_num_iterator(d, seq_ids=True))
