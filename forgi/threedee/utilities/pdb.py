@@ -447,12 +447,141 @@ def get_biggest_chain(in_filename, parser=None):
     orig_chain = chains[biggest]
     return orig_chain, mr, ir
 
+def _extract_symmetrymatrices_from_cif_dict(cif_dict):
+    """
+    Code originally by G. Entzian, modified
 
-def get_all_chains(in_filename, parser=None, no_annotation=False):
+    Extract matrices for symmetry operations from the cif-dict to
+    convert the assymetric unit to the biological unit
+
+    :returns: A tuple matrices, vectors.
+              matrices is a dictionary {operation_id: rot_matrix}
+              vectors a dictionary {operation_id: vector}
+    """
+    symmetry_ids = cif_dict["_pdbx_struct_oper_list.id"]
+    matrices = defaultdict(lambda: [[0.0 for x in range(3)] for y in range(3)])
+    vectors = defaultdict(lambda: [0.0 for x in range(3)])
+    for i in range(1,4):
+        v_key = '_pdbx_struct_oper_list.vector['+str(i)+']'
+        value_vectors = cif_dict[v_key]
+        if type(value_vectors) == type(""):
+            value_vectors = [value_vectors]
+        for k, v in enumerate(value_vectors):
+            vectors[symmetry_ids[k]][i-1] = float(v)
+
+        for j in range(1,4):
+            key = '_pdbx_struct_oper_list.matrix['+str(i)+']['+str(j)+']'
+            value_per_matrix = cif_dict[key]
+            if type(value_per_matrix) == type(""):
+                value_per_matrix = [value_per_matrix]
+            for k, v in enumerate(value_per_matrix):
+                matrices[symmetry_ids[k]][i-1][j-1] = float(v)
+    return matrices, vectors
+
+def _convert_cif_operation_id_expression(expression):
+    """
+    By Gregor Entzian
+    """
+    tmp_expr = expression
+    op_id_list = []
+    match = re.findall("\([\w\-\,\d]+\)", tmp_expr)#("(\d+)\-(\d+)", id)
+    if match:
+        for m in match:
+            match_s = re.search("\((\d+)\-(\d+)\)", m)
+            if match_s:
+                f = match_s.group(1)
+                t = match_s.group(2)
+                f = int(f)
+                t = int(t)
+                for n in range(f,t+1):
+                    op_id_list.append(str(n))
+                tmp_expr = tmp_expr.replace(m,",")
+                continue
+            else:
+                #split ',' in case of more entries. In case of one entry use the same code.
+                l = m[1:-1] # remove parentheses
+                parts = l.split(',')
+                for p in parts:
+                    op_id_list.append(str(p))
+                tmp_expr = tmp_expr.replace(m,",")
+                continue
+    if tmp_expr != None and tmp_expr != "":
+        tmp_expr = tmp_expr.replace("(","").replace(")","")
+        parts = tmp_expr.split(',')
+        for p in parts:
+            if ',' not in p and p != '':
+                match_s = re.search("(\d+)\-(\d+)", p)
+                if match_s:
+                    f = match_s.group(1)
+                    t = match_s.group(2)
+                    f = int(f)
+                    t = int(t)
+                    for n in range(f,t+1):
+                        op_id_list.append(str(n))
+                    continue
+                op_id_list.append(str(p))
+    return op_id_list
+
+def _extract_assembly_gen(cif_dict):
+    """
+    Extracts the information, how assemblies are generated out
+    of the chains and symmetry operations, from the cifdict.
+
+    :returns: A dictionary {assembly_id: [(chainid, operationids)...]}
+              Where operation_ids is a list
+    """
+    assembly_ids = cif_dict['_pdbx_struct_assembly_gen.assembly_id']       #1
+    operation_ids = cif_dict['_pdbx_struct_assembly_gen.oper_expression']   #1,2
+    chain_id_lists = cif_dict['_pdbx_struct_assembly_gen.asym_id_list']      #A,B
+
+    if type(assembly_ids) == type(""):
+        assert "," not in assembly_ids
+        assembly_ids = [assembly_ids]
+
+    tmp_chain_id_lists = []
+    if type(chain_id_lists) == type([]):
+        for id_list in chain_id_lists:
+            chains_per_assembly = str(id_list).split(",")
+            tmp_chain_id_lists.append(chains_per_assembly)
+        chain_id_lists = tmp_chain_id_lists
+    if type(chain_id_lists) == type(""):
+        chain_id_lists = [str(chain_id_lists).split(",")]
+
+    tmp_operation_ids=[]
+    if type(operation_ids) == type([]):
+        for id_str in operation_ids:
+            operations_per_assembly = []
+            for id in id_str.split(','):
+                op_id_list = []
+                op_id_list = _convert_cif_operation_id_expression(id)
+                operations_per_assembly.append(op_id_list)
+            tmp_operation_ids.append(operations_per_assembly)
+        operation_ids = tmp_operation_ids
+
+    if type(operation_ids) == type(""):
+        operation_ids = [[str(operation_ids).split(",")]*len(chain_id_lists[0])]
+        assert len(chain_id_lists)==1
+        #operation_ids = [operation_ids]*len(chain_id_lists[0])
+
+    log.debug("%s          %s               %s", assembly_ids,operation_ids,chain_id_lists)
+    assembly_components = defaultdict(lambda:[[],[]])
+    for i, aid in enumerate(assembly_ids):
+        assembly_components[aid][0].extend(chain_id_lists[i])
+        assembly_components[aid][1].extend(operation_ids[i])
+    return assembly_components
+
+
+def _get_new_chainid(chain_id, op_id, taken_ids):
+    new_id= chain_id+"op"+str(op_id)
+    while new_id in taken_ids:
+        new_id+="a"
+    return new_id
+def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=None):
     '''
     Load the PDB file located at filename, read all chains and return them.
 
     :param in_filename: The location of the original file.
+    :param assembly_nr: Which assembly to return. Default: The first.
     :return: a tuple chains, missing_residues
 
              * chains: A list of Bio.PDB chain structures corresponding to all
@@ -479,54 +608,9 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         s = parser.get_structure('temp', in_filename)
-        try:
-            log.debug("PDB header %s", parser.header)
-            mr = parser.header["missing_residues"]
-        except AttributeError:  # A mmCIF parser
-            cifdict = parser._mmcif_dict # We read a private attribute here, because parsing the mmcif dictionary a second time would cause a performance penalty.
-            mr = []
-            try:
-                mask = np.array(
-                    cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str) == "?"
-                int_seq_ids = np.array(
-                    cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=int)[mask]
-                chains = np.array(
-                    cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
-                insertions = np.array(
-                    cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
-                insertions[insertions == "."] = " "
-                symbol = np.array(
-                    cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
-            except KeyError:
-                pass
-            else:
-                if not no_annotation:
-                    for i, sseq in enumerate(int_seq_ids):
-                        mr.append({
-                            "model": None,
-                            "res_name": symbol[i],
-                            "chain": chains[i],
-                            "ssseq": sseq,
-                            "insertion": insertions[i]
-                        })
-        except KeyError:
-            mr = []
-            with open(in_filename) as f:
-                for wholeline in f:
-                    if wholeline.startswith("REMARK 465"):
-                        line = wholeline[10:].strip()
-                        mr_info = _parse_remark_465(line)
-                        if mr_info is not None:
-                            mr.append(mr_info)
-                    else:
-                        continue
-        else:
-            if mr:
-                log.info("This PDB has missing residues")
-            elif not no_annotation:
-                log.info("This PDB has no missing residues")
     if len(s) > 1:
         warnings.warn("Multiple models in file. Using only the first model")
+
     # Let's detach all H2O, to speed up processing.
     for chain in s[0]:
         for r in chain:
@@ -534,6 +618,87 @@ def get_all_chains(in_filename, parser=None, no_annotation=False):
                 chain.detach_child(r.id)
     # The chains containing RNA
     chains = list(chain for chain in s[0] if contains_rna(chain))
+
+    try:
+        log.debug("PDB header %s", parser.header)
+        mr = parser.header["missing_residues"]
+        if assembly_nr is not None:
+            warnings.warn("Getting an assembly is not supported for the old PDB format.")
+    except AttributeError:  # A mmCIF parser
+        cifdict = parser._mmcif_dict # We read a private attribute here, because parsing the mmcif dictionary a second time would cause a performance penalty.
+        # Generate an assembly
+        try:
+            operation_mat, operation_vec = _extract_symmetrymatrices_from_cif_dict(cifdict)
+        except KeyError:
+            pass
+        else:
+            assemblies = _extract_assembly_gen(cifdict)
+            if assembly_nr is None:
+                assembly_nr = list(sorted(assemblies.keys()))[0]
+            assembly_gen = assemblies[assembly_nr]
+            old_chains = { c.id:c for c in chains}
+            new_chains = {}
+            log.debug("Original chains are %s. Now performing symmetry "
+                      "for assembly %s", old_chains, assembly_nr)
+            log.debug("AG: %s",assembly_gen)
+            for i, chain_id in enumerate(assembly_gen[0]):
+                op_ids = assembly_gen[1][i]
+                if chain_id not in old_chains:
+                    log.debug ("Skipping chain %s: not RNA? chains: %s", chain_id, old_chains.keys())
+                    continue
+                for op_id in op_ids:
+                    log.debug("Applying op %s to %s", op_id, chain_id)
+                    if chain_id in new_chains:
+                        chain = old_chains[chain_id].copy()
+                        newid = _get_new_chainid(chain_id, op_id,
+                                                  old_chains.keys()| new_chains.keys())
+                        log.debug("Setting id %s", newid)
+                        chain.id = newid
+                        chain.transform(operation_mat[op_id], operation_vec[op_id])
+                    new_chains[chain.id]=chain
+            log.debug("new_chains: %s", new_chains)
+            chains = list(new_chains.values())
+        mr = []
+        try:
+            mask = np.array(
+                cifdict["_pdbx_poly_seq_scheme.pdb_mon_id"], dtype=str) == "?"
+            int_seq_ids = np.array(
+                cifdict["_pdbx_poly_seq_scheme.pdb_seq_num"], dtype=int)[mask]
+            cs = np.array(
+                cifdict["_pdbx_poly_seq_scheme.pdb_strand_id"], dtype=str)[mask]
+            insertions = np.array(
+                cifdict["_pdbx_poly_seq_scheme.pdb_ins_code"], dtype=str)[mask]
+            insertions[insertions == "."] = " "
+            symbol = np.array(
+                cifdict["_pdbx_poly_seq_scheme.mon_id"], dtype=str)[mask]
+        except KeyError:
+            pass
+        else:
+            if not no_annotation:
+                for i, sseq in enumerate(int_seq_ids):
+                    mr.append({
+                        "model": None,
+                        "res_name": symbol[i],
+                        "chain": cs[i],
+                        "ssseq": sseq,
+                        "insertion": insertions[i]
+                    })
+    except KeyError:
+        mr = []
+        with open(in_filename) as f:
+            for wholeline in f:
+                if wholeline.startswith("REMARK 465"):
+                    line = wholeline[10:].strip()
+                    mr_info = _parse_remark_465(line)
+                    if mr_info is not None:
+                        mr.append(mr_info)
+                else:
+                    continue
+    else:
+        if mr:
+            log.info("This PDB has missing residues")
+        elif not no_annotation:
+            log.info("This PDB has no missing residues")
     # Now search for protein interactions.
     if not no_annotation:
         interacting_residues = enumerate_interactions_kdtree(s[0])
