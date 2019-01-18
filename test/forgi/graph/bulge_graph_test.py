@@ -1636,13 +1636,24 @@ GCGCGGCACCGUCCGCGGAACAAACGG
         self.assertEqual(bg.ss_distance('s0', 'i0'), 1)
         self.assertEqual(bg.ss_distance('s0', 'h0'), 4)
 
-        db = '((..))((..))'
+        db = '((..))((..))..'
         bg = fgb.BulgeGraph.from_dotbracket(db)
         self.assertEqual(bg.ss_distance('s0', 's1'), 1)
+        self.assertEqual(bg.ss_distance('m0', 's1'), 1)
+        self.assertEqual(bg.ss_distance('m0', 't0'), 3)
 
         db = '((((..))..))'
         bg = fgb.BulgeGraph.from_dotbracket(db)
         self.assertEqual(bg.ss_distance('s0', 's1'), 1)
+
+        self.assertEqual(bg.ss_distance(1, 12), 1)
+        self.assertEqual(bg.ss_distance(1, 11), 2)
+        self.assertEqual(bg.ss_distance(1, 8), 3)
+
+        self.assertEqual(bg.ss_distance(1, 's1'), 2)
+        self.assertEqual(bg.ss_distance(1, fgb.RESID(chain='A', resid=(' ',8,' '))), 3)
+        self.assertEqual(bg.ss_distance('s1',1), 2)
+        self.assertEqual(bg.ss_distance(fgb.RESID(chain='A', resid=(' ',8,' ')),1), 3)
 
     def test_get_position_in_element(self):
         db = '(((((...))....)))'
