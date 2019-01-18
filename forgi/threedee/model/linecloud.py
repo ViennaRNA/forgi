@@ -280,7 +280,7 @@ class LineSegmentStorage(CoordinateStorage):
                             log.debug(
                                 "Parallel lines (A first, d0 small) are far: %s", (potential_interaction))
                         continue
-                    if ftuv.magnitude(b1, a1) < cutoff:
+                    if ftuv.magnitude(b1 - a1) < cutoff:
                         hits.append(potential_interaction)
                         log.debug(
                             "Parallel lines (A first, d0 big) are close: %s", (potential_interaction))
