@@ -58,19 +58,32 @@ def main(args):
                     sys.exit(1)
 
 def pdb_rmsd(cg1, cg2):
-    common_chains = set(cg1.chains.keys()) & set(cg2.chains.keys())
-    reslist1 = []
-    reslist2 = []
-    for chain in common_chains:
-        reslist1.extend(cr for cr in cg1.chains[chain].get_list()
-                         if cr.resname.strip() in ftup.RNA_RESIDUES)
-        reslist2.extend(cr for cr in cg2.chains[chain].get_list()
-                         if cr.resname.strip() in ftup.RNA_RESIDUES)
-    if common_chains:
-        print("PDB-RMSD (chains {}):\t{:.3f}".format("-".join(common_chains),
-              ftup.residuelist_rmsd(reslist1, reslist2, sidechains=True)[1]))
+    if len(cg1.chains)==1==len(cg2.chains):
+        reslist1 = []
+        reslist2 = []
+        chain1, = cg1.chains.values()
+        chain2, = cg2.chains.values()
+        reslist1.extend(cr for cr in chain1.get_list()
+                        if cr.resname.strip() in ftup.RNA_RESIDUES)
+        reslist2.extend(cr for cr in chain2.get_list()
+                             if cr.resname.strip() in ftup.RNA_RESIDUES)
+        print("PDB-RMSD (single chain):\t{:.3f}".format(
+                  ftup.residuelist_rmsd(reslist1, reslist2, sidechains=True)[1]))
         return True
-    return False
+    else:
+        common_chains = set(cg1.chains.keys()) & set(cg2.chains.keys())
+        reslist1 = []
+        reslist2 = []
+        for chain in common_chains:
+            reslist1.extend(cr for cr in cg1.chains[chain].get_list()
+                             if cr.resname.strip() in ftup.RNA_RESIDUES)
+            reslist2.extend(cr for cr in cg2.chains[chain].get_list()
+                             if cr.resname.strip() in ftup.RNA_RESIDUES)
+        if common_chains:
+            print("PDB-RMSD (chains {}):\t{:.3f}".format("-".join(common_chains),
+                  ftup.residuelist_rmsd(reslist1, reslist2, sidechains=True)[1]))
+            return True
+        return False
 
 
 parser = get_parser()
