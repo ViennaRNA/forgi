@@ -534,7 +534,7 @@ def _extract_assembly_gen(cif_dict):
     operation_ids = cif_dict['_pdbx_struct_assembly_gen.oper_expression']   #1,2
     chain_id_lists = cif_dict['_pdbx_struct_assembly_gen.asym_id_list']      #A,B
 
-    if type(assembly_ids) == type(""):
+    if not isinstance(assembly_ids, list):
         assert "," not in assembly_ids
         assembly_ids = [assembly_ids]
 
@@ -544,7 +544,7 @@ def _extract_assembly_gen(cif_dict):
             chains_per_assembly = str(id_list).split(",")
             tmp_chain_id_lists.append(chains_per_assembly)
         chain_id_lists = tmp_chain_id_lists
-    if type(chain_id_lists) == type(""):
+    else:
         chain_id_lists = [str(chain_id_lists).split(",")]
 
     tmp_operation_ids=[]
@@ -557,8 +557,7 @@ def _extract_assembly_gen(cif_dict):
                 operations_per_assembly.append(op_id_list)
             tmp_operation_ids.append(operations_per_assembly)
         operation_ids = tmp_operation_ids
-
-    if type(operation_ids) == type(""):
+    else:
         operation_ids = [[str(operation_ids).split(",")]*len(chain_id_lists[0])]
         assert len(chain_id_lists)==1
         #operation_ids = [operation_ids]*len(chain_id_lists[0])
@@ -651,7 +650,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
                     if chain_id in new_chains:
                         chain = old_chains[chain_id].copy()
                         newid = _get_new_chainid(chain_id, op_id,
-                                                  old_chains.keys()| new_chains.keys())
+                                                 set(old_chains.keys())| set(new_chains.keys()))
                         log.debug("Setting id %s", newid)
                         chain.id = newid
                         chain.transform(operation_mat[op_id], operation_vec[op_id])
