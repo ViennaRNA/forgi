@@ -1,4 +1,5 @@
 #!usr/bin/env python
+from __future__ import division
 
 import logging
 import argparse
@@ -408,6 +409,11 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
         # within/aorund the pseudoknot (-1) incl. 'virtual' angles e.g. H-Type angle_type3
         ml_stack=[]
         if rna.dssr:
+            nc_bps = list(rna.dssr.noncanonical_pairs())
+            nc_dict = defaultdict(list)
+            for nt1, nt2, typ in nc_bps:
+                nc_dict[nt1].append((nt2, typ))
+                nc_dict[nt2].append((nt1, typ))
             stacking_loops = rna.dssr.stacking_loops()
             start_found = 0
             connection = []
@@ -453,7 +459,7 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                 if loop in stacking_loops:
                     ml_stack.append(loop)
             stacks = rna.dssr.coaxial_stacks()
-            log.error(stacks)
+            log.info("Stacks: %s", stacks)
             for stack in stacks:
                 if stem1 in stack and stem2 in stack:
                     # the two stems stack, but we do not specify along which
@@ -463,10 +469,43 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
             else:
                 dataset["is_stacking_dssr"].append(False)
 
+            # Does the connection form base-triples with the stem?
+            stem1_triples=0
+            stem2_triples=0
+            aminors1 = 0
+            aminors2 = 0
+            aminors = list(rna.dssr.aminor_interactions())
+            for elem in connection:
+                for nt in rna.define_residue_num_iterator(elem,seq_ids=True):
+                    if (nt, stem1) in aminors:
+                        aminors1+=1
+                        log.debug("AMinor %s (%s), %s", nt, elem, stem1)
+                    elif (nt, stem2) in aminors:
+                        aminors2+=1
+                        log.debug("AMinor %s (%s), %s", nt, elem, stem2)
+                    else:
+                        for partner, typ in nc_dict[nt]:
+                            if rna.get_elem(partner)==stem1:
+                                log.debug("base_triple %s, %s: %s-%s (%s)", elem, stem1, nt,partner,typ)
+                                stem1_triples+=1
+                            elif rna.get_elem(partner)==stem2:
+                                log.debug("base_triple %s, %s: %s-%s (%s)", elem, stem2, nt,partner,typ)
+                                stem2_triples+=1
+            log.debug("%s has a length of %s and %s triples", stem1, rna.stem_length(stem1),stem1_triples)
+            log.debug("%s has a length of %s and %s triples", stem2, rna.stem_length(stem2),stem2_triples)
+            dataset["stem1_basetripleperc_dssr"].append(stem1_triples/rna.stem_length(stem1))
+            dataset["stem2_basetripleperc_dssr"].append(stem2_triples/rna.stem_length(stem2))
+            dataset["stem1_aminorperc_dssr"].append(aminors1/rna.stem_length(stem1))
+            dataset["stem2_aminorperc_dssr"].append(aminors2/rna.stem_length(stem2))
+
         else:
             dataset["is_stacking_dssr"].append(float("nan"))
             dataset["this_loop_stacking_dssr"].append(float("nan"))
             dataset["connecting_loops"].append("")
+            dataset["stem1_basetripleperc_dssr"].append(float("nan"))
+            dataset["stem2_basetripleperc_dssr"].append(float("nan"))
+            dataset["stem1_aminorperc_dssr"].append(float("nan"))
+            dataset["stem2_aminorperc_dssr"].append(float("nan"))
 
         dataset["stacking_loops"].append(",".join(ml_stack))
 

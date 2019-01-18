@@ -74,6 +74,23 @@ class DSSRAnnotation(object):
         self._dssr = dssr
         self._cg = cg
 
+    def aminor_interactions(self):
+        if "Aminors" not in self._dssr:
+            return
+        for aminor in self._dssr["Aminors"]:
+            nt1,_,nt23 = aminor["desc_long"].split()
+            nt2, nt3 = map(dssr_to_pdb_resid, nt23.split(","))
+            nt1 = dssr_to_pdb_resid(nt1)
+            if nt1 not in self._cg.seq or nt2 not in self._cg.seq or nt3 not in self._cg.seq:
+                log.debug("Ignoring A-Minor interaction outside this connected component: %s->%s-%s", nt1, nt2, nt3)
+                continue
+            stem = self._cg.get_elem(nt2)
+            if stem!=self._cg.get_elem(nt3):
+                log.warning("DSSR assumes {} and {} are in a stem, but we assume they are not. Ignoring this AMinor annotation".format(nt2, nt3))
+                continue
+            yield nt1, stem
+
+
     def noncanonical_pairs(self, elem=None):
         """
         Yield all nucleotides which are in a non-canonical basepair
@@ -116,6 +133,7 @@ class DSSRAnnotation(object):
                         yield nt1, nt2, bp_type
                 except ValueError:
                     pass
+
 
     def coaxial_stacks(self):
         """
