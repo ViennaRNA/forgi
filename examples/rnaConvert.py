@@ -4,10 +4,17 @@ from __future__ import print_function
 import logging
 import os.path
 import sys
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+import string
+
 import numpy as np
 
 import forgi.graph.bulge_graph as fgb
 import forgi.utilities.commandline_utils as fuc
+import forgi.threedee.utilities.pdb as ftup
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +37,22 @@ def bg_to_elem_string(cg):
     return fgb.BulgeGraph.to_dotbracket_string(cg) + "\n" + fgb.BulgeGraph.to_element_string(cg, with_numbers=True)
 
 
+def to_pdb(cg):
+    used_chainids = set(cg.chains.keys())
+    def get_available_chainid():
+        for c in string.ascii_uppercase:
+            if c not in used_chainids:
+                used_chainids.add(c)
+                return c
+        raise ValueError("Too many chains. Cannot convert to old PDB format.")
+    f = StringIO()
+    for chain in cg.chains.values():
+        if len(chain.id)>1:
+            chain.id = get_available_chainid()
+    ftup.output_multiple_chains(cg.chains.values(), f, "pdb")
+    return f.getvalue()
+
+
 class OutFiletype:
     def __init__(self, write_fun, extention_fun, rna_type):
         self.convert = write_fun
@@ -44,6 +67,8 @@ FILETYPES = {
     "dotbracket": OutFiletype(fgb.BulgeGraph.to_dotbracket_string, lambda x: ".dotbracket", "any"),
     "neato": OutFiletype(fgb.BulgeGraph.to_neato_string, lambda x: ".neato", "any"),
     "element_string": OutFiletype(bg_to_elem_string, lambda x: ".element_string", "any"),
+    "pdb": OutFiletype(to_pdb, lambda x: ".pdb", "3d"),
+
 }
 
 parser = fuc.get_rna_input_parser(

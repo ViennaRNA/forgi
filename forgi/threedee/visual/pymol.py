@@ -63,7 +63,7 @@ def pymol_color(color, modifier):
 
 class PyMolRNA(object):
     def __init__(self, name, color_modifier=1.0):
-        self.name = name.replace("-", "_")
+        self.name = name.replace("-", "_").replace(".", "_")
         self.segments = []
         self.boxes = []
         self.labels = []

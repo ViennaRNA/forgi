@@ -164,6 +164,7 @@ def main(args):
         labels = {}
 
     color_modifier = 1.0
+    log.info("Visualizing {} rnas".format(len(rnas)))
     for rna in rnas:
         pp.add_cg(rna, labels, color_modifier)
         color_modifier *= 0.7
@@ -229,8 +230,10 @@ def main(args):
         else:
             p = sp.Popen(['pymol'] + pdb_fns + [pml_filename],
                          stdout=sp.PIPE, stderr=sp.PIPE)
+        log.info("Now opening pymol")
         out, err = p.communicate()
-
+        log.info("Out=\n%s", out)
+        log.info("Errt=\n%s", err)
 
 parser = get_parser()
 if __name__ == "__main__":

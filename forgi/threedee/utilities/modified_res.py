@@ -112,17 +112,6 @@ def to_4_letter_alphabeth(chain, query_db=False):
     i = 0
     while i < len(chain):
         r = chain.child_list[i]
-
-        # rename rosetta-generated structures
-        if r.resname == ' rA':
-            r.resname = '  A'
-        elif r.resname == ' rC':
-            r.resname = '  C'
-        elif r.resname == ' rG':
-            r.resname = '  G'
-        elif r.resname == ' rU':
-            r.resname = '  U'
-
         # Non-standard residues
         if r.resname.strip() == "I":
             # "I" has no standart parent (AUGC) to replace it with.

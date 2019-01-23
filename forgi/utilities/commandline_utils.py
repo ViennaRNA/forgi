@@ -134,6 +134,7 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
             args.pseudoknots = None
             args.pdb_secondary_structure = None
             args.pdb_annotation_tool = None
+            args.pdb_allow_www_query = False
         if args.chains:
             load_chains = args.chains.split(",")
         else:

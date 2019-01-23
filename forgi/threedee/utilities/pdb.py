@@ -464,7 +464,7 @@ def _extract_symmetrymatrices_from_cif_dict(cif_dict):
     for i in range(1,4):
         v_key = '_pdbx_struct_oper_list.vector['+str(i)+']'
         value_vectors = cif_dict[v_key]
-        if type(value_vectors) == type(""):
+        if not isinstance(value_vectors, list):
             value_vectors = [value_vectors]
         for k, v in enumerate(value_vectors):
             vectors[symmetry_ids[k]][i-1] = float(v)
@@ -472,7 +472,7 @@ def _extract_symmetrymatrices_from_cif_dict(cif_dict):
         for j in range(1,4):
             key = '_pdbx_struct_oper_list.matrix['+str(i)+']['+str(j)+']'
             value_per_matrix = cif_dict[key]
-            if type(value_per_matrix) == type(""):
+            if not isinstance(value_per_matrix, list):
                 value_per_matrix = [value_per_matrix]
             for k, v in enumerate(value_per_matrix):
                 matrices[symmetry_ids[k]][i-1][j-1] = float(v)
@@ -535,8 +535,7 @@ def _extract_assembly_gen(cif_dict):
     chain_id_lists = cif_dict['_pdbx_struct_assembly_gen.asym_id_list']      #A,B
 
     if not isinstance(assembly_ids, list):
-        assert "," not in assembly_ids
-        assembly_ids = [assembly_ids]
+        return _extract_assembly_gen_string(assembly_ids, operation_ids, chain_id_lists)
 
     tmp_chain_id_lists = []
     if type(chain_id_lists) == type([]):
@@ -545,8 +544,7 @@ def _extract_assembly_gen(cif_dict):
             tmp_chain_id_lists.append(chains_per_assembly)
         chain_id_lists = tmp_chain_id_lists
     else:
-        chain_id_lists = [str(chain_id_lists).split(",")]
-
+        raise ValueError("Inconsistent symmetry def")
     tmp_operation_ids=[]
     if type(operation_ids) == type([]):
         for id_str in operation_ids:
@@ -558,15 +556,35 @@ def _extract_assembly_gen(cif_dict):
             tmp_operation_ids.append(operations_per_assembly)
         operation_ids = tmp_operation_ids
     else:
-        operation_ids = [[str(operation_ids).split(",")]*len(chain_id_lists[0])]
-        assert len(chain_id_lists)==1
-        #operation_ids = [operation_ids]*len(chain_id_lists[0])
+        raise ValueError("Inconsistent symmetry def")
 
     log.debug("%s          %s               %s", assembly_ids,operation_ids,chain_id_lists)
     assembly_components = defaultdict(lambda:[[],[]])
     for i, aid in enumerate(assembly_ids):
+        if len(operation_ids[i])==1 and len(chain_id_lists[i])>1:
+            assembly_components[aid][1].extend(operation_ids[i]*len(chain_id_lists[i]))
+        else:
+            assembly_components[aid][1].extend(operation_ids[i])
         assembly_components[aid][0].extend(chain_id_lists[i])
-        assembly_components[aid][1].extend(operation_ids[i])
+    return assembly_components
+
+def _extract_assembly_gen_string(assembly_ids, operation_ids, chain_id_lists):
+    """
+    Extracts the information, how assemblies are generated out
+    of the chains and symmetry operations, from the cifdict.
+
+    :returns: A dictionary {assembly_id: [(chainid, operationids)...]}
+              Where operation_ids is a list
+    """
+    if "," in assembly_ids:
+        raise ValueError("Insonsistent symmetry defs")
+
+    operation_ids = [str(operation_ids).split(",")]*len(chain_id_lists)
+
+    log.debug("%s          %s               %s", assembly_ids,operation_ids,chain_id_lists)
+    assembly_components = defaultdict(lambda:[[],[]])
+    assembly_components[0][0].extend(chain_id_lists)
+    assembly_components[0][1].extend(operation_ids)
     return assembly_components
 
 
@@ -615,6 +633,28 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
         for r in chain:
             if r.resname.strip() == "HOH":
                 chain.detach_child(r.id)
+    # Rename residues from other programs
+    for chain in s[0]:
+        for r in chain:
+            # rename rosetta-generated structures
+            if r.resname == ' rA':
+                r.resname = '  A'
+            elif r.resname == ' rC':
+                r.resname = '  C'
+            elif r.resname == ' rG':
+                r.resname = '  G'
+            elif r.resname == ' rU':
+                r.resname = '  U'
+
+            # rename iFoldRNA-generated structures
+            if r.resname == 'ADE':
+                r.resname = '  A'
+            elif r.resname == 'CYT':
+                r.resname = '  C'
+            elif r.resname == 'GUA':
+                r.resname = '  G'
+            elif r.resname == 'URI':
+                r.resname = '  U'
     # The chains containing RNA
     chains = list(chain for chain in s[0] if contains_rna(chain))
 
@@ -641,6 +681,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
                       "for assembly %s", old_chains, assembly_nr)
             log.debug("AG: %s",assembly_gen)
             for i, chain_id in enumerate(assembly_gen[0]):
+                log.debug("i=%s", i)
                 op_ids = assembly_gen[1][i]
                 if chain_id not in old_chains:
                     log.debug ("Skipping chain %s: not RNA? chains: %s", chain_id, old_chains.keys())
