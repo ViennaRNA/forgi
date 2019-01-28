@@ -1266,7 +1266,7 @@ def pair_distance_distribution(points, stepsize=1):
     dists = Counter()
     for p1, p2 in itertools.combinations(points, r=2):
         d = vec_distance(p1, p2)
-        dists[(d+stepsize/2) // stepsize] += 1
+        dists[d // stepsize] += 1
     m = max(dists.keys())
     x = np.arange(0, m + 1)
     return x * stepsize, np.array([dists[xi] for xi in x])
