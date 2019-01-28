@@ -520,7 +520,7 @@ def _convert_cif_operation_id_expression(expression):
                         op_id_list.append(str(n))
                     continue
                 op_id_list.append(str(p))
-    return op_id_list
+    return tuple(op_id_list)
 
 def _extract_assembly_gen(cif_dict):
     """
@@ -535,64 +535,41 @@ def _extract_assembly_gen(cif_dict):
     chain_id_lists = cif_dict['_pdbx_struct_assembly_gen.asym_id_list']      #A,B
 
     if not isinstance(assembly_ids, list):
-        return _extract_assembly_gen_string(assembly_ids, operation_ids, chain_id_lists)
+        assembly_ids=[assembly_ids]
+        assert not isinstance(operation_ids, list)
+        operation_ids=[operation_ids]
+        assert not isinstance(chain_id_lists, list)
+        chain_id_lists=[chain_id_lists]
 
-    tmp_chain_id_lists = []
-    if type(chain_id_lists) == type([]):
-        for id_list in chain_id_lists:
-            chains_per_assembly = str(id_list).split(",")
-            tmp_chain_id_lists.append(chains_per_assembly)
-        chain_id_lists = tmp_chain_id_lists
-    else:
-        raise ValueError("Inconsistent symmetry def")
-    tmp_operation_ids=[]
-    if type(operation_ids) == type([]):
-        for id_str in operation_ids:
-            operations_per_assembly = []
-            for id in id_str.split(','):
-                op_id_list = []
-                op_id_list = _convert_cif_operation_id_expression(id)
-                operations_per_assembly.append(op_id_list)
-            tmp_operation_ids.append(operations_per_assembly)
-        operation_ids = tmp_operation_ids
-    else:
-        raise ValueError("Inconsistent symmetry def")
-
-    log.debug("%s          %s               %s", assembly_ids,operation_ids,chain_id_lists)
-    assembly_components = defaultdict(lambda:[[],[]])
+    assembly_components = defaultdict(lambda:defauldict(list)) # assembly: operation-lists: chains
     for i, aid in enumerate(assembly_ids):
-        if len(operation_ids[i])==1 and len(chain_id_lists[i])>1:
-            assembly_components[aid][1].extend(operation_ids[i]*len(chain_id_lists[i]))
-        else:
-            assembly_components[aid][1].extend(operation_ids[i])
-        assembly_components[aid][0].extend(chain_id_lists[i])
+        op_ids=_convert_cif_operation_id_expression(operation_ids[i])
+        chain_ids=chain_id_lists[i].split()
+        assembly_components[0][operation_ids].extend(chain_id_lists)
     return assembly_components
-
-def _extract_assembly_gen_string(assembly_ids, operation_ids, chain_id_lists):
-    """
-    Extracts the information, how assemblies are generated out
-    of the chains and symmetry operations, from the cifdict.
-
-    :returns: A dictionary {assembly_id: [(chainid, operationids)...]}
-              Where operation_ids is a list
-    """
-    if "," in assembly_ids:
-        raise ValueError("Insonsistent symmetry defs")
-
-    operation_ids = [str(operation_ids).split(",")]*len(chain_id_lists)
-
-    log.debug("%s          %s               %s", assembly_ids,operation_ids,chain_id_lists)
-    assembly_components = defaultdict(lambda:[[],[]])
-    assembly_components[0][0].extend(chain_id_lists)
-    assembly_components[0][1].extend(operation_ids)
-    return assembly_components
-
 
 def _get_new_chainid(chain_id, op_id, taken_ids):
     new_id= chain_id+"op"+str(op_id)
     while new_id in taken_ids:
         new_id+="a"
     return new_id
+
+def _extract_asym_auth_id_map(cif_dict):
+    label_ids = cif_dict['_atom_site.label_asym_id']
+    auth_ids = cif_dict['_atom_site.auth_asym_id']
+    l2a=defaultdict(lambda: None)
+    a2l=defaultdict(list)
+    for i, lid in enumerate(label_ids):
+        if lid in l2a:
+            if l2a[lid]!=auth_ids[i]:
+                log.error("lid %s, authid %s but before %s", lid, auth_ids[i], l2a[lid])
+                raise ValueError("Inconsistent cif.")
+        else:
+            l2a[lid]=auth_ids[i]
+            a2l[auth_ids[i]].append(lid)
+    log.debug(l2a)
+    return l2a, a2l
+
 def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=None):
     '''
     Load the PDB file located at filename, read all chains and return them.
@@ -655,6 +632,12 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
                 r.resname = '  G'
             elif r.resname == 'URI':
                 r.resname = '  U'
+    # Now search for protein interactions.
+    if not no_annotation:
+        interacting_residues = enumerate_interactions_kdtree(s[0])
+    else:
+        interacting_residues = set()
+
     # The chains containing RNA
     chains = list(chain for chain in s[0] if contains_rna(chain))
 
@@ -672,6 +655,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
             pass
         else:
             assemblies = _extract_assembly_gen(cifdict)
+            id2chainid, chainid2ids = _extract_asym_auth_id_map(cifdict)
             if assembly_nr is None:
                 assembly_nr = list(sorted(assemblies.keys()))[0]
             assembly_gen = assemblies[assembly_nr]
@@ -680,22 +664,27 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
             log.debug("Original chains are %s. Now performing symmetry "
                       "for assembly %s", old_chains, assembly_nr)
             log.debug("AG: %s",assembly_gen)
-            for i, chain_id in enumerate(assembly_gen[0]):
-                log.debug("i=%s", i)
-                op_ids = assembly_gen[1][i]
-                if chain_id not in old_chains:
-                    log.debug ("Skipping chain %s: not RNA? chains: %s", chain_id, old_chains.keys())
-                    continue
-                for op_id in op_ids:
-                    log.debug("Applying op %s to %s", op_id, chain_id)
-                    if chain_id in new_chains:
-                        chain = old_chains[chain_id].copy()
-                        newid = _get_new_chainid(chain_id, op_id,
-                                                 set(old_chains.keys())| set(new_chains.keys()))
-                        log.debug("Setting id %s", newid)
-                        chain.id = newid
-                        chain.transform(operation_mat[op_id], operation_vec[op_id])
-                    new_chains[chain.id]=chain
+            for operations, labelids in assembly_gen[0].items():
+                chainids = set(id2chainid[lid] for lid in labelids)
+                lids_back = set( x for x in a2l for cid in chainids for a2l in chainid2ids[cid])
+                if lids_back!=set(labelids):
+                    log.error("%s, %s, extra: %s", lids_back, labelids, lids_back-set(label_ids))
+                    raise ValueError("Operation on part of an author designated assymetric unit "
+                                     "(auth_asym_id) nt supported.")
+                for chain_id in chainids:
+                    if chain_id not in old_chains:
+                        log.debug ("Skipping chain %s: not RNA? chains: %s", chain_id, old_chains.keys())
+                        continue
+                    for op_id in op_ids:
+                        log.debug("Applying op %s to %s", op_id, chain_id)
+                        if chain_id in new_chains:
+                            chain = old_chains[chain_id].copy()
+                            newid = _get_new_chainid(chain_id, op_id,
+                                                     set(old_chains.keys())| set(new_chains.keys()))
+                            log.debug("Setting id %s", newid)
+                            chain.id = newid
+                            chain.transform(operation_mat[op_id], operation_vec[op_id])
+                        new_chains[chain.id]=chain
             log.debug("new_chains: %s", new_chains)
             chains = list(new_chains.values())
         mr = []
@@ -739,11 +728,6 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
             log.info("This PDB has missing residues")
         elif not no_annotation:
             log.info("This PDB has no missing residues")
-    # Now search for protein interactions.
-    if not no_annotation:
-        interacting_residues = enumerate_interactions_kdtree(s[0])
-    else:
-        interacting_residues = set()
     '''for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
         rna_res=None
         other_res=None
