@@ -570,6 +570,41 @@ def _extract_asym_auth_id_map(cif_dict):
     log.debug(l2a)
     return l2a, a2l
 
+def get_assemblies(chains, cifdict):
+    assemblies = _extract_assembly_gen(cifdict)
+    id2chainid, chainid2ids = _extract_asym_auth_id_map(cifdict)
+    if assembly_nr is None:
+        assembly_nr = list(sorted(assemblies.keys()))[0]
+    assembly_gen = assemblies[assembly_nr]
+    old_chains = { c.id:c for c in chains}
+    new_chains = {}
+    log.debug("Original chains are %s. Now performing symmetry "
+              "for assembly %s", old_chains, assembly_nr)
+    log.debug("AG: %s",assembly_gen)
+    for operations, labelids in assembly_gen[0].items():
+        chainids = set(id2chainid[lid] for lid in labelids)
+        lids_back = set( x for x in a2l for cid in chainids for a2l in chainid2ids[cid])
+        if lids_back!=set(labelids):
+            log.error("%s, %s, extra: %s", lids_back, labelids, lids_back-set(label_ids))
+            raise ValueError("Operation on part of an author designated assymetric unit "
+                             "(auth_asym_id) nt supported.")
+        for chain_id in chainids:
+            if chain_id not in old_chains:
+                log.debug ("Skipping chain %s: not RNA? chains: %s", chain_id, old_chains.keys())
+                continue
+            for op_id in op_ids:
+                log.debug("Applying op %s to %s", op_id, chain_id)
+                if chain_id in new_chains:
+                    chain = old_chains[chain_id].copy()
+                    newid = _get_new_chainid(chain_id, op_id,
+                                             set(old_chains.keys())| set(new_chains.keys()))
+                    log.debug("Setting id %s", newid)
+                    chain.id = newid
+                    chain.transform(operation_mat[op_id], operation_vec[op_id])
+                new_chains[chain.id]=chain
+    log.debug("new_chains: %s", new_chains)
+    chains = list(new_chains.values())
+
 def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=None):
     '''
     Load the PDB file located at filename, read all chains and return them.
@@ -654,39 +689,8 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
         except KeyError:
             pass
         else:
-            assemblies = _extract_assembly_gen(cifdict)
-            id2chainid, chainid2ids = _extract_asym_auth_id_map(cifdict)
-            if assembly_nr is None:
-                assembly_nr = list(sorted(assemblies.keys()))[0]
-            assembly_gen = assemblies[assembly_nr]
-            old_chains = { c.id:c for c in chains}
-            new_chains = {}
-            log.debug("Original chains are %s. Now performing symmetry "
-                      "for assembly %s", old_chains, assembly_nr)
-            log.debug("AG: %s",assembly_gen)
-            for operations, labelids in assembly_gen[0].items():
-                chainids = set(id2chainid[lid] for lid in labelids)
-                lids_back = set( x for x in a2l for cid in chainids for a2l in chainid2ids[cid])
-                if lids_back!=set(labelids):
-                    log.error("%s, %s, extra: %s", lids_back, labelids, lids_back-set(label_ids))
-                    raise ValueError("Operation on part of an author designated assymetric unit "
-                                     "(auth_asym_id) nt supported.")
-                for chain_id in chainids:
-                    if chain_id not in old_chains:
-                        log.debug ("Skipping chain %s: not RNA? chains: %s", chain_id, old_chains.keys())
-                        continue
-                    for op_id in op_ids:
-                        log.debug("Applying op %s to %s", op_id, chain_id)
-                        if chain_id in new_chains:
-                            chain = old_chains[chain_id].copy()
-                            newid = _get_new_chainid(chain_id, op_id,
-                                                     set(old_chains.keys())| set(new_chains.keys()))
-                            log.debug("Setting id %s", newid)
-                            chain.id = newid
-                            chain.transform(operation_mat[op_id], operation_vec[op_id])
-                        new_chains[chain.id]=chain
-            log.debug("new_chains: %s", new_chains)
-            chains = list(new_chains.values())
+            if False:
+                chains = get_assemblies(chains, cifdict)
         mr = []
         try:
             mask = np.array(
