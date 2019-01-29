@@ -357,6 +357,9 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
     stems_3p = []
 
     nums = []
+    log.debug("pk Residue numbers %s", pk.residue_numbers)
+    log.debug("pk helix ends %s", pk.helix_ends)
+
     for i, resnum in enumerate(pk.residue_numbers):
         num = rna.seq.to_integer(resnum)
         nums.append(num)
@@ -364,9 +367,10 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
         stems_5p.append(element_5p)
 
         num2 = rna.seq.to_integer(pk.helix_ends[i])
+        log.debug("num %s nums2 %s", num, num2)
         element_3p =rna.get_node_from_residue_num(num2)
         stems_3p.append(element_3p)
-
+    log.debug("nums %s", nums)
     for i, stem1_5p in enumerate(stems_5p):
         dataset["Filename"].append(filename)
         dataset["rnaname"] = rna.name
@@ -403,7 +407,7 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                 stem2 = stems_3p[0]
             else:
                 stem2 = stems_3p[i+1]
-
+        log.debug("Stem 5' %s, 3' %s, stem1 %s stem2 %s", stems_5p, stems_3p, stem1, stem2)
         # enable stacking analysis via DSSR
         # differentiate between stacking (True), no stacking (False) and brakes
         # within/aorund the pseudoknot (-1) incl. 'virtual' angles e.g. H-Type angle_type3
@@ -419,16 +423,14 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
             connection = []
             stacking = None
             branch = None
+            log.debug("Checking %s and %s for stacking, strand %s", stem1, stem2, strand)
             for elem in rna.iter_elements_along_backbone(): #walk along the backbone
-                if elem == stem1:
-                    start_found += 1
-                    if rna.defines[elem][strand*2+1] in rna.backbone_breaks_after:
-                        stacking = -1
-                    log.debug("First stem, elem %s, stacking %s", elem, stacking)
-                elif start_found == strand+1:
+                if start_found == strand+1:
                     if branch:
+                        log.debug("in branch: elem %s, branch %s, stacking %s", elem, branch, stacking)
                         if elem == branch:
                             branch = None
+                            log.debug("Branch end")
                         continue
                     if elem[0] != "s":
                         connection.append(elem)
@@ -446,9 +448,15 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                         if rna.defines[elem][-1] in rna.backbone_breaks_after:
                             stacking = -1
                     log.debug("elem %s, stacking %s, branch %s", elem, stacking, branch)
+                elif elem == stem1:
+                    start_found += 1
+                    if rna.defines[elem][strand*2+1] in rna.backbone_breaks_after:
+                        stacking = -1
+                    log.debug("First stem, elem %s, stacking %s", elem, stacking)
             else:
                 log.debug("End iteration, stacking->-1")
                 stacking = -1
+            log.debug("Finally, stacking = %s", stacking)
             # more detailed stacking (including backbone brackes within and around the pseudoknot)
             dataset["this_loop_stacking_dssr"].append(stacking)
             dataset["connecting_loops"].append(",".join(connection))
