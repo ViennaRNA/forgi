@@ -428,6 +428,7 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                 elif start_found == strand+1:
                     if branch:
                         if elem == branch:
+                            log.debug("End branch at %s", elem)
                             branch = None
                         continue
                     if elem[0] != "s":
