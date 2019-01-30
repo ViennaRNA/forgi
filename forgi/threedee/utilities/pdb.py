@@ -541,7 +541,7 @@ def _extract_assembly_gen(cif_dict):
         assert not isinstance(chain_id_lists, list)
         chain_id_lists=[chain_id_lists]
 
-    assembly_components = defaultdict(lambda:defauldict(list)) # assembly: operation-lists: chains
+    assembly_components = defaultdict(lambda:defaultdict(list)) # assembly: operation-lists: chains
     for i, aid in enumerate(assembly_ids):
         op_ids=_convert_cif_operation_id_expression(operation_ids[i])
         chain_ids=chain_id_lists[i].split()

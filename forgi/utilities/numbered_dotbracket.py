@@ -131,28 +131,24 @@ class NumberedDotbracket():
                   bg.seq._seqids, self.residue_numbers)
         bg.seq._seqids = self.residue_numbers
         log.debug("After setting, before condensing: ResNum: %s", bg.seq._seqids[0])
-        bg = bg.transformed.condensed()
+        bg2 = bg.transformed.condensed()
         log.debug("Successfully transformed")
-        log.debug("DB now %s", bg.to_dotbracket_string())
-        log.debug("Resids now %s", bg.seq._seqids)
+        log.debug("DB now %s", bg2.to_dotbracket_string())
+        log.debug("Resids now %s", bg2.seq._seqids)
 
         helix_ends = []
-        for i,seqid in  enumerate(bg.seq._seqids):
-            try:
-                next_seqid = bg.seq._seqids[i+1]
-            except IndexError:
-                next_seqid = None
-            missing_residues = [  x for x in bg.seq._iter_resids(seqid, next_seqid, True)
-                                  if x!= "&" ]
-            log.debug("Missing residues after %s: %s", seqid, missing_residues)
-            if next_seqid is None:
-                end = missing_residues[-1]
+        for seqid in  bg2.seq._seqids:
+            elem_original = bg.get_elem(seqid)
+            if seqid == bg.seq.to_resid(bg.defines[elem_original][0]):
+                helix_end = bg.seq.to_resid(bg.defines[elem_original][1])
+            elif seqid == bg.seq.to_resid(bg.defines[elem_original][3]):
+                helix_end = bg.seq.to_resid(bg.defines[elem_original][2])
             else:
-                assert missing_residues[-1]==next_seqid
-                end = missing_residues[-2]
-            helix_ends.append(end)
+                assert False
+            helix_ends.append(helix_end)
+
         log.debug("Helix ends: %s", helix_ends)
-        return NumberedDotbracket(bg.to_dotbracket_string(), bg.seq._seqids, helix_ends)
+        return NumberedDotbracket(bg2.to_dotbracket_string(), bg2.seq._seqids, helix_ends)
 
     def __str__(self):
         return str(self.dotbracket_str)
