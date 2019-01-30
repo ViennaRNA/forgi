@@ -107,11 +107,11 @@ class NumberedDotbracket():
             if bg.stem_length(stem)<min_length:
                 to_unpaired.extend(bg.define_residue_num_iterator(stem))
         numpy_db = np.array(list(self.dotbracket_str))
-        log.info("%s %s", numpy_db, type(numpy_db))
+        log.info("%s %s", "".join(numpy_db), type(numpy_db))
         to_unpaired = np.array(to_unpaired, dtype = int)
         to_unpaired-=1 #0-based indexing, numpy supports element-wise substraction
         numpy_db[to_unpaired]="."
-        log.info("After to_unpaired %s ", numpy_db )
+        log.info("After to_unpaired %s ", "".join(numpy_db))
         return NumberedDotbracket("".join(numpy_db), self.residue_numbers, self.helix_ends)
 
     def condensed(self, remove_helices_shorter_than=3):
@@ -144,12 +144,14 @@ class NumberedDotbracket():
                 next_seqid = None
             missing_residues = [  x for x in bg.seq._iter_resids(seqid, next_seqid, True)
                                   if x!= "&" ]
+            log.debug("Missing residues after %s: %s", seqid, missing_residues)
             if next_seqid is None:
                 end = missing_residues[-1]
             else:
                 assert missing_residues[-1]==next_seqid
                 end = missing_residues[-2]
             helix_ends.append(end)
+        log.debug("Helix ends: %s", helix_ends)
         return NumberedDotbracket(bg.to_dotbracket_string(), bg.seq._seqids, helix_ends)
 
     def __str__(self):
@@ -164,12 +166,14 @@ class NumberedDotbracket():
 
     def __iter__(self):
         for i, bracket in enumerate(self.dotbracket_str):
-            yield NumberedDotbracket(bracket, [self.residue_numbers[i]])
+            yield NumberedDotbracket(bracket, [self.residue_numbers[i]], helix_ends=[self.helix_ends[i]])
 
     def __add__(self, other):
         db = self.dotbracket_str +  other.dotbracket_str
         rn = self.residue_numbers + other.residue_numbers
-        return NumberedDotbracket(db, rn)
+        he = self.helix_ends + other.helix_ends
+        log.debug("Add to PK: %r, %r", self, other)
+        return NumberedDotbracket(db, rn, helix_ends=he)
 
     def __eq__(self, other):
         if isinstance(other, NumberedDotbracket):
@@ -181,9 +185,9 @@ class NumberedDotbracket():
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            return NumberedDotbracket(self.dotbracket_str[key], [self.residue_numbers[key]])
+            return NumberedDotbracket(self.dotbracket_str[key], [self.residue_numbers[key]], helix_ends=[self.helix_ends[key]])
         elif isinstance(key, slice):
-            return NumberedDotbracket(self.dotbracket_str[key], self.residue_numbers[key])
+            return NumberedDotbracket(self.dotbracket_str[key], self.residue_numbers[key], helix_ends=self.helix_ends[key])
 
     def __hash__(self):
         return hash(self.dotbracket_str)
