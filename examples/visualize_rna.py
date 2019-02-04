@@ -128,15 +128,22 @@ def pymol_printer_from_args(args):
 
 
 def align_rnas(rnas):
-    crds0 = ftuv.center_on_centroid(ftug.bg_virtual_residues(rnas[0]))
-    centroid0 = ftuv.get_vector_centroid(ftug.bg_virtual_residues(rnas[0]))
+    crds0 = rnas[0].get_ordered_virtual_residue_poss()
+    centroid0 = ftuv.get_vector_centroid(crds0)
+    print(centroid0)
+    rnas[0].rotate_translate(centroid0, ftuv.identity_matrix)
+    crds0-=centroid0
+    assert  ftuv.magnitude(ftuv.get_vector_centroid(crds0))<10**-5, ftuv.magnitude(ftuv.get_vector_centroid(crds0))
+    assert  ftuv.magnitude(ftuv.get_vector_centroid(rnas[0].get_ordered_virtual_residue_poss()))<10**-5, ftuv.get_vector_centroid(rnas[0].get_ordered_virtual_residue_poss())
     for rna in rnas[1:]:
-        centroid1 = ftuv.get_vector_centroid(ftug.bg_virtual_residues(rna))
-        crds1 = ftuv.center_on_centroid(ftug.bg_virtual_residues(rna))
+        crds1 = rna.get_ordered_virtual_residue_poss()
+        centroid1 = ftuv.get_vector_centroid(crds1)
+        crds1-=centroid1
         rot_mat = ftms.optimal_superposition(crds0, crds1)
-        offset = centroid1 - centroid0
-        log.error(offset)
-        rna.rotate_translate(offset, rot_mat)
+        rna.rotate_translate(centroid1, rot_mat)
+        assert  ftuv.magnitude(ftuv.get_vector_centroid(crds1))<10**-5, ftuv.magnitude(ftuv.get_vector_centroid(crds1))
+        assert  ftuv.magnitude(ftuv.get_vector_centroid(rna.get_ordered_virtual_residue_poss()))<10**-5, ftuv.magnitude(ftuv.get_vector_centroid(rna.get_ordered_virtual_residue_poss()))
+
 
 
 def main(args):

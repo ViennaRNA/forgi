@@ -1819,6 +1819,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.after_coordinates_changed()
 
     def rotate_translate(self, offset, rotation_matrix):
+        """
+        First translate the RNA by offset, then rotate by rotation matrix
+        """
         self.coords._coordinates -= offset
         self.coords.rotate(rotation_matrix)
         self.twists.rotate(rotation_matrix)
