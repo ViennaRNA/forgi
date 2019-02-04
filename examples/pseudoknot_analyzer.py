@@ -429,6 +429,7 @@ def extend_pk_description(dataset, filename, pk_type, rna, pk, pk_number):
                     if branch:
                         log.debug("in branch: elem %s, branch %s, stacking %s", elem, branch, stacking)
                         if elem == branch:
+                            log.debug("End branch at %s", elem)
                             branch = None
                             log.debug("Branch end")
                         continue
