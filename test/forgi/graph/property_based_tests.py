@@ -1,6 +1,8 @@
 from string import ascii_letters
 from copy import copy
 
+import unittest
+
 from hypothesis.strategies import composite, text, sampled_from, one_of, data
 from hypothesis.strategies import characters, integers, none, just, lists, booleans
 from hypothesis import given, assume
@@ -123,7 +125,7 @@ def lists_with_duplicates(draw, elem_strategy):
     l.insert(i, copy(elem))
     return l
 
-
+@unittest.skip("WIP")
 @given(resid=resid_strategy(), resname=sampled_from("AUGC"))
 def test_missing_residue(resid, resname):
     #print("testing", resid, resname)
@@ -158,7 +160,7 @@ def test_seqids_duplicate(seq):
         assert False, "ValueError not raised for duplicate seqid {} in {}".format(
             elem, seq)
 
-
+@unittest.skip("WIP. Currently too slow")
 @given(seqids_strategy(True, True, True))
 def test_seqids_strategy(seqids):
     assert len(seqids) >= 3
