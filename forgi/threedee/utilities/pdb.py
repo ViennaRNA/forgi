@@ -642,9 +642,12 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
 
     # Let's detach all H2O, to speed up processing.
     for chain in s[0]:
-        for r in chain:
+        log.debug("Before detaching water from %s: chain has %s residues", chain.id, len(chain))
+        for r in chain.child_list[:]: # We need a copy here, because we are modifying it during iteration
             if r.resname.strip() == "HOH":
                 chain.detach_child(r.id)
+        log.debug("After detaching water from %s: chain has %s residues", chain.id, len(s[0][chain.id]))
+
     # Rename residues from other programs
     for chain in s[0]:
         for r in chain:
