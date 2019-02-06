@@ -688,38 +688,48 @@ requires three backbone, one base pair, and three more backbone links.
 Getting the neighbors of elements in a specified range
 ------------------------------------------------------
 
-bzudi asked on github:
+See https://github.com/ViennaRNA/forgi/issues/33.
 
-Hi,
-I want to explore the micro enviroment of some nucleotide.
-I saw how can i get the element of this nucleotide. let it be E1
-i still need some help with
-1.How can i get all neighbors of E1 in specified range, lets say 50nt up and down stream ?
-2.How can i get the the closest multiloops of E1 ? both up stream and down stream
+Elements upstream and downstream
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-###  1. How can i get all neighbors of E1 in specified range, lets say 50nt up and down stream ?
+To get all elements that are within 10 nts of an element E1,
+but not along other branches of junctions, you can do the following:
 
-## 1a: 50 nts up- and downstream, but not along other branches of junctions
+If you want to get the microenvironment of nucleotide 80::
 
-If you want to get the microenvironment of nucleotide 80
-```
-import forgi
-import forgi.graph.bulge_graph as fgb
-fx ="""
-GAAUUGCGGGAAAGGGGUCAACAGCCGUUCAGUACCAAGUCUCAGGGGAAACUUUGAGAUGGCCUUGCAAAGGGUAUGGUAAUAAGCUGACGGACAUGGUCCUAACCACGCAGCCAAGUCCUAAGUCAACAGAUCUUCUGUUGAUAUGGAUGCAGUUC
-....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))......
-"""
-nuc_number = 80 # Nucleotide of interest
-rna = fgb.BulgeGraph.from_fasta_text(fx)[0]
-elems = set()
-for i in range(nuc_number-50, nuc_number+51):
-    elems.add(rna.get_elem(i))
-print(", ".join(sorted(elems)))
-```
-This gives `"h0, h1, i0, i1, i3, i4, i5, m0, m1, m2, m3, s0, s1, s2, s3, s4, s5, s6, s7, s8, s9"`
-So you have two hairpins (h0 and h1), some interior loops, multiloop segments and stems.
-To find out how the multiloop segments are connected, you can use the property `rna.junctions` (only in forgi 2.0, currently in the branch develop-2.0), which tells you that m0,m1 and m2 form a 3-way junction, while f0,m3 and t0 form the exterior loop.
+    import forgi
+    import forgi.graph.bulge_graph as fgb
+    fx ="""
+    GAAUUGCGGGAAAGGGGUCAACAGCCGUUCAGUACCAAGUCUCAGGGGAAACUUUGAGAUGGCCUUGCAAAGGGUAUGGUAAUAAGCUGACGGACAUGGUCCUAACCACGCAGCCAAGUCCUAAGUCAACAGAUCUUCUGUUGAUAUGGAUGCAGUUC
+    ....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))......
+    """
+    nuc_number = 80 # Nucleotide of interest
+    rna = fgb.BulgeGraph.from_fasta_text(fx)[0]
+    elems = set()
+    for i in range(nuc_number-10, nuc_number+11):
+        elems.add(rna.get_elem(i))
+    print(", ".join(sorted(elems)))
 
+
+This gives `"h0, h1, m1, s6, s7"`. So you have two hairpins (h0 and h1),
+a multiloop segments and two stems. To find out how the multiloop segments are
+connected, you can use the property `rna.junctions`, which tells you that
+`m0,m1 and m2` form a 3-way junction, while `f0,m3 and t0` form the exterior loop.
+
+Elements with small secondary structure distance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now we will consider the pairing partner of a nucleotide to have a distance of 1
+to the nucleotide, and follow all branches up to a distance of 10::
+
+    elems=set()
+    for elem in rna.defines:
+        if rna.ss_distance(58, ref_elem)<=10:
+            elems.add(elem)
+    print(", ".join(sorted(elems)))
+
+This gives `"h0,h1,i3,m0,m1,m2,s4,s5,s6,s7"`.
 
 
 Applications
