@@ -42,7 +42,6 @@ from forgi.utilities.exceptions import CgConstructionError
 from forgi.threedee.utilities.pdb import AtomName
 log = logging.getLogger(__name__)
 
-catom_name = AtomName("C1'")
 REFERENCE_CATOM = AtomName("C1'")
 
 
@@ -615,7 +614,7 @@ def get_centroid(chain, residue_num):
     atoms = []
     for i in residue_num:
         try:
-            atoms += [chain[i][catom_name]]
+            atoms += [chain[i][REFERENCE_CATOM]]
         except KeyError:
             # the C1* atom probably doesn't exist
             continue
@@ -650,7 +649,7 @@ def get_furthest_c_alpha(cg, chain, stem_end, d):
 
     for chainId, i in res_ids:  # seq_ids now contain chain
         try:
-            c_apos = chain[i][catom_name].get_vector().get_array()
+            c_apos = chain[i][REFERENCE_CATOM].get_vector().get_array()
         except KeyError as ke:
             print("Nucleotide %s missing in element %s" %
                   (str(i), d), file=sys.stderr)
@@ -726,9 +725,13 @@ def stem_from_chains(cg, chains, elem_name):
     # the last nucleotide of the first strand
     # and the first nucleotide of the second strand
     first_res_a = residue_ids[1][-1]
-    start_vec1a = chains[first_res_a.chain][first_res_a.resid][catom_name].coord - coords[0]
+    try:
+        start_vec1a = chains[first_res_a.chain][first_res_a.resid][REFERENCE_CATOM].coord - coords[0]
+    except KeyError as e:
+        log.error("Atoms are %s", chains[first_res_a.chain][first_res_a.resid].child_dict)
+        raise
     last_res_a = residue_ids[1][0]
-    end_vec1a = chains[last_res_a.chain][last_res_a.resid][catom_name].coord - coords[1]
+    end_vec1a = chains[last_res_a.chain][last_res_a.resid][REFERENCE_CATOM].coord - coords[1]
 
     notch1 = cuv.vector_rejection(start_vec1, stem_direction)
     notch2 = cuv.vector_rejection(end_vec1, stem_direction)
@@ -1472,23 +1475,23 @@ def add_loop_information_from_pdb_chains(bg):
 
             first_res = None
             for res in chain.get_residues():
-                if catom_name in res:
+                if REFERENCE_CATOM in res:
                     first_res = res
                     break
             try:
-                start_point = first_res[catom_name].get_vector().get_array()
+                start_point = first_res[REFERENCE_CATOM].get_vector().get_array()
             except TypeError:
                 if first_res is not None:
                     raise
                 else:
                     e = CgConstructionError("The PDB chain does not contain any {} atom (despite containing {} residues).".format(
-                        catom_name, len(list(chain.get_residues()))))
+                        REFERENCE_CATOM, len(list(chain.get_residues()))))
                     with log_to_exception(log, e):
                         log.error(
                             "The chain's last residue only has the following atoms: %s", res.child_list)
                         raise e
             centroid = get_furthest_c_alpha(bg, chain,
-                                            first_res[catom_name].get_vector(
+                                            first_res[REFERENCE_CATOM].get_vector(
                                             ).get_array(),
                                             d)
 
