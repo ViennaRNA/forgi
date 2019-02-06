@@ -150,14 +150,16 @@ def to_4_letter_alphabeth(chain, query_db=False):
 
         # rename modified residues
         if r.id[0].strip():
-            log.debug(r.id)
+            log.debug("Modified residue: %s", r.id)
             # The following was added because of 1NYI.pdb. It includes a single G-residue denoted as HETATOM in chain A.
             # It forms a base-pair, but is probably not connected to the backbone.
             # Instead of removing it/ in addition to removing it,
             # introducing cutpoint whereever the PDB Chain
             # contains gaps would be another option (TODO).
             # A plain AUGC as a HETATOM means it is a ligand.
-            if r.id[0].strip() in ["H_A", "H_U", "H_G", "H_C", "H_  G", "H_  C", "H_  A", "H_  U"]:
+            # 1Y26 has H_ADE instead of H_A
+            if r.id[0].strip() in ["H_A", "H_U", "H_G", "H_C", "H_  G", "H_  C", "H_  A", "H_  U", "H_ADE", "H_CYT", "H_GUA", "H_URI"]:
+                log.debug("Detaching %s, because it is a ligand", r.id)
                 chain.detach_child(r.id)
                 continue  # Continue with same i (now different residue)
 
