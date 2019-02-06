@@ -134,14 +134,14 @@ def test_missing_residue(resid, resname):
     assert mr.resid == mr_roundtrip.resid
     assert mr.res_name == mr_roundtrip.res_name
 
-
+@unittest.skip("WIP")
 @given(seq=lists(resid_strategy(), unique=True))
 def test_seqidList_index_and_getitem_consistent(seq):
     seqlist = fgs.SeqidList(seq)
     for elem in seqlist:
         assert seqlist[seqlist.index(elem)] == elem
 
-
+@unittest.skip("WIP")
 @given(seq1=lists(resid_strategy(), unique=True), seq2=lists(resid_strategy(), unique=True))
 def test_seqlist_equal(seq1, seq2):
     assume(seq1 != seq2)
@@ -149,7 +149,7 @@ def test_seqlist_equal(seq1, seq2):
     assert fgs.SeqidList(seq1) == fgs.SeqidList(seq1)
     assert fgs.SeqidList(seq2) == fgs.SeqidList(seq2)
 
-
+@unittest.skip("WIP")
 @given(lists_with_duplicates(resid_strategy()))
 def test_seqids_duplicate(seq):
     try:
