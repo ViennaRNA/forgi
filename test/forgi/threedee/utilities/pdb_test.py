@@ -8,6 +8,7 @@ import warnings
 import forgi.threedee.utilities.pdb as ftup
 import forgi.utilities.debug as fud
 
+@unittest.skip("Not yet used")
 class TestCifSymmetries(unittest.TestCase):
     def test_convert_cif_operation_id_expression(self):
         self.assertEqual(ftup._convert_cif_operation_id_expression(
@@ -24,7 +25,7 @@ class TestCifSymmetries(unittest.TestCase):
         )
         self.assertEqual(ftup._convert_cif_operation_id_expression(
             "(1,3)(4,5)"),
-            ["1","3","4","5"]
+            ("1","3","4","5")
         )
 
 
