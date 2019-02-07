@@ -39,8 +39,7 @@ from __future__ import absolute_import
 from builtins import map
 from builtins import str
 from builtins import range
-from .rna2d import Vienna, Pairs
-import sys
+from .rna2d import Pairs
 
 
 class BpseqParseError(Exception):
@@ -258,18 +257,17 @@ def bpseq_specify_output(lines, num_base=1, unpaired_symbol='0',
         pseudoknots need to be removed from the structure.
 
     """
-    seq, pairs = BpseqParser(lines, num_base, unpaired_symbol)
+    _, seq, pairs = BpseqParser(lines, num_base, unpaired_symbol)
 
     if return_vienna:
         v = pairs.toVienna(len(seq))
         return seq, v
-    else:
-        return seq, pairs
+    return seq, pairs
 
 
 if __name__ == "__main__":
     from sys import argv
-    seq, struct = BpseqParser(open(argv[1]))
+    _, seq, struct = BpseqParser(open(argv[1]))
     print(seq)
     print(seq.Info)
     print(struct)

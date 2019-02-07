@@ -3,15 +3,18 @@ Take a BulgeGraph and return a copy of it with cofold splitpoints inserted.
 """
 import logging
 
-from logging_exceptions import log_to_exception, log_at_caller
+from logging_exceptions import log_to_exception
 
 
 from ._graph_construction import remove_vertex, relabel_node
-from._basegraph import BaseGraph
 from ..utilities.exceptions import GraphConstructionError
 
 
 log = logging.getLogger(__name__)
+
+
+# This module belongs to the BulgeGraph creation machinenery and is allowed to access its private members
+# pylint: disable=protected-access
 
 
 def split_at_cofold_cutpoints(bg, cutpoints):
@@ -43,7 +46,7 @@ def split_at_cofold_cutpoints(bg, cutpoints):
             _split_interior_loop(bg, splitpoint, element_left, element_right)
         elif element_left != element_right:
             _split_between_elements(
-                bg, splitpoint, element_left, element_right)
+                        bg, splitpoint, element_left, element_right)
         elif element_left[0] == "s":
             _split_inside_stem(bg, splitpoint, element_left)
         else:
@@ -55,7 +58,7 @@ def split_at_cofold_cutpoints(bg, cutpoints):
 
 
 def _is_connected(bg):
-    if not(bg.defines):
+    if not bg.defines:
         return True  # We define an empty Graph as connected.
     start_node = list(bg.defines.keys())[0]
     known_nodes = set([start_node])
@@ -66,15 +69,9 @@ def _is_connected(bg):
             continue
         pending.extend(bg.edges[next_node])
         known_nodes.add(next_node)
-    log.info("Testing connectivity: connected component =?= all nodes:\n{} =?= {}".format(
-        list(sorted(known_nodes)), list(sorted(set(bg.defines.keys())))))
+    log.info("Testing connectivity: connected component =?= all nodes:\n%s =?= %s",
+             list(sorted(known_nodes)), list(sorted(set(bg.defines.keys()))))
     return known_nodes == set(bg.defines.keys())
-
-
-def stem_length(bg, key):
-    d = bg.defines[key]
-    assert key[0] == 's'
-    return (d[1] - d[0]) + 1
 
 
 def _split_between_elements(bg, splitpoint, element_left, element_right):
@@ -94,31 +91,31 @@ def _split_between_elements(bg, splitpoint, element_left, element_right):
         assert element_left[0] == "s" and element_right[0] == "s"
         # Zero-length i or m element!
         connections = bg.edges[element_left] & bg.edges[element_right]
-        if len(connections) == 0:
-            raise GraphConstructionError("Cannot split at cofold cutpoint. "
-                                         "Missing connection between "
-                                         "{} and {}.".format(element_left, element_right))
+        # If multiple ml connections exist, find the one which is 0-len
+        # Remove the highest numbered element first
+        # We know that adjacent stems are connected
+        # by either an i-loop or a 0-len ml.
+        for connection in reversed(sorted(connections)):
+            if connection[0] == "i":
+                break
+            if not bg.defines[connection]:
+                assert splitpoint in bg.defines[element_left]
+                break
         else:
-            # If multiple connections exist, find the one which is 0-len
-            # Remove the highest numbered element first
-            for connection in reversed(sorted(connections)):
-                if connection[0] == "i":
-                    break
-                if not bg.defines[connection]:
-                    assert splitpoint in bg.defines[element_left]
-                    break
-            else:
-                raise GraphConstructionError(
-                    "Cannot split at cofold cutpoint. No suitable connection between {} and {}.".format(element_left, element_right))
+            raise GraphConstructionError(
+                        "Cannot split at cofold cutpoint. "
+                        "No (suitable) connection between "
+                        "{} and {}.".format(element_left, element_right))
+        # pylint: disable=undefined-loop-variable
         if connection[0] == "m":
             # Just remove it without replacement
             remove_vertex(bg, connection)
         else:
             assert connection[0] == "i"
             # Replace i by ml (this is then located on the other strand than the splitpoint)
-            nextML = _next_available_element_name(bg, "m")
-            assert nextML not in bg.defines
-            relabel_node(bg, connection, nextML)
+            next_ml = _next_available_element_name(bg, "m")
+            assert next_ml not in bg.defines
+            relabel_node(bg, connection, next_ml)
 
 
 def _split_inside_loop(bg, splitpoint, element):
@@ -145,7 +142,7 @@ def _split_inside_stem(bg, splitpoint, element):
         # Nothing needs to be done. 2 strands split at end
         log.debug("Nothing to do")
         return
-    elif splitpoint < bg.defines[element][1]:
+    if splitpoint < bg.defines[element][1]:
         # Splitpoint in forward strand:
         define1 = [bg.defines[element][0], splitpoint,
                    bg.pairing_partner(splitpoint), bg.defines[element][3]]
@@ -154,10 +151,10 @@ def _split_inside_stem(bg, splitpoint, element):
         log.debug("Split in forward strand")
     else:
         # Splitpoint in backwards strand:
-        define1 = [bg.defines[element][0], bg.pairing_partner(
-            splitpoint + 1), splitpoint + 1, bg.defines[element][3]]
-        define2 = [bg.pairing_partner(
-            splitpoint), bg.defines[element][1], bg.defines[element][2], splitpoint]
+        define1 = [bg.defines[element][0], bg.pairing_partner(splitpoint + 1),
+                   splitpoint + 1, bg.defines[element][3]]
+        define2 = [bg.pairing_partner(splitpoint), bg.defines[element][1],
+                   bg.defines[element][2], splitpoint]
         log.debug("Split in backwards strand")
     edges1 = []
     edges2 = []
@@ -176,26 +173,27 @@ def _split_inside_stem(bg, splitpoint, element):
         if found != 1:
             log.error("For stem %s with define %s and cutpoint %s:",
                       element, bg.defines[element], splitpoint)
-            log.error("Edge {}, with flanking nts {}, define1 {}, define2 {}".format(
-                edge, bg.flanking_nucleotides(edge), define1, define2))
+            log.error("Edge %s, with flanking nts %s, define1 %s, "
+                      "define2 %s", edge, bg.flanking_nucleotides(edge),
+                      define1, define2)
             assert False
     remove_vertex(bg, element)
-    nextS1 = _next_available_element_name(bg, "s")
-    bg.defines[nextS1] = define1
-    nextM = _next_available_element_name(bg, "m")
-    bg.defines[nextM] = []
-    nextS2 = _next_available_element_name(bg, "s")
-    bg.defines[nextS2] = define2
+    next_s1 = _next_available_element_name(bg, "s")
+    bg.defines[next_s1] = define1
+    next_m = _next_available_element_name(bg, "m")
+    bg.defines[next_m] = []
+    next_s2 = _next_available_element_name(bg, "s")
+    bg.defines[next_s2] = define2
 
     for e1 in edges1:
-        bg.edges[e1].add(nextS1)
+        bg.edges[e1].add(next_s1)
     for e2 in edges2:
-        bg.edges[e2].add(nextS2)
-    edges1.append(nextM)
-    edges2.append(nextM)
-    bg.edges[nextS1] = set(edges1)
-    bg.edges[nextS2] = set(edges2)
-    bg.edges[nextM] = set([nextS1, nextS2])
+        bg.edges[e2].add(next_s2)
+    edges1.append(next_m)
+    edges2.append(next_m)
+    bg.edges[next_s1] = set(edges1)
+    bg.edges[next_s2] = set(edges2)
+    bg.edges[next_m] = set([next_s1, next_s2])
 
 
 def _next_available_element_name(bg, element_type):
@@ -224,23 +222,23 @@ def _split_interior_loop_at_side(bg, splitpoint, strand, other_strand, stems):
     """
     Called by _split_at_cofold_cutpoints
     """
-    nextML = _next_available_element_name(bg, "m")
-    nextA = _next_available_element_name(bg, "t")
-    nextB = _next_available_element_name(bg, "f")
+    next_ml = _next_available_element_name(bg, "m")
+    next_a = _next_available_element_name(bg, "t")
+    next_b = _next_available_element_name(bg, "f")
 
     if other_strand[0] > other_strand[1]:
-        bg.defines[nextML] = []
+        bg.defines[next_ml] = []
     else:
-        bg.defines[nextML] = other_strand
-    _add_edge(bg, nextML, stems[0])
-    _add_edge(bg, nextML, stems[1])
+        bg.defines[next_ml] = other_strand
+    _add_edge(bg, next_ml, stems[0])
+    _add_edge(bg, next_ml, stems[1])
 
     if splitpoint >= strand[0]:
-        bg.defines[nextA] = [strand[0], splitpoint]
-        _add_edge(bg, nextA, stems[0])
+        bg.defines[next_a] = [strand[0], splitpoint]
+        _add_edge(bg, next_a, stems[0])
     if splitpoint < strand[1]:
-        bg.defines[nextB] = [splitpoint + 1, strand[1]]
-        _add_edge(bg, nextB, stems[1])
+        bg.defines[next_b] = [splitpoint + 1, strand[1]]
+        _add_edge(bg, next_b, stems[1])
 
 
 def _split_interior_loop(bg, splitpoint, element_left, element_right):
@@ -257,11 +255,11 @@ def _split_interior_loop(bg, splitpoint, element_left, element_right):
     back_strand = [s2[3] + 1, s1[2] - 1]
     if forward_strand[0] - 1 <= splitpoint <= forward_strand[1]:
         # Split forward strand, relabel backwards strand to multiloop.
-        _split_interior_loop_at_side(
-            bg, splitpoint, forward_strand, back_strand, c)
+        _split_interior_loop_at_side(bg, splitpoint,
+                                     forward_strand, back_strand, c)
     elif back_strand[0] - 1 <= splitpoint <= back_strand[1]:
-        _split_interior_loop_at_side(
-            bg, splitpoint, back_strand, forward_strand, [c[1], c[0]])
+        _split_interior_loop_at_side(bg, splitpoint,
+                                     back_strand, forward_strand, [c[1], c[0]])
     else:
         assert False
     remove_vertex(bg, iloop)

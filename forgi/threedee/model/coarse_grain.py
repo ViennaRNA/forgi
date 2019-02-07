@@ -662,7 +662,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         .. warning::
            Virtual residues are only added to stems, not to loop regions.
            The position of residues in loops is much more flexible, which is why virtual
-           residue positions for loops usually do not make sense.
+           residue positions for loops usually do not make sense. If the file
+           was loaded from the PDB, residue positions from the PDB file are
+           stored already.
         """
         for stem in self.stem_iterator():
             try:
@@ -677,7 +679,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                     raise RnaMissing3dError(
                         "No twists available for stem {}".format(stem))
                 else:
-                    log.warning("Reraising an ERROR in add_all_virtual_residues")
+                    log.info("Reraising an ERROR in add_all_virtual_residues")
                     raise
 
     def get_virtual_residue(self, pos, allow_single_stranded=False):
@@ -763,7 +765,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         """
         Get the coordinates of all stem's virtual residues in a consistent order.
 
-        This is used for RMSD calculation and is ment to replace ftug.bg_virtual_residues
+        This is used for RMSD calculation.
         If no virtual_residue_positions are known, self.add_all_virtual_residues() is called
         automatically.
 
@@ -1299,18 +1301,6 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             self._interacting_elements = set(
                 self.nucleotides_to_elements(interacting_nts))
         return self._interacting_elements
-
-    def to_cg_file(self, filename):
-        '''
-        Save this structure as a string in a file.
-
-        :param filename: The filename to save it to.
-        '''
-        warnings.warn("to_cg_file is deprecated. Use to_file!", stacklevel=2)
-        with open(filename, 'w') as f:
-            s = self.to_cg_string()
-
-            f.write(s)
 
     def radius_of_gyration(self, method="vres"):
         '''

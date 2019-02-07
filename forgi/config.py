@@ -1,3 +1,10 @@
+"""
+Code for reading and writing the forgi configuration files.
+
+To configure forgi, run forgi_config.py
+"""
+
+
 import json
 import os
 import os.path
@@ -6,7 +13,7 @@ import appdirs
 
 log = logging.getLogger(__name__)
 
-dirs = appdirs.AppDirs("forgi", "TBI")
+dirs = appdirs.AppDirs("forgi", "TBI")  # pylint: disable=C0103
 ALLOWED_KEY_VALUES = {"PDB_ANNOTATION_TOOL": ["MC-Annotate", "DSSR", "forgi"]}
 
 
@@ -33,9 +40,7 @@ def read_config():
                 conf = json.load(f)
         except (OSError, IOError):
             log.debug("No configuration file present at %s", filename)
-            pass
         else:
             log.debug("Reading configuration from %s", filename)
             config.update(conf)
-
     return config

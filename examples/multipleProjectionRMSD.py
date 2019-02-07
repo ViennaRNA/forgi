@@ -128,9 +128,9 @@ def main(args):
                     target_proj_rmsds.append(prmsd)
                 except:
                     target_proj_rmsds.append(float("nan"))
-        target_vrs = ftug.bg_virtual_residues(target)
+        target_vrs = target.get_ordered_virtual_residue_poss()
         for cg in cgs:
-            vrs1 = ftug.bg_virtual_residues(cg)
+            vrs1 = cg.get_ordered_virtual_residue_poss()
             cgrmsd = ftms.rmsd(vrs1, target_vrs)
             target_rmsds.append(cgrmsd)
         xval = np.arange(len(cgs)) * args.step_size

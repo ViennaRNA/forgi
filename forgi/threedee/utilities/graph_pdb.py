@@ -916,21 +916,6 @@ def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
                                        stem_length, stem_inv)
 
 
-def bg_virtual_residues(bg):
-    warnings.warn("ftug.bg_virtual_residues will be removed in the future."
-                  "Use cg.add_virtual_residues instead to store the virtual "
-                  "residues directly to the CoarseGrainRNA and cg.get_ordered_virtual_residue_poss"
-                  "to retrieve the virtual residue positions.", DeprecationWarning, stacklevel=2)
-    vress = []
-
-    for s in bg.sorted_stem_iterator():
-        for i in range(bg.stem_length(s)):
-            vres = virtual_res_3d_pos(bg, s, i)
-            vress += [vres[0] + vres[2], vres[0] + vres[3]]
-
-    return np.array(vress)
-
-
 def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
     '''
     Define a basis based on the location of a virtual stem residue.

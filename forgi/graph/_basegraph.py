@@ -1,16 +1,15 @@
 from collections import defaultdict
-from pprint import pformat
 import logging
 import itertools as it
 
-from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
+from ..utilities.exceptions import GraphIntegrityError
 
 log = logging.getLogger(__name__)
 
 try:
     profile
 except NameError:
-    def profile(x): return x
+    profile = lambda x: x
 
 
 class BaseGraph(object):
@@ -26,7 +25,7 @@ class BaseGraph(object):
     """
 
     def __init__(self):
-        self.defines = []
+        self.defines = {}
         self.edges = defaultdict(set)
 
     def connections(self, bulge):
@@ -34,7 +33,7 @@ class BaseGraph(object):
         :param g: Graph-like: A BulgeGraph or BulgeGraphConstruction.
         """
         def sort_key(x):
-            if len(self.defines[x]) > 0 and self.defines[x][0] == 1:
+            if self.defines[x] and self.defines[x][0] == 1:
                 # special case for stems at the beginning since there is no
                 # adjacent nucleotide 0
                 return 0
@@ -44,20 +43,31 @@ class BaseGraph(object):
         return connections
 
     def define_a(self, elem):
+        """
+        Returns the element define using the adjacent nucleotides (if present).
+
+        If there is no adjacent nucleotide due to a chain break or chain end,
+        then the nucleotide that is part of the element will be used instead.
+
+        For stems, this always returns a list of length 4,
+        for interior loops a list of length 2 or 4 and
+        for other elements always a list of length 2.
+
+
+        :param elem: An element name
+        :returns: A list of integers
+        """
         if self.defines[elem] == []:
             return self._define_a_zerolength(elem)
-        else:
-            return self._define_a_nonzero(elem)
+        return self._define_a_nonzero(elem)
 
     @profile
     def _define_a_nonzero(self, elem):
         define = self.defines[elem]
-        # log.debug("Define_a nonzero of BaseGraph called for %s with define %s", elem, define) # commented out for performance reasons
         new_def = []
         for i in range(0, len(define), 2):
             new_def.append(max(define[i] - 1, 1))
             new_def.append(define[i + 1] + 1)
-        #log.debug("Define_a nonzero returning %s", new_def)
         return new_def
 
     def flanking_nucleotides(self, d):
@@ -91,10 +101,9 @@ class BaseGraph(object):
             define = self.defines[stem]
             if define[2] == define[1] + 1:
                 return [define[1], define[2]]
-            else:
-                raise GraphIntegrityError("Very strange zero-length hairpin {} "
-                                          "(not?) connected to {}".format(elem, stem))
-        elif len(edges) == 2:
+            raise GraphIntegrityError("Very strange zero-length hairpin {} "
+                                      "(not?) connected to {}".format(elem, stem))
+        if len(edges) == 2:
             stem1, stem2 = edges
             # See if this is the only element connecting the two stems.
             connections = self.edges[stem1] & self.edges[stem2]
@@ -123,13 +132,12 @@ class BaseGraph(object):
             zl_coordinates.sort()
             i = zl_connections.index(elem)
             return list(zl_coordinates[i])
-        else:
-            raise GraphIntegrityError("Very strange zero length bulge {} with more than 2 adjacent "
-                                      "elements: {}.".format(elem, edges))
+        raise GraphIntegrityError("Very strange zero length bulge {} with more than 2 adjacent "
+                                  "elements: {}.".format(elem, edges))
 
     def _zerolen_defines_a_between(self, stem1, stem2):
         zl_coordinates = set()
-        for k, l in it.product(range(4), repeat=2):
+        for k, l in it.product(range(4), repeat=2): # pylint: disable=W1638
             if abs(self.defines[stem1][k] - self.defines[stem2][l]) == 1:
                 d = [self.defines[stem1][k], self.defines[stem2][l]]
                 d.sort()
@@ -138,7 +146,7 @@ class BaseGraph(object):
         log.debug("Returning zl-coordinates: %s", zl_coordinates)
         return zl_coordinates
 
-    def _get_sides_plus(self, s1, b):
+    def _get_sides_plus(self, s1, bulge):
         """
         Get the side of s1 that is next to b.
 
@@ -151,15 +159,15 @@ class BaseGraph(object):
                  to the stem.
                  These sides are equivalent to the indices of the define.
         """
-        if b not in self.edges[s1]:
+        if bulge not in self.edges[s1]:
             raise ValueError(
                 "_get_sides_plus expects stem to be connected to bulge!")
 
         s1d = self.defines[s1]
-        bd = self.defines[b]
+        bd = self.defines[bulge]  # pylint: disable=C0103
 
-        if len(bd) == 0:
-            bd = self._define_a_zerolength(b)
+        if not bd:
+            bd = self._define_a_zerolength(bulge)  # pylint: disable=C0103
             bd[0] += 1
             bd[1] -= 1
 
@@ -167,26 +175,26 @@ class BaseGraph(object):
         if s1d[0] - bd[1] == 1:
             return (0, 1)
         # after the stem on the 5' strand
-        elif bd[0] - s1d[1] == 1:
+        if bd[0] - s1d[1] == 1:
             return (1, 0)
         # before the stem on the 3' strand
-        elif s1d[2] - bd[1] == 1:
+        if s1d[2] - bd[1] == 1:
             return (2, 1)
         # after the stem on the 3' strand
-        elif bd[0] - s1d[3] == 1:
+        if bd[0] - s1d[3] == 1:
             return (3, 0)
 
         raise GraphIntegrityError(
-            "Faulty bulge {}:{} connected to {}:{}".format(b, bd, s1, s1d))
+            "Faulty bulge {}:{} connected to {}:{}".format(bulge, bd, s1, s1d))
 
     def get_node_from_residue_num(self, base_num):
         """
         Iterate over the defines and see which one encompasses this base.
         """
         seq_id = False
-        for key in self.defines.keys():
-            for r in self.define_range_iterator(key):
-                if base_num >= r[0] and base_num <= r[1]:
+        for key in self.defines:
+            for drange in self.define_range_iterator(key):
+                if drange[0] <= base_num <= drange[1]:
                     return key
         raise LookupError(
             "Base number {} not found in the defines {}.".format(base_num, self.defines))

@@ -1,9 +1,30 @@
-__author__ = "Peter Kerpedjiev, Bernhard Thiel"
-__copyright__ = "Copyright 2012 - 2016"
+# pylint: disable=W0612
+
+"""
+forgi - an RNA structure library
+================================
+
+Forgi is a python library for analysing and manipulating RNA secondary and
+tertiary structures based on secondary structure elements.
+
+The libraries core object, which is returned by the load_rna function,
+is the `forgi.graph.bulge_graph.BulgeGraph` object (2D structure) and its
+subclass the `forgi.threedee.model.coarse_grain.CoarseGrainRNA` object.
+
+Citing
+------
+
+If you use forgi for a scientific publication, please cite this library
+as specified in the CREDITS section.
+"""
+
+__author__ = "Bernhard C. Thiel, Peter Kerpedjiev"
+__copyright__ = "Copyright 2012 - 2019"
 __license__ = "GNU Affero GPL v 3.0"
 __version__ = "2.0.0"
-__maintainer__ = "Bernhard Thiel"
+__maintainer__ = "Bernhard C. Thiel"
 __email__ = "thiel@tbi.univie.ac.at"
+
 
 import os
 
