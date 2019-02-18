@@ -402,8 +402,8 @@ def get_relative_orientation(cg, loop, stem):
             # has the same sign as the stem vector and a negative angle otherwise
             cr = np.cross(virt_twist, conn_proj)
             sign = ftuv.is_almost_parallel(cr,  cg.coords.get_direction(stem))
-            assert sign != 0, "{} vs {} not (anti) parallel".format(
-                cr, cg.coords.get_direction(stem))
+            #assert sign != 0, "{} vs {} not (anti) parallel".format(
+            #    cr, cg.coords.get_direction(stem))
             angle2 *= sign
 
     return dist, angle1, angle2

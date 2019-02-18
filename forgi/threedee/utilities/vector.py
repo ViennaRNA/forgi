@@ -166,7 +166,7 @@ def is_almost_parallel(vec1, vec2):
              -1 if they are antiparallel,
              0 if they are neither.
     """
-    CUTOFF = 10**-8
+    CUTOFF = 10**-7
     vec2_clean = []
     for c in vec2:
         if abs(c) < CUTOFF:

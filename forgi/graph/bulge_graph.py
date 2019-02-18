@@ -792,6 +792,12 @@ class BulgeGraph(BaseGraph):
 
     @property
     def junctions(self):
+        """
+        Get all regular multiloops of this structure.
+        :returns: A list of tuples of multiloop segments.
+                  Each tuple contains the segments of one regular
+                  (i.e. not pseudoknotted) multiloop.
+        """
         out = []
         multiloops = self.find_mlonly_multiloops()
         for ml in multiloops:
