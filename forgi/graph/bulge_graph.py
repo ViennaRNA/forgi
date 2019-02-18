@@ -337,7 +337,7 @@ class BulgeGraph(BaseGraph):
 
                 if prev_struct is None:
                     raise GraphConstructionError(
-                        "No structure for id: {}", prev_id)
+                        "No structure for id: {}".format(prev_id))
 
                 bg = cls.from_dotbracket(prev_struct, prev_seq, name=prev_id,
                                          dissolve_length_one_stems=dissolve_length_one_stems,
@@ -381,8 +381,7 @@ class BulgeGraph(BaseGraph):
         return bgs
 
     @classmethod
-    def from_fasta(cls, filename, dissolve_length_one_stems=False,
-                   remove_pseudoknots=False):
+    def from_fasta(cls, filename, dissolve_length_one_stems=False):
         """
         Return a list of BulgeGraphs from a fasta file.
         """
@@ -605,7 +604,7 @@ class BulgeGraph(BaseGraph):
                                 information is present should be included in the output.
         """
         if include_missing:
-            seq = self.complete_seq
+            seq = str(self.seq.with_missing)
         else:
             seq = self.seq
         return ">{}\n{}\n{}".format(self.name, seq, self.to_dotbracket_string(include_missing))

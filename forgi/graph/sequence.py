@@ -221,7 +221,8 @@ class _IndexHelper(object):
                 kwargs = {self.flag: True}
                 f = partial(f, **kwargs)
         return f
-
+    def __str__(self):
+        return str(self[:])
 
 class _WMIndexer(_IndexHelper):
     flag = "include_missing"

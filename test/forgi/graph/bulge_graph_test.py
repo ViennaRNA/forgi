@@ -1084,8 +1084,21 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAA
             instr = f.read()
             bg, = fgb.BulgeGraph.from_fasta_text(instr)
             outstr = bg.to_fasta_string()
-
             self.assertEqual(instr.strip(), outstr.strip())
+
+    def test_to_fasta_string_missing(self):
+        seq = fgs.Sequence("AAA&UUU",
+                                 list(map(fgr.resid_from_str,
+                                          "A:14,A:15,A:15.A,B:12,B:13,B:200.A".split(","))),
+                                 [{"model": None, "ssseq": 13, "res_name": "G", "chain": "A", "insertion": None},
+                                  {"model": None, "ssseq": 16, "res_name": "G",
+                                      "chain": "A", "insertion": "D"},
+                                  {"model": None, "ssseq": 11, "res_name": "C",
+                                      "chain": "B", "insertion": None},
+                                  {"model": None, "ssseq": 202, "res_name": "C", "chain": "B", "insertion": "A"}])
+        bg = fgb.BulgeGraph.from_dotbracket('(((&)))', seq)
+        expected=">untitled\nGAAAG&CUUUC\n-(((-&-)))-"
+        self.assertEqual(bg.to_fasta_string(include_missing=True), expected)
 
     def test_get_multiloop_side(self):
         # see page 85 in the notebook
