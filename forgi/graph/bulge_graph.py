@@ -1303,13 +1303,6 @@ class BulgeGraph(BaseGraph):
                     to_visit.append((key, depth + 1))
         return []
 
-    def _add_node(self, name, edges, define, weight=1):
-        self.defines[name] = define
-        self.edges[name] = edges
-        self.weights[name] = weight
-
-        for edge in self.edges[name]:
-            self.edges[edge].add(name)
 
     def length_one_stem_basepairs(self):
         """
