@@ -211,6 +211,11 @@ class _IndexHelper(object):
         return self.parent._getitem(key, **kwargs)
 
     def __getattr__(self, attr):
+        """
+        If attr is a method that supports **kwargs or has an attribute with
+        the same name as the value of self.flag, then we set this
+        attributre to True
+        """
         log.debug("Getattr called for %s", attr)
         f = getattr(self.parent, attr)
         if callable(f):
@@ -254,7 +259,7 @@ class _WMIndexer(_IndexHelper):
         val = 0
         for i in range(0, len(d), 2):
             if d[i+1]>=d[i]:
-                val += sum(1 for _ in self._iter_resids(
+                val += sum(1 for _ in self.iter_resids(
                     self.to_resid(d[i]), self.to_resid(d[i + 1])))
                 log.debug("Define length of %s with missing incremented to %s", d, val)
         log.debug("Define length of %s with missing is finally %s", d, val)
@@ -577,7 +582,7 @@ class Sequence(object):
             start, stop = key.stop, key.start
         else:
             start, stop = key.start, key.stop
-        seqids = list(self._iter_resids(start, stop, with_missing))
+        seqids = list(self.iter_resids(start, stop, with_missing))
         if key.step == -1:
             seqids.reverse()
         seqs = [[]]
@@ -605,7 +610,7 @@ class Sequence(object):
     def _missing_into_db(self, dotbracket):
         db = ""
         check_i = 0
-        for seqid in self._iter_resids(None, None, True):
+        for seqid in self.iter_resids(None, None, True):
             if seqid == "&":
                 db += "&"
             else:
@@ -619,7 +624,7 @@ class Sequence(object):
                     check_i += 1
         return "".join(db)
 
-    def _iter_resids(self, start, stop, include_missing):
+    def iter_resids(self, start, stop, include_missing):
         left_res = None
         start_i, start_is_missing = self._resid_to_index(start, 0, True)
         stop_i, stop_is_missing = self._resid_to_index(

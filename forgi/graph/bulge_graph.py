@@ -1101,11 +1101,8 @@ class BulgeGraph(BaseGraph):
         """
         Iterate over the seq_ids between the start_id and end_id.
         """
-        i1 = self.seq_ids.index(start_id)
-        i2 = self.seq_ids.index(end_id)
-
-        for i in range(i1, i2 + 1):
-            yield self.seq_ids[i]
+        for res in self.seq.iter_resids(start_id, end_id): # TODO: replace with yield from, once we drop python 2 support
+            yield res
 
     def seq_id_to_pos(self, seq_id):
         """
