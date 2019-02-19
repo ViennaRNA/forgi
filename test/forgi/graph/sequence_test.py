@@ -208,9 +208,15 @@ class TestIndexingWithModifications(unittest.TestCase):
                                   {"model": None, "ssseq": 11, "res_name": "C",
                                       "chain": "B", "insertion": None},
                                   {"model": None, "ssseq": 202, "res_name": "C", "chain": "B", "insertion": "A"}],
-                                 {fgr.resid_from_str("A:13"): "I", fgr.resid_from_str(
-                                     "B:200.A"): "Hallo"}
+                                 {fgr.resid_from_str("A:13"): "I",
+                                  fgr.resid_from_str("B:200.A"): "Hallo"}
                                  )
+
+    def test_iter_modifications(self):
+        self.assertEqual(list(self.seq2.iter_modifications()),
+                         [(fgr.resid_from_str("A:13"), "I"),
+                          (fgr.resid_from_str("B:200.A"), "Hallo")]
+                         )
 
     def test_indexing_integer(self):
         self.assertEqual(self.seq[1], "A")

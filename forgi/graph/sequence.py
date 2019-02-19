@@ -755,8 +755,8 @@ class Sequence(object):
         """
         Iter over tuples seq_id, modified residue code
         """
-        for k in sorted(self._modifications.keys()):
-            yield self.k, self._modifications[k]
+        for k in sorted(self._modifications):
+            yield k, self._modifications[k]
 
     @property
     def with_missing(self):
