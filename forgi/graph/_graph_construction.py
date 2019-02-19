@@ -4,9 +4,6 @@ import itertools as it
 from collections import defaultdict
 from pprint import pformat
 
-from logging_exceptions import log_to_exception, log_at_caller
-
-from ..utilities.exceptions import GraphConstructionError
 from ._basegraph import BaseGraph
 
 log = logging.getLogger(__name__)
@@ -20,7 +17,7 @@ class _BulgeGraphConstruction(BaseGraph):
     it's intialization!
     """
 
-    def __init__(self, tuples):
+    def __init__(self, tuples):  # pylint: disable=W0231
         self.defines = {}
         self.edges = defaultdict(set)
         self.weights = {}
@@ -464,7 +461,7 @@ class _BulgeGraphConstruction(BaseGraph):
         """
         return (self.defines[b][0], 0)
 
-    def compare_bulges(self, b, flank_nucs=False):
+    def compare_bulges(self, b):
         """
         A function that can be passed in as the key to a sort.
 

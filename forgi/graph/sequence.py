@@ -1,9 +1,8 @@
 from __future__ import absolute_import, unicode_literals, division
 from __future__ import print_function
-from __future__ import division
-from builtins import (ascii, bytes, chr, dict, filter, hex, input,
-                      map, next, oct, pow, range, round,
-                      str, super, zip)
+from builtins import (ascii, bytes, chr, dict, filter, hex, input, # pylint: disable=W0611
+                      map, next, oct, pow, range, round, # pylint: disable=W0611
+                      str, super, zip) # pylint: disable=W0611
 
 try:
     from collections.abc import Sequence as SequenceABC
@@ -135,7 +134,7 @@ def _insert_breakpoints_simple(seq, breakpoints, start=0, reverse=False):
         log.debug("bp-=start-->>>%s", bp)
         out.append(seq[oldbp:bp + 1])
         oldbp = bp + 1
-    out.append(seq[bp + 1:])
+    out.append(seq[bp + 1:]) # pylint: disable=undefined-loop-variable
     out = [o for o in out if o]
     seq = "&".join(out)
     if reverse:
@@ -191,6 +190,7 @@ def _sorted_missing_residues(list_of_dicts):
 
 
 class _IndexHelper(object):
+    # pylint: disable=protected-access
     @property
     def flag(self):
         raise NotImplementedError("Must be set in subclass")
@@ -230,6 +230,8 @@ class _IndexHelper(object):
         return str(self[:])
 
 class _WMIndexer(_IndexHelper):
+    # pylint: disable=protected-access
+
     flag = "include_missing"
 
     def __len__(self):
@@ -287,8 +289,9 @@ class SeqidList(SequenceABC):
                 else:
                     break
             if c.most_common()[0][1] == 1:
-                raise ValueError("len %{} ({}) != ({}) len {}", self._lookup, len(self._lookup),
-                                 len(self._list), self._list)
+                raise ValueError("len %{} ({}) != ({}) len {}".format(
+                                            self._lookup, len(self._lookup),
+                                            len(self._list), self._list))
             raise ValueError(
                 "Duplicate Seq_id encountered: {}".format(c.most_common()[0][0]))
 
@@ -316,6 +319,9 @@ class SeqidList(SequenceABC):
             return NotImplemented
         return self._list == other._list
 
+    def __hash__(self):
+        return hash(self._list)
+
     def __repr__(self):
         return "SeqidList({})".format(repr(self._list))
 
@@ -338,7 +344,7 @@ class Sequence(object):
        but no structure information is present).
     """
 
-    def __init__(self, seq, seqids, missing_residues=[], modifications=None):
+    def __init__(self, seq, seqids, missing_residues=None, modifications=None):
         """
         :param seq: A string
         :param missing_residues: A list of dictionaries with the following keys:
@@ -359,9 +365,10 @@ class Sequence(object):
         log.debug("Break-points for seq %s are: %s", seq, self._breaks_after)
         self._seq = seq.replace('&', '')
         self._seqids = SeqidList(seqids)
-        self._missing_residues = None
-        self._missing_nts = None
-        self._set_missing_residues(missing_residues)  # A dict seq_id:nt
+        self._missing_residues = []
+        self._missing_nts = []
+        if missing_residues:
+            self._set_missing_residues(missing_residues)  # A dict seq_id:nt
         # resid : modified res_name
         self._modifications = {}
         if modifications:
@@ -395,7 +402,7 @@ class Sequence(object):
         return [bp + 1 for bp in self._breaks_after]
 
     def is_valid(self):
-        wrong_chars = set(self.seq) - set("AUGCaugc")
+        wrong_chars = set(self._seq) - set("AUGCaugc")
         if wrong_chars:
             log.info("Illegal characters are {}".format(wrong_chars))
             return False
@@ -409,6 +416,9 @@ class Sequence(object):
 
     def __len__(self):
         return len(self._seq)
+
+    def __hash__(self):
+        raise AttributeError()
 
     def __eq__(self, other):
         log.debug("{} =?= {}".format(repr(self), repr(other)))
@@ -706,7 +716,7 @@ class Sequence(object):
         # make sure they were seen in missing residues
         if not found_start or stop_is_missing:
             raise IndexError("At least one of the residues {} and {} "
-                             "is not part of this RNA".format(key.start, key.stop))
+                             "is not part of this RNA".format(start, stop))
         return
 
     def _missing_residues_between(self, from_resid, to_resid):

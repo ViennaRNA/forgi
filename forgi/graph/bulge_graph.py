@@ -1,40 +1,35 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, unicode_literals
-from __future__ import print_function
-from __future__ import division
-from builtins import (ascii, bytes, chr, dict, filter, hex, input,
-                      map, next, oct, pow, range, round,
-                      str, super, zip, object)
+
 """bulge_graph.py: A graph representation of RNA secondary structure based
    on its decomposition into primitive structure types: stems, hairpins,
    interior loops, multiloops, etc..."""
 
+from __future__ import absolute_import, unicode_literals
+from __future__ import print_function
+from __future__ import division
+from builtins import (ascii, bytes, chr, dict, filter, hex, input,   # pylint: disable=W0611
+                      map, next, oct, pow, range, round,   # pylint: disable=W0611
+                      str, super, zip, object)   # pylint: disable=W0611
 
 import sys
 import collections as col
 import random
 import re
 import itertools as it
-import os
 import warnings
-import operator as oper
-import functools
-import traceback
 import math
 import logging
-from pprint import pprint, pformat
+from pprint import pformat
 
 import numpy as np
 
 from logging_exceptions import log_to_exception, log_at_caller
 
-from ..utilities import debug as fud
 from ..utilities import stuff as fus
 from ..utilities.exceptions import GraphConstructionError, GraphIntegrityError
-from ..threedee.utilities import mcannotate as ftum
 from .sequence import Sequence, _insert_breakpoints_simple, SequenceLoader, _seq_ids_from_seq_str, VALID_CHAINIDS
 from . import transform_graphs as fgt
-from .residue import RESID, resid_to_str, resid_from_str
+from .residue import RESID
 from ._basegraph import BaseGraph
 from ._graph_construction import _BulgeGraphConstruction
 from . import _cofold as fgc
@@ -44,14 +39,14 @@ log = logging.getLogger(__name__)
 
 try:
     profile  # The @profile decorator from line_profiler (kernprof)
-except:
+except: # pylint: disable=W0702
     def profile(x):
         return x
 
 
 class BulgeGraph(BaseGraph):
 
-    def __init__(self, graph_construction, seq_obj, name=None, infos=None, _dont_split=False):
+    def __init__(self, graph_construction, seq_obj, name=None, infos=None, _dont_split=False):   # pylint: disable=W0231
         """
         A bulge graph object.
 
@@ -118,7 +113,7 @@ class BulgeGraph(BaseGraph):
                     If it is None, the sequence will be all 'N's
         :param name: Optional string to use as molecule name.
         """
-        log.debug("From dotbracket {}".format(dotbracket_str))
+        log.debug("From dotbracket %s", dotbracket_str)
         pt = fus.dotbracket_to_pairtable(dotbracket_str)
         tuples = fus.pairtable_to_tuples(pt)
         if not isinstance(seq, Sequence):
@@ -127,7 +122,7 @@ class BulgeGraph(BaseGraph):
             seq_ids = _seq_ids_from_seq_str(seq)
             seq = Sequence(seq, seq_ids)
         graph_constr = _BulgeGraphConstruction(tuples)
-        log.debug("Defines are {}".format(graph_constr.defines))
+        log.debug("Defines are %s", graph_constr.defines)
         bg = cls(graph_constr, seq, name)
         return _cleaned_bg(bg, dissolve_length_one_stems, remove_pseudoknots)
 
@@ -208,7 +203,7 @@ class BulgeGraph(BaseGraph):
         return bg
 
     @classmethod
-    def from_bpseq_str(cls, bpseq_str, breakpoints=[], name=None,
+    def from_bpseq_str(cls, bpseq_str, breakpoints=(), name=None,
                        dissolve_length_one_stems=False,
                        remove_pseudoknots=False):
         """
@@ -303,9 +298,9 @@ class BulgeGraph(BaseGraph):
         """
         # compile searches for the fasta id, sequence and
         # secondary structure respectively
-        id_search = re.compile('>(.+)')
-        seq_search = re.compile('^([acgutACGUT&]+)$')
-        stru_search = re.compile('^([(){}<>.A-Za-z&\[\]]+)$')
+        id_search = re.compile(r'>(.+)')
+        seq_search = re.compile(r'^([acgutACGUT&]+)$')
+        stru_search = re.compile(r'^([(){}<>.A-Za-z&\[\]]+)$')
 
         prev_id = None
         prev_seq = None
@@ -454,7 +449,7 @@ class BulgeGraph(BaseGraph):
         else:
             return "".join(output_str).strip()
 
-    def to_neato_string(bg):
+    def to_neato_string(self):
 
         # The different nodes for different types of bulges
         node_lines = dict()
@@ -465,11 +460,11 @@ class BulgeGraph(BaseGraph):
         out.append("\tgraph [overlap=false,splines=true];")
         out.append("\tnode [shape=box];")
 
-        for key2 in bg.defines.keys():
+        for key2 in self.defines.keys():
             # Create the nodes with a different color for each type of element
             if key2[0] == 's':
                 out.append('\t{node [style=filled,fillcolor="#B3E2CD",fontsize=%d,label=\"%s\\n(%d)\"] %s};' % (
-                    fontsize, key2, bg.stem_length(key2), key2))
+                    fontsize, key2, self.stem_length(key2), key2))
                 continue
             elif key2[0] == 'i':
                 out.append(
@@ -490,7 +485,7 @@ class BulgeGraph(BaseGraph):
             out[-1] += ',label=\"%s \\n' % (key2)
 
             # figure out the size of the node and use that as a label
-            node_dims = bg.get_node_dimensions(key2)
+            node_dims = self.get_node_dimensions(key2)
             total_bulge = sum(node_dims)
 
             if node_dims[0] == -1 or node_dims[0] == 1000:
@@ -509,9 +504,9 @@ class BulgeGraph(BaseGraph):
             else:
                 out[-1] += "\"] %s};" % (key2)
 
-        for key1 in bg.edges:
+        for key1 in self.edges:
             if key1[0] == 's':
-                for key2 in bg.edges[key1]:
+                for key2 in self.edges[key1]:
                     out.append("\t%s -- %s;" % (key1, key2))
 
         out.append("}")
@@ -530,13 +525,16 @@ class BulgeGraph(BaseGraph):
 
         return fus.tuples_to_pairtable(pair_tuples)
 
-    def to_pair_tuples(self, remove_basepairs=[]):
+    def to_pair_tuples(self, remove_basepairs=None):
         """
         Create a list of tuples corresponding to all of the base pairs in the
         structure. Unpaired bases will be shown as being paired with a
         nucleotide numbered 0.
 
         i.e. [(1,5),(2,4),(3,0),(4,2),(5,1)]
+
+        :param remove_basepairs: A list of 2-tuples containing
+                                 basepairs that should be removed
         """
         # iterate over each element
         table = []
@@ -778,7 +776,7 @@ class BulgeGraph(BaseGraph):
 
         for region in doublestr:
             domains["rods"].append(
-                sorted(region, key=lambda x: self.define_a(x)))
+                sorted(region, key=self.define_a))
         domains["pseudoknots"].sort()
         domains["multiloops"].sort()
         domains["rods"].sort()
@@ -847,7 +845,7 @@ class BulgeGraph(BaseGraph):
         else:
             return min(self.get_bulge_dimensions(key))
 
-    def define_a(self, elem, seq_ids=False):
+    def define_a(self, elem):
         # Special case, because interior loops can have
         # defines of length 2 or 4
         if elem[0] == "i":
@@ -895,10 +893,6 @@ class BulgeGraph(BaseGraph):
                 warnings.warn(
                     "get_node_dimensions: 'with_missing'-flag is currently ignored for stems!")
             return (self.stem_length(node), self.stem_length(node))
-            """
-            return (self.defines[node][1] - self.defines[node][0] + 1,
-                    self.defines[node][1] - self.defines[node][0] + 1)
-            """
         else:
             bd = self.get_bulge_dimensions(node, with_missing)
             log.debug("BulgeDimensions of %s are %s", node, bd)
@@ -1122,7 +1116,7 @@ class BulgeGraph(BaseGraph):
         :param vertex: The name of the vertex to find the loop.
         :return: A list containing the elements in the shortest cycle.
         """
-        log.debug("Starting shortest BG loop for {}".format(vertex))
+        log.debug("Starting shortest BG loop for %s", vertex)
         G = self.to_networkx()
         log.debug("nx graph  %r with edges %r ", G, G.adj)
 
@@ -1174,7 +1168,7 @@ class BulgeGraph(BaseGraph):
         If there is no other single stranded RNA after the stem, the backbone must end there.
         In that case return None.
         """
-        log.debug("get_next_ml_segment called for {}".format(ml_segment))
+        log.debug("get_next_ml_segment called for %s", ml_segment)
         if ml_segment.startswith("t"):
             return None
         else:
@@ -1524,7 +1518,7 @@ class BulgeGraph(BaseGraph):
                 continue
             elif elem[0] != "m":
                 raise ValueError(
-                    "Non multiloop element '{}' encountered in describe_multiloop.".foemat(elem))
+                    "Non multiloop element '{}' encountered in describe_multiloop.".format(elem))
             conn = self.connections(elem)
             ctype = abs(self.connection_type(elem, conn))
             angle_types[ctype] += 1
@@ -1898,7 +1892,6 @@ class BulgeGraph(BaseGraph):
             return 0
         else:
             return 2
-        pass
 
     def get_flanking_region(self, bulge_name, side=0):
         """
@@ -2040,9 +2033,9 @@ class BulgeGraph(BaseGraph):
         :return: A list containing a the nodes comprising a random subgraph
         """
         if subgraph_length == None:
-            subgraph_length = random.randint(1, len(self.defines.keys()))
+            subgraph_length = random.randint(1, len(self.defines))
 
-        start_node = random.choice(list(self.defines.keys()))
+        start_node = random.choice(list(self.defines))
         curr_length = 0
         visited = set()
         next_nodes = [start_node]
@@ -2104,11 +2097,10 @@ class BulgeGraph(BaseGraph):
     def _insert_cutpoints_into_seq(self):
         if self.seq:
             for breakpoint in self.backbone_breaks_after:
-                log.debug("Inserting breakpoint into seq '{}'".format(self.seq))
+                log.debug("Inserting breakpoint into seq '%s'", self.seq)
                 self.seq = self.seq.subseq_with_cutpoints(
                     1, breakpoint + 1) + "&" + self.seq.subseq_with_cutpoints(breakpoint + 1, None)
-                log.info("seq now has {} cutpoints".format(
-                    self.seq.count('&')))
+                log.info("seq now has %s cutpoints", self.seq.count('&'))
 
     # This function seems to be dead code, but might be useful in the future.
     # Consider adding this to whitelist.py
@@ -2215,7 +2207,6 @@ class BulgeGraph(BaseGraph):
                                            set([prev]))
                 build_order += [(prev, current, list(next_stem)[0])]
         self.build_order = build_order
-        self.ang_type = None
 
         return build_order
 
@@ -2250,7 +2241,7 @@ class BulgeGraph(BaseGraph):
         else:
             if allow_broken:
                 stems = self.connections(bulge)
-                s1, s2 = sorted(stems, key=lambda x: self.buildorder_of(x))
+                s1, s2 = sorted(stems, key=self.buildorder_of)
                 return self.connection_type(bulge, [s1, s2])
             else:
                 return None
@@ -2354,10 +2345,9 @@ class BulgeGraph(BaseGraph):
                     else:
                         nuc = f2
                 node = self.get_node_from_residue_num(nuc)
-                log.debug("Next nuc is {} ({}), node is {}".format(
-                    nuc, repr(nuc), node))
+                log.debug("Next nuc is %s (%s), node is %s", nuc, repr(nuc), node)
 
-    def pseudoknotted_basepairs(self, ignore_basepairs=[]):
+    def pseudoknotted_basepairs(self, ignore_basepairs=()):
         """
         Return a list of base-pairs that will be removed to
         remove pseudoknots using the knotted2nested.py script.
