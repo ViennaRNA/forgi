@@ -6,7 +6,6 @@ import subprocess
 import os
 import itertools
 import warnings
-import numpy
 import logging
 
 logging.basicConfig()
@@ -17,6 +16,7 @@ ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOErro
 def try_cythonize(arg):
   try:
     from Cython.Build import cythonize
+    import numpy
     return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
   except Exception as e:
     return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
@@ -92,6 +92,7 @@ setup_args = {
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
                 'forgi.threedee.classification',
+                'forgi.threedee.classification._training',
                 'forgi._k2n_standalone', 'forgi.threedee.visual',
                 'forgi.visual', 'forgi.projection'],
       "package_data":{'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv', 'data/aminor_params.json']},
