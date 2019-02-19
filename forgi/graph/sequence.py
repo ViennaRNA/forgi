@@ -365,8 +365,8 @@ class Sequence(object):
         log.debug("Break-points for seq %s are: %s", seq, self._breaks_after)
         self._seq = seq.replace('&', '')
         self._seqids = SeqidList(seqids)
-        self._missing_residues = []
-        self._missing_nts = []
+        self._missing_residues = defaultdict(list)
+        self._missing_nts = {}
         if missing_residues:
             self._set_missing_residues(missing_residues)  # A dict seq_id:nt
         # resid : modified res_name
