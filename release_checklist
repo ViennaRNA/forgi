@@ -21,3 +21,5 @@
 * Merge into master and develop
 * Tag inside master
 * Publish documentation to gh-pages
+* Upload to pypi: python setup.py sdist bdist_wheel --universal; gpg2 --detach-sign -a dist/forgi-N.N*; twine upload dist/forgi-N.N*
+

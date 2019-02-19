@@ -1,5 +1,5 @@
-The package forgi\.graph
-========================
+forgi\.graph package
+====================
 
 Submodules
 ----------

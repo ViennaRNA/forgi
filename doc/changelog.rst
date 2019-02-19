@@ -1,6 +1,22 @@
 Changelog
 =========
 
+Changes in Version 1.1
+----------------------
+
+*  We now support **DSSR** as an alternative to **MC-Annotate**.
+   See the :ref:`installation` for more information
+*  RESID for pdb-derived residue ids in now moved into a seperate module.
+*  `describe_cg.py` now adds the number of the multiloop in the sequence to the generated csv.
+*  **Bugfixes**:
+
+   *  python3 compatibility of `visualize_cg.py`
+   *  windows-compatibility of `visualize_cg.py`
+   *  fix count of multiloop-types in `describe_cg.py`
+   *  persist cofold-breakpoints in cg-files, even if no sequence was given.
+   *  fix bugs in parsing of MC-Annotate output. Forgi should now be able to load most pdb-files.
+   *  properly propagate the `--keep-length-one-stems` option.
+
 Changes in Version 1.0
 ----------------------
 
