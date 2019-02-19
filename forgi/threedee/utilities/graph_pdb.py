@@ -575,7 +575,7 @@ def _plot_junction_2d(cg, broken_ml):
     """
     import matplotlib.pyplot as plt
     plotted = set()
-    plot_element(cg, broken_ml, name_suffix=" broken")
+    _plot_element(cg, broken_ml, name_suffix=" broken")
     elem = cg.get_next_ml_segment(broken_ml)
     while elem != broken_ml:
         _plot_element(cg, elem)
@@ -1540,7 +1540,7 @@ def cylinder_works(cg, cylinders_to_stems, tv, c, r=4.):
     p = data
     a = datamean
 
-    dist_vec = (a - p) - (np.dot((a - p), n)[:, np.newaxis]) * n
+    dist_vec = (a - p) - (np.dot((a - p), n)[:, np.newaxis]) * n # pylint: disable=invalid-sequence-index
     mags = [ftuv.magnitude(c) for c in dist_vec]
 
     '''

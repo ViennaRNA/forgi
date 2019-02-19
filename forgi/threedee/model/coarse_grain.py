@@ -353,6 +353,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Populate this structure from the string
         representation of a graph.
         '''
+        # pylint: disable=no-member  # See https://github.com/PyCQA/pylint/issues/981
         # Reading the bulge_graph-part of the file
         cg = super(CoarseGrainRNA, cls).from_bg_string(cg_string)
         cg._init_coords()
@@ -1327,7 +1328,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         rog = ftmd.radius_of_gyration(coords)
         return rog
 
-    def assign_loop_roles(self, loop):
+    def _assign_loop_roles(self, loop):
         """
         EXPERIMENTAL
 
@@ -1397,7 +1398,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         j23, = self.edges[p2] & self.edges[p3]
         return {"P1": p1, "P2": p2, "P3": p3, "J12": j12, "J31": j31, "J23": j23}
 
-    def junction_family_westhof1(self, loop):
+    def _junction_family_westhof1(self, loop):
         """
         EXPERIMENTAL
 
@@ -1407,13 +1408,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         In this method, the junction family is defined via the relative
         lengths of fragments, not the orientation of the elements.
 
-        :param loop: Either a dictionary, as returned by assign_loop_roles
+        :param loop: Either a dictionary, as returned by self._assign_loop_roles
                      or a list of 3 loop segments.
         """
         if isinstance(loop, dict):
             j_roles = loop
         else:
-            j_roles = assign_loop_roles(loop)
+            j_roles = self._assign_loop_roles(loop)
         # Now compare the lengths of J31 and J23 to determine the junction family
         if self.get_length(j_roles["J31"]) > self.get_length(j_roles["J23"]):
             return "A"
@@ -1422,20 +1423,20 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         else:
             return "C"
 
-    def junction_family_3d(self, loop):
+    def _junction_family_3d(self, loop):
         """
         EXPERIMENTAL
 
         For 3-way junctions: Return the junction family depending
         on the 3D orientation.
 
-        :param loop: Either a dictionary, as returned by assign_loop_roles
+        :param loop: Either a dictionary, as returned by self._assign_loop_roles
                      or a list of 3 loop segments.
         """
         if isinstance(loop, dict):
             j_roles = loop
         else:
-            j_roles = assign_loop_roles(loop)
+            j_roles = self._assign_loop_roles(loop)
         a31 = self.stem_angle(j_roles["P3"], j_roles["P1"])
         a23 = self.stem_angle(j_roles["P2"], j_roles["P3"])
         # If the stack is perfectly straight, a31+a23=180 degrees.
@@ -1444,20 +1445,20 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         else:
             return 1
 
-    def junction_family_is_perpenticular(self, loop):
+    def _junction_family_is_perpenticular(self, loop):
         """
         EXPERIMENTAL
 
         For 3-way junctions Return whether or not the not-stacking loop
         is very roughly perpenticular to the stack.
 
-        :param loop: Either a dictionary, as returned by assign_loop_roles
+        :param loop: Either a dictionary, as returned by self._assign_loop_roles
                      or a list of 3 loop segments.
         """
         if isinstance(loop, dict):
             j_roles = loop
         else:
-            j_roles = assign_loop_roles(loop)
+            j_roles = self._assign_loop_roles(loop)
         a31 = self.stem_angle(j_roles["P3"], j_roles["P1"])
         a23 = self.stem_angle(j_roles["P2"], j_roles["P3"])
         # If the stack is perfectly straight, a31+a23=180 degrees.

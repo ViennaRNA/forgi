@@ -4,6 +4,7 @@ from builtins import zip
 from past.builtins import basestring
 
 import Bio
+import forgi.graph.residue as fgr
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.vector as ftuv
@@ -269,6 +270,7 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
         pass
 
     vrna_coords = RNA.get_xy_coordinates(bp_string)
+    # TODO Add option to rotate the plot
     for i, _ in enumerate(bp_string):
         coord = (offset[0] + vrna_coords.get(i).X,
                  offset[1] + vrna_coords.get(i).Y)
@@ -283,14 +285,15 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
     for s in cg.stem_iterator():
         for p1, p2 in cg.stem_bp_iterator(s):
             basepairs.append([coords[p1-1], coords[p2-1]])
-    basepairs = np.array(basepairs)
-    if color:
-        c = "red"
-    else:
-        c = "black"
-    bpkwargs = {"color":c, "zorder":0, "linewidth":3}
-    bpkwargs.update(basepair_kwargs)
-    ax.plot(basepairs[:,:,0].T, basepairs[:,:,1].T, **bpkwargs)
+    if basepairs:
+        basepairs = np.array(basepairs)
+        if color:
+            c = "red"
+        else:
+            c = "black"
+            bpkwargs = {"color":c, "zorder":0, "linewidth":3}
+            bpkwargs.update(basepair_kwargs)
+            ax.plot(basepairs[:,:,0].T, basepairs[:,:,1].T, **bpkwargs)
     # Now plot circles
     for i, coord in enumerate(coords):
         if color:
@@ -307,7 +310,7 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
                             color=c)
         else:
             circle = plt.Circle((coord[0], coord[1]),
-                                edgecolor="black", fill=False)
+                                edgecolor="black", facecolor="white")
 
         ax.add_artist(circle)
         if cg.seq:
@@ -375,15 +378,23 @@ def _find_annot_pos_on_circle(nt, coords, cg):
 
 def plot_pdb(filename, ax=None):
     """
-    Plot a pdb file.
+    Plot the secondary structure of an RNA in a PDB file using the
+    Graph Layout from the ViennaRNA package and indicate long-range
+    interations and RNA-protein interactions.
+
+    Interchain RNA-RNA interactions are shown as red lines.
+    Proteins are shown as transparent gray circles with lines
+    indicating the interacting residues. The circle radius corresponds
+    to the number of interacting nucleotides.
+
 
     :param structure: A Bio.PDB.Structure
+    :param ax: Optional. An matplotlib axis object
     :return: An Axes object (ax)
     """
 
     structure = Bio.PDB.PDBParser().get_structure('blah', filename)
     model = list(structure)[0]
-    ax = None
     chain_coords = {}
     cgs = {}
 
@@ -395,10 +406,10 @@ def plot_pdb(filename, ax=None):
 
     for chain in model:
         # iterate over RNAs
-        if ftup.is_rna(chain):
+        if ftup.contains_rna(chain):
             # convert to cg and store so that we can convert pdb nucleotide ids to
             # secondary structure indexes later
-            cg = ftmc.from_pdb(filename, chain_id=chain.id)
+            cg, = ftmc.CoarseGrainRNA.from_pdb(filename, load_chains=chain.id)
             cgs[chain.id] = cg
 
             # plot the structure and store the coordinates
@@ -411,14 +422,17 @@ def plot_pdb(filename, ax=None):
         chain1 = a1.parent.parent
         chain2 = a2.parent.parent
 
-        if ftup.is_protein(chain1) and ftup.is_rna(chain2):
+        if ftup.is_protein(chain1) and ftup.contains_rna(chain2):
             # collect all the RNA nucleotides that a protein interacts with
-            sid = cgs[chain2.id].seq_ids.index(a2.parent.id)
+            sid = cgs[chain2.id].seq.to_integer(fgr.RESID(chain2.id, a2.parent.id))-1
             protein_interactions[chain1.id].add((chain2.id, sid))
 
-        if ftup.is_rna(chain1) and ftup.is_rna(chain2):
-            sid1 = cgs[chain1.id].seq_ids.index(a1.parent.id)
-            sid2 = cgs[chain2.id].seq_ids.index(a2.parent.id)
+        if ftup.contains_rna(chain1) and ftup.contains_rna(chain2):
+            try:
+                sid1 = cgs[chain1.id].seq.to_integer(fgr.RESID(chain1.id, a1.parent.id))-1
+                sid2 = cgs[chain2.id].seq.to_integer(fgr.RESID(chain2.id, a2.parent.id))-1
+            except ValueError:
+                continue
 
             coord1 = chain_coords[chain1.id][sid1]
             coord2 = chain_coords[chain2.id][sid2]
@@ -454,4 +468,4 @@ def plot_pdb(filename, ax=None):
 
     # plt.axis('off')
 
-    pass
+    return ax

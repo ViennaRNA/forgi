@@ -12,7 +12,7 @@ class CGTransformer(BGTransformer):
         affected by condensing the RNA. This means that stems which has multiple
         base-pairs have the same length as 1-bp stems in the condensed version.
         """
-        new_cg = super(CGTransformer, self).condendes()
+        new_cg = super(CGTransformer, self).condended()
         new_cg.coords = self.bg.coords
         new_cg.twists = self.bg.twists
         new_cg.sampled = self.bg.sampled

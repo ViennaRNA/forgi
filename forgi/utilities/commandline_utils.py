@@ -254,7 +254,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             "Only forgi cg files are accepted, but file {} has type {}.".format(filename, filetype))
     if filetype == "forgi":
         cg = ftmc.CoarseGrainRNA.from_bg_file(filename)
-        if rna_type in ["3d", "only_cg"] and not cg.coords.is_filled:
+        if rna_type in ["3d", "only_cg"] and not cg.coords.is_filled: # pylint: disable=E1101
             raise WrongFileFormat(
                 "File {} does not contain all 3D coordinates!".format(filename))
         if allow_many:
@@ -354,7 +354,7 @@ def hide_traceback(error_class=WrongFileFormat):
     except error_class as e:
         # Integration with logging_exceptions
         if hasattr(e, "log"):
-            for record in exception.log:
+            for record in e.log:
                 logging.getLogger(record.name).handle(record)
         print("Error of type {} occurred. Aborting.".format(type(e).__name__))
         print(e, file=sys.stderr)

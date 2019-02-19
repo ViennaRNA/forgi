@@ -175,13 +175,13 @@ def describe_ml_segments(cg):
         else:
             description = cg.describe_multiloop(loop)
         try:
-            j3_roles = cg.assign_loop_roles(loop)
+            j3_roles = cg._assign_loop_roles(loop)
         except ValueError:
             j3_roles = None
         if j3_roles:
-            j3_familyFlat = cg.junction_family_westhof1(j3_roles)
-            j3_family3D = cg.junction_family_3d(j3_roles)
-            j3_familyPerp = cg.junction_family_is_perpenticular(j3_roles)
+            j3_familyFlat = cg._junction_family_westhof1(j3_roles)
+            j3_family3D = cg._junction_family_3d(j3_roles)
+            j3_familyPerp = cg._junction_family_is_perpenticular(j3_roles)
             j3_Delta = cg.get_length(
                 j3_roles["J23"]) - cg.get_length(j3_roles["J31"])
         else:

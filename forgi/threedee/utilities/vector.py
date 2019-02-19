@@ -289,7 +289,7 @@ def create_orthonormal_basis(vec1, vec2=None, vec3=None):
         if USE_ASSERTS:
             if round(vec_angle(vec2, vec1), 9) != round(math.pi / 2, 9):
                 assert False, ("vec2 {} is not normal to vec1 {}! Angle is {} rad ({} degrees)".format(
-                    vec2, vec1, vec_angle(vec2, vec1), math.degrees(vec_angle(vec2, vec1)), math.pi / 2))
+                    vec2, vec1, vec_angle(vec2, vec1), math.degrees(vec_angle(vec2, vec1))))
 
     mag_vec1 = magnitude(vec1)
     if mag_vec1 == 0:
@@ -870,6 +870,7 @@ def elements_closer_than(s1_p0, s1_p1, s2_p0, s2_p1, distance):
 
     :return: True or False
     '''
+    # pylint: disable=E1130  # See https://github.com/PyCQA/pylint/issues/2721
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0
@@ -960,6 +961,7 @@ def line_segment_distance(s1_p0, s1_p1, s2_p0, s2_p1):
     :return: A tuple of points (i1,i2) containing the point i1 on s1
         closest to the point i2 on segment s2.
     '''
+    # pylint: disable=E1130  # See https://github.com/PyCQA/pylint/issues/2721
     u = s1_p1 - s1_p0
     v = s2_p1 - s2_p0
     w = s1_p0 - s2_p0

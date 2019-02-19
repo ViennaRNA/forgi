@@ -1,4 +1,9 @@
 #!/usr/bin/python
+
+"""
+This code is still experimental
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
@@ -48,14 +53,14 @@ class Ensemble(Mapping):
     # INITIALIZATION
     def __init__(self, cgs, reference_cg=None, sort_key=None):
         """
-        An Ensemble is a sequence of Coarse grained RNAs, all of which must correspond 
+        An Ensemble is a sequence of Coarse grained RNAs, all of which must correspond
                     to the same RNA 2D structure.
 
-        :param cgs: An iterable of coarse grain RNAs or a mapping key->cg, 
+        :param cgs: An iterable of coarse grain RNAs or a mapping key->cg,
                     from which the ensemble is constructed.
-                    The ensemble may keep references to some of the cgs and 
+                    The ensemble may keep references to some of the cgs and
                     modify them by centering them on the centroid.
-                    The ensemble is not guaranteed to keep/copy/reference any of the 
+                    The ensemble is not guaranteed to keep/copy/reference any of the
                     cg's properties except the coords and twists.
         :param sort_key: Optional. A function that takes a cg (if cgs is a sequence)
                          or a key (if cgs is a mapping)
@@ -109,7 +114,7 @@ class Ensemble(Mapping):
         """
         During construction of the ensemble, this is used.
 
-        Save some bookkeeping variables and store the cg, 
+        Save some bookkeeping variables and store the cg,
         if it is not identical to the previouse.
 
         :param cg: The coarse grained RNA
@@ -148,7 +153,7 @@ class Ensemble(Mapping):
 
         In contrast to __getitem__, which uses the index supplied upon ensemble creation,
         this uses the sort order specified by sort_key in the __init__ function.
-        It is useful if the ensemble is seen as a trajectory. 
+        It is useful if the ensemble is seen as a trajectory.
         This method gives the ith frame of this trajectory.
 
         :param timestep: The number of the frame (cg) in the trajectory that should be retrieved.
@@ -167,7 +172,7 @@ class Ensemble(Mapping):
         Return (and cache) the rmsd between two structures.
 
         :param key1, key2: Two keys to reference two cgs
-        :param mode: "key" or "timestep". Whether the keys are timesteps or the keys 
+        :param mode: "key" or "timestep". Whether the keys are timesteps or the keys
                      used by __getitem__
         :returns: the rmsd as float
         """
@@ -199,7 +204,7 @@ class Ensemble(Mapping):
 
     def _cluster_dbscan(self):
         """"
-        Cluster all structures based on the DBSCAN algorithm 
+        Cluster all structures based on the DBSCAN algorithm
         using the pairwise RMSD as distance.
         """
         self._calculate_complete_rmsd_matrix()
@@ -379,7 +384,7 @@ class Ensemble(Mapping):
 
     def view_2d_hist(self, ref_ensemble=None, x="rmsd_to_reference", y="rmsd_to_last", bins=None):
         """
-        Plot a 2D histogram of the ensemble with respect to the given x and y axis, 
+        Plot a 2D histogram of the ensemble with respect to the given x and y axis,
         and visualize the results of clustering with DBSCAN.
 
         :param ref_ensemble: An ensemble or a list of cgs. Plotted as additional image.
@@ -439,7 +444,7 @@ class Ensemble(Mapping):
 
     def view_2d_projection(self, ref_ensemble=None, x="rmsd_to_reference", y="rmsd_to_last", cluster=False, circular=False):
         """
-        Plot a 2D projection of the ensemble to the given x and y axis, 
+        Plot a 2D projection of the ensemble to the given x and y axis,
         and visualize the results of clustering with DBSCAN.
 
         :param ref_ensemble: An ensemble or a list of cgs. Plotted as a background in the images.

@@ -570,7 +570,7 @@ def _extract_asym_auth_id_map(cif_dict):
     log.debug(l2a)
     return l2a, a2l
 
-def get_assemblies(chains, cifdict):
+def _get_assemblies(chains, cifdict):
     assemblies = _extract_assembly_gen(cifdict)
     id2chainid, chainid2ids = _extract_asym_auth_id_map(cifdict)
     if assembly_nr is None:
@@ -585,7 +585,7 @@ def get_assemblies(chains, cifdict):
         chainids = set(id2chainid[lid] for lid in labelids)
         lids_back = set( x for x in a2l for cid in chainids for a2l in chainid2ids[cid])
         if lids_back!=set(labelids):
-            log.error("%s, %s, extra: %s", lids_back, labelids, lids_back-set(label_ids))
+            log.error("%s, %s, extra: %s", lids_back, labelids, lids_back-set(labelids))
             raise ValueError("Operation on part of an author designated assymetric unit "
                              "(auth_asym_id) nt supported.")
         for chain_id in chainids:
@@ -604,6 +604,7 @@ def get_assemblies(chains, cifdict):
                 new_chains[chain.id]=chain
     log.debug("new_chains: %s", new_chains)
     chains = list(new_chains.values())
+    return chains
 
 def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=None):
     '''
@@ -692,8 +693,8 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
         except KeyError:
             pass
         else:
-            if False:
-                chains = get_assemblies(chains, cifdict)
+            if False: # Still experimental and not working correctly.
+                chains = _get_assemblies(chains, cifdict)
         mr = []
         try:
             mask = np.array(

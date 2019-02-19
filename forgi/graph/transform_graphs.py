@@ -28,19 +28,20 @@ class BGTransformer(object):
     def __init__(self, bg):
         self.bg = bg
 
-    def without_elements(self, elems):
+    def _without_elements(self, elems):
         """
         Return a copy of the BulgeGraph without the elements in elem.
         Their residues will be converted to missing residues.
 
         :param elems: A list of element names, e.g. ["s1","s2"]
         """
+        raise NotImplementedError("This is still work in progress.")
         # We use the PDB numbering in new_defines, so we do not have to adjust indices if we remove
         # residues in the middle.
         resid_defines = {}
-        for k, v in self.defines:
-            resid_defines[k] = list(map(self.seq.to_resid, v))
-        new_edges = copy.deepcopy(self.edges)
+        for k, v in self.bg.defines:
+            resid_defines[k] = list(map(self.bg.seq.to_resid, v))
+        new_edges = copy.deepcopy(self.bg.edges)
         to_missing = []
         for elem in elems:
             if elem[0] != "i":
@@ -48,10 +49,10 @@ class BGTransformer(object):
             else:
                 stem1, stem2 = new_edges[elem]
                 elem_define_a = list(
-                    map(self.seq.to_resid, self.define_a(elem)))
+                    map(self.bg.seq.to_resid, self.bg.define_a(elem)))
                 # Remove the iloop
                 to_missing.extend(
-                    self.define_residue_num_iterator(elem, seq_ids=True))
+                    self.bg.define_residue_num_iterator(elem, seq_ids=True))
                 new_edges[stem1].remove(elem)
                 new_edges[stem2].remove(elem)
                 del new_edges[elem]

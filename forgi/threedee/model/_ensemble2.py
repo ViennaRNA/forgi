@@ -1,3 +1,7 @@
+"""
+This code is still experimental
+"""
+
 from __future__ import absolute_import, unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -463,8 +467,8 @@ def split_and_bin_timeseries(y, skip=None):
     bin the equilibrium part in statistically independent samples.
 
     :param y: A time series as numpy 1D array
-    :param skip: INT>0 or None. 
-                 If None, decide wether or not to skip datapoints in y for faster processing 
+    :param skip: INT>0 or None.
+                 If None, decide wether or not to skip datapoints in y for faster processing
                  depending on the length of y
                  If INT i: Only use every ith entry in y (use 1 for disabeling skip)
     """
@@ -591,7 +595,7 @@ def split_timeseries_into_two(y, overall_start):
 ########################## Functions working with timeseries as 1D arrays #########################
 """def optimal_neff_step_detection(x):
     '''
-    We use the idea from J.Chodera, JTCT 2016, to optimize the effective number of independent 
+    We use the idea from J.Chodera, JTCT 2016, to optimize the effective number of independent
     samples for step detection.
 
     The assumption is that the integrated autocorrelation of a timeseries increases,
@@ -599,7 +603,7 @@ def split_timeseries_into_two(y, overall_start):
 
     Note that the autocorrelation function uses the mean and the variance of the sample.
     If several subsequent values are far from the mean, the autocorrelation increases.
-    If a step is included in the data, this slightly shifts the mean, so everything before the 
+    If a step is included in the data, this slightly shifts the mean, so everything before the
     step starts to contribute to the autocorrelation. Further more, the new window has a high autocorrelation.
     '''
     import pymbar
@@ -744,8 +748,8 @@ class EnsembleBase(Sequence):
         :param ensemble: A ensemble or EnsembleView object
         :param descriptor: A STRING. One of AVAILABLE_DESCRIPTORS
         :param domain: An iterable of cg element names or None (whole cg)
-        :param mean: A FLOAT or None. 
-                      If this is None, all datapoints will be shifted by their mean 
+        :param mean: A FLOAT or None.
+                      If this is None, all datapoints will be shifted by their mean
                       before calculating the autocorrelation.
                       If this is numeric, datapoints will be shifted by this value instead.
 
@@ -757,7 +761,7 @@ class EnsembleBase(Sequence):
 class Ensemble(EnsembleBase):
     def __init__(self, cgs):
         """
-        An Ensemble is a sequence of Coarse grained RNAs, all of which must correspond 
+        An Ensemble is a sequence of Coarse grained RNAs, all of which must correspond
                     to the same RNA 2D structure.
 
         :param cgs: An ordered iterable of coarse grain RNAs.
@@ -787,19 +791,19 @@ class Ensemble(EnsembleBase):
         """
         Clear all cached values.
 
-        Has to be called, whenever a CoarseGrainRNA that is 
+        Has to be called, whenever a CoarseGrainRNA that is
         part of the ensemble is modified in place.
         """
         self._descriptors = {}
 
     def get_descriptor(self, descriptor, domain=None):
         """
-        Get a numpy 1D array of one descriptor, e.g. the Radius of Gyration, 
+        Get a numpy 1D array of one descriptor, e.g. the Radius of Gyration,
         for all RNAs in this ensemble.
 
         :param descriptor: STRING. One of AVAILABLE_DESCRIPTORS
         :param domain: None (whole RNA) or a collection of cg. elements.
-                       If domain is present, calculate the descriptor only for these cg-elements.   
+                       If domain is present, calculate the descriptor only for these cg-elements.
         """
         if domain is None:
             if descriptor not in self._descriptors:
@@ -843,7 +847,7 @@ class EnsembleView(EnsembleBase):
 
     def get_descriptor(self, descriptor, domain=None):
         """
-        See Ensemble.get_descriptor. 
+        See Ensemble.get_descriptor.
 
         Gets the descriptor only for part of the ensemble that is in this view.
         """
@@ -887,7 +891,7 @@ def t_scan(L, window=1000, num_workers=-1):
     Returns
     -------
     t_stat : numpy array
-        Array which holds t statistic values for each point. The first 
+        Array which holds t statistic values for each point. The first
         and last (window) points are replaced with zero, since the t
         statistic calculation cannot be performed in that case.
 
@@ -926,7 +930,7 @@ def _t_scan_drone(L, n_cols, frame, window=1e3):
     """
     Drone function for t_scan. Not Intended to be called manually.
     Computes t_scan for the designated frame, and returns result as
-    array along with an integer tag for proper placement in the 
+    array along with an integer tag for proper placement in the
     aggregate array
     """
     size = L.size
@@ -1023,7 +1027,7 @@ def _insert_zeros(x, n):
 def find_steps(array, threshold):
     """
     Finds local maxima by segmenting array based on positions at which
-    the threshold value is crossed. Note that this thresholding is 
+    the threshold value is crossed. Note that this thresholding is
     applied after the absolute value of the array is taken. Thus,
     the distinction between upward and downward steps is lost. However,
     get_step_sizes can be used to determine directionality after the
@@ -1061,7 +1065,7 @@ def get_step_sizes(array, indices, window=1000):
     by the window parameter) before and after the index of step
     occurrence. The directionality of the step is reflected by the sign
     of the step size (i.e. a positive value indicates an upward step,
-    and a negative value indicates a downward step). The combined 
+    and a negative value indicates a downward step). The combined
     standard deviation of both measurements (as a measure of uncertainty
     in step calculation) is also provided.
 
@@ -1070,7 +1074,7 @@ def get_step_sizes(array, indices, window=1000):
     array : numpy array
         1 dimensional array that represents time series of data points
     indices : list
-        List of indices of the detected steps (as provided by 
+        List of indices of the detected steps (as provided by
         find_steps, for example)
     window : int, optional
         Number of points to average over to determine baseline levels
@@ -1159,7 +1163,7 @@ if __name__ == "__main__":
     ax[0].plot(np.arange(len(x)), x)
     ax[1].plot(np.arange(len(t)), t)
     overall_analysis(x)
-    
+
     fig, ax = plt.subplots(2)
     ax[0].plot(np.arange(len(x1)), x1, label = "rand, {}".format(len(x1)/pymbar.timeseries.statisticalInefficiency(x1) ))
     #ax[0].plot(np.arange(len(x2)), x2, label = "rand with higher std, {}".format(len(x2)/pymbar.timeseries.statisticalInefficiency(x2) ))

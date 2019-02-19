@@ -315,7 +315,7 @@ def _parse_fred_line(line, all_cgs, current_annotation, mapping_directory):
         return  # only look at canonical stems.
     if nodes[0][0] == "s":
         log.info(
-            "Parse_fred: Stem-Stem A-Minor not allowed: {} -> {}.".format(nodes[0], nodes[1], line))
+            "Parse_fred: Stem-Stem A-Minor not allowed: {} -> {}.".format(nodes[0], nodes[1]))
         return  # No A-Minor between two stems.
     if nodes[0] in cg.edges[nodes[1]]:
         log.info(
@@ -339,7 +339,7 @@ def _parse_fred_line(line, all_cgs, current_annotation, mapping_directory):
 
 def _safe_resid_from_chain_res(chain, residue):
     try:
-        return fgb.resid_from_str(str("{}:{}".format(chain, residue)))
+        return fgr.resid_from_str(str("{}:{}".format(chain, residue)))
     except ValueError as e:
         if residue.isdigit():
             with log_to_exception(log, e):

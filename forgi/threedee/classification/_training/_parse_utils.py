@@ -43,6 +43,16 @@ class LineBasedParser(object):
         """
         return self._parse(string.splitlines())
 
+    def _before_parsing(self):
+        pass
+
+    def _parse_line(self, line):
+        pass
+
+    def _after_parsing(self):
+        pass
+
+
     def _parse(self, lines):
         """
         This function should not be overridden.

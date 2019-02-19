@@ -194,7 +194,7 @@ class ModifiedResidueLookup(object):
                 self._dict[key] = None
         return self._dict[key]
 
-    def clean_failed():
+    def clean_failed(self):
         for k, v in self._dict.items():
             if v is None:
                 del self._dict[k]

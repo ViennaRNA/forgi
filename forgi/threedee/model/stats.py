@@ -554,7 +554,7 @@ def get_stem_stats(filename, refresh=False):
 
     :param filename: The name of the file.
     '''
-    if ConstructionStats.stem_stats != None and not refresh:
+    if ConstructionStats.stem_stats is not None and not refresh:
         return ConstructionStats.stem_stats
 
     ConstructionStats.stem_stats = c.defaultdict(list)
@@ -587,7 +587,7 @@ def get_fiveprime_stats(filename, refresh=False):
 
     :param filename: The name of the file.
     '''
-    if ConstructionStats.fiveprime_stats != None and not refresh:
+    if ConstructionStats.fiveprime_stats is not None and not refresh:
         return ConstructionStats.fiveprime_stats
 
     ConstructionStats.fiveprime_stats = c.defaultdict(list)
@@ -615,7 +615,7 @@ def get_threeprime_stats(filename, refresh=False):
 
     :param filename: The name of the file.
     '''
-    if ConstructionStats.threeprime_stats != None and not refresh:
+    if ConstructionStats.threeprime_stats is not None and not refresh:
         return ConstructionStats.threeprime_stats
 
     ConstructionStats.threeprime_stats = c.defaultdict(list)
