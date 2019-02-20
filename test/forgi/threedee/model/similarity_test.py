@@ -96,16 +96,14 @@ class CompareTest(unittest.TestCase):
         self.assertAlmostEqual(ftme.cg_rmsd(cg1, cg1), 0)
         cg2 = ftmc.CoarseGrainRNA.from_bg_file(
             'test/forgi/threedee/data/1GID_A_sampled.cg')
-        self.assertAlmostEqual(ftme.cg_rmsd(cg1, cg2), 7.684377397812648)
+        self.assertAlmostEqual(ftme.cg_rmsd(cg1, cg2), 25.563376828137844)
 
     def test_cg_rmsd3(self):
         cg1 = ftmc.CoarseGrainRNA.from_bg_file(
             'test/forgi/threedee/data/1GID_A.cg')
         cg2 = ftmc.CoarseGrainRNA.from_bg_file(
             'test/forgi/threedee/data/1GID_A.cg')
-        cg2.coords.rotate(ftuv.rotation_matrix([1., 2., 3.], 22))
-        cg2.twists.rotate(ftuv.rotation_matrix([1., 2., 3.], 22))
-
+        cg2.rotate( 0.75)
         self.assertLess(ftme.cg_rmsd(cg1, cg2), 10**-6)
 
 

@@ -718,6 +718,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 origin, basis = ftug.element_coord_system(self, elem)
                 new_coords = ftuv.change_basis(
                     elem_coords, ftuv.standard_basis, basis) + origin
+                log.warning("%s %s: coords %s mapped to %s", elem, i, elem_coords, new_coords)
                 return new_coords
             except KeyError as e:
                 try:
@@ -735,25 +736,28 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 if elem[0] == "h":
                     # We estimate the vres position along the axis of the hairpin.
                     h_length = self.element_length(elem) / 2
-                    if pos - self.defines[elem][0] > h_length:
-                        l = 2 * h_length - (pos - self.defines[elem][0])
+                    pos_in_h = pos - self.defines[elem][0] +1
+                    if pos_in_h > math.ceil(h_length):
+                        l = self.defines[elem][1] - pos+1
+                    elif pos_in_h <=int(h_length):
+                        l = pos - self.defines[elem][0]+1
                     else:
-                        l = pos - self.defines[elem][0]
-                    perc = l / h_length
+                        l = math.ceil(h_length)
+                    perc = (l) / math.ceil(h_length)
                 elif elem[0] == "i":
                     if pos <= self.defines[elem][1]:
                         l = pos - self.defines[elem][0]
-                        perc = l / (self.defines[elem]
-                                    [1] - self.defines[elem][0] + 1)
+                        tl = (self.defines[elem][1] - self.defines[elem][0])
                     else:
-                        l = pos - self.defines[elem][2]
+                        l = self.defines[elem][3] - pos
                         tl = (self.defines[elem][3] -
-                              self.defines[elem][2] + 1)
-                        perc = (tl - l) / tl
+                              self.defines[elem][2] )
+                    perc = (l+1) / (tl+2)
                 else:
                     l = pos - self.defines[elem][0]
-                    perc = l / self.element_length(elem)
-                return self.coords[elem][0] + (self.coords[elem][1] - self.coords[elem][0] + 1) * perc
+                    perc = (l+1) / (self.element_length(elem)+1)
+                log.debug("Calculating vres: %s,%s, %s: length=%s, perc=%s",elem, pos, l,(self.coords[elem][1] - self.coords[elem][0]), perc)
+                return self.coords[elem][0] + (self.coords[elem][1] - self.coords[elem][0]) * perc
 
     def get_ordered_stem_poss(self):
         points = []
@@ -780,7 +784,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             self.add_all_virtual_residues()
         vress = []
         elems = []
-        for i in range(1, self.length+1):
+        for i in range(1, len(self.seq)+1):
             pos = self.get_virtual_residue(i, allow_single_stranded = True)
             vress.append(pos)
             elems.append(self.get_elem(i))
@@ -1763,11 +1767,9 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         define = self.defines[key]
 
+        # Do not delete self.vposs, it's in the element's coordinate system
+
         # Delete virtual residues
-        try:
-            del self.vposs[key]
-        except KeyError:
-            pass
         try:
             del self.vbases[key]
         except KeyError:
@@ -1808,6 +1810,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         self.coords.rotate(rotation_matrix)
         self.twists.rotate(rotation_matrix)
         self.after_coordinates_changed()
+        for chain in self.chains.values():
+            chain.transform(rotation_matrix.T, [0, 0, 0])
 
     def rotate_translate(self, offset, rotation_matrix):
         """
@@ -1827,5 +1831,5 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         # Caching for virtual residues
         self.vbases = c.defaultdict(dict)
         self.vvecs = c.defaultdict(dict)
-        self.v3dposs = c.defaultdict(dict)
+        self.v3dposs= c.defaultdict(dict)
         self.vinvs = c.defaultdict(dict)

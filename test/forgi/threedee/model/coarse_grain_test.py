@@ -317,8 +317,7 @@ class CoarseGrainIoTest(tfgb.GraphVerification):
         print(cg_str)
         cg2 = ftmc.CoarseGrainRNA.from_bg_string(cg_str)
         self.assertEqual(cg.defines, cg2.defines)
-        # This only looks at stems
-        self.assertAlmostEqual(ftme.cg_rmsd(cg, cg2), 0)
+        self.assertLess(ftme.cg_rmsd(cg, cg2), 10**-6)
         self.assertEqual(cg.backbone_breaks_after, cg2.backbone_breaks_after)
 
         cg, = ftmc.CoarseGrainRNA.from_pdb(
@@ -475,8 +474,8 @@ class CoarseGrainTest(tfgb.GraphVerification):
 
         rog = cg.radius_of_gyration()
         self.assertGreater(rog, 0.)
-        maxDist = max(ftuv.vec_distance(
-            cg.coords[d1][0], cg.coords[d2][0]) for d1, d2 in it.combinations(cg.defines, 2))
+
+        maxDist = max(ftuv.vec_distance(p0, p1) for p0, p1 in it.combinations(cg.coords._coordinates, 2))
         estimated_radius_circum_cricle = maxDist / 2
         # NOTE: The ROG is 0.77 times the radius of the circumcircle, for m->inf many points
         # in a 3D unit sphere with the nth point placed at radius (n/m)**1/3
@@ -491,7 +490,7 @@ class CoarseGrainTest(tfgb.GraphVerification):
         print(rog_fast, rog_vres, rog_fast - rog_vres, file=sys.stderr)
         self.assertGreater(abs(rog_fast - rog_vres), 0, msg="Different methods for ROG calculation "
                            "producting the exactly same result? Something seems to be wrong.")
-        self.assertLess(abs(rog_fast - rog_vres), 1, msg="Different methods for ROG calculation "
+        self.assertLess(abs(rog_fast - rog_vres), 3, msg="Different methods for ROG calculation "
                         "should produce roughly the same result.")
 
     def test_radius_of_gyration_no_stems(self):
@@ -790,14 +789,31 @@ class RotationTranslationTest(unittest.TestCase):
             self.cg2, = ftmc.CoarseGrainRNA.from_pdb(
                         'test/forgi/threedee/data/1byj.pdb')
 
+    def test_rotate_keeps_RMSD_zero0(self):
+        cg1_rot = copy.deepcopy(self.cg1)
+        cg1_rot.rotate(30, unit="degrees")
+        cg1_rot.rotate(-30, unit="degrees")
+        self.assertLess(ftme.cg_rmsd(self.cg1, cg1_rot), 10**-6)
+
     def test_rotate_keeps_RMSD_zero(self):
         cg1_rot = copy.deepcopy(self.cg1)
         cg1_rot.rotate(30, unit="degrees")
         # This currently uses virtual atoms, thus takes twists into account.
         self.assertLess(ftme.cg_rmsd(self.cg1, cg1_rot), 10**-6)
-        print (self.cg2.coords)
+
+
         cg2_rot = copy.deepcopy(self.cg2)
         cg2_rot.rotate(45, unit="degrees")
+
+        a,b = self.cg2.get_ordered_virtual_residue_poss(True)
+        log.warning("------------------------")
+        c,d = cg2_rot.get_ordered_virtual_residue_poss(True)
+        c2 = np.dot(c, ftuv.rotation_matrix("x", math.radians(-45)).T)
+        log.warning("==================================")
+        for i, coord in enumerate(a):
+            if any(abs(coord-c2[i])>10**-4):
+                log.warning("%s %s %s %s",coord, b[i], c2[i], d[i])
+
         self.assertLess(ftme.cg_rmsd(self.cg2, cg2_rot), 10**-6)
 
 

@@ -8,10 +8,13 @@ import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
 
 import itertools as it
+import logging
 import math
 import numpy as np
 from collections import defaultdict
 
+
+log = logging.getLogger(__name__)
 __all__ = ['AdjacencyCorrelation', 'cg_rmsd', 'rmsd', 'drmsd']
 
 """
