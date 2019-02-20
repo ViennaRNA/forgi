@@ -43,7 +43,7 @@ class AtomName(str):
 backbone_atoms = list(map(AtomName, ['P', "O5'", "C5'", "C4'", "C3'", "O3'"]))
 ring_atoms = list(map(AtomName, ["C4'", "C3'", "C2'", "C1'", "O4'"]))
 
-nonsidechain_atoms = backbone_atoms + ring_atoms
+nonsidechain_atoms = backbone_atoms + ring_atoms + ["OP1", "OP2", "H5'", "H3'", "H4'", "H2'", 'H5"']
 
 chi_torsion_atoms = dict()
 chi_torsion_atoms['A'] = chi_torsion_atoms['G'] = list(
