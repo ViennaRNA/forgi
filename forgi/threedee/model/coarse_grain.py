@@ -685,8 +685,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
     def get_virtual_residue(self, pos, allow_single_stranded=False):
         """
-        Get the virtual residue for the nmucleotide at position pos (1-based)
+        Get the virtual residue position in the global coordinate system
+        for the nucleotide at position pos (1-based)
 
+        :param pos: A 1-based nucleotide number
         :param allow_single_stranded: If True and pos is not in a stem, return a
               rough estimate for the residue position instead of raising an error.
               Currenly, for non-stem elements, these positions are on the axis of the cg-element.
@@ -778,12 +780,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             self.add_all_virtual_residues()
         vress = []
         elems = []
-        for s in self.sorted_stem_iterator():
-            for i in range(self.stem_length(s)):
-                vres = self.v3dposs[s][i]
-                vress.append(vres[0] + vres[2])
-                vress.append(vres[0] + vres[3])
-                elems.extend([s] * 2)
+        for i in range(1, self.length+1):
+            pos = self.get_virtual_residue(i, allow_single_stranded = True)
+            vress.append(pos)
+            elems.append(self.get_elem(i))
         if return_elements:
             return np.array(vress), elems
         return np.array(vress)
