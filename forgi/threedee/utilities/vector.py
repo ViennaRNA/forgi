@@ -1265,10 +1265,28 @@ def middlepoint(vec1, vec2):
 
 
 def pair_distance_distribution(points, stepsize=1):
+    return pair_distance_distribution_vectorized(points, stepsize)
+    # The below is left in here as a not vectorized (slow) reference implementation
     dists = Counter()
     for p1, p2 in itertools.combinations(points, r=2):
         d = vec_distance(p1, p2)
         dists[d // stepsize] += 1
+    m = max(dists.keys())
+    x = np.arange(0, m + 1)
+    return x * stepsize, np.array([dists[xi] for xi in x])
+
+def pair_distance_distribution_vectorized(points, stepsize=1):
+    dists = Counter()
+    p1s = []
+    p2s = []
+    for p1, p2 in itertools.combinations(points, r=2):
+        p1s.append(p1)
+        p2s.append(p2)
+    diffs=np.array(p1s)-np.array(p2s)
+    lengths=np.sqrt(np.sum(diffs*diffs, axis=1))
+    lengths = lengths // stepsize
+    for d in lengths:
+        dists[d] += 1
     m = max(dists.keys())
     x = np.arange(0, m + 1)
     return x * stepsize, np.array([dists[xi] for xi in x])
