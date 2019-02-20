@@ -718,7 +718,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                 origin, basis = ftug.element_coord_system(self, elem)
                 new_coords = ftuv.change_basis(
                     elem_coords, ftuv.standard_basis, basis) + origin
-                log.warning("%s %s: coords %s mapped to %s", elem, i, elem_coords, new_coords)
+                log.debug("%s %s: coords %s mapped to %s", elem, i, elem_coords, new_coords)
                 return new_coords
             except KeyError as e:
                 try:
