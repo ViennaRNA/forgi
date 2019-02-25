@@ -694,6 +694,8 @@ class CoarseGrainRNA(fgb.BulgeGraph):
               Currenly, for non-stem elements, these positions are on the axis of the cg-element.
         """
         mult = 5
+        if isinstance(pos, fgr.RESID):
+            pos = self.seq.to_integer(pos)
         elem = self.get_node_from_residue_num(pos)
         if elem[0] == "s" and elem not in self.v3dposs or not self.v3dposs[elem]:
             ftug.add_virtual_residues(self, elem)

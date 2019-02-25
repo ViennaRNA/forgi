@@ -182,8 +182,28 @@ def cg_rmsd(cg1, cg2):
     residues1 = cg1.get_ordered_virtual_residue_poss()
     residues2 = cg2.get_ordered_virtual_residue_poss()
     try:
+        # First, try all coordinates, no matter if the seq-ids match
         return rmsd(residues1, residues2)
     except Incompareable:
+        # If the number of nts is not equal, issue a warning and try to match based on seq_ids.
+        res_ids = set(cg1.seq._seqids) | set(cg2.seq._seqids)
+        common_resids = set(cg1.seq._seqids) & set(cg2.seq._seqids)
+        residues1 = []
+        residues2 = []
+        for res in res_ids:
+            if res in cg1.seq._seqids and res in cg2.seq._seqids:
+                residues1.append(cg1.get_virtual_residue(res, allow_single_stranded = True))
+                residues2.append(cg2.get_virtual_residue(res, allow_single_stranded = True))
+        if len(residues1)>len(res_ids)*0.8:
+            log.warning("Using only %s common residues for RMSD comparison based on seq_ids.", len(residues1))
+            if set(cg1.seq._seqids)-common_resids :
+                log.warning("Ignoring from cg1:  %s.", set(cg1.seq._seqids)-common_resids )
+            if set(cg2.seq._seqids)-common_resids:
+                log.warning("Ignoring from cg2:  %s.", set(cg2.seq._seqids)-common_resids )
+            return rmsd(residues1, residues2)
+        else:
+            log.warning("Cannot compare based on seqids: Intersection of"
+                        " resids is too small: %s", common_resids)
         raise Incompareable("Cgs {} and {} cannot be compared according to the RMSD, "
                             "because they do not have the same number of "
                             "virtual residues.".format(cg1.name, cg2.name))
