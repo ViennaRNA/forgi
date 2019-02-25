@@ -52,10 +52,58 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="changes-in-version-2-0">
 <h2>Changes in Version 2.0<a class="headerlink" href="#changes-in-version-2-0" title="Permalink to this headline">¶</a></h2>
-<p>Version 2.0 brings a cleaned-up API to forgi.</p>
+<p>Version 2.0 brings a cleaned-up API to forgi. The BulgeGraph object should now be treated as immuteable on the level of defines and edges. Furthermore, the <strong>new Sequence class</strong> deals with many quirks of the PDB format, including tuple-indices and missing and modified residues.
+We now <strong>fully support the MMCIF fileformat</strong>.</p>
 <p>Some of the biggest changes:</p>
+<ul>
+<li><p class="first">All RNA file-formats can be <strong>loaded with the single function `forgi.load_rna`</strong>, which returns a list of connected components.</p>
+</li>
+<li><p class="first">The old functions for creating the RNA from a specific file type are now classmethods of the BulgeGraph class. <code class="code docutils literal"><span class="pre">BulgeGraph.__init__</span></code> should no longer be used.</p>
+</li>
+<li><p class="first">The API of the Bulgegraph object was cleaned up, including the following changes:</p>
 <ul class="simple">
-<li>All RNA file-formats can be loaded with te single function <code class="code docutils literal"><span class="pre">forgi.load_rna</span></code></li>
+<li>Functions modifying the defines and edges of the BulgeGraph (like <code class="code docutils literal"><span class="pre">add_node</span></code>) have been moved to the private module forgi.graph._graph_construction, as they are only used during creation of the BulgeGraph object, including <code class="code docutils literal"><span class="pre">dissolve_length_one_stems</span></code>. Instead, <code class="code docutils literal"><span class="pre">length_one_stem_basepairs</span></code> was added.</li>
+<li>To get a modified copy of a BulgeGraph, use the member methods of the GraphTransformer, accessed with <code class="code docutils literal"><span class="pre">.transformed</span></code>. These methods are implemented in forgi/graph/transform_graphs.py and more methods will be added in the future.</li>
+<li>Some functions that are probably not useful for client code have been made private or removed, including:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><code class="code docutils literal"><span class="pre">all_connections</span></code> -&gt; <code class="code docutils literal"><span class="pre">_all_connections</span></code></li>
+<li><code class="code docutils literal"><span class="pre">compare_stems</span></code>, <code class="code docutils literal"><span class="pre">compare_*</span></code>: removed</li>
+<li><code class="code docutils literal"><span class="pre">find_external_loops</span></code>, use <code class="code docutils literal"><span class="pre">get_domains</span></code></li>
+<li><code class="code docutils literal"><span class="pre">flanking_nucleotides</span></code>, use <code class="code docutils literal"><span class="pre">define_a</span></code>.</li>
+<li><code class="code docutils literal"><span class="pre">get_any_sides</span></code>, <code class="code docutils literal"><span class="pre">get_sides_plus</span></code> removed</li>
+<li>Functions only called by <code class="code docutils literal"><span class="pre">to_bg_string</span></code> are now private
+(<code class="code docutils literal"><span class="pre">get_*_string</span></code>, e.g. <code class="code docutils literal"><span class="pre">_get_connect_str</span></code>).</li>
+<li><code class="code docutils literal"><span class="pre">get_stem_direction</span></code> removed</li>
+<li><code class="code docutils literal"><span class="pre">get_vertex</span></code> removed</li>
+<li><code class="code docutils literal"><span class="pre">nd_define_iterator</span></code> removed</li>
+<li><code class="code docutils literal"><span class="pre">subseq_with_cutpoints</span></code> removed, use Sequence class’s <code class="code docutils literal"><span class="pre">__getitem__</span></code></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><code class="code docutils literal"><span class="pre">get_node_from_residue_num</span></code> is deprecated and shuld be replaced by <code class="code docutils literal"><span class="pre">get_elem</span></code></li>
+<li>Better support for <code class="code docutils literal"><span class="pre">forgi.graph.residue.RESID</span></code> as indices.</li>
+<li>New properties/ methods <code class="code docutils literal"><span class="pre">junctions</span></code>, <code class="code docutils literal"><span class="pre">rods</span></code>, <code class="code docutils literal"><span class="pre">pseudoknotted_basepairs</span></code>, <code class="code docutils literal"><span class="pre">seq_length</span></code></li>
+</ul>
+</li>
+<li><p class="first">A <strong>new sequence class</strong>, which allows for indexing with integers (1-based, like the defines) and <code class="code docutils literal"><span class="pre">forgi.graph.residue.RESID</span></code> tuples. Conversion between these two indices is now also delegated to this class. <code class="code docutils literal"><span class="pre">__getitem__</span></code> is implemented to properly allow for slices with cutpoints.</p>
+</li>
+<li><p class="first">Some changes were made to the CoarseGrainRNA class:</p>
+</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><strong>Virtual residues are now stored for loops</strong> (at the C1’ atom), if the RNA was loaded from a PDB or MMCIF file.</li>
+<li>Experimental functions are now made private.</li>
+<li>New function <code class="code docutils literal"><span class="pre">get_incomplete_elements</span></code> for elements with missing residues.</li>
+<li>New function <code class="code docutils literal"><span class="pre">rotate_translate</span></code></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>PDB files can now be read, even if neither DSSR nor MC-Annotate are installed. However, the accurracy of the secondary structure may suffer in this case.</li>
+<li><code class="code docutils literal"><span class="pre">forgi.threedee.model.similarity.cg_rmsd</span></code> now takes virtual residues of loops into account.</li>
+<li>The module <code class="code docutils literal"><span class="pre">forgi.graph.numbered_dotbracket</span></code> allows you to modify the dotbracket structure while keeping track of the mapping between brackets and residues.</li>
 </ul>
 </div>
 <div class="section" id="changes-in-version-1-1">

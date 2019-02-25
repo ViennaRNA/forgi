@@ -649,7 +649,7 @@
     <span class="k">def</span> <span class="nf">transformed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ftmt</span><span class="o">.</span><span class="n">CGTransformer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CoarseGrainRNA.get_coord_str"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_coord_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_coord_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_coord_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Place the start and end coordinates of each stem into a string.</span>
 
@@ -672,7 +672,7 @@
             <span class="n">out_str</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;coord </span><span class="si">{k}</span><span class="s2"> </span><span class="si">{x[0]:.16f}</span><span class="s2"> </span><span class="si">{x[1]:.16f}</span><span class="s2"> </span><span class="si">{x[2]:.16f}</span><span class="s2"> &quot;</span>
                         <span class="s2">&quot;</span><span class="si">{y[0]:.16f}</span><span class="s2"> </span><span class="si">{y[1]:.16f}</span><span class="s2"> </span><span class="si">{y[2]:.16f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">n</span><span class="p">))</span>
             <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">out_str</span></div>
+        <span class="k">return</span> <span class="n">out_str</span>
 
 <div class="viewcode-block" id="CoarseGrainRNA.add_bulge_coords_from_stems"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.add_bulge_coords_from_stems">[docs]</a>    <span class="k">def</span> <span class="nf">add_bulge_coords_from_stems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -915,7 +915,7 @@
                         <span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">return</span> <span class="n">value</span></div>
 
-<div class="viewcode-block" id="CoarseGrainRNA.get_twist_str"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_twist_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_twist_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_twist_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Place the twist vectors into a string.</span>
 
@@ -933,9 +933,9 @@
             <span class="n">out_str</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;twist </span><span class="si">{k}</span><span class="s2"> </span><span class="si">{x[0]:.16f}</span><span class="s2"> </span><span class="si">{x[1]:.16f}</span><span class="s2"> </span><span class="si">{x[2]:.16f}</span><span class="s2"> &quot;</span>
                         <span class="s2">&quot;</span><span class="si">{y[0]:.16f}</span><span class="s2"> </span><span class="si">{y[1]:.16f}</span><span class="s2"> </span><span class="si">{y[2]:.16f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">n</span><span class="p">))</span>
             <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">out_str</span></div>
+        <span class="k">return</span> <span class="n">out_str</span>
 
-<div class="viewcode-block" id="CoarseGrainRNA.get_long_range_str"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_long_range_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_long_range_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_long_range_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="n">out_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="n">printed</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -951,20 +951,20 @@
 
                 <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;longrange </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">out_str</span></div>
+        <span class="k">return</span> <span class="n">out_str</span>
 
-<div class="viewcode-block" id="CoarseGrainRNA.get_interacting_str"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_interacting_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_interacting_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_interacting_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">seqid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interacting_residues</span><span class="p">:</span>
             <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;interacting</span><span class="se">\t</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">(</span><span class="n">seqid</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span></div>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
-<div class="viewcode-block" id="CoarseGrainRNA.get_sampled_stems_str"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.coarse_grain.html#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_sampled_stems_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_sampled_stems_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_sampled_stems_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">out_str</span> <span class="o">+=</span> <span class="s1">&#39;sampled </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span>
                                             <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="p">[</span><span class="n">key</span><span class="p">])))</span>
-        <span class="k">return</span> <span class="n">out_str</span></div>
+        <span class="k">return</span> <span class="n">out_str</span>
 
     <span class="k">def</span> <span class="nf">_get_vres_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -980,11 +980,11 @@
 <span class="sd">        Output this structure in string form.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="n">curr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_bg_string</span><span class="p">()</span>
-        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coord_str</span><span class="p">()</span>
-        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_twist_str</span><span class="p">()</span>
-        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sampled_stems_str</span><span class="p">()</span>
-        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_long_range_str</span><span class="p">()</span>
-        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_interacting_str</span><span class="p">()</span>
+        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coord_str</span><span class="p">()</span>
+        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_twist_str</span><span class="p">()</span>
+        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sampled_stems_str</span><span class="p">()</span>
+        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_long_range_str</span><span class="p">()</span>
+        <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_interacting_str</span><span class="p">()</span>
         <span class="n">curr_str</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_vres_str</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_from</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">curr_str</span> <span class="o">+=</span> <span class="s2">&quot;project </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">project_from</span><span class="p">)</span>
