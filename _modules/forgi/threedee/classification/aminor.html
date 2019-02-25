@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.classification.aminor &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.classification.aminor</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">pkgutil</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">StringIO</span> <span class="k">import</span> <span class="n">StringIO</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="k">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils.validation</span> <span class="k">import</span> <span class="n">check_X_y</span><span class="p">,</span> <span class="n">check_array</span><span class="p">,</span> <span class="n">check_is_fitted</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors.kde</span> <span class="k">import</span> <span class="n">KernelDensity</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">confusion_matrix</span>
+
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="k">as</span> <span class="nn">ftuv</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="k">as</span> <span class="nn">ftug</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">CUTOFFDIST</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">ANGLEWEIGHT</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains code for classifying a coarse-grained geometry as A-Minor</span>
+<span class="sd">interaction.</span>
+
+<span class="sd">.. warning:: This is intended for low-resolution data , as it does not take the</span>
+<span class="sd">             orientation of individual bases into account. If you have all-atom</span>
+<span class="sd">             data, dedicated tools like FR3D will be more accurate.</span>
+
+<span class="sd">If you just want to classify interactions in a given structure, you only need</span>
+<span class="sd">the functions `classify_interaction` or `all_interactions`.</span>
+
+<span class="sd">To train your own version of the classifier, modify its parameters or perform</span>
+<span class="sd">cross-validation, use the AMinorClassifier.</span>
+
+<span class="sd">Access the default trainings data with the get_trainings_data(loop_type)</span>
+<span class="sd">function.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">P_INTERACTION</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># 0.03644949066213922</span>
+
+<span class="c1">################# Just classify my structure ############################</span>
+
+
+<div class="viewcode-block" id="loop_potential_interactions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.loop_potential_interactions">[docs]</a><span class="k">def</span> <span class="nf">loop_potential_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterate over all stems and return those loop-stem pairs that will be passed</span>
+<span class="sd">    to the AMinor classification and are not ruled out beforehand.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">geos</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stems</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">domain</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stems</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">stem</span> <span class="ow">in</span> <span class="n">stems</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">stem</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">loop</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="c1"># To save computation time</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">elements_closer_than</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">loop</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">loop</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                         <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                         <span class="n">CUTOFFDIST</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">geos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_relative_orientation</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">stem</span><span class="p">))</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">loop</span><span class="p">,</span> <span class="n">stem</span><span class="p">])</span>
+    <span class="n">geos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">geos</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">geos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">geos</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/=</span> <span class="n">ANGLEWEIGHT</span>
+    <span class="k">return</span> <span class="n">geos</span><span class="p">,</span> <span class="n">labels</span></div>
+
+
+<div class="viewcode-block" id="potential_interactions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.potential_interactions">[docs]</a><span class="k">def</span> <span class="nf">potential_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :returns: A tuple `geos`, `labels`.</span>
+<span class="sd">              `geos` is an Nx3 array, where N is the number of</span>
+<span class="sd">              potential interactions and the inner dimension is dist, angle1, angle2.</span>
+<span class="sd">              `geos` can be passed to the AMinor classifier.</span>
+<span class="sd">              `labels` is an Nx2 array, where the inner dimension is loopname, stemname</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">geos</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">loop</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">domain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">loop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">domain</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">loop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">loop_type</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="s1">&#39;A&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">get_define_seq_str</span><span class="p">(</span><span class="n">loop</span><span class="p">)):</span>
+            <span class="k">continue</span>
+        <span class="n">loop_geos</span><span class="p">,</span> <span class="n">loop_labels</span> <span class="o">=</span> <span class="n">loop_potential_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+        <span class="n">geos</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">loop_geos</span><span class="p">)</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">loop_labels</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">geos</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="all_interactions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.all_interactions">[docs]</a><span class="k">def</span> <span class="nf">all_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">clfs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a list of all predicted A-Minor interactions in a cg-object.</span>
+
+<span class="sd">    This is more efficient than using classify_interaction iteratively,</span>
+<span class="sd">    because it uses vectorization.</span>
+
+<span class="sd">    :param clfs: A dictionary {loop_type: AMinorClassifier} where</span>
+<span class="sd">                 loop_type is one of &quot;i&quot;, &quot;h&quot;, &quot;m&quot;.</span>
+<span class="sd">                 If clfs is None or a key is missing, uses the default</span>
+<span class="sd">                 pretrained classifier.</span>
+
+<span class="sd">    :returns: A list of  tuples (loop, stem)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">interactions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">loop_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="s2">&quot;h&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">clfs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">loop_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clfs</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;No classifier specified for loop type </span><span class="si">%s</span><span class="s2"> (only for </span><span class="si">%s</span><span class="s2">), &quot;</span>
+                          <span class="s2">&quot;using default classifier.&quot;</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clfs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">clfs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">loop_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clfs</span><span class="p">:</span>
+            <span class="n">clf</span> <span class="o">=</span> <span class="n">_get_default_clf</span><span class="p">(</span><span class="n">loop_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clf</span> <span class="o">=</span> <span class="n">clfs</span><span class="p">[</span><span class="n">loop_type</span><span class="p">]</span>
+        <span class="n">geos</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">potential_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">)</span>
+        <span class="n">interactions</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">_classify_potential_interactions</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">geos</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">interactions</span></div>
+
+
+<div class="viewcode-block" id="classify_interaction"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.classify_interaction">[docs]</a><span class="k">def</span> <span class="nf">classify_interaction</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">stem</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the interaction pair loop, stem as a tuple or False if no interaction exists.</span>
+
+<span class="sd">    :param cg: The CoarseGrainRNA</span>
+<span class="sd">    :param loop: The loop name, e.g. &quot;i0&quot;</span>
+<span class="sd">    :param stem: A stem name, e.g. &quot;s0&quot; to consider interactions of loop with another stem as False</span>
+<span class="sd">                 and only an interaction with this stem as True.</span>
+
+<span class="sd">                ..warning:: Our statistical modelling allows for at most 1 interaction per loop.</span>
+<span class="sd">                            This means that we have calculate the interaction probability of this</span>
+<span class="sd">                            loop with all stems, even if stem is given. If another stem has a</span>
+<span class="sd">                            higher interaction probability than the given stem,</span>
+<span class="sd">                            this function will return False, regardless of the interaction</span>
+<span class="sd">                            probability stem-loop.</span>
+
+<span class="sd">    :param clf: A trained AMinorClassifier or None (use default classifier for loop type)</span>
+
+
+<span class="sd">    ..note:: `all_interactions` is more efficient, if you are interested in all loop-stem pairs.</span>
+
+<span class="sd">    :returns: A tuple (loop, stem) or False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">clf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clf</span> <span class="o">=</span> <span class="n">_get_default_clf</span><span class="p">(</span><span class="n">loop</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">geos</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">loop_potential_interactions</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">)</span>
+    <span class="n">interactions</span> <span class="o">=</span> <span class="n">_classify_potential_interactions</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">geos</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">interactions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">stem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">interactions</span> <span class="o">!=</span> <span class="p">[(</span><span class="n">loop</span><span class="p">,</span> <span class="n">stem</span><span class="p">)]:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">interaction</span><span class="p">,</span> <span class="o">=</span> <span class="n">interactions</span>
+    <span class="k">return</span> <span class="n">interaction</span></div>
+
+<span class="c1">############# Roll your own classifier ###########################</span>
+
+
+<div class="viewcode-block" id="get_trainings_data"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.get_trainings_data">[docs]</a><span class="k">def</span> <span class="nf">get_trainings_data</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
+    <span class="n">loop_type</span> <span class="o">=</span> <span class="n">loop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_DefaultClf</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">loop_type</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AMinorClassifier"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.AMinorClassifier">[docs]</a><span class="k">class</span> <span class="nc">AMinorClassifier</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">ClassifierMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A classifier that predicts A-Minor interactions based on the following formula:</span>
+
+<span class="sd">    .. math:: P(I|geo)=f(geo|I)/f(geo)*P(I)</span>
+
+<span class="sd">    where :math:`f` is a probability density and :math:`P` is a probability</span>
+<span class="sd">    and :math:`I` means interaction.</span>
+
+<span class="sd">    Since there are no interactions with more than 30 Angstrom distance,</span>
+<span class="sd">    interactions require an A in the loop sequence and estimating numerator</span>
+<span class="sd">    and denominator seperately could lead to probabilities greater than 1,</span>
+<span class="sd">    we use the following formula:</span>
+
+<span class="sd">    .. math:: P(I| (geo, d&lt;30, A in seq)) = num/denom</span>
+
+<span class="sd">    where</span>
+<span class="sd">    .. math::</span>
+
+<span class="sd">        num=f(geo|I)*P(I|(d&lt;30, A \\in seq))</span>
+
+<span class="sd">        denom=num+f(geo|(\\not I, d&lt;30))*(1-P(I|(d&lt;30, A \\in seq))</span>
+
+<span class="sd">    We estimate the probability densities as kernel density estimates.</span>
+<span class="sd">    For :math:`f(geo|I)` we use annotations created by FR3D-searches for</span>
+<span class="sd">    all 4 types of A-minor motifs.</span>
+<span class="sd">    We assume that :math:`f(geo|(\\not I, A \\in seq))== f(geo|(\\not I, A \\in seq))`</span>
+<span class="sd">    and that FR3D might miss some true interactions. Thus we estimate</span>
+<span class="sd">    :math:`f(geo|(\\not I, A \\in seq, d&lt;30))` as</span>
+<span class="sd">    :math:`f(geo|(\\not I, A \\notin seq, d&lt;30))`</span>
+
+<span class="sd">    Since both densities are normalized, it does not matter that we use a</span>
+<span class="sd">    different number of datapoints for their estimation.</span>
+
+<span class="sd">    We estimate P(I|(d&lt;30, A \\in seq)) as the number of occurrences where</span>
+<span class="sd">    a loop with A is in an A-minor interaction, over the number of all</span>
+<span class="sd">    loop-stem pairs with less than 30 angstrom distance and an A in the sequence.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">bandwidth</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">p_I</span><span class="o">=</span><span class="n">P_INTERACTION</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_I</span> <span class="o">=</span> <span class="n">p_I</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symmetric</span> <span class="o">=</span> <span class="n">symmetric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">=</span> <span class="n">bandwidth</span>
+
+<div class="viewcode-block" id="AMinorClassifier.fit"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.AMinorClassifier.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Train the model.</span>
+
+<span class="sd">        :param X: A Nx3 array, where the features are</span>
+<span class="sd">                  distance(Angstrom)/10, angle1(rad), angle2(rad)</span>
+<span class="sd">                  The **distance** is the closest distance between the two line</span>
+<span class="sd">                  segments (i.e. coarse grained elementts)</span>
+<span class="sd">                  **angle1** is the angle between the line along the stem vector</span>
+<span class="sd">                  and the line along the shortest connection between the two</span>
+<span class="sd">                  elements. A an angle between two straight lines, it is</span>
+<span class="sd">                  defined between 0 and 90 degrees.</span>
+<span class="sd">                  **angle2** is the angle between the connecting vector</span>
+<span class="sd">                  (pointing from the stem to the loop), projected onto the</span>
+<span class="sd">                  plane normal to the stem direction and the twist vector</span>
+<span class="sd">                  (location of minor groove) at the point closest to the</span>
+<span class="sd">                  interaction. As an angle between two vectors, it is</span>
+<span class="sd">                  defined between 0 and 180 degrees.</span>
+<span class="sd">        :param y: An array of length N. 0 means no interaction,</span>
+<span class="sd">                  1 means interaction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that X and y have correct shape</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">check_X_y</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Trainings-data has shape </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;We have </span><span class="si">%s</span><span class="s2"> known interactions &quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Expect exactly 3 features, found </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">yi</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">y</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y should only contain the values 1 and 0&quot;</span><span class="p">)</span>
+        <span class="n">ame</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y</span><span class="p">)]</span>
+        <span class="n">non_ame</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetric</span><span class="p">:</span>
+            <span class="n">ame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_symmetric</span><span class="p">(</span><span class="n">ame</span><span class="p">)</span>
+            <span class="n">non_ame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_symmetric</span><span class="p">(</span><span class="n">non_ame</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Fitting. First positive sample: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y</span><span class="p">)][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ame_kde_</span> <span class="o">=</span> <span class="n">KernelDensity</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span>
+                                      <span class="n">bandwidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">ame</span><span class="p">)</span><span class="o">.</span><span class="n">score_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">non_ame_kde_</span> <span class="o">=</span> <span class="n">KernelDensity</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span>
+                                          <span class="n">bandwidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">non_ame</span><span class="p">)</span><span class="o">.</span><span class="n">score_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_</span> <span class="o">=</span> <span class="n">y</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_make_symmetric</span><span class="p">(</span><span class="n">geos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make the trainingsdata symmetric around those bounds of the radial</span>
+<span class="sd">        variables, where we expect a high density.</span>
+
+<span class="sd">        Kernel density estimation does not work too well out of the box on</span>
+<span class="sd">        bounded support: Samples close to the boundary have create a</span>
+<span class="sd">        significant density outside the support. Due to symmetry considerations</span>
+<span class="sd">        of angular data, we can avoid this issue by adding symmetric datapoints</span>
+<span class="sd">        the following way: Mirror all datapoints along the plane</span>
+<span class="sd">        angle1=180 degrees (both angles between the two lines are equivalent) and</span>
+<span class="sd">        around the plane angle2==0 degrees (both rotational</span>
+<span class="sd">        directions are equivalent).</span>
+<span class="sd">        By creating 4 times as many datapoints, we avoid bias near the boundary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">geos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">geos</span><span class="p">,</span>
+                               <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span> <span class="ow">in</span> <span class="n">geos</span><span class="p">]])</span>
+        <span class="c1"># We allow negative angles for angle2, so there is no need to make it symmetric.</span>
+        <span class="c1"># geos = np.concatenate([geos,</span>
+        <span class="c1">#                       [(d, a1, -a2) for d, a1, a2 in geos]])</span>
+        <span class="k">return</span> <span class="n">geos</span>
+
+<div class="viewcode-block" id="AMinorClassifier.predict"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.AMinorClassifier.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span></div>
+
+<div class="viewcode-block" id="AMinorClassifier.score"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.AMinorClassifier.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The average between specificity and sensitivity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">tn</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">tp</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">specificity</span> <span class="o">=</span> <span class="n">tn</span> <span class="o">/</span> <span class="p">(</span><span class="n">tn</span> <span class="o">+</span> <span class="n">fp</span><span class="p">)</span>
+        <span class="n">sensitivity</span> <span class="o">=</span> <span class="n">tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fn</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mf">0.8</span> <span class="o">*</span> <span class="n">sensitivity</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">specificity</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AMinorClassifier.predict_proba"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.AMinorClassifier.predict_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="n">check_is_fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ame_kde_&#39;</span><span class="p">,</span> <span class="s1">&#39;non_ame_kde_&#39;</span><span class="p">])</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Predicting for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+        <span class="n">numerator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ame_kde_</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_I</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="n">numerator</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">non_ame_kde_</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_I</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>  <span class="c1"># division by 0</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denom</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AMinorClassifier.set_params"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.AMinorClassifier.set_params">[docs]</a>    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AMinorClassifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># If it was fitted, we must propagate the parameter changes</span>
+        <span class="c1"># to the child-KDEs by refitting to the same data</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;X_&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="c1">############## get orientation #########################</span>
+
+<div class="viewcode-block" id="get_loop_flexibility"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.get_loop_flexibility">[docs]</a><span class="k">def</span> <span class="nf">get_loop_flexibility</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unused. We tried to see if the length of the loop vs # bases had an effect on ointeraction probability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">loop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">define_a</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
+    <span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">max_nts</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span><span class="p">)</span>
+    <span class="n">loop_length</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">get_direction</span><span class="p">(</span><span class="n">loop</span><span class="p">))</span>
+    <span class="c1"># As number of nucleotide-links (or phosphate groups) per Angstrom</span>
+    <span class="c1"># 9.2 is the sum of average bond lengths for bonds in the nucleotide linkage.</span>
+    <span class="c1"># Bond lengths taken from: DOI: 10.1021/ja9528846</span>
+    <span class="c1"># A value of 1 means, all bonds are stretched.</span>
+    <span class="c1"># Ideal helices have a value of: 4.41</span>
+    <span class="c1"># A value below 1 should be rare.</span>
+    <span class="c1"># Higher values mean higher flexibility.</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">max_nts</span><span class="p">)</span> <span class="o">/</span> <span class="n">loop_length</span> <span class="o">*</span> <span class="mf">9.2</span></div>
+
+
+<div class="viewcode-block" id="get_relative_orientation"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.get_relative_orientation">[docs]</a><span class="k">def</span> <span class="nf">get_relative_orientation</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">stem</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return how loop is related to stem in terms of three parameters.</span>
+
+<span class="sd">    The stem is the receptor of a potential A-Minor interaction, whereas the</span>
+<span class="sd">    loop is the donor.</span>
+
+<span class="sd">    The 3 parameters are:</span>
+
+<span class="sd">        1.  Distance between the closest points of the two elements</span>
+<span class="sd">        2.  The angle between the stem and the vector between the two</span>
+<span class="sd">        3.  The angle between the minor groove of l2 and the projection of</span>
+<span class="sd">            the vector between stem and loop onto the plane normal to the stem</span>
+<span class="sd">            direction.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">point_on_stem</span><span class="p">,</span> <span class="n">point_on_loop</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">line_segment_distance</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                              <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                                              <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">loop</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                                              <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">loop</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">conn_vec</span> <span class="o">=</span> <span class="n">point_on_loop</span> <span class="o">-</span> <span class="n">point_on_stem</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">conn_vec</span><span class="p">)</span>
+    <span class="n">angle1</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">get_direction</span><span class="p">(</span><span class="n">stem</span><span class="p">),</span>
+                            <span class="n">conn_vec</span><span class="p">)</span>
+    <span class="c1"># The direction of the stem vector is irrelevant, so</span>
+    <span class="c1"># choose the smaller of the two angles between two lines</span>
+    <span class="k">if</span> <span class="n">angle1</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">angle1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">angle1</span>
+    <span class="n">tw</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_twists</span><span class="p">(</span><span class="n">stem</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dist</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">angle2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">stem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The receptor needs to be a stem, not </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stem</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stem_len</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">stem</span><span class="p">)</span>
+            <span class="c1"># Where along the helix our A-residue points to the minor groove.</span>
+            <span class="c1"># This can be between residues. We express it as floating point nucleotide coordinates.</span>
+            <span class="c1"># So 0.0 means at the first basepair, while 1.5 means between the second and the third basepair.</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">point_on_stem</span> <span class="o">-</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span>
+                <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">get_direction</span><span class="p">(</span><span class="n">stem</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">stem_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># The vector pointing to the minor groove, even if we are not at a virtual residue (pos is a float value)</span>
+            <span class="n">virt_twist</span> <span class="o">=</span> <span class="n">ftug</span><span class="o">.</span><span class="n">virtual_res_3d_pos_core</span><span class="p">(</span>
+                <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">stem</span><span class="p">],</span> <span class="n">cg</span><span class="o">.</span><span class="n">twists</span><span class="p">[</span><span class="n">stem</span><span class="p">],</span> <span class="n">pos</span><span class="p">,</span> <span class="n">stem_len</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># The projection of the connection vector onto the plane normal to the stem</span>
+            <span class="n">conn_proj</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vector_rejection</span><span class="p">(</span>
+                <span class="n">conn_vec</span><span class="p">,</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">get_direction</span><span class="p">(</span><span class="n">stem</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Note: here the directions of both vectors are well defined,</span>
+                <span class="c1"># so angles &gt;90 degrees make sense.</span>
+                <span class="n">angle2</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">virt_twist</span><span class="p">,</span> <span class="n">conn_proj</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">virt_twist</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">angle2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span>
+            <span class="c1"># Furthermore, the direction of the second angle is meaningful.</span>
+            <span class="c1"># We call use a positive angle, if the cross-product of the two vectors</span>
+            <span class="c1"># has the same sign as the stem vector and a negative angle otherwise</span>
+            <span class="n">cr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">virt_twist</span><span class="p">,</span> <span class="n">conn_proj</span><span class="p">)</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">is_almost_parallel</span><span class="p">(</span><span class="n">cr</span><span class="p">,</span>  <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">get_direction</span><span class="p">(</span><span class="n">stem</span><span class="p">))</span>
+            <span class="c1">#assert sign != 0, &quot;{} vs {} not (anti) parallel&quot;.format(</span>
+            <span class="c1">#    cr, cg.coords.get_direction(stem))</span>
+            <span class="n">angle2</span> <span class="o">*=</span> <span class="n">sign</span>
+
+    <span class="k">return</span> <span class="n">dist</span><span class="p">,</span> <span class="n">angle1</span><span class="p">,</span> <span class="n">angle2</span></div>
+
+<span class="c1">############# Private ##########################################</span>
+
+
+<span class="k">def</span> <span class="nf">_get_masks</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">):</span>
+    <span class="n">lt_mask</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loop_type</span> <span class="o">==</span> <span class="n">loop_type</span>
+    <span class="n">cutoff_mask</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dist</span> <span class="o">&lt;</span> <span class="n">CUTOFFDIST</span>
+    <span class="n">in_support</span> <span class="o">=</span> <span class="n">lt_mask</span> <span class="o">&amp;</span> <span class="n">cutoff_mask</span>
+    <span class="n">has_a</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loop_sequence</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+    <span class="n">is_i</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">is_interaction</span>
+    <span class="n">mask_ame</span> <span class="o">=</span> <span class="n">in_support</span> <span class="o">&amp;</span> <span class="n">is_i</span> <span class="o">&amp;</span> <span class="n">has_a</span>
+    <span class="n">mask_non_ame</span> <span class="o">=</span> <span class="n">in_support</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">is_i</span> <span class="o">|</span> <span class="n">has_a</span><span class="p">)</span>
+    <span class="n">mask_non_fred</span> <span class="o">=</span> <span class="n">in_support</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">is_i</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">has_a</span>
+    <span class="k">return</span> <span class="n">mask_ame</span><span class="p">,</span> <span class="n">mask_non_ame</span><span class="p">,</span> <span class="n">mask_non_fred</span>
+
+
+<span class="k">def</span> <span class="nf">_classify_potential_interactions</span><span class="p">(</span><span class="n">clf</span><span class="p">,</span> <span class="n">geos</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">geos</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">geos</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Classifying </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;score </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;# hits (not unique)=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="c1"># We modelled the probabilities in a way that each loop can have only 1 interaction.</span>
+    <span class="c1"># So for multiple interactions, use only the best one.</span>
+    <span class="n">best_interactions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">score</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">loop</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">best_interactions</span> <span class="ow">or</span> <span class="n">score</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">best_interactions</span><span class="p">[</span><span class="n">loop</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">best_interactions</span><span class="p">[</span><span class="n">loop</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">score</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> unique interacting loops.&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_interactions</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">best_interactions</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">best_i</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">best_i</span> <span class="ow">in</span> <span class="n">best_interactions</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+
+<span class="k">class</span> <span class="nc">_DefaultClf</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Just to put global (cached) variables into a seperate scope.&quot;&quot;&quot;</span>
+    <span class="n">_clfs</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># The pretrained classifiers, lazily loaded.</span>
+    <span class="n">_geo_df</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_default_clf</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">loop_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_clfs</span><span class="p">:</span>
+            <span class="n">clf</span> <span class="o">=</span> <span class="n">AMinorClassifier</span><span class="p">()</span>
+            <span class="n">rawdata</span> <span class="o">=</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span>
+                <span class="s1">&#39;forgi&#39;</span><span class="p">,</span> <span class="s1">&#39;threedee/data/aminor_params.json&#39;</span><span class="p">)</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">rawdata</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">)))</span>
+            <span class="n">clf</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">[</span><span class="n">loop_type</span><span class="p">])</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_data</span><span class="p">(</span><span class="n">loop_type</span><span class="p">)</span>
+            <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_clfs</span><span class="p">[</span><span class="n">loop_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">clf</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_clfs</span><span class="p">[</span><span class="n">loop_type</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_dataframe</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_geo_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rawdata</span> <span class="o">=</span> <span class="n">pkgutil</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span>
+                <span class="s1">&#39;forgi&#39;</span><span class="p">,</span> <span class="s1">&#39;threedee/data/aminor_geometries.csv&#39;</span><span class="p">)</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_geo_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+                <span class="n">StringIO</span><span class="p">(</span><span class="n">rawdata</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">)),</span> <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_geo_df</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_data</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_dataframe</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">df_to_data_labels</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_default_clf</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param loop: A element name, e.g. &quot;i0&quot; or a loop-type, e.g. &quot;i&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">loop_type</span> <span class="o">=</span> <span class="n">loop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_DefaultClf</span><span class="o">.</span><span class="n">get_default_clf</span><span class="p">(</span><span class="n">loop_type</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="df_to_data_labels"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.classification.aminor.html#forgi.threedee.classification.aminor.df_to_data_labels">[docs]</a><span class="k">def</span> <span class="nf">df_to_data_labels</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create the trainings data as two arrays X and y (or data and labels)</span>
+<span class="sd">    from the initial dataframe</span>
+
+<span class="sd">    :returns: X, y</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;loop_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">pdb_id</span> <span class="o">+</span> \
+            <span class="n">df</span><span class="o">.</span><span class="n">interaction</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">mask_ame</span><span class="p">,</span> <span class="n">mask_non_ame</span><span class="p">,</span> <span class="n">mask_non_fred</span> <span class="o">=</span> <span class="n">_get_masks</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">loop_type</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">[</span><span class="n">mask_ame</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">([</span><span class="s2">&quot;loop_name&quot;</span><span class="p">]),</span>
+                      <span class="n">df</span><span class="p">[</span><span class="n">mask_non_ame</span><span class="p">]])</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">x</span><span class="o">.</span><span class="n">dist</span> <span class="o">/</span> <span class="n">ANGLEWEIGHT</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">angle1</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">angle2</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">is_interaction</span><span class="p">]</span>
+                     <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">itertuples</span><span class="p">()])</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

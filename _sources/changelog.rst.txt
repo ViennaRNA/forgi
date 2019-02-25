@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Changes in Version 2.0
+----------------------
+
+Version 2.0 brings a cleaned-up API to forgi.
+
+Some of the biggest changes:
+
+*  All RNA file-formats can be loaded with te single function `forgi.load_rna`
+
 Changes in Version 1.1
 ----------------------
 

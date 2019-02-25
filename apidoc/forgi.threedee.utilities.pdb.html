@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.pdb module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.utilities.pdb module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -50,9 +50,24 @@
         
   <div class="section" id="module-forgi.threedee.utilities.pdb">
 <span id="forgi-threedee-utilities-pdb-module"></span><h1>forgi.threedee.utilities.pdb module<a class="headerlink" href="#module-forgi.threedee.utilities.pdb" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.threedee.utilities.pdb.AtomName">
+<em class="property">class </em><code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">AtomName</code><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#AtomName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.AtomName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">str</span></code></p>
+<p>Like a string, but “C1’” and “C1*” compare equal</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.pdb.annotate_fallback">
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">annotate_fallback</code><span class="sig-paren">(</span><em>chain_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#annotate_fallback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.annotate_fallback" title="Permalink to this definition">¶</a></dt>
+<dd><p>If neither DSSR nor MC-Annotate are available, we use an ad-hoc implementation of canonical
+basepair detection as fallback.
+This does not work well for missing atoms or modified residues.</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.clean_chain">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">clean_chain</code><span class="sig-paren">(</span><em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#clean_chain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.clean_chain" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">clean_chain</code><span class="sig-paren">(</span><em>chain</em>, <em>query_PDBeChem=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#clean_chain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.clean_chain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clean a pdb chain for further use with forgi.</p>
 <p>It will be modified so that all hetatms are removed, modified
 residues will be renamed to regular residues, residue ids will be positive integers, …</p>
@@ -60,9 +75,16 @@ residues will be renamed to regular residues, residue ids will be positive integ
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chaion</strong> – A Bio.PDB.Chain object</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chain</strong> – A Bio.PDB.Chain object</li>
+<li><strong>query_PDBeChem</strong> – If true, query the PDBeChem database whenever a
+modified residue with unknown 3-letter code
+is encountered.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A modified version of this chain</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A modified version of this chain</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -86,44 +108,9 @@ molecule.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="forgi.threedee.utilities.pdb.extract_subchain">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">extract_subchain</code><span class="sig-paren">(</span><em>chain</em>, <em>start_res</em>, <em>end_res</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#extract_subchain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.extract_subchain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract a portion of a particular chain. The new chain
-will contain residues copied from the original chain.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>chain</strong> – The source chain.</li>
-<li><strong>start_res</strong> – The number of the first nucleotide to extract</li>
-<li><strong>last_res</strong> – The number of the last nucleotide to extract</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.utilities.pdb.extract_subchain_from_res_list">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">extract_subchain_from_res_list</code><span class="sig-paren">(</span><em>chain</em>, <em>res_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#extract_subchain_from_res_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.extract_subchain_from_res_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract a portion of a particular chain. The new chain
-will contain residues copied from the original chain.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>chain</strong> – The source chain.</li>
-<li><strong>res_list</strong> – The list of residue identifiers of the nucleotides
-to extract</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dt id="forgi.threedee.utilities.pdb.enumerate_interactions_kdtree">
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">enumerate_interactions_kdtree</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#enumerate_interactions_kdtree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.enumerate_interactions_kdtree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.extract_subchains_from_seq_ids">
@@ -151,17 +138,30 @@ the specified residues copied from the original chain.</p>
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.get_all_chains">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">get_all_chains</code><span class="sig-paren">(</span><em>in_filename</em>, <em>parser=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#get_all_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.get_all_chains" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load the PDB file located at filename, select the longest
-chain and return it.</p>
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">get_all_chains</code><span class="sig-paren">(</span><em>in_filename</em>, <em>parser=None</em>, <em>no_annotation=False</em>, <em>assembly_nr=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#get_all_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.get_all_chains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the PDB file located at filename, read all chains and return them.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>in_filename</strong> – The location of the original file.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>in_filename</strong> – The location of the original file.</li>
+<li><strong>assembly_nr</strong> – Which assembly to return. Default: The first.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of Bio.PDB chain structures corresponding to all
-RNA structures stored in in_filename</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>a tuple chains, missing_residues</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>chains: A list of Bio.PDB chain structures corresponding to all</dt>
+<dd>RNA structures stored in in_filename</dd>
+</dl>
+</li>
+<li>missing_residues: A list of dictionaries, describing the missing residues.</li>
+<li>interacting residues: A list of residues</li>
+</ul>
+</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -226,9 +226,20 @@ chain in the structure stored in in_filename</td>
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="forgi.threedee.utilities.pdb.is_almost_coplanar">
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">is_almost_coplanar</code><span class="sig-paren">(</span><em>*points</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#is_almost_coplanar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.is_almost_coplanar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.pdb.is_basepair_pair">
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">is_basepair_pair</code><span class="sig-paren">(</span><em>res1</em>, <em>res2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#is_basepair_pair"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.is_basepair_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="forgi.threedee.utilities.pdb.is_covalent">
 <code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">is_covalent</code><span class="sig-paren">(</span><em>contact</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#is_covalent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.is_covalent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine if a particular contact is covalent.</p>
+<p>This does not look at the geometric distance but only at the atom names.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -325,7 +336,7 @@ when two atoms that aren’t covalently linked are within 1.8 A of each other.</
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.output_multiple_chains">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">output_multiple_chains</code><span class="sig-paren">(</span><em>chains</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#output_multiple_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.output_multiple_chains" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">output_multiple_chains</code><span class="sig-paren">(</span><em>chains</em>, <em>filename</em>, <em>file_type=u'pdb'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#output_multiple_chains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.output_multiple_chains" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dump multiple chains to an output file. Remove the hydrogen atoms.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -364,7 +375,7 @@ when two atoms that aren’t covalently linked are within 1.8 A of each other.</
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.pdb_rmsd">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">pdb_rmsd</code><span class="sig-paren">(</span><em>c1</em>, <em>c2</em>, <em>sidechains=False</em>, <em>superimpose=True</em>, <em>apply_sup=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#pdb_rmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.pdb_rmsd" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">pdb_rmsd</code><span class="sig-paren">(</span><em>c1</em>, <em>c2</em>, <em>sidechains=False</em>, <em>superimpose=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#pdb_rmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.pdb_rmsd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the all-atom rmsd between two RNA chains.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -384,20 +395,9 @@ when two atoms that aren’t covalently linked are within 1.8 A of each other.</
 </dd></dl>
 
 <dl class="function">
-<dt id="forgi.threedee.utilities.pdb.remove_hetatm">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">remove_hetatm</code><span class="sig-paren">(</span><em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#remove_hetatm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.remove_hetatm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove all the hetatms in the chain.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chain</strong> – A Bio.PDB.Chain</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The same chain, but missing all hetatms</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dt id="forgi.threedee.utilities.pdb.remove_disordered">
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">remove_disordered</code><span class="sig-paren">(</span><em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#remove_disordered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.remove_disordered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.rename_rosetta_atoms">
@@ -426,10 +426,9 @@ len(chain)</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="forgi.threedee.utilities.pdb.trim_chain">
-<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">trim_chain</code><span class="sig-paren">(</span><em>chain</em>, <em>start_res</em>, <em>end_res</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#trim_chain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.trim_chain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove all residues that are not between start_res and end_res, inclusive.</p>
-</dd></dl>
+<dt id="forgi.threedee.utilities.pdb.residuelist_rmsd">
+<code class="descclassname">forgi.threedee.utilities.pdb.</code><code class="descname">residuelist_rmsd</code><span class="sig-paren">(</span><em>c1_list</em>, <em>c2_list</em>, <em>sidechains=False</em>, <em>superimpose=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/pdb.html#residuelist_rmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.pdb.residuelist_rmsd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.pdb.trim_chain_between">
@@ -455,8 +454,8 @@ len(chain)</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

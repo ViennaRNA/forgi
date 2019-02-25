@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.config module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.config module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -48,9 +48,31 @@
       <div class="content">
         
         
-  <div class="section" id="forgi-config-module">
-<h1>forgi.config module<a class="headerlink" href="#forgi-config-module" title="Permalink to this headline">¶</a></h1>
-<p>This module contains some configuration values, like the path to the stats file.</p>
+  <div class="section" id="module-forgi.config">
+<span id="forgi-config-module"></span><h1>forgi.config module<a class="headerlink" href="#module-forgi.config" title="Permalink to this headline">¶</a></h1>
+<p>Code for reading and writing the forgi configuration files.</p>
+<p>To configure forgi, run forgi_config.py</p>
+<dl class="function">
+<dt id="forgi.config.iter_configfiles">
+<code class="descclassname">forgi.config.</code><code class="descname">iter_configfiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/config.html#iter_configfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.config.iter_configfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over config file locations, from lowest priority to highest priority.
+The file does not have to exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.config.read_config">
+<code class="descclassname">forgi.config.</code><code class="descname">read_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/config.html#read_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.config.read_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read all configuration files and return a configuration dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dictionary.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -68,8 +90,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

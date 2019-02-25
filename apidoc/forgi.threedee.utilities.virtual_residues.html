@@ -1,0 +1,114 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.utilities.virtual_residues module &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.threedee.visual package" href="forgi.threedee.visual.html" />
+    <link rel="prev" title="forgi.threedee.utilities.cytvec module" href="forgi.threedee.utilities.cytvec.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.utilities.cytvec.html">forgi.threedee.utilities.cytvec module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.threedee.visual.html">forgi.threedee.visual package</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.threedee.utilities.virtual_residues">
+<span id="forgi-threedee-utilities-virtual-residues-module"></span><h1>forgi.threedee.utilities.virtual_residues module<a class="headerlink" href="#module-forgi.threedee.utilities.virtual_residues" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="forgi.threedee.utilities.virtual_residues.parse_vres">
+<code class="descclassname">forgi.threedee.utilities.virtual_residues.</code><code class="descname">parse_vres</code><span class="sig-paren">(</span><em>parts</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/virtual_residues.html#parse_vres"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.virtual_residues.parse_vres" title="Permalink to this definition">¶</a></dt>
+<dd><p>Go back from a splitted serialized representation to a dictionary used for vres.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parts</strong> – A list of strings which hold floats. The length has to be a multiple of 3.
+Like a list gegerated by <code class="code docutils literal"><span class="pre">serialize_vres(vpos).split()</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary {nucleotide_number: coordinated}. See param <code class="code docutils literal"><span class="pre">vpos</span></code> of the
+function <code class="code docutils literal"><span class="pre">serialize_vres</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.utilities.virtual_residues.serialize_vres">
+<code class="descclassname">forgi.threedee.utilities.virtual_residues.</code><code class="descname">serialize_vres</code><span class="sig-paren">(</span><em>vpos</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/virtual_residues.html#serialize_vres"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.virtual_residues.serialize_vres" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output carthesian coordinates for each virtual residue, ordered by nucleotide number and seperated by space.</p>
+<p>The returned coordinates are relative to the element’s coordinate system.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vpos</strong> – A dictionary <code class="code docutils literal"><span class="pre">{nucleotide_number:</span> <span class="pre">coordinates}</span></code>.
+<code class="code docutils literal"><span class="pre">nucleotide_number</span></code> is an integer with 0 referring to the first nucleotide of the element.
+<code class="code docutils literal"><span class="pre">coordinates</span></code> is a 3-element 1D numpy array
+<code class="code docutils literal"><span class="pre">nucleotide_numbers</span></code> should be consecutive integers.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A string with space-seperated numbers.
+Groups of three numbers are x,y,z coordinates of one residue.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.utilities.cytvec.html">forgi.threedee.utilities.cytvec module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.threedee.visual.html">forgi.threedee.visual package</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Installation &#8212; forgi 1.1.0 documentation</title>
+    <title>Installation &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -50,60 +50,84 @@
         
   <div class="section" id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="download">
-<h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
-<p>The source code for the forgi module can be found at github:</p>
-<p><a class="reference external" href="https://github.com/ViennaRNA/forgi">https://github.com/ViennaRNA/forgi</a></p>
-<p>To install, just run the usual:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+<div class="section" id="installation-from-pypi">
+<h2>Installation from PyPI<a class="headerlink" href="#installation-from-pypi" title="Permalink to this headline">¶</a></h2>
+<p>The forgi package is compatible with python 2 and 3.
+It is available on PyPI at</p>
+<p><a class="reference external" href="https://pypi.org/project/forgi/">https://pypi.org/project/forgi/</a></p>
+<p>You can install it using:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">forgi</span>
+</pre></div>
+</div>
+<p>To install all optional dependencies, use:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">forgi</span><span class="p">[</span><span class="nb">all</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<p>The easiest way to install all dependencies is by using:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirenments</span><span class="o">.</span><span class="n">txt</span>
+<div class="section" id="installing-from-source">
+<h2>Installing from Source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
+<p>The source code for the forgi package can be found at github: <a class="reference external" href="https://github.com/ViennaRNA/forgi">https://github.com/ViennaRNA/forgi</a></p>
+<p>We recommend using pip to install the directory instead of
+invoking setup.py directly:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">forgi</span><span class="o">/</span><span class="n">directory</span>
 </pre></div>
 </div>
-<p>Some standard python packages are required:</p>
+</div>
+<div class="section" id="optional-external-dependencies-require-manual-installation">
+<span id="ext-dep"></span><h2>Optional, external dependencies (require manual installation)<a class="headerlink" href="#optional-external-dependencies-require-manual-installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="vienna-rna-package">
+<h3>Vienna RNA package<a class="headerlink" href="#vienna-rna-package" title="Permalink to this headline">¶</a></h3>
+<p>We provide a wrapper for RNAplot: <code class="code docutils literal"><span class="pre">forgi.visual.mplotlib.plot_rna</span></code>.
+This function imports the Vienna RNA package python bindings and
+visualizes the 2D layout calculated by the Vienna RNA package
+using matplotlib.</p>
+<p>The Vienna RNA package is available at <a class="reference external" href="https://www.tbi.univie.ac.at/RNA/">https://www.tbi.univie.ac.at/RNA/</a></p>
+</div>
+<div class="section" id="either-mc-annotate-or-dssr">
+<h3>Either MC-Annotate or DSSR<a class="headerlink" href="#either-mc-annotate-or-dssr" title="Permalink to this headline">¶</a></h3>
+<p>To convert PDB files into <code class="code docutils literal"><span class="pre">CoarseGrainRNA</span></code> objects, forgi has to detect the
+secondary structure from the 3D coordinates. While forgi contains a built-in
+fallback heuristic for base-pair detection, we strongly recommend that you
+install either MC-Annotate or DSSR, if you want to work with PDB files.
+In contrast to MC-Annotate, DSSR can handle MMCIF files as well.</p>
+<p>MC-Annotate is available at <a class="reference external" href="http://major.iric.ca/MajorLabEn/MC-Tools.html">http://major.iric.ca/MajorLabEn/MC-Tools.html</a></p>
+<p>DSSR is available at <a class="reference external" href="http://home.x3dna.org/">http://home.x3dna.org/</a></p>
+<p>To choose, which of the two programs you want to use (if both are installed),
+run <code class="code docutils literal"><span class="pre">forgi_config.py</span></code> from a terminal.
+Alternatively, you can use the commandline option <code class="code docutils literal"><span class="pre">--pdb-annotation-tool</span> <span class="pre">DSSR</span></code> or
+<code class="code docutils literal"><span class="pre">--pdb-annotation-tool</span> <span class="pre">MC-Annotate</span></code> when you run scripts. This corresponds to
+passing <code class="code docutils literal"><span class="pre">annotation_tool=&quot;DSSR&quot;</span></code> or <code class="code docutils literal"><span class="pre">annotation_tool=&quot;MC-Annotate&quot;</span></code> to the
+function <code class="code docutils literal"><span class="pre">forgi.load_rna</span></code>.</p>
+</div>
+<div class="section" id="pymol">
+<h3>PyMol<a class="headerlink" href="#pymol" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="code docutils literal"><span class="pre">visualize_rna.py</span></code> script requires an installation of
+PyMol (<a class="reference external" href="https://pymol.org/">https://pymol.org/</a>) to work.</p>
+</div>
+</div>
+<div class="section" id="automatically-installed-dependencies">
+<h2>Automatically installed dependencies<a class="headerlink" href="#automatically-installed-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Some standard python packages are required.
+They get installed automatically if you use pip to install the package:</p>
 <ul class="simple">
 <li>numpy + scipy + pandas</li>
 <li>the future package</li>
 <li>networkx</li>
+<li>biopython</li>
+<li>appdirs</li>
 </ul>
-<p>Further more logging_exceptions is required, which we published separately on Pypi</p>
-<blockquote>
-<div>pip install logging_exceptions</div></blockquote>
+<p>Further more <code class="code docutils literal"><span class="pre">logging_exceptions</span></code> is required, which we published separately on Pypi</p>
 <div class="section" id="additional-dependencies">
 <h3>Additional dependencies<a class="headerlink" href="#additional-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>The library can be installed with some of the additional dependencies missing, but will
-raise an error, if functions with missing dependencies are called.</p>
-<p>These additional dependencies include:</p>
+<p>The additional dependencies are automatically installed, if you specify an extra
+when you use <code class="code docutils literal"><span class="pre">pip</span> <span class="pre">install</span></code>. To install all optional dependencies, use
+<code class="code docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">forgi[all]</span></code>.</p>
+<p>The following optional dependencies exist:</p>
 <ul class="simple">
-<li>matplotlib (Needed for <code class="code docutils literal"><span class="pre">forgi.threedee.visual</span></code>, <code class="code docutils literal"><span class="pre">forgi.visual</span></code> and <code class="code docutils literal"><span class="pre">forgi.projection</span></code>)</li>
-<li>Biopython (Needed for <code class="code docutils literal"><span class="pre">forgi.threedee</span></code>)</li>
-<li>pylab (Needed for <code class="code docutils literal"><span class="pre">forgi.visual.mplotlib</span></code>, )</li>
-<li>beautifulsoap4 (Needed for fetching informations about modified residues in pdb files)</li>
-<li>appdirs (Needed for <code class="code docutils literal"><span class="pre">forgi.threedee</span></code>)</li>
+<li>matplotlib (<code class="code docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">forgi[forgi.visual]</span></code>; needed for <code class="code docutils literal"><span class="pre">forgi.threedee.visual</span></code>, <code class="code docutils literal"><span class="pre">forgi.visual</span></code> and <code class="code docutils literal"><span class="pre">forgi.projection</span></code>)</li>
+<li>beautifulsoap4 (<code class="code docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">forgi[pdbechem]</span></code>; needed for fetching informations about modified residues in pdb files)</li>
+<li>cython (<code class="code docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">forgi[development]</span></code>; Usually not needed, forgi comes with the C-code generated by cython.)</li>
 </ul>
-</div>
-<div class="section" id="either-mc-annotate-or-dssr">
-<h3>Either MC-Annotate or DSSR<a class="headerlink" href="#either-mc-annotate-or-dssr" title="Permalink to this headline">¶</a></h3>
-<p>To convert PDB files into CoarseGrainRNA objects, either MC-Annotate or DSSR is required.</p>
-<p>MC-Annotate is available at <a class="reference external" href="http://major.iric.ca/MajorLabEn/MC-Tools.html">http://major.iric.ca/MajorLabEn/MC-Tools.html</a></p>
-<p>DSSR is available at <a class="reference external" href="http://home.x3dna.org/">http://home.x3dna.org/</a></p>
-<p>You can create a configuration file to decide which of the two programs you want to use.
-If no configuration file exists, MC-Annotate will be used.</p>
-<p>We use the appdirs package to define the system specific location of the
-configuration file. Under Linux it would default to ~/.config/forgi.
-Under Linux, you can create the configuration file like this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;{&quot;PDB_ANNOTATION_TOOL&quot;: &quot;MC-Annotate&quot;}&#39;</span> <span class="o">&gt;</span>  <span class="o">~/.</span><span class="n">config</span><span class="o">/</span><span class="n">forgi</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">json</span>
-</pre></div>
-</div>
-<p>or:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;{&quot;PDB_ANNOTATION_TOOL&quot;: &quot;DSSR&quot;}&#39;</span> <span class="o">&gt;</span>  <span class="o">~/.</span><span class="n">config</span><span class="o">/</span><span class="n">forgi</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">json</span>
-</pre></div>
-</div>
 </div>
 </div>
 </div>
@@ -123,8 +147,8 @@ Under Linux, you can create the configuration file like this:</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

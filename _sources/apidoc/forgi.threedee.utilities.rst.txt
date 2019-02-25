@@ -13,7 +13,9 @@ Submodules
    forgi.threedee.utilities.my_math
    forgi.threedee.utilities.pdb
    forgi.threedee.utilities.vector
-
+   forgi.threedee.utilities.cytvec
+   forgi.threedee.utilities.virtual_residues
+   
 Module contents
 ---------------
 

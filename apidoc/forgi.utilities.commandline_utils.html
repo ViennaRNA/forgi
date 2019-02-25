@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.utilities.commandline_utils module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.utilities.commandline_utils module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -59,8 +59,41 @@
 
 <dl class="function">
 <dt id="forgi.utilities.commandline_utils.cgs_from_args">
-<code class="descclassname">forgi.utilities.commandline_utils.</code><code class="descname">cgs_from_args</code><span class="sig-paren">(</span><em>args</em>, <em>nargs=1</em>, <em>rna_type='cg'</em>, <em>enable_logging=True</em>, <em>return_filenames=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/commandline_utils.html#cgs_from_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.commandline_utils.cgs_from_args" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">forgi.utilities.commandline_utils.</code><code class="descname">cgs_from_args</code><span class="sig-paren">(</span><em>args</em>, <em>rna_type='any'</em>, <em>enable_logging=True</em>, <em>return_filenames=False</em>, <em>skip_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/commandline_utils.html#cgs_from_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.commandline_utils.cgs_from_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an Namespace from argparse, return a list of CoarseGrainRNA objects
+(or BulgeGraph objects).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args</strong> – A argparse Namespace.</li>
+<li><strong>rna_type</strong> – See documentation of load_rna</li>
+<li><strong>enable_logging</strong> – In addition to loading the CoarseGrainRNA objects,
+call logging.basicConfig() and use args.verbose
+and args.debug
+to set the level for different loggers.</li>
+<li><strong>return_filenames</strong> – Instead of returning a list of rnas,
+return a tuple <code class="code docutils literal"><span class="pre">rnas,</span> <span class="pre">filenames</span></code>,
+where filenames is a list of filenames of equal length as
+the returned list of CoarseGrainRNA objects and with
+corresponding order.
+If a file contains two seperate RNA molecules, the
+filename will thus be found twice in the list of filenames.</li>
+<li><strong>skip_errors</strong> – Boolean. Log GraphConstructionErrors and continue with
+the next filename instead of letting the error propagate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Usage:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">parser</span> <span class="o">=</span> <span class="n">get_rna_input_parser</span><span class="p">()</span>
+<span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+<span class="n">rnas</span> <span class="o">=</span> <span class="n">cgs_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="function">
 <dt id="forgi.utilities.commandline_utils.get_rna_input_parser">
@@ -76,22 +109,17 @@ only the error message before calling sys.exit(1).</p>
 
 <dl class="function">
 <dt id="forgi.utilities.commandline_utils.load_rna">
-<code class="descclassname">forgi.utilities.commandline_utils.</code><code class="descname">load_rna</code><span class="sig-paren">(</span><em>filename</em>, <em>rna_type='any'</em>, <em>allow_many=True</em>, <em>pdb_chain=None</em>, <em>pbd_remove_pk=True</em>, <em>pdb_dotbracket=''</em>, <em>dissolve_length_one_stems=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/commandline_utils.html#load_rna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.commandline_utils.load_rna" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">forgi.utilities.commandline_utils.</code><code class="descname">load_rna</code><span class="sig-paren">(</span><em>filename</em>, <em>rna_type='any'</em>, <em>allow_many=True</em>, <em>pdb_chain=None</em>, <em>pdb_remove_pk=True</em>, <em>pdb_dotbracket=''</em>, <em>dissolve_length_one_stems=True</em>, <em>pdb_annotation_tool=None</em>, <em>pdb_allow_www_query=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/commandline_utils.html#load_rna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.commandline_utils.load_rna" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>rna_type</strong> – <p>One of “any”, “cg” and “3d” and “pdb”</p>
+<li><strong>rna_type</strong> – <p>One of “any”, and “3d” and “pdb”</p>
 <ul>
 <li><dl class="first docutils">
-<dt>”any”: Return either BulgeGraph or CoarseGrainRNA objekte,</dt>
+<dt>”any”: Return either BulgeGraph or CoarseGrainRNA object,</dt>
 <dd>depending on the input format</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>”cg”:  Always convert to CoarseGrainRNA objects,</dt>
-<dd>even if they have no 3D information</dd>
 </dl>
 </li>
 <li>”only_cg”: Only accept cg-files.</li>
@@ -104,12 +132,17 @@ raise an error otherwise</dd>
 <li>”pdb”: only accept pdb files</li>
 </ul>
 </li>
-<li><strong>allow_many</strong> – If True, return a list. If False raise an error, if more than one RNA is present.</li>
+<li><strong>allow_many</strong> – If True, return a list. If False, return a single
+CoarseGrainRNA object or raise a WrongFileFormat,
+if more than one RNA is present.</li>
 <li><strong>pdb_chain</strong> – Extract the given chain from the file.
 Only applicable if filename corresponds to a pdb file</li>
 <li><strong>pdb_remove_pk</strong> – Detect pseudoknot-free structures from the pdb.</li>
 <li><strong>pdb_dotbracket</strong> – Only applicable, if filename corresponds to a pdb file and pdb_chain is given.</li>
 <li><strong>dissolve_length_one_stems</strong> – Ignored if input is in forgi bg/cg format.</li>
+<li><strong>pdb_annotation_tool</strong> – Use DSSR, MC-Annotate or forgi heuristic for
+basepair-detection in PDB/MMCIF files (None for auto-detect).
+Ignored for other file-types.</li>
 </ul>
 </td>
 </tr>
@@ -148,8 +181,8 @@ Only applicable if filename corresponds to a pdb file</li>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

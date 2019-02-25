@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.modified_res &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.utilities.modified_res &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -54,46 +54,55 @@
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">str</span>
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">object</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">urllib.request</span> <span class="k">import</span> <span class="n">urlopen</span> <span class="c1">#python3</span>
+    <span class="kn">from</span> <span class="nn">urllib.request</span> <span class="k">import</span> <span class="n">urlopen</span>  <span class="c1"># python3</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">urllib</span> <span class="k">import</span> <span class="n">urlopen</span> <span class="c1">#python2</span>
+    <span class="kn">from</span> <span class="nn">urllib</span> <span class="k">import</span> <span class="n">urlopen</span>  <span class="c1"># python2</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
 
-<span class="kn">from</span> <span class="nn">bs4</span> <span class="k">import</span> <span class="n">BeautifulSoup</span>
 
+<span class="kn">from</span> <span class="nn">...graph</span> <span class="k">import</span> <span class="n">residue</span> <span class="k">as</span> <span class="n">fgr</span>
 <span class="c1">#from .modified_res_lookup import RESIDUE_DICT</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_parse_table_row</span><span class="p">(</span><span class="n">tr</span><span class="p">):</span>
-    <span class="n">tds</span> <span class="o">=</span> <span class="p">[</span> <span class="n">td</span> <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">contents</span> <span class="k">if</span> <span class="n">td</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span><span class="s2">&quot;td&quot;</span> <span class="p">]</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tds</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+    <span class="n">tds</span> <span class="o">=</span> <span class="p">[</span><span class="n">td</span> <span class="k">for</span> <span class="n">td</span> <span class="ow">in</span> <span class="n">tr</span><span class="o">.</span><span class="n">contents</span> <span class="k">if</span> <span class="n">td</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;td&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">key</span> <span class="o">=</span> <span class="n">tds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">h3</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">tds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
+
 <span class="k">def</span> <span class="nf">_html_to_info_dict</span><span class="p">(</span><span class="n">html</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">bs4</span> <span class="k">import</span> <span class="n">BeautifulSoup</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not query PDBeChem, because BeautifulSoup is not installed&quot;</span>
+                      <span class="s2">&quot;(install with `pip install forgi[pdbechem]` or `pip install forgi[all]`)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{}</span>
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span> <span class="c1">#We don&#39;t care what xml parser beautiful soup uses</span>
+        <span class="c1"># We don&#39;t care what xml parser beautiful soup uses</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
         <span class="n">parsed_html</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">h1</span> <span class="ow">in</span> <span class="n">parsed_html</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;h1&quot;</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">h1</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s2">&quot;wwPDB Information&quot;</span><span class="p">:</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">h1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="c1">#(h1_&gt;td-&gt;tr-&gt;tbody)</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">h1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>  <span class="c1"># (h1_&gt;td-&gt;tr-&gt;tbody)</span>
             <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">)</span>
             <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="n">_parse_table_row</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
-                    <span class="n">info</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">info</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">info</span>
     <span class="k">return</span> <span class="p">{}</span>
+
 
 <div class="viewcode-block" id="query_PDBeChem"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.query_PDBeChem">[docs]</a><span class="k">def</span> <span class="nf">query_PDBeChem</span><span class="p">(</span><span class="n">three_letter_code</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -102,29 +111,33 @@
 <span class="sd">    Unfortunately, this information does not seem to be provided in any</span>
 <span class="sd">    machine-readable format. We have to parse the html.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">three_letter_code</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">3</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">three_letter_code</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Illegal 3-letter code&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s2">&quot;^[A-Z0-9][A-Z0-9][A-Z0-9]$&quot;</span><span class="p">,</span> <span class="n">three_letter_code</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Illegal 3-letter code&quot;</span><span class="p">)</span>
-    <span class="n">html</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span><span class="s2">&quot;http://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">three_letter_code</span><span class="p">))</span>
+    <span class="n">html</span> <span class="o">=</span> <span class="n">urlopen</span><span class="p">(</span>
+        <span class="s2">&quot;http://www.ebi.ac.uk/pdbe-srv/pdbechem/chemicalCompound/show/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">three_letter_code</span><span class="p">))</span>
     <span class="n">residue_info</span> <span class="o">=</span> <span class="n">_html_to_info_dict</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">residue_info</span></div>
 
+
 <div class="viewcode-block" id="change_residue_id"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.change_residue_id">[docs]</a><span class="k">def</span> <span class="nf">change_residue_id</span><span class="p">(</span><span class="n">residue</span><span class="p">,</span> <span class="n">new_id</span><span class="p">):</span>
     <span class="n">chain</span> <span class="o">=</span> <span class="n">residue</span><span class="o">.</span><span class="n">parent</span>
-    <span class="k">if</span> <span class="n">new_id</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot change id </span><span class="si">{old}</span><span class="s2"> to </span><span class="si">{new}</span><span class="s2">. </span><span class="si">{new}</span><span class="s2"> already exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">old</span><span class="o">=</span><span class="n">residue</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="n">new_id</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">new_id</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot change id </span><span class="si">{old}</span><span class="s2"> to </span><span class="si">{new}</span><span class="s2">. </span><span class="si">{new}</span><span class="s2"> already exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">old</span><span class="o">=</span><span class="n">residue</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="n">new_id</span><span class="p">))</span>
     <span class="n">old_id</span> <span class="o">=</span> <span class="n">residue</span><span class="o">.</span><span class="n">id</span>
     <span class="n">residue</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">new_id</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">del</span> <span class="n">chain</span><span class="o">.</span><span class="n">child_dict</span><span class="p">[</span><span class="n">old_id</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="k">pass</span> <span class="c1"># New version of biopython. Id is a property</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">chain</span><span class="o">.</span><span class="n">child_dict</span><span class="p">[</span><span class="n">new_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">residue</span></div>
+    <span class="k">if</span> <span class="n">chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">chain</span><span class="o">.</span><span class="n">child_dict</span><span class="p">[</span><span class="n">old_id</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># New version of biopython. Id is a property</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chain</span><span class="o">.</span><span class="n">child_dict</span><span class="p">[</span><span class="n">new_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">residue</span></div>
 
 
-<div class="viewcode-block" id="to_4_letter_alphabeth"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.to_4_letter_alphabeth">[docs]</a><span class="k">def</span> <span class="nf">to_4_letter_alphabeth</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+<div class="viewcode-block" id="to_4_letter_alphabeth"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.to_4_letter_alphabeth">[docs]</a><span class="k">def</span> <span class="nf">to_4_letter_alphabeth</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">query_db</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Rename the modified residues so that they have the same</span>
 <span class="sd">    names as unmodified residues.</span>
@@ -135,93 +148,108 @@
 
 <span class="sd">    If it is a modified ribonucleotde, replace it by the unmodified &quot;standard parent&quot;</span>
 
-<span class="sd">    TODO: What to do with I (INOSINIC ACID)</span>
 
 <span class="sd">    :param chain: A Bio.PDB.Chain structure</span>
+<span class="sd">    :param query_db: If true, query PDBeChem whenever a 3-letter code is unknown.</span>
 <span class="sd">    :return: The same chain, but with only AUGC residues.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">modifications</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">i</span><span class="o">&lt;</span><span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">child_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-
-        <span class="c1"># rename rosetta-generated structures</span>
-        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rA&#39;</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  A&#39;</span>
-        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rC&#39;</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  C&#39;</span>
-        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rG&#39;</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  G&#39;</span>
-        <span class="k">elif</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">==</span> <span class="s1">&#39; rU&#39;</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s1">&#39;  U&#39;</span>
-
         <span class="c1"># Non-standard residues</span>
         <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;I&quot;</span><span class="p">:</span>
             <span class="c1"># &quot;I&quot; has no standart parent (AUGC) to replace it with.</span>
-            <span class="c1"># So we just completely remove it.</span>
-            <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Inosinic acid not supported. Residue </span><span class="si">{}</span><span class="s2"> removed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
-            <span class="k">continue</span> <span class="c1">#Continue with same i (now different residue)</span>
-        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">&quot;AUGC&quot;</span><span class="p">:</span>
-            <span class="n">res_info</span> <span class="o">=</span> <span class="n">ModifiedResidueLookup</span><span class="p">()[</span><span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">res_info</span><span class="p">:</span>
-                <span class="c1">#Unknown code. Remove residue</span>
-                <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                <span class="k">continue</span> <span class="c1">#Continue with same i (now different residue)</span>
-            <span class="k">if</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Polymer type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Ribonucleotide&quot;</span><span class="p">:</span>
-                <span class="c1">#DNA/ Amino Acid. Remove residue</span>
-                <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                <span class="k">continue</span> <span class="c1">#Continue with same i (now different residue)</span>
-            <span class="k">if</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Type description&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;NON-POLYMER&quot;</span><span class="p">:</span>
-                <span class="c1">#e.g. GTP in 3DIR</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Detaching </span><span class="si">%s</span><span class="s2">, because </span><span class="si">%s</span><span class="s2"> is classified as non-polymeric.&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="p">)</span>
-                <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                <span class="k">continue</span> <span class="c1">#Continue with same i (now different residue)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Inosine will be replaced by G&quot;</span><span class="p">)</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="s2">&quot;G&quot;</span>
+            <span class="n">modifications</span><span class="p">[</span><span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">resid</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">]))]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">&quot;AUGC&quot;</span><span class="p">:</span>
+                <span class="n">res_info</span> <span class="o">=</span> <span class="n">ModifiedResidueLookup</span><span class="p">(</span><span class="n">query_db</span><span class="p">)[</span><span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">res_info</span><span class="p">:</span>
+                    <span class="c1"># Unknown code. Remove residue</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s2">&quot;Detaching </span><span class="si">%s</span><span class="s2">, because we do not understand the code </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="p">)</span>
+                    <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="k">continue</span>  <span class="c1"># Continue with same i (now different residue)</span>
+                <span class="k">if</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Polymer type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;Ribonucleotide&quot;</span><span class="p">:</span>
+                    <span class="c1"># DNA/ Amino Acid. Remove residue</span>
+                    <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="k">continue</span>  <span class="c1"># Continue with same i (now different residue)</span>
+                <span class="k">if</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Type description&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;NON-POLYMER&quot;</span><span class="p">:</span>
+                    <span class="c1"># e.g. GTP in 3DIR</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Detaching </span><span class="si">%s</span><span class="s2">, because </span><span class="si">%s</span><span class="s2"> is classified as non-polymeric.&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="p">)</span>
+                    <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="k">continue</span>  <span class="c1"># Continue with same i (now different residue)</span>
+                <span class="k">if</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Standard parent&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;U&quot;</span><span class="p">,</span> <span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">]:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Detaching </span><span class="si">%s</span><span class="s2">, because </span><span class="si">%s</span><span class="s2"> has standard parent &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span><span class="p">,</span>
+                                <span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="p">,</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Standard parent&quot;</span><span class="p">])</span>
+                    <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="k">continue</span>  <span class="c1"># Continue with same i (now different residue)</span>
 
-            <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Standard parent&quot;</span><span class="p">]</span>
+                <span class="n">modifications</span><span class="p">[</span><span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">resid</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">]))]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">resname</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">resname</span> <span class="o">=</span> <span class="n">res_info</span><span class="p">[</span><span class="s2">&quot;Standard parent&quot;</span><span class="p">]</span>
 
         <span class="c1"># rename modified residues</span>
         <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Modified residue: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
             <span class="c1"># The following was added because of 1NYI.pdb. It includes a single G-residue denoted as HETATOM in chain A.</span>
             <span class="c1"># It forms a base-pair, but is probably not connected to the backbone.</span>
             <span class="c1"># Instead of removing it/ in addition to removing it,</span>
             <span class="c1"># introducing cutpoint whereever the PDB Chain</span>
             <span class="c1"># contains gaps would be another option (TODO).</span>
-            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;H_A&quot;</span><span class="p">,</span> <span class="s2">&quot;H_U&quot;</span><span class="p">,</span> <span class="s2">&quot;H_G&quot;</span><span class="p">,</span> <span class="s2">&quot;H_C&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  G&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  C&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  A&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  U&quot;</span> <span class="p">]:</span> <span class="c1">#A plain AUGC as a HETATOM means it is a ligand.</span>
+            <span class="c1"># A plain AUGC as a HETATOM means it is a ligand.</span>
+            <span class="c1"># 1Y26 has H_ADE instead of H_A</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;H_A&quot;</span><span class="p">,</span> <span class="s2">&quot;H_U&quot;</span><span class="p">,</span> <span class="s2">&quot;H_G&quot;</span><span class="p">,</span> <span class="s2">&quot;H_C&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  G&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  C&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  A&quot;</span><span class="p">,</span> <span class="s2">&quot;H_  U&quot;</span><span class="p">,</span> <span class="s2">&quot;H_ADE&quot;</span><span class="p">,</span> <span class="s2">&quot;H_CYT&quot;</span><span class="p">,</span> <span class="s2">&quot;H_GUA&quot;</span><span class="p">,</span> <span class="s2">&quot;H_URI&quot;</span><span class="p">]:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Detaching </span><span class="si">%s</span><span class="s2">, because it is a ligand&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
                 <span class="n">chain</span><span class="o">.</span><span class="n">detach_child</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-                <span class="k">continue</span> <span class="c1">#Continue with same i (now different residue)</span>
+                <span class="k">continue</span>  <span class="c1"># Continue with same i (now different residue)</span>
 
             <span class="n">change_residue_id</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
 
-        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span> <span class="c1">#Go to next residue.</span>
-    <span class="k">return</span> <span class="n">chain</span></div>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># Go to next residue.</span>
+    <span class="k">return</span> <span class="n">chain</span><span class="p">,</span> <span class="n">modifications</span></div>
+
 
 <div class="viewcode-block" id="ModifiedResidueLookup"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.ModifiedResidueLookup">[docs]</a><span class="k">class</span> <span class="nc">ModifiedResidueLookup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience wrapper to access modified_res_lookup.RESIDUE_DICT.</span>
 <span class="sd">    If a key does not exist, query the database to add it.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_db</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param query_db: If true, query PDBeChem whenever a 3-letter code is not understood.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">modified_res_lookup</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span> <span class="o">=</span> <span class="n">modified_res_lookup</span><span class="o">.</span><span class="n">RESIDUE_DICT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_query_db</span><span class="o">=</span> <span class="n">query_db</span>
     <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query_db</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">query_PDBeChem</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">query_PDBeChem</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Successfully looked up </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not look-up modified residue key </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-<div class="viewcode-block" id="ModifiedResidueLookup.clean_failed"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.ModifiedResidueLookup.clean_failed">[docs]</a>    <span class="k">def</span> <span class="nf">clean_failed</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+<div class="viewcode-block" id="ModifiedResidueLookup.clean_failed"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.ModifiedResidueLookup.clean_failed">[docs]</a>    <span class="k">def</span> <span class="nf">clean_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span></div>
+
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dict</span><span class="p">)</span></div>
 
+
 <div class="viewcode-block" id="dict_from_pdbs"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.modified_res.html#forgi.threedee.utilities.modified_res.dict_from_pdbs">[docs]</a><span class="k">def</span> <span class="nf">dict_from_pdbs</span><span class="p">(</span><span class="n">filenames</span><span class="p">):</span>
-    <span class="c1">#Just look at the SEQRES headers.</span>
+    <span class="c1"># Just look at the SEQRES headers.</span>
     <span class="n">ignore</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="s2">&quot;AUGC&quot;</span><span class="p">)</span>
     <span class="n">out_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
@@ -237,9 +265,11 @@
                                 <span class="n">res_info</span> <span class="o">=</span> <span class="n">query_PDBeChem</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
                                 <span class="n">out_dict</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_info</span>
                             <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;3-letter code &#39;</span><span class="si">%s</span><span class="s2">&#39; not found: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                    <span class="s2">&quot;3-letter code &#39;</span><span class="si">%s</span><span class="s2">&#39; not found: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
                                 <span class="n">out_dict</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">out_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">out_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
@@ -248,8 +278,8 @@
     <span class="n">d</span> <span class="o">=</span> <span class="n">dict_from_pdbs</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
     <span class="k">for</span> <span class="n">ion</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;MG&quot;</span><span class="p">,</span> <span class="s2">&quot;NA&quot;</span><span class="p">,</span> <span class="s2">&quot;K&quot;</span><span class="p">,</span> <span class="s2">&quot;CL&quot;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">ion</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
-            <span class="n">d</span><span class="p">[</span><span class="n">ion</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
-    <span class="n">pprint</span><span class="p">({</span><span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">})</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">ion</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">pprint</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">})</span>
 </pre></div>
 
       </div>
@@ -262,8 +292,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

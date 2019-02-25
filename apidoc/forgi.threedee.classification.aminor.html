@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.classification.aminor module &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.utilities package" href="forgi.utilities.html" />
+    <link rel="prev" title="forgi.threedee.classification package" href="forgi.threedee.classification.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.classification.html">forgi.threedee.classification package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.utilities.html">forgi.utilities package</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.threedee.classification.aminor">
+<span id="forgi-threedee-classification-aminor-module"></span><h1>forgi.threedee.classification.aminor module<a class="headerlink" href="#module-forgi.threedee.classification.aminor" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.threedee.classification.aminor.AMinorClassifier">
+<em class="property">class </em><code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">AMinorClassifier</code><span class="sig-paren">(</span><em>kernel='linear'</em>, <em>bandwidth=0.3</em>, <em>symmetric=True</em>, <em>p_I=0.05</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#AMinorClassifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.AMinorClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sklearn.base.BaseEstimator</span></code>, <code class="xref py py-class docutils literal"><span class="pre">sklearn.base.ClassifierMixin</span></code></p>
+<p>A classifier that predicts A-Minor interactions based on the following formula:</p>
+<div class="math">
+\[P(I|geo)=f(geo|I)/f(geo)*P(I)\]</div>
+<p>where <span class="math">\(f\)</span> is a probability density and <span class="math">\(P\)</span> is a probability
+and <span class="math">\(I\)</span> means interaction.</p>
+<p>Since there are no interactions with more than 30 Angstrom distance,
+interactions require an A in the loop sequence and estimating numerator
+and denominator seperately could lead to probabilities greater than 1,
+we use the following formula:</p>
+<div class="math">
+\[P(I| (geo, d&lt;30, A in seq)) = num/denom\]</div>
+<p>where
+.. math:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">num</span><span class="o">=</span><span class="n">f</span><span class="p">(</span><span class="n">geo</span><span class="o">|</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="n">P</span><span class="p">(</span><span class="n">I</span><span class="o">|</span><span class="p">(</span><span class="n">d</span><span class="o">&lt;</span><span class="mi">30</span><span class="p">,</span> <span class="n">A</span> \<span class="ow">in</span> <span class="n">seq</span><span class="p">))</span>
+
+<span class="n">denom</span><span class="o">=</span><span class="n">num</span><span class="o">+</span><span class="n">f</span><span class="p">(</span><span class="n">geo</span><span class="o">|</span><span class="p">(</span>\<span class="ow">not</span> <span class="n">I</span><span class="p">,</span> <span class="n">d</span><span class="o">&lt;</span><span class="mi">30</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">P</span><span class="p">(</span><span class="n">I</span><span class="o">|</span><span class="p">(</span><span class="n">d</span><span class="o">&lt;</span><span class="mi">30</span><span class="p">,</span> <span class="n">A</span> \<span class="ow">in</span> <span class="n">seq</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We estimate the probability densities as kernel density estimates.
+For <span class="math">\(f(geo|I)\)</span> we use annotations created by FR3D-searches for
+all 4 types of A-minor motifs.
+We assume that <span class="math">\(f(geo|(\not I, A \in seq))== f(geo|(\not I, A \in seq))\)</span>
+and that FR3D might miss some true interactions. Thus we estimate
+<span class="math">\(f(geo|(\not I, A \in seq, d&lt;30))\)</span> as
+<span class="math">\(f(geo|(\not I, A \notin seq, d&lt;30))\)</span></p>
+<p>Since both densities are normalized, it does not matter that we use a
+different number of datapoints for their estimation.</p>
+<p>We estimate P(I|(d&lt;30, A in seq)) as the number of occurrences where
+a loop with A is in an A-minor interaction, over the number of all
+loop-stem pairs with less than 30 angstrom distance and an A in the sequence.</p>
+<dl class="method">
+<dt id="forgi.threedee.classification.aminor.AMinorClassifier.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#AMinorClassifier.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.AMinorClassifier.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> – A Nx3 array, where the features are
+distance(Angstrom)/10, angle1(rad), angle2(rad)
+The <strong>distance</strong> is the closest distance between the two line
+segments (i.e. coarse grained elementts)
+<strong>angle1</strong> is the angle between the line along the stem vector
+and the line along the shortest connection between the two
+elements. A an angle between two straight lines, it is
+defined between 0 and 90 degrees.
+<strong>angle2</strong> is the angle between the connecting vector
+(pointing from the stem to the loop), projected onto the
+plane normal to the stem direction and the twist vector
+(location of minor groove) at the point closest to the
+interaction. As an angle between two vectors, it is
+defined between 0 and 180 degrees.</li>
+<li><strong>y</strong> – An array of length N. 0 means no interaction,
+1 means interaction.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.classification.aminor.AMinorClassifier.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#AMinorClassifier.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.AMinorClassifier.predict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.classification.aminor.AMinorClassifier.predict_proba">
+<code class="descname">predict_proba</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#AMinorClassifier.predict_proba"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.AMinorClassifier.predict_proba" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.classification.aminor.AMinorClassifier.score">
+<code class="descname">score</code><span class="sig-paren">(</span><em>X</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#AMinorClassifier.score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.AMinorClassifier.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>The average between specificity and sensitivity</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.threedee.classification.aminor.AMinorClassifier.set_params">
+<code class="descname">set_params</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#AMinorClassifier.set_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.AMinorClassifier.set_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="forgi.threedee.classification.aminor.ANGLEWEIGHT">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">ANGLEWEIGHT</code><em class="property"> = 10</em><a class="headerlink" href="#forgi.threedee.classification.aminor.ANGLEWEIGHT" title="Permalink to this definition">¶</a></dt>
+<dd><p>This module contains code for classifying a coarse-grained geometry as A-Minor
+interaction.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is intended for low-resolution data , as it does not take the
+orientation of individual bases into account. If you have all-atom
+data, dedicated tools like FR3D will be more accurate.</p>
+</div>
+<p>If you just want to classify interactions in a given structure, you only need
+the functions <code class="code docutils literal"><span class="pre">classify_interaction</span></code> or <code class="code docutils literal"><span class="pre">all_interactions</span></code>.</p>
+<p>To train your own version of the classifier, modify its parameters or perform
+cross-validation, use the AMinorClassifier.</p>
+<p>Access the default trainings data with the get_trainings_data(loop_type)
+function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.all_interactions">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">all_interactions</code><span class="sig-paren">(</span><em>cg</em>, <em>clfs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#all_interactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.all_interactions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of all predicted A-Minor interactions in a cg-object.</p>
+<p>This is more efficient than using classify_interaction iteratively,
+because it uses vectorization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>clfs</strong> – A dictionary {loop_type: AMinorClassifier} where
+loop_type is one of “i”, “h”, “m”.
+If clfs is None or a key is missing, uses the default
+pretrained classifier.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of  tuples (loop, stem)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.classify_interaction">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">classify_interaction</code><span class="sig-paren">(</span><em>cg</em>, <em>loop</em>, <em>stem=None</em>, <em>clf=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#classify_interaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.classify_interaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the interaction pair loop, stem as a tuple or False if no interaction exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cg</strong> – The CoarseGrainRNA</li>
+<li><strong>loop</strong> – The loop name, e.g. “i0”</li>
+<li><strong>stem</strong> – <dl class="docutils">
+<dt>A stem name, e.g. “s0” to consider interactions of loop with another stem as False</dt>
+<dd>and only an interaction with this stem as True.</dd>
+<dt>..warning:: Our statistical modelling allows for at most 1 interaction per loop.</dt>
+<dd>This means that we have calculate the interaction probability of this
+loop with all stems, even if stem is given. If another stem has a
+higher interaction probability than the given stem,
+this function will return False, regardless of the interaction
+probability stem-loop.</dd>
+</dl>
+</li>
+<li><strong>clf</strong> – A trained AMinorClassifier or None (use default classifier for loop type)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>..note:: <code class="code docutils literal"><span class="pre">all_interactions</span></code> is more efficient, if you are interested in all loop-stem pairs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple (loop, stem) or False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.df_to_data_labels">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">df_to_data_labels</code><span class="sig-paren">(</span><em>df</em>, <em>loop_type</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#df_to_data_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.df_to_data_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the trainings data as two arrays X and y (or data and labels)
+from the initial dataframe</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">X, y</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.get_loop_flexibility">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">get_loop_flexibility</code><span class="sig-paren">(</span><em>cg</em>, <em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#get_loop_flexibility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.get_loop_flexibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unused. We tried to see if the length of the loop vs # bases had an effect on ointeraction probability.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.get_relative_orientation">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">get_relative_orientation</code><span class="sig-paren">(</span><em>cg</em>, <em>loop</em>, <em>stem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#get_relative_orientation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.get_relative_orientation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return how loop is related to stem in terms of three parameters.</p>
+<p>The stem is the receptor of a potential A-Minor interaction, whereas the
+loop is the donor.</p>
+<p>The 3 parameters are:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Distance between the closest points of the two elements</li>
+<li>The angle between the stem and the vector between the two</li>
+<li>The angle between the minor groove of l2 and the projection of
+the vector between stem and loop onto the plane normal to the stem
+direction.</li>
+</ol>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.get_trainings_data">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">get_trainings_data</code><span class="sig-paren">(</span><em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#get_trainings_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.get_trainings_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.loop_potential_interactions">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">loop_potential_interactions</code><span class="sig-paren">(</span><em>cg</em>, <em>loop</em>, <em>domain=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#loop_potential_interactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.loop_potential_interactions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over all stems and return those loop-stem pairs that will be passed
+to the AMinor classification and are not ruled out beforehand.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.threedee.classification.aminor.potential_interactions">
+<code class="descclassname">forgi.threedee.classification.aminor.</code><code class="descname">potential_interactions</code><span class="sig-paren">(</span><em>cg</em>, <em>loop_type</em>, <em>domain=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/classification/aminor.html#potential_interactions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.classification.aminor.potential_interactions" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple <code class="code docutils literal"><span class="pre">geos</span></code>, <code class="code docutils literal"><span class="pre">labels</span></code>.
+<code class="code docutils literal"><span class="pre">geos</span></code> is an Nx3 array, where N is the number of
+potential interactions and the inner dimension is dist, angle1, angle2.
+<code class="code docutils literal"><span class="pre">geos</span></code> can be passed to the AMinor classifier.
+<code class="code docutils literal"><span class="pre">labels</span></code> is an Nx2 array, where the inner dimension is loopname, stemname</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.threedee.classification.html">forgi.threedee.classification package</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.utilities.html">forgi.utilities package</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

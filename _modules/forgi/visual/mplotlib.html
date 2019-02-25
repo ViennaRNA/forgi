@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.visual.mplotlib &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.visual.mplotlib &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -49,20 +49,27 @@
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
 
 <span class="kn">import</span> <span class="nn">Bio</span>
+<span class="kn">import</span> <span class="nn">forgi.graph.residue</span> <span class="k">as</span> <span class="nn">fgr</span>
 <span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
 <span class="kn">import</span> <span class="nn">forgi.threedee.utilities.pdb</span> <span class="k">as</span> <span class="nn">ftup</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="k">as</span> <span class="nn">ftuv</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">colorsys</span>
 
-<div class="viewcode-block" id="circles"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.circles">[docs]</a><span class="k">def</span> <span class="nf">circles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="circles"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.circles">[docs]</a><span class="k">def</span> <span class="nf">circles</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">labels</span><span class="o">=</span><span class="p">[],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Make a scatter of circles plot of x vs y, where x and y are sequence </span>
+<span class="sd">    Make a scatter of circles plot of x vs y, where x and y are sequence</span>
 <span class="sd">    like objects of the same lengths. The size of circles are in data scale.</span>
 
 <span class="sd">    :param x,y: scalar or array_like, shape (n, )</span>
 <span class="sd">                Input data</span>
-<span class="sd">    :param s: scalar or array_like, shape (n, ) </span>
+<span class="sd">    :param s: scalar or array_like, shape (n, )</span>
 <span class="sd">              Radius of circle in data scale (ie. in data unit)</span>
 <span class="sd">    :param c: color or sequence of color, optional, default : &#39;b&#39;</span>
 <span class="sd">              `c` can be a single color format string, or a sequence of color</span>
@@ -85,34 +92,35 @@
 <span class="sd">    :returns: paths : `~matplotlib.collections.PathCollection`</span>
 
 
-<span class="sd">    Examples :: </span>
-<span class="sd">      </span>
+<span class="sd">    Examples ::</span>
+
 <span class="sd">        a = np.arange(11)</span>
 <span class="sd">        circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor=&#39;none&#39;)</span>
 
-<span class="sd">    This code is under [The BSD 3-Clause License]</span>
+<span class="sd">    This code by ??? is under [The BSD 3-Clause License]</span>
 <span class="sd">    (http://opensource.org/licenses/BSD-3-Clause)</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="k">import</span> <span class="n">Circle</span>
     <span class="kn">from</span> <span class="nn">matplotlib.collections</span> <span class="k">import</span> <span class="n">PatchCollection</span>
-    <span class="kn">import</span> <span class="nn">pylab</span> <span class="k">as</span> <span class="nn">plt</span>
     <span class="c1">#import matplotlib.colors as colors</span>
 
     <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>    
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">basestring</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
         <span class="n">color</span> <span class="o">=</span> <span class="n">c</span>     <span class="c1"># ie. use colors.colorConverter.to_rgba_array(c)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">color</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># use cmap, norm after collection is created</span>
     <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">s</span><span class="p">),]</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">s</span><span class="p">),</span> <span class="p">]</span>
     <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
-        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">),</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span><span class="n">y_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)]</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">),</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span> <span class="n">y_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">),</span> <span class="n">s_</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span><span class="n">y_</span><span class="p">,</span><span class="n">s_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">s</span><span class="p">)]</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[</span><span class="n">Circle</span><span class="p">((</span><span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">),</span> <span class="n">s_</span><span class="p">)</span> <span class="k">for</span> <span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">,</span> <span class="n">s_</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">s</span><span class="p">)]</span>
+
     <span class="n">collection</span> <span class="o">=</span> <span class="n">PatchCollection</span><span class="p">(</span><span class="n">patches</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -124,19 +132,161 @@
     <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">collection</span></div>
 
-<div class="viewcode-block" id="plot_rna"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.plot_rna">[docs]</a><span class="k">def</span> <span class="nf">plot_rna</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
+<span class="k">def</span> <span class="nf">_clashfree_annot_pos</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">:</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="c1">#log.debug(&quot;vec_dist=%s&quot;, dist)</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="o">&lt;</span><span class="mi">14</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+<span class="k">def</span> <span class="nf">_annotate_rna_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">text_kwargs</span><span class="p">):</span>
+    <span class="c1"># Plot annotations</span>
+    <span class="n">annot_dict</span> <span class="o">=</span> <span class="p">{</span> <span class="n">elem</span><span class="p">:</span><span class="n">elem</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">annotations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">annot_dict</span><span class="o">=</span><span class="p">{</span><span class="n">elem</span><span class="p">:</span><span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">annot_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">annotations</span><span class="p">)</span>
+    <span class="n">stem_coords</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">stem</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">():</span>
+        <span class="n">stem_start</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">coords</span><span class="p">[</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="n">coords</span><span class="p">[</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+                               <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">stem_end</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">coords</span><span class="p">[</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="n">coords</span><span class="p">[</span><span class="n">cg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">stem</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+                               <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">stem_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">stem_start</span><span class="p">,</span> <span class="n">stem_end</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">stem_coords</span><span class="p">[</span><span class="n">stem</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">stem_start</span><span class="p">,</span> <span class="n">stem_center</span><span class="p">,</span> <span class="n">stem_end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">stem</span><span class="p">]:</span>
+            <span class="n">stem_vec</span> <span class="o">=</span> <span class="n">stem_end</span> <span class="o">-</span> <span class="n">stem_start</span>
+            <span class="n">norm_vec</span> <span class="o">=</span> <span class="p">(</span><span class="n">stem_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">stem_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">norm_vec</span><span class="o">/=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">norm_vec</span><span class="p">)</span>
+            <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stem_center</span><span class="p">)</span><span class="o">+</span><span class="mi">23</span><span class="o">*</span><span class="n">norm_vec</span>
+            <span class="c1">#log.debug(&quot;Checking clashfree for %s, %s&quot;, stem, annot_pos)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as </span><span class="si">%s</span><span class="s2"> ON THE RIGHT HAND SIDE, because of insufficient space. Trying left side...&quot;</span><span class="p">,</span> <span class="n">stem</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">stem</span><span class="p">])</span>
+                <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stem_center</span><span class="p">)</span><span class="o">-</span><span class="mi">23</span><span class="o">*</span><span class="n">norm_vec</span>
+                <span class="c1">#log.debug(&quot;Checking clashfree OTHER SIDE for %s, %s&quot;, stem, annot_pos)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39;, because of insufficient space.&quot;</span><span class="p">,</span> <span class="n">stem</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">stem</span><span class="p">])</span>
+                    <span class="n">annot_pos</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1">#log.debug(&quot;%s&quot;, annot_pos)</span>
+            <span class="k">if</span> <span class="n">annot_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">stem</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos</span><span class="p">,</span>
+                            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">hloop</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">hloop_iterator</span><span class="p">():</span>
+        <span class="n">hc</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">nt</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">hloop</span><span class="p">,</span> <span class="n">adjacent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">hc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">hc</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">hloop</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos</span><span class="p">,</span>
+                        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39; ON THE INSIDE, because of insufficient space. Trying outside...&quot;</span><span class="p">,</span> <span class="n">hloop</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">hloop</span><span class="p">])</span>
+            <span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">define_a</span><span class="p">(</span><span class="n">hloop</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">coords</span><span class="p">[</span><span class="n">nt1</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt2</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">vec</span> <span class="o">=</span> <span class="n">annot_pos</span><span class="o">-</span><span class="n">start</span>
+            <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">annot_pos</span><span class="o">+</span><span class="n">vec</span><span class="o">*</span><span class="mi">3</span>
+            <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">hloop</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos</span><span class="p">,</span>
+                            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39;, because of insufficient space.&quot;</span><span class="p">,</span> <span class="n">hloop</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">hloop</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">iloop</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">iloop_iterator</span><span class="p">():</span>
+        <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">connections</span><span class="p">(</span><span class="n">iloop</span><span class="p">)</span>
+        <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span> <span class="n">stem_coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> <span class="n">stem_coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">iloop</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos</span><span class="p">,</span>
+                        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39; ON THE INSIDE, because of insufficient space. Trying outside...&quot;</span><span class="p">,</span> <span class="n">iloop</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">iloop</span><span class="p">])</span>
+            <span class="n">loop_vec</span> <span class="o">=</span> <span class="n">stem_coords</span><span class="p">[</span><span class="n">s2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">stem_coords</span><span class="p">[</span><span class="n">s1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">norm_vec</span> <span class="o">=</span> <span class="p">(</span><span class="n">loop_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">loop_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">norm_vec</span><span class="o">/=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">norm_vec</span><span class="p">)</span>
+            <span class="n">annot_pos_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">)</span><span class="o">+</span><span class="mi">25</span><span class="o">*</span><span class="n">norm_vec</span>
+            <span class="n">annot_pos_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">)</span><span class="o">-</span><span class="mi">25</span><span class="o">*</span><span class="n">norm_vec</span>
+            <span class="c1"># iloops can be asymmetric (more nts on one strand.)</span>
+            <span class="c1"># plot the label on the strand with more nts.</span>
+            <span class="n">plus</span><span class="o">=</span><span class="mi">0</span>
+            <span class="n">minus</span><span class="o">=</span><span class="mi">0</span>
+            <span class="k">for</span> <span class="n">nt</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">iloop</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">annot_pos_p</span><span class="p">,</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">&lt;</span><span class="n">ftuv</span><span class="o">.</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">annot_pos_m</span><span class="p">,</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">plus</span><span class="o">+=</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">minus</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">plus</span><span class="o">&gt;</span><span class="n">minus</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos_p</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">iloop</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos_p</span><span class="p">,</span>
+                                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39; (only trying inside and right side), because of insufficient space.&quot;</span><span class="p">,</span> <span class="n">iloop</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">iloop</span><span class="p">])</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos_m</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">iloop</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos_m</span><span class="p">,</span>
+                                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39; (only trying inside and left side), because of insufficient space.&quot;</span><span class="p">,</span> <span class="n">iloop</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">iloop</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">mloop</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">floop_iterator</span><span class="p">(),</span> <span class="n">cg</span><span class="o">.</span><span class="n">tloop_iterator</span><span class="p">(),</span> <span class="n">cg</span><span class="o">.</span><span class="n">mloop_iterator</span><span class="p">()):</span>
+        <span class="n">nt1</span><span class="p">,</span> <span class="n">nt2</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">define_a</span><span class="p">(</span><span class="n">mloop</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">mloop</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">anchor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">coords</span><span class="p">[</span><span class="n">nt1</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt2</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">%</span><span class="mi">2</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">anchor</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anchor</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span> <span class="n">coords</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                <span class="n">coords</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">],</span>
+                              <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">loop_vec</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt1</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">norm_vec</span> <span class="o">=</span> <span class="p">(</span><span class="n">loop_vec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">loop_vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">norm_vec</span><span class="o">/=</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">norm_vec</span><span class="p">)</span>
+        <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">anchor</span> <span class="o">-</span> <span class="n">norm_vec</span><span class="o">*</span><span class="mi">18</span>
+        <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">annot_dict</span><span class="p">[</span><span class="n">mloop</span><span class="p">],</span> <span class="n">xy</span><span class="o">=</span><span class="n">annot_pos</span><span class="p">,</span>
+                        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cannot annotate </span><span class="si">%s</span><span class="s2"> as &#39;</span><span class="si">%s</span><span class="s2">&#39; , because of insufficient space.&quot;</span><span class="p">,</span> <span class="n">mloop</span><span class="p">,</span> <span class="n">annot_dict</span><span class="p">[</span><span class="n">mloop</span><span class="p">])</span>
+
+<div class="viewcode-block" id="plot_rna"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.plot_rna">[docs]</a><span class="k">def</span> <span class="nf">plot_rna</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">text_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">backbone_kwargs</span><span class="o">=</span><span class="p">{},</span>
+             <span class="n">basepair_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">color</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lighten</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">annotations</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Plot an RNA structure given a set of nucleotide coordinates</span>
-<span class="sd">    </span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This function calls set_axis_off on the axis. You can revert this by</span>
+<span class="sd">        using ax.set_axis_on() if you like to see the axis.</span>
+
 <span class="sd">    :param cg: A forgi.threedee.model.coarse_grain.CoarseGrainRNA structure</span>
 <span class="sd">    :param ax: A matplotlib plotting area</span>
 <span class="sd">    :param offset: Offset the plot by these coordinates. If a simple True is passed in, then</span>
 <span class="sd">                   offset by the current width of the plot</span>
+<span class="sd">    :param text_kwargs: keyword arguments passed to matplotlib.pyplot.annotate</span>
+<span class="sd">                        for plotting of the sequence</span>
+<span class="sd">    :param backbone_kwargs: keyword arguments passed to matplotlib.pyplot.plot</span>
+<span class="sd">                        for plotting of the backbone links</span>
+<span class="sd">    :param basepair_kwargs: keyword arguments passed to matplotlib.pyplot.plot</span>
+<span class="sd">                        for plotting of the basepair links</span>
+<span class="sd">    :param lighten: Make circles lighter. A percent value where 1 makes</span>
+<span class="sd">                    everything white and 0 leaves the colors unchanged</span>
+<span class="sd">    :param annotations: A dictionary {elem_name: string} or None.</span>
+<span class="sd">                        By default, the element names (e.g. &quot;s0&quot;) are plotted</span>
+<span class="sd">                        next to the element. This dictionary can be used to</span>
+<span class="sd">                        override the default element names by costum strings.</span>
+<span class="sd">                        To remove individual annotations, assign an empty string to the key.</span>
+<span class="sd">                        To remove all annotations, set this to None.</span>
+
+<span class="sd">                        .. warning::</span>
+
+<span class="sd">                            Annotations are not shown, if there is not enough space.</span>
+<span class="sd">                            Annotations not shown are logged with level INFO</span>
 <span class="sd">    :return: (ax, coords) The axes and the coordinates for each nucleotide</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;plotting RNA...&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting to plot RNA...&quot;</span><span class="p">)</span>
     <span class="kn">import</span> <span class="nn">RNA</span>
-
+    <span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mc</span>
     <span class="n">RNA</span><span class="o">.</span><span class="n">cvar</span><span class="o">.</span><span class="n">rna_plot_type</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
@@ -144,8 +294,9 @@
     <span class="c1">#circles = []</span>
 
     <span class="n">bp_string</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">()</span>
-    <span class="n">el_string</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_element_string</span><span class="p">()</span>    <span class="c1"># get the type of element of each nucleotide</span>
-                                          <span class="c1"># i.e. eeesssshhhhsssseeee</span>
+    <span class="c1"># get the type of element of each nucleotide</span>
+    <span class="n">el_string</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_element_string</span><span class="p">()</span>
+    <span class="c1"># i.e. eeesssshhhhsssseeee</span>
     <span class="n">el_to_color</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span>
                    <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span>
                    <span class="s1">&#39;s&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span>
@@ -157,28 +308,78 @@
         <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">offset</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">pass</span>
+        <span class="k">pass</span>
 
     <span class="n">vrna_coords</span> <span class="o">=</span> <span class="n">RNA</span><span class="o">.</span><span class="n">get_xy_coordinates</span><span class="p">(</span><span class="n">bp_string</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bp_string</span><span class="p">):</span>
-        <span class="n">coords</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> 
-                    <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">Y</span><span class="p">)]</span>
-        <span class="c1">#colors += [el_to_color[el_string[i-1]]]</span>
-        <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> 
-                             <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">Y</span><span class="p">),</span>
-                              <span class="n">color</span><span class="o">=</span><span class="n">el_to_color</span><span class="p">[</span><span class="n">el_string</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
-
+    <span class="c1"># TODO Add option to rotate the plot</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bp_string</span><span class="p">):</span>
+        <span class="n">coord</span> <span class="o">=</span> <span class="p">(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">,</span>
+                 <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">vrna_coords</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
     <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
-    <span class="n">datalim</span> <span class="o">=</span> <span class="p">((</span><span class="nb">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]),</span> 
-                <span class="nb">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]])),</span> 
-               <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]),</span> 
-                <span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])))</span>
+    <span class="c1"># First plot backbone</span>
+    <span class="n">bkwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="s2">&quot;zorder&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
+    <span class="n">bkwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">backbone_kwargs</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">coords</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">bkwargs</span><span class="p">)</span>
+    <span class="c1"># Now plot basepairs</span>
+    <span class="n">basepairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">cg</span><span class="o">.</span><span class="n">stem_bp_iterator</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="n">basepairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">coords</span><span class="p">[</span><span class="n">p1</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="n">p2</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">if</span> <span class="n">basepairs</span><span class="p">:</span>
+        <span class="n">basepairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">basepairs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">color</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+            <span class="n">bpkwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span><span class="n">c</span><span class="p">,</span> <span class="s2">&quot;zorder&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">}</span>
+            <span class="n">bpkwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">basepair_kwargs</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">basepairs</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">basepairs</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="o">**</span><span class="n">bpkwargs</span><span class="p">)</span>
+    <span class="c1"># Now plot circles</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">color</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">el_to_color</span><span class="p">[</span><span class="n">el_string</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+            <span class="n">h</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">s</span> <span class="o">=</span> <span class="n">colorsys</span><span class="o">.</span><span class="n">rgb_to_hls</span><span class="p">(</span><span class="o">*</span><span class="n">mc</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">lighten</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">l</span><span class="p">)</span><span class="o">*</span><span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">lighten</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">+=</span><span class="n">l</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">lighten</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">l</span><span class="o">&gt;</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">l</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">=</span><span class="n">colorsys</span><span class="o">.</span><span class="n">hls_to_rgb</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">l</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cg</span><span class="o">.</span><span class="n">seq</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;fontweight&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">text_kwargs</span><span class="p">:</span>
+                <span class="n">text_kwargs</span><span class="p">[</span><span class="s2">&quot;fontweight&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">cg</span><span class="o">.</span><span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">xy</span><span class="o">=</span><span class="n">coord</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">text_kwargs</span> <span class="p">)</span>
+
+    <span class="n">all_coords</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">ntnum_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span><span class="s2">&quot;gray&quot;</span><span class="p">}</span>
+    <span class="n">ntnum_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">text_kwargs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">nt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">cg</span><span class="o">.</span><span class="n">seq_length</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+        <span class="c1"># We try different angles</span>
+        <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">_find_annot_pos_on_circle</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="n">all_coords</span><span class="p">,</span> <span class="n">cg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">annot_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">nt</span><span class="p">),</span> <span class="n">xy</span><span class="o">=</span><span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">xytext</span><span class="o">=</span><span class="n">annot_pos</span><span class="p">,</span>
+                        <span class="n">arrowprops</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;width&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;headwidth&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">:</span><span class="s2">&quot;gray&quot;</span><span class="p">},</span>
+                        <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">ntnum_kwargs</span><span class="p">)</span>
+            <span class="n">all_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">)</span>
+
+    <span class="n">_annotate_rna_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">cg</span><span class="p">,</span> <span class="n">all_coords</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">text_kwargs</span><span class="p">)</span>
+    <span class="n">datalim</span> <span class="o">=</span> <span class="p">((</span><span class="nb">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]]),</span>
+                <span class="nb">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">0</span><span class="p">]])),</span>
+               <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]]),</span>
+                <span class="nb">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()[</span><span class="mi">1</span><span class="p">]])))</span>
 
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    min_coord = min(datalim[0][0], datalim[0][1])</span>
@@ -196,21 +397,49 @@
     <span class="c1">#ax.set_aspect(width / height)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">,</span> <span class="s1">&#39;datalim&#39;</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">update_datalim</span><span class="p">(</span><span class="n">datalim</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">();</span>
-    
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
     <span class="k">return</span> <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">_find_annot_pos_on_circle</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">cg</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">sign</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">sign</span>
+            <span class="k">if</span> <span class="n">cg</span><span class="o">.</span><span class="n">get_elem</span><span class="p">(</span><span class="n">nt</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s2">&quot;s&quot;</span><span class="p">:</span>
+                <span class="n">bp</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">pairing_partner</span><span class="p">(</span><span class="n">nt</span><span class="p">)</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">bp</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">vec</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">anchor</span>
+            <span class="n">vec</span><span class="o">=</span><span class="n">vec</span><span class="o">/</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
+            <span class="n">rotated_vec</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">-</span><span class="n">vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">a</span><span class="p">),</span>
+                                     <span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">+</span><span class="n">vec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">a</span><span class="p">)])</span>
+            <span class="n">annot_pos</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">rotated_vec</span><span class="o">*</span><span class="mi">18</span>
+            <span class="k">if</span> <span class="n">_clashfree_annot_pos</span><span class="p">(</span><span class="n">annot_pos</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Annot pos on c is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">annot_pos</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">annot_pos</span>
+    <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="plot_pdb"><a class="viewcode-back" href="../../../apidoc/forgi.visual.mplotlib.html#forgi.visual.mplotlib.plot_pdb">[docs]</a><span class="k">def</span> <span class="nf">plot_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot a pdb file.</span>
+<span class="sd">    Plot the secondary structure of an RNA in a PDB file using the</span>
+<span class="sd">    Graph Layout from the ViennaRNA package and indicate long-range</span>
+<span class="sd">    interations and RNA-protein interactions.</span>
+
+<span class="sd">    Interchain RNA-RNA interactions are shown as red lines.</span>
+<span class="sd">    Proteins are shown as transparent gray circles with lines</span>
+<span class="sd">    indicating the interacting residues. The circle radius corresponds</span>
+<span class="sd">    to the number of interacting nucleotides.</span>
+
 
 <span class="sd">    :param structure: A Bio.PDB.Structure</span>
+<span class="sd">    :param ax: Optional. An matplotlib axis object</span>
 <span class="sd">    :return: An Axes object (ax)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">structure</span> <span class="o">=</span> <span class="n">Bio</span><span class="o">.</span><span class="n">PDB</span><span class="o">.</span><span class="n">PDBParser</span><span class="p">()</span><span class="o">.</span><span class="n">get_structure</span><span class="p">(</span><span class="s1">&#39;blah&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">structure</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">chain_coords</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">cgs</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -222,30 +451,33 @@
 
     <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">model</span><span class="p">:</span>
         <span class="c1"># iterate over RNAs</span>
-        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
-            <span class="c1"># convert to cg and store so that we can convert pdb nucleotide ids to </span>
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">contains_rna</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="c1"># convert to cg and store so that we can convert pdb nucleotide ids to</span>
             <span class="c1"># secondary structure indexes later</span>
-            <span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">chain_id</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">cg</span><span class="p">,</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">load_chains</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
             <span class="n">cgs</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">cg</span>
 
             <span class="c1"># plot the structure and store the coordinates</span>
             <span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span> <span class="o">=</span> <span class="n">plot_rna</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
             <span class="n">chain_coords</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">coords</span>
-            
+
     <span class="k">for</span> <span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">ftup</span><span class="o">.</span><span class="n">interchain_contacts</span><span class="p">(</span><span class="n">structure</span><span class="p">):</span>
         <span class="c1"># iterate over all the interactions in order to find out which</span>
         <span class="c1"># nucleotides this protein interacts with</span>
         <span class="n">chain1</span> <span class="o">=</span> <span class="n">a1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
         <span class="n">chain2</span> <span class="o">=</span> <span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
-        
-        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_protein</span><span class="p">(</span><span class="n">chain1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain2</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_protein</span><span class="p">(</span><span class="n">chain1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ftup</span><span class="o">.</span><span class="n">contains_rna</span><span class="p">(</span><span class="n">chain2</span><span class="p">):</span>
             <span class="c1"># collect all the RNA nucleotides that a protein interacts with</span>
-            <span class="n">sid</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_integer</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">(</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span>
             <span class="n">protein_interactions</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sid</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_rna</span><span class="p">(</span><span class="n">chain2</span><span class="p">):</span>
-            <span class="n">sid1</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-            <span class="n">sid2</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq_ids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">contains_rna</span><span class="p">(</span><span class="n">chain1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ftup</span><span class="o">.</span><span class="n">contains_rna</span><span class="p">(</span><span class="n">chain2</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sid1</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_integer</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">(</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">a1</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span>
+                <span class="n">sid2</span> <span class="o">=</span> <span class="n">cgs</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_integer</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">(</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">a2</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">continue</span>
 
             <span class="n">coord1</span> <span class="o">=</span> <span class="n">chain_coords</span><span class="p">[</span><span class="n">chain1</span><span class="o">.</span><span class="n">id</span><span class="p">][</span><span class="n">sid1</span><span class="p">]</span>
             <span class="n">coord2</span> <span class="o">=</span> <span class="n">chain_coords</span><span class="p">[</span><span class="n">chain2</span><span class="o">.</span><span class="n">id</span><span class="p">][</span><span class="n">sid2</span><span class="p">]</span>
@@ -258,28 +490,30 @@
         <span class="k">if</span> <span class="n">ftup</span><span class="o">.</span><span class="n">is_protein</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
             <span class="c1"># the protein will be positioned at the centroid of the nucleotides</span>
             <span class="c1"># that it interacts with</span>
-            <span class="n">interacting_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chain_coords</span><span class="p">[</span><span class="n">chain_id</span><span class="p">][</span><span class="n">nuc_num</span><span class="p">])</span> 
+            <span class="n">interacting_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chain_coords</span><span class="p">[</span><span class="n">chain_id</span><span class="p">][</span><span class="n">nuc_num</span><span class="p">])</span>
                                   <span class="k">for</span> <span class="p">(</span><span class="n">chain_id</span><span class="p">,</span> <span class="n">nuc_num</span><span class="p">)</span> <span class="ow">in</span> <span class="n">protein_interactions</span><span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">id</span><span class="p">]]</span>
 
-            <span class="n">centroid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">interacting_coords</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">interacting_coords</span><span class="p">)</span>
+            <span class="n">centroid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">interacting_coords</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> \
+                <span class="nb">len</span><span class="p">(</span><span class="n">interacting_coords</span><span class="p">)</span>
 
             <span class="c1"># the size of the circle representing it will be proportional to its</span>
             <span class="c1"># length (in nucleotides)</span>
             <span class="n">radius</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">get_list</span><span class="p">()))</span>
             <span class="n">protein_circles</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">radius</span><span class="p">]]</span>
-            
+
             <span class="c1"># draw all of the interactions as lines</span>
             <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">interacting_coords</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-        
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span>
+                        <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;k-&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
     <span class="n">protein_circles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">circles</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">protein_circles</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">protein_circles</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">circles</span><span class="p">(</span><span class="n">protein_circles</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">protein_circles</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">protein_circles</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;grey&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 
-    <span class="c1">#plt.axis(&#39;off&#39;)</span>
+    <span class="c1"># plt.axis(&#39;off&#39;)</span>
 
-    <span class="k">pass</span></div>
-
+    <span class="k">return</span> <span class="n">ax</span></div>
 </pre></div>
 
       </div>
@@ -292,8 +526,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

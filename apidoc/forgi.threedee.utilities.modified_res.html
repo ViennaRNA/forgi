@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.modified_res module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.utilities.modified_res module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -55,10 +55,18 @@
 unmodified residue.</p>
 <dl class="class">
 <dt id="forgi.threedee.utilities.modified_res.ModifiedResidueLookup">
-<em class="property">class </em><code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">ModifiedResidueLookup</code><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#ModifiedResidueLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.ModifiedResidueLookup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">ModifiedResidueLookup</code><span class="sig-paren">(</span><em>query_db=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#ModifiedResidueLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.ModifiedResidueLookup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">future.types.newobject.newobject</span></code></p>
 <p>Convenience wrapper to access modified_res_lookup.RESIDUE_DICT.
 If a key does not exist, query the database to add it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query_db</strong> – If true, query PDBeChem whenever a 3-letter code is not understood.</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="forgi.threedee.utilities.modified_res.ModifiedResidueLookup.clean_failed">
 <code class="descname">clean_failed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#ModifiedResidueLookup.clean_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.ModifiedResidueLookup.clean_failed" title="Permalink to this definition">¶</a></dt>
@@ -86,20 +94,24 @@ machine-readable format. We have to parse the html.</p>
 
 <dl class="function">
 <dt id="forgi.threedee.utilities.modified_res.to_4_letter_alphabeth">
-<code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">to_4_letter_alphabeth</code><span class="sig-paren">(</span><em>chain</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#to_4_letter_alphabeth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.to_4_letter_alphabeth" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">forgi.threedee.utilities.modified_res.</code><code class="descname">to_4_letter_alphabeth</code><span class="sig-paren">(</span><em>chain</em>, <em>query_db=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/utilities/modified_res.html#to_4_letter_alphabeth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.utilities.modified_res.to_4_letter_alphabeth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rename the modified residues so that they have the same
 names as unmodified residues.</p>
 <p>If a residue’s name is unknown, query PDBeChem.</p>
 <p>If the residue is not a ribonucleotide, remove it from the chain.</p>
 <p>If it is a modified ribonucleotde, replace it by the unmodified “standard parent”</p>
-<p>TODO: What to do with I (INOSINIC ACID)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chain</strong> – A Bio.PDB.Chain structure</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chain</strong> – A Bio.PDB.Chain structure</li>
+<li><strong>query_db</strong> – If true, query PDBeChem whenever a 3-letter code is unknown.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The same chain, but with only AUGC residues.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The same chain, but with only AUGC residues.</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -122,8 +134,8 @@ names as unmodified residues.</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

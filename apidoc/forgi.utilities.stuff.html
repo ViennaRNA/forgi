@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.utilities.stuff module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.utilities.stuff module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -51,6 +51,24 @@
   <div class="section" id="module-forgi.utilities.stuff">
 <span id="forgi-utilities-stuff-module"></span><h1>forgi.utilities.stuff module<a class="headerlink" href="#module-forgi.utilities.stuff" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
+<dt id="forgi.utilities.stuff.bpseq_to_tuples_and_seq">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">bpseq_to_tuples_and_seq</code><span class="sig-paren">(</span><em>bpseq_str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#bpseq_to_tuples_and_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.bpseq_to_tuples_and_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a bpseq string to a list of pair tuples and a sequence
+dictionary. The return value is a tuple of the list of pair tuples
+and a sequence string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bpseq_str</strong> – The bpseq string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">([(1,5),(2,4),(3,0),(4,2),(5,1)], ‘ACCAA’)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="forgi.utilities.stuff.delete_from_stack">
 <code class="descclassname">forgi.utilities.stuff.</code><code class="descname">delete_from_stack</code><span class="sig-paren">(</span><em>stack</em>, <em>j</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#delete_from_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.delete_from_stack" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -65,6 +83,14 @@
 <dt id="forgi.utilities.stuff.gen_random_sequence">
 <code class="descclassname">forgi.utilities.stuff.</code><code class="descname">gen_random_sequence</code><span class="sig-paren">(</span><em>l</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#gen_random_sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.gen_random_sequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a random RNA sequence of length l.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.utilities.stuff.get_version_string">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">get_version_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#get_version_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.get_version_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>If installed from github, print the version obtained by <code class="code docutils literal"><span class="pre">git</span> <span class="pre">describe</span></code>
+On my local machine, when run within a git directory, get the commit
+hash directly using <code class="code docutils literal"><span class="pre">git</span> <span class="pre">describe</span></code></p>
 </dd></dl>
 
 <dl class="function">
@@ -152,6 +178,19 @@ of this element.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="forgi.utilities.stuff.renumber_bpseq">
+<code class="descclassname">forgi.utilities.stuff.</code><code class="descname">renumber_bpseq</code><span class="sig-paren">(</span><em>bpseq_triples</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#renumber_bpseq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.renumber_bpseq" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bpseq_triples</strong> – A list of triples (from, res, to)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="forgi.utilities.stuff.tuples_to_pairtable">
 <code class="descclassname">forgi.utilities.stuff.</code><code class="descname">tuples_to_pairtable</code><span class="sig-paren">(</span><em>pair_tuples</em>, <em>seq_length=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/stuff.html#tuples_to_pairtable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.stuff.tuples_to_pairtable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a representation of an RNA consisting of a list of tuples
@@ -192,8 +231,8 @@ the unpaired nucleotides aren’t passed in as (x,0) tuples.</li>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

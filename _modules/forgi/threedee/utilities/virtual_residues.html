@@ -1,0 +1,100 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.utilities.virtual_residues &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.utilities.virtual_residues</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">unicode_literals</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="serialize_vres"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.virtual_residues.html#forgi.threedee.utilities.virtual_residues.serialize_vres">[docs]</a><span class="k">def</span> <span class="nf">serialize_vres</span><span class="p">(</span><span class="n">vpos</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Output carthesian coordinates for each virtual residue, ordered by nucleotide number and seperated by space.</span>
+
+<span class="sd">    The returned coordinates are relative to the element&#39;s coordinate system.</span>
+
+<span class="sd">    :param vpos: A dictionary `{nucleotide_number: coordinates}`.</span>
+<span class="sd">                 `nucleotide_number` is an integer with 0 referring to the first nucleotide of the element.</span>
+<span class="sd">                 `coordinates` is a 3-element 1D numpy array</span>
+<span class="sd">                 `nucleotide_numbers` should be consecutive integers.</span>
+<span class="sd">    :returns: A string with space-seperated numbers.</span>
+<span class="sd">              Groups of three numbers are x,y,z coordinates of one residue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">vpos</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">out_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{:.8f}</span><span class="s2"> </span><span class="si">{:.8f}</span><span class="s2"> </span><span class="si">{:.8f}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">out_str</span></div>
+
+
+<div class="viewcode-block" id="parse_vres"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.virtual_residues.html#forgi.threedee.utilities.virtual_residues.parse_vres">[docs]</a><span class="k">def</span> <span class="nf">parse_vres</span><span class="p">(</span><span class="n">parts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Go back from a splitted serialized representation to a dictionary used for vres.</span>
+
+<span class="sd">    :param parts: A list of strings which hold floats. The length has to be a multiple of 3.</span>
+<span class="sd">                  Like a list gegerated by `serialize_vres(vpos).split()`</span>
+<span class="sd">    :returns: A dictionary {nucleotide_number: coordinated}. See param `vpos` of the</span>
+<span class="sd">              function `serialize_vres`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vpos</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">),</span> <span class="mi">3</span><span class="p">)):</span>
+        <span class="n">vpos</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">vpos</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

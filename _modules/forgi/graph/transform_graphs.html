@@ -1,0 +1,200 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.graph.transform_graphs &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../../../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.graph.transform_graphs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module has functions which take a Bulge-Graph as input</span>
+<span class="sd">and return a modified copy of it.</span>
+
+<span class="sd">This is implemented as a class which is accessible as</span>
+<span class="sd">BulgeGraph.transformed. This way we can properly inherit in CoarseGrainRNA</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">.sequence</span> <span class="k">import</span> <span class="n">MissingResidue</span><span class="p">,</span> <span class="n">Sequence</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_GCDummy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Can be used in place of GraphConstruction for BG-Initialization</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defines</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defines</span> <span class="o">=</span> <span class="n">defines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span>
+
+
+<div class="viewcode-block" id="BGTransformer"><a class="viewcode-back" href="../../../apidoc/forgi.graph.transform_graphs.html#forgi.graph.transform_graphs.BGTransformer">[docs]</a><span class="k">class</span> <span class="nc">BGTransformer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bg</span> <span class="o">=</span> <span class="n">bg</span>
+
+    <span class="k">def</span> <span class="nf">_without_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elems</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a copy of the BulgeGraph without the elements in elem.</span>
+<span class="sd">        Their residues will be converted to missing residues.</span>
+
+<span class="sd">        :param elems: A list of element names, e.g. [&quot;s1&quot;,&quot;s2&quot;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This is still work in progress.&quot;</span><span class="p">)</span>
+        <span class="c1"># We use the PDB numbering in new_defines, so we do not have to adjust indices if we remove</span>
+        <span class="c1"># residues in the middle.</span>
+        <span class="n">resid_defines</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">:</span>
+            <span class="n">resid_defines</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+        <span class="n">new_edges</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span>
+        <span class="n">to_missing</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">elems</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stem1</span><span class="p">,</span> <span class="n">stem2</span> <span class="o">=</span> <span class="n">new_edges</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+                <span class="n">elem_define_a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                    <span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">define_a</span><span class="p">(</span><span class="n">elem</span><span class="p">)))</span>
+                <span class="c1"># Remove the iloop</span>
+                <span class="n">to_missing</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">seq_ids</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                <span class="n">new_edges</span><span class="p">[</span><span class="n">stem1</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+                <span class="n">new_edges</span><span class="p">[</span><span class="n">stem2</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+                <span class="k">del</span> <span class="n">new_edges</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+                <span class="c1"># Merge stem2 into stem1</span>
+                <span class="n">new_edges</span><span class="p">[</span><span class="n">stem1</span><span class="p">]</span> <span class="o">|=</span> <span class="n">new_edges</span><span class="p">[</span><span class="n">stem2</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">new_edges</span><span class="p">[</span><span class="n">stem2</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">elem_define_a</span><span class="p">:</span>
+                    <span class="c1"># stem1 -IL - stem2</span>
+                    <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem2</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem2</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># stem2 - il - stem1</span>
+                    <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem1</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem2</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">stem2</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">resid_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BGTransformer.condensed"><a class="viewcode-back" href="../../../apidoc/forgi.graph.transform_graphs.html#forgi.graph.transform_graphs.BGTransformer.condensed">[docs]</a>    <span class="k">def</span> <span class="nf">condensed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a condensed copy of the BulgeGraph.</span>
+
+<span class="sd">        In the condensed BulgeGraph only the first (most 5-prime) nucleotide</span>
+<span class="sd">        or base-pair of each element is retained, and the other nts/ base-pairs are</span>
+<span class="sd">        converted to missing residues.</span>
+<span class="sd">        In basepairs the first basepair contains the most 5&#39; and most 3&#39;</span>
+<span class="sd">        nucleotide of the stem.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Condensing BG with break-points </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">backbone_breaks_after</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Condensing Graph </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">())</span>
+        <span class="n">new_defines</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">new_seqids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">new_seq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">new_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">with_missing</span><span class="o">.</span><span class="n">export_missing</span><span class="p">()</span>
+        <span class="n">new_i</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">iter_elements_along_backbone</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem</span><span class="p">]:</span>
+                <span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">new_defines</span><span class="p">:</span>  <span class="c1"># Backwards strand for stems:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">elem</span><span class="p">])</span>
+                    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> doesn&#39;t have len 2&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">])</span>
+                    <span class="k">assert</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">&quot;si&quot;</span>
+                    <span class="n">fr</span><span class="p">,</span> <span class="n">to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem</span><span class="p">][</span><span class="mi">2</span><span class="p">:]</span>
+                    <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
+                        <span class="c1"># to keep basepairing consistent, we keep the last (not the first)</span>
+                        <span class="c1"># nt.</span>
+                        <span class="n">keep_i</span> <span class="o">=</span> <span class="n">to</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># To keep interiour loops consistent with the case where</span>
+                        <span class="c1"># it is only at the second strand, keep the first nt here</span>
+                        <span class="n">keep_i</span> <span class="o">=</span> <span class="n">fr</span>
+                    <span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">new_i</span><span class="p">,</span> <span class="n">new_i</span><span class="p">])</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Extended new_defines for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                              <span class="n">elem</span><span class="p">,</span> <span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">fr</span><span class="p">,</span> <span class="n">to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">keep_i</span> <span class="o">=</span> <span class="n">fr</span>
+                    <span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_i</span><span class="p">,</span> <span class="n">new_i</span><span class="p">]</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Set new_defines for </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                              <span class="n">elem</span><span class="p">,</span> <span class="n">new_defines</span><span class="p">[</span><span class="n">elem</span><span class="p">])</span>
+                <span class="n">new_i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">new_seq</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="p">[</span><span class="n">keep_i</span><span class="p">]</span>
+                <span class="n">new_seqids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">keep_i</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">to</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">keep_i</span><span class="p">:</span>
+                        <span class="n">seq_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                        <span class="n">new_missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">MissingResidue</span><span class="p">(</span><span class="n">seq_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">backbone_breaks_after</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">keep_i</span><span class="p">:</span>
+                            <span class="n">new_seq</span> <span class="o">+=</span> <span class="s2">&quot;&amp;&quot;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">new_seq</span> <span class="o">=</span> <span class="n">new_seq</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&amp;&quot;</span> <span class="o">+</span> <span class="n">new_seq</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Breakpoint </span><span class="si">%s</span><span class="s2">: new_seq now </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">new_seq</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Condensing iteration done. Now creating condensed BG&quot;</span><span class="p">)</span>
+        <span class="n">graph_constr</span> <span class="o">=</span> <span class="n">_GCDummy</span><span class="p">(</span><span class="n">new_defines</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">edges</span><span class="p">))</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">new_seq</span><span class="p">,</span> <span class="n">new_seqids</span><span class="p">,</span> <span class="n">new_missing</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_modifications</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="p">)(</span><span class="n">graph_constr</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_condensed&quot;</span><span class="p">,</span> <span class="n">_dont_split</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

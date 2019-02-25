@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -43,14 +43,38 @@
         
         
   <h1>Source code for forgi</h1><div class="highlight"><pre>
-<span></span><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Peter Kerpedjiev, Bernhard Thiel&quot;</span>
-<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2012 - 2016&quot;</span>
+<span></span><span class="c1"># pylint: disable=W0612</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">forgi - an RNA structure library</span>
+<span class="sd">================================</span>
+
+<span class="sd">Forgi is a python library for analysing and manipulating RNA secondary and</span>
+<span class="sd">tertiary structures based on secondary structure elements.</span>
+
+<span class="sd">The libraries core object, which is returned by the load_rna function,</span>
+<span class="sd">is the `forgi.graph.bulge_graph.BulgeGraph` object (2D structure) and its</span>
+<span class="sd">subclass the `forgi.threedee.model.coarse_grain.CoarseGrainRNA` object.</span>
+
+<span class="sd">Citing</span>
+<span class="sd">------</span>
+
+<span class="sd">If you use forgi for a scientific publication, please cite this library</span>
+<span class="sd">as specified in the CREDITS section.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Bernhard C. Thiel, Peter Kerpedjiev&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2012 - 2019&quot;</span>
 <span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;GNU Affero GPL v 3.0&quot;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.1&quot;</span>
-<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Bernhard Thiel&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;2.0.0&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Bernhard C. Thiel&quot;</span>
 <span class="n">__email__</span> <span class="o">=</span> <span class="s2">&quot;thiel@tbi.univie.ac.at&quot;</span>
 
+
 <span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">forgi.utilities.commandline_utils</span> <span class="k">import</span> <span class="n">load_rna</span>
+
 
 <div class="viewcode-block" id="data_file"><a class="viewcode-back" href="../apidoc/forgi.html#forgi.data_file">[docs]</a><span class="k">def</span> <span class="nf">data_file</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return the path to a data file of ours.&quot;&quot;&quot;</span>
@@ -67,8 +91,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

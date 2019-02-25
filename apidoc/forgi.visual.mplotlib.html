@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.visual.mplotlib module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.visual.mplotlib module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -52,8 +52,8 @@
 <span id="forgi-visual-mplotlib-module"></span><h1>forgi.visual.mplotlib module<a class="headerlink" href="#module-forgi.visual.mplotlib" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="forgi.visual.mplotlib.circles">
-<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">circles</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>s</em>, <em>c='b'</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#circles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.circles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make a scatter of circles plot of x vs y, where x and y are sequence 
+<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">circles</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>s</em>, <em>c='b'</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>labels=[]</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#circles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.circles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a scatter of circles plot of x vs y, where x and y are sequence
 like objects of the same lengths. The size of circles are in data scale.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -62,7 +62,7 @@ like objects of the same lengths. The size of circles are in data scale.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>x</strong><strong>,</strong><strong>y</strong> – scalar or array_like, shape (n, )
 Input data</li>
-<li><strong>s</strong> – scalar or array_like, shape (n, ) 
+<li><strong>s</strong> – scalar or array_like, shape (n, )
 Radius of circle in data scale (ie. in data unit)</li>
 <li><strong>c</strong> – color or sequence of color, optional, default : ‘b’
 <code class="code docutils literal"><span class="pre">c</span></code> can be a single color format string, or a sequence of color
@@ -94,21 +94,32 @@ eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap</li>
 <span class="n">circles</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">*</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This code is under [The BSD 3-Clause License]
+<p>This code by ??? is under [The BSD 3-Clause License]
 (<a class="reference external" href="http://opensource.org/licenses/BSD-3-Clause">http://opensource.org/licenses/BSD-3-Clause</a>)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="forgi.visual.mplotlib.plot_pdb">
 <code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">plot_pdb</code><span class="sig-paren">(</span><em>filename</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#plot_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.plot_pdb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a pdb file.</p>
+<dd><p>Plot the secondary structure of an RNA in a PDB file using the
+Graph Layout from the ViennaRNA package and indicate long-range
+interations and RNA-protein interactions.</p>
+<p>Interchain RNA-RNA interactions are shown as red lines.
+Proteins are shown as transparent gray circles with lines
+indicating the interacting residues. The circle radius corresponds
+to the number of interacting nucleotides.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>structure</strong> – A Bio.PDB.Structure</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>structure</strong> – A Bio.PDB.Structure</li>
+<li><strong>ax</strong> – Optional. An matplotlib axis object</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">An Axes object (ax)</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An Axes object (ax)</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -116,8 +127,13 @@ eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap</li>
 
 <dl class="function">
 <dt id="forgi.visual.mplotlib.plot_rna">
-<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">plot_rna</code><span class="sig-paren">(</span><em>cg</em>, <em>ax=None</em>, <em>offset=(0</em>, <em>0)</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#plot_rna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.plot_rna" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">forgi.visual.mplotlib.</code><code class="descname">plot_rna</code><span class="sig-paren">(</span><em>cg</em>, <em>ax=None</em>, <em>offset=(0</em>, <em>0)</em>, <em>text_kwargs={}</em>, <em>backbone_kwargs={}</em>, <em>basepair_kwargs={}</em>, <em>color=True</em>, <em>lighten=0</em>, <em>annotations={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/visual/mplotlib.html#plot_rna"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.visual.mplotlib.plot_rna" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot an RNA structure given a set of nucleotide coordinates</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function calls set_axis_off on the axis. You can revert this by
+using ax.set_axis_on() if you like to see the axis.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -127,6 +143,26 @@ eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap</li>
 <li><strong>ax</strong> – A matplotlib plotting area</li>
 <li><strong>offset</strong> – Offset the plot by these coordinates. If a simple True is passed in, then
 offset by the current width of the plot</li>
+<li><strong>text_kwargs</strong> – keyword arguments passed to matplotlib.pyplot.annotate
+for plotting of the sequence</li>
+<li><strong>backbone_kwargs</strong> – keyword arguments passed to matplotlib.pyplot.plot
+for plotting of the backbone links</li>
+<li><strong>basepair_kwargs</strong> – keyword arguments passed to matplotlib.pyplot.plot
+for plotting of the basepair links</li>
+<li><strong>lighten</strong> – Make circles lighter. A percent value where 1 makes
+everything white and 0 leaves the colors unchanged</li>
+<li><strong>annotations</strong> – <p>A dictionary {elem_name: string} or None.
+By default, the element names (e.g. “s0”) are plotted
+next to the element. This dictionary can be used to
+override the default element names by costum strings.
+To remove individual annotations, assign an empty string to the key.
+To remove all annotations, set this to None.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Annotations are not shown, if there is not enough space.
+Annotations not shown are logged with level INFO</p>
+</div>
+</li>
 </ul>
 </td>
 </tr>
@@ -154,8 +190,8 @@ offset by the current width of the plot</li>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

@@ -11,6 +11,7 @@ Submodules
    forgi.threedee.model.descriptors
    forgi.threedee.model.similarity
    forgi.threedee.model.stats
+   forgi.threedee.model.transform_cg
 
 Module contents
 ---------------

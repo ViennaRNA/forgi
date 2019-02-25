@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.vector &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.utilities.vector &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -47,7 +47,10 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">map</span>
 <span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
-<span class="kn">import</span> <span class="nn">timeit</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">timeit</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
 
 <span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="k">as</span> <span class="nn">fud</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -59,7 +62,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="c1">#import scipy as sp</span>
 
-<span class="n">log</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="n">profile</span>
 <span class="k">except</span><span class="p">:</span>
@@ -82,6 +85,8 @@
 <span class="n">tau</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
 
 <span class="c1"># Seems to be unused</span>
+
+
 <div class="viewcode-block" id="get_inter_distances"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.get_inter_distances">[docs]</a><span class="k">def</span> <span class="nf">get_inter_distances</span><span class="p">(</span><span class="n">vecs</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculate all of the distances between the points of vecs.</span>
@@ -91,10 +96,11 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vecs</span><span class="p">)):</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">vecs</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">vecs</span><span class="p">)):</span>
             <span class="n">distances</span> <span class="o">+=</span> <span class="p">[</span><span class="n">vec_distance</span><span class="p">(</span><span class="n">vecs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">vecs</span><span class="p">[</span><span class="n">j</span><span class="p">])]</span>
 
     <span class="k">return</span> <span class="n">distances</span></div>
+
 
 <div class="viewcode-block" id="get_random_vector"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.get_random_vector">[docs]</a><span class="k">def</span> <span class="nf">get_random_vector</span><span class="p">(</span><span class="n">mult</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -106,8 +112,9 @@
     <span class="c1"># Using rejection sampling to generate uniform distribution from points inside a sphere.</span>
     <span class="c1"># Thanks to http://stats.stackexchange.com/a/7984/90399</span>
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="n">vec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mult</span> <span class="o">*</span> <span class="n">rand</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">rand</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">rand</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
-        <span class="k">if</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">mult</span><span class="p">:</span>
+        <span class="n">vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mult</span> <span class="o">*</span> <span class="n">rand</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mult</span> <span class="o">*</span>
+                        <span class="n">rand</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">mult</span> <span class="o">*</span> <span class="n">rand</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">mult</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">vec</span></div>
 
 
@@ -124,7 +131,7 @@
     <span class="k">return</span> <span class="n">normalize</span><span class="p">(</span><span class="n">vec3</span><span class="p">)</span></div>
 
 
-<span class="c1">#def get_random_vector_pair(angle=rand.uniform(0, math.pi)) -&gt; Removed, because it was never used.</span>
+<span class="c1"># def get_random_vector_pair(angle=rand.uniform(0, math.pi)) -&gt; Removed, because it was never used.</span>
 
 
 <div class="viewcode-block" id="get_double_alignment_matrix"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.get_double_alignment_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_double_alignment_matrix</span><span class="p">(</span><span class="n">vp1</span><span class="p">,</span> <span class="n">vp2</span><span class="p">):</span>
@@ -149,7 +156,8 @@
 
     <span class="n">comp1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vp1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="c1">#comp1 = np.cross(vp1[0], vp1[1])</span>
-    <span class="n">comp2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vp1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">comp1</span><span class="p">)</span> <span class="c1"># should be along the plane of vp1[0] and vp1[1]</span>
+    <span class="c1"># should be along the plane of vp1[0] and vp1[1]</span>
+    <span class="n">comp2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vp1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">comp1</span><span class="p">)</span>
 
     <span class="n">basis1</span> <span class="o">=</span> <span class="n">create_orthonormal_basis</span><span class="p">(</span><span class="n">normalize</span><span class="p">(</span><span class="n">vp1</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">normalize</span><span class="p">(</span><span class="n">comp2</span><span class="p">))</span>
     <span class="n">rej2</span> <span class="o">=</span> <span class="n">change_basis</span><span class="p">(</span><span class="n">new_vp2_1</span><span class="p">,</span> <span class="n">basis1</span><span class="p">,</span> <span class="n">standard_basis</span><span class="p">)</span>
@@ -158,8 +166,9 @@
 
     <span class="n">mat2</span> <span class="o">=</span> <span class="n">rotation_matrix</span><span class="p">(</span><span class="n">vp1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">angle</span><span class="p">)</span>
 
-    <span class="c1">#return np.dot(mat1, mat2)</span>
+    <span class="c1"># return np.dot(mat1, mat2)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mat2</span><span class="p">,</span> <span class="n">mat1</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="get_alignment_matrix"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.get_alignment_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_alignment_matrix</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -192,25 +201,57 @@
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span></div>
 
+
 <div class="viewcode-block" id="is_almost_parallel"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.is_almost_parallel">[docs]</a><span class="k">def</span> <span class="nf">is_almost_parallel</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Are vec1 and vec2 almost parallel?</span>
+<span class="sd">    Nothing is parallel to the zero vector!</span>
+
+<span class="sd">    :returns: 1 if vec1 and vec2 are parallel,</span>
+<span class="sd">             -1 if they are antiparallel,</span>
+<span class="sd">             0 if they are neither.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">CUTOFF</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">7</span>
+    <span class="n">vec2_clean</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">vec2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">CUTOFF</span><span class="p">:</span>
+            <span class="n">vec2_clean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vec2_clean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vec2_clean</span><span class="p">)</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">factors</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">f</span><span class="p">)]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;vec1 </span><span class="si">%s</span><span class="s2">, vec2 </span><span class="si">%s</span><span class="s2">, fac </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">factors</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">factors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># vec2~[0,0,0]</span>
+    <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">factors</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span> <span class="o">-</span> <span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">CUTOFF</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Signs: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">factors</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># returns 0, if vec1==[0,0,0]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>  <span class="c1"># Not (anti-)parallel</span></div>
+
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd"># OLD:</span>
+<span class="sd">def is_almost_parallel(vec1, vec2):</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 <span class="sd">    Returns true, if two vectors are almost parallel</span>
 
 <span class="sd">    Note that every vector is parallel to the zero vector.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">CUTOFF</span><span class="o">=</span><span class="mi">10</span><span class="o">**-</span><span class="mi">9</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vec1</span><span class="p">)):</span>
-        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">&gt;</span><span class="n">CUTOFF</span><span class="p">:</span>
-            <span class="n">factor</span><span class="o">=</span><span class="n">vec1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="k">break</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;vec2 is zero-vector&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span> <span class="c1"># vec2 is Zero-vector</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Factor is </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">factor</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;vec1/vec2 = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vec1</span><span class="p">))])</span>
-    <span class="k">return</span> <span class="nb">all</span><span class="p">((</span><span class="nb">abs</span><span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">&lt;</span><span class="n">CUTOFF</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">&lt;</span><span class="n">CUTOFF</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">&gt;</span><span class="n">CUTOFF</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vec1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">factor</span><span class="p">)</span><span class="o">&lt;</span><span class="n">CUTOFF</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vec1</span><span class="p">)))</span></div>
+<span class="sd">    CUTOFF=10**-9</span>
+<span class="sd">    for i in range(len(vec1)):</span>
+<span class="sd">        if abs(vec2[i])&gt;CUTOFF:</span>
+<span class="sd">            factor=vec1[i]/vec2[i]</span>
+<span class="sd">            break</span>
+<span class="sd">    else:</span>
+<span class="sd">        log.debug(&quot;vec2 is zero-vector&quot;)</span>
+<span class="sd">        return True # vec2 is Zero-vector</span>
+<span class="sd">    log.debug(&quot;Factor is %f&quot;, factor)</span>
+<span class="sd">    with warnings.catch_warnings():</span>
+<span class="sd">        warnings.simplefilter(&quot;ignore&quot;)</span>
+<span class="sd">        log.debug(&quot;vec1/vec2 = %s&quot;, [abs(vec1[i]/vec2[i]) for i in range(len(vec1))])</span>
+<span class="sd">    return all((abs(vec1[i])&lt;CUTOFF and abs(vec2[i])&lt;CUTOFF) or (abs(vec2[i])&gt;CUTOFF and abs(vec1[i]/vec2[i]-factor)&lt;CUTOFF) for i in range(len(vec1)))</span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 
 <div class="viewcode-block" id="line_segments_collinearity"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.line_segments_collinearity">[docs]</a><span class="k">def</span> <span class="nf">line_segments_collinearity</span><span class="p">(</span><span class="n">segment1</span><span class="p">,</span> <span class="n">segment2</span><span class="p">):</span>
@@ -219,19 +260,19 @@
 
 <span class="sd">    :param segment1, segment2: Each a tuple of vectors (start, end)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">dir1</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">segment1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">segment1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">dir2</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">segment2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">segment2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">dir1</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">segment1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">segment1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">dir2</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">segment2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">segment2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="c1"># Get the average direction of the two vectors, if oriented correctly.</span>
-    <span class="n">s1</span> <span class="o">=</span> <span class="n">dir1</span><span class="o">+</span><span class="n">dir2</span>
-    <span class="n">s2</span> <span class="o">=</span> <span class="n">dir1</span><span class="o">-</span><span class="n">dir2</span>
-    <span class="k">if</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span><span class="o">&gt;</span><span class="n">magnitude</span><span class="p">(</span><span class="n">s2</span><span class="p">):</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">dir1</span> <span class="o">+</span> <span class="n">dir2</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">dir1</span> <span class="o">-</span> <span class="n">dir2</span>
+    <span class="k">if</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">s2</span><span class="p">):</span>
         <span class="n">sum_vec</span> <span class="o">=</span> <span class="n">s1</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">sum_vec</span> <span class="o">=</span> <span class="n">s2</span>
     <span class="c1"># Further more, the line should pass through the center of the</span>
     <span class="c1"># 4 points defining the line segments.</span>
-    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment1</span><span class="o">+</span><span class="n">segment2</span><span class="p">)</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment1</span> <span class="o">+</span> <span class="n">segment2</span><span class="p">)</span>
     <span class="n">center</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    # Now plot for verification</span>
@@ -254,19 +295,20 @@
 
     <span class="c1"># Now calculate the distances of the 4 points from the fitted line</span>
     <span class="n">d_point_line</span> <span class="o">=</span> <span class="n">point_line_distance</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">sum_vec</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">d_point_line</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">d_point_line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span>
     <span class="c1"># Return an R**2 value, like or linear regression (1=collinear, &lt;1 worse)</span>
-    <span class="k">return</span> <span class="mi">1</span><span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">d_point_line</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">points</span><span class="o">-</span><span class="n">center</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d_point_line</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">points</span> <span class="o">-</span> <span class="n">center</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 
     <span class="c1"># Different version via SVD</span>
-    <span class="n">centered_points</span> <span class="o">=</span> <span class="n">points</span><span class="o">-</span><span class="n">center</span>
-    <span class="n">uu</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">vv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">centered_points</span><span class="p">)</span><span class="c1">#, full_matrices=False)</span>
+    <span class="n">centered_points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">center</span>
+    <span class="n">uu</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">vv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">centered_points</span><span class="p">)</span>  <span class="c1"># , full_matrices=False)</span>
     <span class="c1"># Now vv[0] is the direction of the target line.</span>
     <span class="c1"># Calculate the deviation of the points from the target line.</span>
-    <span class="n">distances_from_line</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centered_points</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">magnitude</span><span class="p">(</span><span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">r2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">distances_from_line</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">centered_points</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">distances_from_line</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">centered_points</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">r2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">distances_from_line</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">centered_points</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">r2</span></div>
+
 
 <div class="viewcode-block" id="create_orthonormal_basis"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.create_orthonormal_basis">[docs]</a><span class="k">def</span> <span class="nf">create_orthonormal_basis</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vec3</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -276,13 +318,23 @@
 <span class="sd">    the others.</span>
 
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">vec1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vec2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vec3</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">USE_ASSERTS</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">cytvec</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Extention modules (cython code) not installed, using slower python version&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cytvec</span><span class="o">.</span><span class="n">create_orthonormal_basis</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">vec2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">vec2</span> <span class="o">=</span> <span class="n">get_non_colinear_unit_vector</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
         <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">USE_ASSERTS</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">round</span><span class="p">(</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">),</span><span class="mi">9</span><span class="p">)</span><span class="o">!=</span><span class="nb">round</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="mi">9</span><span class="p">):</span>
-                <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;vec2 </span><span class="si">{}</span><span class="s2"> is not normal to vec1 </span><span class="si">{}</span><span class="s2">! Angle is </span><span class="si">{}</span><span class="s2"> rad (</span><span class="si">{}</span><span class="s2"> degrees)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">,</span> <span class="n">vec_angle</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">)),</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">round</span><span class="p">(</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">),</span> <span class="mi">9</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">round</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;vec2 </span><span class="si">{}</span><span class="s2"> is not normal to vec1 </span><span class="si">{}</span><span class="s2">! Angle is </span><span class="si">{}</span><span class="s2"> rad (</span><span class="si">{}</span><span class="s2"> degrees)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">,</span> <span class="n">vec_angle</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">vec2</span><span class="p">,</span> <span class="n">vec1</span><span class="p">))))</span>
 
     <span class="n">mag_vec1</span> <span class="o">=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">mag_vec1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -291,7 +343,8 @@
 
     <span class="n">mag_vec2</span> <span class="o">=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec2</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">mag_vec2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s2">&quot;vec 2 has magnitude 0. vecs are so far </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span>
+            <span class="s2">&quot;vec 2 has magnitude 0. vecs are so far </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">))</span>
     <span class="n">vec2</span> <span class="o">=</span> <span class="n">vec2</span> <span class="o">/</span> <span class="n">mag_vec2</span>
 
     <span class="k">if</span> <span class="n">vec3</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -299,10 +352,12 @@
 
     <span class="n">mag_vec3</span> <span class="o">=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec3</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">mag_vec3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s2">&quot;vec 3 has magnitude 0. vecs are </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">vec1</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">vec2</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">vec3</span><span class="p">)))</span>
+        <span class="k">raise</span> <span class="ne">ZeroDivisionError</span><span class="p">(</span><span class="s2">&quot;vec 3 has magnitude 0. vecs are </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">repr</span><span class="p">(</span><span class="n">vec1</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">vec2</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">vec3</span><span class="p">)))</span>
     <span class="n">vec3</span> <span class="o">=</span> <span class="n">vec3</span> <span class="o">/</span> <span class="n">mag_vec3</span>
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">,</span> <span class="n">vec3</span><span class="p">])</span></div>
+
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd"># Code used for comparing the fastes method of creating an orthonormal basis:</span>
@@ -349,6 +404,7 @@
 <span class="sd">    print &quot;2: &quot;, t2.repeat(number=100000) #prints [2.7473390102386475, 2.74338698387146, 2.731964111328125]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+
 <div class="viewcode-block" id="spherical_cartesian_to_polar"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.spherical_cartesian_to_polar">[docs]</a><span class="k">def</span> <span class="nf">spherical_cartesian_to_polar</span><span class="p">(</span><span class="n">vec</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Return a parameterization of a vector of 3 coordinates:</span>
@@ -371,8 +427,10 @@
     <span class="n">v</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">atan2</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">USE_ASSERTS</span><span class="p">:</span>
-        <span class="n">nt</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">r</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
+        <span class="n">nt</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">vec</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">r</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">*</span>
+                           <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="spherical_polar_to_cartesian"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.spherical_polar_to_cartesian">[docs]</a><span class="k">def</span> <span class="nf">spherical_polar_to_cartesian</span><span class="p">(</span><span class="n">vec</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -391,6 +449,7 @@
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">])</span></div>
 
+
 <div class="viewcode-block" id="get_standard_basis"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.get_standard_basis">[docs]</a><span class="k">def</span> <span class="nf">get_standard_basis</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Get a standard basis for the given dimension.</span>
@@ -407,6 +466,7 @@
     <span class="n">standard_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">standard_basis</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">standard_basis</span></div>
+
 
 <div class="viewcode-block" id="change_basis"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.change_basis">[docs]</a><span class="k">def</span> <span class="nf">change_basis</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">new_basis</span><span class="p">,</span> <span class="n">old_basis</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -435,15 +495,18 @@
 
     <span class="k">return</span> <span class="n">new_coords</span></div>
 
+
 <div class="viewcode-block" id="change_basis_vectorized"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.change_basis_vectorized">[docs]</a><span class="k">def</span> <span class="nf">change_basis_vectorized</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">new_basis</span><span class="p">,</span> <span class="n">old_basis</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Change an array of vectors (coords) from old_basis to new_basis.</span>
 
 <span class="sd">    :param coords: A array of coordinates to transform.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">standard_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">old_basis</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">coords</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">standard_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span>
+        <span class="n">old_basis</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">coords</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
     <span class="n">standard_to_new</span> <span class="o">=</span> <span class="n">nl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">new_basis</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
-    <span class="n">new_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">standard_to_new</span><span class="p">,</span> <span class="n">standard_coords</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">],[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">new_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span>
+        <span class="n">standard_to_new</span><span class="p">,</span> <span class="n">standard_coords</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
     <span class="k">return</span> <span class="n">new_coords</span></div>
 
 
@@ -494,6 +557,7 @@
 <span class="sd">    print t2.repeat(number=100000)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+
 <div class="viewcode-block" id="vector_rejection"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.vector_rejection">[docs]</a><span class="k">def</span> <span class="nf">vector_rejection</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Return the vector rejection of a from b. In other words, return the orthogonal</span>
@@ -508,54 +572,10 @@
     <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">b</span></div>
 
-<div class="viewcode-block" id="rotation_matrix_weave"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.rotation_matrix_weave">[docs]</a><span class="k">def</span> <span class="nf">rotation_matrix_weave</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">mat</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Calculate the rotation matrix for a rotation of theta degrees around axis.</span>
-
-<span class="sd">    Implemented in C++ using the weave module. Runs approximately 6x faster than</span>
-<span class="sd">    the numpy version below if no mat is passed in and around 20x faster if mat is</span>
-<span class="sd">    passed in.</span>
-
-<span class="sd">    Thanks to unutbu on StackOverflow</span>
-
-<span class="sd">    http://stackoverflow.com/questions/6802577/python-rotation-of-3d-vector</span>
-
-<span class="sd">    :param axis: The axis around which to rotate</span>
-<span class="sd">    :param theta: The angle of rotation in radians!</span>
-<span class="sd">    :return: A matrix which can be used to perform the given rotation. The coordinates</span>
-<span class="sd">             need only be multiplied by the matrix.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">mat</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
-
-    <span class="n">support</span> <span class="o">=</span> <span class="s2">&quot;#include &lt;math.h&gt;&quot;</span>
-    <span class="n">code</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        double x = sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);</span>
-<span class="s2">        double a = cos(theta / 2.0);</span>
-<span class="s2">        double b = -(axis[0] / x) * sin(theta / 2.0);</span>
-<span class="s2">        double c = -(axis[1] / x) * sin(theta / 2.0);</span>
-<span class="s2">        double d = -(axis[2] / x) * sin(theta / 2.0);</span>
-
-<span class="s2">        mat[0] = a*a + b*b - c*c - d*d;</span>
-<span class="s2">        mat[1] = 2 * (b*c - a*d);</span>
-<span class="s2">        mat[2] = 2 * (b*d + a*c);</span>
-
-<span class="s2">        mat[3*1 + 0] = 2*(b*c+a*d);</span>
-<span class="s2">        mat[3*1 + 1] = a*a+c*c-b*b-d*d;</span>
-<span class="s2">        mat[3*1 + 2] = 2*(c*d-a*b);</span>
-
-<span class="s2">        mat[3*2 + 0] = 2*(b*d-a*c);</span>
-<span class="s2">        mat[3*2 + 1] = 2*(c*d+a*b);</span>
-<span class="s2">        mat[3*2 + 2] = a*a+d*d-b*b-c*c;</span>
-<span class="s2">    &quot;&quot;&quot;</span>
-
-    <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">weave</span>
-    <span class="n">weave</span><span class="o">.</span><span class="n">inline</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;axis&#39;</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="s1">&#39;mat&#39;</span><span class="p">],</span> <span class="n">support_code</span> <span class="o">=</span> <span class="n">support</span><span class="p">,</span> <span class="n">libraries</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">mat</span></div>
-
 
 <div class="viewcode-block" id="rotation_matrix"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.rotation_matrix">[docs]</a><span class="k">def</span> <span class="nf">rotation_matrix</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+    <span class="c1">#TODO:  Use rotation_matrix_weave code (deleted in the commit that introduced this comment)</span>
+    <span class="c1"># as a guide how to implement this in cython in the future for speedup.</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculate the rotation matrix for a CLOCKWISE rotation of theta around axis.</span>
 <span class="sd">    This is in the opposite direction that is usually used.</span>
@@ -570,51 +590,50 @@
 <span class="sd">    :return: A matrix which can be used to perform the given rotation. The coordinates</span>
 <span class="sd">             need only be multiplied by the matrix. (np.dot(matrix, vec))</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="c1"># return rotation_matrix_weave(axis, theta) #scipy.weave is deprecated</span>
-    <span class="c1"># The following would be the slower pure-python implementation (for comparison)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
-            <span class="n">axis</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
-            <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">axis</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">)],</span>
-                      <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">c</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">d</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">)],</span>
-                      <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">b</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">a</span><span class="o">+</span><span class="n">d</span><span class="o">*</span><span class="n">d</span><span class="o">-</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="n">c</span><span class="o">*</span><span class="n">c</span><span class="p">]])</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">axis</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span> <span class="n">d</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">d</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">d</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">c</span><span class="p">)],</span>
+                         <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">c</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">d</span><span class="p">),</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span>
+                          <span class="n">b</span> <span class="o">*</span> <span class="n">b</span> <span class="o">-</span> <span class="n">d</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="n">d</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">)],</span>
+                         <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">d</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">c</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="n">d</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="p">),</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">d</span> <span class="o">*</span> <span class="n">d</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span><span class="p">]])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;y&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="n">a</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span>
-                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>
-                             <span class="p">[</span> <span class="n">s</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="n">a</span><span class="p">]])</span>
-        <span class="k">elif</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;z&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="n">a</span><span class="p">,</span>  <span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span>
+                             <span class="p">[</span><span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>
+                             <span class="p">[</span><span class="n">s</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="n">a</span><span class="p">]])</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">a</span><span class="p">,</span>  <span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
                              <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-        <span class="k">elif</span> <span class="n">axis</span><span class="o">==</span><span class="s2">&quot;x&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>
-                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span>  <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span>
-                             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="n">a</span><span class="p">]])</span>
+                             <span class="p">[</span><span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;x&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">],</span>
+                             <span class="p">[</span><span class="mi">0</span><span class="p">,</span>  <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span>
+                             <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span>  <span class="n">a</span><span class="p">]])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Axis must be numpy array or one of &quot;x&quot;, &quot;y&quot;, &quot;z&quot;&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="vector_set_rmsd"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.vector_set_rmsd">[docs]</a><span class="k">def</span> <span class="nf">vector_set_rmsd</span><span class="p">(</span><span class="n">set1</span><span class="p">,</span> <span class="n">set2</span><span class="p">):</span>
+
+<span class="k">def</span> <span class="nf">_vector_set_rmsd</span><span class="p">(</span><span class="n">set1</span><span class="p">,</span> <span class="n">set2</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculate the not-centered rmsd between two sets of vectors.</span>
+<span class="sd">    Currently in forgi.threedee.utilities.pdb, but subject to future deprecation.</span>
 
 <span class="sd">    :param set1: A matrix</span>
 <span class="sd">    :param set2: Another matrix.</span>
 
 <span class="sd">    :return: The rmsd between the rows of the matrix.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;DEPRECATED! Use ftms.rmsd!!!&quot;</span><span class="p">)</span>
     <span class="n">rmsd</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">set1</span><span class="p">)):</span>
         <span class="n">rmsd</span> <span class="o">+=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">set2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">set1</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">rmsd</span> <span class="o">/=</span> <span class="n">count</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rmsd</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rmsd</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="get_vector_centroid"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.get_vector_centroid">[docs]</a><span class="k">def</span> <span class="nf">get_vector_centroid</span><span class="p">(</span><span class="n">crds1</span><span class="p">):</span>
@@ -642,9 +661,11 @@
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">centroid1</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nan encountered in centroid: </span><span class="si">{}</span><span class="s1">, len crds1 = </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">centroid1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">crds1</span><span class="p">)))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;nan encountered in centroid: </span><span class="si">{}</span><span class="s1">, len crds1 = </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">centroid1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">crds1</span><span class="p">)))</span>
 
     <span class="k">return</span> <span class="n">centroid1</span></div>
+
 
 <div class="viewcode-block" id="center_on_centroid"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.center_on_centroid">[docs]</a><span class="k">def</span> <span class="nf">center_on_centroid</span><span class="p">(</span><span class="n">crds1</span><span class="p">):</span>
     <span class="n">centroid1</span> <span class="o">=</span> <span class="n">get_vector_centroid</span><span class="p">(</span><span class="n">crds1</span><span class="p">)</span>
@@ -657,17 +678,26 @@
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Return the magnitude of a vector `(|V|)`.</span>
 
+<span class="sd">    This is guaranteed for arbitrary dimensions of vec.</span>
+
 <span class="sd">    :param vec: The vector in question.</span>
 <span class="sd">    :return: The magnitude of the vector.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="c1">#return np.linalg.norm(vec) #A lot of overhead, if used for a single vector</span>
+    <span class="c1"># return np.linalg.norm(vec) #A lot of overhead, if used for a single vector</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="n">vec</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="det3x3"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.det3x3">[docs]</a><span class="k">def</span> <span class="nf">det3x3</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;return the determinant of a 3x3 matrix&quot;&quot;&quot;</span>
-    <span class="n">positive</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">minus</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">positive</span><span class="o">-</span><span class="n">minus</span></div>
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> \
+        <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> \
+        <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">minus</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> \
+        <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> \
+        <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">positive</span> <span class="o">-</span> <span class="n">minus</span></div>
+
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">def time_mag1():</span>
 <span class="sd">    vec1 = get_random_vector()</span>
@@ -687,6 +717,7 @@
 <span class="sd">    print t2.repeat(number=10000)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+
 <div class="viewcode-block" id="normalize"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.normalize">[docs]</a><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">vec</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Normalize a vector so that its magnitude becomes 1.0 while</span>
@@ -696,9 +727,10 @@
 <span class="sd">    :return: A normalized version of the vector.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">mag</span> <span class="o">=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mag</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="c1">#Numpy would return Nan and raise a RuntimeWarning.</span>
+    <span class="k">if</span> <span class="n">mag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Numpy would return Nan and raise a RuntimeWarning.</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot normalize zero- vector!&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">vec</span> <span class="o">/</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">vec</span> <span class="o">/</span> <span class="n">mag</span></div>
+
 
 <div class="viewcode-block" id="vec_angle"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.vec_angle">[docs]</a><span class="k">def</span> <span class="nf">vec_angle</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -750,6 +782,7 @@
     <span class="c1"># 0.6194930076599121</span>
     <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></div>
 
+
 <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">def cross(a, b):</span>
 <span class="sd">    c = [a[1]*b[2] - a[2]*b[1],</span>
@@ -759,75 +792,80 @@
 <span class="sd">    return c</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="seg_intersect"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.seg_intersect">[docs]</a><span class="k">def</span> <span class="nf">seg_intersect</span><span class="p">(</span><span class="n">line1</span><span class="p">,</span> <span class="n">line2</span><span class="p">)</span> <span class="p">:</span>
+
+<div class="viewcode-block" id="seg_intersect"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.seg_intersect">[docs]</a><span class="k">def</span> <span class="nf">seg_intersect</span><span class="p">(</span><span class="n">line1</span><span class="p">,</span> <span class="n">line2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Intersection of 2 line segments in 2D space (as lists or numpy array-like).</span>
 <span class="sd">    :param line1: a tuple/list (a1, a2): The first line segment, from a1 to a2</span>
 <span class="sd">    :param line2: a tuple/list (b1, b2):The 2nd line segment, from b1 to b2</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="o">=</span><span class="n">line1</span>
-    <span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="o">=</span><span class="n">line2</span>
-    <span class="n">a1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a1</span><span class="p">)</span>
-    <span class="n">a2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>
-    <span class="n">b1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
-    <span class="n">b2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="p">[</span><span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="p">,</span><span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">]))</span><span class="o">!=</span><span class="mi">2</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting only 2-dimensional vectors. Found higher-dimensional vector: a1=</span><span class="si">{}</span><span class="s2">, a2=</span><span class="si">{}</span><span class="s2">, b1=</span><span class="si">{}</span><span class="s2">, b2=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="p">,</span><span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">))</span>
-    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="p">[</span><span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="p">,</span><span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">]))</span><span class="o">!=</span><span class="mi">2</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expecting only 2-dimensional vectors. Found lower-dimensional vector.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">a1</span><span class="o">==</span><span class="n">a2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">b1</span><span class="o">==</span><span class="n">b2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Start and end of a line must not be equal! a1=</span><span class="si">{}</span><span class="s2">, a2=</span><span class="si">{}</span><span class="s2">, b1=</span><span class="si">{}</span><span class="s2">, b2=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span><span class="n">a2</span><span class="p">,</span><span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">))</span>
-    <span class="n">dxa</span><span class="o">=</span><span class="n">a2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">dya</span><span class="o">=</span><span class="n">a2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">dxb</span><span class="o">=</span><span class="n">b2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">dyb</span><span class="o">=</span><span class="n">b2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">num</span><span class="o">=</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dya</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">dxa</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dya</span><span class="o">+</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">dxa</span>
-    <span class="n">denom</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">dxb</span><span class="o">*</span><span class="n">dya</span><span class="o">-</span><span class="n">dyb</span><span class="o">*</span><span class="n">dxa</span><span class="p">)</span>
+    <span class="n">a1</span><span class="p">,</span> <span class="n">a2</span> <span class="o">=</span> <span class="n">line1</span>
+    <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">line2</span>
+    <span class="n">a1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a1</span><span class="p">)</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>
+    <span class="n">b1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+    <span class="n">b2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="p">[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">]))</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expecting only 2-dimensional vectors. Found higher-dimensional vector: a1=</span><span class="si">{}</span><span class="s2">, a2=</span><span class="si">{}</span><span class="s2">, b1=</span><span class="si">{}</span><span class="s2">, b2=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">min</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="p">[</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">]))</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Expecting only 2-dimensional vectors. Found lower-dimensional vector.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">a1</span> <span class="o">==</span> <span class="n">a2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">b1</span> <span class="o">==</span> <span class="n">b2</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Start and end of a line must not be equal! a1=</span><span class="si">{}</span><span class="s2">, a2=</span><span class="si">{}</span><span class="s2">, b1=</span><span class="si">{}</span><span class="s2">, b2=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">a2</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">))</span>
+    <span class="n">dxa</span> <span class="o">=</span> <span class="n">a2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dya</span> <span class="o">=</span> <span class="n">a2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">dxb</span> <span class="o">=</span> <span class="n">b2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dyb</span> <span class="o">=</span> <span class="n">b2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dya</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">dxa</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dya</span> <span class="o">+</span> <span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">dxa</span>
+    <span class="n">denom</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dxb</span> <span class="o">*</span> <span class="n">dya</span> <span class="o">-</span> <span class="n">dyb</span> <span class="o">*</span> <span class="n">dxa</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">denom</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-        <span class="c1">#parallel or on same lines</span>
-        <span class="k">if</span> <span class="n">dxa</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-          <span class="n">t1</span><span class="o">=</span><span class="p">(</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">dya</span>
-          <span class="n">t2</span><span class="o">=</span><span class="p">(</span><span class="n">b2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">dya</span>
-          <span class="n">t1test</span><span class="o">=</span><span class="n">t1</span>
+    <span class="k">if</span> <span class="n">denom</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># parallel or on same lines</span>
+        <span class="k">if</span> <span class="n">dxa</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dya</span>
+            <span class="n">t2</span> <span class="o">=</span> <span class="p">(</span><span class="n">b2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dya</span>
+            <span class="n">t1test</span> <span class="o">=</span> <span class="n">t1</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="n">t1</span><span class="o">=</span><span class="p">(</span><span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">dxa</span>
-          <span class="n">t2</span><span class="o">=</span><span class="p">(</span><span class="n">b2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">dxa</span>
-        <span class="k">if</span> <span class="n">dya</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-          <span class="n">t1test</span><span class="o">=</span><span class="n">t1</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">dxa</span>
+            <span class="n">t2</span> <span class="o">=</span> <span class="p">(</span><span class="n">b2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">dxa</span>
+        <span class="k">if</span> <span class="n">dya</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">t1test</span> <span class="o">=</span> <span class="n">t1</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="n">t1test</span><span class="o">=</span><span class="p">(</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">dya</span>
-        <span class="k">if</span> <span class="n">t1</span><span class="o">!=</span><span class="n">t1test</span><span class="p">:</span>
+            <span class="n">t1test</span> <span class="o">=</span> <span class="p">(</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dya</span>
+        <span class="k">if</span> <span class="n">t1</span> <span class="o">!=</span> <span class="n">t1test</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
-        <span class="c1">#On same line</span>
-        <span class="k">if</span> <span class="n">dxa</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-          <span class="n">s1</span><span class="o">=</span><span class="p">(</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">dyb</span>
-          <span class="n">s2</span><span class="o">=</span><span class="p">(</span><span class="n">a2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">dyb</span>
+        <span class="c1"># On same line</span>
+        <span class="k">if</span> <span class="n">dxa</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="p">(</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dyb</span>
+            <span class="n">s2</span> <span class="o">=</span> <span class="p">(</span><span class="n">a2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dyb</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="n">s1</span><span class="o">=</span><span class="p">(</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">dxb</span>
-          <span class="n">s2</span><span class="o">=</span><span class="p">(</span><span class="n">a2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">dxb</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span><span class="o">&gt;</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">]):</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="p">(</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">dxb</span>
+            <span class="n">s2</span> <span class="o">=</span> <span class="p">(</span><span class="n">a2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">b1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">dxb</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">]):</span>
             <span class="k">return</span> <span class="p">[]</span>
-        <span class="n">ts</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
-        <span class="n">te</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
-        <span class="n">toret</span><span class="o">=</span><span class="p">[]</span>
-        <span class="k">if</span> <span class="n">ts</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
+        <span class="n">te</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">)</span>
+        <span class="n">toret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">ts</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">toret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">toret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">te</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">te</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">toret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">toret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">toret</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">s</span><span class="o">=</span><span class="n">num</span><span class="o">/</span><span class="n">denom</span>
-        <span class="k">if</span> <span class="n">s</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">s</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">c</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span><span class="o">+</span><span class="n">s</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">dxa</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span>
-                <span class="n">t</span><span class="o">=</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">dxa</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">num</span> <span class="o">/</span> <span class="n">denom</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span> <span class="o">+</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">dxa</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">dxa</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">t</span><span class="o">=</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="n">dya</span>
-            <span class="k">if</span> <span class="n">t</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">t</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">a1</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dya</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">[]</span></div>
 
@@ -839,17 +877,27 @@
 
 <span class="sd">    :param point: A point(an array with shape (3,)) or multiple points (shape n,3)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">point</span><span class="p">)</span><span class="o">==</span><span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
-        <span class="k">return</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">line_dir</span><span class="p">,</span> <span class="p">(</span><span class="n">line_start</span><span class="o">-</span><span class="n">point</span><span class="p">)))</span><span class="o">/</span><span class="n">magnitude</span><span class="p">(</span><span class="n">line_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,):</span>
+        <span class="k">return</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">line_dir</span><span class="p">,</span> <span class="p">(</span><span class="n">line_start</span> <span class="o">-</span> <span class="n">point</span><span class="p">)))</span> <span class="o">/</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">line_dir</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># More than one point</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">line_dir</span><span class="p">,</span> <span class="n">line_start</span><span class="o">-</span><span class="n">point</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">magnitude</span><span class="p">(</span><span class="n">line_dir</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">line_dir</span><span class="p">,</span> <span class="n">line_start</span> <span class="o">-</span> <span class="n">point</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">line_dir</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="vec_distance"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.vec_distance">[docs]</a><span class="k">def</span> <span class="nf">vec_distance</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The (euclidean) distance between two points vec1 and vec2.</span>
+
+<span class="sd">    This is guaranteed to work for arbitrary but equal dimensions of vec1 and vec2.</span>
+
+<span class="sd">    :param vec1, vec2: A list or np.array of floats</span>
+<span class="sd">    :returns: A float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vec1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
     <span class="n">vec2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vec2</span><span class="p">)</span>
-    <span class="n">direction</span> <span class="o">=</span> <span class="n">vec2</span><span class="o">-</span><span class="n">vec1</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">vec2</span> <span class="o">-</span> <span class="n">vec1</span>
     <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">direction</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="elements_closer_than"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.elements_closer_than">[docs]</a><span class="nd">@profile</span>
 <span class="k">def</span> <span class="nf">elements_closer_than</span><span class="p">(</span><span class="n">s1_p0</span><span class="p">,</span> <span class="n">s1_p1</span><span class="p">,</span> <span class="n">s2_p0</span><span class="p">,</span> <span class="n">s2_p1</span><span class="p">,</span> <span class="n">distance</span><span class="p">):</span>
@@ -865,29 +913,27 @@
 <span class="sd">    :param s2_p0: The start of the second segment</span>
 <span class="sd">    :param s2_p1: The end of the second segment</span>
 
-<span class="sd">    :return: A tuple of points (i1,i2) containing the point i1 on s1</span>
-<span class="sd">        closest to the point i2 on segment s2.</span>
+<span class="sd">    :return: True or False</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># pylint: disable=E1130  # See https://github.com/PyCQA/pylint/issues/2721</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">s1_p1</span> <span class="o">-</span> <span class="n">s1_p0</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">s2_p1</span> <span class="o">-</span> <span class="n">s2_p0</span>
     <span class="n">w</span> <span class="o">=</span> <span class="n">s1_p0</span> <span class="o">-</span> <span class="n">s2_p0</span>
-    <span class="n">lenw</span><span class="o">=</span><span class="n">magnitude</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
-    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">u</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
+    <span class="n">lenw</span> <span class="o">=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
 
-    <span class="k">if</span> <span class="n">lenw</span> <span class="o">&lt;</span><span class="n">distance</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">lenw</span> <span class="o">&lt;</span> <span class="n">distance</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="n">lenw</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">+</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">+</span><span class="n">distance</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">lenw</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">distance</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
 
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 
-    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
 
-    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
-    <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
-
-
-    <span class="n">D</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">c</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">b</span>       <span class="c1"># always &gt;= 0</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span>       <span class="c1"># always &gt;= 0</span>
     <span class="n">sD</span> <span class="o">=</span> <span class="n">D</span>      <span class="c1"># sc = sN / sD, default sD = D &gt;= 0</span>
     <span class="n">tD</span> <span class="o">=</span> <span class="n">D</span>      <span class="c1"># tc = tN / tD, default tD = D &gt;= 0</span>
 
@@ -900,8 +946,8 @@
         <span class="n">tN</span> <span class="o">=</span> <span class="n">e</span>
         <span class="n">tD</span> <span class="o">=</span> <span class="n">c</span>
     <span class="k">else</span><span class="p">:</span>                <span class="c1"># get the closest points on the infinite lines</span>
-        <span class="n">sN</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">e</span> <span class="o">-</span> <span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
-        <span class="n">tN</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">e</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">sN</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">tN</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">sN</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">):</span>      <span class="c1"># sc &lt; 0 =&gt; the s=0 edge is visible</span>
             <span class="n">sN</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="n">tN</span> <span class="o">=</span> <span class="n">e</span>
@@ -937,10 +983,9 @@
     <span class="n">tc</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tN</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">SMALL_NUM</span> <span class="k">else</span> <span class="n">tN</span> <span class="o">/</span> <span class="n">tD</span>
 
     <span class="c1"># get the difference of the two closest points</span>
-    <span class="c1">#dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)</span>
+    <span class="c1"># dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)</span>
 
-    <span class="k">return</span> <span class="n">vec_distance</span><span class="p">(</span><span class="n">s1_p0</span> <span class="o">+</span> <span class="n">sc</span> <span class="o">*</span> <span class="n">u</span><span class="p">,</span> <span class="n">s2_p0</span> <span class="o">+</span> <span class="n">tc</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span><span class="o">&lt;</span><span class="n">distance</span></div>
-
+    <span class="k">return</span> <span class="n">vec_distance</span><span class="p">(</span><span class="n">s1_p0</span> <span class="o">+</span> <span class="n">sc</span> <span class="o">*</span> <span class="n">u</span><span class="p">,</span> <span class="n">s2_p0</span> <span class="o">+</span> <span class="n">tc</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">distance</span></div>
 
 
 <div class="viewcode-block" id="line_segment_distance"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.line_segment_distance">[docs]</a><span class="k">def</span> <span class="nf">line_segment_distance</span><span class="p">(</span><span class="n">s1_p0</span><span class="p">,</span> <span class="n">s1_p1</span><span class="p">,</span> <span class="n">s2_p0</span><span class="p">,</span> <span class="n">s2_p1</span><span class="p">):</span>
@@ -961,18 +1006,18 @@
 <span class="sd">    :return: A tuple of points (i1,i2) containing the point i1 on s1</span>
 <span class="sd">        closest to the point i2 on segment s2.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># pylint: disable=E1130  # See https://github.com/PyCQA/pylint/issues/2721</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">s1_p1</span> <span class="o">-</span> <span class="n">s1_p0</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">s2_p1</span> <span class="o">-</span> <span class="n">s2_p0</span>
     <span class="n">w</span> <span class="o">=</span> <span class="n">s1_p0</span> <span class="o">-</span> <span class="n">s2_p0</span>
 
-    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">u</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
-    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
-    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
-    <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>        <span class="c1"># always &gt;= 0</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
 
-
-    <span class="n">D</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">c</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">b</span>       <span class="c1"># always &gt;= 0</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span>       <span class="c1"># always &gt;= 0</span>
     <span class="n">sD</span> <span class="o">=</span> <span class="n">D</span>      <span class="c1"># sc = sN / sD, default sD = D &gt;= 0</span>
     <span class="n">tD</span> <span class="o">=</span> <span class="n">D</span>      <span class="c1"># tc = tN / tD, default tD = D &gt;= 0</span>
 
@@ -985,8 +1030,8 @@
         <span class="n">tN</span> <span class="o">=</span> <span class="n">e</span>
         <span class="n">tD</span> <span class="o">=</span> <span class="n">c</span>
     <span class="k">else</span><span class="p">:</span>                <span class="c1"># get the closest points on the infinite lines</span>
-        <span class="n">sN</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">e</span> <span class="o">-</span> <span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
-        <span class="n">tN</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">e</span> <span class="o">-</span> <span class="n">b</span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">sN</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span>
+        <span class="n">tN</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">e</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">sN</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">):</span>      <span class="c1"># sc &lt; 0 =&gt; the s=0 edge is visible</span>
             <span class="n">sN</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="n">tN</span> <span class="o">=</span> <span class="n">e</span>
@@ -1022,9 +1067,10 @@
     <span class="n">tc</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tN</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">SMALL_NUM</span> <span class="k">else</span> <span class="n">tN</span> <span class="o">/</span> <span class="n">tD</span>
 
     <span class="c1"># get the difference of the two closest points</span>
-    <span class="c1">#dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)</span>
+    <span class="c1"># dP = w + (sc * u) - (tc * v)  # = S1(sc) - S2(tc)</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">s1_p0</span> <span class="o">+</span> <span class="n">sc</span> <span class="o">*</span> <span class="n">u</span><span class="p">,</span> <span class="n">s2_p0</span> <span class="o">+</span> <span class="n">tc</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="closest_point_on_seg"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.closest_point_on_seg">[docs]</a><span class="k">def</span> <span class="nf">closest_point_on_seg</span><span class="p">(</span><span class="n">seg_a</span><span class="p">,</span> <span class="n">seg_b</span><span class="p">,</span> <span class="n">circ_pos</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -1035,9 +1081,9 @@
 <span class="sd">    http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seg_a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">seg_a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seg_a</span><span class="p">)</span>
-        <span class="n">seg_b</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seg_b</span><span class="p">)</span>
-        <span class="n">circ_pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">circ_pos</span><span class="p">)</span>
+        <span class="n">seg_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seg_a</span><span class="p">)</span>
+        <span class="n">seg_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">seg_b</span><span class="p">)</span>
+        <span class="n">circ_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">circ_pos</span><span class="p">)</span>
     <span class="n">seg_v</span> <span class="o">=</span> <span class="n">seg_b</span> <span class="o">-</span> <span class="n">seg_a</span>
     <span class="n">pt_v</span> <span class="o">=</span> <span class="n">circ_pos</span> <span class="o">-</span> <span class="n">seg_a</span>
     <span class="n">mag</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">seg_v</span> <span class="o">*</span> <span class="n">seg_v</span><span class="p">))</span>
@@ -1054,23 +1100,6 @@
     <span class="n">closest</span> <span class="o">=</span> <span class="n">proj_v</span> <span class="o">+</span> <span class="n">seg_a</span>
     <span class="k">return</span> <span class="n">closest</span></div>
 
-
-<span class="c1"># COVERAGE: Not used in forgi and ernwin at least since forgi v0.3. Consider deprecation</span>
-<div class="viewcode-block" id="segment_circle"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.segment_circle">[docs]</a><span class="k">def</span> <span class="nf">segment_circle</span><span class="p">(</span><span class="n">seg_a</span><span class="p">,</span> <span class="n">seg_b</span><span class="p">,</span> <span class="n">circ_pos</span><span class="p">,</span> <span class="n">circ_rad</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Something. Lifted from:</span>
-
-<span class="sd">    http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">closest</span> <span class="o">=</span> <span class="n">closest_point_on_seg</span><span class="p">(</span><span class="n">seg_a</span><span class="p">,</span> <span class="n">seg_b</span><span class="p">,</span> <span class="n">circ_pos</span><span class="p">)</span>
-    <span class="n">dist_v</span> <span class="o">=</span> <span class="n">circ_pos</span> <span class="o">-</span> <span class="n">closest</span>
-    <span class="n">mag</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">dist_v</span> <span class="o">*</span> <span class="n">dist_v</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="n">circ_rad</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">vec</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mag</span><span class="p">(</span><span class="n">dist_v</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Circle&#39;s center is exactly on segment&quot;</span><span class="p">)</span>
-    <span class="n">offset</span> <span class="o">=</span> <span class="n">dist_v</span> <span class="o">/</span> <span class="n">mag</span><span class="p">(</span><span class="n">dist_v</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">circ_rad</span> <span class="o">-</span> <span class="n">mag</span><span class="p">(</span><span class="n">dist_v</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">offset</span></div>
 
 <div class="viewcode-block" id="cylinder_line_intersection"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.cylinder_line_intersection">[docs]</a><span class="k">def</span> <span class="nf">cylinder_line_intersection</span><span class="p">(</span><span class="n">cyl</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -1106,9 +1135,9 @@
 
     <span class="c1"># Figure out the x position by determining how far along</span>
     <span class="c1"># the y-coordinate of the segment the closest point is</span>
-    <span class="n">x</span>  <span class="o">=</span> <span class="p">(</span><span class="n">line_t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span>
-            <span class="p">(</span><span class="n">line_vec_t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span>
-            <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">line_t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">line_vec_t</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">line_t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span>
+         <span class="p">(</span><span class="n">line_vec_t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span>
+          <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">line_t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">line_vec_t</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">p</span> <span class="o">-</span> <span class="n">cyl_t</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
     <span class="n">o</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">v</span><span class="p">))</span>
     <span class="n">p</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
@@ -1161,7 +1190,9 @@
 
     <span class="k">return</span> <span class="n">change_basis</span><span class="p">(</span><span class="n">intersects_t</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">standard_basis</span><span class="p">,</span> <span class="n">cyl_basis</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
-<span class="c1">#COVERAGE: Not used in ernwin and forgi at least since forgi v0.3</span>
+<span class="c1"># COVERAGE: Not used in ernwin and forgi at least since forgi v0.3</span>
+
+
 <div class="viewcode-block" id="pin_fits_two_cyl"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.pin_fits_two_cyl">[docs]</a><span class="k">def</span> <span class="nf">pin_fits_two_cyl</span><span class="p">(</span><span class="n">cyl1</span><span class="p">,</span> <span class="n">cyl2</span><span class="p">,</span> <span class="n">cyl_width</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    If we create a cone that starts at one end of cylinder1, does it</span>
@@ -1196,7 +1227,9 @@
 
     <span class="k">return</span> <span class="kc">True</span></div>
 
-<span class="c1">#COVERAGE: Not used in ernwin and forgi at least since forgi v0.3</span>
+<span class="c1"># COVERAGE: Not used in ernwin and forgi at least since forgi v0.3</span>
+
+
 <div class="viewcode-block" id="point_in_cylinder"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.point_in_cylinder">[docs]</a><span class="k">def</span> <span class="nf">point_in_cylinder</span><span class="p">(</span><span class="n">pt1</span><span class="p">,</span> <span class="n">pt2</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">testpt</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Determine if testpt is within a cylinder of radius r.</span>
@@ -1229,25 +1262,27 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span></div>
 
+
 <div class="viewcode-block" id="GetPointsEquiAngularlyDistancedOnSphere"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.GetPointsEquiAngularlyDistancedOnSphere">[docs]</a><span class="k">def</span> <span class="nf">GetPointsEquiAngularlyDistancedOnSphere</span><span class="p">(</span><span class="n">numberOfPoints</span><span class="o">=</span><span class="mi">45</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; each point you get will be of form &#39;x, y, z&#39;; in cartesian coordinates</span>
 <span class="sd">        eg. the &#39;l2 distance&#39; from the origion [0., 0., 0.] for each point will be 1.0</span>
 <span class="sd">        ------------</span>
 <span class="sd">        converted from:  http://web.archive.org/web/20120421191837/http://www.cgafaq.info/wiki/Evenly_distributed_points_on_sphere )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">dlong</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mf">3.0</span><span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.0</span><span class="p">))</span>  <span class="c1"># ~2.39996323</span>
-    <span class="n">dz</span>   <span class="o">=</span>  <span class="mf">2.0</span><span class="o">/</span><span class="n">numberOfPoints</span>
-    <span class="n">long</span> <span class="o">=</span>  <span class="mf">0.0</span>
-    <span class="n">z</span>    <span class="o">=</span>  <span class="mf">1.0</span> <span class="o">-</span> <span class="n">dz</span><span class="o">/</span><span class="mf">2.0</span>
-    <span class="n">ptsOnSphere</span> <span class="o">=</span><span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">numberOfPoints</span><span class="p">):</span>
-        <span class="n">r</span>    <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">z</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
-        <span class="n">ptNew</span> <span class="o">=</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">long</span><span class="p">)</span><span class="o">*</span><span class="n">r</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">long</span><span class="p">)</span><span class="o">*</span><span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-        <span class="n">ptsOnSphere</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">ptNew</span> <span class="p">)</span>
-        <span class="n">z</span>    <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">dz</span>
+    <span class="n">dlong</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">5.0</span><span class="p">))</span>  <span class="c1"># ~2.39996323</span>
+    <span class="n">dz</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">numberOfPoints</span>
+    <span class="n">long</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">dz</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">ptsOnSphere</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">numberOfPoints</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">z</span> <span class="o">*</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">ptNew</span> <span class="o">=</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">long</span><span class="p">)</span> <span class="o">*</span> <span class="n">r</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">long</span><span class="p">)</span> <span class="o">*</span> <span class="n">r</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">ptsOnSphere</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ptNew</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">dz</span>
         <span class="n">long</span> <span class="o">=</span> <span class="n">long</span> <span class="o">+</span> <span class="n">dlong</span>
 
     <span class="k">return</span> <span class="n">ptsOnSphere</span></div>
+
 
 <div class="viewcode-block" id="sortAlongLine"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.sortAlongLine">[docs]</a><span class="k">def</span> <span class="nf">sortAlongLine</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1259,18 +1294,47 @@
 
 <span class="sd">    :returns: A list containing start, end and all elements of points, sorted by the distance from start</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1">#print start, end, points</span>
-    <span class="n">s_points</span><span class="o">=</span><span class="n">points</span><span class="o">+</span><span class="p">[</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">]</span>
+    <span class="c1"># print start, end, points</span>
+    <span class="n">s_points</span> <span class="o">=</span> <span class="n">points</span> <span class="o">+</span> <span class="p">[</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">]</span>
     <span class="n">s_points</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">vec_distance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">start</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">s_points</span></div>
 
+
 <div class="viewcode-block" id="middlepoint"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.middlepoint">[docs]</a><span class="k">def</span> <span class="nf">middlepoint</span><span class="p">(</span><span class="n">vec1</span><span class="p">,</span> <span class="n">vec2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The point in the middle between vec1 and vec2.&quot;&quot;&quot;</span>
-    <span class="n">generator</span><span class="o">=</span><span class="p">((</span><span class="n">x</span><span class="o">+</span><span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="mf">2.0</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vec1</span><span class="p">))</span>
-    <span class="n">typ</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">typ</span><span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">vec2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vec1</span><span class="p">))</span>
+    <span class="n">typ</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">vec1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">typ</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">vec1</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">typ</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pair_distance_distribution"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.pair_distance_distribution">[docs]</a><span class="k">def</span> <span class="nf">pair_distance_distribution</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">pair_distance_distribution_vectorized</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">stepsize</span><span class="p">)</span>
+    <span class="c1"># The below is left in here as a not vectorized (slow) reference implementation</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">vec_distance</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+        <span class="n">dists</span><span class="p">[</span><span class="n">d</span> <span class="o">//</span> <span class="n">stepsize</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dists</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dists</span><span class="p">[</span><span class="n">xi</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="pair_distance_distribution_vectorized"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.vector.html#forgi.threedee.utilities.vector.pair_distance_distribution_vectorized">[docs]</a><span class="k">def</span> <span class="nf">pair_distance_distribution_vectorized</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">stepsize</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">dists</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+    <span class="n">p1s</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p2s</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">p1s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="n">p2s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+    <span class="n">diffs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p1s</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p2s</span><span class="p">)</span>
+    <span class="n">lengths</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diffs</span><span class="o">*</span><span class="n">diffs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="n">lengths</span> <span class="o">//</span> <span class="n">stepsize</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">:</span>
+        <span class="n">dists</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dists</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">stepsize</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dists</span><span class="p">[</span><span class="n">xi</span><span class="p">]</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span></div>
 </pre></div>
 
       </div>
@@ -1283,8 +1347,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

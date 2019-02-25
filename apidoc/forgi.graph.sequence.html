@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.graph.sequence module &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.graph.transform_graphs module" href="forgi.graph.transform_graphs.html" />
+    <link rel="prev" title="forgi.graph.residue module" href="forgi.graph.residue.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.graph.residue.html">forgi.graph.residue module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.graph.transform_graphs.html">forgi.graph.transform_graphs module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.graph.sequence">
+<span id="forgi-graph-sequence-module"></span><h1>forgi.graph.sequence module<a class="headerlink" href="#module-forgi.graph.sequence" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.graph.sequence.MissingResidue">
+<em class="property">class </em><code class="descclassname">forgi.graph.sequence.</code><code class="descname">MissingResidue</code><span class="sig-paren">(</span><em>resid</em>, <em>res_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#MissingResidue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.MissingResidue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>resid</strong> – A fgr.RESID instance of a string.</li>
+<li><strong>resname</strong> – A string. Probably one of “AUGC”.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="classmethod">
+<dt id="forgi.graph.sequence.MissingResidue.from_bg_fields">
+<em class="property">classmethod </em><code class="descname">from_bg_fields</code><span class="sig-paren">(</span><em>parts</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#MissingResidue.from_bg_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.MissingResidue.from_bg_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used during loading of the bg_file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parts</strong> – A list of strings. If the first is not “missing”,
+None is returned</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Either a MissingResidue instance or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.MissingResidue.to_bg_string">
+<code class="descname">to_bg_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#MissingResidue.to_bg_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.MissingResidue.to_bg_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.graph.sequence.SeqidList">
+<em class="property">class </em><code class="descclassname">forgi.graph.sequence.</code><code class="descname">SeqidList</code><span class="sig-paren">(</span><em>arg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#SeqidList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.SeqidList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">_abcoll.Sequence</span></code></p>
+<dl class="method">
+<dt id="forgi.graph.sequence.SeqidList.index">
+<code class="descname">index</code><span class="sig-paren">(</span><em>elem</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#SeqidList.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.SeqidList.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.graph.sequence.Sequence">
+<em class="property">class </em><code class="descclassname">forgi.graph.sequence.</code><code class="descname">Sequence</code><span class="sig-paren">(</span><em>seq</em>, <em>seqids</em>, <em>missing_residues=None</em>, <em>modifications=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A class holding the RNA sequence.</p>
+<p>It supports 2 indexing conventions (see below), missing residues
+and modified nucleotids.</p>
+<p>The two indexing conventions are:</p>
+<ul class="simple">
+<li>1-based indexing into the sequence for which structure information is available
+This uses indices of type integer.
+Integer based indexing can not address missing residues!</li>
+<li>Indexing using PDB-style numbers (They can start at any positive or negative number and
+may contain insertion codes or gaps.)
+This uses indices of type fgr.RESID
+PDB-Style indices may address missing residues (Reidues for which only sequence
+but no structure information is present).</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>seq</strong> – A string</li>
+<li><strong>missing_residues</strong> – A list of dictionaries with the following keys:
+“res_name”, “chain”, “ssseq”, “insertion”</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="forgi.graph.sequence.Sequence.backbone_breaks_after">
+<code class="descname">backbone_breaks_after</code><a class="headerlink" href="#forgi.graph.sequence.Sequence.backbone_breaks_after" title="Permalink to this definition">¶</a></dt>
+<dd><p>Breakpoints as 1-based indices</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.define_length">
+<code class="descname">define_length</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.define_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.define_length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.get_bg_str">
+<code class="descname">get_bg_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.get_bg_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.get_bg_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used during bg-file creation</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.is_valid">
+<code class="descname">is_valid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.is_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.iter_modifications">
+<code class="descname">iter_modifications</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.iter_modifications"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.iter_modifications" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iter over tuples seq_id, modified residue code</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.iter_resids">
+<code class="descname">iter_resids</code><span class="sig-paren">(</span><em>start</em>, <em>stop</em>, <em>include_missing</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.iter_resids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.iter_resids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.to_integer">
+<code class="descname">to_integer</code><span class="sig-paren">(</span><em>resid</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.to_integer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.to_integer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.graph.sequence.Sequence.to_resid">
+<code class="descname">to_resid</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#Sequence.to_resid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.Sequence.to_resid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.graph.sequence.Sequence.with_missing">
+<code class="descname">with_missing</code><a class="headerlink" href="#forgi.graph.sequence.Sequence.with_missing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows slices with missing residues!</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.graph.sequence.Sequence.with_modifications">
+<code class="descname">with_modifications</code><a class="headerlink" href="#forgi.graph.sequence.Sequence.with_modifications" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="forgi.graph.sequence.SequenceLoader">
+<em class="property">class </em><code class="descclassname">forgi.graph.sequence.</code><code class="descname">SequenceLoader</code><a class="reference internal" href="../_modules/forgi/graph/sequence.html#SequenceLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.SequenceLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the sequence-related part during loading of bg-files</p>
+<dl class="method">
+<dt id="forgi.graph.sequence.SequenceLoader.consume_fields">
+<code class="descname">consume_fields</code><span class="sig-paren">(</span><em>parts</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#SequenceLoader.consume_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.SequenceLoader.consume_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read one line from the forgi file.</p>
+<p>Returns True, if the line was used/ understood, False otherwise</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.graph.sequence.SequenceLoader.sequence">
+<code class="descname">sequence</code><a class="headerlink" href="#forgi.graph.sequence.SequenceLoader.sequence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="forgi.graph.sequence.to_0_based">
+<code class="descclassname">forgi.graph.sequence.</code><code class="descname">to_0_based</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/graph/sequence.html#to_0_based"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.graph.sequence.to_0_based" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.graph.residue.html">forgi.graph.residue module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.graph.transform_graphs.html">forgi.graph.transform_graphs module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

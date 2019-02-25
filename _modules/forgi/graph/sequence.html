@@ -1,0 +1,967 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.graph.sequence &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../../../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.graph.sequence</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span><span class="p">,</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="p">(</span><span class="n">ascii</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">chr</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">filter</span><span class="p">,</span> <span class="nb">hex</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="c1"># pylint: disable=W0611</span>
+                      <span class="nb">map</span><span class="p">,</span> <span class="nb">next</span><span class="p">,</span> <span class="nb">oct</span><span class="p">,</span> <span class="nb">pow</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span> <span class="c1"># pylint: disable=W0611</span>
+                      <span class="nb">str</span><span class="p">,</span> <span class="nb">super</span><span class="p">,</span> <span class="nb">zip</span><span class="p">)</span> <span class="c1"># pylint: disable=W0611</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="k">import</span> <span class="n">Sequence</span> <span class="k">as</span> <span class="n">SequenceABC</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Sequence</span> <span class="k">as</span> <span class="n">SequenceABC</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="k">import</span> <span class="n">ascii_lowercase</span><span class="p">,</span> <span class="n">ascii_uppercase</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">from</span> <span class="nn">logging_exceptions</span> <span class="k">import</span> <span class="n">log_to_exception</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">residue</span> <span class="k">as</span> <span class="n">fgr</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">VALID_CHAINIDS</span> <span class="o">=</span> <span class="n">ascii_uppercase</span> <span class="o">+</span> <span class="n">ascii_lowercase</span>
+
+
+<div class="viewcode-block" id="MissingResidue"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.MissingResidue">[docs]</a><span class="k">class</span> <span class="nc">MissingResidue</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">res_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param resid: A fgr.RESID instance of a string.</span>
+<span class="sd">        :param resname: A string. Probably one of &quot;AUGC&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Type of </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">fgr</span><span class="o">.</span><span class="n">resid_from_str</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resid</span> <span class="o">=</span> <span class="n">resid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">res_name</span> <span class="o">=</span> <span class="n">res_name</span>
+
+<div class="viewcode-block" id="MissingResidue.to_bg_string"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.MissingResidue.to_bg_string">[docs]</a>    <span class="k">def</span> <span class="nf">to_bg_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;missing </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resid</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MissingResidue.from_bg_fields"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.MissingResidue.from_bg_fields">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_bg_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used during loading of the bg_file.</span>
+
+<span class="sd">        :param parts: A list of strings. If the first is not &quot;missing&quot;,</span>
+<span class="sd">                      None is returned</span>
+<span class="sd">        :returns: Either a MissingResidue instance or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;missing&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_from_str</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">_Smallest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smaller than everything, regardless of type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">class</span> <span class="nc">_Biggest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bigger than everything, regardless of type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="to_0_based"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.to_0_based">[docs]</a><span class="k">def</span> <span class="nf">to_0_based</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Converting key </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+        <span class="c1"># Step</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Slices with step != 1 are not supported!&quot;</span><span class="p">)</span>
+        <span class="c1"># Start</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Slices with start &lt;1 are currently not defined.&quot;</span><span class="p">)</span>
+        <span class="c1"># Stop</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s2">&quot;Slices with negative stop and negative step are currently not defined.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Index 0 not allowed in 1-based indexing&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">key</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid index type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Returning key </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">key</span></div>
+
+
+<span class="k">def</span> <span class="nf">_insert_breakpoints_simple</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param seq: A sequence without any missing residues</span>
+<span class="sd">    :param breakpoints: 0-based break points</span>
+<span class="sd">    :param start: The coordinate &quot;on the forward strand&quot;,</span>
+<span class="sd">                 i.e. the lower number of start and stop.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Inserting breakpoints </span><span class="si">%s</span><span class="s2"> into </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">)</span>
+    <span class="n">breakpoints</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">breakpoints</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">breakpoints</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">seq</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Inserting breakpoints into </span><span class="si">%s</span><span class="s2">, start=</span><span class="si">%s</span><span class="s2">, &quot;</span>
+              <span class="s2">&quot;reversed=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
+    <span class="n">oldbp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">bp</span> <span class="ow">in</span> <span class="n">breakpoints</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;BP=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bp</span><span class="p">)</span>
+        <span class="n">bp</span> <span class="o">-=</span> <span class="n">start</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;bp-=start--&gt;&gt;&gt;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bp</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">oldbp</span><span class="p">:</span><span class="n">bp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">oldbp</span> <span class="o">=</span> <span class="n">bp</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">bp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span> <span class="c1"># pylint: disable=undefined-loop-variable</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">out</span> <span class="k">if</span> <span class="n">o</span><span class="p">]</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="s2">&quot;&amp;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reverse</span><span class="p">:</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;seq with break points: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">seq</span>
+
+
+<span class="k">def</span> <span class="nf">_resid_key</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Convert to newstring on python2 See: https://github.com/PythonCharmers/python-future/issues/110</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+
+<span class="k">def</span> <span class="nf">_sorted_missing_residues</span><span class="p">(</span><span class="n">list_of_dicts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param list_of_dicts: A list of dicts, as in my PR to biopython</span>
+<span class="sd">                          or with the two keys &quot;RESID&quot; and &quot;res_name&quot;,</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">chain_to_residues</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">resid_to_nucleotide</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">res_dict</span> <span class="ow">in</span> <span class="n">list_of_dicts</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Processing </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">res_dict</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res_dict</span><span class="p">,</span> <span class="n">MissingResidue</span><span class="p">):</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">resid</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">resid</span><span class="o">.</span><span class="n">chain</span>
+            <span class="n">res_name</span> <span class="o">=</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">res_name</span>
+        <span class="k">elif</span> <span class="s2">&quot;RESID&quot;</span> <span class="ow">in</span> <span class="n">res_dict</span><span class="p">:</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;RESID&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">):</span>
+                <span class="n">resid</span> <span class="o">=</span> <span class="n">fgr</span><span class="o">.</span><span class="n">resid_from_str</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">resid</span><span class="o">.</span><span class="n">chain</span>
+            <span class="n">res_name</span> <span class="o">=</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;res_name&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">]:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Invalid missing residue </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">res_dict</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;insertion&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">insertion</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">insertion</span> <span class="o">=</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;insertion&quot;</span><span class="p">]</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;chain&quot;</span><span class="p">]</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;ssseq&quot;</span><span class="p">],</span> <span class="n">insertion</span><span class="p">))</span>
+            <span class="n">res_name</span> <span class="o">=</span> <span class="n">res_dict</span><span class="p">[</span><span class="s2">&quot;res_name&quot;</span><span class="p">]</span>
+        <span class="n">chain_to_residues</span><span class="p">[</span><span class="n">chain</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span>
+        <span class="n">resid_to_nucleotide</span><span class="p">[</span><span class="n">resid</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_name</span>
+    <span class="k">for</span> <span class="n">reslist</span> <span class="ow">in</span> <span class="n">chain_to_residues</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sorting </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">reslist</span><span class="p">)</span>
+        <span class="n">reslist</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">_resid_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chain_to_residues</span><span class="p">,</span> <span class="n">resid_to_nucleotide</span>
+
+
+<span class="k">class</span> <span class="nc">_IndexHelper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="c1"># pylint: disable=protected-access</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Must be set in subclass&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.__getitem__ called. </span><span class="si">%s</span><span class="s2">=True&quot;</span><span class="p">,</span>
+                  <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_getitem</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_modifications</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;include_missing&quot;</span><span class="p">:</span> <span class="n">include_missing</span><span class="p">,</span>
+                  <span class="s2">&quot;show_modifications&quot;</span><span class="p">:</span> <span class="n">show_modifications</span><span class="p">}</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">._getitem called. flags: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_getitem</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If attr is a method that supports **kwargs or has an attribute with</span>
+<span class="sd">        the same name as the value of self.flag, then we set this</span>
+<span class="sd">        attributre to True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getattr called for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="n">argspec</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;For function </span><span class="si">%s</span><span class="s2">: args are </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">argspec</span><span class="o">.</span><span class="n">keywords</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span> <span class="ow">in</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;setting flag </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">)</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">[:])</span>
+
+<span class="k">class</span> <span class="nc">_WMIndexer</span><span class="p">(</span><span class="n">_IndexHelper</span><span class="p">):</span>
+    <span class="c1"># pylint: disable=protected-access</span>
+
+    <span class="n">flag</span> <span class="o">=</span> <span class="s2">&quot;include_missing&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_dotbracket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">struct</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a dotbracket_string of the same length as the sequence,</span>
+<span class="sd">        update it with &#39;-&#39; for missing residues and &#39;&amp;&#39; for breakpoints.</span>
+
+<span class="sd">        :returns: A string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_missing_into_db</span><span class="p">(</span><span class="n">struct</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">export_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the missing residues in a format which can be</span>
+<span class="sd">        passed to the constructor of a new Sequence object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">_export_missing</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">with_modifications</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_MODIndexer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">define_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">val</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_resids</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])))</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Define length of </span><span class="si">%s</span><span class="s2"> with missing incremented to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Define length of </span><span class="si">%s</span><span class="s2"> with missing is finally </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+
+<span class="k">class</span> <span class="nc">_MODIndexer</span><span class="p">(</span><span class="n">_IndexHelper</span><span class="p">):</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="s2">&quot;show_modifications&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">with_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_WMIndexer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SeqidList"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.SeqidList">[docs]</a><span class="k">class</span> <span class="nc">SeqidList</span><span class="p">(</span><span class="n">SequenceABC</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="n">resid</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">resid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">):</span>
+            <span class="c1"># duplicate seqids</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">amount</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">most_common</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">amount</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Seq_id </span><span class="si">%s</span><span class="s2">  occurs </span><span class="si">%s</span><span class="s2"> times!&quot;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">amount</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">most_common</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len %</span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">) != (</span><span class="si">{}</span><span class="s2">) len </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="p">),</span>
+                                            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Duplicate Seq_id encountered: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">most_common</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SeqidList.index"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.SeqidList.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not in list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elem</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SeqidList</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">==</span><span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list</span> <span class="o">==</span> <span class="n">other</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SeqidList</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_list</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;SeqidList(</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Sequence"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence">[docs]</a><span class="k">class</span> <span class="nc">Sequence</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class holding the RNA sequence.</span>
+
+<span class="sd">    It supports 2 indexing conventions (see below), missing residues</span>
+<span class="sd">    and modified nucleotids.</span>
+
+<span class="sd">    The two indexing conventions are:</span>
+
+<span class="sd">    *  1-based indexing into the sequence for which structure information is available</span>
+<span class="sd">       This uses indices of type integer.</span>
+<span class="sd">       Integer based indexing can not address missing residues!</span>
+<span class="sd">    *  Indexing using PDB-style numbers (They can start at any positive or negative number and</span>
+<span class="sd">       may contain insertion codes or gaps.)</span>
+<span class="sd">       This uses indices of type fgr.RESID</span>
+<span class="sd">       PDB-Style indices may address missing residues (Reidues for which only sequence</span>
+<span class="sd">       but no structure information is present).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">seqids</span><span class="p">,</span> <span class="n">missing_residues</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">modifications</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param seq: A string</span>
+<span class="sd">        :param missing_residues: A list of dictionaries with the following keys:</span>
+<span class="sd">                &quot;res_name&quot;, &quot;chain&quot;, &quot;ssseq&quot;, &quot;insertion&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sequence initialized with </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">,</span> <span class="n">seqids</span><span class="p">)),</span> <span class="n">missing_residues</span><span class="p">)</span>
+        <span class="c1"># Uses 0-based indexing</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="n">seq</span>
+        <span class="k">while</span> <span class="n">remaining</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">remaining</span> <span class="o">=</span> <span class="n">remaining</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">remaining</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Break-points for seq </span><span class="si">%s</span><span class="s2"> are: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span> <span class="o">=</span> <span class="n">SeqidList</span><span class="p">(</span><span class="n">seqids</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_missing_residues</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">missing_residues</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_missing_residues</span><span class="p">(</span><span class="n">missing_residues</span><span class="p">)</span>  <span class="c1"># A dict seq_id:nt</span>
+        <span class="c1"># resid : modified res_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">modifications</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">modifications</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_missing_residues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">missing_residues</span><span class="p">):</span>
+        <span class="n">mr</span><span class="p">,</span> <span class="n">mnts</span> <span class="o">=</span> <span class="n">_sorted_missing_residues</span><span class="p">(</span><span class="n">missing_residues</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Setting missing residues to: </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mr</span><span class="p">,</span> <span class="n">mnts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_missing_residues</span> <span class="o">=</span> <span class="n">mr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span> <span class="o">=</span> <span class="n">mnts</span>  <span class="c1"># A dict seq_id:nt</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[:]</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">qname</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">qname</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;</span><span class="si">{}</span><span class="s2"> object with ._seq=</span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">qname</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">)</span>
+    <span class="n">__nonzero__</span> <span class="o">=</span> <span class="fm">__bool__</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">backbone_breaks_after</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Breakpoints as 1-based indices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">bp</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">bp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Sequence.is_valid"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">wrong_chars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="s2">&quot;AUGCaugc&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wrong_chars</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Illegal characters are </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wrong_chars</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Never return missing residues!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getitem</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> =?= </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;type of other=</span><span class="si">%s</span><span class="s2">, type of string literal in this module is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span>
+            <span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_seq</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sequence different!&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Breakpoints different!&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_seqids</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;seq_ids different: </span><span class="si">%s</span><span class="s2"> != </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_seqids</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;nt changed for </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> missing in other&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">:</span>
+                            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> extra in other&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;They are equal&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_modifications</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;_getitem called for </span><span class="si">%s</span><span class="s2">, include_missing=</span><span class="si">%s</span><span class="s2">, show_modifications=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">to_0_based</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">show_modifications</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">:</span>
+                    <span class="n">nt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">include_missing</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;No structure available for nucleotide &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span>
+                                         <span class="s2">&quot;For look-up including missing residues, use&quot;</span>
+                                         <span class="s2">&quot;`.with_missing[key]`&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">show_modifications</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="n">nt</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s2">&quot;Nucleotide </span><span class="si">{}</span><span class="s2"> is not part of this RNA&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+                <span class="k">with</span> <span class="n">log_to_exception</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;self._missing_nts = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">error</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">show_modifications</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getslice</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Wrong index type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_getslice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_modifications</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Do type checks and delegate to self._resid_slice or self._integer_slice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;The step in the slice has to be 1 or -1&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Slice-start must be either an integer, a RESID or None&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">int</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Slice-stop must be either an integer, a RESID or None&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">RESID</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Mixing integers and RESID for slicing is not allowed&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_slice</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integer_slice</span><span class="p">(</span><span class="n">to_0_based</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_integer_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_modifications</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This provides an implementation for include_missing=False</span>
+<span class="sd">        and delegates to resid_slice otherwise.</span>
+
+<span class="sd">        :param key: Already 0-based, no None in slice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">include_missing</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="n">show_modifications</span> <span class="o">==</span> <span class="kc">False</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">)):</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span>
+                <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">start</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">start</span>
+            <span class="k">return</span> <span class="n">_insert_breakpoints_simple</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">startRES</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">startRES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">start</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stopRES</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">stopRES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">stopRES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">stopRES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span><span class="p">]</span>
+        <span class="n">key2</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">startRES</span><span class="p">,</span> <span class="n">stopRES</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Converted integer_slice </span><span class="si">%s</span><span class="s2"> to resid-slice </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">key2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_slice</span><span class="p">(</span><span class="n">key2</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_resid_slice_to_int_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">default_start</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">)</span>
+            <span class="n">default_stop</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">default_start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">default_stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">)</span>
+        <span class="n">start_i</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_to_index</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">default_start</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">stop_i</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_to_index</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="n">default_stop</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">stop_i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stop_i</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stop_i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start_i</span><span class="p">,</span> <span class="n">stop_i</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Resid-slice mapped to integer-slice </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integer_slice</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_resid_to_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">default_on_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :returns: a tuple index, error_raised</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">resid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span><span class="p">,</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">resid</span><span class="p">),</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">default_on_error</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">default</span><span class="p">,</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;RESID </span><span class="si">{}</span><span class="s2"> is not present or no structure&quot;</span>
+                                 <span class="s2">&quot;is available for it.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resid</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_resid_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This provides an implementation for inclue_missing=True</span>
+<span class="sd">        and delegates to integer_slice otherwise.</span>
+
+<span class="sd">        :param key: A validated resid slice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">include_missing</span> <span class="ow">or</span> <span class="n">show_modifications</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_slice_main</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_slice_to_int_slice</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_resid_slice_main</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">with_missing</span><span class="p">,</span> <span class="n">show_modifications</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">stop</span>
+        <span class="n">seqids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_resids</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">with_missing</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">step</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">seqids</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="p">[[]]</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">seqs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># a reference</span>
+        <span class="k">for</span> <span class="n">seqid</span> <span class="ow">in</span> <span class="n">seqids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">seqid</span> <span class="o">==</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">show_modifications</span><span class="p">:</span>
+                    <span class="n">seqs</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+                    <span class="n">seq</span> <span class="o">=</span> <span class="n">seqs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">show_modifications</span> <span class="ow">and</span> <span class="n">seqid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">:</span>
+                    <span class="n">seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">[</span><span class="n">seqid</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">seqid</span><span class="p">)])</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">seq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">seqid</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">show_modifications</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">seqs</span> <span class="o">==</span> <span class="p">[</span><span class="n">seq</span><span class="p">]</span>
+            <span class="n">seqs</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seqs</span>
+
+    <span class="k">def</span> <span class="nf">_missing_into_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dotbracket</span><span class="p">):</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">check_i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">seqid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_resids</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">seqid</span> <span class="o">==</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">:</span>
+                <span class="n">db</span> <span class="o">+=</span> <span class="s2">&quot;&amp;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">seqid</span><span class="p">)</span>
+                    <span class="k">assert</span> <span class="n">i</span> <span class="o">==</span> <span class="n">check_i</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">db</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">db</span> <span class="o">+=</span> <span class="n">dotbracket</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">check_i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Sequence.iter_resids"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.iter_resids">[docs]</a>    <span class="k">def</span> <span class="nf">iter_resids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">include_missing</span><span class="p">):</span>
+        <span class="n">left_res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">start_i</span><span class="p">,</span> <span class="n">start_is_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_to_index</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">stop_i</span><span class="p">,</span> <span class="n">stop_is_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resid_to_index</span><span class="p">(</span>
+            <span class="n">stop</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">start_is_missing</span> <span class="ow">or</span> <span class="n">stop_is_missing</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                <span class="s2">&quot;Start or stop are missing residues, but indexing without missing residues was requested.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">start_is_missing</span> <span class="ow">and</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">left_res</span> <span class="o">=</span> <span class="n">start</span>
+
+        <span class="c1"># Flag used later if missing_residues == True</span>
+        <span class="n">found_start</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">start_is_missing</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">left_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">left_res</span>
+            <span class="c1"># seq+=self._seq[self._seqids.index(left_res)]</span>
+            <span class="c1">#log.debug(&quot;Added first residue %s: %s&quot;, left_res, seq)</span>
+            <span class="n">start_i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Iterating over sequence </span><span class="si">%s</span><span class="s2">-</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">start_i</span><span class="p">,</span> <span class="n">stop_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">mr_keys</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_i</span><span class="p">,</span> <span class="n">stop_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">right_res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="n">right_res</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># Some consistency checks:</span>
+            <span class="k">if</span> <span class="n">left_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">left_res</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">right_res</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsist break-points discovered.&quot;</span>
+                                     <span class="s2">&quot;Missing breakpoint at position </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                                     <span class="s2">&quot;between chain </span><span class="si">{}</span><span class="s2"> and chain </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                                     <span class="s2">&quot;Break points are </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                                                  <span class="n">left_res</span><span class="o">.</span><span class="n">chain</span><span class="p">,</span> <span class="n">right_res</span><span class="o">.</span><span class="n">chain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">left_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">left_res</span><span class="o">.</span><span class="n">chain</span> <span class="o">==</span> <span class="n">right_res</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsist break-points discovered.&quot;</span>
+                                     <span class="s2">&quot;Breakpoint at position </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                                     <span class="s2">&quot;in the middle of chain </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                                                        <span class="n">left_res</span><span class="o">.</span><span class="n">chain</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">include_missing</span><span class="p">:</span>
+                <span class="n">mr</span><span class="p">,</span> <span class="n">mr_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_residues_between</span><span class="p">(</span>
+                    <span class="n">left_res</span><span class="p">,</span> <span class="n">right_res</span><span class="p">)</span>
+                <span class="n">old_r</span> <span class="o">=</span> <span class="n">left_res</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mr_keys</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">found_start</span> <span class="ow">and</span> <span class="n">r</span> <span class="o">==</span> <span class="n">start</span><span class="p">:</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found start for i=</span><span class="si">%d</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+                        <span class="n">found_start</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">old_r</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Now processing missing residue </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">found_start</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">old_r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">old_r</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">r</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span>
+                            <span class="k">yield</span> <span class="s2">&quot;&amp;&quot;</span>
+                            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Breakpoint inserted!&quot;</span><span class="p">)</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding missing residue </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mr</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                        <span class="k">yield</span> <span class="n">r</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Comparing </span><span class="si">%s</span><span class="s2"> and stop=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="n">stop</span><span class="p">:</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stop found! Seq=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+                        <span class="k">return</span>
+                    <span class="n">old_r</span> <span class="o">=</span> <span class="n">r</span>
+            <span class="c1"># If key.start and key.stop resp. are not modified residues,</span>
+            <span class="c1"># start_i and stop_i are already accurrate, making</span>
+            <span class="c1"># additional checks here unneccessary.</span>
+            <span class="k">if</span> <span class="n">found_start</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">):</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding regular residue </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seq</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">mr_keys</span><span class="p">:</span>  <span class="c1"># No missing residues</span>
+                    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">right_res</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="s2">&quot;&amp;&quot;</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Breakpoint inserted!&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">left_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right_res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">left_res</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">right_res</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="s2">&quot;&amp;&quot;</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Breakpoint inserted!&quot;</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">right_res</span>
+            <span class="n">left_res</span> <span class="o">=</span> <span class="n">right_res</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;seq now is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq</span><span class="p">)</span>
+        <span class="c1"># If start or stop are not part of sequence,</span>
+        <span class="c1"># make sure they were seen in missing residues</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">found_start</span> <span class="ow">or</span> <span class="n">stop_is_missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;At least one of the residues </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                             <span class="s2">&quot;is not part of this RNA&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="nf">_missing_residues_between</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_resid</span><span class="p">,</span> <span class="n">to_resid</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching missing residues between </span><span class="si">%s</span><span class="s2">  and </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="n">from_resid</span><span class="p">,</span> <span class="n">to_resid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">from_resid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">to_resid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">from_resid</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">to_resid</span><span class="o">.</span><span class="n">chain</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_residues_between</span><span class="p">(</span><span class="n">from_resid</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_residues_between</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">to_resid</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">right</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">left</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">right</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">from_resid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">from_key</span> <span class="o">=</span> <span class="n">_resid_key</span><span class="p">(</span><span class="n">from_resid</span><span class="p">)</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">from_resid</span><span class="o">.</span><span class="n">chain</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">from_key</span> <span class="o">=</span> <span class="n">_Smallest</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">to_resid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">to_key</span> <span class="o">=</span> <span class="n">_resid_key</span><span class="p">(</span><span class="n">to_resid</span><span class="p">)</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">to_resid</span><span class="o">.</span><span class="n">chain</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">to_key</span> <span class="o">=</span> <span class="n">_Biggest</span><span class="p">()</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">res_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">res1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_residues</span><span class="p">[</span><span class="n">chain</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">_resid_key</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">from_key</span> <span class="ow">and</span> <span class="n">_resid_key</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">to_key</span><span class="p">:</span>
+                <span class="n">seq</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">[</span><span class="n">res1</span><span class="p">]</span>
+                <span class="n">res_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seq</span><span class="p">,</span> <span class="n">res_ids</span>
+
+<div class="viewcode-block" id="Sequence.to_resid"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.to_resid">[docs]</a>    <span class="k">def</span> <span class="nf">to_resid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Sequence.to_integer"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.to_integer">[docs]</a>    <span class="k">def</span> <span class="nf">to_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resid</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Sequence.iter_modifications"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.iter_modifications">[docs]</a>    <span class="k">def</span> <span class="nf">iter_modifications</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iter over tuples seq_id, modified residue code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">[</span><span class="n">k</span><span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">with_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allows slices with missing residues!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_WMIndexer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># For performance reasons</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">with_modifications</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_MODIndexer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Sequence.get_bg_str"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.get_bg_str">[docs]</a>    <span class="k">def</span> <span class="nf">get_bg_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used during bg-file creation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;seq </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;seq_ids </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seqids</span><span class="p">))))</span>
+        <span class="k">for</span> <span class="n">resid</span><span class="p">,</span> <span class="n">nt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">MissingResidue</span><span class="p">(</span><span class="n">resid</span><span class="p">,</span> <span class="n">nt</span><span class="p">)</span><span class="o">.</span><span class="n">to_bg_string</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">resid</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;modification </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">(</span><span class="n">resid</span><span class="p">),</span> <span class="n">label</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span></div>
+
+<div class="viewcode-block" id="Sequence.define_length"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.Sequence.define_length">[docs]</a>    <span class="k">def</span> <span class="nf">define_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">+=</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Define length of </span><span class="si">%s</span><span class="s2"> without missing is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">val</span></div>
+
+    <span class="k">def</span> <span class="nf">_export_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implementation for Sequence().with_missing.export_missing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">resid</span><span class="p">,</span> <span class="n">nt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_nts</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;RESID&quot;</span><span class="p">:</span> <span class="n">resid</span><span class="p">,</span> <span class="s2">&quot;res_name&quot;</span><span class="p">:</span> <span class="n">nt</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1">#print(&quot;Sequence add called&quot;)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;This is not yet implemented (but really should be)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1">#print(&quot;Sequence radd called, other is &quot;, repr(other), type(other).__name__, str.__name__)</span>
+        <span class="c1">#print(isinstance(other, str))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;This is not yet implemented (but really should be)&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1">#print(&quot;Other is str&quot;)</span>
+            <span class="k">return</span> <span class="n">other</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span></div>
+
+
+<div class="viewcode-block" id="SequenceLoader"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.SequenceLoader">[docs]</a><span class="k">class</span> <span class="nc">SequenceLoader</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load the sequence-related part during loading of bg-files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mod</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="SequenceLoader.consume_fields"><a class="viewcode-back" href="../../../apidoc/forgi.graph.sequence.html#forgi.graph.sequence.SequenceLoader.consume_fields">[docs]</a>    <span class="k">def</span> <span class="nf">consume_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read one line from the forgi file.</span>
+
+<span class="sd">        Returns True, if the line was used/ understood, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mr</span> <span class="o">=</span> <span class="n">MissingResidue</span><span class="o">.</span><span class="n">from_bg_fields</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;seq&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;More than one seq-line encountered.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;seq_ids&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;More than one seq-ids line encountered.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_from_str</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;modification&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="p">[</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_from_str</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">:</span>
+            <span class="c1"># The breakpoints are only persisted at the seq and seq_id level.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parsing incomplete: No seq found.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">old_chain</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">resid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">old_chain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">resid</span><span class="o">.</span><span class="n">chain</span> <span class="o">!=</span> <span class="n">old_chain</span><span class="p">:</span>
+                    <span class="n">seq</span> <span class="o">+=</span> <span class="s2">&quot;&amp;&quot;</span>
+                <span class="n">seq</span> <span class="o">+=</span> <span class="s2">&quot;N&quot;</span>
+                <span class="n">old_chain</span> <span class="o">=</span> <span class="n">resid</span><span class="o">.</span><span class="n">chain</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span> <span class="o">=</span> <span class="n">_seq_ids_from_seq_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Sequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_seq_ids_from_seq_str</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a list of seq_ids with the same length as the sequence,</span>
+<span class="sd">    respecting cutpoints.</span>
+
+<span class="sd">    We start with seq_id A:1. If a &#39;&amp;&#39; is encountered in the sequence,</span>
+<span class="sd">    a new chain-letter is used.</span>
+
+<span class="sd">    :param seq: A string, optionally containing &#39;&amp;&#39; characters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seq_strs</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&amp;&#39;</span><span class="p">)</span>
+    <span class="n">seq_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seq_str</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seq_strs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seq_str</span><span class="p">):</span>
+            <span class="n">seq_ids</span> <span class="o">+=</span> <span class="p">[</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_from_str</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">VALID_CHAINIDS</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span>
+    <span class="k">return</span> <span class="n">seq_ids</span>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

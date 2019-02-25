@@ -1,0 +1,84 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.threedee.model.transform_cg &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../../../../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.threedee.model.transform_cg</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">forgi.graph.transform_graphs</span> <span class="k">import</span> <span class="n">_GCDummy</span><span class="p">,</span> <span class="n">BGTransformer</span>
+
+
+<div class="viewcode-block" id="CGTransformer"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.transform_cg.html#forgi.threedee.model.transform_cg.CGTransformer">[docs]</a><span class="k">class</span> <span class="nc">CGTransformer</span><span class="p">(</span><span class="n">BGTransformer</span><span class="p">):</span>
+<div class="viewcode-block" id="CGTransformer.condensed"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.transform_cg.html#forgi.threedee.model.transform_cg.CGTransformer.condensed">[docs]</a>    <span class="k">def</span> <span class="nf">condensed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a condensed copy of the CoarseGrainRNA.</span>
+
+<span class="sd">        See superclass docstring for definition of condensed.</span>
+
+<span class="sd">        In the case of CoarseGrainRNA objects, the 3D coordinates are not</span>
+<span class="sd">        affected by condensing the RNA. This means that stems which has multiple</span>
+<span class="sd">        base-pairs have the same length as 1-bp stems in the condensed version.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_cg</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">CGTransformer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">condended</span><span class="p">()</span>
+        <span class="n">new_cg</span><span class="o">.</span><span class="n">coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">coords</span>
+        <span class="n">new_cg</span><span class="o">.</span><span class="n">twists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">twists</span>
+        <span class="n">new_cg</span><span class="o">.</span><span class="n">sampled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">sampled</span>
+        <span class="n">new_cg</span><span class="o">.</span><span class="n">longrange</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">longrange</span>
+        <span class="n">new_cg</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bg</span><span class="o">.</span><span class="n">chains</span>
+        <span class="k">return</span> <span class="n">new_cg</span></div></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

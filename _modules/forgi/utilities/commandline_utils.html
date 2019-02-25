@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.utilities.commandline_utils &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.utilities.commandline_utils &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -55,6 +55,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">GraphConstructionError</span>
 <span class="kn">from</span> <span class="nn">logging_exceptions</span> <span class="k">import</span> <span class="n">log_to_exception</span>
 <span class="kn">import</span> <span class="nn">logging_exceptions</span>
 
@@ -64,39 +65,43 @@
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+
 <div class="viewcode-block" id="WrongFileFormat"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.WrongFileFormat">[docs]</a><span class="k">class</span> <span class="nc">WrongFileFormat</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Error raised if the input file has the wrong file format or the file format could not be detected.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
 
-<div class="viewcode-block" id="get_rna_input_parser"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.get_rna_input_parser">[docs]</a><span class="k">def</span> <span class="nf">get_rna_input_parser</span><span class="p">(</span><span class="n">helptext</span><span class="p">,</span> <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">rna_type</span> <span class="o">=</span> <span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="n">enable_logging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parser_kwargs</span><span class="o">=</span><span class="p">{}):</span>
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">helptext</span><span class="p">,</span> <span class="o">**</span><span class="n">parser_kwargs</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">nargs</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
-        <span class="n">helptext</span> <span class="o">=</span> <span class="s2">&quot;One file containing an RNA.</span><span class="se">\n</span><span class="s2">&quot;</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nargs</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nargs</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
-        <span class="n">helptext</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{:d}</span><span class="s2"> files containing one RNA each.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nargs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">nargs</span> <span class="o">==</span> <span class="s2">&quot;+&quot;</span><span class="p">:</span>
-        <span class="n">helptext</span><span class="o">=</span><span class="s2">&quot;One or more files containing one or more RNAs each.</span><span class="se">\n</span><span class="s2">&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;get_parser_any_cgsg does not support nargs=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nargs</span><span class="p">)</span> <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">rna_type</span><span class="o">!=</span><span class="s2">&quot;only_cg&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="get_rna_input_parser"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.get_rna_input_parser">[docs]</a><span class="k">def</span> <span class="nf">get_rna_input_parser</span><span class="p">(</span><span class="n">helptext</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="n">enable_logging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parser_kwargs</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="n">helptext</span><span class="p">,</span> <span class="o">**</span><span class="n">parser_kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nargs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">helptext</span> <span class="o">=</span> <span class="s2">&quot;One file containing an RNA.</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nargs</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nargs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">helptext</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{:d}</span><span class="s2"> files containing one RNA each.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">nargs</span> <span class="o">==</span> <span class="s2">&quot;+&quot;</span><span class="p">:</span>
+        <span class="n">helptext</span> <span class="o">=</span> <span class="s2">&quot;One or more files containing one or more RNAs each.</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;get_parser_any_cgsg does not support nargs=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nargs</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">!=</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">:</span>
         <span class="n">fileformats</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pdb files&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fileformats</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">rna_type</span><span class="o">!=</span><span class="s2">&quot;pdb&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">!=</span> <span class="s2">&quot;pdb&quot;</span><span class="p">:</span>
         <span class="n">fileformats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;forgi cg files&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rna_type</span><span class="o">!=</span><span class="s2">&quot;3d&quot;</span> <span class="ow">and</span> <span class="n">rna_type</span> <span class="o">!=</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rna_type</span> <span class="o">!=</span> <span class="s2">&quot;3d&quot;</span> <span class="ow">and</span> <span class="n">rna_type</span> <span class="o">!=</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">:</span>
             <span class="n">fileformats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;forgi bg files&quot;</span><span class="p">)</span>
             <span class="n">fileformats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;fasta files&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;any&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;any&quot;</span><span class="p">:</span>
         <span class="n">fileformats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;dotbracketfiles&quot;</span><span class="p">)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fileformats</span><span class="p">)</span>
-    <span class="n">helptext</span><span class="o">+=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="s2">&quot;Supported Filetypes are: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fileformats</span><span class="p">)),</span> <span class="mi">55</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;any&quot;</span><span class="p">:</span>
-        <span class="n">helptext</span><span class="o">+=</span><span class="p">(</span><span class="s2">&quot;Alternatively you can supply a dotbracket-string</span><span class="se">\n</span><span class="s2"> &quot;</span>
-                   <span class="s2">&quot;(containing only the characters &#39;.()[]</span><span class="si">{}</span><span class="s2">&amp;&#39;) from the commandline.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;rna&quot;</span><span class="p">,</span> <span class="n">nargs</span> <span class="o">=</span> <span class="n">nargs</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">helptext</span><span class="p">)</span>
+    <span class="n">helptext</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span>
+        <span class="s2">&quot;Supported Filetypes are: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fileformats</span><span class="p">)),</span> <span class="mi">55</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;any&quot;</span><span class="p">:</span>
+        <span class="n">helptext</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;Alternatively you can supply a dotbracket-string</span><span class="se">\n</span><span class="s2"> &quot;</span>
+                     <span class="s2">&quot;(containing only the characters &#39;.()[]</span><span class="si">{}</span><span class="s2">&amp;&#39;) from the commandline.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;rna&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="n">nargs</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">helptext</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--keep-length-one-stems&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;For all input formats except forgi bg/cg files,</span><span class="se">\n</span><span class="s2">&quot;</span>
                              <span class="s2">&quot;this controlls whether stems of length one are </span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -104,41 +109,97 @@
                              <span class="s2">&quot;or kept (if this option is present).</span><span class="se">\n</span><span class="s2">&quot;</span>
                              <span class="s2">&quot;In  the case of input in forgi-format,</span><span class="se">\n</span><span class="s2">&quot;</span>
                              <span class="s2">&quot;the RNA from the file is not modified.&quot;</span><span class="p">)</span>
-    <span class="n">pdb_input_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;Options for loading of PDB files&quot;</span><span class="p">,</span>
-                                    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;These options only take effect, &quot;</span>
-                                                 <span class="s2">&quot;if the input RNA is in pdb file format.&quot;</span><span class="p">)</span>
-    <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--pseudoknots&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Allow pseudoknots when extracting the structure</span><span class="se">\n</span><span class="s2">from PDB files.&quot;</span><span class="p">)</span>
-    <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--chain&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;When reading pdb-files: Only extract the given chain.&quot;</span><span class="p">)</span>
-    <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--pdb-secondary-structure&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;When reading a single chain from a pdb-files: </span><span class="se">\n</span><span class="s2">Enforce the secondary structure given as dotbracket</span><span class="se">\n</span><span class="s2"> string. (This only works, if --chain is given!)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">!=</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">:</span>
+        <span class="n">pdb_input_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;Options for loading of PDB files&quot;</span><span class="p">,</span>
+                                                    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;These options only take effect, &quot;</span>
+                                                    <span class="s2">&quot;if the input RNA is in pdb file format.&quot;</span><span class="p">)</span>
+        <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--pseudoknots&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Allow pseudoknots when extracting the structure</span><span class="se">\n</span><span class="s2">from PDB files.&quot;</span><span class="p">)</span>
+        <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--chains&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+                                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;When reading pdb-files: Only extract the given chain(s). Comma-seperated&quot;</span><span class="p">)</span>
+        <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--pdb-secondary-structure&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;When reading a single chain from a pdb-files: </span><span class="se">\n</span><span class="s2">Enforce the secondary structure given as dotbracket</span><span class="se">\n</span><span class="s2"> string. (This only works, if --chain is given!)&quot;</span><span class="p">)</span>
+        <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--pdb-annotation-tool&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;What program to use for detecting basepairs in PDB/ MMCIF structures.&quot;</span>
+                                     <span class="s2">&quot; This commandline option overrides the value in the config file (if present).&quot;</span>
+                                     <span class="s2">&quot;If this is not present and no config-file is given, we try to detect the installed programs.&quot;</span><span class="p">)</span>
+        <span class="n">pdb_input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--pdb-allow-www-query&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+                                     <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Usually, if modified residues/ ligand with an unknown 3-letter code are encountered in PDB files, &quot;</span>
+                                          <span class="s2">&quot;they are removed from the chain and a log message of severity INFO is issued. &quot;</span>
+                                          <span class="s2">&quot;With this option, we first try to query the PDBeChem database for the 3-letter code, to &quot;</span>
+                                          <span class="s2">&quot;see whether or not it is a modified residue that can be converted to its standard parent &quot;</span>
+                                          <span class="s2">&quot; and should be part of the chain.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">enable_logging</span><span class="p">:</span>
-        <span class="n">verbosity_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;Control verbosity of logging output&quot;</span><span class="p">)</span>
+        <span class="n">verbosity_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span>
+            <span class="s2">&quot;Control verbosity of logging output&quot;</span><span class="p">)</span>
         <span class="n">logging_exceptions</span><span class="o">.</span><span class="n">update_parser</span><span class="p">(</span><span class="n">verbosity_group</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">parser</span></div>
 
-<div class="viewcode-block" id="cgs_from_args"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.cgs_from_args">[docs]</a><span class="k">def</span> <span class="nf">cgs_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="s2">&quot;cg&quot;</span><span class="p">,</span> <span class="n">enable_logging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_filenames</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">enable_logging</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">.</span><span class="si">%(funcName)s</span><span class="s2">[</span><span class="si">%(lineno)d</span><span class="s2">]: </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">logging_exceptions</span><span class="o">.</span><span class="n">config_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 
+<div class="viewcode-block" id="cgs_from_args"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.cgs_from_args">[docs]</a><span class="k">def</span> <span class="nf">cgs_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="n">enable_logging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">return_filenames</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given an Namespace from argparse, return a list of CoarseGrainRNA objects</span>
+<span class="sd">    (or BulgeGraph objects).</span>
+
+<span class="sd">    :param args: A argparse Namespace.</span>
+<span class="sd">    :param rna_type: See documentation of load_rna</span>
+<span class="sd">    :param enable_logging: In addition to loading the CoarseGrainRNA objects,</span>
+<span class="sd">                    call logging.basicConfig() and use args.verbose</span>
+<span class="sd">                    and args.debug</span>
+<span class="sd">                    to set the level for different loggers.</span>
+<span class="sd">    :param return_filenames: Instead of returning a list of rnas,</span>
+<span class="sd">                    return a tuple `rnas, filenames`,</span>
+<span class="sd">                    where filenames is a list of filenames of equal length as</span>
+<span class="sd">                    the returned list of CoarseGrainRNA objects and with</span>
+<span class="sd">                    corresponding order.</span>
+<span class="sd">                    If a file contains two seperate RNA molecules, the</span>
+<span class="sd">                    filename will thus be found twice in the list of filenames.</span>
+<span class="sd">    :param skip_errors: Boolean. Log GraphConstructionErrors and continue with</span>
+<span class="sd">                    the next filename instead of letting the error propagate.</span>
+
+<span class="sd">    Usage::</span>
+
+<span class="sd">        parser = get_rna_input_parser()</span>
+<span class="sd">        args = parser.parse_args()</span>
+<span class="sd">        rnas = cgs_from_args(args)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">enable_logging</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">.</span><span class="si">%(funcName)s</span><span class="s2">[</span><span class="si">%(lineno)d</span><span class="s2">]: </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logging_exceptions</span><span class="o">.</span><span class="n">config_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
     <span class="n">cg_rnas</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">filenames</span>  <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">filenames</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">rna</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">rna</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nargs</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="n">allow_many</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Load RNA </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">pseudoknots</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">pdb_secondary_structure</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">pdb_annotation_tool</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">pdb_allow_www_query</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">chains</span><span class="p">:</span>
+            <span class="n">load_chains</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">chains</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">allow_many</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">cg_or_cgs</span> <span class="o">=</span> <span class="n">load_rna</span><span class="p">(</span><span class="n">rna</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="n">rna_type</span><span class="p">,</span> <span class="n">allow_many</span><span class="o">=</span><span class="n">allow_many</span><span class="p">,</span> <span class="n">pdb_chain</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chain</span><span class="p">,</span>
-                             <span class="n">pbd_remove_pk</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">pseudoknots</span><span class="p">,</span> <span class="n">pdb_dotbracket</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pdb_secondary_structure</span><span class="p">,</span>
-                             <span class="n">dissolve_length_one_stems</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">keep_length_one_stems</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">allow_many</span><span class="p">:</span>
+            <span class="n">load_chains</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cg_or_cgs</span> <span class="o">=</span> <span class="n">load_rna</span><span class="p">(</span><span class="n">rna</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="n">rna_type</span><span class="p">,</span> <span class="n">allow_many</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">pdb_chain</span><span class="o">=</span><span class="n">load_chains</span><span class="p">,</span>
+                                 <span class="n">pdb_remove_pk</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">pseudoknots</span><span class="p">,</span> <span class="n">pdb_dotbracket</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pdb_secondary_structure</span><span class="p">,</span>
+                                 <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">keep_length_one_stems</span><span class="p">,</span>
+                                 <span class="n">pdb_annotation_tool</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pdb_annotation_tool</span><span class="p">,</span>
+                                 <span class="n">pdb_allow_www_query</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">pdb_allow_www_query</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">GraphConstructionError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_errors</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;An error occurred while loading the file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="p">)</span>
+                <span class="k">raise</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;The PDB </span><span class="si">%s</span><span class="s2"> was skipped due to the following error&quot;</span><span class="p">,</span> <span class="n">rna</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="n">cg_rnas</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">cg_or_cgs</span><span class="p">)</span>
-            <span class="n">filenames</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">rna</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">cg_or_cgs</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cg_rnas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cg_or_cgs</span><span class="p">)</span>
-            <span class="n">filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rna</span><span class="p">)</span>
+            <span class="n">filenames</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">rna</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cg_or_cgs</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">return_filenames</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">cg_rnas</span><span class="p">,</span> <span class="n">filenames</span>
     <span class="k">else</span><span class="p">:</span>
@@ -147,27 +208,30 @@
 
 <div class="viewcode-block" id="sniff_filetype"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.sniff_filetype">[docs]</a><span class="k">def</span> <span class="nf">sniff_filetype</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
     <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ATOM&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;HEADER&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;HETATM&quot;</span><span class="p">):</span>
+    <span class="c1"># PDB</span>
+    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ATOM&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;HEADER&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;HETATM&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;REMARK&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;pdb&quot;</span>
-    <span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="c1">#We allow comments in all files except PDB files.</span>
-    <span class="k">while</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
-        <span class="n">line</span><span class="o">=</span><span class="nb">next</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="c1"># We allow comments and empty lines in all files except PDB files.</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;forgi&quot;</span>
-    <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">==</span><span class="s2">&quot;loop_&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;mmcif&quot;</span>
+    <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span> <span class="o">==</span> <span class="s2">&quot;loop_&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;cif&quot;</span>
     <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;&gt;&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;fasta&quot;</span>
     <span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
         <span class="k">return</span> <span class="s2">&quot;bpseq&quot;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Is it a bp-seq file with header?</span>
+        <span class="c1"># Is it a bp-seq or mmcif file with header?</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">):</span>
                     <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="s2">&quot;cif&quot;</span>
                 <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">d1</span><span class="p">,</span> <span class="n">nt</span><span class="p">,</span> <span class="n">d2</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
@@ -180,121 +244,131 @@
             <span class="k">pass</span>
         <span class="k">return</span> <span class="s2">&quot;other&quot;</span></div>
 
-<div class="viewcode-block" id="load_rna"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.load_rna">[docs]</a><span class="k">def</span> <span class="nf">load_rna</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="n">allow_many</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pdb_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">pbd_remove_pk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pdb_dotbracket</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-             <span class="n">dissolve_length_one_stems</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    :param rna_type: One of &quot;any&quot;, &quot;cg&quot; and &quot;3d&quot; and &quot;pdb&quot;</span>
 
-<span class="sd">                     *  &quot;any&quot;: Return either BulgeGraph or CoarseGrainRNA objekte,</span>
-<span class="sd">                            depending on the input format</span>
-<span class="sd">                     *  &quot;cg&quot;:  Always convert to CoarseGrainRNA objects,</span>
-<span class="sd">                            even if they have no 3D information</span>
+<div class="viewcode-block" id="load_rna"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.load_rna">[docs]</a><span class="k">def</span> <span class="nf">load_rna</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rna_type</span><span class="o">=</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="n">allow_many</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pdb_chain</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">pdb_remove_pk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pdb_dotbracket</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+             <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+             <span class="n">pdb_annotation_tool</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pdb_allow_www_query</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param rna_type: One of &quot;any&quot;, and &quot;3d&quot; and &quot;pdb&quot;</span>
+
+<span class="sd">                     *  &quot;any&quot;: Return either BulgeGraph or CoarseGrainRNA object,</span>
+<span class="sd">                               depending on the input format</span>
 <span class="sd">                     *  &quot;only_cg&quot;: Only accept cg-files.</span>
 <span class="sd">                     *  &quot;3d&quot;:  Return CoarseGrainRNA objects,</span>
-<span class="sd">                            if the file contains 3D information,</span>
-<span class="sd">                            raise an error otherwise</span>
-<span class="sd">                     *  &quot;pdb&quot;: only accept pdb files</span>
-<span class="sd">    :param allow_many: If True, return a list. If False raise an error, if more than one RNA is present.</span>
+<span class="sd">                               if the file contains 3D information,</span>
+<span class="sd">                               raise an error otherwise</span>
+<span class="sd">                     *   &quot;pdb&quot;: only accept pdb files</span>
+
+<span class="sd">    :param allow_many: If True, return a list. If False, return a single</span>
+<span class="sd">                       CoarseGrainRNA object or raise a WrongFileFormat,</span>
+<span class="sd">                       if more than one RNA is present.</span>
 <span class="sd">    :param pdb_chain: Extract the given chain from the file.</span>
 <span class="sd">                      Only applicable if filename corresponds to a pdb file</span>
 <span class="sd">    :param pdb_remove_pk: Detect pseudoknot-free structures from the pdb.</span>
 <span class="sd">    :param pdb_dotbracket: Only applicable, if filename corresponds to a pdb file and pdb_chain is given.</span>
 <span class="sd">    :param dissolve_length_one_stems: Ignored if input is in forgi bg/cg format.</span>
+<span class="sd">    :param pdb_annotation_tool: Use DSSR, MC-Annotate or forgi heuristic for</span>
+<span class="sd">                    basepair-detection in PDB/MMCIF files (None for auto-detect).</span>
+<span class="sd">                    Ignored for other file-types.</span>
 
 <span class="sd">    :retuns: A list of RNAs or a single RNA</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Is filename a dotbracket string and not a filename?</span>
-    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">&quot;.()[]</span><span class="si">{}</span><span class="s2">&amp;&quot;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">c</span> <span class="ow">in</span> <span class="s2">&quot;.()[]</span><span class="si">{}</span><span class="s2">&amp;&quot;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">):</span>
         <span class="c1"># A dotbracket-string was provided via the commandline</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;any&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;any&quot;</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Cannot treat &#39;</span><span class="si">{}</span><span class="s2">&#39; as dotbracket string, since we need a sequence. &quot;</span>
                           <span class="s2">&quot;Trying to treat it as a filename instead...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Assuming RNA </span><span class="si">%s</span><span class="s2"> is a dotbracketstring and not a file.&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-            <span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">from_fasta_text</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Assuming RNA </span><span class="si">%s</span><span class="s2"> is a dotbracketstring and not a file.&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">allow_many</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[</span><span class="n">bg</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">bg</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">rnafile</span><span class="p">:</span>
         <span class="n">filetype</span> <span class="o">=</span> <span class="n">sniff_filetype</span><span class="p">(</span><span class="n">rnafile</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;pdb&quot;</span> <span class="ow">and</span> <span class="n">filetype</span><span class="o">!=</span><span class="s2">&quot;pdb&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;Only PDB files are accepted, but file </span><span class="si">{}</span><span class="s2"> has type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filetype</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;only_cg&quot;</span> <span class="ow">and</span> <span class="n">filetype</span><span class="o">!=</span><span class="s2">&quot;forgi&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;Only forgi cg files are accepted, but file </span><span class="si">{}</span><span class="s2"> has type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filetype</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">filetype</span><span class="o">==</span><span class="s2">&quot;forgi&quot;</span><span class="p">:</span>
-        <span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rna_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;3d&quot;</span><span class="p">,</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">is_filled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;File </span><span class="si">{}</span><span class="s2"> does not contain all 3D coordinates!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;pdb&quot;</span> <span class="ow">and</span> <span class="n">filetype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pdb&quot;</span><span class="p">,</span> <span class="s2">&quot;cif&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span>
+            <span class="s2">&quot;Only PDB files (*.pdb/.cif) are accepted, but file </span><span class="si">{}</span><span class="s2"> has type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filetype</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;only_cg&quot;</span> <span class="ow">and</span> <span class="n">filetype</span> <span class="o">!=</span> <span class="s2">&quot;forgi&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span>
+            <span class="s2">&quot;Only forgi cg files are accepted, but file </span><span class="si">{}</span><span class="s2"> has type </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">filetype</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;forgi&quot;</span><span class="p">:</span>
+        <span class="n">cg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="o">.</span><span class="n">from_bg_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rna_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;3d&quot;</span><span class="p">,</span> <span class="s2">&quot;only_cg&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cg</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">is_filled</span><span class="p">:</span> <span class="c1"># pylint: disable=E1101</span>
+            <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span>
+                <span class="s2">&quot;File </span><span class="si">{}</span><span class="s2"> does not contain all 3D coordinates!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">allow_many</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">cg</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">cg</span>
-    <span class="k">elif</span> <span class="n">filetype</span><span class="o">==</span><span class="s2">&quot;pdb&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;pdb&quot;</span> <span class="ow">or</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;cif&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">pdb_chain</span><span class="p">:</span>
-            <span class="n">cgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ftmc</span><span class="o">.</span><span class="n">load_cg_from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">chain_id</span><span class="o">=</span><span class="n">pdb_chain</span><span class="p">,</span>
-                                                 <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="n">pbd_remove_pk</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pdb_dotbracket</span><span class="p">,</span>
-                                                 <span class="n">secondary_structure</span><span class="o">=</span><span class="n">pdb_dotbracket</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)]</span>
-            <span class="k">if</span> <span class="n">dissolve_length_one_stems</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">cg</span> <span class="ow">in</span> <span class="n">cgs</span><span class="p">:</span>
-                    <span class="n">cg</span><span class="o">.</span><span class="n">dissolve_length_one_stems</span><span class="p">()</span>
+            <span class="n">cgs</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">load_chains</span><span class="o">=</span><span class="n">pdb_chain</span><span class="p">,</span>
+                                               <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="n">pdb_remove_pk</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pdb_dotbracket</span><span class="p">,</span>
+                                               <span class="n">secondary_structure</span><span class="o">=</span><span class="n">pdb_dotbracket</span><span class="p">,</span>
+                                               <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">,</span>
+                                               <span class="n">filetype</span><span class="o">=</span><span class="n">filetype</span><span class="p">,</span> <span class="n">annotation_tool</span><span class="o">=</span><span class="n">pdb_annotation_tool</span><span class="p">,</span>
+                                               <span class="n">query_PDBeChem</span><span class="o">=</span><span class="n">pdb_allow_www_query</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pdb_dotbracket</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;pdb_dotbracket requires a chain ti be given to avioid ambiguity.&quot;</span><span class="p">)</span>
-            <span class="n">cgs</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">connected_cgs_from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">remove_pseudoknots</span> <span class="o">=</span> <span class="n">pbd_remove_pk</span><span class="p">,</span>
-                                              <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;pdb_dotbracket requires a chain to be given to avoid ambiguity.&quot;</span><span class="p">)</span>
+            <span class="n">cgs</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="o">.</span><span class="n">from_pdb</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">remove_pseudoknots</span><span class="o">=</span><span class="n">pdb_remove_pk</span><span class="p">,</span>
+                                               <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">,</span>
+                                               <span class="n">filetype</span><span class="o">=</span><span class="n">filetype</span><span class="p">,</span> <span class="n">annotation_tool</span><span class="o">=</span><span class="n">pdb_annotation_tool</span><span class="p">,</span>
+                                               <span class="n">query_PDBeChem</span><span class="o">=</span><span class="n">pdb_allow_www_query</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">allow_many</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">cgs</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cgs</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;More than one connected RNA component in pdb file </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;More than one connected RNA component in pdb file </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">filename</span><span class="p">,</span> <span class="p">[</span><span class="n">cg</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">cg</span> <span class="ow">in</span> <span class="n">cgs</span><span class="p">]))</span>
             <span class="k">return</span> <span class="n">cgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="n">filetype</span><span class="o">==</span><span class="s2">&quot;mmcif&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;MMCIF files are not yet supported.&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">filetype</span><span class="o">==</span><span class="s2">&quot;bpseq&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;3d&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;bpseq file </span><span class="si">{}</span><span class="s2"> is not supported. We need 3D coordinates!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
-        <span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
+    <span class="c1"># elif filetype==&quot;mmcif&quot;:</span>
+    <span class="c1">#    raise WrongFileFormat(&quot;MMCIF files are not yet supported.&quot;)</span>
+    <span class="k">elif</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;bpseq&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;3d&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span>
+                <span class="s2">&quot;bpseq file </span><span class="si">{}</span><span class="s2"> is not supported. We need 3D coordinates!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="nb">int</span><span class="p">(</span><span class="n">text</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="n">i</span><span class="o">=</span><span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">1 &quot;</span><span class="p">)</span>
-                <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
-        <span class="n">bg</span><span class="o">.</span><span class="n">from_bpseq_str</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;cg&quot;</span><span class="p">:</span>
-            <span class="n">bg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">from_bulge_graph</span><span class="p">(</span><span class="n">bg</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">1 &quot;</span><span class="p">)</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="o">.</span><span class="n">from_bpseq_str</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">allow_many</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">bg</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">bg</span>
-    <span class="k">elif</span> <span class="n">filetype</span> <span class="o">==</span><span class="s2">&quot;fasta&quot;</span> <span class="ow">or</span> <span class="n">filetype</span><span class="o">==</span><span class="s2">&quot;other&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;3d&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;Fasta(like) file </span><span class="si">{}</span><span class="s2"> is not supported. We need 3D coordinates!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;fasta&quot;</span> <span class="ow">or</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;other&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">rna_type</span> <span class="o">==</span> <span class="s2">&quot;3d&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span>
+                <span class="s2">&quot;Fasta(like) file </span><span class="si">{}</span><span class="s2"> is not supported. We need 3D coordinates!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">bgs</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">from_fasta</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
+            <span class="n">bgs</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">CoarseGrainRNA</span><span class="o">.</span><span class="n">from_fasta</span><span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="n">dissolve_length_one_stems</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">log_to_exception</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
                 <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Could not parse file </span><span class="si">%r</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">filetype</span><span class="o">==</span><span class="s2">&quot;other&quot;</span><span class="p">:</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;We assumed file </span><span class="si">%r</span><span class="s2"> to be some fasta-variant or dotbracket file, but an error occurred during parsing.&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">filetype</span> <span class="o">==</span> <span class="s2">&quot;other&quot;</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span>
+                        <span class="s2">&quot;We assumed file </span><span class="si">%r</span><span class="s2"> to be some fasta-variant or dotbracket file, but an error occurred during parsing.&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
             <span class="k">raise</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bgs</span><span class="p">,</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">):</span>
-            <span class="n">bgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">bgs</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">dissolve_length_one_stems</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">bg</span> <span class="ow">in</span> <span class="n">bgs</span><span class="p">:</span>
-                <span class="n">bg</span><span class="o">.</span><span class="n">dissolve_length_one_stems</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">rna_type</span><span class="o">==</span><span class="s2">&quot;cg&quot;</span><span class="p">:</span>
-            <span class="n">bgs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">ftmc</span><span class="o">.</span><span class="n">from_bulge_graph</span><span class="p">,</span> <span class="n">bgs</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">allow_many</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">bgs</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bgs</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span><span class="s2">&quot;More than one RNA found in fasta/ dotbracket file </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongFileFormat</span><span class="p">(</span>
+                    <span class="s2">&quot;More than one RNA found in fasta/ dotbracket file </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">bgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
-
 
 
 <div class="viewcode-block" id="open_for_out"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.open_for_out">[docs]</a><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
@@ -302,7 +376,8 @@
     <span class="s2">&quot;From http://stackoverflow.com/a/17603000/5069869&quot;</span>
     <span class="k">if</span> <span class="n">filename</span> <span class="ow">and</span> <span class="n">filename</span> <span class="o">!=</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Cannot create file </span><span class="si">{}</span><span class="s2">. File exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot create file </span><span class="si">{}</span><span class="s2">. File exists.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
         <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">fh</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
@@ -311,6 +386,7 @@
     <span class="k">finally</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">fh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
             <span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
 
 <div class="viewcode-block" id="hide_traceback"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.commandline_utils.html#forgi.utilities.commandline_utils.hide_traceback">[docs]</a><span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
 <span class="k">def</span> <span class="nf">hide_traceback</span><span class="p">(</span><span class="n">error_class</span><span class="o">=</span><span class="n">WrongFileFormat</span><span class="p">):</span>
@@ -323,7 +399,7 @@
     <span class="k">except</span> <span class="n">error_class</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># Integration with logging_exceptions</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">exception</span><span class="o">.</span><span class="n">log</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">log</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error of type </span><span class="si">{}</span><span class="s2"> occurred. Aborting.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
@@ -340,8 +416,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

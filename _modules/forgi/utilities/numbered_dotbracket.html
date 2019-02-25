@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.utilities.numbered_dotbracket &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../../../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for forgi.utilities.numbered_dotbracket</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
+<span class="kn">import</span> <span class="nn">forgi.graph.sequence</span> <span class="k">as</span> <span class="nn">fgs</span>
+<span class="kn">import</span> <span class="nn">forgi.graph.residue</span> <span class="k">as</span> <span class="nn">fgr</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.model.coarse_grain</span> <span class="k">as</span> <span class="nn">ftmc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="NumberedDotbracket"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.numbered_dotbracket.html#forgi.utilities.numbered_dotbracket.NumberedDotbracket">[docs]</a><span class="k">class</span> <span class="nc">NumberedDotbracket</span><span class="p">():</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dotbracket_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">residue_numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">helix_ends</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param dotbracket_str: A string</span>
+<span class="sd">        :param residue numbers: A list of integers or forgi RESIDS.</span>
+<span class="sd">                                Same length as dotbracket_str</span>
+<span class="sd">        :param helix_ends: If a basepair represents a helix or</span>
+<span class="sd">                           stem with missing residues,</span>
+<span class="sd">                           The helix end give the last/ first missing(condensed)</span>
+<span class="sd">                           residue number which is represented by this basepair.</span>
+<span class="sd">                           I.e. the basepair of the helix that is at the 3&#39; end</span>
+<span class="sd">                           of the forward strand.</span>
+<span class="sd">                           It is a list with the same length as residue_numers.</span>
+
+<span class="sd">                           *   Example 1. Every nucleotide only represents itself::</span>
+<span class="sd">                                    dotbracket_str   (((..)))</span>
+<span class="sd">                                    residue numbers  12345678</span>
+<span class="sd">                                    helix_ends       12345678</span>
+<span class="sd">                           *  Example 2. The same helix as Ex. 1, now condensed.</span>
+<span class="sd">                                    The helix 1-3,6-8 is represented by the basepair 1-8::</span>
+<span class="sd">                                    dotbracket_str   (..)</span>
+<span class="sd">                                    residue numbers  1458</span>
+<span class="sd">                                    helix_ends       3456</span>
+<span class="sd">                                    Here the nucleotide 1 represents one strand</span>
+<span class="sd">                                    of the helix, going from 1 to 3.</span>
+<span class="sd">                                    The nucleotide 8 represents the other strand,</span>
+<span class="sd">                                    going from 6 to 8.</span>
+
+<span class="sd">                          The value for helix ends for unpaired nucleotides is</span>
+<span class="sd">                          undefined and should ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dotbracket_str</span> <span class="o">=</span> <span class="n">dotbracket_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">residue_numbers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">residue_numbers</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">residue_numbers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span> <span class="o">=</span> <span class="n">dotbracket_str</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span> <span class="o">=</span> <span class="n">residue_numbers</span>
+        <span class="k">if</span> <span class="n">helix_ends</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span> <span class="o">=</span> <span class="n">helix_ends</span>
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span> <span class="c1">#self.residue_numbers:</span>
+            <span class="n">tb</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_list</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">extract_stack</span><span class="p">()[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">tb</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;NumberedDotbracket initialized. &quot;</span>
+                  <span class="s2">&quot;residue_numbers[0]=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">residue_numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<div class="viewcode-block" id="NumberedDotbracket.without_unpaired"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.numbered_dotbracket.html#forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_unpaired">[docs]</a>    <span class="k">def</span> <span class="nf">without_unpaired</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return NumberedDotbracket with dots removed</span>
+
+<span class="sd">        :param dotbracket: A dotbracket string</span>
+<span class="sd">        :param residue_numbers: A list of residue numbers,</span>
+<span class="sd">                                with same length as dotbracket</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Removing unpaired from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)))</span>
+        <span class="n">new_dotbracket</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">new_residue_numbers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">new_helix_ends</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ch</span><span class="o">!=</span><span class="s1">&#39;.&#39;</span><span class="p">:</span>
+                <span class="n">new_dotbracket</span><span class="o">+=</span><span class="n">ch</span>
+                <span class="n">new_residue_numbers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">new_helix_ends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Residue numbers now </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">,</span> <span class="n">new_residue_numbers</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="n">new_dotbracket</span><span class="p">,</span> <span class="n">new_residue_numbers</span><span class="p">,</span> <span class="n">new_helix_ends</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_to_forgi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span> <span class="c1"># Expects residue_numers to be forgi.graph.residue.RESID instances</span>
+            <span class="n">breakpoints</span> <span class="o">=</span> <span class="n">ftmc</span><span class="o">.</span><span class="n">breakpoints_from_seqids</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="c1">#residue numbers are ints or something else</span>
+            <span class="n">breakpoints</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">dotbracketstr</span> <span class="o">=</span> <span class="n">fgs</span><span class="o">.</span><span class="n">_insert_breakpoints_simple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">,</span> <span class="n">breakpoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting </span><span class="si">%s</span><span class="s2"> to forgi&quot;</span><span class="p">,</span> <span class="n">dotbracketstr</span><span class="p">)</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="n">dotbracketstr</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Forgi-db is </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="p">,</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">bg</span>
+
+<div class="viewcode-block" id="NumberedDotbracket.without_short_helices"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.numbered_dotbracket.html#forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_short_helices">[docs]</a>    <span class="k">def</span> <span class="nf">without_short_helices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check the stems if the correspond to the minimum length given by the Users</span>
+
+<span class="sd">        :param min_length: minimum stem length</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_forgi</span><span class="p">()</span>
+        <span class="n">to_unpaired</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">stem</span> <span class="ow">in</span> <span class="n">bg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">bg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">stem</span><span class="p">)</span><span class="o">&lt;</span><span class="n">min_length</span><span class="p">:</span>
+                <span class="n">to_unpaired</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">stem</span><span class="p">))</span>
+        <span class="n">numpy_db</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">numpy_db</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">numpy_db</span><span class="p">))</span>
+        <span class="n">to_unpaired</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">to_unpaired</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="n">to_unpaired</span><span class="o">-=</span><span class="mi">1</span> <span class="c1">#0-based indexing, numpy supports element-wise substraction</span>
+        <span class="n">numpy_db</span><span class="p">[</span><span class="n">to_unpaired</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;.&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;After to_unpaired </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">numpy_db</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">numpy_db</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NumberedDotbracket.condensed"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.numbered_dotbracket.html#forgi.utilities.numbered_dotbracket.NumberedDotbracket.condensed">[docs]</a>    <span class="k">def</span> <span class="nf">condensed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_helices_shorter_than</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return input with consecutive basepairs remove_unpaired</span>
+
+<span class="sd">        :param dotbracket: A dotbracket string</span>
+<span class="sd">        :param residue_numbers: A list of residue numbers,</span>
+<span class="sd">                                with same length as dotbracket</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Condensing: Seq-ids are </span><span class="si">%s</span><span class="s2"> of length </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">fgr</span><span class="o">.</span><span class="n">resid_to_str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)),</span>
+                  <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">))</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_forgi</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Breakpoints are (0-based) </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_breaks_after</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Before setting: ResNum: </span><span class="si">%s</span><span class="s2"> will be set to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_seqids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)</span>
+        <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_seqids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;After setting, before condensing: ResNum: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_seqids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">bg2</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">transformed</span><span class="o">.</span><span class="n">condensed</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Successfully transformed&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;DB now </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bg2</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">())</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Resids now </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bg2</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_seqids</span><span class="p">)</span>
+
+        <span class="n">helix_ends</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">seqid</span> <span class="ow">in</span>  <span class="n">bg2</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_seqids</span><span class="p">:</span>
+            <span class="n">elem_original</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_elem</span><span class="p">(</span><span class="n">seqid</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">seqid</span> <span class="o">==</span> <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem_original</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">helix_end</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem_original</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">seqid</span> <span class="o">==</span> <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem_original</span><span class="p">][</span><span class="mi">3</span><span class="p">]):</span>
+                <span class="n">helix_end</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">to_resid</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">defines</span><span class="p">[</span><span class="n">elem_original</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="kc">False</span>
+            <span class="n">helix_ends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">helix_end</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Helix ends: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">helix_ends</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="n">bg2</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">(),</span> <span class="n">bg2</span><span class="o">.</span><span class="n">seq</span><span class="o">.</span><span class="n">_seqids</span><span class="p">,</span> <span class="n">helix_ends</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;NumberedDotbracket(</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">),</span>
+                                                   <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bracket</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="n">bracket</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">helix_ends</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span> <span class="o">+</span>  <span class="n">other</span><span class="o">.</span><span class="n">dotbracket_str</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">residue_numbers</span>
+        <span class="n">he</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">helix_ends</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Add to PK: </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">rn</span><span class="p">,</span> <span class="n">helix_ends</span><span class="o">=</span><span class="n">he</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">NumberedDotbracket</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="o">==</span><span class="n">other</span><span class="o">.</span><span class="n">dotbracket_str</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If other is a string, compare it to self.dotbracket_str</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">[</span><span class="n">key</span><span class="p">]],</span> <span class="n">helix_ends</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span><span class="p">[</span><span class="n">key</span><span class="p">]])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">helix_ends</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NumberedDotbracket.count"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.numbered_dotbracket.html#forgi.utilities.numbered_dotbracket.NumberedDotbracket.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NumberedDotbracket.without_substr"><a class="viewcode-back" href="../../../apidoc/forgi.utilities.numbered_dotbracket.html#forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_substr">[docs]</a>    <span class="k">def</span> <span class="nf">without_substr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return number of occurrences of pattern and</span>
+<span class="sd">        a NumberedDotbracket all occurrences removed.</span>
+
+<span class="sd">        Occurrences of the pattern are removed recursicvely. E.g.:</span>
+<span class="sd">        The pattern &quot;ab&quot; will be removed from &quot;aabb&quot; two times.</span>
+<span class="sd">        E.g.: two occurrences of &quot;([)]&quot; will be removed from &quot;(([)][)]&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">db</span> <span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dotbracket_str</span>
+        <span class="n">res_nums</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">residue_numbers</span><span class="p">)</span>
+        <span class="n">h_ends</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">helix_ends</span><span class="p">)</span>
+        <span class="n">removed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">removed</span><span class="p">,</span> <span class="n">NumberedDotbracket</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">res_nums</span><span class="p">)</span>
+            <span class="n">removed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NumberedDotbracket</span><span class="p">(</span><span class="n">db</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">)],</span>
+                                              <span class="n">res_nums</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">)],</span>
+                                              <span class="n">h_ends</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">)]))</span>
+            <span class="n">db</span> <span class="o">=</span> <span class="n">db</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">db</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">):]</span>
+            <span class="n">res_nums</span> <span class="o">=</span> <span class="n">res_nums</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">res_nums</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">):]</span>
+            <span class="n">h_ends</span> <span class="o">=</span> <span class="n">h_ends</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">h_ends</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">):]</span></div></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        <a class="uplink" href="../../../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

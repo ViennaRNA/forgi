@@ -8,6 +8,8 @@ Submodules
 
    forgi.graph.bulge_graph
    forgi.graph.residue
+   forgi.graph.sequence
+   forgi.graph.transform_graphs
 
 Module contents
 ---------------

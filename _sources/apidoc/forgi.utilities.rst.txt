@@ -10,6 +10,7 @@ Submodules
    forgi.utilities.debug
    forgi.utilities.exceptions
    forgi.utilities.graph
+   forgi.utilities.numbered_dotbracket
    forgi.utilities.observedDict
    forgi.utilities.stuff
 

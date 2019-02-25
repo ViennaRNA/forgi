@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.model.coarse_grain module &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.model.coarse_grain module &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -50,9 +50,15 @@
         
   <div class="section" id="module-forgi.threedee.model.coarse_grain">
 <span id="forgi-threedee-model-coarse-grain-module"></span><h1>forgi.threedee.model.coarse_grain module<a class="headerlink" href="#module-forgi.threedee.model.coarse_grain" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="forgi.threedee.model.coarse_grain.AnnotationToolNotInstalled">
+<em class="property">exception </em><code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">AnnotationToolNotInstalled</code><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#AnnotationToolNotInstalled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.AnnotationToolNotInstalled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.ValueError</span></code></p>
+</dd></dl>
+
 <dl class="class">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA">
-<em class="property">class </em><code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">CoarseGrainRNA</code><span class="sig-paren">(</span><em>cg_file=None</em>, <em>dotbracket_str=u''</em>, <em>seq=u''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">CoarseGrainRNA</code><span class="sig-paren">(</span><em>graph_construction</em>, <em>sequence</em>, <em>name=None</em>, <em>infos=None</em>, <em>_dont_split=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="forgi.graph.bulge_graph.html#forgi.graph.bulge_graph.BulgeGraph" title="forgi.graph.bulge_graph.BulgeGraph"><code class="xref py py-class docutils literal"><span class="pre">forgi.graph.bulge_graph.BulgeGraph</span></code></a></p>
 <p>A coarse grain model of RNA structure based on the
 bulge graph representation.</p>
@@ -73,7 +79,9 @@ to avoid leaving it in an inconsistent state.</p>
 <p class="first admonition-title">Warning</p>
 <p class="last">Virtual residues are only added to stems, not to loop regions.
 The position of residues in loops is much more flexible, which is why virtual
-residue positions for loops usually do not make sense.</p>
+residue positions for loops usually do not make sense. If the file
+was loaded from the PDB, residue positions from the PDB file are
+stored already.</p>
 </div>
 </dd></dl>
 
@@ -86,23 +94,14 @@ The stems have to be created beforehand.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.assign_loop_roles">
-<code class="descname">assign_loop_roles</code><span class="sig-paren">(</span><em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.assign_loop_roles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.assign_loop_roles" title="Permalink to this definition">¶</a></dt>
-<dd><p>EXPERIMENTAL</p>
-<p>For 3-way junctions: Assign the roles P1, P2 and P3
-and J12, J31, J23 according to Lescoute and Westhof,
-RNA 2006 (doi: 10.1261/rna.2208106)</p>
-<p>We try to detect which helices stack and assign the roles in a way
-that J12 is always the stacking segment.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None if no clear classification was possible,
-a dictionary otherwise.</td>
-</tr>
-</tbody>
-</table>
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.after_coordinates_changed">
+<code class="descname">after_coordinates_changed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.after_coordinates_changed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.after_coordinates_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.bases">
+<code class="descname">bases</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary storing the stem-bases (not the vres basis)</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -162,27 +161,42 @@ However h,t and f elements always point away from the connected stem.</p>
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_bpseq_str">
-<code class="descname">from_bpseq_str</code><span class="sig-paren">(</span><em>bpseq_str</em>, <em>dissolve_length_one_stems=False</em>, <em>breakpoints=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.from_bpseq_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_bpseq_str" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_cg_string">
-<code class="descname">from_cg_string</code><span class="sig-paren">(</span><em>cg_string</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.from_cg_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_cg_string" title="Permalink to this definition">¶</a></dt>
+<dl class="classmethod">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_bg_string">
+<em class="property">classmethod </em><code class="descname">from_bg_string</code><span class="sig-paren">(</span><em>cg_string</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.from_bg_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_bg_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Populate this structure from the string
 representation of a graph.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_dotbracket">
-<code class="descname">from_dotbracket</code><span class="sig-paren">(</span><em>dotbracket_str</em>, <em>dissolve_length_one_stems=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.from_dotbracket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_dotbracket" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_file">
-<code class="descname">from_file</code><span class="sig-paren">(</span><em>cg_filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load this data structure from a file.</p>
+<dl class="classmethod">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_pdb">
+<em class="property">classmethod </em><code class="descname">from_pdb</code><span class="sig-paren">(</span><em>pdb_filename</em>, <em>load_chains=None</em>, <em>remove_pseudoknots=False</em>, <em>dissolve_length_one_stems=True</em>, <em>secondary_structure=None</em>, <em>filetype=u'pdb'</em>, <em>annotation_tool=None</em>, <em>query_PDBeChem=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.from_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.from_pdb" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>load_chains</strong> – A list of chain_ids or None (all chains)</li>
+<li><strong>secondary_structure</strong> – Only useful if we load only 1 component</li>
+<li><strong>filetype</strong> – One of ‘pdb’ or ‘cif’</li>
+<li><strong>query_PDBeChem</strong> – If true, query the PDBeChem database whenever a
+modified residue with unknown 3-letter code
+is encountered.</li>
+<li><strong>annotation_tool</strong> – One of “DSSR”, “MC-Annotate”, “forgi” or None.
+If this is None, we take the value of the configuration
+file (run forgi_config.py to create a config file).
+If no config file is given either, we see what tools are
+installed, preferring the newer DSSR over MC-Annotate and
+falling back to the fogi implementation if neither is in
+the PATH variable.
+If a string is given or the configuration file set,
+we never fall back to a different option but raise an
+error, if the requested tool is unavailable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -210,7 +224,7 @@ the other direction</p>
 
 <dl class="method">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_bulge_angle_stats_core">
-<code class="descname">get_bulge_angle_stats_core</code><span class="sig-paren">(</span><em>define</em>, <em>connections</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.get_bulge_angle_stats_core"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_bulge_angle_stats_core" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_bulge_angle_stats_core</code><span class="sig-paren">(</span><em>elem</em>, <em>forward=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.get_bulge_angle_stats_core"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_bulge_angle_stats_core" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the angle stats for a particular bulge. These stats describe the
 relative orientation of the two stems that it connects.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -218,7 +232,7 @@ relative orientation of the two stems that it connects.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>define</strong> – The name of the bulge.</li>
+<li><strong>elem</strong> – The name of the bulge.</li>
 <li><strong>connections</strong> – The two stems that are connected by it.</li>
 </ul>
 </td>
@@ -266,8 +280,8 @@ in coordinates dictionary.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_coordinates_list">
-<code class="descname">get_coordinates_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.get_coordinates_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_coordinates_list" title="Permalink to this definition">¶</a></dt>
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_interacting_str">
+<code class="descname">get_interacting_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.get_interacting_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_interacting_str" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -300,7 +314,7 @@ to which it is attached.</p>
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_ordered_virtual_residue_poss">
 <code class="descname">get_ordered_virtual_residue_poss</code><span class="sig-paren">(</span><em>return_elements=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.get_ordered_virtual_residue_poss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_ordered_virtual_residue_poss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the coordinates of all stem’s virtual residues in a consistent order.</p>
-<p>This is used for RMSD calculation and is ment to replace ftug.bg_virtual_residues
+<p>This is used for RMSD calculation.
 If no virtual_residue_positions are known, self.add_all_virtual_residues() is called
 automatically.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -406,7 +420,8 @@ of the base pairs.</p>
 <dd><p>Get the array of twists for this node. If the node is a stem,
 then the twists will simply those stored in the array.
 If the node is an interior loop or a junction segment,
-then the twists will be the ones that are adjacent to it.
+then the twists will be the ones that are adjacent to it,
+projected to the plane normal to the element vector.
 If the node is a hairpin loop or a free end, then the same twist
 will be duplicated and returned twice.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -422,18 +437,33 @@ will be duplicated and returned twice.</p>
 <dl class="method">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_virtual_residue">
 <code class="descname">get_virtual_residue</code><span class="sig-paren">(</span><em>pos</em>, <em>allow_single_stranded=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.get_virtual_residue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.get_virtual_residue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the virtual residue for the nmucleotide at position pos (1-based)</p>
+<dd><p>Get the virtual residue position in the global coordinate system
+for the nucleotide at position pos (1-based)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>allow_single_stranded</strong> – If True and pos is not in a stem, return a
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pos</strong> – A 1-based nucleotide number</li>
+<li><strong>allow_single_stranded</strong> – If True and pos is not in a stem, return a
 rough estimate for the residue position instead of raising an error.
-Currenly, for non-stem elements, these positions are on the axis of the cg-element.</td>
+Currenly, for non-stem elements, these positions are on the axis of the cg-element.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.incomplete_elements">
+<code class="descname">incomplete_elements</code><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.incomplete_elements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.interacting_elements">
+<code class="descname">interacting_elements</code><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.interacting_elements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.is_stacking">
@@ -452,59 +482,6 @@ Currenly, for non-stem elements, these positions are on the axis of the cg-eleme
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A BOOLEAN.</p>
 </td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.junction_family_3d">
-<code class="descname">junction_family_3d</code><span class="sig-paren">(</span><em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.junction_family_3d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.junction_family_3d" title="Permalink to this definition">¶</a></dt>
-<dd><p>EXPERIMENTAL</p>
-<p>For 3-way junctions: Return the junction family depending
-on the 3D orientation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loop</strong> – Either a dictionary, as returned by assign_loop_roles
-or a list of 3 loop segments.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.junction_family_is_perpenticular">
-<code class="descname">junction_family_is_perpenticular</code><span class="sig-paren">(</span><em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.junction_family_is_perpenticular"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.junction_family_is_perpenticular" title="Permalink to this definition">¶</a></dt>
-<dd><p>EXPERIMENTAL</p>
-<p>For 3-way junctions Return whether or not the not-stacking loop
-is very roughly perpenticular to the stack.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loop</strong> – Either a dictionary, as returned by assign_loop_roles
-or a list of 3 loop segments.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.junction_family_westhof1">
-<code class="descname">junction_family_westhof1</code><span class="sig-paren">(</span><em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.junction_family_westhof1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.junction_family_westhof1" title="Permalink to this definition">¶</a></dt>
-<dd><p>EXPERIMENTAL</p>
-<p>For 3-way junctions: Return the junction family according to
-Lescoute and Westhof, RNA 2006 (doi: 10.1261/rna.2208106).</p>
-<p>In this method, the junction family is defined via the relative
-lengths of fragments, not the orientation of the elements.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loop</strong> – Either a dictionary, as returned by assign_loop_roles
-or a list of 3 loop segments.</td>
 </tr>
 </tbody>
 </table>
@@ -591,6 +568,12 @@ Used as on_call function for the observing of the self.coords dictionary.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.rotate_translate">
+<code class="descname">rotate_translate</code><span class="sig-paren">(</span><em>offset</em>, <em>rotation_matrix</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.rotate_translate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.rotate_translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>First translate the RNA by offset, then rotate by rotation matrix</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.sorted_edges_for_mst">
 <code class="descname">sorted_edges_for_mst</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.sorted_edges_for_mst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.sorted_edges_for_mst" title="Permalink to this definition">¶</a></dt>
 <dd><p>Keep track of all linked nodes. Used for the generation of the minimal spanning tree.</p>
@@ -629,20 +612,6 @@ by counting the atom density around the center of these elements</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.to_cg_file">
-<code class="descname">to_cg_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.to_cg_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.to_cg_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save this structure as a string in a file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – The filename to save it to.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.to_cg_string">
 <code class="descname">to_cg_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.to_cg_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.to_cg_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Output this structure in string form.</p>
@@ -658,6 +627,11 @@ by counting the atom density around the center of these elements</p>
 <code class="descname">total_length</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#CoarseGrainRNA.total_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.total_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the combined length of all the elements.</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.transformed">
+<code class="descname">transformed</code><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.transformed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="attribute">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.v3dposs">
@@ -676,7 +650,8 @@ generated by self.add_all_virtual_residues()</p>
 <dl class="attribute">
 <dt id="forgi.threedee.model.coarse_grain.CoarseGrainRNA.vinvs">
 <code class="descname">vinvs</code><em class="property"> = None</em><a class="headerlink" href="#forgi.threedee.model.coarse_grain.CoarseGrainRNA.vinvs" title="Permalink to this definition">¶</a></dt>
-<dd><p>generated by self.add_all_virtual_residues()</p>
+<dd><p>generated by self.add_all_virtual_residues()
+The inverse of the transposed basis.</p>
 </dd></dl>
 
 <dl class="method">
@@ -740,94 +715,14 @@ about interactions between non-adjacent elements.</p>
 <dl class="function">
 <dt id="forgi.threedee.model.coarse_grain.breakpoints_from_seqids">
 <code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">breakpoints_from_seqids</code><span class="sig-paren">(</span><em>seqids</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#breakpoints_from_seqids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.breakpoints_from_seqids" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the list of cofold cutpoints from the seq_ids.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.model.coarse_grain.connected_cgs_from_pdb">
-<code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">connected_cgs_from_pdb</code><span class="sig-paren">(</span><em>pdb_filename</em>, <em>remove_pseudoknots=False</em>, <em>dissolve_length_one_stems=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#connected_cgs_from_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.connected_cgs_from_pdb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.model.coarse_grain.from_bulge_graph">
-<code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">from_bulge_graph</code><span class="sig-paren">(</span><em>bulge_graph</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#from_bulge_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.from_bulge_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a CoarseGrainRNA from a BulgeGraph</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.model.coarse_grain.from_pdb">
-<code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">from_pdb</code><span class="sig-paren">(</span><em>pdb_filename</em>, <em>secondary_structure=u''</em>, <em>intermediate_file_dir=None</em>, <em>chain_id=None</em>, <em>remove_pseudoknots=True</em>, <em>parser=None</em>, <em>dissolve_length_one_stems=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#from_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.from_pdb" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.model.coarse_grain.load_cg_from_pdb">
-<code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">load_cg_from_pdb</code><span class="sig-paren">(</span><em>pdb_filename</em>, <em>secondary_structure=u''</em>, <em>intermediate_file_dir=None</em>, <em>chain_id=None</em>, <em>remove_pseudoknots=True</em>, <em>parser=None</em>, <em>dissolve_length_one_stems=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#load_cg_from_pdb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.load_cg_from_pdb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load a coarse grain model from a PDB file, by extracing
-the bulge graph.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pdb_filename</strong> – The filename of the 3D model</li>
-<li><strong>secondary_structure</strong> – A dot-bracket string encoding the secondary
-structure of this molecule</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.model.coarse_grain.load_cg_from_pdb_in_dir">
-<code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">load_cg_from_pdb_in_dir</code><span class="sig-paren">(</span><em>pdb_filename</em>, <em>output_dir</em>, <em>secondary_structure=u''</em>, <em>chain_id=None</em>, <em>remove_pseudoknots=True</em>, <em>parser=None</em>, <em>dissolve_length_one_stems=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#load_cg_from_pdb_in_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.load_cg_from_pdb_in_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the coarse grain model from a pdb file and store all
-of the intermediate files in the given directory.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pdb_filename</strong> – The name of the pdb file to be coarseified</li>
-<li><strong>output_dir</strong> – The name of the output directory</li>
-<li><strong>secondary_structure</strong> – Specify a particular secondary structure
-for this coarsification.</li>
-<li><strong>chain_id</strong> – <p>The id of the chain to create the CG model from.
-This can be one of the following:</p>
-<ul>
-<li>The string “all” in lowercase, to extract all chains.</li>
-<li>None, to extract the biggest chain</li>
-<li>A (single-letter) string containing the chain id</li>
-<li>A list of chain-ids. In that case only chains that match this id will be extracted.</li>
-</ul>
-</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<dd><p>Create the list of cofold cutpoints from the seq_ids.
+Return 1-based breakpoints</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="forgi.threedee.model.coarse_grain.profile">
 <code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">profile</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.profile" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="function">
-<dt id="forgi.threedee.model.coarse_grain.remove_hetatm">
-<code class="descclassname">forgi.threedee.model.coarse_grain.</code><code class="descname">remove_hetatm</code><span class="sig-paren">(</span><em>lines</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/threedee/model/coarse_grain.html#remove_hetatm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.threedee.model.coarse_grain.remove_hetatm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Go through the lines of a pdb file and remove any which refer to a
-HETATM.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lines</strong> – A an array of lines of text from a pdb file.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
 
 </div>
 
@@ -846,8 +741,8 @@ HETATM.</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

@@ -1,0 +1,193 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>forgi.utilities.numbered_dotbracket module &#8212; forgi 2.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="forgi.utilities.observedDict module" href="forgi.utilities.observedDict.html" />
+    <link rel="prev" title="forgi.utilities.graph module" href="forgi.utilities.graph.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>forgi 2.0.0 documentation</span></a></h1>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.utilities.graph.html">forgi.utilities.graph module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.utilities.observedDict.html">forgi.utilities.observedDict module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="module-forgi.utilities.numbered_dotbracket">
+<span id="forgi-utilities-numbered-dotbracket-module"></span><h1>forgi.utilities.numbered_dotbracket module<a class="headerlink" href="#module-forgi.utilities.numbered_dotbracket" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="forgi.utilities.numbered_dotbracket.NumberedDotbracket">
+<em class="property">class </em><code class="descclassname">forgi.utilities.numbered_dotbracket.</code><code class="descname">NumberedDotbracket</code><span class="sig-paren">(</span><em>dotbracket_str=''</em>, <em>residue_numbers=None</em>, <em>helix_ends=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/numbered_dotbracket.html#NumberedDotbracket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.numbered_dotbracket.NumberedDotbracket" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dotbracket_str</strong> – A string</li>
+<li><strong>numbers</strong> (<a class="reference internal" href="forgi.graph.residue.html#module-forgi.graph.residue" title="forgi.graph.residue"><em>residue</em></a>) – A list of integers or forgi RESIDS.
+Same length as dotbracket_str</li>
+<li><strong>helix_ends</strong> – <dl class="docutils">
+<dt>If a basepair represents a helix or</dt>
+<dd>stem with missing residues,
+The helix end give the last/ first missing(condensed)
+residue number which is represented by this basepair.
+I.e. the basepair of the helix that is at the 3’ end
+of the forward strand.
+It is a list with the same length as residue_numers.<ul class="last">
+<li><dl class="first docutils">
+<dt>Example 1. Every nucleotide only represents itself::</dt>
+<dd>dotbracket_str   (((..)))
+residue numbers  12345678
+helix_ends       12345678</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Example 2. The same helix as Ex. 1, now condensed.</dt>
+<dd>The helix 1-3,6-8 is represented by the basepair 1-8::
+dotbracket_str   (..)
+residue numbers  1458
+helix_ends       3456
+Here the nucleotide 1 represents one strand
+of the helix, going from 1 to 3.
+The nucleotide 8 represents the other strand,
+going from 6 to 8.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>The value for helix ends for unpaired nucleotides is
+undefined and should ignored.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="forgi.utilities.numbered_dotbracket.NumberedDotbracket.condensed">
+<code class="descname">condensed</code><span class="sig-paren">(</span><em>remove_helices_shorter_than=3</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/numbered_dotbracket.html#NumberedDotbracket.condensed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.numbered_dotbracket.NumberedDotbracket.condensed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return input with consecutive basepairs remove_unpaired</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dotbracket</strong> – A dotbracket string</li>
+<li><strong>residue_numbers</strong> – A list of residue numbers,
+with same length as dotbracket</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.utilities.numbered_dotbracket.NumberedDotbracket.count">
+<code class="descname">count</code><span class="sig-paren">(</span><em>pattern</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/numbered_dotbracket.html#NumberedDotbracket.count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.numbered_dotbracket.NumberedDotbracket.count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_short_helices">
+<code class="descname">without_short_helices</code><span class="sig-paren">(</span><em>min_length</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/numbered_dotbracket.html#NumberedDotbracket.without_short_helices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_short_helices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the stems if the correspond to the minimum length given by the Users</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>min_length</strong> – minimum stem length</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_substr">
+<code class="descname">without_substr</code><span class="sig-paren">(</span><em>pattern</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/numbered_dotbracket.html#NumberedDotbracket.without_substr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_substr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return number of occurrences of pattern and
+a NumberedDotbracket all occurrences removed.</p>
+<p>Occurrences of the pattern are removed recursicvely. E.g.:
+The pattern “ab” will be removed from “aabb” two times.
+E.g.: two occurrences of “([)]” will be removed from “(([)][)]”</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_unpaired">
+<code class="descname">without_unpaired</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/forgi/utilities/numbered_dotbracket.html#NumberedDotbracket.without_unpaired"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#forgi.utilities.numbered_dotbracket.NumberedDotbracket.without_unpaired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return NumberedDotbracket with dots removed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dotbracket</strong> – A dotbracket string</li>
+<li><strong>residue_numbers</strong> – A list of residue numbers,
+with same length as dotbracket</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="forgi.utilities.graph.html">forgi.utilities.graph module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="forgi.utilities.observedDict.html">forgi.utilities.observedDict module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+    </div>
+  </body>
+</html>

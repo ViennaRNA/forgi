@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>RNA Secondary Structure as a Graph Using the forgi Library &#8212; forgi 1.1.0 documentation</title>
+    <title>RNA Secondary Structure as a Graph Using the forgi Library &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -28,16 +28,16 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="RNA 3D Structure Using forgi.threedee" href="threedee_tutorial.html" />
-    <link rel="prev" title="RNA Secondary Structure Utilities Using the forgi.utilities Submodule" href="utilities_tutorial.html" /> 
+    <link rel="prev" title="Useful scripts coming with forgi" href="scripts_tutorial.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
         <p>
-        «&#160;&#160;<a href="utilities_tutorial.html">RNA Secondary Structure Utilities Using the forgi.utilities Submodule</a>
+        «&#160;&#160;<a href="scripts_tutorial.html">Useful scripts coming with forgi</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -61,24 +61,24 @@ which elements are connected and which nucleotides they contain.</p>
 five different types of ‘elements’. Each element is assigned a name that
 can be used to refer to it and to determine its identity:</p>
 <ul class="simple">
-<li><strong>fiveprime:</strong> The unpaired nucleotides at the 5’ end of a molecule/ chain. Always start with ‘f’ (e.g. ‘f0’).</li>
-<li><strong>threeprime</strong>: The unpaired nucleotides at the 3’ end of a molecule/ chain. Always start with ‘t’ (e.g. ‘t0’)</li>
+<li><strong>fiveprime:</strong> The unpaired nucleotides at the 5’ end of a molecule/ chain. Name always starts with ‘f’ (e.g. ‘f0’).</li>
+<li><strong>threeprime</strong>: The unpaired nucleotides at the 3’ end of a molecule/ chain. Name always start with ‘t’ (e.g. ‘t0’)</li>
 <li><dl class="first docutils">
-<dt><strong>stem:</strong> Regions of contiguous canonical Watson-Crick base-paired nucleotides.</dt>
+<dt><strong>stem:</strong> Regions of contiguous canonical Watson-Crick base-paired nucleotides. By default, stems have at least 2 consecutive basepairs.</dt>
 <dd>Always start with ‘s’ (e.g., ‘s0’, ‘s1’, ‘s2’, …)</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><strong>interior loop:</strong> Bulged out nucleotides. Unpaird double stranded regions, flanked by stems on either side.</dt>
+<dt><strong>interior loop:</strong> Bulged out nucleotides and interior loops. An interior loop can contain unpaired bases on either strand or on both strands, flanked by stems on either side.</dt>
 <dd>Always start with ‘i’ (‘i0’, ‘i1’, ‘i2’,…)</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><strong>multiloop segment:</strong> Single-stranded unpaired regions. Always start with ‘m’. (‘m0’, ‘m1’, ‘m2’…)</dt>
+<dt><strong>multiloop segment:</strong> Single-stranded regions bewteen two stems. Always start with ‘m’. (‘m0’, ‘m1’, ‘m2’…)</dt>
 <dd>In the current version of forgi, pseudo-knots and exterior loops segments between stems are treated as multiloop segments.</dd>
 </dl>
 </li>
-<li><strong>hairpin loop:</strong> Always start with ‘h’.</li>
+<li><strong>hairpin loop:</strong> Always starts with ‘h’.</li>
 </ul>
 </div>
 <div class="section" id="a-simple-example">
@@ -93,25 +93,34 @@ including the Vienna RNA Package’s RNAfold program:</p>
 <p>This will return a minimum free energy structure which can be represented using
 dot-bracket notation:</p>
 <p><code class="docutils literal"><span class="pre">(((((((((...((((((.........))))))........((((((.......))))))..)))))))))</span></code></p>
-<p>This notation corresponds to a structure containing the base pairs shown in the
-following figure:</p>
-<a class="reference internal image-reference" href="_images/1y26_ss.png"><img alt="_images/1y26_ss.png" class="align-center" src="_images/1y26_ss.png" style="width: 260px; height: 260px;" /></a>
+<p>The secondary structure can be visualized using
+<a class="reference external" href="https://www.tbi.univie.ac.at/RNA/RNAplot.1.html">RNAplot</a>.
+Forgi also contains wrapper code that calls the ViennaRNA library (the basis of RNAplot)
+to generate the graph layout and visualizes it using matpoltlib:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">forgi.visual.mplotlib</span> <span class="k">as</span> <span class="nn">fvm</span>
+<span class="kn">import</span> <span class="nn">forgi</span>
+<span class="n">cg</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s2">&quot;examples/input/1y26.fx&quot;</span><span class="p">,</span> <span class="n">allow_many</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fvm</span><span class="o">.</span><span class="n">plot_rna</span><span class="p">(</span><span class="n">cg</span><span class="p">,</span> <span class="n">text_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;fontweight&quot;</span><span class="p">:</span><span class="s2">&quot;black&quot;</span><span class="p">},</span> <span class="n">lighten</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+             <span class="n">backbone_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;linewidth&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">})</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/1y26_ss.png" class="align-center" src="_images/1y26_ss.png" />
 <p>Evident in this image are six structural elements.</p>
 <blockquote>
 <div><ul class="simple">
 <li>3 stems</li>
 <li>2 hairpin loops</li>
-<li>1 multiloop</li>
+<li>1 multiloop (consisting of 3 multiloop segments)</li>
 </ul>
 </div></blockquote>
-<p>The multiloop itself can be divided into three unpaired sections of
-nucleotides. Each of these elements is connected to certain other elements. For
+<p>Each of these elements is connected to certain other elements. For
 example, the stem at the top is connected to two unpaired regions of the
-multi-loop. Both of the hairpin loops are connected one stem each. If we
+multi-loop. Both of the hairpin loops are connected to one stem each. If we
 abstract away the sequence information, we can imagine the structure as being
 represented by a graph.</p>
-<p>The forgi package can be used to do just this by using the
-dotbracket_to_bulge_graph.py script:</p>
+<p id="forgibgformat">The forgi package can be used to do just this using the <code class="code docutils literal"><span class="pre">rnaConvert.py</span></code> script:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>$ python examples/rnaConvert.py examples/input/1y26_ss.dotbracket -T forgi
 name untitled
 length 71
@@ -128,13 +137,12 @@ connect s1 h0 m1 m2
 connect s0 m1 m0
 </pre></div>
 </div>
-<p>The result is an adjacency list of all the elements. The stems are defined with
-names starting with ‘s’, hairpins with an ‘h’, multiloops with an ‘m’, interior
-loops with an ‘i’, five-prime unpaired regions with an ‘f’ and three-prime
-unpaired regions with a ‘t’. The numbers indicate the nucleotides that are
+<p>The define section contain one secondary structure element per line.
+The numbers indicate the nucleotides that are
 present in each element. So the stem s0 is composed of nucleotides 1 to 9 on
 one strand and 63 to 71 on the other. The other elements are described in a
-similar manner. The hairpin <em>h0</em> includes the nucleotides 19 to 27.</p>
+similar manner. The hairpin <em>h0</em> includes the nucleotides 19 to 27.
+The <em>connect</em> section describes the edges in the graph.</p>
 <p>In this case it is difficult to picture which section is which from the text
 representation. To make it easier, we will generate a file
 readable by graphviz. The <em>neato</em> program can take that as input and create a
@@ -178,7 +186,7 @@ multiloops are present as well as two hairpin regions.</p>
 <p>With a secondary structure:</p>
 <p><code class="docutils literal"><span class="pre">....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))........</span></code></p>
 <p>Which looks like this:</p>
-<a class="reference internal image-reference" href="_images/1gid_ss.png"><img alt="_images/1gid_ss.png" class="align-center" src="_images/1gid_ss.png" style="width: 360px; height: 360px;" /></a>
+<img alt="_images/1gid_ss.png" class="align-center" src="_images/1gid_ss.png" />
 <p>Can be transformed using the command:</p>
 <p><code class="docutils literal"><span class="pre">python</span> <span class="pre">examples/rnaConvert.py</span> <span class="pre">-T</span> <span class="pre">neato</span> <span class="pre">examples/input/1gid_ss.dotbracket</span> <span class="pre">|</span> <span class="pre">neato</span> <span class="pre">-Tpng</span> <span class="pre">-o</span> <span class="pre">1gid_neato.png</span></code></p>
 <p>Into a graph that looks like this:</p>
@@ -193,17 +201,21 @@ they are indeed present.</p>
 <div class="section" id="loading-structures">
 <h2>Loading Structures<a class="headerlink" href="#loading-structures" title="Permalink to this headline">¶</a></h2>
 <p>There are a number of ways to represent an RNA secondary structure and forgi
-provides functionality for reading a number of them.</p>
+can read many of them using factory-classmethods of the <code class="code docutils literal"><span class="pre">BulgeGraph</span></code> object
+or its subclass, the <code class="code docutils literal"><span class="pre">CoarseGrainedRNA</span></code> object.</p>
+<p>As a high-level alternative, there is the <code class="code docutils literal"><span class="pre">load_rna</span></code> factory function available
+as <code class="code docutils literal"><span class="pre">forgi.load_rna</span></code>. It automatically detects the filetype of the
+input file, calls the correct constructor and returns a list of
+CoarseGrainRNA objects.</p>
 <div class="section" id="loading-a-structure-from-a-dot-bracket-string">
 <h3>Loading a Structure from a Dot-Bracket String<a class="headerlink" href="#loading-a-structure-from-a-dot-bracket-string" title="Permalink to this headline">¶</a></h3>
 <p>A pseudoknot-free secondary structure can be represented a sequence of dots and
 brackets where the dots represent unpaired bases and the matching brackets
 represent base pairs. This representation is often delivered as the output of
-secondary structure prediction tools such as <a class="reference external" href="http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi">RNAfold</a> and <a class="reference external" href="http://mfold.rna.albany.edu/?q=mfold">Mfold</a>. It can
+secondary structure prediction tools such as <a class="reference external" href="http://rna.tbi.univie.ac.at/cgi-bin/RNAfold.cgi">RNAfold</a>. It can
 also be used as input to create a skeleton graph in <code class="code docutils literal"><span class="pre">forgi</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_bg_string</span><span class="p">()</span>
 <span class="go">name untitled</span>
 <span class="go">length 14</span>
@@ -227,7 +239,6 @@ identity (A, C, G, or U) and the index of its pairing partner (0 if none). We
 can load this file and create graph structure from it using the
 <code class="code docutils literal"><span class="pre">from_bpseq_str</span></code> function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bpstr</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;1 A 0</span>
 <span class="gp">... </span><span class="s2">2 A 12</span>
 <span class="gp">... </span><span class="s2">3 A 11</span>
@@ -250,8 +261,7 @@ can load this file and create graph structure from it using the
 <span class="gp">... </span><span class="s2">20 A 15</span>
 <span class="gp">... </span><span class="s2">21 A 0</span>
 <span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">from_bpseq_str</span><span class="p">(</span><span class="n">bpstr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fbg</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_bpseq_str</span><span class="p">(</span><span class="n">bpstr</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_bg_string</span><span class="p">()</span>
 <span class="go">name untitled</span>
 <span class="go">length 21</span>
@@ -277,7 +287,7 @@ can load this file and create graph structure from it using the
 <p>A fasta file containing an id, a sequence and a secondary structure in
 dot-bracket notation can be used to create a BulgeGraph structure:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">from_fasta_text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;&gt;blah</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_fasta_text</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;&gt;blah</span>
 <span class="gp">... </span><span class="s2">AAAACCGGGCCUUUUACCCCAAAUUGGAA</span>
 <span class="gp">... </span><span class="s2">((((..(((..)))..))))...((..))</span>
 <span class="gp">... </span><span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
@@ -299,6 +309,28 @@ dot-bracket notation can be used to create a BulgeGraph structure:</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="using-the-load-rna-factory-function">
+<h3>Using the load_rna factory function<a class="headerlink" href="#using-the-load-rna-factory-function" title="Permalink to this headline">¶</a></h3>
+<p>If you prefer writing high-level code or if you are unsure about the format of the input file,
+you should use the <code class="code docutils literal"><span class="pre">forgi.load_rna</span></code> factory function:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.utilities.commanline_utils</span> <span class="k">as</span> <span class="nn">fuc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rnas</span> <span class="o">=</span> <span class="n">fuc</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s2">&quot;examples/input/1y26.fx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">rna</span> <span class="ow">in</span> <span class="n">rnas</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">rna</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">rna</span><span class="o">.</span><span class="n">seq_length</span><span class="p">)</span>
+<span class="go">1y26 71</span>
+</pre></div>
+</div>
+<p>Alternatively, if integration with the argparse module is desired, you can
+use the <code class="code docutils literal"><span class="pre">forgi.utilities.commandline_utils.cgs_from_args</span></code> function:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.utilities.commanline_utils</span> <span class="k">as</span> <span class="nn">fuc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">fuc</span><span class="o">.</span><span class="n">get_rna_input_parser</span><span class="p">(</span><span class="s2">&quot;My commandline application does something&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--some-argument&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;some custom argument &quot;</span>
+<span class="gp">... </span>                                    <span class="s2">&quot;not handled by forgi.&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rnas</span> <span class="o">=</span> <span class="n">fuc</span><span class="o">.</span><span class="n">cgs_from_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="querying-the-secondary-structure">
 <h2>Querying the Secondary Structure<a class="headerlink" href="#querying-the-secondary-structure" title="Permalink to this headline">¶</a></h2>
@@ -306,15 +338,14 @@ dot-bracket notation can be used to create a BulgeGraph structure:</p>
 <h3>Finding the Partner of a Base Pair<a class="headerlink" href="#finding-the-partner-of-a-base-pair" title="Permalink to this headline">¶</a></h3>
 <p>Consider the situation where we have a secondary structure and we want to know
 the base-pairing partner of nucleotide <em>n</em>. This is easily done with forgi:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="s1">&#39;(((((((((...((((((.........))))))........((((((.......))))))..)))))))))&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;(((((((((...((((((.........))))))........((((((.......))))))..)))))))))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">pairing_partner</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">71</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">pairing_partner</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
 <span class="go">33</span>
 </pre></div>
 </div>
+<p>The <code class="code docutils literal"><span class="pre">pairing_partner</span></code> can alternatively take a PDB-style residue id as argument (see <a class="reference internal" href="threedee_tutorial.html#forgi-threedee-tutorial"><span class="std std-ref">RNA 3D Structure Using forgi.threedee</span></a>)</p>
 </div>
 <div class="section" id="extracting-a-pair-table">
 <h3>Extracting a Pair Table<a class="headerlink" href="#extracting-a-pair-table" title="Permalink to this headline">¶</a></h3>
@@ -323,9 +354,7 @@ this molecule. The first element of the pair table always contains the number
 of nucleotides in the secondary structure. Every subsequent element <strong>i</strong>
 either contains the number 0, indicating the nucleotide <strong>i</strong> is unpaired or an
 integer <strong>j</strong> which is the pairing partner of <strong>i</strong>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">cgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">cgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="s1">&#39;(((((((((...((((((.........))))))........((((((.......))))))..)))))))))&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;(((((((((...((((((.........))))))........((((((.......))))))..)))))))))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">to_pair_table</span><span class="p">()</span>
 <span class="go">[71, 71, 70, 69, 68, 67, 66, 65, 64, 63, 0, 0, 0, 33, 32, 31, 30, 29, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 17, 16, 15, 14, 13, 0, 0, 0, 0, 0, 0, 0, 0, 60, 59, 58, 57, 56, 55, 0, 0, 0, 0, 0, 0, 0, 47, 46, 45, 44, 43, 42, 0, 0, 9, 8, 7, 6, 5, 4, 3, 2, 1]</span>
 </pre></div>
@@ -335,11 +364,11 @@ integer <strong>j</strong> which is the pairing partner of <strong>i</strong>:</
 <h3>Getting the Name of an Element from the Residue Number<a class="headerlink" href="#getting-the-name-of-an-element-from-the-residue-number" title="Permalink to this headline">¶</a></h3>
 <p>Various applictions of <code class="docutils literal"><span class="pre">forgi</span></code> require knowledge of the internal name
 of a particular element. As these names are generated by <code class="docutils literal"><span class="pre">forgi</span></code> itself, it’s
-useful to be to retrieve the name of an element given the number of a
-residue which is part of it. To demonstrate how to do this we will first need
+useful to retrieve the name of an element given the number of a
+residue which is part of it. To demonstrate how to do this we first need
 to load a secondary structure:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_bg_string</span><span class="p">()</span>
 <span class="go">name untitled</span>
 <span class="go">length 14</span>
@@ -354,16 +383,16 @@ to load a secondary structure:</p>
 </pre></div>
 </div>
 <p>Then we can simply query for the element name based on the residue number:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_node_from_residue_num</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_elem</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">&#39;s0&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_node_from_residue_num</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_elem</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="go">&#39;h0&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_node_from_residue_num</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_elem</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
 <span class="go">&#39;s1&#39;</span>
 </pre></div>
 </div>
 <p>This can then be used to in other applications such as <a class="reference internal" href="#loop-dimensions"><span class="std std-ref">Retrieving the Dimensions of a Loop</span></a>,
-<a class="reference internal" href="#dissolving-stems"><span class="std std-ref">Removing basepairs and dissolving Stems</span></a>, <a class="reference internal" href="#iloop-iterating"><span class="std std-ref">Iterating Over the Nucleotides of an Interior Loop</span></a>, etc…</p>
+<a class="reference internal" href="#iloop-iterating"><span class="std std-ref">Iterating Over the Nucleotides of an Interior Loop</span></a>, etc…</p>
 <div class="section" id="finding-the-length-of-the-longest-stem">
 <h4>Finding the Length of the Longest Stem<a class="headerlink" href="#finding-the-length-of-the-longest-stem" title="Permalink to this headline">¶</a></h4>
 <p>For whatever reason, one may be interested in finding out how long the longest
@@ -374,8 +403,7 @@ unpaired base on only one strand will lead to an erronous result in this
 example. The decomposition provided by forgi will, however, take this into
 account in enumerating the structural elements. It then becomes a matter of
 iterating over the stems and checking their lengths:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">bg</span> <span class="o">=</span> <span class="n">cgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
-<span class="n">bg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="n">brackets</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="n">brackets</span><span class="p">)</span>
 <span class="n">biggest_stem</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">bg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">bg</span><span class="o">.</span><span class="n">stem_length</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">biggest_stem</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -394,13 +422,11 @@ elements that surround it? This is easily done using the
 fasta representation:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
 
-<span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
-
 <span class="n">fa</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&gt;blah</span>
 <span class="s2">AAAACCGGGCCUUUUACCCCAAAUUGGAA</span>
 <span class="s2">((((..(((..)))..))))...((..))</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">bg</span><span class="o">.</span><span class="n">from_fasta</span><span class="p">(</span><span class="n">fa</span><span class="p">)</span>
+<span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_fasta_text</span><span class="p">(</span><span class="n">fa</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>From the structure, we can see that there are two hairpins (<code class="code docutils literal"><span class="pre">h0</span></code> and <code class="code docutils literal"><span class="pre">h1</span></code>), one
@@ -436,7 +462,7 @@ thus should have only one dimension (how many unpaired nucleotides are in that
 segment), but in order to maintain consistency with interior loops, we make it
 a tuple by attaching 1000 as the second value:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((.(.))..((..)))&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;((.(.))..((..)))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;i0&#39;</span><span class="p">)</span>
 <span class="go">(1, 0)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_bulge_dimensions</span><span class="p">(</span><span class="s1">&#39;m0&#39;</span><span class="p">)</span>
@@ -447,33 +473,7 @@ a tuple by attaching 1000 as the second value:</p>
 <span class="go">(2, 1000)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="removing-basepairs-and-dissolving-stems">
-<span id="dissolving-stems"></span><h3>Removing basepairs and dissolving Stems<a class="headerlink" href="#removing-basepairs-and-dissolving-stems" title="Permalink to this headline">¶</a></h3>
-<p>Basepairs be removed from the skeleton graph using the <code class="code docutils literal"><span class="pre">remove_base_pairs</span></code>
-memberfunction:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">remove_base_pairs</span><span class="p">([(</span><span class="mi">1</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">14</span><span class="p">)])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">()</span>
-<span class="go">.(..)....(..).</span>
-</pre></div>
-</div>
-<p>To remove a whole stem, use the <code class="code docutils literal"><span class="pre">stem_bp_iterator</span></code> member function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..))..((..))&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">remove_base_pairs</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">stem_bp_iterator</span><span class="p">(</span><span class="s2">&quot;s0&quot;</span><span class="p">)))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">to_dotbracket_string</span><span class="p">()</span>
-<span class="go">.(..)....(..).</span>
-</pre></div>
-</div>
-<p>Note:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>In forgi 1.0, you have to explicitly convert the iterator to
-a list. In future versions, this conversion will be done automatically by
-`remove_base_pairsremove_base_pairs`.
-</pre></div>
-</div>
-</div>
+<span class="target" id="dissolving-stems"></span></div>
 <div class="section" id="finding-out-which-side-of-a-stem-a-loop-is-on">
 <h3>Finding Out Which Side of a Stem a Loop Is On<a class="headerlink" href="#finding-out-which-side-of-a-stem-a-loop-is-on" title="Permalink to this headline">¶</a></h3>
 <p>If one imagines a stem as having a direction where its start is the position of
@@ -481,7 +481,7 @@ the lowest numbered nucleotide within it, then a loop adjacent to the stem will
 be on one side of it. Which side it’s on can be elucidated using the
 <code class="docutils literal"><span class="pre">get_sides</span></code> function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s2">&quot;..((..((..))..))..&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s2">&quot;..((..((..))..))..&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_sides</span><span class="p">(</span><span class="s1">&#39;s0&#39;</span><span class="p">,</span> <span class="s1">&#39;i0&#39;</span><span class="p">)</span>
 <span class="go">(1, 0)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_sides</span><span class="p">(</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="s1">&#39;i0&#39;</span><span class="p">)</span>
@@ -489,8 +489,8 @@ be on one side of it. Which side it’s on can be elucidated using the
 </pre></div>
 </div>
 <p>The result shows that the loop <code class="code docutils literal"><span class="pre">i0</span></code> is on side 1 of stem <code class="code docutils literal"><span class="pre">s0</span></code> and side 0 of
-stem <code class="code docutils literal"><span class="pre">s1</span></code>. If <code class="code docutils literal"><span class="pre">bg.get_sides(s,b)</span></code> return a tuple <code class="code docutils literal"><span class="pre">(sb,</span> <span class="pre">se)</span></code>, where the nucleotides
-in <code class="code docutils literal"><span class="pre">bg.coords[sb]</span></code> are on the side of the loop.</p>
+stem <code class="code docutils literal"><span class="pre">s1</span></code>. <code class="code docutils literal"><span class="pre">bg.get_sides(s,b)</span></code> returns a tuple <code class="code docutils literal"><span class="pre">(sb,</span> <span class="pre">se)</span></code>, where the nucleotides
+in <code class="code docutils literal"><span class="pre">bg.coords[s][sb[0]]</span></code> are on the side of the loop.</p>
 </div>
 </div>
 <div class="section" id="iteration">
@@ -503,9 +503,8 @@ the nucleotides which are in interior loop regions. This is can be done by
 combining an iterator which yields all of the interior loops and another
 iterator which iterates over the nucleotides within a particular element:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">cgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">cgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">from_dotbracket</span><span class="p">(</span><span class="s2">&quot;((..((..))..))..((..((..))..))&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s2">&quot;((..((..))..))..((..((..))..))&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">iloop</span> <span class="ow">in</span> <span class="n">bg</span><span class="o">.</span><span class="n">iloop_iterator</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">rn</span> <span class="ow">in</span> <span class="n">bg</span><span class="o">.</span><span class="n">define_residue_num_iterator</span><span class="p">(</span><span class="n">iloop</span><span class="p">):</span>
 <span class="gp">... </span>            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
@@ -518,8 +517,8 @@ iterator which iterates over the nucleotides within a particular element:</p>
 <h3>Iterating Over The List of Elements<a class="headerlink" href="#iterating-over-the-list-of-elements" title="Permalink to this headline">¶</a></h3>
 <p>** Stems **</p>
 <p>To iterate over each stem in the structure, use the <code class="code docutils literal"><span class="pre">stem_iterator()</span></code> function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..((..))..))..((..((..))...)).&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;((..((..))..))..((..((..))...)).&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">bg</span><span class="o">.</span><span class="n">stem_iterator</span><span class="p">())</span>
 <span class="go">[&#39;s3&#39;, &#39;s2&#39;, &#39;s1&#39;, &#39;s0&#39;]</span>
 </pre></div>
@@ -564,8 +563,7 @@ multiloops.</p>
 <a class="reference internal image-reference" href="_images/mst_init.png"><img alt="_images/mst_init.png" class="align-center" src="_images/mst_init.png" style="width: 200px;" /></a>
 <p>To break the cycle, we would like to remove the segment ‘m0’. This is easily
 done using the <code class="code docutils literal"><span class="pre">get_mst()</span></code> function of the <code class="code docutils literal"><span class="pre">BulgeGraph</span></code> data structure:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s2">&quot;((..((.)).(.).))&quot;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s2">&quot;((..((.)).(.).))&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">get_mst</span><span class="p">()</span>
 <span class="go">set([&#39;s2&#39;, &#39;s1&#39;, &#39;s0&#39;, &#39;m1&#39;, &#39;m2&#39;])</span>
 </pre></div>
@@ -577,8 +575,7 @@ The implementation uses a slightly modified version of Kruskal’s algorithm.</p
 <h3>Traversing the Graph<a class="headerlink" href="#traversing-the-graph" title="Permalink to this headline">¶</a></h3>
 <p>We can traverse all of the loops in a graph in breadth-first manner using the
 <code class="code docutils literal"><span class="pre">traverse_graph</span></code> function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;(.(.(.(.).(.).).(.).))&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;(.(.(.(.).(.).).(.).))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">traverse_graph</span><span class="p">()</span>
 <span class="go">[(&#39;s0&#39;, &#39;i0&#39;, &#39;s1&#39;), (&#39;s1&#39;, &#39;m1&#39;, &#39;s5&#39;), (&#39;s5&#39;, &#39;m4&#39;, &#39;s2&#39;), (&#39;s2&#39;, &#39;m3&#39;, &#39;s4&#39;), (&#39;s4&#39;, &#39;m5&#39;, &#39;s3&#39;)]</span>
 </pre></div>
@@ -589,24 +586,31 @@ has the following three elements: (from_stem, loop, to_stem).</p>
 </div>
 <div class="section" id="finding-the-elements-which-form-the-multiloops-of-a-structure">
 <h3>Finding the elements which form the multiloops of a structure<a class="headerlink" href="#finding-the-elements-which-form-the-multiloops-of-a-structure" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="code docutils literal"><span class="pre">find_multiloop_loops()</span></code> function returns a list of sets where each set
-contains the elements that are part of a particular junction.</p>
+<p>The <code class="code docutils literal"><span class="pre">junctions</span></code> property returns a list of lists, where each inner list
+describes a single non-pseudoknotted multiloop.</p>
 <a class="reference internal image-reference" href="_images/find_loops.png"><img alt="_images/find_loops.png" class="align-center" src="_images/find_loops.png" style="width: 290px;" /></a>
 <p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;(.(.(.(.).(.).).(.).))&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">find_multiloop_loops</span><span class="p">()</span>
-<span class="go">[set([&#39;s3&#39;, &#39;s2&#39;, &#39;s4&#39;, &#39;m5&#39;, &#39;m3&#39;, &#39;m2&#39;]), set([&#39;s2&#39;, &#39;s1&#39;, &#39;s5&#39;, &#39;m4&#39;, &#39;m1&#39;, &#39;m0&#39;])]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">forgi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;(.(.(.(.).(.).).(.).))&#39;</span><span class="p">,</span> <span class="n">dissolve_length_one_stems</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">bg</span><span class="o">.</span><span class="n">junctions</span><span class="p">()</span>
+<span class="go">[[&#39;m0&#39;, &#39;m4&#39;, &#39;m5&#39;], [&#39;m1&#39;, &#39;m2&#39;, &#39;m3&#39;]]</span>
 </pre></div>
 </div>
+<p>The order of the loops and within the loops is well defined:
+The loops are ordered alphabetically by their first element.
+The order inside the loop is from the 5’ to 3’ along the RNA chain.</p>
+</div>
+<div class="section" id="finding-rods-or-helices">
+<h3>Finding rods or helices<a class="headerlink" href="#finding-rods-or-helices" title="Permalink to this headline">¶</a></h3>
+</div>
 <div class="section" id="calculating-the-minimum-secondary-structure-distance-between-two-elements">
-<h4>Calculating the Minimum Secondary Structure Distance Between Two Elements<a class="headerlink" href="#calculating-the-minimum-secondary-structure-distance-between-two-elements" title="Permalink to this headline">¶</a></h4>
+<h3>Calculating the Minimum Secondary Structure Distance Between Two Elements<a class="headerlink" href="#calculating-the-minimum-secondary-structure-distance-between-two-elements" title="Permalink to this headline">¶</a></h3>
 <p>The secondary structure distance, in our case, will be calculated as the
 distance along the backbone or along base-pair links. When calculated between
 two elements, it is the minimum distance between any two pairs of nucleotides
 in each of the two elements.</p>
 <p>Consider the following example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="p">(</span><span class="n">dotbracket_str</span><span class="o">=</span><span class="s1">&#39;((..))..((..))((..))&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="p">,</span> <span class="o">=</span> <span class="n">forgi</span><span class="o">.</span><span class="n">load_rna</span><span class="p">(</span><span class="s1">&#39;((..))..((..))((..))&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">ss_distance</span><span class="p">(</span><span class="s1">&#39;s0&#39;</span><span class="p">,</span> <span class="s1">&#39;s1&#39;</span><span class="p">)</span>
 <span class="go">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bg</span><span class="o">.</span><span class="n">ss_distance</span><span class="p">(</span><span class="s1">&#39;s0&#39;</span><span class="p">,</span> <span class="s1">&#39;s2&#39;</span><span class="p">)</span>
@@ -620,6 +624,46 @@ Requires three backbone, one base pair, and one more backbone. The last distance
 requires three backbone, one base pair, and three more backbone links.</p>
 </div>
 </div>
+<div class="section" id="getting-the-neighbors-of-elements-in-a-specified-range">
+<h2>Getting the neighbors of elements in a specified range<a class="headerlink" href="#getting-the-neighbors-of-elements-in-a-specified-range" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference external" href="https://github.com/ViennaRNA/forgi/issues/33">https://github.com/ViennaRNA/forgi/issues/33</a>.</p>
+<div class="section" id="elements-upstream-and-downstream">
+<h3>Elements upstream and downstream<a class="headerlink" href="#elements-upstream-and-downstream" title="Permalink to this headline">¶</a></h3>
+<p>To get all elements that are within 10 nts of an element E1,
+but not along other branches of junctions, you can do the following:</p>
+<p>If you want to get the microenvironment of nucleotide 80:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">forgi</span>
+<span class="kn">import</span> <span class="nn">forgi.graph.bulge_graph</span> <span class="k">as</span> <span class="nn">fgb</span>
+<span class="n">fx</span> <span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">GAAUUGCGGGAAAGGGGUCAACAGCCGUUCAGUACCAAGUCUCAGGGGAAACUUUGAGAUGGCCUUGCAAAGGGUAUGGUAAUAAGCUGACGGACAUGGUCCUAACCACGCAGCCAAGUCCUAAGUCAACAGAUCUUCUGUUGAUAUGGAUGCAGUUC</span>
+<span class="s2">....((((((....((.......((((.((((.(((...(((((..........)))))...((.......))....)))......))))))))......))...)).))))......(((....((((((((...))))))))...)))......</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">nuc_number</span> <span class="o">=</span> <span class="mi">80</span> <span class="c1"># Nucleotide of interest</span>
+<span class="n">rna</span> <span class="o">=</span> <span class="n">fgb</span><span class="o">.</span><span class="n">BulgeGraph</span><span class="o">.</span><span class="n">from_fasta_text</span><span class="p">(</span><span class="n">fx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">elems</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nuc_number</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="n">nuc_number</span><span class="o">+</span><span class="mi">11</span><span class="p">):</span>
+    <span class="n">elems</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rna</span><span class="o">.</span><span class="n">get_elem</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">elems</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>This gives <code class="code docutils literal"><span class="pre">&quot;h0,</span> <span class="pre">h1,</span> <span class="pre">m1,</span> <span class="pre">s6,</span> <span class="pre">s7&quot;</span></code>. So you have two hairpins (h0 and h1),
+a multiloop segments and two stems. To find out how the multiloop segments are
+connected, you can use the property <code class="code docutils literal"><span class="pre">rna.junctions</span></code>, which tells you that
+<code class="code docutils literal"><span class="pre">m0,m1</span> <span class="pre">and</span> <span class="pre">m2</span></code> form a 3-way junction, while <code class="code docutils literal"><span class="pre">f0,m3</span> <span class="pre">and</span> <span class="pre">t0</span></code> form the exterior loop.</p>
+</div>
+<div class="section" id="elements-with-small-secondary-structure-distance">
+<h3>Elements with small secondary structure distance<a class="headerlink" href="#elements-with-small-secondary-structure-distance" title="Permalink to this headline">¶</a></h3>
+<p>Now we will consider the pairing partner of a nucleotide to have a distance of 1
+to the nucleotide, and follow all branches up to a distance of 10:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">elems</span><span class="o">=</span><span class="nb">set</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">rna</span><span class="o">.</span><span class="n">defines</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rna</span><span class="o">.</span><span class="n">ss_distance</span><span class="p">(</span><span class="mi">58</span><span class="p">,</span> <span class="n">ref_elem</span><span class="p">)</span><span class="o">&lt;=</span><span class="mi">10</span><span class="p">:</span>
+        <span class="n">elems</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">elems</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>This gives <code class="code docutils literal"><span class="pre">&quot;h0,h1,i3,m0,m1,m2,s4,s5,s6,s7&quot;</span></code>.</p>
+</div>
 </div>
 <div class="section" id="applications">
 <h2>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h2>
@@ -630,7 +674,7 @@ package provides a program for RNA 3D structure prediction called <a class="refe
 To specify the secondary structure of an RNA molecule, one needs to pass in a
 parameter file indicating which nucleotides are paired.</p>
 <p>Given an dot-bracket sequence as input, forgi can be easily be used to generate
-the parameter file for rna_denovo.Using the secondary structure of 1y26 (shown
+the parameter file for rna_denovo. Using the secondary structure of 1y26 (shown
 in the first example) one can run the appropriate example:</p>
 <p><code class="docutils literal"><span class="pre">python</span> <span class="pre">examples/dotbracket_to_rosetta_constraints.py</span> <span class="pre">examples/1y26_ss.dotbracket</span></code></p>
 <p>And get an appropriately formatted parameter file:</p>
@@ -667,7 +711,7 @@ in the first example) one can run the appropriate example:</p>
       <div class="bottomnav">
       
         <p>
-        «&#160;&#160;<a href="utilities_tutorial.html">RNA Secondary Structure Utilities Using the forgi.utilities Submodule</a>
+        «&#160;&#160;<a href="scripts_tutorial.html">Useful scripts coming with forgi</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -677,8 +721,8 @@ in the first example) one can run the appropriate example:</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

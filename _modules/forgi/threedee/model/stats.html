@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.model.stats &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.model.stats &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -54,7 +54,8 @@
 
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
-<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">random</span> <span class="k">as</span> <span class="nn">rand</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -68,6 +69,7 @@
 
 <span class="kn">import</span> <span class="nn">forgi.utilities.debug</span> <span class="k">as</span> <span class="nn">fud</span>
 <span class="kn">import</span> <span class="nn">forgi.threedee.utilities.vector</span> <span class="k">as</span> <span class="nn">ftuv</span>
+<span class="kn">import</span> <span class="nn">forgi.threedee.utilities.virtual_residues</span> <span class="k">as</span> <span class="nn">ftuvres</span>
 <span class="kn">import</span> <span class="nn">forgi.threedee.utilities.graph_pdb</span> <span class="k">as</span> <span class="nn">ftug</span>
 
 <span class="c1"># The two constants seem to be unused.</span>
@@ -75,48 +77,13 @@
 <span class="n">avg_twist_rotation_per_bp</span> <span class="o">=</span> <span class="mi">360</span> <span class="o">/</span> <span class="mf">11.</span>
 
 
-<span class="c1">#loop_lengths = [</span>
-<span class="c1">#        (0., 0.),</span>
-<span class="c1">#        ( 7.0 , 9.0 ),</span>
-<span class="c1">#        ( 7.459 , 9.33 ),</span>
-<span class="c1">#        ( 7.774 , 8.945 ),</span>
-<span class="c1">#        ( 8.102 , 8.985 ),</span>
-<span class="c1">#        ( 6.771 , 8.182 ),</span>
-<span class="c1">#        ( 6.465 , 7.533 ),</span>
-<span class="c1">#        ( 6.435 , 7.676 ),</span>
-<span class="c1">#        ( 6.605 , 8.987 ),</span>
-<span class="c1">#        ( 8.396 , 9.367 ),</span>
-<span class="c1">#        ( 12.13 , 18.68 ),</span>
-<span class="c1">#        ( 19.76 , 22.32 ),</span>
-<span class="c1">#        ( 11.57 , 14.59 ),</span>
-<span class="c1">#        ( 8.702 , 8.744 ),</span>
-<span class="c1">#        ( 15.46 , 15.46 ),</span>
-<span class="c1">#        ( 15.0 , 30.0 ),</span>
-<span class="c1">#        ( 15.0 , 30.0 ),</span>
-<span class="c1">#        ( 15.0 , 30.0 ),</span>
-<span class="c1">#        ( 15. , 30. ),</span>
-<span class="c1">#        ( 15. , 30. ),</span>
-<span class="c1">#        ( 15. , 30. ),</span>
-<span class="c1">#        ( 15. , 30. ),</span>
-<span class="c1">#        ( 15. , 30. ),</span>
-<span class="c1">#        ( 15. , 30. ),</span>
-<span class="c1">#        ( 33.02 , 33.02 ) ]</span>
-<span class="c1">#</span>
-<span class="c1">#def get_loop_length(bg, key):</span>
-<span class="c1">#</span>
-<span class="c1">#    if int(bg.defines[key][0]) &gt; int(bg.defines[key][1]):</span>
-<span class="c1">#        loop_length = 1.</span>
-<span class="c1">#    else:</span>
-<span class="c1">#        loop_length = int(bg.defines[key][1]) - int(bg.defines[key][0])</span>
-<span class="c1">#</span>
-<span class="c1">#    return rand.uniform(loop_lengths[loop_length][0], loop_lengths[loop_length][1])</span>
-
 <div class="viewcode-block" id="LoopStat"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.LoopStat">[docs]</a><span class="k">class</span> <span class="nc">LoopStat</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Class for storing the individual statistics about loops.</span>
 
 <span class="sd">    phys_length: The length between the start and the centroid of the loop.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">s_type</span><span class="o">=</span><span class="s2">&quot;loop&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stat_type</span> <span class="o">=</span> <span class="n">s_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -127,8 +94,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="mf">0.</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="o">=</span><span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span><span class="o">=</span><span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vres</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
@@ -143,7 +112,7 @@
 <span class="sd">        :param line: The line from the statistics file.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="n">parts</span> <span class="o">=</span>  <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
@@ -152,20 +121,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">6</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="p">[</span><span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">7</span><span class="p">]]))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vres</span> <span class="o">=</span> <span class="n">ftuvres</span><span class="o">.</span><span class="n">parse_vres</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">9</span><span class="p">:])</span></div>
 
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{stat_type}</span><span class="s2"> </span><span class="si">{pdb_name}</span><span class="s2"> </span><span class="si">{bp_length}</span><span class="s2"> </span><span class="si">{phys_length}</span><span class="s2"> </span><span class="si">{u}</span><span class="s2"> </span><span class="si">{v}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seqs</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{stat_type}</span><span class="s2"> </span><span class="si">{pdb_name}</span><span class="s2"> </span><span class="si">{bp_length}</span><span class="s2"> </span><span class="si">{phys_length}</span><span class="s2">&quot;</span>
+               <span class="s2">&quot; </span><span class="si">{u}</span><span class="s2"> </span><span class="si">{v}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">ftuvres</span><span class="o">.</span><span class="n">serialize_vres</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vres</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">==</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
         <span class="k">return</span> <span class="bp">NotImplemented</span>
 
     <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
+
 
 <div class="viewcode-block" id="StemStat"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.StemStat">[docs]</a><span class="k">class</span> <span class="nc">StemStat</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -177,6 +153,7 @@
 <span class="sd">    phys_length: The physical length of such a helix</span>
 <span class="sd">    twist_angle: The angle between its two twist segments</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 
@@ -185,7 +162,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">twist_angle</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span><span class="o">=</span><span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
@@ -196,15 +173,16 @@
 <span class="sd">        :param line: The line from the statistics file.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="n">parts</span> <span class="o">=</span>  <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">bp_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">phys_length</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">twist_angle</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">5</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">8</span><span class="p">])]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">]),</span>
+                           <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">7</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">8</span><span class="p">])]</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">parts</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">parts</span><span class="p">[</span><span class="mi">10</span><span class="p">]]</span>
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
@@ -212,19 +190,21 @@
 
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;stem </span><span class="si">{pdb_name}</span><span class="s2"> </span><span class="si">{bp_length}</span><span class="s2"> </span><span class="si">{phys_length}</span><span class="s2"> </span><span class="si">{twist_angle}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">))</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seqs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;stem </span><span class="si">{pdb_name}</span><span class="s2"> </span><span class="si">{bp_length}</span><span class="s2"> </span><span class="si">{phys_length}</span><span class="s2"> </span><span class="si">{twist_angle}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seqs</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Could not print define &#39;</span><span class="si">{}</span><span class="s2">&#39; for StemStat&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">))</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Could not print define &#39;</span><span class="si">{}</span><span class="s2">&#39; for StemStat&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">))</span>
             <span class="k">return</span> <span class="s2">&quot;stem </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bp_length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phys_length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">twist_angle</span><span class="p">)</span>
-        <span class="c1">#return &quot;pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s&quot; % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, &quot; &quot;.join(map(str, self.define)))</span>
+        <span class="c1"># return &quot;pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s&quot; % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, &quot; &quot;.join(map(str, self.define)))</span>
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">==</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
         <span class="k">return</span> <span class="bp">NotImplemented</span>
 
     <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span></div>
+
 
 <div class="viewcode-block" id="AngleStat"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.AngleStat">[docs]</a><span class="k">class</span> <span class="nc">AngleStat</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -232,7 +212,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat_type</span><span class="o">=</span><span class="s2">&quot;angle&quot;</span><span class="p">,</span> <span class="n">pdb_name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">dim1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dim2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">r1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">u1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">v1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ang_type</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span>
-                 <span class="n">define</span><span class="o">=</span><span class="p">[],</span> <span class="n">seqs</span><span class="o">=</span><span class="p">[]):</span>
+                 <span class="n">define</span><span class="o">=</span><span class="p">[],</span> <span class="n">seq</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">vres</span><span class="o">=</span><span class="p">{}):</span>
         <span class="c1">#log.debug(&quot;Stat init called&quot;)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">=</span> <span class="n">pdb_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim1</span> <span class="o">=</span> <span class="n">dim1</span>
@@ -250,14 +230,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ang_type</span> <span class="o">=</span> <span class="n">ang_type</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="n">define</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span> <span class="o">=</span> <span class="n">seqs</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vres</span> <span class="o">=</span> <span class="n">vres</span>
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a_s</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Is this AngleStat equal to another one.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Comparing angle stats </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">,</span> <span class="n">a_s</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Comparing angle stats </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">,</span> <span class="n">a_s</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim1</span> <span class="o">!=</span> <span class="n">a_s</span><span class="o">.</span><span class="n">dim1</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dim1 </span><span class="si">{}</span><span class="s2"> != </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">a_s</span><span class="o">.</span><span class="n">dim1</span><span class="p">))</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -286,7 +267,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="AngleStat.parse_line"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.AngleStat.parse_line">[docs]</a>    <span class="k">def</span> <span class="nf">parse_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">stat_type</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -322,8 +303,11 @@
             <span class="c1"># have an unpaired base</span>
             <span class="k">assert</span><span class="p">(</span><span class="n">def_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">parts</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">11</span> <span class="o">+</span> <span class="n">def_len</span><span class="p">]))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">seqs</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">11</span><span class="o">+</span><span class="n">def_len</span><span class="p">:]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">define</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">11</span> <span class="o">+</span> <span class="n">def_len</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">11</span> <span class="o">+</span> <span class="n">def_len</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;len(parts)=</span><span class="si">%s</span><span class="s2">, def_len=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">),</span> <span class="n">def_len</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">def_len</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vres</span> <span class="o">=</span> <span class="n">ftuvres</span><span class="o">.</span><span class="n">parse_vres</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">12</span> <span class="o">+</span> <span class="n">def_len</span><span class="p">:])</span></div>
 
 <div class="viewcode-block" id="AngleStat.orientation_params"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.AngleStat.orientation_params">[docs]</a>    <span class="k">def</span> <span class="nf">orientation_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -354,20 +338,23 @@
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v1</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">out_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stat_type</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">ang_type</span><span class="p">,</span>
-                                                             <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">)),</span>
-                                                             <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seqs</span><span class="p">))</span>
+        <span class="n">out_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stat_type</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">pdb_name</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">v1</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">ang_type</span><span class="p">,</span>
+                                                                 <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                                                                     <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">define</span><span class="p">)),</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">seq</span><span class="p">,</span>
+                                                                 <span class="n">ftuvres</span><span class="o">.</span><span class="n">serialize_vres</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vres</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">out_str</span>
+
     <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
@@ -375,7 +362,7 @@
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Return the angle between the two connected stems.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">]),</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">spherical_polar_to_cartesian</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">]))</span></div>
+        <span class="k">return</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">vec_angle</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]),</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">spherical_polar_to_cartesian</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">]))</span></div>
 
 <div class="viewcode-block" id="AngleStat.deviation_from"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.AngleStat.deviation_from">[docs]</a>    <span class="k">def</span> <span class="nf">deviation_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -388,15 +375,16 @@
         <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">pos1</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">spherical_polar_to_cartesian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position_params</span><span class="p">())</span>
         <span class="n">pos2</span> <span class="o">=</span> <span class="n">ftuv</span><span class="o">.</span><span class="n">spherical_polar_to_cartesian</span><span class="p">(</span><span class="n">stat2</span><span class="o">.</span><span class="n">position_params</span><span class="p">())</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">pos1</span><span class="o">-</span><span class="n">pos2</span><span class="p">))</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ftuv</span><span class="o">.</span><span class="n">magnitude</span><span class="p">(</span><span class="n">pos1</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">))</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Position difference is </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
 
         <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;t&quot;</span><span class="p">]:</span>
             <span class="n">raw_diff</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="o">-</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat2</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
-            <span class="c1">#Map the difference to a value between 0 and pi</span>
-            <span class="n">raw_diff_on_circle</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">raw_diff</span><span class="o">+</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">%</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Angular difference for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%f</span><span class="s2">, mapped to </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">raw_diff</span><span class="p">,</span> <span class="n">raw_diff_on_circle</span><span class="p">)</span>
+            <span class="c1"># Map the difference to a value between 0 and pi</span>
+            <span class="n">raw_diff_on_circle</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">raw_diff</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Angular difference for </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%f</span><span class="s2">, mapped to </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span>
+                      <span class="n">attr</span><span class="p">,</span> <span class="n">raw_diff</span><span class="p">,</span> <span class="n">raw_diff_on_circle</span><span class="p">)</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">raw_diff_on_circle</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span></div>
 
@@ -411,20 +399,24 @@
         <span class="k">if</span> <span class="n">angular_cutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">angular_cutoff</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">position_cutoff</span><span class="p">)</span>
         <span class="n">deviation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deviation_from</span><span class="p">(</span><span class="n">stat2</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="n">position_cutoff</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dissimilar, because of position deviation = </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">position_cutoff</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Dissimilar, because of position deviation = </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-            <span class="k">if</span> <span class="n">dev</span><span class="o">&gt;</span><span class="n">angular_cutoff</span><span class="p">:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dissimilar, because of angular deviation </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">) &gt; </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dev</span><span class="p">,</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">angular_cutoff</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dev</span> <span class="o">&gt;</span> <span class="n">angular_cutoff</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Dissimilar, because of angular deviation </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">) &gt; </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span>
+                          <span class="n">dev</span><span class="p">,</span> <span class="n">deviation</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">angular_cutoff</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> &lt; (</span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">deviation</span><span class="p">,</span> <span class="n">position_cutoff</span><span class="p">,</span> <span class="n">angular_cutoff</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div></div>
+
 
 <div class="viewcode-block" id="RandomAngleStats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.RandomAngleStats">[docs]</a><span class="k">class</span> <span class="nc">RandomAngleStats</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Store all of the angle stats.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discrete_angle_stats</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_random</span><span class="p">(</span><span class="n">discrete_angle_stats</span><span class="p">)</span>
@@ -439,11 +431,11 @@
 <span class="sd">                 maximum and minimum no greater than the largest</span>
 <span class="sd">                 and least values in that column, respectively.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">mins</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-        <span class="n">maxs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">max</span><span class="p">,</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">mins</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">maxs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">max</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">bounded_uniform</span><span class="p">():</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">nr</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mins</span><span class="p">,</span> <span class="n">maxs</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">nr</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mins</span><span class="p">,</span> <span class="n">maxs</span><span class="p">)]</span>
 
         <span class="k">return</span> <span class="n">bounded_uniform</span></div>
 
@@ -455,11 +447,11 @@
 <span class="sd">        from the discrete statistics.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">ss</span>
-        <span class="k">for</span> <span class="n">key1</span><span class="p">,</span><span class="n">key2</span><span class="p">,</span><span class="n">key3</span> <span class="ow">in</span> <span class="n">discrete_angle_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">,</span> <span class="n">key3</span> <span class="ow">in</span> <span class="n">discrete_angle_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">,</span> <span class="n">key3</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">discrete_angle_stats</span><span class="p">[(</span><span class="n">key1</span><span class="p">,</span><span class="n">key2</span><span class="p">,</span><span class="n">key3</span><span class="p">)]:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">discrete_angle_stats</span><span class="p">[(</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">,</span> <span class="n">key3</span><span class="p">)]:</span>
                 <span class="n">data</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">d</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">v1</span><span class="p">]]</span>
 
             <span class="sd">&#39;&#39;&#39;</span>
@@ -468,7 +460,8 @@
 <span class="sd">            &#39;&#39;&#39;</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span><span class="p">[</span><span class="n">dims</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_random_function</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span><span class="p">[</span><span class="n">dims</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_random_function</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">lae</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Singular matrix, dimensions:&quot;</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
 
@@ -481,86 +474,8 @@
         <span class="n">new_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span><span class="p">[</span><span class="n">dims</span><span class="p">]()</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">AngleStat</span><span class="p">()</span>
         <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">v1</span><span class="p">)</span> <span class="o">=</span> <span class="n">new_stats</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">s</span></div></div>
 
-    <span class="c1"># This function seems to be unused. Consider deprecation...</span>
-<div class="viewcode-block" id="RandomAngleStats.stats_by_dimensions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.RandomAngleStats.stats_by_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">stats_by_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Return a set of n AngleStats for a bulge with a dimension</span>
-<span class="sd">        of of dims.</span>
-
-<span class="sd">        :param dims: The dimensions of the bulge (i.e. `(1,2)`)</span>
-<span class="sd">        :params n: The number of angle stats to return. If n is greater</span>
-<span class="sd">            than the number of stats stored, then return the number of</span>
-<span class="sd">            stats available.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle_kdes</span><span class="p">[</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span></div></div>
-
-<div class="viewcode-block" id="ContinuousAngleStats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ContinuousAngleStats">[docs]</a><span class="k">class</span> <span class="nc">ContinuousAngleStats</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Store all of the angle stats.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discrete_angle_stats</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">make_continuous</span><span class="p">(</span><span class="n">discrete_angle_stats</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ContinuousAngleStats.make_continuous"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ContinuousAngleStats.make_continuous">[docs]</a>    <span class="k">def</span> <span class="nf">make_continuous</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discrete_angle_stats</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Create a kernel density estimation of the statistics</span>
-<span class="sd">        for each bulge dimension represented in the collection</span>
-<span class="sd">        of discrete angle statistics.</span>
-
-<span class="sd">        Each KDE will have six dimensions corresponding to the six</span>
-<span class="sd">        dimensions necessary for describing the orientation of one</span>
-<span class="sd">        helix with respect to another.</span>
-
-<span class="sd">        :param discrete_angle_statistics: A dictionary of dictionaries,</span>
-<span class="sd">            each one containing and AngleStats structure.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">ss</span>
-        <span class="k">for</span> <span class="n">key1</span><span class="p">,</span><span class="n">key2</span><span class="p">,</span><span class="n">key3</span> <span class="ow">in</span> <span class="n">discrete_angle_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">,</span> <span class="n">key3</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">discrete_angle_stats</span><span class="p">[(</span><span class="n">key1</span><span class="p">,</span><span class="n">key2</span><span class="p">,</span><span class="n">key3</span><span class="p">)]:</span>
-                <span class="n">data</span> <span class="o">+=</span> <span class="p">[[</span><span class="n">d</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">v1</span><span class="p">]]</span>
-
-            <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            if len(data) &lt; 2:</span>
-<span class="sd">                continue</span>
-<span class="sd">            &#39;&#39;&#39;</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="k">continue</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span><span class="p">[</span><span class="n">dims</span><span class="p">]</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">gaussian_kde</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">lae</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Singular matrix, dimensions:&quot;</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="ContinuousAngleStats.sample_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ContinuousAngleStats.sample_stats">[docs]</a>    <span class="k">def</span> <span class="nf">sample_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dims</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Sample a set of statistics.</span>
-
-<span class="sd">        :param dims: The dimensions of the bulge for which to sample.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">new_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cont_stats</span><span class="p">[</span><span class="n">dims</span><span class="p">]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">AngleStat</span><span class="p">()</span>
-        <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">r1</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">u1</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">v1</span><span class="p">)</span> <span class="o">=</span> <span class="n">new_stats</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">s</span></div>
-
-    <span class="c1">#Probably unused!</span>
-<div class="viewcode-block" id="ContinuousAngleStats.stats_by_dimensions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ContinuousAngleStats.stats_by_dimensions">[docs]</a>    <span class="k">def</span> <span class="nf">stats_by_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Return a set of n AngleStats for a bulge with a dimension</span>
-<span class="sd">        of of dims.</span>
-
-<span class="sd">        :param dims: The dimensions of the bulge (i.e. (1,2))</span>
-<span class="sd">        :params n: The number of angle stats to return. If n is greater</span>
-<span class="sd">            than the number of stats stored, then return the number of</span>
-<span class="sd">            stats available.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle_kdes</span><span class="p">[</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="ConstructionStats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ConstructionStats">[docs]</a><span class="k">class</span> <span class="nc">ConstructionStats</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="n">angle_stats</span> <span class="o">=</span> <span class="kc">None</span>
@@ -611,13 +526,13 @@
 
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">angle_stats</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-    <span class="c1">#DefaultDict(DefaultDict([]))</span>
+    <span class="c1"># DefaultDict(DefaultDict([]))</span>
 
     <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
 
     <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;angle&#39;</span><span class="p">):</span>
             <span class="n">angle_stat</span> <span class="o">=</span> <span class="n">AngleStat</span><span class="p">()</span>
             <span class="n">angle_stat</span><span class="o">.</span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
@@ -625,8 +540,10 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">define</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">define</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">continue</span>
 
-            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">angle_stat</span><span class="p">]</span>
-            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="o">-</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">angle_stat</span><span class="p">]</span>
+            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span>
+                <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">angle_stat</span><span class="p">]</span>
+            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span>
+                <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="o">-</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">angle_stat</span><span class="p">]</span>
             <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -637,6 +554,7 @@
 
     <span class="c1">#print &gt;&gt;sys.stderr, &quot;done loading stats&quot;</span>
     <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">angle_stats</span></div>
+
 
 <div class="viewcode-block" id="get_angle_stat_dims"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.get_angle_stat_dims">[docs]</a><span class="k">def</span> <span class="nf">get_angle_stat_dims</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">angle_type</span><span class="p">,</span> <span class="n">min_entries</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -651,13 +569,15 @@
     <span class="n">available_stats</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">angle_stats</span> <span class="o">=</span> <span class="n">get_angle_stats</span><span class="p">()</span>
 
-    <span class="k">for</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">k2</span><span class="p">,</span><span class="n">k3</span><span class="p">)</span> <span class="ow">in</span> <span class="n">angle_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">k3</span> <span class="o">==</span> <span class="n">angle_type</span><span class="p">:</span><span class="c1"># and len(angle_stats[(k1,k2,k3)]) &gt;= min_entries: #BT: I think this should&#39;t be here.</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">)</span> <span class="ow">in</span> <span class="n">angle_stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># and len(angle_stats[(k1,k2,k3)]) &gt;= min_entries: #BT: I think this should&#39;t be here.</span>
+        <span class="k">if</span> <span class="n">k3</span> <span class="o">==</span> <span class="n">angle_type</span><span class="p">:</span>
             <span class="n">dist</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">k1</span> <span class="o">-</span> <span class="n">s1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">k2</span> <span class="o">-</span> <span class="n">s2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">available_stats</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">k2</span><span class="p">,</span><span class="n">k3</span><span class="p">))]</span>
+            <span class="n">available_stats</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">))]</span>
 
     <span class="n">available_stats</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">available_stats</span></div>
+
 
 <div class="viewcode-block" id="get_one_d_stat_dims"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.get_one_d_stat_dims">[docs]</a><span class="k">def</span> <span class="nf">get_one_d_stat_dims</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">min_entries</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="n">available_stats</span> <span class="o">=</span> <span class="p">[]</span>
@@ -679,7 +599,7 @@
 
 <span class="sd">    :param filename: The name of the file.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">stem_stats</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">stem_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">stem_stats</span>
 
     <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">stem_stats</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -694,7 +614,8 @@
 <span class="sd">                continue</span>
 <span class="sd">            &#39;&#39;&#39;</span>
 
-            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">stem_stats</span><span class="p">[(</span><span class="n">stem_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">,</span> <span class="n">stem_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">stem_stat</span><span class="p">]</span>
+            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">stem_stats</span><span class="p">[(</span>
+                <span class="n">stem_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">,</span> <span class="n">stem_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">stem_stat</span><span class="p">]</span>
 
     <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -711,7 +632,7 @@
 
 <span class="sd">    :param filename: The name of the file.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span>
 
     <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -721,11 +642,13 @@
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;5prime&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">fiveprime_stat</span> <span class="o">=</span> <span class="n">LoopStat</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span><span class="p">[</span><span class="n">fiveprime_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">fiveprime_stat</span><span class="p">]</span>
+            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span><span class="p">[</span><span class="n">fiveprime_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">fiveprime_stat</span><span class="p">]</span>
 
     <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">fiveprime_stats</span></div>
+
 
 <div class="viewcode-block" id="get_threeprime_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.get_threeprime_stats">[docs]</a><span class="k">def</span> <span class="nf">get_threeprime_stats</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -737,7 +660,7 @@
 
 <span class="sd">    :param filename: The name of the file.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">refresh</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span>
 
     <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
@@ -747,11 +670,13 @@
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;3prime&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">threeprime_stat</span> <span class="o">=</span> <span class="n">LoopStat</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span><span class="p">[</span><span class="n">threeprime_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">threeprime_stat</span><span class="p">]</span>
+            <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span><span class="p">[</span><span class="n">threeprime_stat</span><span class="o">.</span><span class="n">bp_length</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="n">threeprime_stat</span><span class="p">]</span>
 
     <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">threeprime_stats</span></div>
+
 
 <div class="viewcode-block" id="get_loop_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.get_loop_stats">[docs]</a><span class="k">def</span> <span class="nf">get_loop_stats</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -779,6 +704,7 @@
 
     <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">loop_stats</span></div>
 
+
 <div class="viewcode-block" id="ClusteredAngleStats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ClusteredAngleStats">[docs]</a><span class="k">class</span> <span class="nc">ClusteredAngleStats</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -801,7 +727,7 @@
         <span class="c1">#: A dict `(dim1, dim2, ang_type)` : list of lists.</span>
         <span class="c1">#: Each value is a list of clusters, and each cluster is a list.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="n">lastkey</span><span class="o">=</span><span class="kc">None</span>
+        <span class="n">lastkey</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;# Cluster&#39;</span><span class="p">):</span>
@@ -821,28 +747,31 @@
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">define</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">define</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="k">continue</span>
 
-                    <span class="k">assert</span> <span class="n">lastkey</span> <span class="o">==</span> <span class="p">(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)</span> <span class="ow">or</span> <span class="n">lastkey</span> <span class="o">==</span> <span class="p">(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="o">-</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)</span>
+                    <span class="k">assert</span> <span class="n">lastkey</span> <span class="o">==</span> <span class="p">(</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)</span> <span class="ow">or</span> <span class="n">lastkey</span> <span class="o">==</span> <span class="p">(</span>
+                        <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">angle_stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="o">-</span><span class="n">angle_stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span><span class="p">[</span><span class="n">lastkey</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">angle_stat</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a list of stats with only one randomly choosen stat for each cluster.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">[</span> <span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">rand</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
+
 <div class="viewcode-block" id="ClusteredAngleStats.keys"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ClusteredAngleStats.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="ClusteredAngleStats.lookup_stat"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ClusteredAngleStats.lookup_stat">[docs]</a>    <span class="k">def</span> <span class="nf">lookup_stat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">):</span>
         <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)</span>
         <span class="n">clusters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="n">total_length</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span> <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">)</span>
-        <span class="n">cluster_length</span><span class="o">=-</span><span class="mi">1</span>
-        <span class="n">num_clusters</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span>
+        <span class="n">total_length</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span> <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">)</span>
+        <span class="n">cluster_length</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">num_clusters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="n">clusters</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">cluster</span><span class="p">:</span>
-                <span class="n">cluster_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+                <span class="n">cluster_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
                 <span class="k">break</span>
         <span class="k">return</span> <span class="n">cluster_length</span><span class="p">,</span> <span class="n">total_length</span><span class="p">,</span> <span class="n">num_clusters</span></div>
+
 <div class="viewcode-block" id="ClusteredAngleStats.cluster_of"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ClusteredAngleStats.cluster_of">[docs]</a>    <span class="k">def</span> <span class="nf">cluster_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">):</span>
         <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">stat</span><span class="o">.</span><span class="n">dim1</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">dim2</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">ang_type</span><span class="p">)</span>
         <span class="n">clusters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stats_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -860,13 +789,14 @@
 <span class="sd">        :param ang_type: angle_type of the query key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">available_stats</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">k2</span><span class="p">,</span><span class="n">k3</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">k3</span> <span class="o">==</span> <span class="n">ang_type</span><span class="p">:</span>
-               <span class="n">dist</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">k1</span> <span class="o">-</span> <span class="n">dim0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">k2</span> <span class="o">-</span> <span class="n">dim1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-               <span class="n">available_stats</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span><span class="n">k2</span><span class="p">,</span><span class="n">k3</span><span class="p">))]</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">k1</span> <span class="o">-</span> <span class="n">dim0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">k2</span> <span class="o">-</span> <span class="n">dim1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">available_stats</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">dist</span><span class="p">,</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">))]</span>
 
         <span class="n">available_stats</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">available_stats</span></div></div>
+
 
 <div class="viewcode-block" id="ConformationStats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ConformationStats">[docs]</a><span class="k">class</span> <span class="nc">ConformationStats</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats_file</span><span class="p">,</span> <span class="n">clustered_angle_stats_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -893,7 +823,7 @@
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Function does nothing!!!&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ConformationStats.sample_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ConformationStats.sample_stats">[docs]</a>    <span class="k">def</span> <span class="nf">sample_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">min_entries</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+<div class="viewcode-block" id="ConformationStats.sample_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.ConformationStats.sample_stats">[docs]</a>    <span class="k">def</span> <span class="nf">sample_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">min_entries</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Return a set of statistics compatible with this element.</span>
 
@@ -912,20 +842,23 @@
             <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]]:</span>
                 <span class="k">return</span> <span class="n">stats</span><span class="p">[</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="s2">&quot;No stats for element </span><span class="si">{}</span><span class="s2"> with dimensions </span><span class="si">{}</span><span class="s2">. Stats keys are </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+                <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="s2">&quot;No stats for element </span><span class="si">{}</span><span class="s2"> with dimensions </span><span class="si">{}</span><span class="s2">. Stats keys are </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">elem</span><span class="p">,</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
         <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;i&#39;</span> <span class="ow">or</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
             <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">angle_stats</span>
 
             <span class="n">ang_type</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_angle_type</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">ClusteredAngleStats</span><span class="p">):</span>
-                    <span class="n">dims</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">get_angle_stat_dims</span><span class="p">(</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ang_type</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span> <span class="c1"># assert isinstance(stats, defaultdict)</span>
+                    <span class="n">dims</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">get_angle_stat_dims</span><span class="p">(</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ang_type</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># assert isinstance(stats, defaultdict)</span>
                     <span class="n">dims</span> <span class="o">=</span> <span class="n">get_angle_stat_dims</span><span class="p">(</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                                                <span class="n">ang_type</span><span class="p">,</span> <span class="n">min_entries</span><span class="o">=</span><span class="n">min_entries</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in sample_stats:&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;elem:&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="s2">&quot;dims:&quot;</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="s2">&quot;ang_type:&quot;</span><span class="p">,</span> <span class="n">ang_type</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;elem:&quot;</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="s2">&quot;dims:&quot;</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span>
+                      <span class="s2">&quot;ang_type:&quot;</span><span class="p">,</span> <span class="n">ang_type</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
                 <span class="k">raise</span>
         <span class="k">elif</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span>
             <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -951,11 +884,11 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_stats</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No statistics for bulge </span><span class="si">{}</span><span class="s2"> with dims </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">elem</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">&quot;mi&quot;</span><span class="p">:</span>
-                <span class="n">msg</span><span class="o">+=</span><span class="s2">&quot; and ang_type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ang_type</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; and ang_type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ang_type</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-
         <span class="k">return</span> <span class="n">all_stats</span></div></div>
+
 
 <div class="viewcode-block" id="FilteredConformationStats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.FilteredConformationStats">[docs]</a><span class="k">class</span> <span class="nc">FilteredConformationStats</span><span class="p">(</span><span class="n">ConformationStats</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats_file</span><span class="p">,</span> <span class="n">filter_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_prob</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -970,7 +903,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">filter_prob</span> <span class="o">=</span> <span class="n">filter_prob</span>
         <span class="k">if</span> <span class="n">filter_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">filter_filename</span><span class="p">)</span>
-
 
 <div class="viewcode-block" id="FilteredConformationStats.from_file"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.FilteredConformationStats.from_file">[docs]</a>    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -987,7 +919,8 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="p">:</span> <span class="k">continue</span><span class="p">;</span> <span class="c1">#Empty line</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># Empty line</span>
                 <span class="n">elem_name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">define_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
                 <span class="n">pdb_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -995,25 +928,24 @@
                 <span class="n">define</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">5</span> <span class="o">+</span> <span class="n">define_len</span><span class="p">])</span>
 
                 <span class="c1"># get filtered stats for each type of angle</span>
-                <span class="n">ang_types</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">ang_types</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">at</span> <span class="ow">in</span> <span class="n">ang_types</span><span class="p">:</span>
                     <span class="c1"># for interior loops, the mirror loop should induce the same</span>
                     <span class="c1"># bend as if the direction of the stem was reversed</span>
                     <span class="c1"># TODO: make sure this is true</span>
                     <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">it</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span><span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">at</span><span class="p">)],</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span><span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">at</span><span class="p">)]):</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">angle_stats</span><span class="p">[(</span><span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="n">at</span><span class="p">)]):</span>
                         <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">==</span> <span class="n">pdb_id</span><span class="p">:</span>
-                            <span class="c1">#print stat.define, define</span>
+                            <span class="c1"># print stat.define, define</span>
                             <span class="k">pass</span>
 
                         <span class="k">if</span> <span class="n">stat</span><span class="o">.</span><span class="n">pdb_name</span> <span class="o">==</span> <span class="n">pdb_id</span> <span class="ow">and</span> <span class="n">stat</span><span class="o">.</span><span class="n">define</span> <span class="o">==</span> <span class="n">define</span><span class="p">:</span>
                             <span class="c1">#print &gt;&gt;sys.stderr, &quot;found filtered stats:&quot;, stat.pdb_name, define</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">filtered_stats</span><span class="p">[(</span><span class="n">elem_name</span><span class="p">,</span> <span class="n">at</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">stat</span><span class="p">]</span></div>
 
-
 <div class="viewcode-block" id="FilteredConformationStats.sample_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.FilteredConformationStats.sample_stats">[docs]</a>    <span class="k">def</span> <span class="nf">sample_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
-        <span class="n">r</span><span class="o">=</span><span class="n">rand</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtered_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">r</span><span class="o">&lt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_prob</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">rand</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtered_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_prob</span><span class="p">:</span>
             <span class="n">ang_type</span> <span class="o">=</span> <span class="n">bg</span><span class="o">.</span><span class="n">get_angle_type</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">ang_type</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filtered_stats</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filtered_stats</span><span class="p">[(</span><span class="n">elem</span><span class="p">,</span> <span class="n">ang_type</span><span class="p">)])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1021,11 +953,13 @@
         <span class="c1"># No filtered stats found. Return normal stats for this element.</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">FilteredConformationStats</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">sample_stats</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span></div></div>
 
+
 <div class="viewcode-block" id="get_conformation_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.get_conformation_stats">[docs]</a><span class="k">def</span> <span class="nf">get_conformation_stats</span><span class="p">(</span><span class="n">stats_file</span><span class="p">,</span> <span class="n">angle_stats_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">conf_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">conf_stats</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ConformationStats</span><span class="p">(</span><span class="n">stats_file</span><span class="p">,</span> <span class="n">angle_stats_file</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="set_conformation_stats"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.model.stats.html#forgi.threedee.model.stats.set_conformation_stats">[docs]</a><span class="k">def</span> <span class="nf">set_conformation_stats</span><span class="p">(</span><span class="n">conf_stats</span><span class="p">):</span>
     <span class="n">ConstructionStats</span><span class="o">.</span><span class="n">conf_stats</span> <span class="o">=</span> <span class="n">conf_stats</span></div>
@@ -1041,8 +975,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>

@@ -6,14 +6,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>forgi.threedee.utilities.mcannotate &#8212; forgi 1.1.0 documentation</title>
+    <title>forgi.threedee.utilities.mcannotate &#8212; forgi 2.0.0 documentation</title>
     <link rel="stylesheet" href="../../../../_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/print.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '1.1.0',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -30,7 +30,7 @@
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="../../../../index.html">
-          <span>forgi 1.1.0 documentation</span></a></h1>
+          <span>forgi 2.0.0 documentation</span></a></h1>
       </div>
       <div class="topnav">
       
@@ -60,6 +60,7 @@
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+
 <div class="viewcode-block" id="parse_resid"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.parse_resid">[docs]</a><span class="k">def</span> <span class="nf">parse_resid</span><span class="p">(</span><span class="n">mcann_resid</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Read in an MC-Annotate formatted resid and return a tuple</span>
@@ -71,6 +72,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
+
 <div class="viewcode-block" id="format_resid"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.format_resid">[docs]</a><span class="k">def</span> <span class="nf">format_resid</span><span class="p">(</span><span class="n">pdb_resid</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Convert a PDB.Chain.Residue id to an MC-Annotate formatted</span>
@@ -81,6 +83,7 @@
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">pdb_resid</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">pdb_resid</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">pdb_resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="parse_chain_base"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.parse_chain_base">[docs]</a><span class="k">def</span> <span class="nf">parse_chain_base</span><span class="p">(</span><span class="n">chain_base</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -102,13 +105,14 @@
         <span class="k">if</span> <span class="n">chain_base</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">:</span>
             <span class="n">end_quote_idx</span> <span class="o">=</span> <span class="n">chain_base</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">chain</span> <span class="o">=</span> <span class="n">chain_base</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">end_quote_idx</span><span class="p">]</span>
-            <span class="n">base</span> <span class="o">=</span> <span class="n">chain_base</span><span class="p">[</span><span class="n">end_quote_idx</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">chain_base</span><span class="p">[</span><span class="n">end_quote_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># no chain identifier</span>
             <span class="n">chain</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
             <span class="n">base</span> <span class="o">=</span> <span class="n">chain_base</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;base is </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="parse_base_pair_id"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.parse_base_pair_id">[docs]</a><span class="k">def</span> <span class="nf">parse_base_pair_id</span><span class="p">(</span><span class="n">base_pair_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -124,18 +128,21 @@
 
     <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">residue_pattern</span><span class="p">,</span> <span class="n">base_pair_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">e</span> <span class="o">=</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid interaction in the MC-Annotate file: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">base_pair_id</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid interaction in the MC-Annotate file: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">base_pair_id</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">log_to_exception</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
             <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Regex matched the following parts: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parts</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">e</span>
     <span class="k">if</span> <span class="s2">&quot;-&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="n">base_pair_id</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid interaction in the MC-Annotate file: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">base_pair_id</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid interaction in the MC-Annotate file: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">base_pair_id</span><span class="p">)</span>
 
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Parts are &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parts</span><span class="p">))</span>
     <span class="p">(</span><span class="n">from_chain</span><span class="p">,</span> <span class="n">from_base</span><span class="p">)</span> <span class="o">=</span> <span class="n">parse_chain_base</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
     <span class="p">(</span><span class="n">to_chain</span><span class="p">,</span> <span class="n">to_base</span><span class="p">)</span> <span class="o">=</span> <span class="n">parse_chain_base</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">from_chain</span><span class="p">,</span> <span class="n">from_base</span><span class="p">,</span> <span class="n">to_chain</span><span class="p">,</span> <span class="n">to_base</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="get_interacting_base_pairs"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.get_interacting_base_pairs">[docs]</a><span class="k">def</span> <span class="nf">get_interacting_base_pairs</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -146,6 +153,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">line_parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">parse_base_pair_id</span><span class="p">(</span><span class="n">line_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
 
 <div class="viewcode-block" id="iterate_over_residue_list"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.iterate_over_residue_list">[docs]</a><span class="k">def</span> <span class="nf">iterate_over_residue_list</span><span class="p">(</span><span class="n">mcannotate_lines</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -166,6 +174,7 @@
         <span class="k">if</span> <span class="n">residue_conf_line</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">line</span></div>
 
+
 <div class="viewcode-block" id="iterate_over_interactions"><a class="viewcode-back" href="../../../../apidoc/forgi.threedee.utilities.mcannotate.html#forgi.threedee.utilities.mcannotate.iterate_over_interactions">[docs]</a><span class="k">def</span> <span class="nf">iterate_over_interactions</span><span class="p">(</span><span class="n">mcannotate_lines</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generator function for the iteration over lines in the &#39;Base-pairs&#39; section of an</span>
@@ -185,7 +194,8 @@
         <span class="k">if</span> <span class="n">base_pair_line</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;A Basepair line is &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="p">(</span><span class="n">from_chain</span><span class="p">,</span> <span class="n">from_base</span><span class="p">,</span> <span class="n">to_chain</span><span class="p">,</span> <span class="n">to_base</span><span class="p">)</span> <span class="o">=</span>  <span class="n">get_interacting_base_pairs</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">from_chain</span><span class="p">,</span> <span class="n">from_base</span><span class="p">,</span> <span class="n">to_chain</span><span class="p">,</span>
+                 <span class="n">to_base</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_interacting_base_pairs</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ve</span><span class="p">:</span>
                 <span class="n">log_exception</span><span class="p">(</span><span class="n">ve</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span> <span class="n">with_stacktrace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">continue</span>
@@ -197,27 +207,27 @@
     <span class="sd">&quot;&quot;&quot;docstring for get_dotplot&quot;&quot;&quot;</span>
     <span class="n">residues</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">residue_types</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">bps</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">bps</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">bpseq_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">iterate_over_residue_list</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-        <span class="n">residues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_chain_base</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="c1"># A tuple chain, id</span>
+        <span class="n">residues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_chain_base</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>  <span class="c1"># A tuple chain, id</span>
         <span class="n">residue_types</span> <span class="o">+=</span> <span class="p">[</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
 
     <span class="n">paired</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">iterate_over_interactions</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
         <span class="c1">#bond_type = parts[3]</span>
-        <span class="c1">#if bond_type.find(&#39;Ww/Ww&#39;) &gt;= 0 or bond_type.find(&#39;Ww/Ws&#39;) &gt;= 0 or bond_type.find(&#39;Ws/Ww&#39;) &gt;= 0:</span>
+        <span class="c1"># if bond_type.find(&#39;Ww/Ww&#39;) &gt;= 0 or bond_type.find(&#39;Ww/Ws&#39;) &gt;= 0 or bond_type.find(&#39;Ws/Ww&#39;) &gt;= 0:</span>
         <span class="k">if</span> <span class="p">((</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;Ww/Ww&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;A-U&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span>
-                                        <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;U-A&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span>
-                                        <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;C-G&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span>
-                                        <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;G-C&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">or</span>
-           <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;Ws/Ww&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;U-G&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
-            <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;Ww/Ws&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;G-U&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)):</span>
-            <span class="c1">#if bond_type.find(&#39;Ww/Ww&#39;) &gt;= 0:</span>
-            <span class="c1">#print line</span>
+                                          <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;U-A&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span>
+                                          <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;C-G&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span>
+                                          <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;G-C&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">))</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;Ws/Ww&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;U-G&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;Ww/Ws&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;G-U&#39;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="c1"># if bond_type.find(&#39;Ww/Ww&#39;) &gt;= 0:</span>
+            <span class="c1"># print line</span>
             <span class="n">chain1</span><span class="p">,</span> <span class="n">base1</span><span class="p">,</span> <span class="n">chain2</span><span class="p">,</span> <span class="n">base2</span> <span class="o">=</span> <span class="n">parse_base_pair_id</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">res1</span> <span class="o">=</span> <span class="p">(</span><span class="n">chain1</span><span class="p">,</span> <span class="n">base1</span><span class="p">)</span>
             <span class="n">res2</span> <span class="o">=</span> <span class="p">(</span><span class="n">chain2</span><span class="p">,</span> <span class="n">base2</span><span class="p">)</span>
@@ -227,7 +237,8 @@
                         <span class="n">existing</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res1</span><span class="p">,</span> <span class="n">residues</span><span class="p">[</span><span class="n">bps</span><span class="p">[</span><span class="n">res1</span><span class="p">]])</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">existing</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> - </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res2</span><span class="p">,</span> <span class="n">residues</span><span class="p">[</span><span class="n">bps</span><span class="p">[</span><span class="n">res2</span><span class="p">]])</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Base-triple encountered: Ignoring basepair </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">, because basepair </span><span class="si">%s</span><span class="s2"> exists&quot;</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">,</span> <span class="n">existing</span><span class="p">)</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Base-triple encountered: Ignoring basepair </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">, because basepair </span><span class="si">%s</span><span class="s2"> exists&quot;</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">,</span> <span class="n">existing</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">paired</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span>
@@ -236,16 +247,17 @@
                 <span class="n">bps</span><span class="p">[</span><span class="n">res1</span><span class="p">]</span> <span class="o">=</span> <span class="n">residues</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">res2</span><span class="p">)</span>
                 <span class="n">bps</span><span class="p">[</span><span class="n">res2</span><span class="p">]</span> <span class="o">=</span> <span class="n">residues</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">res1</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;bps = </span><span class="si">%s</span><span class="s2">, residues = </span><span class="si">%s</span><span class="s2">, res1 = </span><span class="si">%s</span><span class="s2">, res2 = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bps</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">)</span>
                 <span class="k">with</span> <span class="n">log_to_exception</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;bps = </span><span class="si">%s</span><span class="s2">, residues = </span><span class="si">%s</span><span class="s2">, res1 = </span><span class="si">%s</span><span class="s2">, res2 = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bps</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">)</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="s2">&quot;bps = </span><span class="si">%s</span><span class="s2">, residues = </span><span class="si">%s</span><span class="s2">, res1 = </span><span class="si">%s</span><span class="s2">, res2 = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bps</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span><span class="p">)</span>
                 <span class="k">raise</span>
 
-
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">residue_types</span><span class="p">)):</span>
-        <span class="n">bpseq_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">residue_types</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">bps</span><span class="p">[</span><span class="n">residues</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">bpseq_str</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                     <span class="n">residue_types</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">bps</span><span class="p">[</span><span class="n">residues</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">seq_ids</span> <span class="o">=</span> <span class="n">_seqids_from_residue_map</span><span class="p">(</span><span class="n">residues</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">bpseq_str</span><span class="p">,</span> <span class="n">seq_ids</span></div>
+
 
 <span class="k">def</span> <span class="nf">_seqids_from_residue_map</span><span class="p">(</span><span class="n">residue_map</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -271,8 +283,8 @@
       </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015,2016 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
-      Last updated on Feb 06, 2018.
+        &#169; Copyright 2012-2016 Peter Kerpedjiev &lt;pkerp@tbi.univie.ac.at&gt;; 2015-2018 Bernhard Thiel &lt;thiel@tbi.univie.ac.at&gt;.
+      Last updated on Feb 25, 2019.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
