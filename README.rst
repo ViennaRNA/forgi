@@ -6,6 +6,11 @@ Forgi Library for RNA Secondary Structure Analysis
 
 Full documentation: https://viennarna.github.io/forgi
 
+Citing
+======
+
+See the file CREDITS
+
 Locally build the documentation 
 ===============================
 

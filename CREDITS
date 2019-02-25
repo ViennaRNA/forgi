@@ -7,18 +7,17 @@ Main Library Code - CITING
 --------------------------
 
 ===========  ================  ======================
+2015 - 2019  Bernhard Thiel    thiel@tbi.univie.ac.at
 2012 - 2016  Peter Kerpedjiev  pkerp@tbi.univie.ac.at
-2015 - 2017  Bernhard Thiel    thiel@tbi.univie.ac.at
 ===========  ================  ======================
 
 **Please Cite:**
 
-"3D based on 2D: Calculating helix angles and stacking
-patterns using forgi 2.0 , an RNA python library cen-
-tered on secondary structure elements."
+"3D based on 2D: Calculating helix angles and stacking patterns using forgi 2.0,
+ an RNA python library centered on secondary structure elements."
 Bernhard C. Thiel, Irene K. Beckmann, Peter Kerpedjiev and Ivo L.
-Hofacker
-F1000 Research, **in preparation**
+Hofacker. 
+*F1000 Research*, **in preparation**
 
 For the pseudoknot removal code, see citation below.
 
@@ -29,7 +28,7 @@ Contributions
 2015     Stephan Hammer  s.hammer@univie.ac.at
 2015     Marcel Kucharik marcel@tbi.univie.ac.at
 2016     tcarlile        https://github.com/tcarlile
-2017-18  Irene Beckmann  irene@tbi.univie.ac.at
+2017-19  Irene Beckmann  irene@tbi.univie.ac.at
 =======  =============== ===========================
 
 ACKNOWLEDGEMENTS
