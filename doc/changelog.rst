@@ -4,12 +4,48 @@ Changelog
 Changes in Version 2.0
 ----------------------
 
-Version 2.0 brings a cleaned-up API to forgi.
+Version 2.0 brings a cleaned-up API to forgi. The BulgeGraph object should now be treated as immuteable on the level of defines and edges. Furthermore, the **new Sequence class** deals with many quirks of the PDB format, including tuple-indices and missing and modified residues.
+We now **fully support the MMCIF fileformat**.
+
 
 Some of the biggest changes:
 
-*  All RNA file-formats can be loaded with te single function `forgi.load_rna`
+*  All RNA file-formats can be **loaded with the single function `forgi.load_rna`**, which returns a list of connected components.
+*  The old functions for creating the RNA from a specific file type are now classmethods of the BulgeGraph class. `BulgeGraph.__init__` should no longer be used.
+* The API of the Bulgegraph object was cleaned up, including the following changes:
 
+  *  Functions modifying the defines and edges of the BulgeGraph (like `add_node`) have been moved to the private module forgi.graph._graph_construction, as they are only used during creation of the BulgeGraph object, including `dissolve_length_one_stems`. Instead, `length_one_stem_basepairs` was added.
+  *  To get a modified copy of a BulgeGraph, use the member methods of the GraphTransformer, accessed with `.transformed`. These methods are implemented in forgi/graph/transform_graphs.py and more methods will be added in the future.
+  *  Some functions that are probably not useful for client code have been made private or removed, including:
+
+    *  `all_connections` -> `_all_connections`
+    *  `compare_stems`, `compare_*`: removed
+    *  `find_external_loops`, use `get_domains`
+    *  `flanking_nucleotides`, use `define_a`.
+    *  `get_any_sides`, `get_sides_plus` removed
+    *  Functions only called by `to_bg_string` are now private 
+       (`get_*_string`, e.g. `_get_connect_str`).
+    *  `get_stem_direction` removed
+    *  `get_vertex` removed
+    *  `nd_define_iterator` removed
+    *  `subseq_with_cutpoints` removed, use Sequence class's `__getitem__`
+    
+  *  `get_node_from_residue_num` is deprecated and shuld be replaced by `get_elem`
+  *  Better support for `forgi.graph.residue.RESID` as indices.
+  *  New properties/ methods `junctions`, `rods`, `pseudoknotted_basepairs`, `seq_length`
+  
+ * A **new sequence class**, which allows for indexing with integers (1-based, like the defines) and `forgi.graph.residue.RESID` tuples. Conversion between these two indices is now also delegated to this class. `__getitem__` is implemented to properly allow for slices with cutpoints.
+*  Some changes were made to the CoarseGrainRNA class:
+  
+  *  **Virtual residues are now stored for loops** (at the C1' atom), if the RNA was loaded from a PDB or MMCIF file.
+  *  Experimental functions are now made private.
+  *  New function `get_incomplete_elements` for elements with missing residues.
+  *  New function `rotate_translate`
+  
+*  PDB files can now be read, even if neither DSSR nor MC-Annotate are installed. However, the accurracy of the secondary structure may suffer in this case.
+* `forgi.threedee.model.similarity.cg_rmsd` now takes virtual residues of loops into account.
+* The module `forgi.graph.numbered_dotbracket` allows you to modify the dotbracket structure while keeping track of the mapping between brackets and residues.
+ 
 Changes in Version 1.1
 ----------------------
 

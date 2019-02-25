@@ -604,7 +604,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
     def transformed(self):
         return ftmt.CGTransformer(self)
 
-    def get_coord_str(self):
+    def _get_coord_str(self):
         '''
         Place the start and end coordinates of each stem into a string.
 
@@ -870,7 +870,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
                         value += 1
             return value
 
-    def get_twist_str(self):
+    def _get_twist_str(self):
         '''
         Place the twist vectors into a string.
 
@@ -890,7 +890,7 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             out_str += '\n'
         return out_str
 
-    def get_long_range_str(self):
+    def _get_long_range_str(self):
 
         out_str = ''
         printed = set()
@@ -908,13 +908,13 @@ class CoarseGrainRNA(fgb.BulgeGraph):
 
         return out_str
 
-    def get_interacting_str(self):
+    def _get_interacting_str(self):
         out = []
         for seqid in self.interacting_residues:
             out.append("interacting\t{}".format(fgr.resid_to_str(seqid)))
         return "\n".join(out) + "\n"
 
-    def get_sampled_stems_str(self):
+    def _get_sampled_stems_str(self):
         out_str = ''
         for key in self.sampled.keys():
             out_str += 'sampled %s %s\n' % (key,
@@ -935,11 +935,11 @@ class CoarseGrainRNA(fgb.BulgeGraph):
         Output this structure in string form.
         '''
         curr_str = self.to_bg_string()
-        curr_str += self.get_coord_str()
-        curr_str += self.get_twist_str()
-        curr_str += self.get_sampled_stems_str()
-        curr_str += self.get_long_range_str()
-        curr_str += self.get_interacting_str()
+        curr_str += self._get_coord_str()
+        curr_str += self._get_twist_str()
+        curr_str += self._get_sampled_stems_str()
+        curr_str += self._get_long_range_str()
+        curr_str += self._get_interacting_str()
         curr_str += self._get_vres_str()
         if self.project_from is not None:
             curr_str += "project {} {} {}\n".format(*self.project_from)
