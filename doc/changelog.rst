@@ -34,7 +34,7 @@ Some of the biggest changes:
   *  Better support for `forgi.graph.residue.RESID` as indices.
   *  New properties/ methods `junctions`, `rods`, `pseudoknotted_basepairs`, `seq_length`
   
- * A **new sequence class**, which allows for indexing with integers (1-based, like the defines) and `forgi.graph.residue.RESID` tuples. Conversion between these two indices is now also delegated to this class. `__getitem__` is implemented to properly allow for slices with cutpoints.
+*  A **new sequence class**, which allows for indexing with integers (1-based, like the defines) and `forgi.graph.residue.RESID` tuples. Conversion between these two indices is now also delegated to this class. `__getitem__` is implemented to properly allow for slices with cutpoints.
 *  Some changes were made to the CoarseGrainRNA class:
   
   *  **Virtual residues are now stored for loops** (at the C1' atom), if the RNA was loaded from a PDB or MMCIF file.
