@@ -15,11 +15,14 @@ ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOErro
 
 def try_cythonize(arg):
   try:
-    from Cython.Build import cythonize
     import numpy
-    return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
+    try:
+      from Cython.Build import cythonize
+      return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
+    except Exception as e:
+      return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
   except Exception as e:
-    return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
+    return []
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -85,7 +88,7 @@ setup_args = {
       "description":'RNA Graph Library',
       "author":'Bernhard Thiel, Peter Kerpedjiev',
       "author_email":'thiel@tbi.univie.ac.at',
-      "license":'GNU Affero GPL 3.0',
+      "license":'GNU GPL 3.0',
       "url":'http://www.tbi.univie.ac.at/~pkerp/forgi/',
       "ext_modules": try_cythonize("forgi/threedee/utilities/cytvec"), 
       "packages":['forgi', 'forgi.graph', 'forgi.threedee',
@@ -96,6 +99,7 @@ setup_args = {
                 'forgi._k2n_standalone', 'forgi.threedee.visual',
                 'forgi.visual', 'forgi.projection'],
       "package_data":{'forgi.threedee': ['data/*.pdb', 'data/stats/temp.stats', 'data/average_atom_positions.json', 'data/aminor_geometries.csv', 'data/aminor_params.json']},
+      "data_files":[("", ["CREDITS", "LICENSE"])],
       "scripts":['examples/rnaConvert.py',
                'examples/describe_cg.py',
                'examples/compare_RNA.py',
@@ -119,8 +123,7 @@ setup_args = {
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 5 - Production',
-
+        'Development Status :: 5 - Production/Stable',
         # Indicate who your project is intended for
         'Intended Audience :: Science/Research',
         'Operating System :: POSIX :: Linux',
@@ -128,7 +131,7 @@ setup_args = {
         'Topic :: Scientific/Engineering :: Chemistry',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU Affero General Public License v3',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
