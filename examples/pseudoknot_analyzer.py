@@ -90,6 +90,10 @@ def identification_pseudoknot(rna, without_pk, with_pk, unfold, minlength):
     dotbracket  = dotbracket.condensed()
     log.info("Condensed-bracket-structure: {}".format(dotbracket))
 
+    if set(dotbracket)-set("()[]{}<>"):
+        raise ValueError("Pseudoknots with more than 4 types of "
+                         "brackets are not supported.")
+
     #discard every structure without pseudoknot
     if not any (pk in dotbracket for pk in PK_CHECK):
         without_pk += 1
