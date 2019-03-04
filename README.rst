@@ -4,6 +4,12 @@ Forgi Library for RNA Secondary Structure Analysis
 .. image:: https://travis-ci.org/ViennaRNA/forgi.svg?branch=master
     :target: https://travis-ci.org/ViennaRNA/forgi
 
+
+
+.. image:: https://zenodo.org/badge/6291657.svg
+   :target: https://zenodo.org/badge/latestdoi/6291657
+
+
 Full documentation: https://viennarna.github.io/forgi
 
 Citing
