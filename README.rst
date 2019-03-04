@@ -9,6 +9,8 @@ Forgi Library for RNA Secondary Structure Analysis
 .. image:: https://zenodo.org/badge/6291657.svg
    :target: https://zenodo.org/badge/latestdoi/6291657
 
+.. image:: https://anaconda.org/bioconda/forgi/badges/version.svg   
+   :target: https://anaconda.org/bioconda/forgi
 
 Full documentation: https://viennarna.github.io/forgi
 
