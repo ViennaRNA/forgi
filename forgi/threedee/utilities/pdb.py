@@ -6,6 +6,7 @@ import sys
 import re
 import warnings
 import itertools
+import string
 import math
 import numpy as np
 import Bio.PDB as bpdb
@@ -104,6 +105,22 @@ interactions = [(AtomName(a), AtomName(b)) for a, b in map(sorted,
                                                             ('C6', 'N6')])]
 
 
+
+def rename_chains_for_pdb(chains):
+    """
+    :param chains: A dict chain_id:chain
+    """
+    used_chainids = set(chains.keys())
+    def get_available_chainid():
+        for c in string.ascii_uppercase:
+            if c not in used_chainids:
+                used_chainids.add(c)
+                return c
+        raise ValueError("Too many chains. Cannot convert to old PDB format.")
+    for chain in chains.values():
+        if len(chain.id)>1:
+            chain.id = get_available_chainid()
+    return {c.id: c for c in chains.values()}
 
 def trim_chain_between(chain, start_res, end_res):
     '''

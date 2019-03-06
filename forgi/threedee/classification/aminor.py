@@ -1,3 +1,22 @@
+
+"""
+This module contains code for classifying a coarse-grained geometry as A-Minor
+interaction.
+
+.. warning:: This is intended for low-resolution data , as it does not take the
+             orientation of individual bases into account. If you have all-atom
+             data, dedicated tools like FR3D will be more accurate.
+
+If you just want to classify interactions in a given structure, you only need
+the functions `classify_interaction` or `all_interactions`.
+
+To train your own version of the classifier, modify its parameters or perform
+cross-validation, use the AMinorClassifier.
+
+Access the default trainings data with the get_trainings_data(loop_type)
+function.
+"""
+
 from __future__ import print_function, division, absolute_import
 
 import pkgutil
@@ -30,23 +49,6 @@ log = logging.getLogger(__name__)
 CUTOFFDIST = 30
 ANGLEWEIGHT = 10
 
-"""
-This module contains code for classifying a coarse-grained geometry as A-Minor
-interaction.
-
-.. warning:: This is intended for low-resolution data , as it does not take the
-             orientation of individual bases into account. If you have all-atom
-             data, dedicated tools like FR3D will be more accurate.
-
-If you just want to classify interactions in a given structure, you only need
-the functions `classify_interaction` or `all_interactions`.
-
-To train your own version of the classifier, modify its parameters or perform
-cross-validation, use the AMinorClassifier.
-
-Access the default trainings data with the get_trainings_data(loop_type)
-function.
-"""
 
 
 P_INTERACTION = 0.05  # 0.03644949066213922

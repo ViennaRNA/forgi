@@ -38,18 +38,9 @@ def bg_to_elem_string(cg):
 
 
 def to_pdb(cg):
-    used_chainids = set(cg.chains.keys())
-    def get_available_chainid():
-        for c in string.ascii_uppercase:
-            if c not in used_chainids:
-                used_chainids.add(c)
-                return c
-        raise ValueError("Too many chains. Cannot convert to old PDB format.")
+    chains = ftup.rename_chains_for_pdb(cg.chains)
     f = StringIO()
-    for chain in cg.chains.values():
-        if len(chain.id)>1:
-            chain.id = get_available_chainid()
-    ftup.output_multiple_chains(cg.chains.values(), f, "pdb")
+    ftup.output_multiple_chains(chains.values(), f, "pdb")
     return f.getvalue()
 
 
