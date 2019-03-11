@@ -37,7 +37,6 @@ cpdef np.ndarray[double, ndim=2] create_orthonormal_basis(
     out[2,1]=az*bx-ax*bz
     out[2,2]=ax*by-ay*bx
 
-
     return out
 
 
