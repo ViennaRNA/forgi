@@ -11,13 +11,16 @@ class Vect{
     Vect cross(const Vect &b);
     void normalize();
     double distance_to(const Vect &b);
+    void print();
+
 };
 
 class Basis{
-    public: std::array<std::array<double, 3>, 3> coords;
+    public: std::array<std::array<double,3>,3> coords;
     Basis(Vect a, Vect b, Vect c);
     Basis(double ax, double bx, double cx, double ay, double by, double cy, double az, double bz, double cz);
     Vect apply_to(const Vect &a);
+    void print();
 };
 
 Vect transform_coords(Basis b, double r, double u, double v);
@@ -42,3 +45,5 @@ Vect _get_broken_ml_dev_core(
                             Vect s_twist,
                             double r1, double u1, double v1,
                             double u, double v, double t);
+
+void testdot();

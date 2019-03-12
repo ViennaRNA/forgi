@@ -4,6 +4,7 @@
 {
     "distutils": {
         "depends": [], 
+        "language": "C++", 
         "name": "brokenml1", 
         "sources": [
             "brokenml1.pyx"
@@ -6359,16 +6360,16 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   }
   __pyx_pybuffernd_virtual_stat.diminfo[0].strides = __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_virtual_stat.diminfo[0].shape = __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.shape[0];
 
-  /* "brokenml1.pyx":141
+  /* "brokenml1.pyx":140
+ *                              np.ndarray[double, ndim=1] s_twist,
  *                              np.ndarray[double, ndim=1] virtual_stat):
- * 
  *     cdef np.ndarray[double, ndim=2] fixed_stem_basis = create_orthonormal_basis(fixed_s_vec, s_twist)             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[double, ndim=2] transposed_stem1_basis = fixed_stem_basis.transpose()
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_fixed_s_vec), PyBUF_WRITABLE); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 141, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_s_twist), PyBUF_WRITABLE); if (unlikely(!__pyx_t_2.memview)) __PYX_ERR(0, 141, __pyx_L1_error)
-  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_create_orthonormal_basis(__pyx_t_1, __pyx_t_2, 0)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_fixed_s_vec), PyBUF_WRITABLE); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_s_twist), PyBUF_WRITABLE); if (unlikely(!__pyx_t_2.memview)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_create_orthonormal_basis(__pyx_t_1, __pyx_t_2, 0)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __PYX_XDEC_MEMVIEW(&__pyx_t_1, 1);
   __pyx_t_1.memview = NULL;
@@ -6380,21 +6381,21 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_fixed_stem_basis.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_3), &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_fixed_stem_basis = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_fixed_stem_basis.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 141, __pyx_L1_error)
+      __PYX_ERR(0, 140, __pyx_L1_error)
     } else {__pyx_pybuffernd_fixed_stem_basis.diminfo[0].strides = __pyx_pybuffernd_fixed_stem_basis.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_fixed_stem_basis.diminfo[0].shape = __pyx_pybuffernd_fixed_stem_basis.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_fixed_stem_basis.diminfo[1].strides = __pyx_pybuffernd_fixed_stem_basis.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_fixed_stem_basis.diminfo[1].shape = __pyx_pybuffernd_fixed_stem_basis.rcbuffer->pybuffer.shape[1];
     }
   }
   __pyx_v_fixed_stem_basis = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":142
- * 
+  /* "brokenml1.pyx":141
+ *                              np.ndarray[double, ndim=1] virtual_stat):
  *     cdef np.ndarray[double, ndim=2] fixed_stem_basis = create_orthonormal_basis(fixed_s_vec, s_twist)
  *     cdef np.ndarray[double, ndim=2] transposed_stem1_basis = fixed_stem_basis.transpose()             # <<<<<<<<<<<<<<
  * 
  *     cdef np.ndarray[double, ndim=1] vbulge_vec = transform_coords(transposed_stem1_basis,
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_fixed_stem_basis), __pyx_n_s_transpose); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 142, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_fixed_stem_basis), __pyx_n_s_transpose); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
@@ -6407,20 +6408,20 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
     }
   }
   if (__pyx_t_5) {
-    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   } else {
-    __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 142, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
   }
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 142, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 141, __pyx_L1_error)
   __pyx_t_6 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_transposed_stem1_basis.rcbuffer->pybuffer, (PyObject*)__pyx_t_6, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_transposed_stem1_basis = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_transposed_stem1_basis.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 142, __pyx_L1_error)
+      __PYX_ERR(0, 141, __pyx_L1_error)
     } else {__pyx_pybuffernd_transposed_stem1_basis.diminfo[0].strides = __pyx_pybuffernd_transposed_stem1_basis.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_transposed_stem1_basis.diminfo[0].shape = __pyx_pybuffernd_transposed_stem1_basis.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_transposed_stem1_basis.diminfo[1].strides = __pyx_pybuffernd_transposed_stem1_basis.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_transposed_stem1_basis.diminfo[1].shape = __pyx_pybuffernd_transposed_stem1_basis.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -6428,7 +6429,7 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   __pyx_v_transposed_stem1_basis = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":145
+  /* "brokenml1.pyx":144
  * 
  *     cdef np.ndarray[double, ndim=1] vbulge_vec = transform_coords(transposed_stem1_basis,
  *                                                   virtual_stat[0],             # <<<<<<<<<<<<<<
@@ -6442,10 +6443,10 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_7 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 145, __pyx_L1_error)
+    __PYX_ERR(0, 144, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":146
+  /* "brokenml1.pyx":145
  *     cdef np.ndarray[double, ndim=1] vbulge_vec = transform_coords(transposed_stem1_basis,
  *                                                   virtual_stat[0],
  *                                                   virtual_stat[1],             # <<<<<<<<<<<<<<
@@ -6459,10 +6460,10 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_9 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 146, __pyx_L1_error)
+    __PYX_ERR(0, 145, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":147
+  /* "brokenml1.pyx":146
  *                                                   virtual_stat[0],
  *                                                   virtual_stat[1],
  *                                                   virtual_stat[2])             # <<<<<<<<<<<<<<
@@ -6476,30 +6477,30 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_10 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 147, __pyx_L1_error)
+    __PYX_ERR(0, 146, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":144
+  /* "brokenml1.pyx":143
  *     cdef np.ndarray[double, ndim=2] transposed_stem1_basis = fixed_stem_basis.transpose()
  * 
  *     cdef np.ndarray[double, ndim=1] vbulge_vec = transform_coords(transposed_stem1_basis,             # <<<<<<<<<<<<<<
  *                                                   virtual_stat[0],
  *                                                   virtual_stat[1],
  */
-  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_transform_coords(((PyArrayObject *)__pyx_v_transposed_stem1_basis), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
+  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_transform_coords(((PyArrayObject *)__pyx_v_transposed_stem1_basis), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vbulge_vec.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_3), &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_vbulge_vec = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_vbulge_vec.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 144, __pyx_L1_error)
+      __PYX_ERR(0, 143, __pyx_L1_error)
     } else {__pyx_pybuffernd_vbulge_vec.diminfo[0].strides = __pyx_pybuffernd_vbulge_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vbulge_vec.diminfo[0].shape = __pyx_pybuffernd_vbulge_vec.rcbuffer->pybuffer.shape[0];
     }
   }
   __pyx_v_vbulge_vec = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":150
+  /* "brokenml1.pyx":149
  *     cdef np.ndarray[double, ndim=1] vstem_vec = transform_coords(transposed_stem1_basis,
  *                                                   1.,
  *                                                   virtual_stat[3],             # <<<<<<<<<<<<<<
@@ -6513,10 +6514,10 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_11 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 150, __pyx_L1_error)
+    __PYX_ERR(0, 149, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":151
+  /* "brokenml1.pyx":150
  *                                                   1.,
  *                                                   virtual_stat[3],
  *                                                   virtual_stat[4])             # <<<<<<<<<<<<<<
@@ -6530,30 +6531,30 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_12 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 151, __pyx_L1_error)
+    __PYX_ERR(0, 150, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":148
+  /* "brokenml1.pyx":147
  *                                                   virtual_stat[1],
  *                                                   virtual_stat[2])
  *     cdef np.ndarray[double, ndim=1] vstem_vec = transform_coords(transposed_stem1_basis,             # <<<<<<<<<<<<<<
  *                                                   1.,
  *                                                   virtual_stat[3],
  */
-  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_transform_coords(((PyArrayObject *)__pyx_v_transposed_stem1_basis), 1., (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 148, __pyx_L1_error)
+  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_transform_coords(((PyArrayObject *)__pyx_v_transposed_stem1_basis), 1., (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 147, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vstem_vec.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_3), &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_vstem_vec = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_vstem_vec.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 148, __pyx_L1_error)
+      __PYX_ERR(0, 147, __pyx_L1_error)
     } else {__pyx_pybuffernd_vstem_vec.diminfo[0].strides = __pyx_pybuffernd_vstem_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vstem_vec.diminfo[0].shape = __pyx_pybuffernd_vstem_vec.rcbuffer->pybuffer.shape[0];
     }
   }
   __pyx_v_vstem_vec = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":153
+  /* "brokenml1.pyx":152
  *                                                   virtual_stat[4])
  *     cdef np.ndarray[double, ndim=1] vstem_twist = twist2_orient_from_stem1_1(transposed_stem1_basis,
  *                                                    virtual_stat[3],             # <<<<<<<<<<<<<<
@@ -6567,10 +6568,10 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_13 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 153, __pyx_L1_error)
+    __PYX_ERR(0, 152, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":154
+  /* "brokenml1.pyx":153
  *     cdef np.ndarray[double, ndim=1] vstem_twist = twist2_orient_from_stem1_1(transposed_stem1_basis,
  *                                                    virtual_stat[3],
  *                                                    virtual_stat[4],             # <<<<<<<<<<<<<<
@@ -6584,10 +6585,10 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_14 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 154, __pyx_L1_error)
+    __PYX_ERR(0, 153, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":155
+  /* "brokenml1.pyx":154
  *                                                    virtual_stat[3],
  *                                                    virtual_stat[4],
  *                                                    virtual_stat[5])             # <<<<<<<<<<<<<<
@@ -6601,39 +6602,39 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   } else if (unlikely(__pyx_t_15 >= __pyx_pybuffernd_virtual_stat.diminfo[0].shape)) __pyx_t_8 = 0;
   if (unlikely(__pyx_t_8 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_8);
-    __PYX_ERR(0, 155, __pyx_L1_error)
+    __PYX_ERR(0, 154, __pyx_L1_error)
   }
 
-  /* "brokenml1.pyx":152
+  /* "brokenml1.pyx":151
  *                                                   virtual_stat[3],
  *                                                   virtual_stat[4])
  *     cdef np.ndarray[double, ndim=1] vstem_twist = twist2_orient_from_stem1_1(transposed_stem1_basis,             # <<<<<<<<<<<<<<
  *                                                    virtual_stat[3],
  *                                                    virtual_stat[4],
  */
-  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_twist2_orient_from_stem1_1(((PyArrayObject *)__pyx_v_transposed_stem1_basis), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __pyx_t_3 = ((PyObject *)__pyx_f_9brokenml1_twist2_orient_from_stem1_1(((PyArrayObject *)__pyx_v_transposed_stem1_basis), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_virtual_stat.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_virtual_stat.diminfo[0].strides)))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 151, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vstem_twist.rcbuffer->pybuffer, (PyObject*)((PyArrayObject *)__pyx_t_3), &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_vstem_twist = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_vstem_twist.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 152, __pyx_L1_error)
+      __PYX_ERR(0, 151, __pyx_L1_error)
     } else {__pyx_pybuffernd_vstem_twist.diminfo[0].strides = __pyx_pybuffernd_vstem_twist.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vstem_twist.diminfo[0].shape = __pyx_pybuffernd_vstem_twist.rcbuffer->pybuffer.shape[0];
     }
   }
   __pyx_v_vstem_twist = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":157
+  /* "brokenml1.pyx":156
  *                                                    virtual_stat[5])
  * 
  *     vstem_vec *=5             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[double, ndim=1] vstem_coords0 = fixed_s_pos + vbulge_vec
  *     cdef np.ndarray[double, ndim=1] vstem_coords1 = vstem_coords0 + vstem_vec
  */
-  __pyx_t_3 = PyNumber_InPlaceMultiply(((PyObject *)__pyx_v_vstem_vec), __pyx_int_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 157, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_InPlaceMultiply(((PyObject *)__pyx_v_vstem_vec), __pyx_int_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 156, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 157, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 156, __pyx_L1_error)
   __pyx_t_16 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -6650,28 +6651,28 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
       __pyx_t_17 = __pyx_t_18 = __pyx_t_19 = 0;
     }
     __pyx_pybuffernd_vstem_vec.diminfo[0].strides = __pyx_pybuffernd_vstem_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vstem_vec.diminfo[0].shape = __pyx_pybuffernd_vstem_vec.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 157, __pyx_L1_error)
+    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 156, __pyx_L1_error)
   }
   __pyx_t_16 = 0;
   __Pyx_DECREF_SET(__pyx_v_vstem_vec, ((PyArrayObject *)__pyx_t_3));
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":158
+  /* "brokenml1.pyx":157
  * 
  *     vstem_vec *=5
  *     cdef np.ndarray[double, ndim=1] vstem_coords0 = fixed_s_pos + vbulge_vec             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[double, ndim=1] vstem_coords1 = vstem_coords0 + vstem_vec
  * 
  */
-  __pyx_t_3 = PyNumber_Add(((PyObject *)__pyx_v_fixed_s_pos), ((PyObject *)__pyx_v_vbulge_vec)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(((PyObject *)__pyx_v_fixed_s_pos), ((PyObject *)__pyx_v_vbulge_vec)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 157, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 158, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 157, __pyx_L1_error)
   __pyx_t_20 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vstem_coords0.rcbuffer->pybuffer, (PyObject*)__pyx_t_20, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_vstem_coords0 = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_vstem_coords0.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 158, __pyx_L1_error)
+      __PYX_ERR(0, 157, __pyx_L1_error)
     } else {__pyx_pybuffernd_vstem_coords0.diminfo[0].strides = __pyx_pybuffernd_vstem_coords0.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vstem_coords0.diminfo[0].shape = __pyx_pybuffernd_vstem_coords0.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -6679,22 +6680,22 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   __pyx_v_vstem_coords0 = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":159
+  /* "brokenml1.pyx":158
  *     vstem_vec *=5
  *     cdef np.ndarray[double, ndim=1] vstem_coords0 = fixed_s_pos + vbulge_vec
  *     cdef np.ndarray[double, ndim=1] vstem_coords1 = vstem_coords0 + vstem_vec             # <<<<<<<<<<<<<<
  * 
  *     cdef np.ndarray[double, ndim=1] orig_stem_vec = orig_coords1 - orig_coords0
  */
-  __pyx_t_3 = PyNumber_Add(((PyObject *)__pyx_v_vstem_coords0), ((PyObject *)__pyx_v_vstem_vec)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 159, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Add(((PyObject *)__pyx_v_vstem_coords0), ((PyObject *)__pyx_v_vstem_vec)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 159, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 158, __pyx_L1_error)
   __pyx_t_21 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vstem_coords1.rcbuffer->pybuffer, (PyObject*)__pyx_t_21, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_vstem_coords1 = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_vstem_coords1.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 159, __pyx_L1_error)
+      __PYX_ERR(0, 158, __pyx_L1_error)
     } else {__pyx_pybuffernd_vstem_coords1.diminfo[0].strides = __pyx_pybuffernd_vstem_coords1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vstem_coords1.diminfo[0].shape = __pyx_pybuffernd_vstem_coords1.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -6702,22 +6703,22 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   __pyx_v_vstem_coords1 = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":161
+  /* "brokenml1.pyx":160
  *     cdef np.ndarray[double, ndim=1] vstem_coords1 = vstem_coords0 + vstem_vec
  * 
  *     cdef np.ndarray[double, ndim=1] orig_stem_vec = orig_coords1 - orig_coords0             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[double, ndim=1] true_bulge_vec = orig_coords0 - fixed_s_pos
  * 
  */
-  __pyx_t_3 = PyNumber_Subtract(((PyObject *)__pyx_v_orig_coords1), ((PyObject *)__pyx_v_orig_coords0)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 161, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Subtract(((PyObject *)__pyx_v_orig_coords1), ((PyObject *)__pyx_v_orig_coords0)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 160, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 161, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 160, __pyx_L1_error)
   __pyx_t_22 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_orig_stem_vec.rcbuffer->pybuffer, (PyObject*)__pyx_t_22, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_orig_stem_vec = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_orig_stem_vec.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 161, __pyx_L1_error)
+      __PYX_ERR(0, 160, __pyx_L1_error)
     } else {__pyx_pybuffernd_orig_stem_vec.diminfo[0].strides = __pyx_pybuffernd_orig_stem_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_orig_stem_vec.diminfo[0].shape = __pyx_pybuffernd_orig_stem_vec.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -6725,22 +6726,22 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   __pyx_v_orig_stem_vec = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":162
+  /* "brokenml1.pyx":161
  * 
  *     cdef np.ndarray[double, ndim=1] orig_stem_vec = orig_coords1 - orig_coords0
  *     cdef np.ndarray[double, ndim=1] true_bulge_vec = orig_coords0 - fixed_s_pos             # <<<<<<<<<<<<<<
  * 
  *     cdef double pos_dev = ( vec_distance(orig_coords0, vstem_coords0) )
  */
-  __pyx_t_3 = PyNumber_Subtract(((PyObject *)__pyx_v_orig_coords0), ((PyObject *)__pyx_v_fixed_s_pos)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Subtract(((PyObject *)__pyx_v_orig_coords0), ((PyObject *)__pyx_v_fixed_s_pos)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 161, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 162, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 161, __pyx_L1_error)
   __pyx_t_23 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_true_bulge_vec.rcbuffer->pybuffer, (PyObject*)__pyx_t_23, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_true_bulge_vec = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_true_bulge_vec.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 162, __pyx_L1_error)
+      __PYX_ERR(0, 161, __pyx_L1_error)
     } else {__pyx_pybuffernd_true_bulge_vec.diminfo[0].strides = __pyx_pybuffernd_true_bulge_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_true_bulge_vec.diminfo[0].shape = __pyx_pybuffernd_true_bulge_vec.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -6748,7 +6749,7 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   __pyx_v_true_bulge_vec = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "brokenml1.pyx":164
+  /* "brokenml1.pyx":163
  *     cdef np.ndarray[double, ndim=1] true_bulge_vec = orig_coords0 - fixed_s_pos
  * 
  *     cdef double pos_dev = ( vec_distance(orig_coords0, vstem_coords0) )             # <<<<<<<<<<<<<<
@@ -6757,7 +6758,7 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
  */
   __pyx_v_pos_dev = __pyx_f_9brokenml1_vec_distance(((PyArrayObject *)__pyx_v_orig_coords0), ((PyArrayObject *)__pyx_v_vstem_coords0));
 
-  /* "brokenml1.pyx":165
+  /* "brokenml1.pyx":164
  * 
  *     cdef double pos_dev = ( vec_distance(orig_coords0, vstem_coords0) )
  *     cdef double ang_dev = vec_angle(vstem_vec, orig_stem_vec)             # <<<<<<<<<<<<<<
@@ -6766,7 +6767,7 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
  */
   __pyx_v_ang_dev = __pyx_f_9brokenml1_vec_angle(((PyArrayObject *)__pyx_v_vstem_vec), ((PyArrayObject *)__pyx_v_orig_stem_vec));
 
-  /* "brokenml1.pyx":166
+  /* "brokenml1.pyx":165
  *     cdef double pos_dev = ( vec_distance(orig_coords0, vstem_coords0) )
  *     cdef double ang_dev = vec_angle(vstem_vec, orig_stem_vec)
  *     cdef double twist_dev = vec_angle(orig_twist, vstem_twist)             # <<<<<<<<<<<<<<
@@ -6775,7 +6776,7 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
  */
   __pyx_v_twist_dev = __pyx_f_9brokenml1_vec_angle(((PyArrayObject *)__pyx_v_orig_twist), ((PyArrayObject *)__pyx_v_vstem_twist));
 
-  /* "brokenml1.pyx":167
+  /* "brokenml1.pyx":166
  *     cdef double ang_dev = vec_angle(vstem_vec, orig_stem_vec)
  *     cdef double twist_dev = vec_angle(orig_twist, vstem_twist)
  *     return pos_dev, ang_dev, twist_dev             # <<<<<<<<<<<<<<
@@ -6783,13 +6784,13 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
  * @cython.boundscheck(False)
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_pos_dev); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 167, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_pos_dev); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 166, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_ang_dev); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 167, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_ang_dev); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 166, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = PyFloat_FromDouble(__pyx_v_twist_dev); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 167, __pyx_L1_error)
+  __pyx_t_5 = PyFloat_FromDouble(__pyx_v_twist_dev); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 166, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_24 = PyTuple_New(3); if (unlikely(!__pyx_t_24)) __PYX_ERR(0, 167, __pyx_L1_error)
+  __pyx_t_24 = PyTuple_New(3); if (unlikely(!__pyx_t_24)) __PYX_ERR(0, 166, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_24);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_24, 0, __pyx_t_3);
@@ -6877,7 +6878,7 @@ static PyObject *__pyx_f_9brokenml1__get_broken_ml_dev_core(PyArrayObject *__pyx
   return __pyx_r;
 }
 
-/* "brokenml1.pyx":171
+/* "brokenml1.pyx":170
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef double vec_angle(np.ndarray[double, ndim=1] vec1,             # <<<<<<<<<<<<<<
@@ -6905,7 +6906,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   double __pyx_t_9;
   int __pyx_t_10;
   __Pyx_RefNannySetupContext("vec_angle", 0);
-  __Pyx_TraceCall("vec_angle", __pyx_f[0], 171, 0, __PYX_ERR(0, 171, __pyx_L1_error));
+  __Pyx_TraceCall("vec_angle", __pyx_f[0], 170, 0, __PYX_ERR(0, 170, __pyx_L1_error));
   __Pyx_INCREF((PyObject *)__pyx_v_vec1);
   __Pyx_INCREF((PyObject *)__pyx_v_vec2);
   __pyx_pybuffer_vec1.pybuffer.buf = NULL;
@@ -6918,23 +6919,23 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   __pyx_pybuffernd_vec2.rcbuffer = &__pyx_pybuffer_vec2;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec1.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec1, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec1.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec1, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 170, __pyx_L1_error)
   }
   __pyx_pybuffernd_vec1.diminfo[0].strides = __pyx_pybuffernd_vec1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec1.diminfo[0].shape = __pyx_pybuffernd_vec1.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec2.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec2, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 171, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec2.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec2, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 170, __pyx_L1_error)
   }
   __pyx_pybuffernd_vec2.diminfo[0].strides = __pyx_pybuffernd_vec2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec2.diminfo[0].shape = __pyx_pybuffernd_vec2.rcbuffer->pybuffer.shape[0];
 
-  /* "brokenml1.pyx":185
+  /* "brokenml1.pyx":184
  *         '''
  * 
  *         vec1 = normalize(vec1)             # <<<<<<<<<<<<<<
  *         vec2 = normalize(vec2)
  * 
  */
-  __pyx_t_1 = ((PyObject *)__pyx_f_9brokenml1_normalize(((PyArrayObject *)__pyx_v_vec1))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 185, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__pyx_f_9brokenml1_normalize(((PyArrayObject *)__pyx_v_vec1))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 184, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -6951,19 +6952,19 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
       __pyx_t_3 = __pyx_t_4 = __pyx_t_5 = 0;
     }
     __pyx_pybuffernd_vec1.diminfo[0].strides = __pyx_pybuffernd_vec1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec1.diminfo[0].shape = __pyx_pybuffernd_vec1.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 185, __pyx_L1_error)
+    if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 184, __pyx_L1_error)
   }
   __Pyx_DECREF_SET(__pyx_v_vec1, ((PyArrayObject *)__pyx_t_1));
   __pyx_t_1 = 0;
 
-  /* "brokenml1.pyx":186
+  /* "brokenml1.pyx":185
  * 
  *         vec1 = normalize(vec1)
  *         vec2 = normalize(vec2)             # <<<<<<<<<<<<<<
  * 
  *         cdef double d = np.dot(vec1, vec2)
  */
-  __pyx_t_1 = ((PyObject *)__pyx_f_9brokenml1_normalize(((PyArrayObject *)__pyx_v_vec2))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 186, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__pyx_f_9brokenml1_normalize(((PyArrayObject *)__pyx_v_vec2))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 185, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -6980,21 +6981,21 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
       __pyx_t_5 = __pyx_t_4 = __pyx_t_3 = 0;
     }
     __pyx_pybuffernd_vec2.diminfo[0].strides = __pyx_pybuffernd_vec2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec2.diminfo[0].shape = __pyx_pybuffernd_vec2.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 186, __pyx_L1_error)
+    if (unlikely(__pyx_t_2 < 0)) __PYX_ERR(0, 185, __pyx_L1_error)
   }
   __Pyx_DECREF_SET(__pyx_v_vec2, ((PyArrayObject *)__pyx_t_1));
   __pyx_t_1 = 0;
 
-  /* "brokenml1.pyx":188
+  /* "brokenml1.pyx":187
  *         vec2 = normalize(vec2)
  * 
  *         cdef double d = np.dot(vec1, vec2)             # <<<<<<<<<<<<<<
  * 
  *         # this shouldn't happen, but sometimes it does, presumably because
  */
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 188, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 187, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_dot); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 188, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_dot); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 187, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_6 = NULL;
@@ -7012,7 +7013,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_7)) {
     PyObject *__pyx_temp[3] = {__pyx_t_6, ((PyObject *)__pyx_v_vec1), ((PyObject *)__pyx_v_vec2)};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_2, 2+__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_2, 2+__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
@@ -7020,13 +7021,13 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_7)) {
     PyObject *__pyx_temp[3] = {__pyx_t_6, ((PyObject *)__pyx_v_vec1), ((PyObject *)__pyx_v_vec2)};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_2, 2+__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_7, __pyx_temp+1-__pyx_t_2, 2+__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   {
-    __pyx_t_8 = PyTuple_New(2+__pyx_t_2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __pyx_t_8 = PyTuple_New(2+__pyx_t_2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     if (__pyx_t_6) {
       __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -7037,16 +7038,16 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
     __Pyx_INCREF(((PyObject *)__pyx_v_vec2));
     __Pyx_GIVEREF(((PyObject *)__pyx_v_vec2));
     PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_2, ((PyObject *)__pyx_v_vec2));
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_7, __pyx_t_8, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 187, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   }
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_t_9 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 188, __pyx_L1_error)
+  __pyx_t_9 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_9 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 187, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_d = __pyx_t_9;
 
-  /* "brokenml1.pyx":192
+  /* "brokenml1.pyx":191
  *         # this shouldn't happen, but sometimes it does, presumably because
  *         # of rounding errors
  *         if d >= 1.:             # <<<<<<<<<<<<<<
@@ -7056,7 +7057,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   __pyx_t_10 = ((__pyx_v_d >= 1.) != 0);
   if (__pyx_t_10) {
 
-    /* "brokenml1.pyx":193
+    /* "brokenml1.pyx":192
  *         # of rounding errors
  *         if d >= 1.:
  *             d = 1.             # <<<<<<<<<<<<<<
@@ -7065,7 +7066,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
  */
     __pyx_v_d = 1.;
 
-    /* "brokenml1.pyx":192
+    /* "brokenml1.pyx":191
  *         # this shouldn't happen, but sometimes it does, presumably because
  *         # of rounding errors
  *         if d >= 1.:             # <<<<<<<<<<<<<<
@@ -7074,7 +7075,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
  */
   }
 
-  /* "brokenml1.pyx":194
+  /* "brokenml1.pyx":193
  *         if d >= 1.:
  *             d = 1.
  *         if d <= -1.:             # <<<<<<<<<<<<<<
@@ -7084,7 +7085,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   __pyx_t_10 = ((__pyx_v_d <= -1.) != 0);
   if (__pyx_t_10) {
 
-    /* "brokenml1.pyx":195
+    /* "brokenml1.pyx":194
  *             d = 1.
  *         if d <= -1.:
  *             d = -1.             # <<<<<<<<<<<<<<
@@ -7093,7 +7094,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
  */
     __pyx_v_d = -1.;
 
-    /* "brokenml1.pyx":194
+    /* "brokenml1.pyx":193
  *         if d >= 1.:
  *             d = 1.
  *         if d <= -1.:             # <<<<<<<<<<<<<<
@@ -7102,7 +7103,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
  */
   }
 
-  /* "brokenml1.pyx":197
+  /* "brokenml1.pyx":196
  *             d = -1.
  * 
  *         return  acos(d)             # <<<<<<<<<<<<<<
@@ -7112,7 +7113,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   __pyx_r = acos(__pyx_v_d);
   goto __pyx_L0;
 
-  /* "brokenml1.pyx":171
+  /* "brokenml1.pyx":170
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef double vec_angle(np.ndarray[double, ndim=1] vec1,             # <<<<<<<<<<<<<<
@@ -7147,7 +7148,7 @@ static double __pyx_f_9brokenml1_vec_angle(PyArrayObject *__pyx_v_vec1, PyArrayO
   return __pyx_r;
 }
 
-/* "brokenml1.pyx":201
+/* "brokenml1.pyx":200
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef np.ndarray[double, ndim=1] normalize(np.ndarray[double, ndim=1] vec):             # <<<<<<<<<<<<<<
@@ -7167,32 +7168,32 @@ static PyArrayObject *__pyx_f_9brokenml1_normalize(PyArrayObject *__pyx_v_vec) {
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   __Pyx_RefNannySetupContext("normalize", 0);
-  __Pyx_TraceCall("normalize", __pyx_f[0], 201, 0, __PYX_ERR(0, 201, __pyx_L1_error));
+  __Pyx_TraceCall("normalize", __pyx_f[0], 200, 0, __PYX_ERR(0, 200, __pyx_L1_error));
   __pyx_pybuffer_vec.pybuffer.buf = NULL;
   __pyx_pybuffer_vec.refcount = 0;
   __pyx_pybuffernd_vec.data = NULL;
   __pyx_pybuffernd_vec.rcbuffer = &__pyx_pybuffer_vec;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 201, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 200, __pyx_L1_error)
   }
   __pyx_pybuffernd_vec.diminfo[0].strides = __pyx_pybuffernd_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec.diminfo[0].shape = __pyx_pybuffernd_vec.rcbuffer->pybuffer.shape[0];
 
-  /* "brokenml1.pyx":209
+  /* "brokenml1.pyx":208
  *     :return: A normalized version of the vector.
  *     '''
  *     cdef double mag = magnitude(vec)             # <<<<<<<<<<<<<<
  *     return vec / mag
  * 
  */
-  __pyx_t_1 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_vec), PyBUF_WRITABLE); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 209, __pyx_L1_error)
-  __pyx_t_2 = __pyx_f_9brokenml1_magnitude(__pyx_t_1); if (unlikely(__pyx_t_2 == ((double)-1.0))) __PYX_ERR(0, 209, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_vec), PyBUF_WRITABLE); if (unlikely(!__pyx_t_1.memview)) __PYX_ERR(0, 208, __pyx_L1_error)
+  __pyx_t_2 = __pyx_f_9brokenml1_magnitude(__pyx_t_1); if (unlikely(__pyx_t_2 == ((double)-1.0))) __PYX_ERR(0, 208, __pyx_L1_error)
   __PYX_XDEC_MEMVIEW(&__pyx_t_1, 1);
   __pyx_t_1.memview = NULL;
   __pyx_t_1.data = NULL;
   __pyx_v_mag = __pyx_t_2;
 
-  /* "brokenml1.pyx":210
+  /* "brokenml1.pyx":209
  *     '''
  *     cdef double mag = magnitude(vec)
  *     return vec / mag             # <<<<<<<<<<<<<<
@@ -7200,17 +7201,17 @@ static PyArrayObject *__pyx_f_9brokenml1_normalize(PyArrayObject *__pyx_v_vec) {
  * @cython.boundscheck(False)
  */
   __Pyx_XDECREF(((PyObject *)__pyx_r));
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_mag); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 210, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_mag); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyNumber_Divide(((PyObject *)__pyx_v_vec), __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 210, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyNumber_Divide(((PyObject *)__pyx_v_vec), __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 209, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 210, __pyx_L1_error)
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 209, __pyx_L1_error)
   __pyx_r = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
   goto __pyx_L0;
 
-  /* "brokenml1.pyx":201
+  /* "brokenml1.pyx":200
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef np.ndarray[double, ndim=1] normalize(np.ndarray[double, ndim=1] vec):             # <<<<<<<<<<<<<<
@@ -7241,7 +7242,7 @@ static PyArrayObject *__pyx_f_9brokenml1_normalize(PyArrayObject *__pyx_v_vec) {
   return __pyx_r;
 }
 
-/* "brokenml1.pyx":214
+/* "brokenml1.pyx":213
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef double vec_distance( np.ndarray[double, ndim=1] vec1,             # <<<<<<<<<<<<<<
@@ -7268,7 +7269,7 @@ static double __pyx_f_9brokenml1_vec_distance(PyArrayObject *__pyx_v_vec1, PyArr
   PyObject *__pyx_t_6 = NULL;
   double __pyx_t_7;
   __Pyx_RefNannySetupContext("vec_distance", 0);
-  __Pyx_TraceCall("vec_distance", __pyx_f[0], 214, 0, __PYX_ERR(0, 214, __pyx_L1_error));
+  __Pyx_TraceCall("vec_distance", __pyx_f[0], 213, 0, __PYX_ERR(0, 213, __pyx_L1_error));
   __pyx_pybuffer_direction.pybuffer.buf = NULL;
   __pyx_pybuffer_direction.refcount = 0;
   __pyx_pybuffernd_direction.data = NULL;
@@ -7283,30 +7284,30 @@ static double __pyx_f_9brokenml1_vec_distance(PyArrayObject *__pyx_v_vec1, PyArr
   __pyx_pybuffernd_vec2.rcbuffer = &__pyx_pybuffer_vec2;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec1.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec1, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 214, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec1.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec1, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 213, __pyx_L1_error)
   }
   __pyx_pybuffernd_vec1.diminfo[0].strides = __pyx_pybuffernd_vec1.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec1.diminfo[0].shape = __pyx_pybuffernd_vec1.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec2.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec2, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 214, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vec2.rcbuffer->pybuffer, (PyObject*)__pyx_v_vec2, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 213, __pyx_L1_error)
   }
   __pyx_pybuffernd_vec2.diminfo[0].strides = __pyx_pybuffernd_vec2.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vec2.diminfo[0].shape = __pyx_pybuffernd_vec2.rcbuffer->pybuffer.shape[0];
 
-  /* "brokenml1.pyx":216
+  /* "brokenml1.pyx":215
  * cdef double vec_distance( np.ndarray[double, ndim=1] vec1,
  *                                          np.ndarray[double, ndim=1] vec2):
  *     cdef np.ndarray[double, ndim=1] direction = vec2-vec1             # <<<<<<<<<<<<<<
  *     return sqrt(np.dot(direction, direction))
  */
-  __pyx_t_1 = PyNumber_Subtract(((PyObject *)__pyx_v_vec2), ((PyObject *)__pyx_v_vec1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 216, __pyx_L1_error)
+  __pyx_t_1 = PyNumber_Subtract(((PyObject *)__pyx_v_vec2), ((PyObject *)__pyx_v_vec1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 215, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 216, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 215, __pyx_L1_error)
   __pyx_t_2 = ((PyArrayObject *)__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_direction.rcbuffer->pybuffer, (PyObject*)__pyx_t_2, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_direction = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_direction.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 216, __pyx_L1_error)
+      __PYX_ERR(0, 215, __pyx_L1_error)
     } else {__pyx_pybuffernd_direction.diminfo[0].strides = __pyx_pybuffernd_direction.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_direction.diminfo[0].shape = __pyx_pybuffernd_direction.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -7314,14 +7315,14 @@ static double __pyx_f_9brokenml1_vec_distance(PyArrayObject *__pyx_v_vec1, PyArr
   __pyx_v_direction = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "brokenml1.pyx":217
+  /* "brokenml1.pyx":216
  *                                          np.ndarray[double, ndim=1] vec2):
  *     cdef np.ndarray[double, ndim=1] direction = vec2-vec1
  *     return sqrt(np.dot(direction, direction))             # <<<<<<<<<<<<<<
  */
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 216, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_dot); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_dot); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 216, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_t_3 = NULL;
@@ -7339,7 +7340,7 @@ static double __pyx_f_9brokenml1_vec_distance(PyArrayObject *__pyx_v_vec1, PyArr
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_4)) {
     PyObject *__pyx_temp[3] = {__pyx_t_3, ((PyObject *)__pyx_v_direction), ((PyObject *)__pyx_v_direction)};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
@@ -7347,13 +7348,13 @@ static double __pyx_f_9brokenml1_vec_distance(PyArrayObject *__pyx_v_vec1, PyArr
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
     PyObject *__pyx_temp[3] = {__pyx_t_3, ((PyObject *)__pyx_v_direction), ((PyObject *)__pyx_v_direction)};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 217, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_3) {
       __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -7364,17 +7365,17 @@ static double __pyx_f_9brokenml1_vec_distance(PyArrayObject *__pyx_v_vec1, PyArr
     __Pyx_INCREF(((PyObject *)__pyx_v_direction));
     __Pyx_GIVEREF(((PyObject *)__pyx_v_direction));
     PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_5, ((PyObject *)__pyx_v_direction));
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 217, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 216, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 217, __pyx_L1_error)
+  __pyx_t_7 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_7 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 216, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = sqrt(__pyx_t_7);
   goto __pyx_L0;
 
-  /* "brokenml1.pyx":214
+  /* "brokenml1.pyx":213
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cdef double vec_distance( np.ndarray[double, ndim=1] vec1,             # <<<<<<<<<<<<<<

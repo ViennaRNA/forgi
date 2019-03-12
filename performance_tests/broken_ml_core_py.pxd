@@ -14,3 +14,5 @@ cdef extern from "broken_ml_core.h":
                     Vect s_twist,
                     double r1, double u1, double v1,
                     double u, double v, double t)
+
+    void testdot()

@@ -137,7 +137,6 @@ cdef _get_broken_ml_dev_core(np.ndarray[double, ndim=1] fixed_s_pos,
                              np.ndarray[double, ndim=1] orig_twist,
                              np.ndarray[double, ndim=1] s_twist,
                              np.ndarray[double, ndim=1] virtual_stat):
-
     cdef np.ndarray[double, ndim=2] fixed_stem_basis = create_orthonormal_basis(fixed_s_vec, s_twist)
     cdef np.ndarray[double, ndim=2] transposed_stem1_basis = fixed_stem_basis.transpose()
 

@@ -8,9 +8,11 @@ cimport numpy as np
 from libcpp.vector cimport vector
 
 
-from broken_ml_core_py cimport Vect, _get_broken_ml_dev_core
+from broken_ml_core_py cimport Vect, _get_broken_ml_dev_core, testdot
 
-
+def testdot1():
+    testdot()
+    
 def get_orig_coords(cg, broken_ml_name, fixed_stem_name):
     s1, s2 = cg.edges[broken_ml_name]
     if s1 == fixed_stem_name:
@@ -50,6 +52,6 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
                 Vect(orig_coords1[0], orig_coords1[1], orig_coords1[2]),
                 Vect(orig_twist[0], orig_twist[1], orig_twist[2]),
                 Vect(s_twist[0], s_twist[1], s_twist[2]),
-                                   virtual_stat.r1, virtual_stat.u1, virtual_stat.v1,
-                                   virtual_stat.u, virtual_stat.v, virtual_stat.t)
+                virtual_stat.r1, virtual_stat.u1, virtual_stat.v1,
+                virtual_stat.u, virtual_stat.v, virtual_stat.t)
     return a.x, a.y, a.z
