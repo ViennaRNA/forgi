@@ -17,7 +17,12 @@ Full documentation: https://viennarna.github.io/forgi
 Citing
 ======
 
-See the file CREDITS
+If your use of forgi results in an academic publication, please cite:
+
+Thiel BC, Beckmann IK, Kerpedjiev P and Hofacker IL. 3D based on 2D: Calculating helix angles and stacking patterns using forgi 2.0, an RNA Python library centered on secondary structure elements. [version 1; referees: awaiting peer review]. *F1000Research* 2019, **8**:287
+(https://doi.org/10.12688/f1000research.18458.1) 
+
+For the pseudoknot-removal code and external PDB annotation tools, see the citations therein.
 
 Locally build the documentation 
 ===============================
