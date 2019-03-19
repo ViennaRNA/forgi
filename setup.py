@@ -18,9 +18,12 @@ def try_cythonize(arg):
     import numpy
     try:
       from Cython.Build import cythonize
-      return cythonize([Extension("", [arg+".pyx"], include_dirs=[numpy.get_include()])])
+      return cythonize([Extension(arg.split("/")[-1], [arg+".pyx"], extra_compile_args=['-O3', "-std=c++11"],
+                                  language='c++', include_dirs=[numpy.get_include()])])
     except Exception as e:
-      return [Extension("", [arg+".c"], include_dirs=[numpy.get_include()])]
+      return [Extension(arg, [arg+".cpp"], extra_compile_args=['-O3', "-std=c++11"],
+                        include_dirs=[numpy.get_include()],
+                        language="c++")]
   except Exception as e:
     return []
 
@@ -90,7 +93,7 @@ setup_args = {
       "author_email":'thiel@tbi.univie.ac.at',
       "license":'GNU GPL 3.0',
       "url":'http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      "ext_modules": try_cythonize("forgi/threedee/utilities/cytvec"), 
+      "ext_modules": try_cythonize("forgi/threedee/utilities/cytvec"),
       "packages":['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
@@ -150,4 +153,3 @@ except BuildFailed as ex:
     del setup_args["ext_modules"]
     setup(**setup_args)
     log.info("Installed forgi without faster compiled C-code.")
-

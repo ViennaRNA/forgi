@@ -1,52 +1,18 @@
 # cython: profile=True
 # distutils: language = c++
-# distutils: sources = forgi/threedee/utilities/broken_ml_core.cpp
+# distutils: sources = broken_ml_core.cpp
 
 import numpy as np
 cimport cython
 cimport numpy as np
-from libc.math cimport sqrt, cos, sin, acos
 from libcpp.vector cimport vector
 
 
-from forgi.threedee.utilities.broken_ml_core_py cimport Vect, _get_broken_ml_dev_core, testdot
+from broken_ml_core_py cimport Vect, _get_broken_ml_dev_core, testdot
 
-@cython.boundscheck(False)
-@cython.wraparound(False)  # turn off negative index wrapping for entire function
-cdef double magnitude(double [:] vec) except -1:
-    return sqrt(vec[0]*vec[0]+vec[1]*vec[1]+vec[2]*vec[2])
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)  # turn off negative index wrapping for entire function
-cpdef np.ndarray[double, ndim=2] create_orthonormal_basis(
-                             double[:] vec1,
-                             double[:] vec2): # Optimized
-    cdef double ma, mb, mc
-    cdef double ax,ay,az,bx,by,bz
-    ma =magnitude(vec1)
-    mb =magnitude(vec2)
-    ax=vec1[0]/ma
-    ay=vec1[1]/ma
-    az=vec1[2]/ma
-    bx=vec2[0]/mb
-    by=vec2[1]/mb
-    bz=vec2[2]/mb
-
-    cdef np.ndarray[double, ndim=2] out = np.zeros((3,3))
-    out[0,0]=ax
-    out[0,1]=ay
-    out[0,2]=az
-    out[1,0]=bx
-    out[1,1]=by
-    out[1,2]=bz
-    out[2,0]=ay*bz-az*by
-    out[2,1]=az*bx-ax*bz
-    out[2,2]=ax*by-ay*bx
-    return out
-
-
-
+def testdot1():
+    testdot()
+    
 def get_orig_coords(cg, broken_ml_name, fixed_stem_name):
     s1, s2 = cg.edges[broken_ml_name]
     if s1 == fixed_stem_name:
