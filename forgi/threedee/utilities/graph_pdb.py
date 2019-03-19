@@ -896,6 +896,7 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
 
     # the basis vectors for the helix along which the
     # virtual residues will residue
+    # TODO: Use create_orthonormal_basis for speedup
     u = twists[0]
     v = cuv.normalize(np.cross(stem_vec, twists[0]))
 
@@ -1161,6 +1162,7 @@ def _add_loop_virtual_residues(cg, element):
 
 
 def _add_stem_virtual_residues(bg, stem):
+    # TODO: Refactor virtual_res_3d_pos such that it can be called only once per stem
     stem_vec = bg.coords.get_direction(stem)
     twist_vec = bg.get_twists(stem)[0]
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):

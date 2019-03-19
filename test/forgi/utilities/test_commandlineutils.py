@@ -83,3 +83,14 @@ class TestCommanldineUtils(unittest.TestCase):
     def test_sniff_malformed_file(self):
         file = StringIO("\n>fasta header\nAAAGGGCCC\n.........")
         self.assertEqual(fuc.sniff_filetype(file), "fasta")
+
+    @unittest.skip("Requires ViennaRNApackage")
+    def test_with_missing_refolded(self):
+        bg, = fuc.load_rna("test/forgi/threedee/data/1FJG_reduced.pdb")
+        db = bg.to_dotbracket_string(include_missing=True)
+        self.assertIn("-", db)
+        cg2 = fuc.with_missing_refolded(bg)
+        db2 = cg2.to_dotbracket_string()
+        self.assertEqual(len(db2), 207)
+        self.assertNotIn("-", db2)
+        self.assertEqual(db2, ".........((((.........))))...................................(((..((.((((((((((.....)))))))))).)))))......................................(((((....((((((....)))))).....))))).........(((((....)))))...........")
