@@ -29,6 +29,10 @@ class WrongChain(LookupError):
 
 
 def dssr_to_pdb_resid(dssr_resid):
+    if ":" in dssr_resid:
+        model, dssr_resid = dssr_resid.split(":")
+        if model != "1":
+            return None
     if '.' in dssr_resid:
         chain, _, resid = dssr_resid.partition(".")
     else:
@@ -111,6 +115,8 @@ class DSSRAnnotation(object):
         for pair in self._dssr["pairs"]:
             nt1 = dssr_to_pdb_resid(pair["nt1"])
             nt2 = dssr_to_pdb_resid(pair["nt2"])
+            if nt1 is None or nt2 is None:
+                continue
             bp_type = pair["LW"]
             try:
                 s1 = self._cg.seq.with_missing[nt1]
@@ -134,6 +140,29 @@ class DSSRAnnotation(object):
                 except ValueError:
                     pass
 
+    def stacking_nts(self):
+        """
+        What nucleotides stack according to DSSR
+
+        :returns: A list of tuples of stacking nts.
+        """
+        if "stacks" not in self._dssr:
+            return []
+        out = []
+        for stack in self._dssr["stacks"]:
+            nts = stack["nts_long"].split(",")
+            resids = []
+            for nt in nts:
+                resid = dssr_to_pdb_resid(nt)
+                if resid is None:
+                    continue
+                resids.append(resid)
+            for i, resid in enumerate(resids):
+                try:
+                    out.append((resid, resids[i+1]))
+                except IndexError:
+                    pass
+        return out
 
     def coaxial_stacks(self):
         """
@@ -177,6 +206,8 @@ class DSSRAnnotation(object):
         for pair in stem_obj["pairs"]:
             res1 = dssr_to_pdb_resid(pair["nt1"])
             res2 = dssr_to_pdb_resid(pair["nt2"])
+            if res1 is None or res2 is None:
+                continue
             log.debug("Contains pair %s-%s", res1, res2)
             if self._cg.chains and (res1.chain not in self._cg.chains or res2.chain not in self._cg.chains):
                 e = WrongChain()
@@ -286,6 +317,8 @@ class DSSRAnnotation(object):
                 nts_dssrstack = []
                 for nt in stack["nts_long"].split(","):
                     nt = dssr_to_pdb_resid(nt)
+                    if nt is None:
+                        continue
                     nts_dssrstack.append(nt)
                 if any(nt in nts_dssrstack for nt in helix1) and any(nt in nts_dssrstack for nt in helix2):
                     log.debug("elem %s is stacking ", loop)
@@ -308,6 +341,8 @@ class DSSRAnnotation(object):
             for pair in stem["pairs"]:
                 nt1 = dssr_to_pdb_resid(pair["nt1"])
                 nt2 = dssr_to_pdb_resid(pair["nt2"])
+                if nt1 is None or nt2 is None:
+                    continue
                 if forgi_chain is None or nt1[0] == forgi_chain:
                     dssr_helices[-1].add(nt1)
                 if forgi_chain is None or nt2[0] == forgi_chain:
@@ -318,7 +353,7 @@ class DSSRAnnotation(object):
             dssr_helices.append(set())
             for nt in stack["nts_long"].split(","):
                 nt1 = dssr_to_pdb_resid(nt)
-                if forgi_chain is None or nt1[0] == forgi_chain:
+                if nt1 is not None and forgi_chain is None or nt1[0] == forgi_chain:
                     dssr_helices[-1].add(nt1)
             if not dssr_helices[-1]:
                 del dssr_helices[-1]
