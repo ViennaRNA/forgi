@@ -1028,7 +1028,8 @@ class BulgeGraph(BaseGraph):
         """
         if isinstance(position, RESID):
             position = self.seq.to_integer(position)
-
+        if not isinstance(position, int):
+            raise TypeError("Wrong type of position %s, not int or RESID but %s", position, type(position).__name__)
         if position not in self._node_to_resnum:
             self._node_to_resnum[position] = super(
                 BulgeGraph, self).get_node_from_residue_num(position)
