@@ -11,6 +11,7 @@ import collections as col
 import os.path as op
 import warnings
 import random
+import numbers
 import sys
 import math
 import json
@@ -815,7 +816,8 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     plt.show()
     #assert False
 
-
+'''
+# TODO: Incomplete. Refactor this out ouf virtual_res_3d_pos_core
 def total_helix_rotation(coords, twists, stem_len):
     """
     Calculate the total rotation of the helix in radians from the twists.
@@ -837,7 +839,7 @@ def total_helix_rotation(coords, twists, stem_len):
     average_ang_per_nt = 0.636738030735
     expected_total_ang = (stem_len - 1) * average_ang_per_nt
     expected_twist_ang = expected_total_ang % (2 * math.pi)
-
+'''
 
 def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     '''
@@ -846,19 +848,15 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     The virtual position extrapolates the position of the residues based
     on the twists of the helix.
 
+    :param i: The nucleotide number or a list of nt numbers.
     :return: A tuple containing the point located on the axis of the stem
              and a vector away from that point in the direction of the
              residue.
+             Or, if i is a list, return a list of tuples.
     '''
-    #stem_len = bg.defines[stem][1] - bg.defines[stem][0] + 1
+    log.debug("virtual_res_3d_pos_core called with %s, %s, %s, %s, %s",
+                coords, twists, i, stem_len, stem_inv)
     stem_vec = coords[1] - coords[0]
-
-    # the position of the virtual residue along the axis of
-    # the stem
-    if stem_len == 1:
-        vres_stem_pos = coords[0]
-    else:
-        vres_stem_pos = coords[0] + (i / float(stem_len - 1)) * stem_vec
 
     # the angle of the second twist with respect to the first
     if stem_inv is None:
@@ -884,15 +882,9 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
         backward = 2 * math.pi + expected_dev - ang
 
     if forward < backward:
-        ang = expected_ang + forward
+        total_ang = expected_ang + forward
     else:
-        ang = expected_ang - backward
-
-    if stem_len == 1:
-        ang = 0.
-    else:
-        ang_per_nt = ang / float(stem_len - 1)
-        ang = ang_per_nt * i
+        total_ang = expected_ang - backward
 
     # the basis vectors for the helix along which the
     # virtual residues will residue
@@ -901,11 +893,39 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     v = cuv.normalize(np.cross(stem_vec, twists[0]))
 
     ang_offset = 0.9
-    # equation for a circle in 3-space
-    return (vres_stem_pos,
-            u * math.cos(ang) + v * math.sin(ang),
-            u * math.cos(ang + ang_offset) + v * math.sin(ang + ang_offset),
-            u * math.cos(ang - ang_offset) + v * math.sin(ang - ang_offset))
+
+    if isinstance(i, numbers.Number):
+        ret_list = False
+        i=[i]
+    else:
+        ret_list = True
+
+    outlist=[]
+    for j in i:
+        if stem_len == 1:
+            ang = 0.
+        else:
+            ang_per_nt = total_ang / float(stem_len - 1)
+            ang = ang_per_nt * j
+
+        # the position of the virtual residue along the axis of
+        # the stem
+        if stem_len == 1:
+            vres_stem_pos = coords[0]
+        else:
+            vres_stem_pos = coords[0] + (j / float(stem_len - 1)) * stem_vec
+
+        vpos_tuple = (vres_stem_pos,
+                u * math.cos(ang) + v * math.sin(ang),
+                u * math.cos(ang + ang_offset) + v * math.sin(ang + ang_offset),
+                u * math.cos(ang - ang_offset) + v * math.sin(ang - ang_offset))
+
+        outlist.append(vpos_tuple)
+
+    if not ret_list:
+        assert len(outlist)==1
+        return outlist[0]
+    return outlist
 
 
 def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
@@ -1173,11 +1193,12 @@ def _add_stem_virtual_residues(bg, stem):
         bg.bases[stem] = stem_basis
         bg.stem_invs[stem] = stem_inv
 
-    for i in range(bg.stem_length(stem)):
-        vpos = virtual_res_3d_pos(bg, stem, i, stem_inv=stem_inv)
+    list_of_is = list( range(bg.stem_length(stem)))
+    vposlist = virtual_res_3d_pos(bg, stem, list_of_is, stem_inv=stem_inv)
+    for i in list_of_is:
+        vpos = vposlist[i]
         vbasis = virtual_res_basis(bg, stem, i, vec=vpos[1])
         vinv = nl.inv(vbasis.transpose())
-
         bg.vposs[stem][i] = vpos[0]
         bg.vvecs[stem][i] = vpos[1]
         bg.v3dposs[stem][i] = vpos
