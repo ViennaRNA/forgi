@@ -372,7 +372,29 @@ def db_to_constraint(dbstri):
     This means that unpaired nucleotides are forced unpaired and missing
     residues are free to form basepairs.
     """
-    return dbstri.replace(".", "x").replace("-",".")
+    dbstri = dbstri.replace(".", "x").replace("-",".")
+    return ''.join( "x" if c not in "()." else c for c in dbstri )
+
+def insert_pk_into_stru(refolded, with_pk):
+    """
+    Replaces '.' characters in refolded with pkseudoknots from with_pk where possible.
+
+    :param with_pk: A dotbracket string, possibly with '-' characters
+    :param refolded: The same dbstring as with_pk, but without pseudoknots and with '-' replaced by one of '().
+    """
+    out=[]
+    for i,c in refolded:
+        if c != with_pk[i]:
+            if c==".":
+                if with_pk[i]=="-":
+                    out.append(c)
+                else:
+                    out.append(with_pk[i])
+            else:
+                assert with_pk[i]=="-"
+        else:
+            out.append(c)
+    return "".join(out)
 
 def with_missing_refolded(cg):
     """
@@ -381,8 +403,6 @@ def with_missing_refolded(cg):
     Uses RNAfold
     """
     domains = cg.get_domains()
-    if domains["pseudoknots"]:
-        raise ValueError("Cannot refold missing residues for pseudoknotted structures")
     fasta_lines = cg.to_fasta_string(include_missing=True).splitlines()
     assert len(fasta_lines)==3
     constraint = db_to_constraint(fasta_lines[2])
@@ -393,12 +413,14 @@ def with_missing_refolded(cg):
     fc = RNA.fold_compound(fasta_lines[1], RNA.md())
     fc.hc_add_from_db(constraint)
     stru, energy = fc.mfe()
+
+    stru=insert_pk_into_stru(stru, fasta_lines[2])
     log.info("Energy of constraint secondary structyure is %s", energy)
     new_fasta="\n".join([fasta_lines[0], fasta_lines[1], stru])
     new_cg, = ftmc.CoarseGrainRNA.from_fasta_text(new_fasta)
     new_cg._seq = fgs.missing_to_normal(cg.seq)
     # TODO: Copy coordinates, but take potentially changed 2D structure into account.
-    
+
     #new_cg.sampled = copy.deepcopy(cg.sampled)
     #new_cg.longrange = copy.deepcopy(cg.longrange)
     #new_cg.interacting_residues = copy.deepcopy(cg.interacting_residues)
