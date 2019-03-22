@@ -383,7 +383,7 @@ def insert_pk_into_stru(refolded, with_pk):
     :param refolded: The same dbstring as with_pk, but without pseudoknots and with '-' replaced by one of '().
     """
     out=[]
-    for i,c in refolded:
+    for i,c in enumerate(refolded):
         if c != with_pk[i]:
             if c==".":
                 if with_pk[i]=="-":
@@ -392,6 +392,7 @@ def insert_pk_into_stru(refolded, with_pk):
                     out.append(with_pk[i])
             else:
                 assert with_pk[i]=="-"
+                out.append(c)
         else:
             out.append(c)
     return "".join(out)
