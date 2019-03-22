@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 
 
 def get_parser():
-    parser = fuc.get_rna_input_parser("Compare two RNA 3d structures based on RMSD, ACC"
-                                      " or other measures", 2, "3d", enable_logging=True)
+    parser = fuc.get_rna_input_parser("Compare RNA 3d structures based on RMSD, ACC"
+                                      " or other measures. If more than 2 filenames are given, compare all files to the first.", "+", "3d", enable_logging=True)
     output_group = parser.add_argument_group("Controlling output",
                                              description="Control, based on which measure the two "
                                              "structures will be compared")
@@ -30,32 +30,35 @@ def get_parser():
 
 def main(args):
     with fuc.hide_traceback():
-        cg1, cg2 = fuc.cgs_from_args(
+        cgs = fuc.cgs_from_args(
             args, rna_type="3d", enable_logging=True)
 
+        if len(cgs)<2:
+            raise ValueError("At least 2 RNA structures required for comparison")
+        cg1=cgs[0]
         if not (args.acc or args.rmsd or args.pdb_rmsd):
             showall = True
         else:
             showall = False
-        if showall or args.acc:
-            if cg1.defines != cg2.defines:
-                if args.acc:
-                    print(
-                       "Cannot compare two 3d structures that do not correspond to the same RNA.")
-                    sys.exit(1)
-            else:
-                adj = ftms.AdjacencyCorrelation(cg1)
-                print("ACC:\t{:.3f}".format(ftms.mcc(adj.evaluate(cg2))))
-        if showall or args.rmsd:
-            print("RMSD:\t{:.3f}".format(ftms.cg_rmsd(cg1, cg2)))
-        if showall or args.pdb_rmsd:
-            if not pdb_rmsd(cg1, cg2):
-                # If --pdb-rmsd was not given, just don't print it.
-                # If it was given, we exit with non-zero exit status.
-                if args.pdb_rmsd:
-                    print(
-                        "Cannot calculate PDB-RMSD: The two files do not contain the same chains.")
-                    sys.exit(1)
+        for cg2 in cgs[1:]:
+            if showall or args.acc:
+                if cg1.defines != cg2.defines:
+                    if args.acc:
+                        print(
+                           "Cannot compare two 3d structures that do not correspond to the same RNA.")
+                        sys.exit(1)
+                else:
+                    adj = ftms.AdjacencyCorrelation(cg1)
+                    print("ACC:\t{:.3f}".format(ftms.mcc(adj.evaluate(cg2))))
+            if showall or args.rmsd:
+                print("RMSD:\t{:.3f}".format(ftms.cg_rmsd(cg1, cg2)))
+            if showall or args.pdb_rmsd:
+                if not pdb_rmsd(cg1, cg2):
+                    # If --pdb-rmsd was not given, just don't print it.
+                    # If it was given, we exit with non-zero exit status.
+                    if args.pdb_rmsd:
+                        print("Cannot calculate PDB-RMSD: "
+                              "The two files do not contain the same chains.")
 
 def pdb_rmsd(cg1, cg2):
     if len(cg1.chains)==1==len(cg2.chains):
