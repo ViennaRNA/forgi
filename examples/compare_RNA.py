@@ -57,7 +57,7 @@ def main(args):
             if showall or args.stem_rmsd:
                 try:
                     print("Stem:\t{:.3f}".format(ftms.cg_stem_rmsd(cg1, cg2)))
-                except ftus.Incompareable:
+                except ftms.Incompareable:
                     if args.stem_rmsd:
                         raise
                     # Otherwise do nothing
