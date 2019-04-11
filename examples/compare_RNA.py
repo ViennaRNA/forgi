@@ -24,6 +24,8 @@ def get_parser():
     output_group.add_argument(
         "--rmsd", help="Compare based on CG-RMSD", action="store_true")
     output_group.add_argument(
+        "--stem-rmsd", help="Compare based on coarse grained stem RMSD", action="store_true")
+    output_group.add_argument(
         "--pdb-rmsd", help="Compare based on PDB-RMSD", action="store_true")
     return parser
 
@@ -52,6 +54,13 @@ def main(args):
                     print("ACC:\t{:.3f}".format(ftms.mcc(adj.evaluate(cg2))))
             if showall or args.rmsd:
                 print("RMSD:\t{:.3f}".format(ftms.cg_rmsd(cg1, cg2)))
+            if showall or args.stem_rmsd:
+                try:
+                    print("Stem:\t{:.3f}".format(ftms.cg_stem_rmsd(cg1, cg2)))
+                except ftus.Incompareable:
+                    if args.stem_rmsd:
+                        raise
+                    # Otherwise do nothing
             if showall or args.pdb_rmsd:
                 if not pdb_rmsd(cg1, cg2):
                     # If --pdb-rmsd was not given, just don't print it.
