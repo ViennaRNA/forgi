@@ -16,6 +16,18 @@ from forgi.threedee.utilities.broken_ml_core_py cimport Vect, _get_broken_ml_dev
 cdef double magnitude(double [:] vec) except -1:
     return sqrt(vec[0]*vec[0]+vec[1]*vec[1]+vec[2]*vec[2])
 
+@cython.boundscheck(False)
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+cpdef np.ndarray[double, ndim=2] transposed_inverted(
+                             np.ndarray[double, ndim=2] b):
+    cdef double det = ( b[0,0]*(b[1,1]*b[2,2]-b[1,2]*b[2,1])
+                      - b[0,1]*(b[1,0]*b[2,2]-b[1,2]*b[2,0])
+                      + b[0,2]*(b[1,0]*b[2,1]-b[1,1]*b[2,0]))
+    return np.array([
+                        [(b[1,1]*b[2,2]-b[1,2]*b[2,1])/det, -(b[1,0]*b[2,2]-b[2,0]*b[1,2])/det, (b[1,0]*b[2,1]-b[2,0]*b[1,1])/det],
+                        [-(b[0,1]*b[2,2]-b[2,1]*b[0,2])/det, (b[0,0]*b[2,2]-b[2,0]*b[0,2])/det, -(b[0,0]*b[2,1]-b[2,0]*b[0,1])/det],
+                        [ (b[0,1]*b[1,2]-b[1,1]*b[0,2])/det, -(b[0,0]*b[1,2]-b[1,0]*b[0,2])/det, (b[0,0]*b[1,1]-b[1,0]*b[0,1])/det]
+                    ])
 
 @cython.boundscheck(False)
 @cython.wraparound(False)  # turn off negative index wrapping for entire function

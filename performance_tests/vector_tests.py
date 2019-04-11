@@ -2,17 +2,37 @@ from __future__ import print_function
 from orthonormal_test import create_orthonormal_basis, create_orthonormal_basis2
 import numpy as np
 from forgi.threedee.utilities.vector import magnitude
+import forgi.threedee.utilities.vector as ftuv
 import forgi
 import cpp_vect, brokenml1
 import sys
-
+from cppvect import transposed_inverted
 def create_orthonormal_basis_numpy(vec1, vec2):
     vec3 = np.cross(vec1, vec2)
     assert abs(magnitude(vec3)-1)<10**-10, magnitude(vec3)
     return np.array([vec1,vec2,vec3])
 
 
+
+
 if __name__ == "__main__":
+    print("=====  test inv ========")
+    a=np.random.rand(3);
+    a=a/ftuv.magnitude(a)
+    b=ftuv.get_orthogonal_unit_vector(a)
+    basis = ftuv.create_orthonormal_basis(a,b)
+    print(np.linalg.inv(basis.T))
+    print(transposed_inverted(basis))
+    assert np.all(np.linalg.inv(basis.T)-transposed_inverted(basis)  < 10**-8)
+    from timeit import timeit
+    setup = ("import numpy as np; import forgi.threedee.utilities.vector as ftuv;"
+             "a=np.random.rand(3); a=a/ftuv.magnitude(a);"
+             "b=ftuv.get_orthogonal_unit_vector(a);"
+             "basis = ftuv.create_orthonormal_basis(a,b);"
+             "from cppvect import transposed_inverted;")
+    t_cyt =  timeit("transposed_inverted(basis)", setup=setup)
+    t_np  =  timeit("np.linalg.inv(basis.T)", setup=setup)
+    print("cyt, np", t_cyt, t_np)
     print("====== testdot =========")
     print("Basis dot product")
     a=np.array([[1.,2,3],[4.,5,6],[7.,8,9]])
@@ -38,7 +58,7 @@ if __name__ == "__main__":
     print(a,b)
     assert a==b
     print("TIMINGS")
-    
+
     from timeit import timeit
     setup = ("import numpy as np; import forgi.threedee.utilities.vector as ftuv;"
              " a=np.random.rand(3); a=a/ftuv.magnitude(a);"

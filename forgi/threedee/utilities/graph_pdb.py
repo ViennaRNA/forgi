@@ -1189,7 +1189,12 @@ def _add_stem_virtual_residues(bg, stem):
         stem_inv = bg.stem_invs[stem]
     else:
         stem_basis = cuv.create_orthonormal_basis(stem_vec, twist_vec)
-        stem_inv = nl.inv(stem_basis.transpose())
+        try:
+            from . import cytvec
+        except ImportError as e:
+            stem_inv = nl.inv(stem_basis.transpose())
+        else:
+            stem_inv = cytvec.transposed_inverted(stem_basis)
         bg.bases[stem] = stem_basis
         bg.stem_invs[stem] = stem_inv
 
