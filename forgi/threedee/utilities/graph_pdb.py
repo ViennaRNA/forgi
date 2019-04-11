@@ -961,6 +961,7 @@ def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
 
 
 def virtual_res_basis(bg, stem, i, vec=None):
+
     return virtual_res_basis_core(bg.coords[stem], bg.twists[stem], i,
                                   bg.stem_length(stem), vec)
 
