@@ -961,6 +961,7 @@ def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
 
 
 def virtual_res_basis(bg, stem, i, vec=None):
+
     return virtual_res_basis_core(bg.coords[stem], bg.twists[stem], i,
                                   bg.stem_length(stem), vec)
 
@@ -1182,7 +1183,6 @@ def _add_loop_virtual_residues(cg, element):
 
 
 def _add_stem_virtual_residues(bg, stem):
-    # TODO: Refactor virtual_res_3d_pos such that it can be called only once per stem
     stem_vec = bg.coords.get_direction(stem)
     twist_vec = bg.get_twists(stem)[0]
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):

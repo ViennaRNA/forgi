@@ -168,6 +168,11 @@ def optimal_superposition(crds1, crds2):
         raise ValueError("Wrong dimension of crds1. Needs to be an array of "
                          "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
 
+def cg_stem_rmsd(cg1, cg2):
+    coords1 = cg1.get_ordered_stem_poss()
+    coords2 = cg2.get_ordered_stem_poss()
+    return rmsd(coords1, coords2)
+
 
 def cg_rmsd(cg1, cg2):
     '''

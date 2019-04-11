@@ -450,7 +450,7 @@ class BulgeGraph(BaseGraph):
             return "".join(output_str).strip()
 
     def to_neato_string(self):
-
+        self.traverse_graph()
         # The different nodes for different types of bulges
         node_lines = dict()
 
@@ -470,8 +470,12 @@ class BulgeGraph(BaseGraph):
                 out.append(
                     '\t{node [style=filled,shape=circle,fillcolor="#FFF2AE",fontsize=%d' % (fontsize))
             elif key2[0] == 'm':
+                if key2 in self.mst:
+                    c="#FF9090"
+                else:
+                    c="#F4CAE4"
                 out.append(
-                    '\t{node [style=filled,shape=circle,fillcolor="#F4CAE4",fontsize=%d' % (fontsize))
+                    '\t{{node [style=filled,shape=circle,fillcolor="{}",fontsize={}'.format(c, fontsize))
             elif key2[0] == 'f':
                 out.append(
                     '\t{node [style=filled,shape=circle,fillcolor="#FDCDAC",fontsize=%d' % (fontsize))

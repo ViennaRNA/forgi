@@ -187,7 +187,9 @@ def main(args):
 
         pdb_fns = []
         selections = ""
+        group_selections=""
         for i, rna in enumerate(rnas):
+            sel_names=[]
             if rna.chains:
                 obj_name = "pdb{}_{}".format(i, rna.name.replace("-", "_"))
                 fn = os.path.join(tmpdir, obj_name + ".cif")
@@ -202,8 +204,10 @@ def main(args):
                         for c in chains:
                             sel.append("( %{} and chain {} and resi {}) ".format(
                                 obj_name, c, "+".join(map(str, (r.resid[1] for r in resids)))))
-                        selections += "select {}, ".format(
-                            d + "_" + obj_name) + " or ".join(sel) + "\n"
+                        sel_name = d + "_" + obj_name
+                        selections += "select {}, {}\n".format(sel_name, " or ".join(sel))
+                        sel_names.append(sel_name)
+                group_selections+=("cmd.group('sel_{}', '{}')\n".format(obj_name, " ".join(sel_names)))
 
         pymol_cmd = 'hide all\n'
         pymol_cmd += 'show cartoon, all\n'
@@ -224,6 +228,8 @@ def main(args):
         pymol_cmd += 'clip slab, 10000\n'
         #pymol_cmd += 'orient\n'
         pymol_cmd += selections
+        pymol_cmd += group_selections
+
         if args.output is not None:
             pymol_cmd += 'ray\n'
             pymol_cmd += 'png %s\n' % (args.output)
