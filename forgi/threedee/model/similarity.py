@@ -171,7 +171,7 @@ def optimal_superposition(crds1, crds2):
 def cg_stem_rmsd(cg1, cg2):
     coords1 = cg1.get_ordered_stem_poss()
     coords2 = cg2.get_ordered_stem_poss()
-    return rmsd(residues1, residues2)
+    return rmsd(coords1, coords2)
 
 
 def cg_rmsd(cg1, cg2):
