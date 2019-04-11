@@ -38,7 +38,7 @@ def main(args):
         if len(cgs)<2:
             raise ValueError("At least 2 RNA structures required for comparison")
         cg1=cgs[0]
-        if not (args.acc or args.rmsd or args.pdb_rmsd):
+        if not (args.acc or args.rmsd or args.pdb_rmsd or args.stem_rmsd):
             showall = True
         else:
             showall = False
