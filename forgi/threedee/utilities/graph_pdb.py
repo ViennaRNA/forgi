@@ -43,6 +43,16 @@ from forgi.utilities.exceptions import CgConstructionError
 from forgi.threedee.utilities.pdb import AtomName
 log = logging.getLogger(__name__)
 
+try:
+    from . import cytvec
+except ImportError as e:
+    def transposed_inverted(basis):
+        return nl.inv(basis.transpose())
+else:
+    transposed_inverted = cytvec.transposed_inverted
+
+
+
 REFERENCE_CATOM = AtomName("C1'")
 
 
@@ -1189,12 +1199,7 @@ def _add_stem_virtual_residues(bg, stem):
         stem_inv = bg.stem_invs[stem]
     else:
         stem_basis = cuv.create_orthonormal_basis(stem_vec, twist_vec)
-        try:
-            from . import cytvec
-        except ImportError as e:
-            stem_inv = nl.inv(stem_basis.transpose())
-        else:
-            stem_inv = cytvec.transposed_inverted(stem_basis)
+        stem_inv = transposed_inverted(stem_basis)
         bg.bases[stem] = stem_basis
         bg.stem_invs[stem] = stem_inv
 
@@ -1203,7 +1208,7 @@ def _add_stem_virtual_residues(bg, stem):
     for i in list_of_is:
         vpos = vposlist[i]
         vbasis = virtual_res_basis(bg, stem, i, vec=vpos[1])
-        vinv = nl.inv(vbasis.transpose())
+        vinv = transposed_inverted(vbasis)
         bg.vposs[stem][i] = vpos[0]
         bg.vvecs[stem][i] = vpos[1]
         bg.v3dposs[stem][i] = vpos
