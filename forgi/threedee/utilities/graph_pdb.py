@@ -43,13 +43,6 @@ from forgi.utilities.exceptions import CgConstructionError
 from forgi.threedee.utilities.pdb import AtomName
 log = logging.getLogger(__name__)
 
-try:
-    from . import cytvec
-except ImportError as e:
-    def transposed_inverted(basis):
-        return nl.inv(basis.transpose())
-else:
-    transposed_inverted = cytvec.transposed_inverted
 
 
 
@@ -1193,6 +1186,14 @@ def _add_loop_virtual_residues(cg, element):
 
 
 def _add_stem_virtual_residues(bg, stem):
+    try:
+        from . import cytvec
+    except ImportError as e:
+        def transposed_inverted(basis):
+            return nl.inv(basis.transpose())
+    else:
+        transposed_inverted = cytvec.transposed_inverted
+
     stem_vec = bg.coords.get_direction(stem)
     twist_vec = bg.get_twists(stem)[0]
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):
