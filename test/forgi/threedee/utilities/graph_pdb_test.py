@@ -27,18 +27,32 @@ class TestBrokenMlDeviation(unittest.TestCase):
     def setUp(self):
         self.cg = ftmc.CoarseGrainRNA.from_bg_file(
             "test/forgi/threedee/data/1GID_A.cg")
+        self.cg2 = ftmc.CoarseGrainRNA.from_bg_file(
+            "test/forgi/threedee/data/1FIR_A.cg")
 
     def test_zero_deviation(self):
         # m2 is broken
-        stats = self.cg.get_stats("m2")
-        dev = ftug.get_broken_ml_deviation(self.cg, "m2", "s6", stats[0])
-        dev2 = ftug.get_broken_ml_deviation(self.cg, "m2", "s6", stats[1])
-        print(dev)
-        print(dev2)
-        self.assertLess(dev[0], 10**-3)
-        self.assertLess(dev[1], 10**-3)
-        self.assertLess(dev[2], 10**-3)
-
+        for cg in [self.cg, self.cg2]:
+            broken_ml="m2"
+            stats = cg.get_stats(broken_ml)
+            stems = cg.edges[broken_ml]
+            stem, _ = sorted(stems, key=cg.buildorder_of)
+            ang_type = cg.get_angle_type(broken_ml, allow_broken=True)
+            if stats[0].ang_type == ang_type:
+                good_stat = stats[0]
+                bad_stat = stats[1]
+            else:
+                assert stats[1].ang_type == ang_type
+                good_stat = stats[1]
+                bad_stat = stats[0]
+            dev  = ftug.get_broken_ml_deviation(cg, broken_ml, stem, good_stat)
+            dev2 = ftug.get_broken_ml_deviation(cg, broken_ml, stem, bad_stat)
+            print(cg.get_angle_type(broken_ml, allow_broken=True))
+            print(dev,  good_stat.ang_type)
+            print(dev2, bad_stat.ang_type)
+            self.assertLess(dev[0], 10**-6)
+            self.assertLess(dev[1], 10**-6)
+            self.assertLess(dev[2], 10**-6)
 
 class TestGraphPDB(unittest.TestCase):
     '''
