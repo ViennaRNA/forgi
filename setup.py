@@ -16,16 +16,16 @@ ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOErro
 def try_cythonize(arg):
   try:
     import numpy
-    try:
+  except Exception as e:
+    return []
+  try:
       from Cython.Build import cythonize
-      return cythonize([Extension(arg.split("/")[-1], [arg+".pyx"], extra_compile_args=['-O3', "-std=c++11"],
+      return cythonize([Extension(".".join(arg.split("/")), [arg+".pyx"], extra_compile_args=['-O3', "-std=c++11"],
                                   language='c++', include_dirs=[numpy.get_include()])])
-    except Exception as e:
+  except Exception as e:
       return [Extension(arg, [arg+".cpp"], extra_compile_args=['-O3', "-std=c++11"],
                         include_dirs=[numpy.get_include()],
                         language="c++")]
-  except Exception as e:
-    return []
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
