@@ -293,7 +293,7 @@ class AngleStat(object):
         return (self.r1, self.u1, self.v1)
 
     def __str__(self):
-        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s %s" % (self.stat_type,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %d %s %s %s" % (self.stat_type,
                                                                  self.pdb_name,
                                                                  self.dim1,
                                                                  self.dim2,

@@ -18,6 +18,7 @@ import logging
 
 import forgi.threedee.utilities.pdb as ftup
 import forgi.threedee.utilities.graph_pdb as ftug
+import forgi.threedee.model.stats as ftmstat
 #import forgi.threedee.utilities.average_stem_vres_atom_positions as cua
 import forgi.utilities.debug as fud
 import forgi.threedee.utilities.vector as cuv
@@ -34,6 +35,7 @@ NAMED_COLORS = {
     'forest':      [0.2, 0.6, 0.2],
     'blue':        [0.0, 0.0, 1.0],
     'red':         [1.0, 0.0, 0.0],
+    'light red':   [0.9, 0.6, 0.6],
     'orange':      [1., 165 / 255., 0.],
     'yellow':      [1.0, 1.0, 0.0],
     'purple':      [1.0, 0.0, 1.0],
@@ -214,6 +216,7 @@ class PyMolRNA(object):
 class PymolPrinter(object):
     def __init__(self):
         self.display_virtual_residues = False
+        self.plot_virtual_stems = False
         self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
@@ -241,8 +244,7 @@ class PymolPrinter(object):
         self.show_twists = True
         self.plotters = []
         self.show_bounding_boxes = False
-
-    def add_cg(self, cg, labels, color_modifier=1.0):
+    def add_cg(self, cg, labels, color_modifier=1.0, plot_core_bulge_graph=True):
         """
         :param labels: A dictionary with element names as keys
                        and labels as values.
@@ -261,7 +263,8 @@ class PymolPrinter(object):
                     text = labels[key]
                 except KeyError:
                     text = key
-                self.add_stem_like(rna_plotter, cg, text, key, color=color)
+                if plot_core_bulge_graph:
+                    self.add_stem_like(rna_plotter, cg, text, key, color=color)
                 if self.show_bounding_boxes:
                     self.draw_bounding_boxes(rna_plotter, cg, key)
             else:
@@ -271,9 +274,10 @@ class PymolPrinter(object):
                             text = labels[key]
                         except KeyError:
                             text = key + " " + str(cg.get_length(key))
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                                text,
-                                                key=key)
+                        if plot_core_bulge_graph:
+                            rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                                                    text,
+                                                    key=key)
                 elif key[0] == 'm':
                     twists = cg.get_twists(key)
                     try:
@@ -287,8 +291,27 @@ class PymolPrinter(object):
                             text = key + " " + \
                                 str(cg.defines[key][1] -
                                     cg.defines[key][0] + 1)
-                    rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                    if plot_core_bulge_graph:
+                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
                                             text, key=key)
+                    vstat_line = cg.infos["vstat_{}".format(key)]
+                    if self.plot_virtual_stems and key not in cg.get_mst() and vstat_line:
+                        log.info("Plotting virtual stem for %s", key)
+                        virtual_stat = ftmstat.AngleStat()
+                        vstat_line = vstat_line[0]
+                        print(vstat_line)
+                        virtual_stat.parse_line(vstat_line)
+                        stems= cg.edges[key]
+                        fixed_stem_name, _ = sorted(stems, key=cg.buildorder_of)
+                        vbulge_vec, vstem_coords0, vstem_vec = ftug._get_vstem_coords(cg, key, fixed_stem_name, virtual_stat)
+                        rna_plotter.add_segment(vstem_coords0, vstem_coords0+vstem_vec, self.plot_virtual_stems,
+                                                2*self.cylinder_width, "", key="")
+                        fixed_side = cg._get_sides_plus(fixed_stem_name, key)[1]
+                        rna_plotter.add_segment(cg.coords[key][fixed_side], vstem_coords0, self.plot_virtual_stems, 0.7*self.cylinder_width,
+                                                "", key="")
+                    else:
+                        log.info("NOT Plotting virtual stem for %s: %s, %s, %s", key, self.plot_virtual_stems, key not in cg.get_mst(), vstat_line )
+
                 elif key[0] in 'ft':
                     try:
                         text = labels[key]
@@ -297,24 +320,43 @@ class PymolPrinter(object):
                             str(cg.defines[key][1] - cg.defines[key][0] + 1)
 
                     if self.visualize_three_and_five_prime:
-                        rna_plotter.add_segment(p, n, color, self.cylinder_width,
-                                                text, key=key)
+                        if plot_core_bulge_graph:
+                            rna_plotter.add_segment(p, n, color, self.cylinder_width,
+                                                    text, key=key)
                 elif key[0] == "i":
                     try:
                         text = labels[key]
                     except KeyError:
                         text = key
-                    rna_plotter.add_segment(
-                        p, n, color, self.cylinder_width, text, key=key)
+                    if plot_core_bulge_graph:
+                        rna_plotter.add_segment(
+                                p, n, color, self.cylinder_width, text, key=key)
 
         if self.display_virtual_residues:
             for i in range(1, cg.seq_length + 1):
-                pos = cg.get_virtual_residue(i, True)
-                if cg.get_node_from_residue_num(i)[0] == "s":
-                    c = "cyan"
-                else:
-                    c = "magenta"
-                rna_plotter.add_sphere(pos, c, 1.)
+                elem =  cg.get_node_from_residue_num(i)
+                if not self.only_elements or elem in self.only_elements:
+                    try:
+                        c = self.element_specific_colors[elem]
+                    except (KeyError, TypeError):
+                        if elem[0] == "s":
+                            c = "cyan"
+                        else:
+                            c = "magenta"
+
+                    pos = cg.get_virtual_residue(i, True)
+                    if i>1 and (i-1) not in cg.backbone_breaks_after:
+                        prev_elem =  cg.get_node_from_residue_num(i-1)
+                        if elem not in cg.get_mst() or prev_elem not in cg.get_mst():
+                            w=0.05
+                        else:
+                            w=0.2
+                        rna_plotter.add_segment(cg.get_virtual_residue(i-1, True), pos, c, w)
+                    j=cg.pairing_partner(i)
+                    if j:
+                        rna_plotter.add_segment(cg.get_virtual_residue(j, True), pos, "gray", 0.3)
+                    rna_plotter.add_sphere(pos, c, 1.)
+
         if self.add_longrange:
             for key1 in cg.longrange.keys():
                 for key2 in cg.longrange[key1]:

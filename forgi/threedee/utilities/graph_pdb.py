@@ -470,6 +470,21 @@ def get_angle_stat_geometry(stem1_vec, twist1, stem2_vec, twist2, bulge_vec):
     return u, v, t, r1, u1, v1
 
 
+def _get_vstem_coords(cg, broken_ml_name, fixed_stem_name, virtual_stat):
+    sides = cg.get_sides(fixed_stem_name, broken_ml_name)
+    fixed_s_vec = cg.coords.get_direction(fixed_stem_name)
+    if sides[0] == 0:
+        fixed_s_vec = -fixed_s_vec
+    s_twist = cg.twists[fixed_stem_name][sides[0]]
+    fixed_stem_basis = ftuv.create_orthonormal_basis(fixed_s_vec, s_twist)
+    vbulge_vec, vstem_vec, vstem_twist = _virtual_stem_from_bulge(
+        fixed_stem_basis, virtual_stat)
+
+    vstem_vec *= 5
+    vstem_coords0 = cg.coords[fixed_stem_name][sides[0]] + vbulge_vec
+    vstem_coords1 = vstem_coords0 + vstem_vec
+    return vbulge_vec, vstem_coords0, vstem_vec
+
 @profile
 def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     """
@@ -510,18 +525,8 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
         raise ValueError("fixed stem {} is not attached to ml {} with "
                          "edges {}".format(fixed_stem_name, broken_ml_name, [s1, s2]))
 
-    sides = cg.get_sides(fixed_stem_name, broken_ml_name)
-    fixed_s_vec = cg.coords.get_direction(fixed_stem_name)
-    if sides[0] == 0:
-        fixed_s_vec = -fixed_s_vec
-    s_twist = cg.twists[fixed_stem_name][sides[0]]
-    fixed_stem_basis = ftuv.create_orthonormal_basis(fixed_s_vec, s_twist)
-    vbulge_vec, vstem_vec, vstem_twist = _virtual_stem_from_bulge(
-        fixed_stem_basis, virtual_stat)
-
-    vstem_vec *= 5
-    vstem_coords0 = cg.coords[fixed_stem_name][sides[0]] + vbulge_vec
-    vstem_coords1 = vstem_coords0 + vstem_vec
+    vbulge_vec, vstem_coords0, vstem_vec = _get_vstem_coords(cg, broken_ml_name, fixed_stem_name, virtual_stat)
+    vstem_coords1 = vstem_coords0+vstem_vec
 
     sides2 = cg.get_sides(orig_stem_name, broken_ml_name)
     orig_coords0 = cg.coords[orig_stem_name][sides2[0]]

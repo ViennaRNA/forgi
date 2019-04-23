@@ -703,10 +703,10 @@ class CoarseGrainRNA(fgb.BulgeGraph):
             for i in range(self.stem_length(elem)):
                 if self.defines[elem][0] + i == pos:
                     vres = self.v3dposs[elem][i]
-                    return vres[0] + vres[2] * mult
+                    return vres[0] + vres[3] * mult
                 elif self.defines[elem][3] - i == pos:
                     vres = self.v3dposs[elem][i]
-                    return vres[0] + vres[3] * mult
+                    return vres[0] + vres[2] * mult
             else:
                 assert False
         else:

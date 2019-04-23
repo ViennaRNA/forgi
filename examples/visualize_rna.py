@@ -35,6 +35,8 @@ def get_parser():
                         help='Display the virtual atoms')
     parser.add_argument('--virtual-residues', default=False,
                         action='store_true', help='Display the virtual residues as spheres')
+    parser.add_argument('--virtual-stems', default="",
+                        type=str, help='Display the virtual stems at broken MLS (in this color)')
     parser.add_argument('--only-elements', dest='only_elements', default=None,
                         help='Display only these elements, separated by commas')
     parser.add_argument('--no-loops', action="store_true",
@@ -77,6 +79,7 @@ def get_parser():
                         help='Start pymol in batch mode')
     parser.add_argument('--pymol-file', type=str,
                         help=argparse.SUPPRESS)  # Store the PYMOL file under this name. WARNING: Do not use .pml as file ending!!!
+    parser.add_argument('--only-first-bg', action="store_true", help=argparse.SUPPRESS)
 
     return parser
 
@@ -87,6 +90,7 @@ def pymol_printer_from_args(args):
         pp.cylinder_width = 0.5
         pp.show_twists = False
     pp.display_virtual_residues = args.virtual_residues
+    pp.plot_virtual_stems = args.virtual_stems
     pp.virtual_atoms = args.virtual_atoms
 
     if args.only_elements is not None:
@@ -172,9 +176,12 @@ def main(args):
 
     color_modifier = 1.0
     log.info("Visualizing {} rnas".format(len(rnas)))
+    plot_bg = True
     for rna in rnas:
-        pp.add_cg(rna, labels, color_modifier)
-        color_modifier *= 0.7
+        pp.add_cg(rna, labels, color_modifier, plot_bg)
+        if args.only_first_bg:
+            plot_bg=False
+        #color_modifier *= 0.7
 
     with make_temp_directory() as tmpdir:
         # The file describing the cg-structure as cylinders
@@ -218,10 +225,10 @@ def main(args):
 
             for constraint in args.only_elements.split(','):
                 color = pp.get_element_color(constraint)
-
-                for r in cg.define_residue_num_iterator(constraint, seq_ids=True):
-                    pymol_cmd += "show sticks, resi %r\n" % (r[1])
-                    pymol_cmd += "color %s, resi %r\n" % (color, r[1])
+                for i, rna in enumerate(rnas):
+                    for r in rna.define_residue_num_iterator(constraint, seq_ids=True):
+                        pymol_cmd += "show sticks, resi {}\n".format(r[1])
+                        pymol_cmd += "color {}, resi {}\n".format(color, r[1])
 
         pymol_cmd += 'run %s\n' % (stru_filename)
         pymol_cmd += 'bg white\n'
