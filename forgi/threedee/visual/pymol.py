@@ -125,12 +125,11 @@ class PyMolRNA(object):
         for seg in self.segments:
             (p, n, color, width, text, key) = seg
             color = pymol_color(color, self.color_modifier)
-
+            s += "\n# {}\n".format(key)
             s += " CYLINDER, %f, %f, %f, %f, %f, %f, " % (p[0], p[1], p[2],
                                                           n[0], n[1], n[2])
             s += "%f, %s, %s," % (width, ", ".join(color),
                                   ", ".join(color)) + '\n'
-            s += "\n# {}\n".format(key)
         return s
 
     def pymol_spheres_string(self):
@@ -305,10 +304,10 @@ class PymolPrinter(object):
                         fixed_stem_name, _ = sorted(stems, key=cg.buildorder_of)
                         vbulge_vec, vstem_coords0, vstem_vec = ftug._get_vstem_coords(cg, key, fixed_stem_name, virtual_stat)
                         rna_plotter.add_segment(vstem_coords0, vstem_coords0+vstem_vec, self.plot_virtual_stems,
-                                                2*self.cylinder_width, "", key="")
+                                                2*self.cylinder_width, "", key="virtual stem {}".format(key))
                         fixed_side = cg._get_sides_plus(fixed_stem_name, key)[1]
                         rna_plotter.add_segment(cg.coords[key][fixed_side], vstem_coords0, self.plot_virtual_stems, 0.7*self.cylinder_width,
-                                                "", key="")
+                                                "", key="virtual stem {}".format(key))
                     else:
                         log.info("NOT Plotting virtual stem for %s: %s, %s, %s", key, self.plot_virtual_stems, key not in cg.get_mst(), vstat_line )
 
@@ -351,10 +350,10 @@ class PymolPrinter(object):
                             w=0.05
                         else:
                             w=0.2
-                        rna_plotter.add_segment(cg.get_virtual_residue(i-1, True), pos, c, w)
+                        rna_plotter.add_segment(cg.get_virtual_residue(i-1, True), pos, c, w, key="vres{}-{} {}".format(i-1, i, elem))
                     j=cg.pairing_partner(i)
                     if j:
-                        rna_plotter.add_segment(cg.get_virtual_residue(j, True), pos, "gray", 0.3)
+                        rna_plotter.add_segment(cg.get_virtual_residue(j, True), pos, "gray", 0.3, key="vres BP {}-{}-{}".format(j, i, elem))
                     rna_plotter.add_sphere(pos, c, 1.)
 
         if self.add_longrange:

@@ -90,7 +90,6 @@ def pymol_printer_from_args(args):
         pp.cylinder_width = 0.5
         pp.show_twists = False
     pp.display_virtual_residues = args.virtual_residues
-    pp.plot_virtual_stems = args.virtual_stems
     pp.virtual_atoms = args.virtual_atoms
 
     if args.only_elements is not None:
@@ -104,6 +103,17 @@ def pymol_printer_from_args(args):
     pp.sidechain_atoms = args.sidechain_atoms
     pp.basis = args.basis
     pp.rainbow = args.rainbow
+    pp.plot_virtual_stems = args.virtual_stems
+    if args.virtual_stems:
+        if args.virtual_stems not in ftvp.NAMED_COLORS:  # A hex value
+            try:
+                color = tuple(
+                    int(args.virtual_stems[i:i + 2], 16) / 255 for i in (0, 2, 4))
+            except:
+                raise ValueError("Color value '{}' not understood. "
+                                 "Either provide a HEX value or "
+                                 "one of {}".format(args.virtual_stems, ",".join(ftvp.NAMED_COLORS.keys())))
+            pp.plot_virtual_stems = color
     if args.element_colors:
         directives = args.element_colors.split(",")
         elem_colors = {}
@@ -149,12 +159,12 @@ def align_rnas(rnas):
         assert  ftuv.magnitude(ftuv.get_vector_centroid(rna.get_ordered_virtual_residue_poss()))<10**-5, ftuv.magnitude(ftuv.get_vector_centroid(rna.get_ordered_virtual_residue_poss()))
 
 
-
 def main(args):
     rnas = fuc.cgs_from_args(args, '+', '3d')
     pp = pymol_printer_from_args(args)
 
     if args.align:
+        print("Aligning RNAs")
         align_rnas(rnas)
     if args.labels:
         label_list = args.labels.split(",")
@@ -178,7 +188,7 @@ def main(args):
     log.info("Visualizing {} rnas".format(len(rnas)))
     plot_bg = True
     for rna in rnas:
-        pp.add_cg(rna, labels, color_modifier, plot_bg)
+        pp.add_cg(rna, labels, color_modifier, plot_core_bulge_graph=plot_bg)
         if args.only_first_bg:
             plot_bg=False
         #color_modifier *= 0.7
