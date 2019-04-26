@@ -19,8 +19,8 @@ Citing
 
 If your use of forgi results in an academic publication, please cite:
 
-Thiel BC, Beckmann IK, Kerpedjiev P and Hofacker IL. 3D based on 2D: Calculating helix angles and stacking patterns using forgi 2.0, an RNA Python library centered on secondary structure elements. [version 1; peer review: 1 approved, 1 approved with reservations]. *F1000Research* 2019, **8**:287
-(https://doi.org/10.12688/f1000research.18458.1) 
+Thiel BC, Beckmann IK, Kerpedjiev P and Hofacker IL. 3D based on 2D: Calculating helix angles and stacking patterns using forgi 2.0, an RNA Python library centered on secondary structure elements. [version 2; peer review: 2 approved]. *F1000Research* 2019, **8**:287
+(https://doi.org/10.12688/f1000research.18458.2) 
 
 For the pseudoknot-removal code and external PDB annotation tools, see the citations therein.
 
