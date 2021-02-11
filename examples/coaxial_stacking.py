@@ -17,9 +17,11 @@ import random
 import math
 import sys
 import warnings
-from collections import defaultdict, namedtuple, OrderedDict, Mapping
+from collections import defaultdict, namedtuple, OrderedDict#, Mapping
+from collections.abc import Mapping
 import forgi.threedee.model.coarse_grain as ftmc
-import forgi.threedee.utilities.dssr as ftud
+#import forgi.threedee.utilities.dssr as ftud
+import forgi.threedee.utilities._dssr as ftud
 import pandas as pd
 import numpy as np
 import scipy.stats
@@ -39,8 +41,10 @@ import matplotlib
 from matplotlib.pyplot import cm
 from matplotlib.ticker import MaxNLocator
 matplotlib.use("TkAgg")
-from sklearn.neighbors.kde import KernelDensity
-from sklearn.grid_search import GridSearchCV
+#from sklearn.neighbors.kde import KernelDensity
+from sklearn.neighbors import KernelDensity
+#from sklearn.grid_search import GridSearchCV
+from sklearn.model_selection import learning_curve,GridSearchCV
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.linear_model import Lasso
@@ -244,7 +248,7 @@ def decomposition(data):
     plt.scatter(data_r[:, 0], data_r[:, 1], c=labels.astype(np.float))
 
     plt.show(block=False)
-    
+
     return"""
     # LDA
 
@@ -827,8 +831,8 @@ class interactive_analysis(object):
 
         Use 'SAVE NAME' to save the current dataset under the name NAME.
         Use 'SAVE NAME for KEY FROM TO [STEP]' to save subsets of the current dataset according
-            to the range specified with FROM and TO. 
-            They will have '_NUMBER' appended to their name.        
+            to the range specified with FROM and TO.
+            They will have '_NUMBER' appended to their name.
         """
         if len(args) > 1 and args[1] == "for":
             range_ = self._get_range(*args[2:])
@@ -852,7 +856,7 @@ class interactive_analysis(object):
             self.stored[args[0]] = self.filtered_data
 
     def load(self, *args):
-        """ 
+        """
         Load a previousely saved dataset.
         """
         if len(args) == 0:
@@ -865,7 +869,7 @@ class interactive_analysis(object):
         """
         Delete a dataset that was previousely saved under this name(s)
 
-        Use 'DEL NAME1 [NAME2...] to delete saves NAME1,... 
+        Use 'DEL NAME1 [NAME2...] to delete saves NAME1,...
         """
         if len(args) == 0:
             raise InvalidInput(
@@ -900,7 +904,7 @@ class interactive_analysis(object):
 
         Use 'COMPARE name1 name2' to compare two subsets of the data, previousely stored with 'SAVE name1' and 'SAVE name2'
         Use 'COMPARE name1 name2 name3 [name4...] to perform pairwise comparison of multiple datasets.
-        Use 'COMPARE for 
+        Use 'COMPARE for
         """
         print ("Kolmogorov-Smirnov-Test:")
         datasets = []
@@ -1175,7 +1179,6 @@ def generateParser():
         "--csv", type=str, help="Store data in csv with this filename", default="")
     parser.add_argument("-c", "--continue-from", type=str,
                         help="Load Data from csv with this filename", default="")
-
     return parser
 
 
@@ -1204,7 +1207,9 @@ if __name__ == "__main__":
         else:
             data = defaultdict(list)
             for i, filename in enumerate(args.files):
-                cg = ftmc.CoarseGrainRNA(filename)
+                print(type(filename))
+                print(filename)
+                cg = ftmc.CoarseGrainRNA.from_bg_file(filename)
                 try:
                     annot = ftud.DSSRAnnotation(args.dssr_json[i], cg)
                 except (LookupError, TypeError):
@@ -1230,7 +1235,7 @@ if __name__ == "__main__":
         for i, filename in enumerate(args.files):
             if not args.quiet:
                 print("=== FILE ", filename, args.dssr_json[i], " ===")
-            cg = ftmc.CoarseGrainRNA(filename)
+            cg = ftmc.CoarseGrainRNA.from_bg_file(filename)
             try:
                 annot = ftud.DSSRAnnotation(args.dssr_json[i], cg)
                 #assert "coaxStacks" in annot._dssr, "{}".format(annot._dssr)
