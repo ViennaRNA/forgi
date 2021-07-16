@@ -41,7 +41,6 @@ from sklearn.metrics import confusion_matrix
 import forgi.threedee.utilities.vector as ftuv
 import forgi.threedee.utilities.graph_pdb as ftug
 
-import matplotlib.pyplot as plt
 
 log = logging.getLogger(__name__)
 
