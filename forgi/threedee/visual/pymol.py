@@ -216,6 +216,7 @@ class PymolPrinter(object):
     def __init__(self):
         self.display_virtual_residues = False
         self.plot_virtual_stems = False
+        self.display_3_points = False
         self.rainbow = False
         self.basis = None
         self.visualize_three_and_five_prime = True
@@ -355,6 +356,15 @@ class PymolPrinter(object):
                     if j:
                         rna_plotter.add_segment(cg.get_virtual_residue(j, True), pos, "gray", 0.3, key="vres BP {}-{}-{}".format(j, i, elem))
                     rna_plotter.add_sphere(pos, c, 1.)
+
+        if self.display_3_points:
+            for i in range(1, cg.seq_length + 1):
+                for pos in cg.iter_three_points(i):
+                    if cg.get_node_from_residue_num(i)[0] == "s":
+                        c = "cyan"
+                    else:
+                        c = "magenta"
+                    rna_plotter.add_sphere(pos, c, 0.4)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():

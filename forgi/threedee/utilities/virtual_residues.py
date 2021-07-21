@@ -32,6 +32,16 @@ def parse_vres(parts):
               function `serialize_vres`
     """
     vpos = {}
-    for i, j in enumerate(range(0, len(parts), 3)):
-        vpos[i] = np.array(list(map(float, parts[j:j + 3])))
-    return vpos
+    vbase = {}
+    vsugar = {}
+    vbackbone = {}
+    to_fill = vpos
+    start = 0
+    for to_fill in [vpos, vbase, vsugar, vbackbone]:
+        for i, j in enumerate(range(start, len(parts), 3)):
+            if parts[j].startswith("v"):
+                start = j + 1
+                break
+            to_fill[i] = np.array(list(map(float, parts[j:j + 3])))
+
+    return vpos, vbase, vsugar, vbackbone

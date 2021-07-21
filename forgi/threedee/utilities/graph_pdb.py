@@ -1112,6 +1112,43 @@ def _add_loop_virtual_residues(cg, element):
             global_coords - origin, basis, ftuv.standard_basis)
         cg.vposs[element][i] = element_coords
 
+def _add_three_points_per_element(cg, element):
+    if not cg.chains:
+        log.info(
+            "No 3 ppints added for %s, because no pdb chain present", element)
+        return
+
+    for i, resid in enumerate(cg.define_residue_num_iterator(element, seq_ids=True)):
+        base_coords = []
+        sugar_coords = []
+        phosphor_coord = []
+        for atom in cg.chains[resid.chain][resid.resid]:
+            if atom.name in ["C1'", "C2'", "C3'", "C4'", "O4'"]:
+                sugar_coords.append(atom.coord)
+            elif atom.name in ["N1", "C2", "N3", "C4", "C5", "C6", "N7", "C8", "N9"]:
+                base_coords.append(atom.coord)
+            elif atom.name in ["P", "O5'", "OP1", "OP2"]:
+                phosphor_coord.append(atom.coord)
+            else:
+                log.debug("Getting vbase coordinates: Ignoring atom: %s", atom.name)
+        for attr, coords in zip([cg.vbase, cg.vsugar, cg.vbackbone],
+                               [base_coords, sugar_coords, phosphor_coord]):
+            if len(coords) == 0:
+                log.warning("Cannot get 3 points for %s, %s (%s): "
+                            "only %s sugar atoms, %s base atoms and %s phosphor atoms",
+                            element, resid, repr(cg.chains[resid.chain][resid.resid]), len(sugar_coords), len(base_coords), len(phosphor_coord))
+                log.warning("atoms are %s", 
+                            ", ".join(atom.name for atom in cg.chains[resid.chain][resid.resid]))
+
+            else:
+                x=sum(c[0] for c in coords)/len(coords)
+                y=sum(c[1] for c in coords)/len(coords)
+                z=sum(c[2] for c in coords)/len(coords)
+                global_coords = [x,y,z]
+                origin, basis = element_coord_system(cg, element)
+                element_coords = ftuv.change_basis(
+                    global_coords - origin, basis, ftuv.standard_basis)
+                attr[element][i] = element_coords
 
 def _add_stem_virtual_residues(bg, stem):
     try:
@@ -1475,13 +1512,16 @@ def _add_loop_vres(cg):
         return  # fifeprime only-cgs have no twists
     log.debug("Adding virtual residues")
     for elem in cg.defines:
-        if elem[0] != "s":
-            try:
-                add_virtual_residues(cg, elem)
-            except:
-                log.warning("Could not add virtual residues from PDB for %s, elem %s", cg.name, elem)
-
-
+        try:
+            if elem[0] != "s":
+                _add_loop_virtual_residues(cg, elem)
+        except:
+            log.exception("Could not add virtual residues from PDB for %s, elem %s", cg.name, elem)
+        try:
+          log.debug("Add 3 points for elem %s", elem)
+          _add_three_points_per_element(cg, elem)
+        except:
+            log.exception("Could not add 3 virtual points from PDB for %s, elem %s", cg.name, elem)
 
 def cylinder_works(cg, cylinders_to_stems, tv, c, r=4.):
     '''

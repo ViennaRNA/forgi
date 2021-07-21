@@ -37,6 +37,8 @@ def get_parser():
                         action='store_true', help='Display the virtual residues as spheres')
     parser.add_argument('--virtual-stems', default="",
                         type=str, help='Display the virtual stems at broken MLS (in this color)')
+    parser.add_argument('--three-points', default=False,
+                        action='store_true', help='Display the virtual 2 points as spheres')
     parser.add_argument('--only-elements', dest='only_elements', default=None,
                         help='Display only these elements, separated by commas')
     parser.add_argument('--no-loops', action="store_true",
@@ -89,7 +91,8 @@ def pymol_printer_from_args(args):
     if args.thin_cylinders:
         pp.cylinder_width = 0.5
         pp.show_twists = False
-    pp.display_virtual_residues = args.virtual_residues
+    pp.display_virtual_residues = args.virtual_residues    
+    pp.display_3_points = args.three_points
     pp.virtual_atoms = args.virtual_atoms
 
     if args.only_elements is not None:
