@@ -14,18 +14,10 @@ log = logging.getLogger(__file__)
 ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError)
 
 def try_cythonize(arg):
-  try:
-    import numpy
-  except Exception as e:
-    return []
-  try:
-      from Cython.Build import cythonize
-      return cythonize([Extension(".".join(arg.split("/")), [arg+".pyx"], extra_compile_args=['-O3', "-std=c++11"],
-                                  language='c++', include_dirs=[numpy.get_include()])])
-  except Exception as e:
-      return [Extension(arg, [arg+".cpp"], extra_compile_args=['-O3', "-std=c++11"],
-                        include_dirs=[numpy.get_include()],
-                        language="c++")]
+  import numpy
+  from Cython.Build import cythonize
+  return cythonize([Extension(".".join(arg.split("/")), [arg+".pyx"], extra_compile_args=['-O3', "-std=c++11"],
+                              language='c++', include_dirs=[numpy.get_include()])])
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -146,10 +138,4 @@ setup_args = {
          ],
      }
 
-try:
-    setup(**setup_args)
-except BuildFailed as ex:
-    log.warning("The C extension could not be compiled")
-    del setup_args["ext_modules"]
-    setup(**setup_args)
-    log.info("Installed forgi without faster compiled C-code.")
+setup(**setup_args)

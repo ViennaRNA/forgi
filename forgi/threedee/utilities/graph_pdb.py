@@ -41,6 +41,12 @@ import forgi
 from forgi.threedee.utilities.modified_res import change_residue_id
 from forgi.utilities.exceptions import CgConstructionError
 from forgi.threedee.utilities.pdb import AtomName
+try:
+  from .cytvec import get_broken_ml_deviation
+except ImportError:
+  def get_broken_ml_deviation(*args, **kwargs):
+    raise ValueError("cython extention not properly installed!")
+
 log = logging.getLogger(__name__)
 
 
@@ -485,89 +491,6 @@ def _get_vstem_coords(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     vstem_coords1 = vstem_coords0 + vstem_vec
     return vbulge_vec, vstem_coords0, vstem_vec
 
-@profile
-def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
-    """
-    If we assgin a stat to a broken ml-segment, how much would the attached
-    stem deviate from its true location.
-
-    Calculates the position of a '"virtual stem", which would be
-    placed after the broken ml-segment, if it was a true ml-segment
-    with the virtual stat assigned.
-    Then calculates the deviation between this virtual stem and the actual stem.
-
-    :param cg: The CoarseGrainRNA
-    :param broken_ml_name: The name of the ml-segment of interest.
-                           It should not be part of cg.mst.
-    :param fixed_stem_name: The name of a stem (e.g. "s0") attached to the
-                            broken ml segment. This stem will be used as reference,
-                            For the other stem attached to the broken ml-segment (original_stem),
-                            the virtual stem position will be calculated.
-    :param virtual_stat: The stat assigned to the broken ml segment, in the direction
-                         from fixed_stem_name to the other stem.
-
-    :returns: A triple: positional_deviation, angular_deviation and twist_deviation.
-              positional_deviation measures how far the start of the virtual stem
-              is from the start of the true ("original") stem.
-              Angular deviation measures (in radians) the differece in the stem's orientation.
-              twist_deviation measures the angle (in radians) between the two stem's twist vectors.
-    """
-
-    log.debug("Getting broken ML deviation for %s attached to %s "
-              "using stat %s", broken_ml_name, fixed_stem_name,
-              virtual_stat.pdb_name)
-    s1, s2 = cg.edges[broken_ml_name]
-    if s1 == fixed_stem_name:
-        orig_stem_name = s2
-    elif s2 == fixed_stem_name:
-        orig_stem_name = s1
-    else:
-        raise ValueError("fixed stem {} is not attached to ml {} with "
-                         "edges {}".format(fixed_stem_name, broken_ml_name, [s1, s2]))
-
-    vbulge_vec, vstem_coords0, vstem_vec = _get_vstem_coords(cg, broken_ml_name, fixed_stem_name, virtual_stat)
-    vstem_coords1 = vstem_coords0+vstem_vec
-
-    sides2 = cg.get_sides(orig_stem_name, broken_ml_name)
-    orig_coords0 = cg.coords[orig_stem_name][sides2[0]]
-    orig_coords1 = cg.coords[orig_stem_name][sides2[1]]
-
-    orig_stem_vec = orig_coords1 - orig_coords0
-    true_bulge_vec = orig_coords0 - cg.coords[fixed_stem_name][sides[0]]
-
-    pos_dev = (ftuv.vec_distance(orig_coords0, vstem_coords0))
-    ang_dev = ftuv.vec_angle(vstem_vec, orig_stem_vec)
-    twist_dev = ftuv.vec_angle(
-        cg.twists[orig_stem_name][sides2[0]], vstem_twist)
-    log.debug("Deviation: pos %s, orient %s, twist: %s", pos_dev,
-              math.degrees(ang_dev), math.degrees(twist_dev))
-
-    # For debugging
-    #max_diff = 6
-    #max_adiff = math.radians(3*max_diff)
-    # if pos_dev < max_diff and ang_dev<max_adiff and twist_dev<2*max_adiff:
-    if False:  # plotting-code used for debugging
-        pos_adev = ftuv.vec_angle(true_bulge_vec, vbulge_vec)
-        log.info("Deviation: pos %s, %s orient %s, twist: %s", pos_dev, math.degrees(pos_adev),
-                 math.degrees(ang_dev), math.degrees(twist_dev))
-        log.info("Length: virtual: %s original: %s", ftuv.magnitude(
-            vstem_vec), ftuv.magnitude(orig_stem_vec))
-        import matplotlib.pyplot as plt
-
-        _plot_junction_2d(cg, broken_ml_name)
-        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], cg.coords[orig_stem_name][sides2[0]][0]],
-                 [cg.coords[fixed_stem_name][sides[0]][1],
-                     cg.coords[orig_stem_name][sides2[0]][1]],
-                 ".-", label="true bulge")
-        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], vstem_coords0[0]],
-                 [cg.coords[fixed_stem_name][sides[0]][1], vstem_coords0[1]],
-                 ".-", label="virtual bulge")
-        plt.plot([vstem_coords0[0], vstem_coords1[0]],
-                 [vstem_coords0[1], vstem_coords1[1]],
-                 "s-", label="virtual" + orig_stem_name)
-        plt.legend()
-        plt.show()
-    return pos_dev, ang_dev, twist_dev
 
 
 def _plot_element(cg, elem, style="o-", name_suffix=""):
