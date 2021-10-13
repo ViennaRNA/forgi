@@ -215,9 +215,9 @@ void testdot(){
     Basis b3 = b1*b2;
     std::cout<<"B3:\n";
     b3.print();
-    assert (b3[0][0]==8);
-    assert (b3[1][0]==20);
-    assert (b3[1][2]==32);
+    assert (b3.coords[0][0]==8);
+    assert (b3.coords[1][0]==20);
+    assert (b3.coords[1][2]==32);
 
     Vect a=Vect(1.,2.,5.);
     Vect b=b1.apply_to(a);
