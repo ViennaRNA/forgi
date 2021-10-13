@@ -2294,7 +2294,7 @@ class BulgeGraph(BaseGraph):
             node = self.get_node_from_residue_num(nuc)
         except:
             assert len(self.defines) == 0
-            raise StopIteration("Empty Graph")
+            return
         while True:
             log.debug("Yielding node %s with edges %s", node, self.edges[node])
             yield node
@@ -2316,7 +2316,7 @@ class BulgeGraph(BaseGraph):
                 try:
                     next_node = self.get_node_from_residue_num(nuc)
                 except LookupError:
-                    raise StopIteration("End of chain reached")
+                    return
                 else:
                     # We need to make sure there is no 0-length multiloop between the two stems.
                     intersect = self.edges[node] & self.edges[next_node]
@@ -2341,10 +2341,10 @@ class BulgeGraph(BaseGraph):
                 except ValueError as e:  # Too few values to unpack
                     if node[0] == "f":
                         if len(self.defines) == 1:
-                            raise StopIteration("Single stranded-only RNA")
+                            return
                         nuc, = self.flanking_nucleotides(node)
                     else:
-                        raise StopIteration("End of chain reached")
+                        return
                 else:
                     if f1 > f2:
                         nuc = f1
