@@ -7,6 +7,7 @@ import os.path
 import contextlib
 import warnings
 import textwrap
+import copy
 
 import numpy as np
 
@@ -16,6 +17,7 @@ import logging_exceptions
 
 
 import forgi.graph.bulge_graph as fgb
+import forgi.graph.sequence as fgs
 import forgi.threedee.model.coarse_grain as ftmc
 
 log = logging.getLogger(__name__)
@@ -326,6 +328,7 @@ def load_rna(filename, rna_type="any", allow_many=True, pdb_chain=None,
             return bgs[0]
 
 
+
 @contextlib.contextmanager
 def open_for_out(filename=None, force=False):
     "From http://stackoverflow.com/a/17603000/5069869"
@@ -359,3 +362,69 @@ def hide_traceback(error_class=WrongFileFormat):
         print("Error of type {} occurred. Aborting.".format(type(e).__name__))
         print(e, file=sys.stderr)
         sys.exit(1)
+
+def db_to_constraint(dbstri):
+    """
+    Convert a dotbracket string with dashes representing missing residues and
+    dots representing unpaired nucleotides to a constraint that can be used
+    with RNAfold.
+
+    This means that unpaired nucleotides are forced unpaired and missing
+    residues are free to form basepairs.
+    """
+    dbstri = dbstri.replace(".", "x").replace("-",".")
+    return ''.join( "x" if c not in "()." else c for c in dbstri )
+
+def insert_pk_into_stru(refolded, with_pk):
+    """
+    Replaces '.' characters in refolded with pkseudoknots from with_pk where possible.
+
+    :param with_pk: A dotbracket string, possibly with '-' characters
+    :param refolded: The same dbstring as with_pk, but without pseudoknots and with '-' replaced by one of '().
+    """
+    out=[]
+    for i,c in enumerate(refolded):
+        if c != with_pk[i]:
+            if c==".":
+                if with_pk[i]=="-":
+                    out.append(c)
+                else:
+                    out.append(with_pk[i])
+            else:
+                assert with_pk[i]=="-"
+                out.append(c)
+        else:
+            out.append(c)
+    return "".join(out)
+
+def with_missing_refolded(cg):
+    """
+    This requires the ViennaRNA package.
+
+    Uses RNAfold
+    """
+    domains = cg.get_domains()
+    fasta_lines = cg.to_fasta_string(include_missing=True).splitlines()
+    assert len(fasta_lines)==3
+    constraint = db_to_constraint(fasta_lines[2])
+    try:
+        import RNA
+    except ImportError as e:
+        raise ImportError(str(e)+"\nPlease install the ViennaRNA package to fold missing residues.")
+    fc = RNA.fold_compound(fasta_lines[1], RNA.md())
+    fc.hc_add_from_db(constraint)
+    stru, energy = fc.mfe()
+
+    stru=insert_pk_into_stru(stru, fasta_lines[2])
+    log.info("Energy of constraint secondary structyure is %s", energy)
+    new_fasta="\n".join([fasta_lines[0], fasta_lines[1], stru])
+    new_cg, = ftmc.CoarseGrainRNA.from_fasta_text(new_fasta)
+    new_cg._seq = fgs.missing_to_normal(cg.seq)
+    # TODO: Copy coordinates, but take potentially changed 2D structure into account.
+
+    #new_cg.sampled = copy.deepcopy(cg.sampled)
+    #new_cg.longrange = copy.deepcopy(cg.longrange)
+    #new_cg.interacting_residues = copy.deepcopy(cg.interacting_residues)
+    #new_cg.vposs = {k:copy.deepcopy(v) for k,v in cg.vposs.items() if k[0]!="s"}
+
+    return new_cg

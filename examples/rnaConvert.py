@@ -78,6 +78,13 @@ parser.add_argument("--filename", type=str,
 parser.add_argument("-f", "--force", action="store_true",
                     help="Overwrite files, if they already exist. Note: In case of race conditions, "
                          "files could be overwritten even if this flag is not provided.")
+parser.add_argument("--refold-missing", action="store_true",
+                    help="Only used for conversion from PDB/ MMCIF to secondary structure formats."
+                         "Requires the ViennaRNA library with python bindings installed."
+                         "With this option, missing residues (i.e.residues without 3D coordinates)"
+                         "are included in the output and their secondary structure is predicted."
+                         "This prediction is done with RNAfold on the whole sequence using the "
+                         "secondary structure from the PDB as hard constraints.")
 
 
 if __name__ == "__main__":
@@ -97,9 +104,15 @@ if __name__ == "__main__":
     else:
         filename = None
         directory = ""
+    if args.refold_missing and args.target_type and FILETYPES[args.target_type].rna_type == "3d":
+        raise ValueError("Option refold-missing cannot"
+                         "be used for output files with 3D information.")
+
     for i, cg in enumerate(cgs):
         if not args.to_file and i > 0:
             print("\n\n========================================\n\n")
+        if args.refold_missing:
+            cg = fuc.with_missing_refolded(cg)
         target_str = FILETYPES[args.target_type].convert(cg)
         if args.to_file:
             if filename:

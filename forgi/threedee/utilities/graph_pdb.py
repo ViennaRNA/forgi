@@ -11,6 +11,7 @@ import collections as col
 import os.path as op
 import warnings
 import random
+import numbers
 import sys
 import math
 import json
@@ -40,7 +41,16 @@ import forgi
 from forgi.threedee.utilities.modified_res import change_residue_id
 from forgi.utilities.exceptions import CgConstructionError
 from forgi.threedee.utilities.pdb import AtomName
+try:
+  from .cytvec import get_broken_ml_deviation
+except ImportError:
+  def get_broken_ml_deviation(*args, **kwargs):
+    raise ValueError("cython extention not properly installed!")
+
 log = logging.getLogger(__name__)
+
+
+
 
 REFERENCE_CATOM = AtomName("C1'")
 
@@ -466,46 +476,7 @@ def get_angle_stat_geometry(stem1_vec, twist1, stem2_vec, twist2, bulge_vec):
     return u, v, t, r1, u1, v1
 
 
-@profile
-def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
-    """
-    If we assgin a stat to a broken ml-segment, how much would the attached
-    stem deviate from its true location.
-
-    Calculates the position of a '"virtual stem", which would be
-    placed after the broken ml-segment, if it was a true ml-segment
-    with the virtual stat assigned.
-    Then calculates the deviation between this virtual stem and the actual stem.
-
-    :param cg: The CoarseGrainRNA
-    :param broken_ml_name: The name of the ml-segment of interest.
-                           It should not be part of cg.mst.
-    :param fixed_stem_name: The name of a stem (e.g. "s0") attached to the
-                            broken ml segment. This stem will be used as reference,
-                            For the other stem attached to the broken ml-segment (original_stem),
-                            the virtual stem position will be calculated.
-    :param virtual_stat: The stat assigned to the broken ml segment, in the direction
-                         from fixed_stem_name to the other stem.
-
-    :returns: A triple: positional_deviation, angular_deviation and twist_deviation.
-              positional_deviation measures how far the start of the virtual stem
-              is from the start of the true ("original") stem.
-              Angular deviation measures (in radians) the differece in the stem's orientation.
-              twist_deviation measures the angle (in radians) between the two stem's twist vectors.
-    """
-
-    log.debug("Getting broken ML deviation for %s attached to %s "
-              "using stat %s", broken_ml_name, fixed_stem_name,
-              virtual_stat.pdb_name)
-    s1, s2 = cg.edges[broken_ml_name]
-    if s1 == fixed_stem_name:
-        orig_stem_name = s2
-    elif s2 == fixed_stem_name:
-        orig_stem_name = s1
-    else:
-        raise ValueError("fixed stem {} is not attached to ml {} with "
-                         "edges {}".format(fixed_stem_name, broken_ml_name, [s1, s2]))
-
+def _get_vstem_coords(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     sides = cg.get_sides(fixed_stem_name, broken_ml_name)
     fixed_s_vec = cg.coords.get_direction(fixed_stem_name)
     if sides[0] == 0:
@@ -518,47 +489,8 @@ def get_broken_ml_deviation(cg, broken_ml_name, fixed_stem_name, virtual_stat):
     vstem_vec *= 5
     vstem_coords0 = cg.coords[fixed_stem_name][sides[0]] + vbulge_vec
     vstem_coords1 = vstem_coords0 + vstem_vec
+    return vbulge_vec, vstem_coords0, vstem_vec
 
-    sides2 = cg.get_sides(orig_stem_name, broken_ml_name)
-    orig_coords0 = cg.coords[orig_stem_name][sides2[0]]
-    orig_coords1 = cg.coords[orig_stem_name][sides2[1]]
-
-    orig_stem_vec = orig_coords1 - orig_coords0
-    true_bulge_vec = orig_coords0 - cg.coords[fixed_stem_name][sides[0]]
-
-    pos_dev = (ftuv.vec_distance(orig_coords0, vstem_coords0))
-    ang_dev = ftuv.vec_angle(vstem_vec, orig_stem_vec)
-    twist_dev = ftuv.vec_angle(
-        cg.twists[orig_stem_name][sides2[0]], vstem_twist)
-    log.debug("Deviation: pos %s, orient %s, twist: %s", pos_dev,
-              math.degrees(ang_dev), math.degrees(twist_dev))
-
-    # For debugging
-    #max_diff = 6
-    #max_adiff = math.radians(3*max_diff)
-    # if pos_dev < max_diff and ang_dev<max_adiff and twist_dev<2*max_adiff:
-    if False:  # plotting-code used for debugging
-        pos_adev = ftuv.vec_angle(true_bulge_vec, vbulge_vec)
-        log.info("Deviation: pos %s, %s orient %s, twist: %s", pos_dev, math.degrees(pos_adev),
-                 math.degrees(ang_dev), math.degrees(twist_dev))
-        log.info("Length: virtual: %s original: %s", ftuv.magnitude(
-            vstem_vec), ftuv.magnitude(orig_stem_vec))
-        import matplotlib.pyplot as plt
-
-        _plot_junction_2d(cg, broken_ml_name)
-        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], cg.coords[orig_stem_name][sides2[0]][0]],
-                 [cg.coords[fixed_stem_name][sides[0]][1],
-                     cg.coords[orig_stem_name][sides2[0]][1]],
-                 ".-", label="true bulge")
-        plt.plot([cg.coords[fixed_stem_name][sides[0]][0], vstem_coords0[0]],
-                 [cg.coords[fixed_stem_name][sides[0]][1], vstem_coords0[1]],
-                 ".-", label="virtual bulge")
-        plt.plot([vstem_coords0[0], vstem_coords1[0]],
-                 [vstem_coords0[1], vstem_coords1[1]],
-                 "s-", label="virtual" + orig_stem_name)
-        plt.legend()
-        plt.show()
-    return pos_dev, ang_dev, twist_dev
 
 
 def _plot_element(cg, elem, style="o-", name_suffix=""):
@@ -815,7 +747,8 @@ def verify_vatom_positions(residue_ids, chains, coords, twists, label=""):
     plt.show()
     #assert False
 
-
+'''
+# TODO: Incomplete. Refactor this out ouf virtual_res_3d_pos_core
 def total_helix_rotation(coords, twists, stem_len):
     """
     Calculate the total rotation of the helix in radians from the twists.
@@ -837,7 +770,7 @@ def total_helix_rotation(coords, twists, stem_len):
     average_ang_per_nt = 0.636738030735
     expected_total_ang = (stem_len - 1) * average_ang_per_nt
     expected_twist_ang = expected_total_ang % (2 * math.pi)
-
+'''
 
 def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     '''
@@ -846,19 +779,15 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
     The virtual position extrapolates the position of the residues based
     on the twists of the helix.
 
+    :param i: The nucleotide number or a list of nt numbers.
     :return: A tuple containing the point located on the axis of the stem
              and a vector away from that point in the direction of the
              residue.
+             Or, if i is a list, return a list of tuples.
     '''
-    #stem_len = bg.defines[stem][1] - bg.defines[stem][0] + 1
+    log.debug("virtual_res_3d_pos_core called with %s, %s, %s, %s, %s",
+                coords, twists, i, stem_len, stem_inv)
     stem_vec = coords[1] - coords[0]
-
-    # the position of the virtual residue along the axis of
-    # the stem
-    if stem_len == 1:
-        vres_stem_pos = coords[0]
-    else:
-        vres_stem_pos = coords[0] + (i / float(stem_len - 1)) * stem_vec
 
     # the angle of the second twist with respect to the first
     if stem_inv is None:
@@ -884,27 +813,50 @@ def virtual_res_3d_pos_core(coords, twists, i, stem_len, stem_inv=None):
         backward = 2 * math.pi + expected_dev - ang
 
     if forward < backward:
-        ang = expected_ang + forward
+        total_ang = expected_ang + forward
     else:
-        ang = expected_ang - backward
-
-    if stem_len == 1:
-        ang = 0.
-    else:
-        ang_per_nt = ang / float(stem_len - 1)
-        ang = ang_per_nt * i
+        total_ang = expected_ang - backward
 
     # the basis vectors for the helix along which the
     # virtual residues will residue
+    # TODO: Use create_orthonormal_basis for speedup
     u = twists[0]
     v = cuv.normalize(np.cross(stem_vec, twists[0]))
 
     ang_offset = 0.9
-    # equation for a circle in 3-space
-    return (vres_stem_pos,
-            u * math.cos(ang) + v * math.sin(ang),
-            u * math.cos(ang + ang_offset) + v * math.sin(ang + ang_offset),
-            u * math.cos(ang - ang_offset) + v * math.sin(ang - ang_offset))
+
+    if isinstance(i, numbers.Number):
+        ret_list = False
+        i=[i]
+    else:
+        ret_list = True
+
+    outlist=[]
+    for j in i:
+        if stem_len == 1:
+            ang = 0.
+        else:
+            ang_per_nt = total_ang / float(stem_len - 1)
+            ang = ang_per_nt * j
+
+        # the position of the virtual residue along the axis of
+        # the stem
+        if stem_len == 1:
+            vres_stem_pos = coords[0]
+        else:
+            vres_stem_pos = coords[0] + (j / float(stem_len - 1)) * stem_vec
+
+        vpos_tuple = (vres_stem_pos,
+                u * math.cos(ang) + v * math.sin(ang),
+                u * math.cos(ang + ang_offset) + v * math.sin(ang + ang_offset),
+                u * math.cos(ang - ang_offset) + v * math.sin(ang - ang_offset))
+
+        outlist.append(vpos_tuple)
+
+    if not ret_list:
+        assert len(outlist)==1
+        return outlist[0]
+    return outlist
 
 
 def virtual_res_3d_pos(bg, stem, i, stem_inv=None, stem_length=None):
@@ -940,6 +892,7 @@ def virtual_res_basis_core(coords, twists, i, stem_len, vec=None):
 
 
 def virtual_res_basis(bg, stem, i, vec=None):
+
     return virtual_res_basis_core(bg.coords[stem], bg.twists[stem], i,
                                   bg.stem_length(stem), vec)
 
@@ -1159,23 +1112,69 @@ def _add_loop_virtual_residues(cg, element):
             global_coords - origin, basis, ftuv.standard_basis)
         cg.vposs[element][i] = element_coords
 
+def _add_three_points_per_element(cg, element):
+    if not cg.chains:
+        log.info(
+            "No 3 ppints added for %s, because no pdb chain present", element)
+        return
+
+    for i, resid in enumerate(cg.define_residue_num_iterator(element, seq_ids=True)):
+        base_coords = []
+        sugar_coords = []
+        phosphor_coord = []
+        for atom in cg.chains[resid.chain][resid.resid]:
+            if atom.name in ["C1'", "C2'", "C3'", "C4'", "O4'"]:
+                sugar_coords.append(atom.coord)
+            elif atom.name in ["N1", "C2", "N3", "C4", "C5", "C6", "N7", "C8", "N9"]:
+                base_coords.append(atom.coord)
+            elif atom.name in ["P", "O5'", "OP1", "OP2"]:
+                phosphor_coord.append(atom.coord)
+            else:
+                log.debug("Getting vbase coordinates: Ignoring atom: %s", atom.name)
+        for attr, coords in zip([cg.vbase, cg.vsugar, cg.vbackbone],
+                               [base_coords, sugar_coords, phosphor_coord]):
+            if len(coords) == 0:
+                log.warning("Cannot get 3 points for %s, %s (%s): "
+                            "only %s sugar atoms, %s base atoms and %s phosphor atoms",
+                            element, resid, repr(cg.chains[resid.chain][resid.resid]), len(sugar_coords), len(base_coords), len(phosphor_coord))
+                log.warning("atoms are %s", 
+                            ", ".join(atom.name for atom in cg.chains[resid.chain][resid.resid]))
+
+            else:
+                x=sum(c[0] for c in coords)/len(coords)
+                y=sum(c[1] for c in coords)/len(coords)
+                z=sum(c[2] for c in coords)/len(coords)
+                global_coords = [x,y,z]
+                origin, basis = element_coord_system(cg, element)
+                element_coords = ftuv.change_basis(
+                    global_coords - origin, basis, ftuv.standard_basis)
+                attr[element][i] = element_coords
 
 def _add_stem_virtual_residues(bg, stem):
+    try:
+        from . import cytvec
+    except ImportError as e:
+        def transposed_inverted(basis):
+            return nl.inv(basis.transpose())
+    else:
+        transposed_inverted = cytvec.transposed_inverted
+
     stem_vec = bg.coords.get_direction(stem)
     twist_vec = bg.get_twists(stem)[0]
     if stem in bg.bases and np.allclose(stem_vec, bg.bases[stem][0]) and np.allclose(twist_vec, bg.bases[stem][1]):
         stem_inv = bg.stem_invs[stem]
     else:
         stem_basis = cuv.create_orthonormal_basis(stem_vec, twist_vec)
-        stem_inv = nl.inv(stem_basis.transpose())
+        stem_inv = transposed_inverted(stem_basis)
         bg.bases[stem] = stem_basis
         bg.stem_invs[stem] = stem_inv
 
-    for i in range(bg.stem_length(stem)):
-        vpos = virtual_res_3d_pos(bg, stem, i, stem_inv=stem_inv)
+    list_of_is = list( range(bg.stem_length(stem)))
+    vposlist = virtual_res_3d_pos(bg, stem, list_of_is, stem_inv=stem_inv)
+    for i in list_of_is:
+        vpos = vposlist[i]
         vbasis = virtual_res_basis(bg, stem, i, vec=vpos[1])
-        vinv = nl.inv(vbasis.transpose())
-
+        vinv = transposed_inverted(vbasis)
         bg.vposs[stem][i] = vpos[0]
         bg.vvecs[stem][i] = vpos[1]
         bg.v3dposs[stem][i] = vpos
@@ -1513,13 +1512,16 @@ def _add_loop_vres(cg):
         return  # fifeprime only-cgs have no twists
     log.debug("Adding virtual residues")
     for elem in cg.defines:
-        if elem[0] != "s":
-            try:
-                add_virtual_residues(cg, elem)
-            except:
-                log.warning("Could not add virtual residues from PDB for %s, elem %s", cg.name, elem)
-
-
+        try:
+            if elem[0] != "s":
+                _add_loop_virtual_residues(cg, elem)
+        except:
+            log.exception("Could not add virtual residues from PDB for %s, elem %s", cg.name, elem)
+        try:
+          log.debug("Add 3 points for elem %s", elem)
+          _add_three_points_per_element(cg, elem)
+        except:
+            log.exception("Could not add 3 virtual points from PDB for %s, elem %s", cg.name, elem)
 
 def cylinder_works(cg, cylinders_to_stems, tv, c, r=4.):
     '''

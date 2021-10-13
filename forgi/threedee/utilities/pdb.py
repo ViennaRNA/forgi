@@ -249,6 +249,8 @@ def residuelist_rmsd(c1_list, c2_list, sidechains=False, superimpose=True):
     import forgi.threedee.model.similarity as ftms
 
     if len(c1_list) != len(c2_list):
+        log.error("c1_list (len %s): %s", c1_list)
+        log.error("c2_list (len %s): %s", c2_list)
         raise Exception(
             "Chains of different length. (Maybe an RNA-DNA hybrid?)")
 

@@ -10,6 +10,43 @@ import forgi.utilities.commandline_utils as fuc
 import forgi.threedee.model.coarse_grain as ftmc
 import forgi.graph.bulge_graph as fgb
 
+class TestSniffFiletype(unittest.TestCase):
+    def test_sniff_fasta(self):
+        with open("test/forgi/data/2hoj.fa") as f:
+            self.assertEqual(fuc.sniff_filetype(f), "fasta")
+    def test_sniff_bpseq(self):
+        with open("test/forgi/data/1gid.bpseq") as f:
+            self.assertEqual(fuc.sniff_filetype(f), "bpseq")
+    def test_sniff_bg(self):
+        with open("test/forgi/data/telomerase.cg") as f:
+            self.assertEqual(fuc.sniff_filetype(f), "forgi")
+    def test_sniff_dotbracket(self):
+        db = StringIO("(((...(((...))))))")
+        self.assertEqual(fuc.sniff_filetype(db), "other")
+    def test_sniff_pdb(self):
+        with open("test/forgi/threedee/data/1A34.pdb") as f:
+            self.assertEqual(fuc.sniff_filetype(f), "pdb")
+
+class TestLoadRNA(unittest.TestCase):
+    def test_db_direct(self):
+        db = "(((..[[[..)))..(((..]]].)))"
+        result = fuc.load_rna(db, "any", allow_many=True)
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)
+        self.assertIsInstance(result[0], fgb.BulgeGraph)
+        with self.assertRaises(IOError): #No such file.
+            fuc.load_rna(db, "cg", allow_many=True)
+        result = fuc.load_rna(db, "any", allow_many=False)
+        self.assertIsInstance(result, fgb.BulgeGraph)
+    def test_fasta(self):
+        with self.assertRaises(ValueError):
+            fuc.load_rna("test/forgi/data/2hoj.fa", "3d")
+        result = fuc.load_rna("test/forgi/data/2hoj.fa", "cg", allow_many=False)
+        self.assertIsInstance(result, ftmc.CoarseGrainRNA)
+        result = fuc.load_rna("test/forgi/data/2hoj.fa", "any", allow_many=False)
+        self.assertIsInstance(result, fgb.BulgeGraph)
+        result = fuc.load_rna("test/forgi/data/2hoj.fa", "any", allow_many=True)
+        self.assertIsInstance(result, list)
 
 class TestCommanldineUtils(unittest.TestCase):
     def test_load_rna_pdb_simple(self):
@@ -83,3 +120,31 @@ class TestCommanldineUtils(unittest.TestCase):
     def test_sniff_malformed_file(self):
         file = StringIO("\n>fasta header\nAAAGGGCCC\n.........")
         self.assertEqual(fuc.sniff_filetype(file), "fasta")
+
+    @unittest.skip("Requires ViennaRNApackage")
+    def test_with_missing_refolded(self):
+        bg, = fuc.load_rna("test/forgi/threedee/data/1FJG_reduced.pdb")
+        db = bg.to_dotbracket_string(include_missing=True)
+        self.assertIn("-", db)
+        cg2 = fuc.with_missing_refolded(bg)
+        db2 = cg2.to_dotbracket_string()
+        self.assertEqual(len(db2), 208)
+        self.assertNotIn("-", db2)
+        self.assertEqual(db2, ".........((((.........))))...................................(((..((.((((((((((.....)))))))))).)))))......................................(((((....((((((....)))))).....))))).........(((((....)))))............")
+
+    @unittest.skip("Requires ViennaRNApackage")
+    def test_with_missing_refolded_pk(self):
+        bg, = fuc.load_rna("test/forgi/threedee/data/3DHS.cif", pdb_remove_pk=False)
+        db = bg.to_dotbracket_string(include_missing=True)
+        self.assertIn("-", db)
+        cg2 = fuc.with_missing_refolded(bg)
+        db2 = cg2.to_dotbracket_string()
+        self.assertEqual(len(db2), len(db))
+        self.assertNotIn("-", db2)
+        self.assertEqual(db2, ".((((((((((((.(((((((.(((((((((....))))))))).....[[.[[[[[(((((((((.((......)))))).....(((((....))))))))))...(((...........)))...(((((((................)))))))((((((..........))))))........)))))))(((........(((((......)))))..........)))......]]]]]]]....))))))))))))....")
+
+
+
+    def test_insert_pk_into_stru(self):
+        self.assertEqual(fuc.insert_pk_into_stru('((..(...)))]]', '(([[-----))]]'),
+                            '(([[(...)))]]')

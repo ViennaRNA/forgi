@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Changes in Version 2.1
+
+* Cython code for vectors is no longer optional. This allows the setup to fail on errors, instead of hiding them and having them pop up later.
+* Store 3 points per nucleotide
+* In pymol visualizations the selections for elements are now inside a group
+* Performance improvements
+* compareRNA can compare more than 2 RNAs. Added additional metirc: stem-rmsd
+* visulaization of virtual stem (for broken MLs)
+* experimental integration with Vienna RNA package for refolding of missing elements.
+* Added compatibility with python 3.7-3.9 (Note: forgi is still compatible with python 2.7)
+
 Changes in Version 2.0
 ----------------------
 

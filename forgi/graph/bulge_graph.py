@@ -450,7 +450,7 @@ class BulgeGraph(BaseGraph):
             return "".join(output_str).strip()
 
     def to_neato_string(self):
-
+        self.traverse_graph()
         # The different nodes for different types of bulges
         node_lines = dict()
 
@@ -470,8 +470,12 @@ class BulgeGraph(BaseGraph):
                 out.append(
                     '\t{node [style=filled,shape=circle,fillcolor="#FFF2AE",fontsize=%d' % (fontsize))
             elif key2[0] == 'm':
+                if key2 in self.mst:
+                    c="#FF9090"
+                else:
+                    c="#F4CAE4"
                 out.append(
-                    '\t{node [style=filled,shape=circle,fillcolor="#F4CAE4",fontsize=%d' % (fontsize))
+                    '\t{{node [style=filled,shape=circle,fillcolor="{}",fontsize={}'.format(c, fontsize))
             elif key2[0] == 'f':
                 out.append(
                     '\t{node [style=filled,shape=circle,fillcolor="#FDCDAC",fontsize=%d' % (fontsize))
@@ -1028,7 +1032,8 @@ class BulgeGraph(BaseGraph):
         """
         if isinstance(position, RESID):
             position = self.seq.to_integer(position)
-
+        if not isinstance(position, int):
+            raise TypeError("Wrong type of position %s, not int or RESID but %s", position, type(position).__name__)
         if position not in self._node_to_resnum:
             self._node_to_resnum[position] = super(
                 BulgeGraph, self).get_node_from_residue_num(position)
@@ -2289,7 +2294,7 @@ class BulgeGraph(BaseGraph):
             node = self.get_node_from_residue_num(nuc)
         except:
             assert len(self.defines) == 0
-            raise StopIteration("Empty Graph")
+            return
         while True:
             log.debug("Yielding node %s with edges %s", node, self.edges[node])
             yield node
@@ -2311,7 +2316,7 @@ class BulgeGraph(BaseGraph):
                 try:
                     next_node = self.get_node_from_residue_num(nuc)
                 except LookupError:
-                    raise StopIteration("End of chain reached")
+                    return
                 else:
                     # We need to make sure there is no 0-length multiloop between the two stems.
                     intersect = self.edges[node] & self.edges[next_node]
@@ -2336,10 +2341,10 @@ class BulgeGraph(BaseGraph):
                 except ValueError as e:  # Too few values to unpack
                     if node[0] == "f":
                         if len(self.defines) == 1:
-                            raise StopIteration("Single stranded-only RNA")
+                            return
                         nuc, = self.flanking_nucleotides(node)
                     else:
-                        raise StopIteration("End of chain reached")
+                        return
                 else:
                     if f1 > f2:
                         nuc = f1

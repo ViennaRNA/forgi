@@ -110,9 +110,11 @@ class TestCompareRNA(unittest.TestCase):
                                   "test/forgi/threedee/data/1y26.pdb"],
                                  universal_newlines=True, env=subprocess_env)
         lines = cg_out.split("\n")
+
         self.assertEqual(lines[0], "ACC:\t1.000")
         self.assertEqual(lines[1], "RMSD:\t0.000")
-        self.assertEqual(lines[2], "PDB-RMSD (single chain):\t0.000")
+        self.assertEqual(lines[2], "Stem:\t0.000")        
+        self.assertEqual(lines[3], "PDB-RMSD (single chain):\t0.000")
 
     def test_compare_different(self):
         with self.assertRaises(sp.CalledProcessError):

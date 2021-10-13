@@ -52,7 +52,9 @@ class LoopStat(object):
         self.define = []
         self.seq = ""
         self.vres = {}
-
+        self.vbase = {}
+        self.vsugar = {}
+        self.vbackbone = {}
         if len(line) > 0:
             try:
                 self.parse_line(line)
@@ -80,13 +82,16 @@ class LoopStat(object):
             self.define = list(map(int, [parts[6], parts[7]]))
             self.seq = parts[8]
         if len(parts) > 9:
-            self.vres = ftuvres.parse_vres(parts[9:])
+            self.vres, self.vbase , self.vsugar, self.vbackbone = ftuvres.parse_vres(parts[9:])
 
     def __str__(self):
         out = ("{stat_type} {pdb_name} {bp_length} {phys_length}"
                " {u} {v} ".format(**self.__dict__))
         out += " ".join(map(str, self.define)) + " " + self.seq
         out += " " + ftuvres.serialize_vres(self.vres)
+        out += " vbase " + ftuvres.serialize_vres(self.vbase)
+        out += " vsugar " + ftuvres.serialize_vres(self.vsugar)
+        out += " vbackbone " + ftuvres.serialize_vres(self.vbackbone)
         return out
 
     def __eq__(self, other):
@@ -118,8 +123,12 @@ class StemStat(object):
         self.twist_angle = 0.
         self.define = []
         self.seqs = []
+        self.vbase = {}
+        self.vsugar = {}
+        self.vbackbone = {}
         if len(line) > 0:
             self.parse_line(line)
+
 
     def parse_line(self, line):
         '''
@@ -142,15 +151,22 @@ class StemStat(object):
             self.seqs = [parts[9], parts[10]]
         except IndexError:
             pass
+        else:
+            _, self.vbase , self.vsugar, self.vbackbone = ftuvres.parse_vres(parts[11:])
 
     def __str__(self):
         try:
-            return "stem {pdb_name} {bp_length} {phys_length} {twist_angle} ".format(**self.__dict__) + " ".join(map(str, self.define)) + " " + " ".join(self.seqs)
+            return ("stem {pdb_name} {bp_length} {phys_length} {twist_angle} ".format(**self.__dict__)
+                    + " ".join(map(str, self.define)) + " " + " ".join(self.seqs)
+                    + " vbase {} vsugar {} vbackbone {} ".format(
+                        ftuvres.serialize_vres(self.vbase),
+                        ftuvres.serialize_vres(self.vsugar),
+                        ftuvres.serialize_vres(self.vbackbone)))
         except (KeyError, IndexError):
             warnings.warn(
                 "Could not print define '{}' for StemStat".format(self.define))
             return "stem {} {} {} {}".format(self.pdb_name, self.bp_length, self.phys_length, self.twist_angle)
-        # return "pdb_name: %s bp_length: %d phys_length: %f twist_angle: %f define: %s" % (self.pdb_name, self.bp_length, self.phys_length, self.twist_angle, " ".join(map(str, self.define)))
+
 
     def __eq__(self, other):
         if type(self) == type(other):
@@ -167,7 +183,7 @@ class AngleStat(object):
     '''
 
     def __init__(self, stat_type="angle", pdb_name='', dim1=0, dim2=0, u=0, v=0, t=0, r1=0, u1=0, v1=0, ang_type='x',
-                 define=[], seq="", vres={}):
+                 define=[], seq="", vres={}, vbase={}, vsugar={}, vbackbone={}):
         #log.debug("Stat init called")
         self.pdb_name = pdb_name
         self.dim1 = dim1
@@ -187,6 +203,9 @@ class AngleStat(object):
         self.define = define
         self.seq = seq
         self.vres = vres
+        self.vbase = vbase
+        self.vsugar = vsugar
+        self.vbackbone = vbackbone
 
     def __eq__(self, a_s):
         '''
@@ -262,7 +281,7 @@ class AngleStat(object):
         self.seq = parts[11 + def_len]
         log.debug("len(parts)=%s, def_len=%s", len(parts), def_len)
         if len(parts) > 12 + def_len:
-            self.vres = ftuvres.parse_vres(parts[12 + def_len:])
+            self.vres, self.vbase , self.vsugar, self.vbackbone = ftuvres.parse_vres(parts[12 + def_len:])
 
     def orientation_params(self):
         '''
@@ -293,7 +312,7 @@ class AngleStat(object):
         return (self.r1, self.u1, self.v1)
 
     def __str__(self):
-        out_str = "%s %s %d %d %f %f %f %f %f %f %s %s %s %s" % (self.stat_type,
+        out_str = "%s %s %d %d %f %f %f %f %f %f %d %s %s %s vbase %s vsugar %s vbackbone %s" % (self.stat_type,
                                                                  self.pdb_name,
                                                                  self.dim1,
                                                                  self.dim2,
@@ -307,7 +326,10 @@ class AngleStat(object):
                                                                  " ".join(
                                                                      map(str, self.define)),
                                                                  self.seq,
-                                                                 ftuvres.serialize_vres(self.vres))
+                                                                 ftuvres.serialize_vres(self.vres),
+                                                                 ftuvres.serialize_vres(self.vbase),
+                                                                 ftuvres.serialize_vres(self.vsugar),
+                                                                 ftuvres.serialize_vres(self.vbackbone))
         return out_str
 
     def __hash__(self):

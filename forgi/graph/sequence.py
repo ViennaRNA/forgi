@@ -843,7 +843,7 @@ class SequenceLoader:
 
     def consume_fields(self, parts):
         """
-        Read one line from the forgi file.
+        Read one splitted line from the forgi file.
 
         Returns True, if the line was used/ understood, False otherwise
         """
@@ -902,3 +902,14 @@ def _seq_ids_from_seq_str(seq):
             seq_ids += [fgr.resid_from_str(
                 "{}:{}".format(VALID_CHAINIDS[i], j + 1))]
     return seq_ids
+
+
+def missing_to_normal(seq):
+    """
+    Return a Sequence object which has all missing residues moved to normal residues.
+
+    :param seq: A forgi.graph.sequence.Sequence object
+    """
+    new_seq = seq.with_missing[:]
+    new_seqids = list(seq.with_missing.iter_resids(None,None))
+    return Sequence(new_seq, new_seqids, None, seq._modifications)

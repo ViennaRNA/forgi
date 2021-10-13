@@ -168,6 +168,11 @@ def optimal_superposition(crds1, crds2):
         raise ValueError("Wrong dimension of crds1. Needs to be an array of "
                          "Points in 2D or 3D space. Found {}D".format(crds1.shape[1]))
 
+def cg_stem_rmsd(cg1, cg2):
+    coords1 = cg1.get_ordered_stem_poss()
+    coords2 = cg2.get_ordered_stem_poss()
+    return rmsd(coords1, coords2)
+
 
 def cg_rmsd(cg1, cg2):
     '''
@@ -190,10 +195,9 @@ def cg_rmsd(cg1, cg2):
         common_resids = set(cg1.seq._seqids) & set(cg2.seq._seqids)
         residues1 = []
         residues2 = []
-        for res in res_ids:
-            if res in cg1.seq._seqids and res in cg2.seq._seqids:
-                residues1.append(cg1.get_virtual_residue(res, allow_single_stranded = True))
-                residues2.append(cg2.get_virtual_residue(res, allow_single_stranded = True))
+        for res in common_resids:
+            residues1.append(cg1.get_virtual_residue(res, allow_single_stranded = True))
+            residues2.append(cg2.get_virtual_residue(res, allow_single_stranded = True))
         if len(residues1)>len(res_ids)*0.8:
             log.warning("Using only %s common residues for RMSD comparison based on seq_ids.", len(residues1))
             if set(cg1.seq._seqids)-common_resids :

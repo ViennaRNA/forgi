@@ -12,7 +12,7 @@ def shortest_cycle(G, v):
     '''
     lengths = []
 
-    for n in G.neighbors(v):
+    for n in list(G.neighbors(v)):
         G.remove_edge(v, n)
         try:
             p = nx.shortest_path(G, v, n)
