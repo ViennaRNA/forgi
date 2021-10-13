@@ -314,6 +314,7 @@ class AMinorClassifier(BaseEstimator, ClassifierMixin):
             return np.nan_to_num(numerator / denom)
 
     def set_params(self, **kwargs):
+        """"""
         super(AMinorClassifier, self).set_params(**kwargs)
         # If it was fitted, we must propagate the parameter changes
         # to the child-KDEs by refitting to the same data
