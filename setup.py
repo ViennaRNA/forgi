@@ -110,7 +110,12 @@ setup_args = {
                 'biopython',
                 'appdirs>=1.4',
                 'logging_exceptions>=0.1.8',
+                'cython'
 	],
+      "setup_requires":[
+        'numpy>=1.10.0',
+        'cython'
+      ],
       "extras_require":extras,
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     "classifiers":[
