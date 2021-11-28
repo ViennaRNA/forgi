@@ -894,9 +894,9 @@ class BulgeGraph(BaseGraph):
         :return: A pair containing its dimensions
         """
         if node[0] == 's':
-            if with_missing:
-                warnings.warn(
-                    "get_node_dimensions: 'with_missing'-flag is currently ignored for stems!")
+            # if with_missing:
+            #     warnings.warn(
+            #         "get_node_dimensions: 'with_missing'-flag is currently ignored for stems!")
             return (self.stem_length(node), self.stem_length(node))
         else:
             bd = self.get_bulge_dimensions(node, with_missing)

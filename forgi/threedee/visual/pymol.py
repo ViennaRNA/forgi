@@ -359,12 +359,14 @@ class PymolPrinter(object):
 
         if self.display_3_points:
             for i in range(1, cg.seq_length + 1):
-                for pos in cg.iter_three_points(i):
-                    if cg.get_node_from_residue_num(i)[0] == "s":
-                        c = "cyan"
-                    else:
-                        c = "magenta"
-                    rna_plotter.add_sphere(pos, c, 0.4)
+                elem =  cg.get_node_from_residue_num(i)
+                if not self.only_elements or elem in self.only_elements:
+                    for pos in cg.iter_three_points(i):
+                        if cg.get_node_from_residue_num(i)[0] == "s":
+                            c = "cyan"
+                        else:
+                            c = "magenta"
+                        rna_plotter.add_sphere(pos, c, 0.4)
 
         if self.add_longrange:
             for key1 in cg.longrange.keys():
