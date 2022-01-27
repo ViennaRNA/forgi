@@ -10,7 +10,10 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       str, super, zip, object)  # future package
 
 from collections import defaultdict, Sequence
-from collections.abc import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 import itertools as it
 import numpy as np
 from sklearn.cluster import DBSCAN

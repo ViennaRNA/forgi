@@ -18,7 +18,10 @@ import math
 import sys
 import warnings
 from collections import defaultdict, namedtuple, OrderedDict#, Mapping
-from collections.abc import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 import forgi.threedee.model.coarse_grain as ftmc
 #import forgi.threedee.utilities.dssr as ftud
 import forgi.threedee.utilities._dssr as ftud
