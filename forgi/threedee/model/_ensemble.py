@@ -9,7 +9,8 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip, object)  # future package
 
-from collections import Mapping, defaultdict, Sequence
+from collections import defaultdict, Sequence
+from collections.abc import Mapping
 import itertools as it
 import numpy as np
 from sklearn.cluster import DBSCAN
