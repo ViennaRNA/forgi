@@ -9,7 +9,16 @@ from builtins import (ascii, bytes, chr, dict, filter, hex, input,
                       int, map, next, oct, open, pow, range, round,
                       str, super, zip, object)  # future package
 
-from collections import Mapping, defaultdict, Sequence
+from collections import defaultdict, Sequence
+
+# Check the Python version
+import platform
+import pkg_resources
+if pkg_resources.parse_version(platform.python_version()) >= pkg_resources.parse_version('3.10'):
+    from collections.abc import Mapping
+else:
+    from collections import Mapping
+
 import itertools as it
 import numpy as np
 from sklearn.cluster import DBSCAN

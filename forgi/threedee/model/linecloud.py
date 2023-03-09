@@ -9,7 +9,15 @@ else:
     viewkeys = lambda dic, **kwargs: dic.keys(**kwargs)
 
 import numpy as np
-from collections import Mapping
+
+# Check the Python version
+import platform
+import pkg_resources
+if pkg_resources.parse_version(platform.python_version()) >= pkg_resources.parse_version('3.10'):
+    from collections.abc import Mapping
+else:
+    from collections import Mapping
+
 import itertools
 import logging
 import forgi.threedee.utilities.vector as ftuv
