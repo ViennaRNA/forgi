@@ -9,7 +9,10 @@ else:
     viewkeys = lambda dic, **kwargs: dic.keys(**kwargs)
 
 import numpy as np
-from collections import Mapping
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 import itertools
 import logging
 import forgi.threedee.utilities.vector as ftuv
