@@ -299,7 +299,7 @@ class _BulgeGraphConstruction(BaseGraph):
             bulges = [k for k in self.defines if k[0] != 'y']
 
             for (b1, b2) in it.combinations(bulges, r=2):
-                if self.edges[b1] == self.edges[b2] and len(self.edges[b1]) == 2:
+                if b1 in self.edges and b2 in self.edges and self.edges[b1] == self.edges[b2] and len(self.edges[b1]) == 2:
                     connections = self.connections(b1)
 
                     all_connections = [sorted((self._get_sides_plus(connections[0], b1)[0],
@@ -312,7 +312,6 @@ class _BulgeGraphConstruction(BaseGraph):
                         log.debug("Collapsing %s and %s", b1, b2)
                         self.merge_vertices([b1, b2])
                         new_vertex = True
-                        break
 
     def create_stem_graph(self, stems, bulge_counter):
         """
