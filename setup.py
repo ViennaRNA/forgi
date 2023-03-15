@@ -72,14 +72,15 @@ def construct_build_ext(build_ext):
 extras = {"forgi.visual":["matplotlib>=2.0"],
           "development":["cython"],
           "classification":["scikit-learn"],
-          "pdbechem":['beautifulsoup4>=4.6']
+          "pdbechem":['beautifulsoup4>=4.6'],
+          "tests":["ddt", "hypothesis"]
          }
 extras["all"]=list(itertools.chain(extras.values()))
 setup_args = {
       "zip_safe":False,
       "cmdclass":{'build_py': build_py, 'build_ext':construct_build_ext(build_ext)},
       "name":'forgi',
-      "version":'2.1.1',
+      "version":'2.2.0',
       "description":'RNA Graph Library',
       "author":'Bernhard Thiel, Peter Kerpedjiev',
       "author_email":'thiel@tbi.univie.ac.at',

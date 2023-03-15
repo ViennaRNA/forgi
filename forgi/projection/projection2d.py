@@ -249,11 +249,11 @@ class Projection2D(object):
         # Calculate orthonormal basis of projection plane.
         # Compare to none, because `if np.array:` raises ValueError.
         if proj_direction is not None:
-            proj_direction = np.array(proj_direction, dtype=np.float)
+            proj_direction = np.array(proj_direction, dtype=float)
         elif cg.project_from is not None:
             # We make a copy here. In case cg.project_from is modified,
             # we still want to be able to look up from what direction the projection was generated.
-            proj_direction = np.array(cg.project_from, dtype=np.float)
+            proj_direction = np.array(cg.project_from, dtype=float)
         else:
             raise ValueError(
                 "No projection direction given and none present in the cg Object.")

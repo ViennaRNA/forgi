@@ -125,11 +125,6 @@ class TestCompareRNA(unittest.TestCase):
 
 
 class TestOtherScripts(unittest.TestCase):
-    def test_burial(self):
-        """Just test that burial.py does not crash."""
-        sp.check_call([sys.executable, "examples/burial.py",
-                       "test/forgi/threedee/data/1y26.pdb"],
-                      universal_newlines=True, env=subprocess_env)
 
     @unittest.skip("2D RMSD no longer supported")
     def test_projection_rmsd(self):

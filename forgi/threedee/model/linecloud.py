@@ -273,7 +273,7 @@ class LineSegmentStorage(CoordinateStorage):
                             "Parallel lines (B first, d0 big) are far: %s", (potential_interaction))
                     continue
                 # Is segment B after A?
-                elif d0 >= np.asscalar(magnitudes[i]) <= d1:
+                elif d0 >= magnitudes[i].item() <= d1:
                     if np.absolute(d0) < np.absolute(d1):
                         if ftuv.magnitude(b0 - a1) < cutoff:
                             hits.append(potential_interaction)

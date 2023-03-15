@@ -374,7 +374,7 @@ if __name__ == "__main__":
         else:
             raise ValueError("Mode must be one of 'a' and 'o'")
     else:
-        pd.set_option('max_columns', 99)
-        pd.set_option('max_rows', 200)
+        pd.set_option('display.max_columns', 99)
+        pd.set_option('display.max_rows', 200)
 
         print(df)
