@@ -291,9 +291,11 @@ def plot_rna(cg, ax=None, offset=(0, 0), text_kwargs={}, backbone_kwargs={},
             c = "red"
         else:
             c = "black"
-            bpkwargs = {"color":c, "zorder":0, "linewidth":3}
-            bpkwargs.update(basepair_kwargs)
-            ax.plot(basepairs[:,:,0].T, basepairs[:,:,1].T, **bpkwargs)
+            # Do not allow changing color through basepair_kwargs if color is set to False
+            basepair_kwargs["color"] = c
+        bpkwargs = {"color":c, "zorder":0, "linewidth":3}
+        bpkwargs.update(basepair_kwargs)
+        ax.plot(basepairs[:,:,0].T, basepairs[:,:,1].T, **bpkwargs)
     # Now plot circles
     for i, coord in enumerate(coords):
         if color:
