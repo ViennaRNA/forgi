@@ -35,7 +35,11 @@ import pandas as pd
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-from sklearn.neighbors.kde import KernelDensity
+try:
+    from sklearn.neighbors import KernelDensity
+except:
+    from sklearn.neighbors.kde import KernelDensity
+
 from sklearn.metrics import confusion_matrix
 
 import forgi.threedee.utilities.vector as ftuv
