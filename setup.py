@@ -68,7 +68,7 @@ extras = {"forgi.visual":["matplotlib>=2.0"],
           "development":["cython"],
           "classification":["scikit-learn"],
           "pdbechem":['beautifulsoup4>=4.6'],
-          "tests":["ddt", "hypothesis"]
+          "tests":["ddt", "hypothesis", "nose2"]
          }
 extras["all"]=list(itertools.chain(extras.values()))
 setup_args = {
