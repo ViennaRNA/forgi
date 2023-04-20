@@ -13,11 +13,6 @@ log = logging.getLogger(__file__)
 
 ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError)
 
-def try_cythonize(arg):
-  import numpy
-  from Cython.Build import cythonize
-  return cythonize([Extension(".".join(arg.split("/")), [arg+".pyx"], extra_compile_args=['-O3', "-std=c++11"],
-                              language='c++', include_dirs=[numpy.get_include()])])
 
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
@@ -86,7 +81,8 @@ setup_args = {
       "author_email":'thiel@tbi.univie.ac.at',
       "license":'GNU GPL 3.0',
       "url":'http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      "ext_modules": try_cythonize("forgi/threedee/utilities/cytvec"),
+      "ext_modules": [Extension("cytvec", sources=["forgi/threedee/utilities/cytvec.pyx"], extra_compile_args=['-O3', "-std=c++11"],
+                                language='c++' )],
       "packages":['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
                 'forgi.threedee.utilities',
@@ -115,7 +111,8 @@ setup_args = {
 	],
       "setup_requires":[
         'numpy>=1.10.0',
-        'cython'
+        'cython',
+        'setuptools>=18'
       ],
       "extras_require":extras,
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers

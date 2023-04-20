@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-forgi 2.1
+forgi 2.2
 =================================
 
 forgi is a python library for manipulating RNA secondary structure. Some examples of its usage can be found in the two tutorials below. 
