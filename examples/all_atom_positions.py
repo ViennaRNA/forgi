@@ -47,12 +47,12 @@ def main(parser):
             else:
                 conn_type = 0
 
-            for i, r in it.izip(it.count(),
-                                cg.define_residue_num_iterator(d)):
+            for i, r in zip(it.count(),
+                            cg.define_residue_num_iterator(d)):
 
                 # add only the base atoms which are relevant to the calculation
                 # of the chi torsion angle
-                seq_id = cg.seq_ids[r - 1]
+                seq_id = cg.seq.to_resid(r - 1)
                 resname = cg.chains[seq_id.chain][seq_id.resid].resname.strip()
 
                 if resname not in ftup.chi_torsion_atoms.keys():
@@ -64,7 +64,7 @@ def main(parser):
                 scatoms = ftup.side_chain_atoms[resname]
                 for aname in atoms + scatoms:
                     try:
-                        resid = cg.seq_ids[r - 1]
+                        resid = cg.seq.to_resid(r - 1)
                         a = cg.chains[resid.chain][resid.resid][aname]
                     except KeyError as ke:
                         # missing an atom
