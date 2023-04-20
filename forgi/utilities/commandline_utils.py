@@ -37,6 +37,8 @@ def get_rna_input_parser(helptext, nargs=1, rna_type="any", enable_logging=True,
         helptext = "{:d} files containing one RNA each.\n".format(nargs)
     elif nargs == "+":
         helptext = "One or more files containing one or more RNAs each.\n"
+    elif nargs == "*":
+        helptext = "Zero or more files containing one or more RNAs each.\n"    
     else:
         raise ValueError(
             "get_parser_any_cgsg does not support nargs={}".format(nargs))
