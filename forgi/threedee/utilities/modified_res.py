@@ -20,6 +20,7 @@ from pprint import pprint
 
 
 from ...graph import residue as fgr
+import forgi.threedee.utilities.pdb as ftup
 #from .modified_res_lookup import RESIDUE_DICT
 
 log = logging.getLogger(__name__)
@@ -120,7 +121,7 @@ def to_4_letter_alphabeth(chain, query_db=False):
             modifications[fgr.RESID(chain=chain.id, resid=(
                 " ", r.id[1], r.id[2]))] = r.resname.strip()
         else:
-            if r.resname.strip() not in "AUGC":
+            if r.resname.strip() not in ftup.RNA_RESIDUES:
                 res_info = ModifiedResidueLookup(query_db)[r.resname]
                 if not res_info:
                     # Unknown code. Remove residue

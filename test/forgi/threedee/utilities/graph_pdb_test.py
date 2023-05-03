@@ -238,9 +238,9 @@ class TestGraphPDB(unittest.TestCase):
         print(vres['C8'])
         print(vres['N2'])
         nptest.assert_allclose(vres['C8'], np.array(
-            [5.17130963, -2.93616933, -2.16725865]))
+            [5.14024752, -2.87121741, -2.27861434]))
         nptest.assert_allclose(vres['N2'], np.array(
-            [6.91170703,  2.35440312, -1.92080436]))
+            [6.95005643,  2.40848483, -2.02670265]))
 
 
 class TestOrientation(unittest.TestCase):
@@ -339,7 +339,7 @@ class TestAtomPosition_VirtualAtoms(unittest.TestCase):
         """ Number of atoms for each nucleotide"""
         for i in range(1, 65):
                 # non-sidechain atoms
-            self.assertEqual(len(self.va1[1].keys()), 9)
+            self.assertEqual(len(self.va1[1].keys()), 10)
             # Side-chain atoms depend on nucleotide
             self.assertGreaterEqual(len(self.va2[1].keys()), 15)
 

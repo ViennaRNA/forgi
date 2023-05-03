@@ -219,9 +219,13 @@ class _IndexHelper(object):
         log.debug("Getattr called for %s", attr)
         f = getattr(self.parent, attr)
         if callable(f):
-            argspec = inspect.getargspec(f)
+            try:
+                argspec = inspect.getfullargspec(f)
+            except AttributeError:
+                argspec = inspect.getargspec(f)
             log.debug("For function %s: args are %s", f, argspec.args)
-            if argspec.keywords or self.flag in argspec.args:
+            if (getattr(argspec, "varkw", getattr(argspec, "keywords", None)) 
+                    or self.flag in argspec.args):
                 log.debug("setting flag %s", self.flag)
                 kwargs = {self.flag: True}
                 f = partial(f, **kwargs)
