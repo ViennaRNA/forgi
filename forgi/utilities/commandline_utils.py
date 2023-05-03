@@ -125,12 +125,49 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
         rnas = cgs_from_args(args)
 
     """
+    cgs, fns = [], []
+    for value in iter_cgs_from_args(args, rna_type, enable_logging,
+                                    return_filenames, skip_errors):
+        if return_filenames:
+            cgs.append(value[0])
+            fns.append(value[1])
+        else:
+            cgs.append(value)
+    if return_filenames:
+        return cgs, fns
+    return cgs
+
+
+def iter_cgs_from_args(args, rna_type="any", enable_logging=True,
+                       return_filenames=False, skip_errors=False):
+    """
+    Given an Namespace from argparse, iterate over the corresponding of CoarseGrainRNA objects
+    (or BulgeGraph objects).
+
+    :param args: A argparse Namespace.
+    :param rna_type: See documentation of load_rna
+    :param enable_logging: In addition to loading the CoarseGrainRNA objects,
+                    call logging.basicConfig() and use args.verbose
+                    and args.debug
+                    to set the level for different loggers.
+    :param return_filenames: Instead of yielding just the rnas,
+                    yield tuples `rna, filename`,
+                    If a file contains two seperate RNA molecules, the same
+                    filename will be yeilded twice.
+    :param skip_errors: Boolean. Log GraphConstructionErrors and continue with
+                    the next filename instead of letting the error propagate.
+
+    Usage::
+
+        parser = get_rna_input_parser()
+        args = parser.parse_args()
+        rnas = cgs_from_args(args)
+
+    """
     if enable_logging:
         logging.basicConfig(
             format="%(levelname)s:%(name)s.%(funcName)s[%(lineno)d]: %(message)s")
         logging_exceptions.config_from_args(args)
-    cg_rnas = []
-    filenames = []
     for rna in args.rna:
         log.debug("Load RNA %s", rna)
         if rna_type == "only_cg":
@@ -157,12 +194,11 @@ def cgs_from_args(args, rna_type="any", enable_logging=True,
             else:
                 log.exception("The PDB %s was skipped due to the following error", rna)
         else:
-            cg_rnas.extend(cg_or_cgs)
-            filenames.extend([rna] * len(cg_or_cgs))
-    if return_filenames:
-        return cg_rnas, filenames
-    else:
-        return cg_rnas
+            for cg in cg_or_cgs:
+                if return_filenames:
+                    yield cg, rna
+                else:
+                    yield cg
 
 
 def sniff_filetype(file):
