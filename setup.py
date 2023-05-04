@@ -106,7 +106,7 @@ setup_args = {
                 'networkx>=2.0',
                 'biopython',
                 'appdirs>=1.4',
-                'logging_exceptions>=0.1.8',
+                'logging_exceptions>=0.1.9',
                 'cython'
 	],
       "setup_requires":[
