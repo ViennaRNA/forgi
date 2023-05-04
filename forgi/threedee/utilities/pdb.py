@@ -672,6 +672,7 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
     for chain in s[0]:
         for r in chain:
             # rename rosetta-generated structures
+            # Old: with whitespace
             if r.resname == ' rA':
                 r.resname = '  A'
             elif r.resname == ' rC':
@@ -680,7 +681,15 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
                 r.resname = '  G'
             elif r.resname == ' rU':
                 r.resname = '  U'
-
+            # newer biopython: No whitespace
+            if r.resname == 'rA':
+                r.resname = 'A'
+            elif r.resname == 'rC':
+                r.resname = 'C'
+            elif r.resname == 'rG':
+                r.resname = 'G'
+            elif r.resname == 'rU':
+                r.resname = 'U'
             # rename iFoldRNA-generated structures
             if r.resname == 'ADE':
                 r.resname = '  A'
@@ -698,13 +707,8 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
 
     # The chains containing RNA
     chains = list(chain for chain in s[0] if contains_rna(chain))
-
-    try:
-        log.debug("PDB header %s", parser.header)
-        mr = parser.header["missing_residues"]
-        if assembly_nr is not None:
-            warnings.warn("Getting an assembly is not supported for the old PDB format.")
-    except AttributeError:  # A mmCIF parser
+    
+    if isinstance(parser, bpdb.MMCIFParser):
         cifdict = parser._mmcif_dict # We read a private attribute here, because parsing the mmcif dictionary a second time would cause a performance penalty.
         # Generate an assembly
         try:
@@ -739,40 +743,29 @@ def get_all_chains(in_filename, parser=None, no_annotation=False, assembly_nr=No
                         "ssseq": sseq,
                         "insertion": insertions[i]
                     })
-    except KeyError:
-        mr = []
-        with open(in_filename) as f:
-            for wholeline in f:
-                if wholeline.startswith("REMARK 465"):
-                    line = wholeline[10:].strip()
-                    mr_info = _parse_remark_465(line)
-                    if mr_info is not None:
-                        mr.append(mr_info)
-                else:
-                    continue
+
     else:
-        if mr:
-            log.info("This PDB has missing residues")
-        elif not no_annotation:
-            log.info("This PDB has no missing residues")
-    '''for res1, res2 in itertools.combinations(s[0].get_residues(), 2):
-        rna_res=None
-        other_res=None
-        if res1.resname.strip() in RNA_RESIDUES:
-            rna_res=res1
-        else:
-            other_res=res1
-        if res2.resname.strip() in RNA_RESIDUES:
-            rna_res=res2
-        else:
-            other_res=res2
-        if rna_res is None or other_res is None:
-            continue
-        if other_res.resname.strip()=="HOH":
-            continue
-        if residues_interact(rna_res, other_res):
-            log.error("%s and %s interact", rna_res, other_res)
-            interacting_residues.add(rna_res)'''
+        log.debug("PDB header %s", parser.header)
+        try:
+            mr = parser.header["missing_residues"]
+            if assembly_nr is not None:
+                warnings.warn("Getting an assembly is not supported for the old PDB format.")
+        except KeyError:
+            mr = []
+            with open(in_filename) as f:
+                for wholeline in f:
+                    if wholeline.startswith("REMARK 465"):
+                        line = wholeline[10:].strip()
+                        mr_info = _parse_remark_465(line)
+                        if mr_info is not None:
+                            mr.append(mr_info)
+                    else:
+                        continue
+
+    if mr:
+        log.info("This PDB has missing residues")
+    elif not no_annotation:
+        log.info("This PDB has no missing residues")
     log.debug("LOADING DONE: chains %s, mr %s, ir: %s",
              chains, mr, interacting_residues)
     return chains, mr, interacting_residues

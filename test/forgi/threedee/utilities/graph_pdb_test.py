@@ -293,7 +293,8 @@ class TestDistanceCalculation(unittest.TestCase):
     def setUp(self):
         try:
             self.rs_random_281, = ftmc.CoarseGrainRNA.from_pdb(
-                'test/forgi/threedee/data/RS_random_281_S_0.pdb', annotation_tool="MC-Annotate")
+                'test/forgi/threedee/data/RS_random_281_S_0.pdb', annotation_tool="MC-Annotate",
+                secondary_structure=".....(((...(((....)))...)))((((((((((((..(((.((.(((((.(((((......)))))...(((.....)))((((..((..(((........))).))..)))).........))))).)).))).)))).....)).))))))...")
         except ftmc.AnnotationToolNotInstalled:
             self.skipTest("Requires MC-Annotate")
 
@@ -321,7 +322,7 @@ class TestDistanceCalculation(unittest.TestCase):
             self.rs_random_281, "m3")
         self.assertLess(distance, 4.)  # This should always hold!
         # This value might change, if we change the virtual atom calculation
-        self.assertAlmostEqual(distance, 3.486261134885911)
+        self.assertAlmostEqual(distance, 3.297867339668882)
 
 
 class TestAtomPosition_VirtualAtoms(unittest.TestCase):
