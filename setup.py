@@ -44,24 +44,6 @@ except: #Outside of a git repo, do nothing.
 class BuildFailed(Exception):
     pass
 
-def construct_build_ext(build_ext):
-    """
-    Thanks to https://stackoverflow.com/a/41785785/5069869 and https://github.com/Toblerity/Shapely/blob/master/setup.py
-    """
-    class WrappedBuildExt(build_ext):
-        # This class allows C extension building to fail.
-        def run(self):
-            try:
-                build_ext.run(self)
-            except DistutilsPlatformError as x:
-                raise BuildFailed(x)
-
-        def build_extension(self, ext):
-            try:
-                build_ext.build_extension(self, ext)
-            except ext_errors as x:
-                raise BuildFailed(x)
-    return WrappedBuildExt
 
 
 extras = {"forgi.visual":["matplotlib>=2.0"],
@@ -73,15 +55,20 @@ extras = {"forgi.visual":["matplotlib>=2.0"],
 extras["all"]=list(itertools.chain(extras.values()))
 setup_args = {
       "zip_safe":False,
-      "cmdclass":{'build_py': build_py, 'build_ext':construct_build_ext(build_ext)},
+      "cmdclass":{'build_py': build_py, 'build_ext': build_ext},
       "name":'forgi',
-      "version":'2.2.0',
+      "version":'2.2.1',
       "description":'RNA Graph Library',
       "author":'Bernhard Thiel, Peter Kerpedjiev',
       "author_email":'thiel@tbi.univie.ac.at',
       "license":'GNU GPL 3.0',
       "url":'http://www.tbi.univie.ac.at/~pkerp/forgi/',
-      "ext_modules": [Extension("cytvec", sources=["forgi/threedee/utilities/cytvec.pyx"], extra_compile_args=['-O3', "-std=c++11"],
+      "ext_modules": [Extension("forgi.threedee.utilities.cytvec",
+                                sources=["forgi/threedee/utilities/cytvec.pyx",
+                                         "forgi/threedee/utilities/broken_ml_core_py.pxd",
+                                         "forgi/threedee/utilities/broken_ml_core.cpp",
+                                        ],
+                                extra_compile_args=['-O3', "-std=c++11"],
                                 language='c++' )],
       "packages":['forgi', 'forgi.graph', 'forgi.threedee',
                 'forgi.threedee.model', 'forgi.utilities',
@@ -136,8 +123,8 @@ setup_args = {
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
          ],
      }
 
