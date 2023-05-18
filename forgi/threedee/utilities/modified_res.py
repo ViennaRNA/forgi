@@ -20,7 +20,7 @@ from pprint import pprint
 
 
 from ...graph import residue as fgr
-import forgi.threedee.utilities.pdb as ftup
+
 #from .modified_res_lookup import RESIDUE_DICT
 
 log = logging.getLogger(__name__)
@@ -109,6 +109,7 @@ def to_4_letter_alphabeth(chain, query_db=False):
     :param query_db: If true, query PDBeChem whenever a 3-letter code is unknown.
     :return: The same chain, but with only AUGC residues.
     '''
+    import forgi.threedee.utilities.pdb as ftup
     modifications = {}
     i = 0
     while i < len(chain):
