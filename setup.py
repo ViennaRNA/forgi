@@ -14,6 +14,23 @@ log = logging.getLogger(__file__)
 ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError, IOError)
 
 
+
+class CustomBuildExtCommand(build_ext):
+    """
+    build_ext command for use when numpy headers are needed.
+    See: https://stackoverflow.com/a/42163080/5069869
+    """
+    def run(self):
+
+        # Import numpy here, only when headers are needed
+        import numpy
+
+        # Add numpy headers to include_dirs
+        self.include_dirs.append(numpy.get_include())
+
+        # Call original build_ext command
+        build_ext.run(self)
+
 try: #If we are in a git-repo, get git-describe version.
     path = os.path.abspath(os.path.dirname(__file__))
     forgi_version = subprocess.check_output(["git", "describe", "--always"], universal_newlines=True).strip()
@@ -55,9 +72,9 @@ extras = {"forgi.visual":["matplotlib>=2.0"],
 extras["all"]=list(itertools.chain(extras.values()))
 setup_args = {
       "zip_safe":False,
-      "cmdclass":{'build_py': build_py, 'build_ext': build_ext},
+      "cmdclass":{'build_py': build_py, 'build_ext': CustomBuildExtCommand},
       "name":'forgi',
-      "version":'2.2.1',
+      "version":'2.2.2',
       "description":'RNA Graph Library',
       "author":'Bernhard Thiel, Peter Kerpedjiev',
       "author_email":'thiel@tbi.univie.ac.at',

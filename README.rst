@@ -24,6 +24,15 @@ Thiel BC, Beckmann IK, Kerpedjiev P and Hofacker IL. 3D based on 2D: Calculating
 
 For the pseudoknot-removal code and external PDB annotation tools, see the citations therein.
 
+Installation
+============
+
+:code:`pip install forgi` will work in many cases. However, as forgi contains a small part of compiled code, this can fail,
+especially on operating systems/ python versions for which no manylinux wheel is available.
+
+If compilation fails, you should first try to install Cython, python development headers and a compiler. E.g. on Ubuntu
+:code:`sudo apt install gcc g++ python3-dev`. On other distributions/ when targeting non-default python versions, the package cpoyuld also be called python3-devel or python3.11-dev or something similar.
+
 Locally build the documentation 
 ===============================
 

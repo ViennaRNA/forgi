@@ -21,7 +21,7 @@ as specified in the CREDITS section.
 __author__ = "Bernhard C. Thiel, Peter Kerpedjiev"
 __copyright__ = "Copyright 2012 - 2019"
 __license__ = "GNU GPL v 3.0"
-__version__ = "2.2.0"
+__version__ = "2.2.2"
 __maintainer__ = "University of Vienna, TBI"
 
 
