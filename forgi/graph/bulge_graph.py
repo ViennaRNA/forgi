@@ -623,16 +623,14 @@ class BulgeGraph(BaseGraph):
 
         residues = []
         for d in self.defines:
-            prev = None
-
             for r in self.define_residue_num_iterator(d):
-                G.add_node(r)
                 residues += [r]
 
         # Add links along the backbone
         residues.sort()
         prev = None
         for r in residues:
+           G.add_node(r)
             if prev is not None:
                 G.add_edge(prev, r)
             prev = r
