@@ -630,7 +630,7 @@ class BulgeGraph(BaseGraph):
         residues.sort()
         prev = None
         for r in residues:
-           G.add_node(r)
+            G.add_node(r)
             if prev is not None:
                 G.add_edge(prev, r)
             prev = r
