@@ -74,7 +74,7 @@ setup_args = {
       "zip_safe":False,
       "cmdclass":{'build_py': build_py, 'build_ext': CustomBuildExtCommand},
       "name":'forgi',
-      "version":'2.2.2',
+      "version":'2.2.3',
       "description":'RNA Graph Library',
       "author":'Bernhard Thiel, Peter Kerpedjiev',
       "author_email":'thiel@tbi.univie.ac.at',
