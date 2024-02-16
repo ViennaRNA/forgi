@@ -82,7 +82,6 @@ setup_args = {
       "url":'http://www.tbi.univie.ac.at/~pkerp/forgi/',
       "ext_modules": [Extension("forgi.threedee.utilities.cytvec",
                                 sources=["forgi/threedee/utilities/cytvec.pyx",
-                                         "forgi/threedee/utilities/broken_ml_core_py.pxd",
                                          "forgi/threedee/utilities/broken_ml_core.cpp",
                                         ],
                                 extra_compile_args=['-O3', "-std=c++11"],
